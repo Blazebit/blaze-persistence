@@ -84,8 +84,8 @@
     </developers>
 
     <properties>
-        <version.blazecbav>0.1.9</version.blazecbav>
-        <version.blazeutils>0.1.7-SNAPSHOT</version.blazeutils>
+        <version.blazecbav>0.2.0</version.blazecbav>
+        <version.blazeutils>0.1.7</version.blazeutils>
         <version.junit>4.11</version.junit>
 
         <version.openejb>4.6.0</version.openejb>
