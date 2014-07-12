@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.blazebit</groupId>
+        <artifactId>blazebit-parent</artifactId>
+        <version>8</version>
+    </parent>
+
+    <artifactId>blaze-persistence</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Blazebit Persistence</name>
+    <url>http://blazebit.com/persistence</url>
+    <description>Persistence Utilities for Blazebit Projects</description>
+
+    <modules>
+        <module>core</module>
+        <module>entity-view</module>
+        <module>integration</module>
+    </modules>
+
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/Blazebit/blaze-persistence/issues</url>
+    </issueManagement>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>Blazebit</name>
+        <url>http://www.blazebit.com</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:git@github.com:Blazebit/blaze-persistence.git</connection>
+        <developerConnection>scm:git:git@github.com:Blazebit/blaze-persistence.git</developerConnection>
+        <url>git@github.com:Blazebit/blaze-persistence.git</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>christian</id>
+            <name>Christian Beikov</name>
+            <email>christian@blazebit.com</email>
+            <organization>Blazebit</organization>
+            <organizationUrl>http://www.blazebit.com</organizationUrl>
+            <timezone>UTC+1</timezone>
+            <roles>
+                <role>Project Owner</role>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>cchet</id>
+            <name>Thomas Herzog</name>
+            <email>t.herzog@curecomp.com</email>
+            <organization>Curecomp</organization>
+            <organizationUrl>http://www.curecomp.com</organizationUrl>
+            <timezone>UTC+1</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>Mobe91</id>
+            <name>Moritz Becker</name>
+            <email>m.becker@curecomp.com</email>
+            <organization>Curecomp</organization>
+            <organizationUrl>http://www.curecomp.com</organizationUrl>
+            <timezone>UTC+1</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <properties>
+        <version.blazecbav>0.1.9</version.blazecbav>
+        <version.blazeutils>0.1.7-SNAPSHOT</version.blazeutils>
+        <version.junit>4.11</version.junit>
+
+        <version.openejb>4.6.0</version.openejb>
+        <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
+
+        <!-- Plugin versions -->
+        <version.processor.plugin>2.2.1</version.processor.plugin>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>apache-snapshot</id>
+            <url>https://repository.apache.org/content/repositories/snapshots/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Project dependencies -->
+            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-apt-utils</artifactId>
+                <version>${version.blazeutils}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-common-utils</artifactId>
+                <version>${version.blazeutils}</version>
+            </dependency>
+                        
+            <!-- Moudle dependencies -->
+                        
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+                        
+            <!-- Platform dependencies -->
+                        
+            <dependency>
+                <groupId>org.apache.openejb</groupId>
+                <artifactId>javaee-api</artifactId>
+                <version>${version.openejb.javaee-api}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.openejb</groupId>
+                <artifactId>openejb-core</artifactId>
+                <version>${version.openejb}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.bsc.maven</groupId>
+                    <artifactId>maven-processor-plugin</artifactId>
+                    <version>${version.processor.plugin}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${maven.compiler.argument.source}</source>
+                    <target>${maven.compiler.argument.target}</target>
+                    <!-- Disable annotation processing via compiler plugin. -->
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
