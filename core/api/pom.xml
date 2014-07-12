@@ -16,11 +16,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-common-utils</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.apache.openejb</groupId>
             <artifactId>javaee-api</artifactId>
             <scope>provided</scope>

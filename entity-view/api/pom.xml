@@ -19,11 +19,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
-        
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-common-utils</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.openejb</groupId>

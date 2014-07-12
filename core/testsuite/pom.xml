@@ -40,11 +40,6 @@
             <artifactId>blaze-persistence-core-impl</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-common-utils</artifactId>
-            <scope>test</scope>
-        </dependency>
         
         <!-- If new integrations arrive, we can use profiles -->
         <dependency>
