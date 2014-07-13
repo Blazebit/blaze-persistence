@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.parser.JPQLSelectExpressionBaseListener;
 import com.blazebit.persistence.parser.JPQLSelectExpressionListener;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  *
  * @author Moritz Becker
  */
-class JPQLSelectExpressionListenerImpl implements JPQLSelectExpressionListener {
+class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
     enum ContextType {
 
         FOO, PATH, ARRAY

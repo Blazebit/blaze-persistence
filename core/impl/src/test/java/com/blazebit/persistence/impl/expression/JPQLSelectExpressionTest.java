@@ -121,7 +121,7 @@ public class JPQLSelectExpressionTest {
         assertTrue(expressions.size() == 2);
 
         assertTrue(expressions.get(0).equals(path("age")));
-        assertTrue(expressions.get(1).equals(new FooExpression("+ 1")));
+        assertTrue(expressions.get(1).equals(new FooExpression("+1")));
     }
 
     @Test

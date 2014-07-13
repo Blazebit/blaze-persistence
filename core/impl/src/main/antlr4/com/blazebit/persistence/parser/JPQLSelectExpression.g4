@@ -96,13 +96,16 @@ simple_expression : single_valued_path_expression |
                        nullif_expression |
                        entity_type_expression;
 
- arithmetic_expression : arithmetic_term | arithmetic_expression ( '+' | '-' ) arithmetic_term;
+ arithmetic_expression : arithmetic_term 
+                       | arithmetic_expression ( '+' | '-' ) arithmetic_term
+                       ;
 
  arithmetic_term : arithmetic_factor | arithmetic_term ( '*' | '/' ) arithmetic_factor;
 
  arithmetic_factor : ( '+' | '-' )? arithmetic_primary;
 
  arithmetic_primary : state_field_path_expression |
+                      single_element_path_expression |
                         Numeric_literal |
                         '('arithmetic_expression')' |
                         ':' input_parameter |

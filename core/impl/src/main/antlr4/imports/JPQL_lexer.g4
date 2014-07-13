@@ -92,6 +92,8 @@ lexer grammar JPQL_lexer;
      : '.'
      ;
  
+ WS: [ \n\t\r]+ -> skip;
+ 
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
 fragment
