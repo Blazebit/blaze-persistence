@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 lexer grammar JPQL_lexer;
-
- Input_parameter : 'abc'
-     //: ':'Identifier
-     ;
  
  String_literal : '\'' ~[\']* '\'';
  
@@ -67,18 +63,6 @@ lexer grammar JPQL_lexer;
      : Identifier
      ;
  
- Single_valued_input_parameter
-     : Input_parameter
-     ;
- 
- Collection_valued_input_parameter
-     : Input_parameter
-     ;
- 
- Character_valued_input_parameter
-     : Input_parameter
-     ;
- 
  Collection_valued_field
      : Identifier
      ;
@@ -102,14 +86,6 @@ lexer grammar JPQL_lexer;
  
  Numeric_literal
      : DIGIT+
-     ;
- 
- Pattern_value //TODO
-     : 'p'
-     ;
- 
- Trim_character //TODO
-     : 'c'
      ;
  
  Path_separator
