@@ -127,11 +127,6 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-core-spi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-core-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
