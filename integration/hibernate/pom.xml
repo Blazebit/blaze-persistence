@@ -19,10 +19,6 @@
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-spi</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>${project.groupId}</groupId>

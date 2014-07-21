@@ -14,25 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.proxy.model;
+package com.blazebit.persistence.spi;
 
-import java.io.Serializable;
-import java.util.Iterator;
+import com.blazebit.persistence.CriteriaBuilder;
+import javax.persistence.EntityManager;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-public class Wrapper implements Comparable<Wrapper>, Iterable<Wrapper>, Serializable{
-
-    @Override
-    public int compareTo(Wrapper o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Iterator<Wrapper> iterator() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+public interface CriteriaProvider {
     
+    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz);
+
+    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias);
 }

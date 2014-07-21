@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.proxy.model;
+package com.blazebit.persistence.spi;
+
+import com.blazebit.persistence.ObjectBuilder;
+import javax.persistence.TypedQuery;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class TestClass implements IdHolderViewBounded<Wrapper>{
-
-    @Override
-    public Wrapper getId() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void setId(Wrapper id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+public interface QueryTransformer {
     
+    public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder);
 }
