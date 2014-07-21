@@ -30,6 +30,9 @@ public interface DocumentInterfaceView extends IdHolderView<Long>, ContactHolder
     
     public String getName();
     
+    @Mapping("contacts[:contactPersonNumber]")
+    public Person getMyContactPerson();
+    
     @Mapping("contacts[1]")
     public Person getFirstContactPerson();
 }

@@ -28,10 +28,7 @@ import com.blazebit.persistence.view.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.model.IdHolderView;
 import com.blazebit.persistence.view.model.PersonView1;
 import java.util.Set;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -102,14 +99,14 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     public void testMappingAttributesInterfaceView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Set<MethodAttribute<? super DocumentViewInterface, ?>> attributes = viewMetamodel.view(DocumentViewInterface.class).getAttributes();
-        assertEquals(3, attributes.size());
+        assertEquals(4, attributes.size());
     }
     
     @Test
     public void testMappingAttributesClassView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Set<MethodAttribute<? super DocumentViewAbstractClass, ?>> attributes = viewMetamodel.view(DocumentViewAbstractClass.class).getAttributes();
-        assertEquals(3, attributes.size());
+        assertEquals(4, attributes.size());
     }
     
     @Test
@@ -191,6 +188,32 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     }
     
     @Test
+    public void testMappingAttributeWithParameterInterfaceView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("myContactPerson");
+        assertNotNull(attribute);
+        assertEquals("myContactPerson", attribute.getName());
+        assertEquals("contacts[:contactPersonNumber]", attribute.getMapping());
+        assertEquals(Person.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
+    public void testMappingAttributeWithParameterClassView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("myContactPerson");
+        assertNotNull(attribute);
+        assertEquals("myContactPerson", attribute.getName());
+        assertEquals("contacts[:contactPersonNumber]", attribute.getMapping());
+        assertEquals(Person.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
     public void testGetConstructorsInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
@@ -204,8 +227,8 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         assertEquals(1, constructors.size());
-        assertNotNull(viewType.getConstructor(long.class));
-        assertTrue(constructors.contains(viewType.getConstructor(long.class)));
+        assertNotNull(viewType.getConstructor(long.class, Integer.class));
+        assertTrue(constructors.contains(viewType.getConstructor(long.class, Integer.class)));
     }
     
     @Test
@@ -215,12 +238,23 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         MappingConstructor<?> constructor = constructors.iterator().next();
         assertNotNull(constructor);
-        assertEquals(1, constructor.getParameterAttributes().size());
+        assertEquals(2, constructor.getParameterAttributes().size());
+        
         assertEquals(long.class, constructor.getParameterAttributes().get(0).getJavaType());
         assertEquals(constructor, constructor.getParameterAttributes().get(0).getDeclaringConstructor());
         assertEquals(viewType, constructor.getParameterAttributes().get(0).getDeclaringType());
         assertEquals(0, constructor.getParameterAttributes().get(0).getIndex());
-        assertEquals(DocumentViewAbstractClass.class.getConstructor(long.class), constructor.getJavaConstructor());
+        assertEquals("age + 1", constructor.getParameterAttributes().get(0).getMapping());
+        assertFalse(constructor.getParameterAttributes().get(0).isMappingParameter());
+        
+        assertEquals(Integer.class, constructor.getParameterAttributes().get(1).getJavaType());
+        assertEquals(constructor, constructor.getParameterAttributes().get(1).getDeclaringConstructor());
+        assertEquals(viewType, constructor.getParameterAttributes().get(1).getDeclaringType());
+        assertEquals(1, constructor.getParameterAttributes().get(1).getIndex());
+        assertEquals("contactPersonNumber", constructor.getParameterAttributes().get(1).getMapping());
+        assertTrue(constructor.getParameterAttributes().get(1).isMappingParameter());
+        
+        assertEquals(DocumentViewAbstractClass.class.getConstructor(long.class, Integer.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
 }

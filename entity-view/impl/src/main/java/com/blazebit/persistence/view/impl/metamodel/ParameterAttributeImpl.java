@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -33,6 +34,7 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
     private final MappingConstructor<X> declaringConstructor;
     private final Class<Y> javaType;
     private final String mapping;
+    private final boolean mappingParameter;
     
     public ParameterAttributeImpl(MappingConstructor<X> constructor, int index) {
         this.index = index;
@@ -40,25 +42,45 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
         this.javaType = (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index];
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
-        Mapping mapping = null;
+        Mapping mappingAnnotation = null;
         
         for (int i = 0; i < annotations.length; i++) {
             if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
-                mapping = (Mapping) annotations[i];
+                mappingAnnotation = (Mapping) annotations[i];
                 break;
             }
         }
         
-        if (mapping == null) {
-            throw new IllegalArgumentException("No mapping annotation could be found for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
-        }
+        if (mappingAnnotation == null) {
+            MappingParameter mappingParameterAnnotation = null;
         
-        this.mapping = mapping.value();
+            for (int i = 0; i < annotations.length; i++) {
+                if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
+                    mappingParameterAnnotation = (MappingParameter) annotations[i];
+                    break;
+                }
+            }
+        
+            if (mappingParameterAnnotation == null) {
+                throw new IllegalArgumentException("No mapping annotation could be found for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
+            } else {
+                this.mapping = mappingParameterAnnotation.value();
+                this.mappingParameter = true;
+            }
+        } else {
+            this.mapping = mappingAnnotation.value();
+                this.mappingParameter = false;
+        }
     }
 
     @Override
     public int getIndex() {
         return index;
+    }
+    
+    @Override
+    public boolean isMappingParameter() {
+        return mappingParameter;
     }
 
     @Override

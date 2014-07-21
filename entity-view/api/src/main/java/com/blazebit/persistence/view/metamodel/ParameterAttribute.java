@@ -24,5 +24,7 @@ public interface ParameterAttribute<X, Y> extends MappingAttribute<X, Y>{
     
     public int getIndex();
     
+    public boolean isMappingParameter();
+    
     public MappingConstructor<X> getDeclaringConstructor();
 }
