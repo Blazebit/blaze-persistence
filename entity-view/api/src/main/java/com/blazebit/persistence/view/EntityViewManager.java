@@ -18,6 +18,7 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
 /**
  *
@@ -25,7 +26,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
  */
 public interface EntityViewManager {
     
-    public EntityViewManagerFactory getEntityViewManagerFactory();
+    public ViewMetamodel getMetamodel();
     
     public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, PaginatedCriteriaBuilder<?> criteriaBuilder);
     

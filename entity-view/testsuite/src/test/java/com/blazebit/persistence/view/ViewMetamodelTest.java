@@ -18,7 +18,7 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
@@ -41,20 +41,20 @@ import org.junit.Test;
 public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     
     private ViewMetamodel getViewMetamodel() {
-        EntityViewConfiguration cfg = new EntityViewConfiguration();
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
-        return cfg.createEntityViewManagerFactory().getMetamodel();
+        return cfg.createEntityViewManager().getMetamodel();
     }
     
     @Test
     public void testGetViewsContainsViews() {
-        EntityViewConfiguration cfg = new EntityViewConfiguration();
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
-        ViewMetamodel viewMetamodel = cfg.createEntityViewManagerFactory().getMetamodel();
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager().getMetamodel();
         
         assertEquals(3, viewMetamodel.getViews().size());
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewInterface.class)));

@@ -86,6 +86,7 @@
     <properties>
         <version.blazecbav>0.2.0</version.blazecbav>
         <version.blazeutils>0.1.7</version.blazeutils>
+        <version.deltaspike>1.0.1</version.deltaspike>
         <version.junit>4.11</version.junit>
 
         <version.openejb>4.6.0</version.openejb>
@@ -116,6 +117,18 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-common-utils</artifactId>
                 <version>${version.blazeutils}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-api</artifactId>
+                <version>${version.deltaspike}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-impl</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>runtime</scope>
             </dependency>
                         
             <!-- Moudle dependencies -->
