@@ -25,6 +25,7 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.lang.reflect.Constructor;
@@ -235,6 +236,9 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
         return whereManager.whereOr(this);
     }
 
+    /*
+     * Group by methods
+     */
     @Override
     public U groupBy(String... paths) {
         for (String path : paths) {
@@ -351,6 +355,11 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     @Override
     public U outerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.OUTER, true);
+    }
+    
+    @Override
+    public U join(String path, String alias, JoinType type) {
+        return join(path, alias, type, false);
     }
 
     @Override

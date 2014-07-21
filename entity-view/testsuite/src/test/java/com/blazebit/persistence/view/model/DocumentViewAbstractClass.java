@@ -16,20 +16,25 @@
 
 package com.blazebit.persistence.view.model;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-@EntityView(Document.class)
-public interface DocumentView1 extends IdHolderView<Long> {
+// Not necessary because DocumentView1 already provides this information
+//@EntityView(Document.class)
+public abstract class DocumentViewAbstractClass implements DocumentViewInterface {
     
-    public String getName();
+    private final long age;
     
-    @Mapping("contacts[1]")
-    public Person getFirstContactPerson();
+    public DocumentViewAbstractClass(
+            @Mapping("age + 1") long age
+    ) {
+        this.age = age;
+    }
+    
+    public long getAge() {
+        return age;
+    }
 }
