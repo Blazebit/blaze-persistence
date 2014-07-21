@@ -236,6 +236,11 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
         return whereManager.whereOr(this);
     }
 
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<? extends U>> whereExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     /*
      * Group by methods
      */
@@ -268,6 +273,11 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     @Override
     public HavingOrBuilder<U> havingOr() {
         return havingManager.havingOr(this);
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<? extends U>> havingExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /*

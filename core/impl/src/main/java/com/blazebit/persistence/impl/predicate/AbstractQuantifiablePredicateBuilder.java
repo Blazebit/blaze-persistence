@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.BinaryPredicateBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -48,15 +49,15 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> implements
     }
 
     @Override
-    public BinaryPredicateBuilder<T> all() {
+    public SubqueryBuilder<T> all() {
         this.quantifier = PredicateQuantifier.ALL;
-        return this;
+        throw new UnsupportedOperationException("not supported");
     }
 
     @Override
-    public BinaryPredicateBuilder<T> any() {
+    public SubqueryBuilder<T> any() {
         this.quantifier = PredicateQuantifier.ANY;
-        return this;
+        throw new UnsupportedOperationException("not supported");
     }
 
     @Override

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -68,5 +69,10 @@ public class WhereAndBuilderImpl<T> extends AbstractBuilderEndedListener impleme
     public RestrictionBuilder<? extends WhereAndBuilder<T>> where(String expression) {
         Expression exp = Expressions.createSimpleExpression(expression);
         return startBuilder(new RestrictionBuilderImpl<WhereAndBuilderImpl<T>>(this, this, exp));
+    }
+
+    @Override
+    public SubqueryBuilder<RestrictionBuilder<? extends WhereAndBuilder<T>>> whereExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
