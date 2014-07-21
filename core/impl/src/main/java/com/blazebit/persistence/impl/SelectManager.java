@@ -182,7 +182,9 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         for (String expression : builder.getExpressions()) {
-            SelectInfo selectInfo = new SelectInfo(Expressions.createSimpleExpression(expression), null);
+            Expression expr = Expressions.createSimpleExpression(expression);
+            registerParameterExpressions(expr);
+            SelectInfo selectInfo = new SelectInfo(expr, null);
             selectInfos.add(selectInfo);
         }
         objectBuilder = (ObjectBuilder<T>) builder;

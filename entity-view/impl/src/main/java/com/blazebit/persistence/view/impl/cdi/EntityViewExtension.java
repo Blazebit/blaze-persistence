@@ -49,10 +49,10 @@ public class EntityViewExtension implements Extension {
         EntityViewManager entityViewManagerFactory = configuration.createEntityViewManager();
         Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
             .beanClass(EntityViewManager.class)
-            .addTypes(Object.class)
+            .types(Object.class)
             .passivationCapable(false)
             .scope(ApplicationScoped.class)
-            .beanLifecycle(new EntityViewManagerFactoryLifecycle(entityViewManagerFactory))
+            .beanLifecycle(new EntityViewManagerLifecycle(entityViewManagerFactory))
             .create();
         
         abd.addBean(bean);
