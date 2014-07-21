@@ -57,16 +57,8 @@ simple_expression : single_valued_path_expression |
                       ;
  
  //TODO: allow only in certain clauses??
- array_expression : simple_path_element '[' arithmetic_primary ']'
+ array_expression : simple_path_element '[' arithmetic_expression ']'
                   ;
- 
- array_index : state_field_path_expression
-             | ':' input_parameter
-             | Numeric_literal
-             ;
- 
- input_parameter : Identifier
-                 ;
       
  general_subpath : general_path_start('.'general_path_element)*;
 
@@ -108,7 +100,7 @@ simple_expression : single_valued_path_expression |
                       single_element_path_expression |
                         Numeric_literal |
                         '('arithmetic_expression')' |
-                        ':' input_parameter |
+                        Input_parameter |
                         functions_returning_numerics |
                         aggregate_expression |
                         case_expression |
@@ -199,5 +191,5 @@ simple_expression : single_valued_path_expression |
      ;
 
  trim_character : String_literal
-                | input_parameter
+                | Input_parameter
                 ;

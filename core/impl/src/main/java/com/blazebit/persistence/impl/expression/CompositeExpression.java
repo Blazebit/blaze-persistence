@@ -42,4 +42,26 @@ public class CompositeExpression implements Expression {
     public String toString() {
         return expressions.toString();
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 61 * hash + (this.expressions != null ? this.expressions.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final CompositeExpression other = (CompositeExpression) obj;
+        if (this.expressions != other.expressions && (this.expressions == null || !this.expressions.equals(other.expressions))) {
+            return false;
+        }
+        return true;
+    }
 }

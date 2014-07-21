@@ -19,6 +19,8 @@ lexer grammar JPQL_lexer;
  
  Character_literal : '\''JavaLetter'\'';
  
+ Input_parameter : ':'Identifier;
+ 
  //Enum_literal : (Identifier'.')+Identifier;
  
  Date_literal : '(' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* ')';
