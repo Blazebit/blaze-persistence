@@ -234,7 +234,8 @@ public class ExtendedCriteriaBuilderTest extends AbstractPersistenceTest {
         criteria.where(null);
     }
     
-    
-    
-    
+    @Test(expected = NullPointerException.class)
+    public void testEntityManagerNull(){
+        Criteria.from(null, Document.class, "d");
+    }
 }

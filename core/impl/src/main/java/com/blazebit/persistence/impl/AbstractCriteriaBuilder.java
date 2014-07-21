@@ -50,6 +50,7 @@ import javax.persistence.TypedQuery;
 public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> implements QueryBuilder<T, U> {
 
     protected static final Logger log = Logger.getLogger(CriteriaBuilderImpl.class.getName());
+    protected static final String idParamName = "ids";
 
     protected final Class<?> fromClazz;
     protected Class<T> resultClazz;
@@ -86,6 +87,16 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     }
 
     public AbstractCriteriaBuilder(EntityManager em, Class<T> clazz, String alias) {
+        if(em == null){
+            throw new NullPointerException("em");
+        }
+        if(alias == null){
+            throw new NullPointerException("alias");
+        }
+        if(clazz == null){
+            throw new NullPointerException("clazz");
+        }
+        
         this.fromClazz = this.resultClazz = clazz;
         
         this.joinManager = new JoinManager(alias, clazz);
@@ -465,7 +476,7 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     public boolean isParameterSet(String name) {
         Map<String,Object> parameters = parameterManager.getParameters();
         if(!parameters.containsKey(name)){
-            return false;
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", name));
         }
         return parameters.get(name) != null;
     }

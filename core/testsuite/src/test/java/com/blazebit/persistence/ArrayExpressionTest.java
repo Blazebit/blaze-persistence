@@ -90,7 +90,7 @@ public class ArrayExpressionTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         criteria.select("contacts[1]").where("contacts[1]").ge(0);
         
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts WHERE VALUE(contacts) >= :param_0 AND KEY(contacts) = 1", criteria.getQueryString());
+        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts WHERE contacts >= :param_0 AND KEY(contacts) = 1", criteria.getQueryString());
     }
     
     @Test
@@ -107,7 +107,7 @@ public class ArrayExpressionTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         criteria.select("owner.partnerDocument", "x").leftJoin("owner.partnerDocument", "p").leftJoin("p.contacts", "c").where("c[1]").ge(0);
         
-        assertEquals("SELECT p AS x FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c WHERE VALUE(c) >= :param_0 AND KEY(c) = 1", criteria.getQueryString());
+        assertEquals("SELECT p AS x FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c WHERE c >= :param_0 AND KEY(c) = 1", criteria.getQueryString());
     }
     
     @Test

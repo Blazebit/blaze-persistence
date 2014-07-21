@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -33,25 +34,25 @@ import org.junit.Test;
  * @author ccbem
  */
 public class ParameterAPITest extends AbstractPersistenceTest{
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testIsParameterSet_noSuchParamter(){
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
         crit.isParameterSet("index");
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testSetParameter_noSuchParamter(){
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
         crit.setParameter("index", 0);
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testSetDateParameter_noSuchParamter(){
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
         crit.setParameter("index", new Date(), TemporalType.DATE);
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testSetCalendarParameter_noSuchParamter(){
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
         crit.setParameter("index", Calendar.getInstance(), TemporalType.DATE);
@@ -59,7 +60,6 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     
     @Test
     public void test(){
-        Expressions.createSimpleExpression("age > :minAge");
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
 //        crit.isParameterSet("index")
         crit.select("contacts[:index]")
@@ -67,7 +67,7 @@ public class ParameterAPITest extends AbstractPersistenceTest{
                 .where("name").eq("MyDoc")
                 .where("lastModified").lt().expression(":lastModifiedFilter")
                 .groupBy("age")
-                .having("age > :minAge");
+                .having("age").gt().expression(":minAge");
         
         assertFalse(crit.isParameterSet("index"));
         assertFalse(crit.isParameterSet("where_index"));
@@ -94,5 +94,10 @@ public class ParameterAPITest extends AbstractPersistenceTest{
         assertTrue(crit.isParameterSet("where_index"));
         assertTrue(crit.isParameterSet("minAge"));
         assertTrue(crit.isParameterSet("lastModifiedFilter"));
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testReservedParameterName1(){
+        CriteriaBuilder<Tuple> crit = Criteria.from(em, Document.class).select("contacts[:ids]");
     }
 }

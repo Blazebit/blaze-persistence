@@ -50,16 +50,20 @@ public class ParameterManager {
         return existingName;
     }
     
-    public void registerParameterName(String name){
-        if(parameters.containsKey(name)){
-            throw new IllegalArgumentException("Parameter name already registered");
+    void addParameterMapping(String name, Object o){
+        parameters.put(name, o);
+    }
+    
+    public void registerParameterName(String parameterName){
+        if(parameters.containsKey(parameterName)){
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" already registered", parameterName));
         }
-        parameters.put(name, null);
+        parameters.put(parameterName, null);
     }
     
     public void satisfyParameter(String parameterName, Object parameterValue){
         if(!parameters.containsKey(parameterName)){
-            throw new IllegalArgumentException("Parameter name does not exist");
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
         parameters.put(parameterName, parameterValue);
     }

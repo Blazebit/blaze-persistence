@@ -95,6 +95,8 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     @Override
     public void visit(BetweenPredicate predicate) {
         predicate.getLeft().accept(this);
+        predicate.getStart().accept(this);
+        predicate.getEnd().accept(this);
     }
 
     @Override
