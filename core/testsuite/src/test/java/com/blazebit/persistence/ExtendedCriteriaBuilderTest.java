@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
- *
+ * TODO: resolve tests
  * @author ccbem
  */
 public class ExtendedCriteriaBuilderTest extends AbstractPersistenceTest {

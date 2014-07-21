@@ -17,14 +17,12 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.spi.Criteria;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -61,7 +59,6 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     @Test
     public void test(){
         CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
-//        crit.isParameterSet("index")
         crit.select("contacts[:index]")
                 .where("contacts[:where_index]").isNotNull()
                 .where("name").eq("MyDoc")
@@ -98,6 +95,6 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     
     @Test(expected = IllegalArgumentException.class)
     public void testReservedParameterName1(){
-        CriteriaBuilder<Tuple> crit = Criteria.from(em, Document.class).select("contacts[:ids]");
+        Criteria.from(em, Document.class).select("contacts[:ids]");
     }
 }
