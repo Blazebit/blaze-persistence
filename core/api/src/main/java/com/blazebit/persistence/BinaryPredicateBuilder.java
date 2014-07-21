@@ -19,7 +19,7 @@ package com.blazebit.persistence;
  *
  * @author cpbec
  */
-public interface BinaryPredicateBuilder<T> extends SubqueryPredicateBuilder<T> {
+public interface BinaryPredicateBuilder<T> {
     
     public T value(Object value);
     

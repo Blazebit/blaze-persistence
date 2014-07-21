@@ -23,5 +23,5 @@ public interface Filterable<T> {
     
     public T where(String expression);
     
-//    public T whereExists(CriteriaBuilder builder);
+    public SubqueryBuilder<T> whereExists();
 }

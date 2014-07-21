@@ -23,5 +23,5 @@ public interface Aggregateable<T> {
     
     public T having(String expression);
     
-//    public T havingExists(CriteriaBuilder builder);
+    public SubqueryBuilder<T> havingExists();
 }

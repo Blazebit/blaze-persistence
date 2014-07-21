@@ -70,7 +70,7 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
     }
     
     @Test
-    public void testAbstractClass() {
+    public void testInterface() {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d")
                 .orderByAsc("id");
         List<DocumentViewInterface> results = evm.applyObjectBuilder(DocumentViewInterface.class, criteria).getResultList(em);

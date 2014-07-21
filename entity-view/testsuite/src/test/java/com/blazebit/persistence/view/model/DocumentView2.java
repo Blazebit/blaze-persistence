@@ -13,16 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence;
+
+package com.blazebit.persistence.view.model;
+
+import com.blazebit.persistence.view.Mapping;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-public interface SubqueryPredicateBuilder<T> {
+// Not necessary because DocumentView1 already provides this information
+//@EntityView(Document.class)
+public abstract class DocumentViewAbstractClass implements DocumentViewInterface {
     
+    private final long age;
     
-    // TODO: subquery
+    public DocumentViewAbstractClass(
+            @Mapping("age + 1") long age
+    ) {
+        this.age = age;
+    }
     
-    //public T subquery(CriteriaBuilder builder);
+    public long getAge() {
+        return age;
+    }
 }

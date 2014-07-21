@@ -23,14 +23,6 @@ import java.util.List;
  */
 public interface RestrictionBuilder<T> {
     
-    // TODO: [expression] [operator] [ALL | ANY | SOME] [subquery]
-    
-    // Functions TODO: SIZE, UPPER, LOWER, TRIM, CONCAT
-    //                 COUNT, AVG, MIN, MAX, SUM
-    
-    // Operators TODO: IN [subquery], 
-    //                 EXISTS [subquery] => Filterable
-    
     public T between(Object start, Object end);
     
     public T notBetween(Object start, Object end);
@@ -71,17 +63,13 @@ public interface RestrictionBuilder<T> {
     
     public T leExpression(String expression);
     
-    //public T in(CriteriaBuilder builder);
+    public SubqueryBuilder<T> in();
     
-    //public T notIn(CriteriaBuilder builder);
+    public SubqueryBuilder<T> notIn();
     
     public T in(List<?> values);
     
     public T notIn(List<?> values);
-    
-//    public T inElements(String expression);
-//    
-//    public T inIndices(String expression);
     
     public T isNull();
     
