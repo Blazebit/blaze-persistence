@@ -32,7 +32,7 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 public class EntityViewExtension implements Extension {
     
     private static final EntityViewConfiguration configuration = new EntityViewConfiguration();
-    private static EntityViewManagerFactory entityViewManager;
+    private static EntityViewManagerFactory entityViewManagerFactory;
     
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
@@ -41,10 +41,10 @@ public class EntityViewExtension implements Extension {
     }
     
     void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd) {
-        entityViewManager = configuration.createEntityViewManagerFactory();
+        entityViewManagerFactory = configuration.createEntityViewManagerFactory();
     }
     
     public static EntityViewManagerFactory getEntityViewManagerFactory() {
-        return entityViewManager;
+        return entityViewManagerFactory;
     }
 }
