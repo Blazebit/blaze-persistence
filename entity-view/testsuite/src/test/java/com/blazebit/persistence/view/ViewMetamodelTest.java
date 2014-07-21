@@ -194,7 +194,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         MethodAttribute<?, ?> attribute = viewType.getAttribute("myContactPerson");
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
-        assertEquals("contacts[:contactPersonNumber]", attribute.getMapping());
+        assertEquals("contacts2[:contactPersonNumber]", attribute.getMapping());
         assertEquals(Person.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -207,7 +207,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         MethodAttribute<?, ?> attribute = viewType.getAttribute("myContactPerson");
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
-        assertEquals("contacts[:contactPersonNumber]", attribute.getMapping());
+        assertEquals("contacts2[:contactPersonNumber]", attribute.getMapping());
         assertEquals(Person.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());

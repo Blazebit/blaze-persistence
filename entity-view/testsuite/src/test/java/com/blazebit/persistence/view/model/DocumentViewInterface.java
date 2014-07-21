@@ -30,7 +30,7 @@ public interface DocumentViewInterface extends IdHolderView<Long> {
     
     public String getName();
     
-    @Mapping("contacts[:contactPersonNumber]")
+    @Mapping("contacts2[:contactPersonNumber]")
     public Person getMyContactPerson();
     
     @Mapping("contacts[1]")

@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -48,6 +49,7 @@ public class Document {
     private long age;
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
+    private Map<Integer, Person> contacts2 = new HashMap<Integer, Person>();
     private Calendar creationDate;
     private Date lastModified;
     
@@ -139,6 +141,16 @@ public class Document {
 
     public void setContacts(Map<Integer, Person> localized) {
         this.contacts = localized;
+    }
+
+    @ElementCollection
+    @CollectionTable(name = "contacts2")
+    public Map<Integer, Person> getContacts2() {
+        return contacts2;
+    }
+
+    public void setContacts2(Map<Integer, Person> localized) {
+        this.contacts2 = localized;
     }
 
     @Temporal(TemporalType.DATE)

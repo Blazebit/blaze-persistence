@@ -55,6 +55,9 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
             
+            doc1.getContacts2().put(2, o1);
+            doc2.getContacts2().put(2, o2);
+            
             em.persist(o1);
             em.persist(o2);
             
@@ -80,11 +83,11 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
         assertEquals(doc1.getId(), results.get(0).getId());
         assertEquals(doc1.getName(), results.get(0).getName());
         assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
-        assertEquals(doc1.getContacts().get(2), results.get(0).getMyContactPerson());
+        assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
         assertEquals(doc2.getContacts().get(1), results.get(1).getFirstContactPerson());
-        assertEquals(doc2.getContacts().get(2), results.get(1).getMyContactPerson());
+        assertEquals(doc2.getContacts2().get(2), results.get(1).getMyContactPerson());
     }
 }
