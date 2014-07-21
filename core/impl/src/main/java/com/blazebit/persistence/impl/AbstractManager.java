@@ -29,16 +29,20 @@ public class AbstractManager {
     protected final ParameterManager parameterManager;
     private final VisitorAdapter parameterRegistrationVisitor = new VisitorAdapter() {
         @Override
-            public void visit(ParameterExpression expression) {
-                if (expression.getValue() != null) {
-                    // ParameterExpression was created with an object but no name is set
-                    expression.setName(parameterManager.getParamNameForObject(expression.getValue()));
-                } else {
-                    // Value was not set so we only have an unsatisfied parameter name which we register
+        public void visit(ParameterExpression expression) {
+            if (expression.getValue() != null) {
+                // ParameterExpression was created with an object but no name is set
+                expression.setName(parameterManager.getParamNameForObject(expression.getValue()));
+            } else {
+                // Value was not set so we only have an unsatisfied parameter name which we register
+                if(AbstractCriteriaBuilder.idParamName.equals(expression.getName())){
+                    throw new IllegalArgumentException(String.format("The parameter name \"%s\" is reserved - use a different name"));
+                }else{
                     parameterManager.registerParameterName(expression.getName());
                 }
             }
-};
+        }
+    };
 
     protected AbstractManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
         this.queryGenerator = queryGenerator;

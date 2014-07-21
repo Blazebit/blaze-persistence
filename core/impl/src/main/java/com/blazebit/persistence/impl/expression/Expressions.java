@@ -46,7 +46,7 @@ public final class Expressions {
 
             @Override
             public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-                throw e;
+                throw new SyntaxErrorException(e);
             }
 
             @Override

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseListener;
+import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionListener;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
@@ -28,9 +29,17 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * @author Moritz Becker
  */
 class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
+
+    public JPQLSelectExpressionListenerImpl() {
+    }
+
+    public JPQLSelectExpressionListenerImpl(JPQLSelectExpressionListenerImpl parent) {
+        this.parent = parent;
+    }
+
     enum ContextType {
 
-        FOO, PATH, ARRAY
+        FOO, PATH, ARRAY, PARAM
     }
 
     private CompositeExpression root = new CompositeExpression(new ArrayList<Expression>());
@@ -44,46 +53,36 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     private ContextType ctx = ContextType.FOO;
 
+    private JPQLSelectExpressionListenerImpl parent;
+    private JPQLSelectExpressionListenerImpl subexpressionDelegate;
+
     public CompositeExpression getCompositeExpression() {
         return root;
     }
 
     @Override
-    public void enterArray_index(JPQLSelectExpressionParser.Array_indexContext ctx) {
-    }
-
-    @Override
-    public void exitArray_index(JPQLSelectExpressionParser.Array_indexContext ctx) {
-    }
-
-    @Override
-    public void enterInput_parameter(JPQLSelectExpressionParser.Input_parameterContext ctx) {
-        if(this.ctx == ContextType.ARRAY){
-            arrayIndexParam = new ParameterExpression(ctx.getText());
-        }
-    }
-
-    @Override
-    public void exitInput_parameter(JPQLSelectExpressionParser.Input_parameterContext ctx) {
-    }
-    
-    @Override
     public void enterState_field_path_expression(JPQLSelectExpressionParser.State_field_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         if (this.ctx != ContextType.ARRAY) {
             pathContext();
-        }else if(this.ctx == ContextType.ARRAY){
-            arrayExprIndex = new PathExpression();
         }
-
     }
 
     @Override
     public void exitState_field_path_expression(JPQLSelectExpressionParser.State_field_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         fooContext();
     }
 
     @Override
     public void enterSingle_valued_object_path_expression(JPQLSelectExpressionParser.Single_valued_object_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         if (this.ctx != ContextType.ARRAY) {
             pathContext();
         }
@@ -92,11 +91,17 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void exitSingle_valued_object_path_expression(JPQLSelectExpressionParser.Single_valued_object_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         fooContext();
     }
 
     @Override
     public void enterCollection_valued_path_expression(JPQLSelectExpressionParser.Collection_valued_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         if (this.ctx != ContextType.ARRAY) {
             pathContext();
         }
@@ -104,11 +109,17 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void exitCollection_valued_path_expression(JPQLSelectExpressionParser.Collection_valued_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         fooContext();
     }
 
     @Override
     public void enterSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         if (this.ctx != ContextType.ARRAY) {
             pathContext();
         }
@@ -116,6 +127,9 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void exitSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
         fooContext();
     }
 
@@ -130,11 +144,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             path = new PathExpression(new ArrayList<PathElementExpression>());
         } else if (ctx == ContextType.ARRAY) {
             ArrayExpression arrayExpr;
-            if(arrayExprIndex != null){
+            if (arrayExprIndex != null) {
                 // the current array expression has an expression index
                 arrayExpr = new ArrayExpression(arrayExprBase, arrayExprIndex);
                 arrayExprIndex = null;
-            }else{
+            } else {
                 // the current array expression has an parameter index
                 arrayExpr = new ArrayExpression(arrayExprBase, arrayIndexParam);
                 arrayIndexParam = null;
@@ -146,17 +160,24 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         }
     }
 
+    private void paramContext() {
+        if (this.ctx == ContextType.FOO) {
+            ctx = ContextType.PARAM;
+        }
+    }
+    
     private void fooContext() {
         if (this.ctx == ContextType.PATH) {
             ctx = ContextType.FOO;
             root.getExpressions().add(path);
+        }else if(this.ctx == ContextType.PARAM){
+            ctx = ContextType.FOO;
         }
     }
 
     @Override
     public void exitArray_expression(JPQLSelectExpressionParser.Array_expressionContext ctx) {
         pathContext();
-
     }
 
     @Override
@@ -178,11 +199,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     private void applyPathElement(String property) {
         if (ctx == ContextType.ARRAY) {
-            if (arrayExprBase == null) {
-                arrayExprBase = new PropertyExpression(property);
-            } else {
-                ((PathExpression) arrayExprIndex).getExpressions().add(new PropertyExpression(property));
-            }
+            arrayExprBase = new PropertyExpression(property);
         } else if (ctx == ContextType.PATH) {
             path.getExpressions().add(new PropertyExpression(property));
         }
@@ -190,6 +207,10 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void enterSimple_path_element(JPQLSelectExpressionParser.Simple_path_elementContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
+
         applyPathElement(ctx.getText());
     }
 
@@ -245,13 +266,17 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void exitParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
+        if (subexpressionDelegate != null) {
+            return;
+        }
+
         if (fooBuilder.length() > 0) {
             root.getExpressions().add(new FooExpression(fooBuilder.toString()));
         }
     }
 
     private void arrayContext() {
-        ctx = ContextType.ARRAY;        
+        ctx = ContextType.ARRAY;
     }
 
     @Override
@@ -325,9 +350,6 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void enterSingle_valued_path_expression(JPQLSelectExpressionParser.Single_valued_path_expressionContext ctx) {
-        if(this.ctx == ContextType.ARRAY){
-            arrayExprIndex = new PathExpression(new ArrayList<PathElementExpression>());
-        }
     }
 
     @Override
@@ -488,14 +510,42 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void visitTerminal(TerminalNode node) {
-        System.out.println("visitTerminal " + node.getText());
-        if (ctx == ContextType.FOO) {
-            fooBuilder.append(node.getSymbol().getText());
-        } else if(ctx == ContextType.ARRAY){
-            if(node.getSymbol().getType() == JPQLSelectExpressionParser.Numeric_literal){
-                arrayExprIndex = new FooExpression(node.getText());
+        if (subexpressionDelegate != null) {
+            subexpressionDelegate.visitTerminal(node);
+        } else {
+            System.out.println("visitTerminal " + node.getText());
+
+            if (node.getSymbol().getText().equals("]")) {
+                if (fooBuilder.length() > 0) {
+                    root.getExpressions().add(new FooExpression(fooBuilder.toString()));
+                }
+                parent.exitSubexpressionParsing();
+            }
+
+            if (ctx == ContextType.FOO) {
+                if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Input_parameter){
+                    // cut of ':' at the start
+                    root.getExpressions().add(new ParameterExpression(node.getText().substring(1)));
+                }else{
+                    fooBuilder.append(node.getSymbol().getText());
+                }
+            } else if (ctx == ContextType.ARRAY) {
+                if (node.getSymbol().getText().equals("[")) {
+                    subexpressionDelegate = new JPQLSelectExpressionListenerImpl(this);
+                }
             }
         }
+    }
+
+    private void exitSubexpressionParsing() {
+        CompositeExpression subexpression = subexpressionDelegate.getCompositeExpression();
+        // unwrap if possible
+        if (subexpression.getExpressions().size() == 1) {
+            arrayExprIndex = subexpression.getExpressions().get(0);
+        } else {
+            arrayExprIndex = subexpression;
+        }
+        subexpressionDelegate = null;
     }
 
     @Override
@@ -505,11 +555,19 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void enterEveryRule(ParserRuleContext ctx) {
-        System.out.println("enter" + ctx.getClass().getSimpleName());
+        if (subexpressionDelegate != null) {
+            ctx.enterRule(subexpressionDelegate);
+        } else {
+            System.out.println("enter" + ctx.getClass().getSimpleName());
+        }
     }
 
     @Override
     public void exitEveryRule(ParserRuleContext ctx) {
-        System.out.println("exit" + ctx.getClass().getSimpleName());
+        if (subexpressionDelegate != null) {
+            ctx.exitRule(subexpressionDelegate);
+        } else {
+            System.out.println("exit" + ctx.getClass().getSimpleName());
+        }
     }
 }

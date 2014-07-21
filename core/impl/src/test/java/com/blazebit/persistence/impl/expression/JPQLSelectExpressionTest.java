@@ -145,6 +145,53 @@ public class JPQLSelectExpressionTest {
     }
     
     @Test
+    public void testArrayIndexArithmetic() {
+        CompositeExpression result = parse("versions[test.x.y + test.b]");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+
+        PathExpression expected = new PathExpression();
+        List<Expression> compositeExpressions = new ArrayList<Expression>();
+        compositeExpressions.add(path("test", "x", "y"));
+        compositeExpressions.add(new FooExpression("+"));
+        compositeExpressions.add(path("test", "b"));
+        CompositeExpression expectedIndex = new CompositeExpression(compositeExpressions);
+        expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), expectedIndex));
+        assertTrue(expressions.get(0).equals(expected));
+    }
+    
+    @Test
+    public void testArrayIndexArithmeticMixed() {
+        CompositeExpression result = parse("versions[test.x.y + 1]");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+
+        PathExpression expected = new PathExpression();
+        List<Expression> compositeExpressions = new ArrayList<Expression>();
+        compositeExpressions.add(path("test", "x", "y"));
+        compositeExpressions.add(new FooExpression("+1"));
+        CompositeExpression expectedIndex = new CompositeExpression(compositeExpressions);
+        expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), expectedIndex));
+        
+        assertTrue(expressions.get(0).equals(expected));
+    }
+    
+    @Test
+    public void testArrayIndexArithmeticLiteral() {
+        CompositeExpression result = parse("versions[2 + 1]");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+
+        PathExpression expected = new PathExpression();
+        expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), new FooExpression("2+1")));
+        
+        assertTrue(expressions.get(0).equals(expected));
+    }
+    
+    @Test
     public void testMultipleArrayExpressions() {
         CompositeExpression result = parse("versions[test.x.y].owner[a.b.c]");
         List<Expression> expressions = result.getExpressions();

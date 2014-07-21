@@ -51,26 +51,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, 
         Query countQuery = em.createQuery(countQueryString);
         parameterizeQuery(countQuery);
         
-        
         long totalSize = (Long) countQuery.getSingleResult();
-
-
-
-
-
-        
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
         
         // Lossy conversion since JPQL COUNT returns a long
         List ids = idQuery.setFirstResult((int)firstRow).setMaxResults((int)pageSize).getResultList();
-        
-        TypedQuery<T> mainQuery = getQuery(em);
-        mainQuery.setParameter("ids", ids);
+        parameterManager.addParameterMapping(idParamName, ids);
         
         PagedList<T> pagedResultList = new PagedListImpl<T>(totalSize);
-        pagedResultList.addAll(mainQuery.getResultList());
+        pagedResultList.addAll(super.getResultList(em));
         return pagedResultList;
     }
     
@@ -119,11 +110,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, 
         sb.append(joinManager.buildJoins(true));
         
         sb.append(whereManager.buildClause(true));
-        sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:ids)");
+        sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
         
         sb.append(groupByManager.buildGroupBy());        
         sb.append(havingManager.buildClause());
         sb.append(orderByManager.buildOrderBy());
+                
         return sb.toString();
     }
     
