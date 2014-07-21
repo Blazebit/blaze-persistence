@@ -23,8 +23,8 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.model.DocumentView1;
-import com.blazebit.persistence.view.model.DocumentView2;
+import com.blazebit.persistence.view.model.DocumentViewInterface;
+import com.blazebit.persistence.view.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.model.IdHolderView;
 import com.blazebit.persistence.view.model.PersonView1;
 import java.util.Set;
@@ -42,8 +42,8 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     
     private ViewMetamodel getViewMetamodel() {
         EntityViewConfiguration cfg = new EntityViewConfiguration();
-        cfg.addEntityView(DocumentView1.class);
-        cfg.addEntityView(DocumentView2.class);
+        cfg.addEntityView(DocumentViewInterface.class);
+        cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
         return cfg.createEntityViewManagerFactory().getMetamodel();
     }
@@ -51,14 +51,14 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testGetViewsContainsViews() {
         EntityViewConfiguration cfg = new EntityViewConfiguration();
-        cfg.addEntityView(DocumentView1.class);
-        cfg.addEntityView(DocumentView2.class);
+        cfg.addEntityView(DocumentViewInterface.class);
+        cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
         ViewMetamodel viewMetamodel = cfg.createEntityViewManagerFactory().getMetamodel();
         
         assertEquals(3, viewMetamodel.getViews().size());
-        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentView1.class)));
-        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentView2.class)));
+        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewInterface.class)));
+        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewAbstractClass.class)));
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(PersonView1.class)));
     }
     
@@ -66,8 +66,8 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     public void testViewReturnsViewTypes() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         
-        assertNotNull(viewMetamodel.view(DocumentView1.class));
-        assertNotNull(viewMetamodel.view(DocumentView2.class));
+        assertNotNull(viewMetamodel.view(DocumentViewInterface.class));
+        assertNotNull(viewMetamodel.view(DocumentViewAbstractClass.class));
         assertNotNull(viewMetamodel.view(PersonView1.class));
         assertNull(viewMetamodel.view(IdHolderView.class));
     }
@@ -75,7 +75,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testViewTypeDefaults() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        Class<?> expectedViewClass = DocumentView1.class;
+        Class<?> expectedViewClass = DocumentViewInterface.class;
         Class<?> expectedEntityClass = Document.class;
         String expectedViewName = expectedViewClass.getSimpleName();
         ViewType<?> docView = viewMetamodel.view(expectedViewClass);
@@ -101,21 +101,21 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testMappingAttributesInterfaceView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        Set<MethodAttribute<? super DocumentView1, ?>> attributes = viewMetamodel.view(DocumentView1.class).getAttributes();
+        Set<MethodAttribute<? super DocumentViewInterface, ?>> attributes = viewMetamodel.view(DocumentViewInterface.class).getAttributes();
         assertEquals(3, attributes.size());
     }
     
     @Test
     public void testMappingAttributesClassView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        Set<MethodAttribute<? super DocumentView2, ?>> attributes = viewMetamodel.view(DocumentView2.class).getAttributes();
+        Set<MethodAttribute<? super DocumentViewAbstractClass, ?>> attributes = viewMetamodel.view(DocumentViewAbstractClass.class).getAttributes();
         assertEquals(3, attributes.size());
     }
     
     @Test
     public void testMappingAttributeInterfaceInheritedInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView1.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("id");
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
@@ -128,7 +128,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testMappingAttributeInterfaceInheritedClassView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView2.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("id");
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
@@ -141,59 +141,59 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testMappingAttributeImplicitAttributeInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView1.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("name");
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertEquals("name", attribute.getMapping());
         assertEquals(String.class, attribute.getJavaType());
-        assertEquals(DocumentView1.class.getMethod("getName"), attribute.getJavaMethod());
+        assertEquals(DocumentViewInterface.class.getMethod("getName"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
     }
     
     @Test
     public void testMappingAttributeImplicitAttributeClassView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView2.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("name");
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertEquals("name", attribute.getMapping());
         assertEquals(String.class, attribute.getJavaType());
-        assertEquals(DocumentView1.class.getMethod("getName"), attribute.getJavaMethod());
+        assertEquals(DocumentViewInterface.class.getMethod("getName"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
     }
     
     @Test
     public void testMappingAttributeExplicitAttributeInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView1.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("firstContactPerson");
         assertNotNull(attribute);
         assertEquals("firstContactPerson", attribute.getName());
         assertEquals("contacts[1]", attribute.getMapping());
         assertEquals(Person.class, attribute.getJavaType());
-        assertEquals(DocumentView1.class.getMethod("getFirstContactPerson"), attribute.getJavaMethod());
+        assertEquals(DocumentViewInterface.class.getMethod("getFirstContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
     }
     
     @Test
     public void testMappingAttributeExplicitAttributeClassView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView2.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         MethodAttribute<?, ?> attribute = viewType.getAttribute("firstContactPerson");
         assertNotNull(attribute);
         assertEquals("firstContactPerson", attribute.getName());
         assertEquals("contacts[1]", attribute.getMapping());
         assertEquals(Person.class, attribute.getJavaType());
-        assertEquals(DocumentView1.class.getMethod("getFirstContactPerson"), attribute.getJavaMethod());
+        assertEquals(DocumentViewInterface.class.getMethod("getFirstContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
     }
     
     @Test
     public void testGetConstructorsInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView1.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         assertEquals(0, constructors.size());
     }
@@ -201,7 +201,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testGetConstructorsClassView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView2.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         assertEquals(1, constructors.size());
         assertNotNull(viewType.getConstructor(long.class));
@@ -211,7 +211,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     @Test
     public void testMappingConstructor() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentView2.class);
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         MappingConstructor<?> constructor = constructors.iterator().next();
         assertNotNull(constructor);
@@ -220,7 +220,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertEquals(constructor, constructor.getParameterAttributes().get(0).getDeclaringConstructor());
         assertEquals(viewType, constructor.getParameterAttributes().get(0).getDeclaringType());
         assertEquals(0, constructor.getParameterAttributes().get(0).getIndex());
-        assertEquals(DocumentView2.class.getConstructor(long.class), constructor.getJavaConstructor());
+        assertEquals(DocumentViewAbstractClass.class.getConstructor(long.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
 }

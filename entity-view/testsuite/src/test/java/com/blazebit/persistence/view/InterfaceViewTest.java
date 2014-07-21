@@ -20,7 +20,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.spi.Criteria;
-import com.blazebit.persistence.view.model.DocumentView1;
+import com.blazebit.persistence.view.model.DocumentViewInterface;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -73,7 +73,7 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
     public void testAbstractClass() {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d")
                 .orderByAsc("id");
-        List<DocumentView1> results = evm.applyObjectBuilder(DocumentView1.class, criteria).getResultList(em);
+        List<DocumentViewInterface> results = evm.applyObjectBuilder(DocumentViewInterface.class, criteria).getResultList(em);
         
         assertEquals(2, results.size());
         // Doc1

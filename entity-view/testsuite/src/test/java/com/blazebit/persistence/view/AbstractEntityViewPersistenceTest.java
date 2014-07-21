@@ -18,8 +18,8 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.model.DocumentView1;
-import com.blazebit.persistence.view.model.DocumentView2;
+import com.blazebit.persistence.view.model.DocumentViewInterface;
+import com.blazebit.persistence.view.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.model.PersonView1;
 import org.junit.BeforeClass;
 
@@ -35,8 +35,8 @@ public class AbstractEntityViewPersistenceTest extends AbstractPersistenceTest {
     @BeforeClass
     public static void initEvm() {
         EntityViewConfiguration cfg = new EntityViewConfiguration();
-        cfg.addEntityView(DocumentView1.class);
-        cfg.addEntityView(DocumentView2.class);
+        cfg.addEntityView(DocumentViewInterface.class);
+        cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
         evmf = cfg.createEntityViewManagerFactory();
         evm = evmf.createEntityViewManager(em);
