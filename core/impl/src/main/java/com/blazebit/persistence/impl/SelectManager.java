@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
@@ -114,7 +115,7 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void select(AbstractCriteriaBuilder<?, ?> builder, String expression, String selectAlias) {
+    void select(BaseQueryBuilderImpl<?, ?> builder, String expression, String selectAlias) {
         Expression expr = Expressions.createSimpleExpression(expression);
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias);
         if (selectAlias != null) {

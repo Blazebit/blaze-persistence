@@ -19,7 +19,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import javax.persistence.EntityManager;
 
 /**

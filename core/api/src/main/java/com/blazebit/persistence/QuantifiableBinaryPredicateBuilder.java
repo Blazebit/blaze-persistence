@@ -21,7 +21,7 @@ package com.blazebit.persistence;
  */
 public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBuilder<T> {
     
-    public SubqueryBuilder<T> all();
+    public BaseQueryBuilder<T> all();
     
-    public SubqueryBuilder<T> any();
+    public BaseQueryBuilder<T> any();
 }

@@ -32,7 +32,7 @@ import javax.persistence.TypedQuery;
  * @author ccbem
  */
 // TODO: implement clone for query builder (deep copy)
-public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends SubqueryBuilder<X> {
+public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQueryBuilder<X> {
     
     public TypedQuery<T> getQuery(EntityManager em);
 
