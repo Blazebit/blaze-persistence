@@ -55,10 +55,9 @@ public class ParameterManager {
     }
     
     public void registerParameterName(String parameterName){
-        if(parameters.containsKey(parameterName)){
-            throw new IllegalArgumentException(String.format("Parameter name \"%s\" already registered", parameterName));
+        if(!parameters.containsKey(parameterName)){
+            parameters.put(parameterName, null);
         }
-        parameters.put(parameterName, null);
     }
     
     public void satisfyParameter(String parameterName, Object parameterValue){
