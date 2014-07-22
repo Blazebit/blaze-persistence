@@ -39,7 +39,7 @@ import org.apache.deltaspike.core.util.bean.BeanBuilder;
 @ServiceProvider(Extension.class)
 public class EntityViewExtension implements Extension {
     
-    private static final EntityViewConfiguration configuration = EntityViews.getDefault();
+    private final EntityViewConfiguration configuration = EntityViews.getDefault();
     
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
