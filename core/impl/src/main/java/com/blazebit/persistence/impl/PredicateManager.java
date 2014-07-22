@@ -41,7 +41,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
         return rootPredicate;
     }
 
-    RestrictionBuilder<U> restrict(AbstractCriteriaBuilder<?, ?> builder, String expression) {
+    RestrictionBuilder<U> restrict(BaseQueryBuilderImpl<?, ?> builder, String expression) {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, Expressions.createSimpleExpression(expression)));
     }
 

@@ -32,7 +32,7 @@ public class WhereManager<U> extends PredicateManager<U> {
         return "WHERE";
     }
 
-    WhereOrBuilder<U> whereOr(AbstractCriteriaBuilder<?, ?> builder) {
+    WhereOrBuilder<U> whereOr(BaseQueryBuilderImpl<?, ?> builder) {
         return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate));
     }
 

@@ -196,6 +196,11 @@ public class JoinTest extends AbstractPersistenceTest {
     }
     
     @Test(expected = NullPointerException.class)
+    public void testConstructorEntityManagerNull(){
+        Criteria.from(null, Document.class, "d");
+    }
+    
+    @Test(expected = NullPointerException.class)
     public void testJoinNullPath(){
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class);
         criteria.join(null, "o", JoinType.LEFT, true);

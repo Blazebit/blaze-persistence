@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
@@ -70,7 +70,7 @@ public class HavingAndBuilderImpl<T> extends AbstractBuilderEndedListener implem
     }
 
     @Override
-    public SubqueryBuilder<RestrictionBuilder<? extends HavingAndBuilder<T>>> havingExists() {
+    public BaseQueryBuilder<RestrictionBuilder<? extends HavingAndBuilder<T>>> havingExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

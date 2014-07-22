@@ -30,7 +30,7 @@ public class HavingManager<U> extends PredicateManager<U>{
         return "HAVING";
     }
     
-    HavingOrBuilderImpl<U> havingOr(AbstractCriteriaBuilder<?, ?> builder) {
+    HavingOrBuilderImpl<U> havingOr(BaseQueryBuilderImpl<?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<U>((U) builder, rootPredicate));
     }
 }

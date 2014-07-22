@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence;
+package com.blazebit.persistence.impl;
+
+import com.blazebit.persistence.BaseQueryBuilder;
 
 /**
  *
  * @author ccbem
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<T> {
-    public T end();
+public class SubqueryBuilderImpl<T> extends BaseQueryBuilderImpl<T> implements BaseQueryBuilder<T> {
+    
 }

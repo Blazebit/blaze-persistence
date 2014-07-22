@@ -25,7 +25,7 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.lang.reflect.Constructor;
@@ -237,7 +237,7 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     }
 
     @Override
-    public SubqueryBuilder<RestrictionBuilder<? extends U>> whereExists() {
+    public BaseQueryBuilder<RestrictionBuilder<? extends U>> whereExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -276,7 +276,8 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> i
     }
 
     @Override
-    public SubqueryBuilder<RestrictionBuilder<? extends U>> havingExists() {
+    public BaseQueryBuilder<RestrictionBuilder<? extends U>> havingExists() {
+        return new CriteriaBuilderImpl<T>
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
