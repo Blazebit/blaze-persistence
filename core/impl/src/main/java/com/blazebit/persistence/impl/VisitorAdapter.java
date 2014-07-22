@@ -30,6 +30,7 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.InSubqueryPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
@@ -159,5 +160,10 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
 
     @Override
     public void visit(FooExpression expression) {
+    }
+
+    @Override
+    public void visit(InSubqueryPredicate predicate) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

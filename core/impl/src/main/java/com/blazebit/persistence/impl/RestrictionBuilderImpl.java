@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -281,12 +282,12 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     }
 
     @Override
-    public BaseQueryBuilder<T> in() {
+    public SubqueryInitiator<RestrictionBuilderImpl<T>> in() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public BaseQueryBuilder<T> notIn() {
+    public SubqueryInitiator<RestrictionBuilderImpl<T>> notIn() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

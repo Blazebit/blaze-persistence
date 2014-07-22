@@ -233,7 +233,7 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     public void visit(InSubqueryPredicate predicate) {
         predicate.getLeft().accept(this);
         sb.append(" IN (");
-        sb.append(generateSubquery(predicate.getRight()));
+//        sb.append(generateSubquery(predicate.getRight()));
         sb.append(")");
     }
     

@@ -18,7 +18,9 @@ package com.blazebit.persistence.impl.predicate;
 import com.blazebit.persistence.BinaryPredicateBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
+import javax.persistence.criteria.Subquery;
 
 /**
  *
@@ -49,13 +51,13 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> implements
     }
 
     @Override
-    public BaseQueryBuilder<T> all() {
+    public SubqueryInitiator<AbstractQuantifiablePredicateBuilder<T>> all() {
         this.quantifier = PredicateQuantifier.ALL;
         throw new UnsupportedOperationException("not supported");
     }
 
     @Override
-    public BaseQueryBuilder<T> any() {
+    public SubqueryInitiator<AbstractQuantifiablePredicateBuilder<T>> any() {
         this.quantifier = PredicateQuantifier.ANY;
         throw new UnsupportedOperationException("not supported");
     }

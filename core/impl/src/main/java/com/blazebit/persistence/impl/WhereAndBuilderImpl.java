@@ -72,7 +72,7 @@ public class WhereAndBuilderImpl<T> extends AbstractBuilderEndedListener impleme
     }
 
     @Override
-    public BaseQueryBuilder<RestrictionBuilder<? extends WhereAndBuilder<T>>> whereExists() {
+    public SubqueryInitiatorImpl<WhereAndBuilderImpl<RestrictionBuilder<? extends WhereAndBuilder<T>>>> whereExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
