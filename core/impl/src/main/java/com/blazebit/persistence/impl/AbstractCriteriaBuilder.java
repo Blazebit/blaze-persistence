@@ -182,6 +182,11 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> e
         }
         return result;
     }
+
+    @Override
+    public Object getParameterValue(String name) {
+        return parameterManager.getParameters().get(name);
+    }
     
     private class ParameterImpl<T> implements Parameter<T>{
         private final Class<T> paramClass;

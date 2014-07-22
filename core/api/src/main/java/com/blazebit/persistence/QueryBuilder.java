@@ -46,6 +46,8 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     
     public Set<? extends Parameter<?>> getParameters();
     
+    public Object getParameterValue(String name);
+    
     public List<T> getResultList(EntityManager em);
 
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize);
