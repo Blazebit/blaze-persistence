@@ -125,6 +125,16 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
+    public void testNullLiteralExpression() {
+        CompositeExpression result = parse("NULLIF(1,1)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+
+        assertTrue(expressions.get(0).equals(new FooExpression("NULLIF(1,1)")));
+    }
+
+    @Test
     public void testArrayExpression() {
         CompositeExpression result = parse("versions[test]");
         List<Expression> expressions = result.getExpressions();
