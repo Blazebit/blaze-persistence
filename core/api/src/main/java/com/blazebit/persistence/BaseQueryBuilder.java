@@ -24,6 +24,7 @@ import javax.persistence.Tuple;
  */
 public interface BaseQueryBuilder<X> extends Aggregateable<RestrictionBuilder<? extends X>>, Filterable<RestrictionBuilder<? extends X>> {
     
+    public String getQueryString();
     /*
      * Join methods
      */

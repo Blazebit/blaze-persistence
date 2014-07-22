@@ -27,8 +27,9 @@ import javax.persistence.Tuple;
 public class SubqueryBuilderImpl<U> extends BaseQueryBuilderImpl<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
     private final U result;
     
-    public SubqueryBuilderImpl(EntityManager em, String alias, U result) {
-        super(em, Tuple.class, alias);
+    //TODO: prevent duplication of aliases from the main query
+    public SubqueryBuilderImpl(EntityManager em, String alias, U result, ParameterManager parameterManager) {
+        super(em, Tuple.class, alias, parameterManager);
         this.result = result;
     }
     
@@ -36,5 +37,4 @@ public class SubqueryBuilderImpl<U> extends BaseQueryBuilderImpl<Tuple, Subquery
     public U end() {
         return result;
     }
-    
 }

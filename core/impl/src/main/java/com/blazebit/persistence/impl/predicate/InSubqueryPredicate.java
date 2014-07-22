@@ -16,6 +16,8 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -25,9 +27,9 @@ import com.blazebit.persistence.impl.expression.Expression;
 public class InSubqueryPredicate implements Predicate {
 
     private Expression left;
-    private BaseQueryBuilder<?> right;
+    private SubqueryBuilderImpl<?> right;
 
-    public InSubqueryPredicate(Expression left, BaseQueryBuilder<?> right) {
+    public InSubqueryPredicate(Expression left, SubqueryBuilderImpl<?> right) {
         this.left = left;
         this.right = right;
     }
@@ -36,7 +38,7 @@ public class InSubqueryPredicate implements Predicate {
         return left;
     }
 
-    public BaseQueryBuilder<?> getRight() {
+    public SubqueryBuilderImpl<?> getRight() {
         return right;
     }
 

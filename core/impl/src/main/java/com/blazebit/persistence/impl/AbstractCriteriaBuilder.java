@@ -134,35 +134,6 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> e
     }
 
     @Override
-    public String getQueryString() {
-        verifyBuilderEnded();
-        StringBuilder sb = new StringBuilder();
-        // resolve unresolved aliases, object model etc.
-        // we must do implicit joining at the end because we can only do
-        // the aliases resolving at the end and alias resolving must happen before
-        // the implicit joins
-        // it makes no sense to do implicit joining before this point, since
-        // the user can call the api in arbitrary orders
-        // so where("b.c").join("a.b") but also
-        // join("a.b", "b").where("b.c")
-        // in the first case
-        applyImplicitJoins();
-        applyArrayTransformations();
-
-        sb.append(selectManager.buildSelect());
-        if (sb.length() > 0) {
-            sb.append(' ');
-        }
-        sb.append("FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
-        sb.append(joinManager.buildJoins(true));
-        sb.append(whereManager.buildClause());
-        sb.append(groupByManager.buildGroupBy());
-        sb.append(havingManager.buildClause());
-        sb.append(orderByManager.buildOrderBy());
-        return sb.toString();
-    }
-
-    @Override
     public TypedQuery<T> getQuery(EntityManager em) {
         TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString(), Object[].class);
         if (selectManager.getSelectObjectBuilder() != null) {

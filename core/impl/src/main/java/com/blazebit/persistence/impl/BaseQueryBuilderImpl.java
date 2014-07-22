@@ -74,8 +74,8 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         this.em = builder.em;
         this.queryTransformer = builder.queryTransformer;
     }
-
-    public BaseQueryBuilderImpl(EntityManager em, Class<T> clazz, String alias) {
+    
+    protected BaseQueryBuilderImpl(EntityManager em, Class<T> clazz, String alias, ParameterManager parameterManager) {
         if(em == null){
             throw new NullPointerException("em");
         }
@@ -90,7 +90,7 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         
         this.joinManager = new JoinManager(alias, clazz);
                 
-        this.parameterManager = new ParameterManager();
+        this.parameterManager = parameterManager;
         
         this.queryGenerator = new QueryGenerator(parameterManager);
         
@@ -106,6 +106,10 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
         this.queryTransformer = getQueryTransformer();
+    }
+
+    public BaseQueryBuilderImpl(EntityManager em, Class<T> clazz, String alias) {
+        this(em, clazz, alias, new ParameterManager());
     }
     
 
@@ -248,9 +252,7 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
     }
-
     
-
     @Override
     public U orderBy(String expression, boolean ascending, boolean nullFirst) {
         if (expression == null) {
@@ -348,6 +350,35 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         whereManager.rootPredicate.predicate.getChildren().addAll(arrayTransformer.getAdditionalWherePredicates());
     }
 
+    @Override
+    public String getQueryString(){
+        verifyBuilderEnded();
+        StringBuilder sb = new StringBuilder();
+        // resolve unresolved aliases, object model etc.
+        // we must do implicit joining at the end because we can only do
+        // the aliases resolving at the end and alias resolving must happen before
+        // the implicit joins
+        // it makes no sense to do implicit joining before this point, since
+        // the user can call the api in arbitrary orders
+        // so where("b.c").join("a.b") but also
+        // join("a.b", "b").where("b.c")
+        // in the first case
+        applyImplicitJoins();
+        applyArrayTransformations();
+
+        sb.append(selectManager.buildSelect());
+        if (sb.length() > 0) {
+            sb.append(' ');
+        }
+        sb.append("FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
+        sb.append(joinManager.buildJoins(true));
+        sb.append(whereManager.buildClause());
+        sb.append(groupByManager.buildGroupBy());
+        sb.append(havingManager.buildClause());
+        sb.append(orderByManager.buildOrderBy());
+        return sb.toString();
+    }
+    
     private QueryTransformer getQueryTransformer() {
         ServiceLoader<QueryTransformer> serviceLoader = ServiceLoader.load(QueryTransformer.class);
         Iterator<QueryTransformer> iterator = serviceLoader.iterator();

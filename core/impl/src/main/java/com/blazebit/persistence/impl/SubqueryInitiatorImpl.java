@@ -27,20 +27,22 @@ import javax.persistence.EntityManager;
 public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final EntityManager em;
     private final X result;
+    private final ParameterManager parameterManager;
 
-    public SubqueryInitiatorImpl(EntityManager em, X result) {
+    public SubqueryInitiatorImpl(EntityManager em, X result, ParameterManager parameterManager) {
         this.em = em;
         this.result = result;
+        this.parameterManager = parameterManager;
     }
     
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
-        return new SubqueryBuilderImpl<X>(em, clazz.getSimpleName().toLowerCase(), result);
+        return new SubqueryBuilderImpl<X>(em, clazz.getSimpleName().toLowerCase(), result, parameterManager);
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        return new SubqueryBuilderImpl<X>(em, alias, result);
+        return new SubqueryBuilderImpl<X>(em, alias, result, parameterManager);
     }
     
 }

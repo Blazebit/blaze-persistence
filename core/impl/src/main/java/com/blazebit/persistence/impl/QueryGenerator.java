@@ -233,13 +233,9 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     public void visit(InSubqueryPredicate predicate) {
         predicate.getLeft().accept(this);
         sb.append(" IN (");
-//        sb.append(generateSubquery(predicate.getRight()));
+        sb.append(predicate.getRight().getQueryString());
         sb.append(")");
     }
-    
-//    private String generateSubquery(BaseQueryBuilder<?> baseQueryBuilder){
-//        
-//    }
     
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         predicate.getLeft().accept(this);

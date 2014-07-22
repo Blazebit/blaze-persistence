@@ -35,8 +35,6 @@ import javax.persistence.TypedQuery;
 public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQueryBuilder<X> {
     
     public TypedQuery<T> getQuery(EntityManager em);
-
-    public String getQueryString();
     
     public X setParameter(String name, Object value);
 
