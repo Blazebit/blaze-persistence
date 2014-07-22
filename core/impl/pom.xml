@@ -27,8 +27,14 @@
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
-            <artifactId>antlr4</artifactId>
+            <artifactId>antlr4-runtime</artifactId>
             <version>4.3</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org.abego.treelayout.core</artifactId>
+                    <groupId>org.abego.treelayout</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <!-- Platform dependencies -->
