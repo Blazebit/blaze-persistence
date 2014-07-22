@@ -166,4 +166,15 @@ public class PaginationTest extends AbstractPersistenceTest {
         
         em.createQuery("SELECT VALUE(contacts) AS l FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE contacts.name LIKE '%arl%' AND KEY(contacts) = 1", Tuple.class).getResultList();
     }
+    
+    @Test
+    public void testSelectIndexedWithParameter() {
+        String expectedQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE owner.name = :param_0 AND KEY(contacts) = :contactNr";
+        PaginatedCriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class, "d")
+            .where("owner.name").eq("Karl1")
+                .select("contacts[:contactNr].name")
+                .page(0, 1);
+        
+        assertEquals(expectedQuery, cb.getPageCountQueryString());
+    }
 }
