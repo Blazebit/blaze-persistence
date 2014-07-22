@@ -69,7 +69,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
-        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(viewType, mappingConstructor));
+        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(viewType, mappingConstructor, criteriaBuilder));
     }
     
 }

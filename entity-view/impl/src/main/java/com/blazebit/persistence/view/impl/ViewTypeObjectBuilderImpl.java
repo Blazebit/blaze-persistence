@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -35,8 +36,11 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
     
     private final Constructor<? extends T> proxyConstructor;
     private final String[] mappings;
+    private final String[] parameterMappings;
+    private final QueryBuilder<?, ?> queryBuilder;
+    private final boolean hasParameters;
 
-    public ViewTypeObjectBuilderImpl(ViewType<T> viewType, MappingConstructor<T> constructor) {
+    public ViewTypeObjectBuilderImpl(ViewType<T> viewType, MappingConstructor<T> constructor, QueryBuilder<?, ?> queryBuilder) {
         if (constructor == null) {
             if(viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -48,14 +52,38 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
         Object[] result = getConstructorAndMappings(ProxyFactory.getProxy(viewType), viewType, constructor);
         this.proxyConstructor = (Constructor<? extends T>) result[0];
         this.mappings = (String[]) result[1];
+        this.parameterMappings = (String[]) result[2];
+        this.queryBuilder = queryBuilder;
+        boolean parameterFound = false;
+        
+        for (int i = 0; i < parameterMappings.length; i++) {
+            if (parameterMappings[i] != null) {
+                parameterFound = true;
+            }
+        }
+        
+        this.hasParameters = parameterFound;
     }
 
     @Override
     public T build(Object[] tuple, String[] aliases) {
-        try {
-            return proxyConstructor.newInstance(tuple);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
+        if (hasParameters) {
+            try {
+                for (int i = 0; i < tuple.length; i++) {
+                    if (parameterMappings[i] != null) {
+                        tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
+                    }
+                }
+                return proxyConstructor.newInstance(tuple);
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
+            }
+        } else {
+            try {
+                return proxyConstructor.newInstance(tuple);
+            } catch (Exception ex) {
+                throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
+            }
         }
     }
 
@@ -84,6 +112,7 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
         
         int length = attributes.length + parameterAttributes.length;
         String mappings[] = new String[length];
+        String parameterMappings[] = new String[length];
         
         OUTER: for (Constructor<?> constructor : constructors) {
             Class<?>[] parameterTypes = constructor.getParameterTypes();
@@ -102,14 +131,15 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
                     continue OUTER;
                 } else {
                     if (parameterAttributes[i].isMappingParameter()) {
-                        mappings[i + attributes.length] = ":" + parameterAttributes[i].getMapping();
+                        mappings[i + attributes.length] = "NULLIF(1,1)";
+                        parameterMappings[i + attributes.length] = parameterAttributes[i].getMapping();
                     } else {
                         mappings[i + attributes.length] = parameterAttributes[i].getMapping();
                     }
                 }
             }
 
-            return new Object[]{ constructor, mappings };
+            return new Object[]{ constructor, mappings, parameterMappings };
         }
         
         throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass.getName());
