@@ -89,7 +89,7 @@
         <version.deltaspike>1.0.1</version.deltaspike>
         <version.junit>4.11</version.junit>
 
-        <version.openejb>4.6.0-SNAPSHOT</version.openejb>
+        <version.openejb>4.6.0</version.openejb>
         <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
 
         <!-- Plugin versions -->
