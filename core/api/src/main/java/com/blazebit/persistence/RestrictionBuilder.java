@@ -63,9 +63,9 @@ public interface RestrictionBuilder<T> {
     
     public T leExpression(String expression);
     
-    public BaseQueryBuilder<T> in();
+    public SubqueryInitiator in();
     
-    public BaseQueryBuilder<T> notIn();
+    public SubqueryInitiator notIn();
     
     public T in(List<?> values);
     

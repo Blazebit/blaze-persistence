@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.InSubqueryPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
@@ -227,6 +229,18 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
         sb.append(")");
     }
 
+    @Override
+    public void visit(InSubqueryPredicate predicate) {
+        predicate.getLeft().accept(this);
+        sb.append(" IN (");
+        sb.append(generateSubquery(predicate.getRight()));
+        sb.append(")");
+    }
+    
+//    private String generateSubquery(BaseQueryBuilder<?> baseQueryBuilder){
+//        
+//    }
+    
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         predicate.getLeft().accept(this);
         sb.append(operator);

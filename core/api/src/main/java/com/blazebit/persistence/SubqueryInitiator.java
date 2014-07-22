@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
 import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 
 /**
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U extends BaseQueryBuilder<U>> extends BaseQueryBuilderImpl<Tuple, U> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
-    private final U result;
-    
-    public SubqueryBuilderImpl(EntityManager em, String alias, U result) {
-        super(em, Tuple.class, alias);
-        this.result = result;
-    }
-    
-    @Override
-    public U end() {
-        return result;
-    }
-    
+public interface SubqueryInitiator<U> {
+    public SubqueryBuilder<U> from(Class<?> clazz);
+
+    public SubqueryBuilder<U> from(Class<?> clazz, String alias);
 }

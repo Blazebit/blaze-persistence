@@ -13,29 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
+import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U extends BaseQueryBuilder<U>> extends BaseQueryBuilderImpl<Tuple, U> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
-    private final U result;
-    
-    public SubqueryBuilderImpl(EntityManager em, String alias, U result) {
-        super(em, Tuple.class, alias);
-        this.result = result;
+public class InSubqueryPredicate implements Predicate {
+
+    private Expression left;
+    private BaseQueryBuilder<?> right;
+
+    public InSubqueryPredicate(Expression left, BaseQueryBuilder<?> right) {
+        this.left = left;
+        this.right = right;
     }
-    
+
+    public Expression getLeft() {
+        return left;
+    }
+
+    public BaseQueryBuilder<?> getRight() {
+        return right;
+    }
+
     @Override
-    public U end() {
-        return result;
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
-    
+
 }

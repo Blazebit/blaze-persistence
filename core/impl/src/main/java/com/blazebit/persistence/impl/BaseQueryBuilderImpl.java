@@ -27,6 +27,7 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.lang.reflect.Constructor;
@@ -190,7 +191,7 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
     }
 
     @Override
-    public BaseQueryBuilder<RestrictionBuilder<? extends U>> whereExists() {
+    public SubqueryInitiator whereExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -229,7 +230,7 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
     }
 
     @Override
-    public BaseQueryBuilder<RestrictionBuilder<? extends U>> havingExists() {
+    public SubqueryInitiator havingExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -372,29 +373,5 @@ public class BaseQueryBuilderImpl<T, U extends BaseQueryBuilder<U>> implements B
         throw new IllegalStateException("No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
     
-    private class ParameterImpl<T> implements Parameter<T>{
-        private final Class<T> paramClass;
-        private final String paramName;
-
-        public ParameterImpl(Class<T> paramClass, String paramName) {
-            this.paramClass = paramClass;
-            this.paramName = paramName;
-        }
-        
-        @Override
-        public String getName() {
-            return paramName;
-        }
-
-        @Override
-        public Integer getPosition() {
-            return null;
-        }
-
-        @Override
-        public Class<T> getParameterType() {
-            return paramClass;
-        }
-        
-    }
+    
 }
