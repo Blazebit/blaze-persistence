@@ -33,11 +33,6 @@ import org.junit.Test;
  * @author ccbem
  */
 public class ParameterAPITest extends AbstractPersistenceTest{
-    @Test(expected = IllegalArgumentException.class)
-    public void testIsParameterSet_noSuchParamter(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
-        crit.isParameterSet("index");
-    }
     
     @Test(expected = IllegalArgumentException.class)
     public void testSetParameter_noSuchParamter(){
@@ -78,7 +73,7 @@ public class ParameterAPITest extends AbstractPersistenceTest{
         for(Parameter p : params){
             if("param_0".equals(p.getName())){
                 assertTrue(p.getParameterType().equals(String.class));
-            }else{
+            } else {
                 assertTrue(p.getParameterType() == null);
             }
             assertTrue(p.getPosition() == null);
@@ -103,6 +98,12 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     public void testUseParameterTwoTimes(){
         CriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class).select(":test")
             .where("contacts[:test]").isNull();
+        assertFalse(cb.isParameterSet("test"));
+    }
+    
+    @Test
+    public void testIsParameterSetWithNonExistingParameter(){
+        CriteriaBuilder<Document> cb = Criteria.from(em, Document.class);
         assertFalse(cb.isParameterSet("test"));
     }
 }

@@ -20,8 +20,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
+import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
 /**
@@ -33,9 +36,42 @@ public class ParameterManager {
     private int counter;
     private final Map<Object, String> nameCache = new IdentityHashMap<Object, String>();
     private final Map<String, Object> parameters = new HashMap<String, Object>();
+    private static final Object REGISTERED_PLACEHOLDER = new Object();
 
-    public Map<String, Object> getParameters() {
-        return Collections.unmodifiableMap(parameters);
+//    public Map<String, Object> getParameters() {
+//        return Collections.unmodifiableMap(parameters);
+//    }
+    public Parameter<?> getParameter(String name) {
+        if (!containsParameter(name)) {
+            return null;
+        }
+        
+        Object value = getParameterValue(name);
+        
+        return new ParameterImpl(value == null ? null : value.getClass(), name);
+    }
+    
+    public Set<? extends Parameter<?>> getParameters() {
+        Set<Parameter<?>> result = new HashSet<Parameter<?>>();
+
+        for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
+            Class<?> paramClass = paramEntry.getValue() == null || paramEntry.getValue() == REGISTERED_PLACEHOLDER ? null : paramEntry.getValue().getClass();
+            result.add(new ParameterImpl(paramClass, paramEntry.getKey()));
+        }
+        return result;
+    }
+    
+    public boolean containsParameter(String name) {
+        return parameters.containsKey(name);
+    }
+
+    public boolean isParameterSet(String name) {
+        return parameters.containsKey(name) && parameters.get(name) != REGISTERED_PLACEHOLDER;
+    }
+    
+    public Object getParameterValue(String name) {
+        Object o = parameters.get(name);
+        return o == REGISTERED_PLACEHOLDER ? null : o;
     }
     
     public String getParamNameForObject(Object o) {
@@ -56,7 +92,7 @@ public class ParameterManager {
     
     public void registerParameterName(String parameterName){
         if(!parameters.containsKey(parameterName)){
-            parameters.put(parameterName, null);
+            parameters.put(parameterName, REGISTERED_PLACEHOLDER);
         }
     }
     
@@ -65,6 +101,32 @@ public class ParameterManager {
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
         parameters.put(parameterName, parameterValue);
+    }
+    
+    private class ParameterImpl<T> implements Parameter<T>{
+        private final Class<T> paramClass;
+        private final String paramName;
+
+        public ParameterImpl(Class<T> paramClass, String paramName) {
+            this.paramClass = paramClass;
+            this.paramName = paramName;
+        }
+        
+        @Override
+        public String getName() {
+            return paramName;
+        }
+
+        @Override
+        public Integer getPosition() {
+            return null;
+        }
+
+        @Override
+        public Class<T> getParameterType() {
+            return paramClass;
+        }
+        
     }
     
     static class TemporalCalendarParameterWrapper {

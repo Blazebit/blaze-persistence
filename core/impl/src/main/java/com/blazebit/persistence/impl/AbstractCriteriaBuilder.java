@@ -145,12 +145,11 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> e
     }
 
     void parameterizeQuery(javax.persistence.Query q) {
-        Map<String, Object> parameters = parameterManager.getParameters();
         for (Parameter<?> p : q.getParameters()) {
             if (!isParameterSet(p.getName())) {
                 throw new IllegalStateException("Unsatisfied parameter " + p.getName());
             }
-            Object paramValue = parameters.get(p.getName());
+            Object paramValue = parameterManager.getParameterValue(p.getName());
             if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
                 ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
                 q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
@@ -164,53 +163,27 @@ public abstract class AbstractCriteriaBuilder<T, U extends QueryBuilder<T, U>> e
     }
 
     @Override
+    public boolean containsParameter(String name) {
+        return parameterManager.containsParameter(name);
+    }
+
+    @Override
     public boolean isParameterSet(String name) {
-        Map<String, Object> parameters = parameterManager.getParameters();
-        if (!parameters.containsKey(name)) {
-            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", name));
-        }
-        return parameters.get(name) != null;
+        return parameterManager.isParameterSet(name);
+    }
+    
+    @Override
+    public Parameter<?> getParameter(String name) {
+        return parameterManager.getParameter(name);
     }
 
     @Override
     public Set<? extends Parameter<?>> getParameters() {
-        Map<String, Object> parameters = parameterManager.getParameters();
-        Set<Parameter<?>> result = new HashSet<Parameter<?>>();
-
-        for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
-            result.add(new ParameterImpl(paramEntry.getValue() == null ? null : paramEntry.getValue().getClass(), paramEntry.getKey()));
-        }
-        return result;
+        return parameterManager.getParameters();
     }
 
     @Override
     public Object getParameterValue(String name) {
-        return parameterManager.getParameters().get(name);
-    }
-    
-    private class ParameterImpl<T> implements Parameter<T>{
-        private final Class<T> paramClass;
-        private final String paramName;
-
-        public ParameterImpl(Class<T> paramClass, String paramName) {
-            this.paramClass = paramClass;
-            this.paramName = paramName;
-        }
-        
-        @Override
-        public String getName() {
-            return paramName;
-        }
-
-        @Override
-        public Integer getPosition() {
-            return null;
-        }
-
-        @Override
-        public Class<T> getParameterType() {
-            return paramClass;
-        }
-        
+        return parameterManager.getParameterValue(name);
     }
 }

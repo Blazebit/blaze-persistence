@@ -42,7 +42,11 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
 
     public X setParameter(String name, Date value, TemporalType temporalType);
     
+    public boolean containsParameter(String name);
+    
     public boolean isParameterSet(String name);
+    
+    public Parameter<?> getParameter(String name);
     
     public Set<? extends Parameter<?>> getParameters();
     
