@@ -13,20 +13,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
+ * TODO: javadoc
  *
- * @author cpbec
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
  */
 public interface CaseWhenBuilder<T> {
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression);
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd();
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> whenOr();
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public T thenElse(String elseExpression);
 }

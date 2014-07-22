@@ -23,13 +23,12 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 
 /**
@@ -52,8 +51,8 @@ public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> exte
     }
 
     @Override
-    public List<T> getResultList(EntityManager em) {
-        return getQuery(em).getResultList();
+    public List<T> getResultList() {
+        return getQuery().getResultList();
     }
 
     @Override
@@ -134,7 +133,7 @@ public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> exte
     }
 
     @Override
-    public TypedQuery<T> getQuery(EntityManager em) {
+    public TypedQuery<T> getQuery() {
         TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString(), Object[].class);
         if (selectManager.getSelectObjectBuilder() != null) {
             queryTransformer.transformQuery(query, selectManager.getSelectObjectBuilder());
@@ -185,5 +184,15 @@ public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> exte
     @Override
     public Object getParameterValue(String name) {
         return parameterManager.getParameterValue(name);
+    }
+
+    @Override
+    public QueryBuilder<Tuple, ?> select(String expression) {
+        return (QueryBuilder<Tuple, ?>) super.select(expression);
+    }
+
+    @Override
+    public QueryBuilder<Tuple, ?> select(String expression, String alias) {
+        return (QueryBuilder<Tuple, ?>) super.select(expression, alias);
     }
 }

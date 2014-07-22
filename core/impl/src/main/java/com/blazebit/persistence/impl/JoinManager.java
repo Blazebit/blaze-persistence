@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
-import static com.blazebit.persistence.impl.AbstractQueryBuilder.log;
+import static com.blazebit.persistence.impl.AbstractBaseQueryBuilder.log;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;

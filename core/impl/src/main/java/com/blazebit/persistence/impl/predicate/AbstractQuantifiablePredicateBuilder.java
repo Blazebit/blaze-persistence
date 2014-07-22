@@ -15,12 +15,9 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.BinaryPredicateBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
-import javax.persistence.criteria.Subquery;
 
 /**
  *

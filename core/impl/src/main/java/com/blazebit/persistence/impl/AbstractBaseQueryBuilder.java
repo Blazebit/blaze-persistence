@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.RestrictionBuilder;
@@ -36,7 +35,7 @@ import javax.persistence.Tuple;
  *
  * @author ccbem
  */
-public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<U>> implements BaseQueryBuilder<U>{
+public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> implements BaseQueryBuilder<T, U>{
     
     protected static final Logger log = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     protected static final String idParamName = "ids";
@@ -60,7 +59,7 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<U>> implemen
      *
      * @param builder
      */
-    protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<?>> builder) {
+    protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
         this.fromClazz = builder.fromClazz;
         this.resultClazz = builder.resultClazz;
         this.orderByManager = builder.orderByManager;
@@ -135,12 +134,12 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<U>> implemen
     }
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression) {
+    public BaseQueryBuilder<Tuple, ?> select(String expression) {
         return select(expression, null);
     }
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression, String selectAlias) {
+    public BaseQueryBuilder<Tuple, ?> select(String expression, String selectAlias) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -150,7 +149,7 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<U>> implemen
         verifyBuilderEnded();
         resultClazz = (Class<T>) Tuple.class;
         selectManager.select(this, expression, selectAlias);
-        return (CriteriaBuilder<Tuple>) this;
+        return (BaseQueryBuilder<Tuple, ?>) this;
     }
     
     /*

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -22,27 +21,53 @@ import java.util.ServiceLoader;
 import javax.persistence.EntityManager;
 
 /**
+ * Bootstrap class that is used to obtain a {@linkplain CriteriaBuilder} instance.
  *
  * @author Christian Beikov
  */
 public class Criteria {
-    
+
+    /**
+     * Returns the first {@linkplain CriteriaProvider} that is found
+     *
+     * @return The first {@linkplain CriteriaProvider} that is found
+     */
     public static CriteriaProvider getDefaultProvider() {
         ServiceLoader<CriteriaProvider> serviceLoader = ServiceLoader.load(CriteriaProvider.class);
         Iterator<CriteriaProvider> iterator = serviceLoader.iterator();
-        
+
         if (iterator.hasNext()) {
             return iterator.next();
         }
-        
-        throw new IllegalStateException("No CriteriaProvider found on the class path. Please check if a valid implementation is on the class path.");
-    }
-    
-    public static <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
-        return getDefaultProvider().from(em, clazz);
+
+        throw new IllegalStateException(
+            "No CriteriaProvider found on the class path. Please check if a valid implementation is on the class path.");
     }
 
+    /**
+     * Uses the default {@linkplain CriteriaProvider} and invokes {@link CriteriaProvider#from(javax.persistence.EntityManager, java.lang.Class) }.
+     *
+     * @param <T>   The query result type
+     * @param em    The entity manager that should be used for the query
+     * @param clazz The from class
+     * @return A criteria builder for the given from class
+     */
+    public static <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
+        return getDefaultProvider()
+            .from(em, clazz);
+    }
+
+    /**
+     * Uses the default {@linkplain CriteriaProvider} and invokes {@link CriteriaProvider#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String) }.
+     *
+     * @param <T>   The query result type
+     * @param em    The entity manager that should be used for the query
+     * @param clazz The from class
+     * @param alias The alias for the from class
+     * @return A criteria builder for the given from class
+     */
     public static <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
-        return getDefaultProvider().from(em, clazz, alias);
+        return getDefaultProvider()
+            .from(em, clazz, alias);
     }
 }

@@ -15,15 +15,28 @@
  */
 package com.blazebit.persistence;
 
+import javax.persistence.Tuple;
+
 /**
+ * A builder for criteria queries. This is the entry point for building queries.
  *
- * @author cpbec
+ * @param <T> The query result type
+ * @author Christian Beikov
  */
 public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>> {
-    
+
+    /*
+     * Covariant overrides.
+     */
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
-    
+
     @Override
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
+
+    @Override
+    public CriteriaBuilder<Tuple> select(String expression);
+
+    @Override
+    public CriteriaBuilder<Tuple> select(String expression, String alias);
 }

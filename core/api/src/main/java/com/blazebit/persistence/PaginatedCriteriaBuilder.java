@@ -13,30 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
-import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 
 /**
+ * A builder for paginated criteria queries.
  *
- * @author ccbem
+ * @param <T> The query result type
+ * @author Christian Beikov
  */
 public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCriteriaBuilder<T>> {
-    
-    @Override
-    public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
-    
-    @Override
-    public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) ;
-    
-    @Override
-    public PagedList<T> getResultList(EntityManager em);
 
+    /**
+     * Returns the query string that selects the count of elements.
+     *
+     * @return The query string
+     */
     public String getPageCountQueryString();
 
+    /**
+     * Returns the query string that selects the id of the elements.
+     *
+     * @return The query string
+     */
     public String getPageIdQueryString();
-    
-    public String getPageObjectQueryString();
+
+    /*
+     * Covariant overrides.
+     */
+    @Override
+    public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
+
+    @Override
+    public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
+
+    @Override
+    public PaginatedCriteriaBuilder<Tuple> select(String expression);
+
+    @Override
+    public PaginatedCriteriaBuilder<Tuple> select(String expression, String alias);
+
+    @Override
+    public PagedList<T> getResultList();
 
 }

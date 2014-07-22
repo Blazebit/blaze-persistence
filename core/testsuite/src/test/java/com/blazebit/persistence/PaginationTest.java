@@ -115,24 +115,24 @@ public class PaginationTest extends AbstractPersistenceTest {
                 + "WHERE KEY(localized) = 1 AND d.id IN (:ids) "
                 + "ORDER BY d.id ASC NULLS LAST";
         
-        crit.getResultList(em);
+        crit.getResultList();
         PaginatedCriteriaBuilder<DocumentViewModel> pcb = crit.page(0, 2);
         
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
         
-        PagedList<DocumentViewModel> result = pcb.getResultList(em);
+        PagedList<DocumentViewModel> result = pcb.getResultList();
         assertEquals(2, result.size());
         assertEquals(5, result.totalSize());
         assertEquals("doc1", result.get(0).getName());
         assertEquals("Doc2", result.get(1).getName());
         
-        result = crit.page(2, 2).getResultList(em);
+        result = crit.page(2, 2).getResultList();
         assertEquals("doC3", result.get(0).getName());
         assertEquals("dOc4", result.get(1).getName());
         
-        result = crit.page(4, 2).getResultList(em);
+        result = crit.page(4, 2).getResultList();
         assertEquals(result.size(), 1);
         assertEquals("DOC5", result.get(0).getName());
     }
@@ -142,7 +142,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         CriteriaBuilder<Tuple> tupleCrit = criteria.select("owner.localized[1]", "l").leftJoin("owner.localized", "localized").leftJoin("d.contacts", "contacts").where("contacts[1].name").like("%arl%");
         System.out.println(tupleCrit.getQueryString());
-        List<Tuple> results = tupleCrit.getResultList(em);
+        List<Tuple> results = tupleCrit.getResultList();
         for(Tuple t : results){
             System.out.println(t.get("l"));
         }
@@ -162,6 +162,6 @@ public class PaginationTest extends AbstractPersistenceTest {
         
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, cb.getPageObjectQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
     }
 }

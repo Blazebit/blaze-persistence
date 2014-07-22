@@ -13,19 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import javax.persistence.EntityManager;
 
 /**
+ * Interface implemented by the criteria provider.
+ *
+ * It is invoked to create criteria builders.
  *
  * @author Christian Beikov
  */
 public interface CriteriaProvider {
-    
+
+    /**
+     * Creates a new {@linkplain CriteriaBuilder} for the given {@linkplain EntityManager} and from class.
+     *
+     * @param <T>   The query result type
+     * @param em    The entity manager that should be used for the query
+     * @param clazz The from class
+     * @return A criteria builder for the given from class
+     */
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz);
 
+    /**
+     * Creates a new {@linkplain CriteriaBuilder} for the given {@linkplain EntityManager}, from class and alias.
+     *
+     * @param <T>   The query result type
+     * @param em    The entity manager that should be used for the query
+     * @param clazz The from class
+     * @param alias The alias for the from class
+     * @return A criteria builder for the given from class
+     */
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias);
 }

@@ -15,10 +15,35 @@
  */
 package com.blazebit.persistence;
 
-public interface SelectObjectBuilder<T> {
+/**
+ * The builder interface for a select new select clause.
+ *
+ * @param <T> The query builder that is returned on terminal operations
+ * @author Christian Beikov
+ */
+public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
+
+    /**
+     * Adds the given expression to the arguments for the select new select clause.
+     *
+     * @param expression The expression to add
+     * @return This select object builder
+     */
     public SelectObjectBuilder<T> with(String expression);
-    
+
+    /**
+     * Adds the given expression at the given position, possibly overwriting existing expressions, to the arguments for the select new select clause.
+     *
+     * @param position   The position at which the expression should be added
+     * @param expression The expression to add
+     * @return This select object builder
+     */
     public SelectObjectBuilder<T> with(int position, String expression);
-    
+
+    /**
+     * Finishes the select object builder.
+     *
+     * @return The query builder
+     */
     public T end();
 }

@@ -13,13 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
+import javax.persistence.Tuple;
+
 /**
+ * A builder for subquery criteria queries.
  *
- * @author ccbem
+ * @param <T> The parent query builder type
+ * @author Christian Beikov
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<SubqueryBuilder<T>> {
+public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>> {
+
+    /**
+     * Finishes the subquery builder.
+     *
+     * @return The parent query builder
+     */
     public T end();
+
+    /*
+     * Covariant overrides.
+     */
+    @Override
+    public SubqueryBuilder<T> select(String expression);
+
+    @Override
+    public SubqueryBuilder<T> select(String expression, String alias);
 }
