@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -25,7 +24,7 @@ import javax.persistence.Tuple;
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U extends BaseQueryBuilder<U>> extends BaseQueryBuilderImpl<Tuple, U> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
+public class SubqueryBuilderImpl<U> extends BaseQueryBuilderImpl<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
     private final U result;
     
     public SubqueryBuilderImpl(EntityManager em, String alias, U result) {

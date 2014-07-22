@@ -20,6 +20,6 @@ package com.blazebit.persistence;
  *
  * @author ccbem
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<T> {
+public interface SubqueryBuilder<T> extends BaseQueryBuilder<SubqueryBuilder<T>> {
     public T end();
 }

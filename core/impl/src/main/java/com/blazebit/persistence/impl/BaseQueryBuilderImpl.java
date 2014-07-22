@@ -21,30 +21,16 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.lang.reflect.Constructor;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
 
 /**
  *

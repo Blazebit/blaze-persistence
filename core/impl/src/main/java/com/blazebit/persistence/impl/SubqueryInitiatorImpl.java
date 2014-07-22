@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import javax.persistence.EntityManager;
