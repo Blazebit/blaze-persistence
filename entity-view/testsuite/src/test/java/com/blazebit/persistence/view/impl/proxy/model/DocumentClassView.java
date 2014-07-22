@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.impl.proxy.model;
 
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingParameter;
 
 /**
  *
@@ -25,14 +26,21 @@ import com.blazebit.persistence.view.Mapping;
 public abstract class DocumentClassView implements DocumentInterfaceView {
     
     private final long age;
+    private final Integer contactPersonNumber;
     
     public DocumentClassView(
-            @Mapping("age + 1") long age
+            @Mapping("age + 1") long age,
+            @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
         this.age = age;
+        this.contactPersonNumber = contactPersonNumber;
     }
     
     public long getAge() {
         return age;
+    }
+
+    public Integer getContactPersonNumber() {
+        return contactPersonNumber;
     }
 }

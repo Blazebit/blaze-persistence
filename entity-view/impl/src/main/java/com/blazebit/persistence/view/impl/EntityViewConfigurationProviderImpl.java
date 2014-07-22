@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view;
+package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import javax.persistence.EntityManager;
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.spi.EntityViewConfigurationProvider;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public interface EntityViewManagerFactory {
+@ServiceProvider(EntityViewConfigurationProvider.class)
+public class EntityViewConfigurationProviderImpl implements EntityViewConfigurationProvider {
+
+    @Override
+    public EntityViewConfiguration createConfiguration() {
+        return new EntityViewConfigurationImpl();
+    }
     
-    public ViewMetamodel getMetamodel();
-    
-    public EntityViewManager createEntityViewManager(EntityManager em);
 }

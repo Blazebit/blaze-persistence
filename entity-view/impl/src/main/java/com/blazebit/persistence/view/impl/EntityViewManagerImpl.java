@@ -20,10 +20,10 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewManagerFactory;
+import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import javax.persistence.EntityManager;
 
 /**
  *
@@ -31,17 +31,15 @@ import javax.persistence.EntityManager;
  */
 public class EntityViewManagerImpl implements EntityViewManager {
     
-    private final EntityViewManagerFactory entityViewManagerFactory;
-    private final EntityManager em;
-
-    public EntityViewManagerImpl(EntityViewManagerFactory entityViewManagerFactory, EntityManager em) {
-        this.entityViewManagerFactory = entityViewManagerFactory;
-        this.em = em;
+    private final ViewMetamodel metamodel;
+    
+    public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
+        metamodel = new ViewMetamodelImpl(config.getEntityViews());
     }
 
     @Override
-    public EntityViewManagerFactory getEntityViewManagerFactory() {
-        return entityViewManagerFactory;
+    public ViewMetamodel getMetamodel() {
+        return metamodel;
     }
     
     @Override
@@ -56,7 +54,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     
     @Override
     public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder) {
-        ViewType<T> viewType = entityViewManagerFactory.getMetamodel().view(clazz);
+        ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
@@ -64,7 +62,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     
     @Override
     public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder) {
-        ViewType<T> viewType = entityViewManagerFactory.getMetamodel().view(clazz);
+        ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (CriteriaBuilder<T>) criteriaBuilder;
@@ -73,4 +71,5 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
         criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(viewType, mappingConstructor));
     }
+    
 }

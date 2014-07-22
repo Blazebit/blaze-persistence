@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewManagerFactory;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
  *
@@ -31,8 +37,7 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 @ServiceProvider(Extension.class)
 public class EntityViewExtension implements Extension {
     
-    private static final EntityViewConfiguration configuration = new EntityViewConfiguration();
-    private static EntityViewManagerFactory entityViewManagerFactory;
+    private static final EntityViewConfiguration configuration = EntityViews.getDefault();
     
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
@@ -40,11 +45,16 @@ public class EntityViewExtension implements Extension {
         }
     }
     
-    void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd) {
-        entityViewManagerFactory = configuration.createEntityViewManagerFactory();
-    }
-    
-    public static EntityViewManagerFactory getEntityViewManagerFactory() {
-        return entityViewManagerFactory;
+    void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        EntityViewManager entityViewManagerFactory = configuration.createEntityViewManager();
+        Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
+            .beanClass(EntityViewManager.class)
+            .types(Object.class)
+            .passivationCapable(false)
+            .scope(ApplicationScoped.class)
+            .beanLifecycle(new EntityViewManagerLifecycle(entityViewManagerFactory))
+            .create();
+        
+        abd.addBean(bean);
     }
 }

@@ -101,7 +101,11 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
                 if (parameterAttributes[i].getJavaType() != parameterTypes[i + attributes.length]) {
                     continue OUTER;
                 } else {
-                    mappings[i + attributes.length] = parameterAttributes[i].getMapping();
+                    if (parameterAttributes[i].isMappingParameter()) {
+                        mappings[i + attributes.length] = ":" + parameterAttributes[i].getMapping();
+                    } else {
+                        mappings[i + attributes.length] = parameterAttributes[i].getMapping();
+                    }
                 }
             }
 

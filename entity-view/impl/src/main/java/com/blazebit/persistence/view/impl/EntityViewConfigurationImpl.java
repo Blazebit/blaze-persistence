@@ -16,32 +16,31 @@
 
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViewManagerFactory;
-import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import javax.persistence.EntityManager;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
  * @author cpbec
  */
-public class EntityViewManagerFactoryImpl implements EntityViewManagerFactory {
+public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     
-    private final ViewMetamodel metamodel;
+    private final Set<Class<?>> entityViewClasses = new HashSet<Class<?>>();
+
+    @Override
+    public void addEntityView(Class<?> clazz) {
+        entityViewClasses.add(clazz);
+    }
     
-    public EntityViewManagerFactoryImpl(EntityViewConfiguration config) {
-        metamodel = new ViewMetamodelImpl(config.getEntityViews());
+    @Override
+    public Set<Class<?>> getEntityViews() {
+        return entityViewClasses;
     }
 
     @Override
-    public ViewMetamodel getMetamodel() {
-        return metamodel;
+    public EntityViewManager createEntityViewManager() {
+        return new EntityViewManagerImpl(this);
     }
-
-    @Override
-    public EntityViewManager createEntityViewManager(EntityManager em) {
-        return new EntityViewManagerImpl(this, em);
-    }
-    
 }

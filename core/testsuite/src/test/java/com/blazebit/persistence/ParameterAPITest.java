@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -96,5 +97,12 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     @Test(expected = IllegalArgumentException.class)
     public void testReservedParameterName1(){
         Criteria.from(em, Document.class).select("contacts[:ids]");
+    }
+    
+    @Test
+    public void testUseParameterTwoTimes(){
+        CriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class).select(":test")
+            .where("contacts[:test]").isNull();
+        assertFalse(cb.isParameterSet("test"));
     }
 }

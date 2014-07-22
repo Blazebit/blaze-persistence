@@ -14,29 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view.spi;
 
-import com.blazebit.persistence.view.EntityViewManagerFactory;
-import java.util.HashSet;
+import com.blazebit.persistence.view.EntityViewManager;
 import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class EntityViewConfiguration {
-    
-    private final Set<Class<?>> entityViewClasses = new HashSet<Class<?>>();
+public interface EntityViewConfiguration {
 
-    public void addEntityView(Class<?> clazz) {
-        entityViewClasses.add(clazz);
-    }
-    
-    public Set<Class<?>> getEntityViews() {
-        return entityViewClasses;
-    }
+    public void addEntityView(Class<?> clazz);
 
-    public EntityViewManagerFactory createEntityViewManagerFactory() {
-        return new EntityViewManagerFactoryImpl(this);
-    }
+    public EntityViewManager createEntityViewManager();
+
+    public Set<Class<?>> getEntityViews();
+    
 }

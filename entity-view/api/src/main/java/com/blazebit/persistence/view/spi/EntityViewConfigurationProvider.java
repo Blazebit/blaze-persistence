@@ -14,25 +14,14 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.proxy.model;
-
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.Mapping;
+package com.blazebit.persistence.view.spi;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-@EntityView(Document.class)
-public interface DocumentInterfaceView extends IdHolderView<Long>, ContactHolderView<Integer> {
+public interface EntityViewConfigurationProvider {
     
-    public String getName();
+    public EntityViewConfiguration createConfiguration();
     
-    @Mapping("contacts[:contactPersonNumber]")
-    public Person getMyContactPerson();
-    
-    @Mapping("contacts[1]")
-    public Person getFirstContactPerson();
 }
