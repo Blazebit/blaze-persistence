@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import javassist.CannotCompileException;
+import javassist.ClassClassPath;
+import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtConstructor;
@@ -72,6 +74,9 @@ public class ProxyFactory {
         ClassPool pool = ClassPool.getDefault();
         CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + classCounter.getAndIncrement());
         CtClass superCc;
+        
+        ClassPath classPath = new ClassClassPath(clazz);
+        pool.insertClassPath(classPath);
         
         try {
             superCc = pool.get(clazz.getName());
@@ -157,6 +162,8 @@ public class ProxyFactory {
             return cc.toClass();
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
+        } finally {
+            pool.removeClassPath(classPath);
         }
     }
 
