@@ -73,7 +73,7 @@ public class SelectManager<T> extends AbstractManager {
     public Map<String, Integer> getSelectAliasToPositionMap() {
         return selectAliasToPositionMap;
     }
-    
+
     void acceptVisitor(Visitor v) {
         //TODO: implement test for select new with joins!! - we might also have to do implicit joins for constructor arguments
         // carry out implicit joins
@@ -123,8 +123,7 @@ public class SelectManager<T> extends AbstractManager {
         }
         selectInfos.add(selectInfo);
         objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(this);
-
-		registerParameterExpressions(expr);
+        registerParameterExpressions(expr);
     }
 
 //    public U select(Class<? extends T> clazz) {
@@ -173,6 +172,7 @@ public class SelectManager<T> extends AbstractManager {
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
+    //TODO: create tests
     void selectNew(ObjectBuilder<?> builder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
@@ -182,7 +182,9 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         for (String expression : builder.getExpressions()) {
-            SelectInfo selectInfo = new SelectInfo(Expressions.createSimpleExpression(expression), null);
+            Expression expr = Expressions.createSimpleExpression(expression);
+            registerParameterExpressions(expr);
+            SelectInfo selectInfo = new SelectInfo(expr, null);
             selectInfos.add(selectInfo);
         }
         objectBuilder = (ObjectBuilder<T>) builder;
@@ -260,6 +262,8 @@ public class SelectManager<T> extends AbstractManager {
             }
             currentBuilder = null;
             for (Expression e : expressions) {
+                //TODO: create tests for parameter registration at this point
+                registerParameterExpressions(e);
                 SelectManager.this.selectInfos.add(new SelectInfo(e));
             }
         }
