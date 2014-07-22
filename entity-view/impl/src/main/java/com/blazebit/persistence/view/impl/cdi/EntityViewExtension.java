@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -28,6 +29,7 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
@@ -49,8 +51,9 @@ public class EntityViewExtension implements Extension {
         EntityViewManager entityViewManagerFactory = configuration.createEntityViewManager();
         Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
             .beanClass(EntityViewManager.class)
-            .types(Object.class)
+            .types(EntityViewManager.class, Object.class)
             .passivationCapable(false)
+            .qualifiers(new DefaultLiteral())
             .scope(ApplicationScoped.class)
             .beanLifecycle(new EntityViewManagerLifecycle(entityViewManagerFactory))
             .create();

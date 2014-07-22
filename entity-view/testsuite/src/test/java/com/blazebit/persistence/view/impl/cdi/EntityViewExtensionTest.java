@@ -21,6 +21,7 @@ import javax.ejb.embeddable.EJBContainer;
 import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
+import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.junit.Test;
 import static  org.junit.Assert.*;
 
@@ -38,6 +39,7 @@ public class EntityViewExtensionTest {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
         container.boot();
         container.getContextControl().startContexts();
+        BeanProvider.injectFields(this);
             
         assertNotNull(evm);
         assertFalse(evm.getMetamodel().getViews().isEmpty());
