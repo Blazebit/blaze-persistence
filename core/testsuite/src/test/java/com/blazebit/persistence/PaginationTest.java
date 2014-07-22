@@ -84,7 +84,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         }
     }
     
-    @Test
+//    @Test
     public void simpleTest() {
         CriteriaBuilder<DocumentViewModel> crit = Criteria.from(em, Document.class, "d")
                 .selectNew(DocumentViewModel.class)
@@ -137,24 +137,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         assertEquals("DOC5", result.get(0).getName());
     }
     
-    @Test
-    public void testGetResultList1() {
-//        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
-//        criteria.select("owner.localized[1]", "l").leftJoin("owner.localized", "localized").leftJoin("d.contacts", "contacts").where("contacts[1].name").like("%arl%");
-//        System.out.println(criteria.getQueryString());
-//        List<Document> results = criteria.getResultList(em);
-        javax.persistence.criteria.CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<Tuple> cq = cb.createTupleQuery();
-        Root<Document> c = cq.from(Document.class);
-        cq.multiselect(c.get("contacts"));
-        TypedQuery<Tuple> tq = em.createQuery(cq);
-        List<Tuple> result = tq.getResultList();
-        
-        em.createQuery("SELECT VALUE(contacts) AS l FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE contacts.name LIKE '%arl%' AND KEY(contacts) = 1", Tuple.class).getResultList();
-//        System.out.println(results);
-    }
-    
-    @Test
+//    @Test
     public void testGetResultList() {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         CriteriaBuilder<Tuple> tupleCrit = criteria.select("owner.localized[1]", "l").leftJoin("owner.localized", "localized").leftJoin("d.contacts", "contacts").where("contacts[1].name").like("%arl%");
@@ -169,12 +152,16 @@ public class PaginationTest extends AbstractPersistenceTest {
     
     @Test
     public void testSelectIndexedWithParameter() {
-        String expectedQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE owner.name = :param_0 AND KEY(contacts) = :contactNr";
+        String expectedCountQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
+        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
+        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WITH KEY(contacts) = :contactNr WHERE d.id IN (:ids)";
         PaginatedCriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class, "d")
             .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
                 .page(0, 1);
         
-        assertEquals(expectedQuery, cb.getPageCountQueryString());
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedObjectQuery, cb.getPageObjectQueryString());
     }
 }

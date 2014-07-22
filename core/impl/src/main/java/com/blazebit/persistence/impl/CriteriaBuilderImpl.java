@@ -26,7 +26,7 @@ import javax.persistence.EntityManager;
  *
  * @author cpbec
  */
-public class CriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
+public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 
     public CriteriaBuilderImpl(EntityManager em, Class<T> clazz, String alias) {
         super(em, clazz, alias);

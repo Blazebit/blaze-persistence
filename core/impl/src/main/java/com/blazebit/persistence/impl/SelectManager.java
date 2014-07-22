@@ -115,7 +115,7 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void select(BaseQueryBuilderImpl<?, ?> builder, String expression, String selectAlias) {
+    void select(AbstractBaseQueryBuilder<?, ?> builder, String expression, String selectAlias) {
         Expression expr = Expressions.createSimpleExpression(expression);
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias);
         if (selectAlias != null) {
@@ -147,7 +147,7 @@ public class SelectManager<T> extends AbstractManager {
 //    public SimpleCaseWhenBuilder<U> selectCase(String expression) {
 //        return new SimpleCaseWhenBuilderImpl<U>((U) this, expression);
 //    }
-    <Y, T extends AbstractCriteriaBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Class<Y> clazz) {
+    <Y, T extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Class<Y> clazz) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -160,7 +160,7 @@ public class SelectManager<T> extends AbstractManager {
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
-    <Y, T extends AbstractCriteriaBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Constructor<Y> constructor) {
+    <Y, T extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Constructor<Y> constructor) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }

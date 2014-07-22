@@ -52,7 +52,7 @@ public class ParameterExpression implements Expression {
 
     @Override
     public String toString() {
-        return name;
+        return ":" + name;
     }
 
     @Override

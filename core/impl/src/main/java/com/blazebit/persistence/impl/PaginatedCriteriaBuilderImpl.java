@@ -33,11 +33,11 @@ import javax.persistence.metamodel.Metamodel;
  * @author ccbem
  */
 // TODO: maybe unify PaginatedCriterBuilder and CriteriaBuilder? We could view the CriteriaBuilder as the standard case with 1 single page containing all entries
-public class PaginatedCriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
+public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
     private final int firstRow;
     private final int pageSize;
     
-    public PaginatedCriteriaBuilderImpl(AbstractCriteriaBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, int firstRow, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, int firstRow, int pageSize) {
         super(baseBuilder);
         this.firstRow = firstRow;
         this.pageSize = pageSize;

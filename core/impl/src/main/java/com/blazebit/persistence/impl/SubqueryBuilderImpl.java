@@ -24,7 +24,7 @@ import javax.persistence.Tuple;
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U> extends BaseQueryBuilderImpl<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
+public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
     private final U result;
     
     //TODO: prevent duplication of aliases from the main query

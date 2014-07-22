@@ -69,7 +69,7 @@ public class SelectTest extends AbstractPersistenceTest {
     @Test
     public void testSelectMultiple(){
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
-        criteria.select(new String[]{"d.partners", "d.versions"});
+        criteria.select("d.partners").select("d.versions");
         
         assertEquals("SELECT partners, versions FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
     }
@@ -177,6 +177,6 @@ public class SelectTest extends AbstractPersistenceTest {
     @Test(expected = NullPointerException.class)
     public void testSelectArrayNull(){
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
-        criteria.select((String[]) null);
+        criteria.select(null);
     }
 }

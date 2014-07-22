@@ -48,8 +48,6 @@ public interface BaseQueryBuilder<X> extends Aggregateable<RestrictionBuilder<? 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     public SimpleCaseWhenBuilder<? extends X> selectCase(String expression);
 
-    public CriteriaBuilder<Tuple> select(String... expressions);
-
     public CriteriaBuilder<Tuple> select(String expression);
 
     public CriteriaBuilder<Tuple> select(String expression, String alias);
