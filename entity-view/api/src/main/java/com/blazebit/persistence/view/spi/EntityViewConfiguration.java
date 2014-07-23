@@ -13,22 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.spi;
 
 import com.blazebit.persistence.view.EntityViewManager;
 import java.util.Set;
 
 /**
+ * This class is used to configure the entity view manager that it creates.
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface EntityViewConfiguration {
 
+    /**
+     * Adds the given class to the set of known entity views.
+     *
+     * @param clazz The class to be added
+     */
     public void addEntityView(Class<?> clazz);
 
+    /**
+     * Creates a new entity view manager from this configuration.
+     *
+     * @return A new entity view manager
+     */
     public EntityViewManager createEntityViewManager();
 
+    /**
+     * Returns the currently known entity views.
+     *
+     * @return The currently known entity views
+     */
     public Set<Class<?>> getEntityViews();
-    
+
 }

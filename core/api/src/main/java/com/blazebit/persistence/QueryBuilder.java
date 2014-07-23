@@ -32,6 +32,7 @@ import javax.persistence.TypedQuery;
  * @param <T> The query result type
  * @param <X> The concrete builder type
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQueryBuilder<T, X> {
 

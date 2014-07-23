@@ -13,15 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.spi;
 
 /**
+ * Interface implemented by the entity view provider.
  *
- * @author Christian
+ * It is invoked to create entity view configurations.
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface EntityViewConfigurationProvider {
-    
+
+    /**
+     * Creates a new {@linkplain EntityViewConfiguration} and returns it.
+     *
+     * @return A new entity view configuration
+     */
     public EntityViewConfiguration createConfiguration();
-    
+
 }

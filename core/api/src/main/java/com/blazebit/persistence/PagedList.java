@@ -22,6 +22,7 @@ import java.util.List;
  *
  * @param <T> the type of elements in this list
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface PagedList<T> extends List<T> {
 

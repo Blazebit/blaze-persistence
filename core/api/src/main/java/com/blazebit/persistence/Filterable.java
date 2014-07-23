@@ -21,6 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The concrete builder type
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface Filterable<T extends Filterable<T>> {
 

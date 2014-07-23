@@ -13,18 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.Set;
 
 /**
+ * Provides access to the metamodel of the entity views.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface ViewMetamodel {
-    
+
+    /**
+     * Returns the metamodel entity view type representing the entity view specified by the given class.
+     *
+     * @param <X>   The type of the given entity view class
+     * @param clazz The entity view class for which the view type should be returned
+     * @return The metamodel entity view type
+     */
     public <X> ViewType<X> view(Class<X> clazz);
-    
+
+    /**
+     * Returns the metamodel entity views.
+     *
+     * @return The metamodel entity views
+     */
     public Set<ViewType<?>> getViews();
 }

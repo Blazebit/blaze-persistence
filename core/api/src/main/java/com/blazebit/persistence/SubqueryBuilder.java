@@ -22,6 +22,7 @@ import javax.persistence.Tuple;
  *
  * @param <T> The parent query builder type
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>> {
 

@@ -21,6 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface BinaryPredicateBuilder<T> {
 

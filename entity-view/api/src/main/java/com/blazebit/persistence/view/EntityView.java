@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view;
 
 import java.lang.annotation.ElementType;
@@ -22,13 +21,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Specifies that the class is is an entity view.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EntityView {
+
+    /**
+     * The name of the entity view. It is defaulted to the simple class name.
+     *
+     * @return The name of the entity view
+     */
     String name() default "";
-    
+
+    /**
+     * The entity class on which this view is based on.
+     *
+     * @return The entity class
+     */
     Class<?> value();
 }
