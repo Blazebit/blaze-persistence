@@ -74,7 +74,7 @@ public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     }
 
     @Override
-    public SubqueryInitiator<? extends WhereAndBuilder<T>> whereExists() {
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<WhereAndBuilder<T>> whereExists() {
+        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, this);
     }
 }

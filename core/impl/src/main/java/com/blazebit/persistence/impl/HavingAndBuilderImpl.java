@@ -72,7 +72,7 @@ public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements
     }
 
     @Override
-    public SubqueryInitiator<? extends HavingAndBuilder<T>> havingExists() {
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<HavingAndBuilder<T>> havingExists() {
+        return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, this);
     }
 }

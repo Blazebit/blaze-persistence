@@ -32,5 +32,5 @@ public interface Aggregateable<T extends Aggregateable<T>> extends BaseAggregate
      *
      * @return The or predicate builder for the having clause
      */
-    public SubqueryInitiator<? extends T> havingExists();
+    public HavingOrBuilder<? extends T> havingOr();
 }

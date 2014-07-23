@@ -181,7 +181,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<? extends X> whereExists() {
+    public SubqueryInitiator<X> whereExists() {
         return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 
@@ -223,7 +223,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<? extends X> havingExists() {
+    public SubqueryInitiator<X> havingExists() {
         return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 

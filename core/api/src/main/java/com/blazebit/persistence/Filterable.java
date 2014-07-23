@@ -32,5 +32,5 @@ public interface Filterable<T extends Filterable<T>> extends BaseFilterable<T> {
      *
      * @return The or predicate builder for the where clause
      */
-    public SubqueryInitiator<? extends T> whereExists();
+    public WhereOrBuilder<? extends T> whereOr();
 }
