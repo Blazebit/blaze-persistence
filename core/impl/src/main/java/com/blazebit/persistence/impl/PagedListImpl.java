@@ -28,6 +28,10 @@ import java.util.Collection;
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     private final long totalSize;
+
+    public PagedListImpl(long totalSize) {
+        this.totalSize = totalSize;
+    }
     
     PagedListImpl(Collection<? extends T> collection, long totalSize) {
         super(collection);

@@ -58,6 +58,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         parameterizeQuery(countQuery);
 
         long totalSize = countQuery.getSingleResult();
+        
+        if (totalSize == 0L) {
+            return new PagedListImpl<T>(totalSize);
+        }
+        
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
@@ -65,6 +70,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         List ids = idQuery.setFirstResult((int) firstRow)
             .setMaxResults((int) pageSize)
             .getResultList();
+        
+        if (ids.isEmpty()) {
+            return new PagedListImpl<T>(totalSize);
+        }
+        
         parameterManager.addParameterMapping(idParamName, ids);
 
         PagedList<T> pagedResultList = new PagedListImpl<T>(super.getResultList(), totalSize);

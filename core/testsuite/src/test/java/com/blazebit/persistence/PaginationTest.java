@@ -155,10 +155,16 @@ public class PaginationTest extends AbstractPersistenceTest {
             .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
                 .page(0, 1);
-//        em.createQuery("SELECT contacts.name FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WITH KEY(contacts) = :contactNr").setParameter("contactNr", 1).getResultList();
-//        em.createQuery("SELECT contacts.name FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE KEY(contacts) = :contactNr").setParameter("contactNr", 1).getResultList();
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
+    }
+    
+    @Test
+    public void testSelectEmptyResultList() {
+        PaginatedCriteriaBuilder<Document> cb = Criteria.from(em, Document.class, "d")
+            .where("name").isNull()
+                .page(0, 1);
+        assertEquals(0, cb.getResultList().size());
     }
 }
