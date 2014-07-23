@@ -26,7 +26,8 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
  */
 public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
     // This field indicates whether it is necessary to include this KEY(x) = y clause in the
-    // where clause.
+    // where clause. E.g. this is not necessary for id and count query if the corresponding map access
+    // only occurs in the select clause.
     private boolean requiredByMapValueSelect = false;
     
     public EqPredicate(Expression left, Expression right) {

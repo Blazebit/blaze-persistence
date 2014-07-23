@@ -118,15 +118,13 @@ public class ArrayExpressionTransformer {
                 arrayExp = (ArrayExpression) expr;
 
                 String currentAbsPath = absBasePath;
-//                currentAbsPath = currentAbsPath + arrayExp.getBase().toString();
-//                String alias = joinManager.getAliasInfoByJoinPath(currentAbsPath).getAlias();
                 TransformationInfo transInfo = new TransformationInfo(currentAbsPath, arrayExp.getIndex().toString());
                 EqPredicate valueKeyFilterPredicate;
                 if ((valueKeyFilterPredicate = transformedPathFilterMap.get(transInfo)) == null) {
                     CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
                     keyExpression.getExpressions().add(new FooExpression("KEY("));
 
-                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(/*transformedPath.getExpressions()*/));
+                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>());
                     keyPath.getExpressions().add(arrayExp.getBase());
                     keyExpression.getExpressions().add(keyPath);
                     keyExpression.getExpressions().add(new FooExpression(")"));
@@ -159,6 +157,7 @@ public class ArrayExpressionTransformer {
             }
         }
 
+        // convert occurrence of a.b.c.d[xy] to d and ab.c.d[xy].z to d.z
         if (farRightArrayExp != null) {
             // add value for last array expression
             CompositeExpression valueExpression = new CompositeExpression(new ArrayList<Expression>());
@@ -171,9 +170,7 @@ public class ArrayExpressionTransformer {
                 valuePath.getExpressions().addAll(farRightValuePath.getExpressions());
                 valueExpression.getExpressions().add(valuePath);
             } else {
-//                valueExpression.getExpressions().add(new FooExpression("VALUE("));
                 valueExpression.getExpressions().add(valuePath);
-//                valueExpression.getExpressions().add(new FooExpression(")"));
             }
             
             if(selectClause == true){

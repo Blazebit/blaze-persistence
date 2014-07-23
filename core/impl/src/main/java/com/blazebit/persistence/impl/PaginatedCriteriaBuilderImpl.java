@@ -109,8 +109,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         sb.append("FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
         sb.append(joinManager.buildJoins(true));
         
-        sb.append(whereManager.buildClause(true));
-        sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
+        String whereClause = whereManager.buildClause(true);
+        if(whereClause.isEmpty()){
+            sb.append(" WHERE ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
+        }else{
+            sb.append(whereClause);
+            sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
+        }
         
         sb.append(groupByManager.buildGroupBy());        
         sb.append(havingManager.buildClause());

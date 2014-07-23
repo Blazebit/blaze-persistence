@@ -84,7 +84,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         }
     }
     
-//    @Test
+    @Test
     public void simpleTest() {
         CriteriaBuilder<DocumentViewModel> crit = Criteria.from(em, Document.class, "d")
                 .selectNew(DocumentViewModel.class)
@@ -162,6 +162,6 @@ public class PaginationTest extends AbstractPersistenceTest {
         
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        assertEquals(expectedObjectQuery, cb.getPageObjectQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
     }
 }

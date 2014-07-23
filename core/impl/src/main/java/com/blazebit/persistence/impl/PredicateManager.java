@@ -73,7 +73,13 @@ public abstract class PredicateManager<U> extends AbstractManager {
             return;
         }
         sb.append(' ').append(getClauseName()).append(' ');
+        final String initialClause = sb.toString();
         rootPredicate.predicate.accept(queryGenerator);
+        
+        // in case no predicate was generated, we remove the clause name
+        if(initialClause.equals(sb.toString())){
+            sb.setLength(0);
+        }
     }
 
     class RootPredicate extends AbstractBuilderEndedListener {
