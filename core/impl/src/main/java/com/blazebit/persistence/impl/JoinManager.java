@@ -43,13 +43,22 @@ public class JoinManager {
     // root entity class
     private final Class<?> clazz;
     private final QueryGenerator queryGenerator;
+    private final String joinRestrictionKeyword;
 
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator) {
+    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, AbstractBaseQueryBuilder.JPAInfo jpaInfo) {
         this.rootAliasInfo = new AliasInfo(rootAlias, "", true);
         this.joinAliasInfos.put(rootAlias, rootAliasInfo);
         this.rootNode = new JoinNode(rootAliasInfo, null, false, null);
         this.clazz = clazz;
         this.queryGenerator = queryGenerator;
+        
+        if(AbstractBaseQueryBuilder.JPAInfo.JPA_2_1){
+            joinRestrictionKeyword = " ON ";
+        }else if(jpaInfo.isHibernate){ //TODO: add version check
+            joinRestrictionKeyword = " WITH ";
+        }else{// TODO: add workaround for hibernate
+            throw new UnsupportedOperationException("Unsupported JPA provider");
+        }
     }
 
     String getRootAlias() {
@@ -94,7 +103,7 @@ public class JoinManager {
             sb.append(joinBase.getAlias()).append('.').append(relation).append(' ').append(node.getAliasInfo().getAlias());
 
             if (node.getWithPredicate() != null) {
-                sb.append(" WITH ");
+                sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
                 node.getWithPredicate().accept(queryGenerator);
             }

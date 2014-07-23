@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseQueryBuilder;
@@ -40,8 +39,8 @@ import javax.persistence.Tuple;
  * @author Moritz Becker
  * @author Christian Beikov
  */
-public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>{
-    
+public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
+
     protected static final Logger log = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     protected static final String idParamName = "ids";
 
@@ -58,6 +57,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
     private final QueryGenerator queryGenerator;
+
+    private final JPAInfo jpaInfo;
 
     /**
      * Create flat copy of builder
@@ -77,33 +78,35 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
         this.queryTransformer = builder.queryTransformer;
+        this.jpaInfo = builder.jpaInfo;
     }
-    
+
     protected AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias, ParameterManager parameterManager) {
-        if(em == null){
+        if (em == null) {
             throw new NullPointerException("em");
         }
-        if(alias == null){
+        if (alias == null) {
             throw new NullPointerException("alias");
         }
-        if(clazz == null){
+        if (clazz == null) {
             throw new NullPointerException("clazz");
         }
-        
+
+        this.jpaInfo = new JPAInfo(em);
         this.fromClazz = this.resultClazz = clazz;
-                
+
         this.parameterManager = parameterManager;
-        
+
         this.queryGenerator = new QueryGenerator(parameterManager);
-        
-        this.joinManager = new JoinManager(alias, clazz, queryGenerator);
+
+        this.joinManager = new JoinManager(alias, clazz, queryGenerator, jpaInfo);
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
-                
+
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager);
-        
+
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
@@ -113,7 +116,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias) {
         this(em, clazz, alias, new ParameterManager());
     }
-    
+
 
     /*
      * Select methods
@@ -152,7 +155,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         selectManager.select(this, expr, selectAlias);
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
-    
+
     /*
      * Where methods
      */
@@ -241,7 +244,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
     }
-    
+
     @Override
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr = Expressions.createSimpleExpression(expression);
@@ -273,7 +276,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return join(path, alias, JoinType.OUTER);
     }
 
-    
     @Override
     public X join(String path, String alias, JoinType type) {
         if (path == null) {
@@ -299,17 +301,17 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setFromSelect(true);
         selectManager.acceptVisitor(joinVisitor);
         joinVisitor.setFromSelect(false);
-        
+
         whereManager.acceptVisitor(joinVisitor);
         groupByManager.acceptVisitor(joinVisitor);
-        
+
         havingManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(false);
         orderByManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(true);
     }
-    
-    protected void applyArrayTransformations(){
+
+    protected void applyArrayTransformations() {
         // run through expressions
         // for each arrayExpression, look up the alias in the joinManager's aliasMap
         // do the transformation using the alias
@@ -317,7 +319,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // introduce applyTransformer method in managers
         // transformer has a method that returns the transformed Expression
         // the applyTransformer method will replace the transformed expression with the original one
-        
+
         // Problem we must have the complete (i.e. including array indices) absolute path available during array transformation of a path expression
         // since the path expression might not be based on the root node
         // we must track absolute paths to detect redundancies
@@ -331,7 +333,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // or we remember the already transfomred path in a Set<(BaseNode, RelativePath)> - maybe this would be sufficient
         // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
         // two different indices for the same array we would output the two accesses for the subpath and the access for the current path just once (and not once for each distinct subpath)
-
         ArrayExpressionTransformer arrayTransformer = new ArrayExpressionTransformer(joinManager);
         selectManager.applyTransformer(arrayTransformer);
         whereManager.applyTransformer(arrayTransformer);
@@ -340,7 +341,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public String getQueryString(){
+    public String getQueryString() {
         verifyBuilderEnded();
         StringBuilder sb = new StringBuilder();
         // resolve unresolved aliases, object model etc.
@@ -367,17 +368,44 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         sb.append(orderByManager.buildOrderBy());
         return sb.toString();
     }
-    
+
     private QueryTransformer getQueryTransformer() {
         ServiceLoader<QueryTransformer> serviceLoader = ServiceLoader.load(QueryTransformer.class);
         Iterator<QueryTransformer> iterator = serviceLoader.iterator();
-        
+
         if (iterator.hasNext()) {
             return iterator.next();
         }
-        
+
         throw new IllegalStateException("No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
-    
-    
+
+    static class JPAInfo {
+
+        public final static boolean JPA_2_1;
+        public final boolean isHibernate;
+
+        static {
+            boolean isJPA21 = false;
+            try {
+                Class.forName("javax.persistence.EntityGraph");
+                isJPA21 = true;
+            } catch (ClassNotFoundException e) {
+            }
+
+            JPA_2_1 = isJPA21;
+        }
+
+        public JPAInfo(EntityManager em) {
+            boolean isHibernate = false;
+
+            try {
+                Class<?> sessionClass = Class.forName("org.hibernate.Session");
+                Object o = em.unwrap(sessionClass);
+                isHibernate = o != null;
+            } catch (ClassNotFoundException e) {
+            }
+            this.isHibernate = isHibernate;
+        }
+    }
 }
