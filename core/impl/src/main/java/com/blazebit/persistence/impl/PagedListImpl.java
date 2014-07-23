@@ -18,15 +18,19 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.PagedList;
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  *
- * @author ccbem
+ * @param <T> the type of elements in this list
+ * @author Moritz Becker
+ * @author Christian Beikov
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     private final long totalSize;
     
-    PagedListImpl(long totalSize) {
+    PagedListImpl(Collection<? extends T> collection, long totalSize) {
+        super(collection);
         this.totalSize = totalSize;
     }
     

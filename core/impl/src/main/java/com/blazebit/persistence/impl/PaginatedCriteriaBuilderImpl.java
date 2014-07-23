@@ -23,11 +23,13 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 /**
  *
+ * @param <T> The query result type
  * @author Moritz Becker
  * @author Christian Beikov
  */
@@ -39,6 +41,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, int firstRow, int pageSize) {
         super(baseBuilder);
+        if (firstRow < 0) {
+            throw new IllegalArgumentException("firstRow may not be negative");
+        }
+        if (pageSize <= 0) {
+            throw new IllegalArgumentException("pageSize may not be zero or negative");
+        }
         this.firstRow = firstRow;
         this.pageSize = pageSize;
     }
@@ -46,10 +54,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @Override
     public PagedList<T> getResultList() {
         String countQueryString = getPageCountQueryString();
-        Query countQuery = em.createQuery(countQueryString);
+        TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
         parameterizeQuery(countQuery);
 
-        long totalSize = (Long) countQuery.getSingleResult();
+        long totalSize = countQuery.getSingleResult();
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
@@ -59,8 +67,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .getResultList();
         parameterManager.addParameterMapping(idParamName, ids);
 
-        PagedList<T> pagedResultList = new PagedListImpl<T>(totalSize);
-        pagedResultList.addAll(super.getResultList());
+        PagedList<T> pagedResultList = new PagedListImpl<T>(super.getResultList(), totalSize);
         return pagedResultList;
     }
 
@@ -109,10 +116,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         String whereClause = whereManager.buildClause(true);
         if (whereClause.isEmpty()) {
-            sb.append(" WHERE ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
+            sb.append(" WHERE ")
+                .append(joinManager.getRootAlias())
+                .append('.')
+                .append(idName)
+                .append(" IN (:")
+                .append(idParamName)
+                .append(")");
         } else {
             sb.append(whereClause);
-            sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
+            sb.append(" AND ")
+                .append(joinManager.getRootAlias())
+                .append('.')
+                .append(idName)
+                .append(" IN (:")
+                .append(idParamName)
+                .append(")");
         }
 
         sb.append(groupByManager.buildGroupBy());

@@ -37,17 +37,17 @@ public class ParameterManager {
     private final Map<String, Object> parameters = new HashMap<String, Object>();
     private static final Object REGISTERED_PLACEHOLDER = new Object();
 
-//    public Map<String, Object> getParameters() {
-//        return Collections.unmodifiableMap(parameters);
-//    }
-    public Parameter<?> getParameter(String name) {
-        if (!containsParameter(name)) {
+    public Parameter<?> getParameter(String parameterName) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        if (!containsParameter(parameterName)) {
             return null;
         }
         
-        Object value = getParameterValue(name);
+        Object value = getParameterValue(parameterName);
         
-        return new ParameterImpl(value == null ? null : value.getClass(), name);
+        return new ParameterImpl(value == null ? null : value.getClass(), parameterName);
     }
     
     public Set<? extends Parameter<?>> getParameters() {
@@ -60,16 +60,25 @@ public class ParameterManager {
         return result;
     }
     
-    public boolean containsParameter(String name) {
-        return parameters.containsKey(name);
+    public boolean containsParameter(String parameterName) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        return parameters.containsKey(parameterName);
     }
 
-    public boolean isParameterSet(String name) {
-        return parameters.containsKey(name) && parameters.get(name) != REGISTERED_PLACEHOLDER;
+    public boolean isParameterSet(String parameterName) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        return parameters.containsKey(parameterName) && parameters.get(parameterName) != REGISTERED_PLACEHOLDER;
     }
     
-    public Object getParameterValue(String name) {
-        Object o = parameters.get(name);
+    public Object getParameterValue(String parameterName) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        Object o = parameters.get(parameterName);
         return o == REGISTERED_PLACEHOLDER ? null : o;
     }
     
@@ -85,17 +94,26 @@ public class ParameterManager {
         return existingName;
     }
     
-    void addParameterMapping(String name, Object o){
-        parameters.put(name, o);
+    void addParameterMapping(String parameterName, Object o){
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        parameters.put(parameterName, o);
     }
     
     public void registerParameterName(String parameterName){
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
         if(!parameters.containsKey(parameterName)){
             parameters.put(parameterName, REGISTERED_PLACEHOLDER);
         }
     }
     
     public void satisfyParameter(String parameterName, Object parameterValue){
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
         if(!parameters.containsKey(parameterName)){
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }

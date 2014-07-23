@@ -199,7 +199,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public RestrictionBuilder<X> having(String expression) {
-        if (groupByManager.getGroupByInfos().isEmpty()) {
+        if (groupByManager.getGroupByInfos()
+            .isEmpty()) {
             throw new IllegalStateException();
         }
         Expression expr = Expressions.createSimpleExpression(expression);
@@ -360,7 +361,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         if (sb.length() > 0) {
             sb.append(' ');
         }
-        sb.append("FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
+        sb.append("FROM ")
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
         sb.append(joinManager.buildJoins(true));
         sb.append(whereManager.buildClause());
         sb.append(groupByManager.buildGroupBy());
@@ -377,7 +381,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             return iterator.next();
         }
 
-        throw new IllegalStateException("No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
+        throw new IllegalStateException(
+            "No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
 
     static class JPAInfo {
