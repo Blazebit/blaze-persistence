@@ -78,7 +78,7 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
     public void testAbstractClass() {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d")
                 .orderByAsc("id");
-        List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria).setParameter("contactPersonNumber", 2).getResultList(em);
+        List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
         
         assertEquals(2, results.size());
         // Doc1

@@ -60,8 +60,8 @@ public class WhereOrBuilderImpl<T> extends AbstractBuilderEndedListener implemen
     }
 
     @Override
-    public WhereAndBuilder<WhereOrBuilderImpl<T>> whereAnd() {
-        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilderImpl<T>>(this, this));
+    public WhereAndBuilder<WhereOrBuilder<T>> whereAnd() {
+        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilder<T>>(this, this));
     }
 
     @Override
@@ -70,7 +70,7 @@ public class WhereOrBuilderImpl<T> extends AbstractBuilderEndedListener implemen
     }
 
     @Override
-    public SubqueryInitiator<WhereOrBuilderImpl<RestrictionBuilder<? extends WhereOrBuilder<T>>>> whereExists() {
+    public SubqueryInitiator<WhereOrBuilder<T>> whereExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

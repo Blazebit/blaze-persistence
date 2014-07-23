@@ -13,17 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.ObjectBuilder;
 import javax.persistence.TypedQuery;
 
 /**
+ * Interface implemented by the criteria provider.
  *
- * @author Christian
+ * It is invoked to transform a JPA query.
+ *
+ * @author Christian Beikov
  */
 public interface QueryTransformer {
-    
-    public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder);
+
+    /**
+     * Transforms the query.
+     *
+     * @param <T>           The query result type
+     * @param query         The original query
+     * @param objectBuilder The object build that should be used to transform the query
+     * @return The transformed query
+     */
+    public <T> TypedQuery<T> transformQuery(TypedQuery<T> query, ObjectBuilder<T> objectBuilder);
 }

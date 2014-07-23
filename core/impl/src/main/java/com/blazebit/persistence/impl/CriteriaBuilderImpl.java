@@ -19,6 +19,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 
 /**
  *
@@ -40,6 +41,16 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     @Override
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
+    }
+
+    @Override
+    public CriteriaBuilder<Tuple> select(String expression) {
+        return (CriteriaBuilder<Tuple>) super.select(expression);
+    }
+
+    @Override
+    public CriteriaBuilder<Tuple> select(String expression, String alias) {
+        return (CriteriaBuilder<Tuple>) super.select(expression, alias);
     }
 
 }

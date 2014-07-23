@@ -16,12 +16,28 @@
 package com.blazebit.persistence;
 
 /**
+ * A base interface for builders that support aggregation.
+ * This is related to the fact, that a query builder supports group by and having clauses.
  *
- * @author cpbec
+ * @param <T> The concrete builder type
+ * @author Christian Beikov
  */
-public interface Aggregateable<T> {
-    
-    public T having(String expression);
-    
-    public SubqueryInitiator havingExists();
+public interface Aggregateable<T extends Aggregateable<T>> {
+
+    /**
+     * Starts a {@link RestrictionBuilder} for a having predicate with the given expression as left hand expression.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param expression The left hand expression for a having predicate
+     * @return The restriction builder for the given expression
+     */
+    public RestrictionBuilder<? extends T> having(String expression);
+
+    /**
+     * Starts an exists predicate for the having clause with a subquery on the right hand side.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<T> havingExists();
 }

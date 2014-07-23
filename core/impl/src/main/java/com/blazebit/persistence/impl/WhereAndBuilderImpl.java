@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -61,8 +61,8 @@ public class WhereAndBuilderImpl<T> extends AbstractBuilderEndedListener impleme
     }
 
     @Override
-    public WhereOrBuilder<WhereAndBuilderImpl<T>> whereOr() {
-        return startBuilder(new WhereOrBuilderImpl<WhereAndBuilderImpl<T>>(this, this));
+    public WhereOrBuilder<WhereAndBuilder<T>> whereOr() {
+        return startBuilder(new WhereOrBuilderImpl<WhereAndBuilder<T>>(this, this));
     }
  
     @Override
@@ -72,7 +72,7 @@ public class WhereAndBuilderImpl<T> extends AbstractBuilderEndedListener impleme
     }
 
     @Override
-    public SubqueryInitiatorImpl<WhereAndBuilderImpl<RestrictionBuilder<? extends WhereAndBuilder<T>>>> whereExists() {
+    public SubqueryInitiator<WhereAndBuilder<T>> whereExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

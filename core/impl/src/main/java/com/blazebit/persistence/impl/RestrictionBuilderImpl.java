@@ -17,7 +17,6 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
@@ -233,7 +232,8 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T like(String value, boolean caseSensitive) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(value == null) throw new NullPointerException();
+        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null));
     }
 
     @Override
@@ -248,8 +248,8 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     }
 
     @Override
-    public T likeExpression(String value, boolean caseSensitive) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public T likeExpression(String expression, boolean caseSensitive) {
+        return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, null));
     }
     
     @Override
@@ -257,12 +257,16 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
         return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, escapeCharacter));
     }
     
-    //TODO: notLike overload with 2 args
-
     @Override
     public T notLike(String value) {
         if(value == null) throw new NullPointerException();
         return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), true, null)));
+    }
+    
+    @Override
+    public T notLike(String value, boolean caseSensitive) {
+        if(value == null) throw new NullPointerException();
+        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null)));
     }
 
     @Override
@@ -274,6 +278,11 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     @Override
     public T notLikeExpression(String expression) {
         return chain(new NotPredicate(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), true, null)));
+    }
+
+    @Override
+    public T notLikeExpression(String expression, boolean caseSensitive) {
+        return chain(new NotPredicate(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, null)));
     }
 
     @Override

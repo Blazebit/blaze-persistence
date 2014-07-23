@@ -22,9 +22,8 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import java.util.List;
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
@@ -46,7 +45,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     @Override
-    public PagedList<T> getResultList(EntityManager em) {
+    public PagedList<T> getResultList() {
         String countQueryString = getPageCountQueryString();
         Query countQuery = em.createQuery(countQueryString);
         parameterizeQuery(countQuery);
@@ -61,7 +60,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         parameterManager.addParameterMapping(idParamName, ids);
         
         PagedList<T> pagedResultList = new PagedListImpl<T>(totalSize);
-        pagedResultList.addAll(super.getResultList(em));
+        pagedResultList.addAll(super.getResultList());
         return pagedResultList;
     }
     
@@ -83,11 +82,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 //        applyGroupBys(queryGenerator, sb, groupByInfos);
 //        applyHavings(queryGenerator, sb);
         return countQuery.toString();
-    }
-    
-    @Override
-    public String getPageObjectQueryString() {
-        return "";
     }
 
     @Override
@@ -154,5 +148,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @Override
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (PaginatedCriteriaBuilder<Y>) super.selectNew(builder);
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<Tuple> select(String expression) {
+        return (PaginatedCriteriaBuilder<Tuple>) super.select(expression);
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<Tuple> select(String expression, String alias) {
+        return (PaginatedCriteriaBuilder<Tuple>) super.select(expression, alias);
     }
 }

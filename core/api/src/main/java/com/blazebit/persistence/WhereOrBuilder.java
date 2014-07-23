@@ -16,12 +16,25 @@
 package com.blazebit.persistence;
 
 /**
+ * The builder interface for a where predicate container that connects predicates with the OR operator.
  *
- * @author cpbec
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
  */
-public interface WhereOrBuilder<T> extends Filterable<RestrictionBuilder<? extends WhereOrBuilder<T>>> {
-    
+public interface WhereOrBuilder<T> extends Filterable<WhereOrBuilder<T>> {
+
+    /**
+     * Finishes the OR predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The parent predicate container builder
+     */
     public T endOr();
-    
-    public <N extends WhereOrBuilder<T>> WhereAndBuilder<N> whereAnd();
+
+    /**
+     * Starts a where and builder which connects it's predicates with the AND operator.
+     * When the builder finishes, the predicate is added to this predicate container as disjunct.
+     *
+     * @return The where and builder
+     */
+    public WhereAndBuilder<WhereOrBuilder<T>> whereAnd();
 }

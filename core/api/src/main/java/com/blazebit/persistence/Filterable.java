@@ -16,12 +16,28 @@
 package com.blazebit.persistence;
 
 /**
+ * A base interface for builders that support filtering.
+ * This is related to the fact, that a query builder supports where clauses.
  *
- * @author cpbec
+ * @param <T> The concrete builder type
+ * @author Christian Beikov
  */
-public interface Filterable<T> {
-    
-    public T where(String expression);
-    
-    public SubqueryInitiator whereExists();
+public interface Filterable<T extends Filterable<T>> {
+
+    /**
+     * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param expression The left hand expression for a where predicate
+     * @return The restriction builder for the given expression
+     */
+    public RestrictionBuilder<? extends T> where(String expression);
+
+    /**
+     * Starts an exists predicate for the where clause with a subquery on the right hand side.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<T> whereExists();
 }

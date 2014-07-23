@@ -16,12 +16,29 @@
 package com.blazebit.persistence;
 
 /**
+ * The interface for binary predicate builders.
+ * The left hand side and the operator are already known to the builder and the methods of this builder terminate the building process.
  *
- * @author cpbec
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
  */
 public interface BinaryPredicateBuilder<T> {
-    
+
+    /**
+     * Uses the given value as right hand side for the binary predicate.
+     * Finishes the binary predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param value The value to use for the right hand side of the binary predicate
+     * @return The parent predicate container builder
+     */
     public T value(Object value);
-    
+
+    /**
+     * Uses the given expression as right hand side for the binary predicate.
+     * Finishes the binary predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param expression The expression to use for the right hand side of the binary predicate
+     * @return The parent predicate container builder
+     */
     public T expression(String expression);
 }

@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
+ * TODO: javadoc
  *
- * @author cpbec
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
  */
 public interface CaseWhenThenBuilder<T> {
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public T then(String expression);
 }

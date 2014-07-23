@@ -16,12 +16,25 @@
 package com.blazebit.persistence;
 
 /**
+ * The builder interface for a having predicate container that connects predicates with the AND operator.
  *
- * @author cpbec
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
  */
-public interface HavingAndBuilder<T> extends Aggregateable<RestrictionBuilder<? extends HavingAndBuilder<T>>> {
-    
+public interface HavingAndBuilder<T> extends Aggregateable<HavingAndBuilder<T>> {
+
+    /**
+     * Finishes the AND predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The parent predicate container builder
+     */
     public T endAnd();
-    
-    public <N extends HavingAndBuilder<T>> HavingOrBuilder<N> havingOr();
+
+    /**
+     * Starts a having or builder which connects it's predicates with the OR operator.
+     * When the builder finishes, the predicate is added to this predicate container as conjunct.
+     *
+     * @return The having or builder
+     */
+    public HavingOrBuilder<HavingAndBuilder<T>> havingOr();
 }

@@ -59,7 +59,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
                 .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
 
         assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC NULLS LAST", criteria.getQueryString());
-        List<DocumentViewModel> actual = criteria.getQuery(em).getResultList();
+        List<DocumentViewModel> actual = criteria.getQuery().getResultList();
 
         /* expected */
         List<Document> expected = em.createQuery("FROM Document d ORDER BY d.name ASC", Document.class).getResultList();
@@ -75,7 +75,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.name").end().where("LENGTH(d.name)").le(4).orderByAsc("d.name");
         assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC NULLS LAST", criteria.getQueryString());
-        List<Document> actual = criteria.getQuery(em).getResultList();
+        List<Document> actual = criteria.getQuery().getResultList();
 
         /* expected */
         List<Document> expected = em.createQuery("FROM Document d ORDER BY d.name ASC", Document.class).getResultList();

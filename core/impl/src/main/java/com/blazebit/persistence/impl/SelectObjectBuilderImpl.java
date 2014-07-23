@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
@@ -26,7 +27,7 @@ import java.util.TreeMap;
  *
  * @author ccbem
  */
-public class SelectObjectBuilderImpl<T> implements SelectObjectBuilder<T>{
+public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> implements SelectObjectBuilder<T>{
 
     private final T result;
     // maps positions to expressions

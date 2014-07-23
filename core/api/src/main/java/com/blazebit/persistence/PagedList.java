@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import java.util.List;
 
 /**
+ * An extended version of a list which also provides access to the total size of the list.
  *
- * @author ccbem
+ * @param <T> the type of elements in this list
+ * @author Christian Beikov
  */
-public interface PagedList<T> extends List<T>{
-    
+public interface PagedList<T> extends List<T> {
+
+    /**
+     * The total size of the list.
+     *
+     * @return The total size
+     */
     public long totalSize();
 }
