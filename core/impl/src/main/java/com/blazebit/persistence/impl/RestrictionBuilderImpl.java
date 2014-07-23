@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
@@ -27,6 +28,7 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.InSubqueryPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
@@ -36,23 +38,26 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.SubqueryPredicate;
 import java.util.List;
 
 /**
  *
  * @author cpbec
  */
-public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener implements RestrictionBuilder<T>, PredicateBuilder {
+public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implements RestrictionBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final BuilderEndedListener listener;
     private final Expression leftExpression;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     
-    public RestrictionBuilderImpl(T result, BuilderEndedListener listener, Expression leftExpression) {
+    public RestrictionBuilderImpl(T result, BuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
         this.leftExpression = leftExpression;
         this.listener = listener;
         this.result = result;
+        this.subqueryInitFactory = subqueryInitFactory;
     }
     
     private T chain(Predicate predicate) {
@@ -90,7 +95,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> eq() {
-        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, false));
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory));
     }
 
     @Override
@@ -106,7 +111,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> notEq() {
-        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, true));
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, true, subqueryInitFactory));
     }
 
     @Override
@@ -122,7 +127,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> gt() {
-        return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, this, leftExpression));
+        return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
     }
 
     @Override
@@ -138,7 +143,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> ge() {
-        return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression));
+        return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
     }
 
     @Override
@@ -154,7 +159,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> lt() {
-        return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, this, leftExpression));
+        return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
     }
 
     @Override
@@ -170,7 +175,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> le() {
-        return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression));
+        return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
     }
 
     @Override
@@ -293,13 +298,39 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilderImpl<T>> in() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> in() {
+        verifyBuilderEnded();
+        this.predicate = new InSubqueryPredicate(leftExpression);
+        return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilderImpl<T>> notIn() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> notIn() {
+        verifyBuilderEnded();
+        this.predicate = new NotPredicate(new InSubqueryPredicate(leftExpression));
+        return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
+
+    @Override
+    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+        super.onBuilderEnded(builder);
+        // set the finished subquery builder on the previously created predicate
+        Predicate pred;
+        if(predicate instanceof NotPredicate){
+            // unwrap not predicate
+            pred = ((NotPredicate)predicate).getPredicate();
+        }else{
+            pred = predicate;
+        }
+        
+        if(pred instanceof SubqueryPredicate){
+            ((SubqueryPredicate)pred).setSubqueryBuilder(builder);
+        }else{
+            throw new IllegalStateException("SubqueryBuilder ended but predicate was not a SubqueryPredicate");
+        }
+        listener.onBuilderEnded(this);
+    }
+    
+    
 
 }

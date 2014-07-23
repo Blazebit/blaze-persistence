@@ -26,22 +26,24 @@ import com.blazebit.persistence.impl.expression.Expressions;
  *
  * @author cpbec
  */
-public class CaseWhenAndThenBuilderImpl<T> extends AbstractBuilderEndedListener implements CaseWhenAndThenBuilder<T>, CaseWhenAndBuilder<T> {
+public class CaseWhenAndThenBuilderImpl<T> extends BuilderEndedListenerImpl implements CaseWhenAndThenBuilder<T>, CaseWhenAndBuilder<T> {
     
     private final T result;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    public CaseWhenAndThenBuilderImpl(T result) {
+    public CaseWhenAndThenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
+        this.subqueryInitFactory = subqueryInitFactory;
     }
 
     @Override
     public RestrictionBuilder<CaseWhenAndThenBuilderImpl<T>> and(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression)));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
     }
     
     @Override
     public CaseWhenOrBuilder<CaseWhenAndThenBuilderImpl<T>> or() {
-        return new CaseWhenOrThenBuilderImpl<CaseWhenAndThenBuilderImpl<T>>(this);
+        return new CaseWhenOrThenBuilderImpl<CaseWhenAndThenBuilderImpl<T>>(this, subqueryInitFactory);
     }
 
     @Override

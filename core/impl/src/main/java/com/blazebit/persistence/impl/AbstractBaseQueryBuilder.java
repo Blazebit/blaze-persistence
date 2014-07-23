@@ -57,8 +57,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
     private final QueryGenerator queryGenerator;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
 
     private final JPAInfo jpaInfo;
+    
+    private final BuilderEndedListenerImpl subqueryBuilderListener = new BuilderEndedListenerImpl();
 
     /**
      * Create flat copy of builder
@@ -79,29 +82,36 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.em = builder.em;
         this.queryTransformer = builder.queryTransformer;
         this.jpaInfo = builder.jpaInfo;
+        this.subqueryInitFactory = builder.subqueryInitFactory;
     }
 
-    protected AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias, ParameterManager parameterManager) {
+    protected AbstractBaseQueryBuilder(EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager) {
         if (em == null) {
             throw new NullPointerException("em");
         }
         if (alias == null) {
             throw new NullPointerException("alias");
         }
-        if (clazz == null) {
-            throw new NullPointerException("clazz");
+        if (fromClazz == null) {
+            throw new NullPointerException("fromClazz");
+        }
+        if (resultClazz == null) {
+            throw new NullPointerException("resultClazz");
         }
 
         this.jpaInfo = new JPAInfo(em);
-        this.fromClazz = this.resultClazz = clazz;
+        this.fromClazz = fromClazz;
+        this.resultClazz = resultClazz;
 
         this.parameterManager = parameterManager;
+        
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(em, parameterManager);
 
         this.queryGenerator = new QueryGenerator(parameterManager);
 
-        this.joinManager = new JoinManager(alias, clazz, queryGenerator, jpaInfo);
-        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager);
-        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager);
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo);
+        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
+        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager);
@@ -114,7 +124,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias) {
-        this(em, clazz, alias, new ParameterManager());
+        this(em, clazz, clazz, alias, new ParameterManager());
     }
 
 
@@ -130,7 +140,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
     public CaseWhenBuilder<X> selectCase() {
-        return new CaseWhenBuilderImpl<X>((X) this);
+        return new CaseWhenBuilderImpl<X>((X) this, subqueryInitFactory);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
@@ -171,8 +181,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator whereExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<? extends X> whereExists() {
+        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 
     /*
@@ -213,8 +223,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator havingExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<? extends X> havingExists() {
+        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 
     /*
@@ -244,6 +254,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
+        subqueryBuilderListener.verifySubqueryBuilderEnded();
     }
 
     @Override

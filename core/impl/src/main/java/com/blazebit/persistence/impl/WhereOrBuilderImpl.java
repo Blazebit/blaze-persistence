@@ -29,16 +29,18 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author cpbec
  */
-public class WhereOrBuilderImpl<T> extends AbstractBuilderEndedListener implements WhereOrBuilder<T>, PredicateBuilder {
+public class WhereOrBuilderImpl<T> extends BuilderEndedListenerImpl implements WhereOrBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final BuilderEndedListener listener;
     private final OrPredicate predicate;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public WhereOrBuilderImpl(T result, BuilderEndedListener listener) {
+    public WhereOrBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new OrPredicate();
+        this.subqueryInitFactory = subqueryInitFactory;
     }
     
     @Override
@@ -61,17 +63,17 @@ public class WhereOrBuilderImpl<T> extends AbstractBuilderEndedListener implemen
 
     @Override
     public WhereAndBuilder<WhereOrBuilder<T>> whereAnd() {
-        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilder<T>>(this, this));
+        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory));
     }
 
     @Override
     public RestrictionBuilder<? extends WhereOrBuilder<T>> where(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<WhereOrBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression)));
+        return startBuilder(new RestrictionBuilderImpl<WhereOrBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
     }
 
     @Override
-    public SubqueryInitiator<WhereOrBuilder<T>> whereExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<? extends WhereOrBuilder<T>> whereExists() {
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
     
 }
