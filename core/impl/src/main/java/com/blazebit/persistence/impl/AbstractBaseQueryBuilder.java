@@ -384,33 +384,4 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         throw new IllegalStateException(
             "No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
-
-    static class JPAInfo {
-
-        public final static boolean JPA_2_1;
-        public final boolean isHibernate;
-
-        static {
-            boolean isJPA21 = false;
-            try {
-                Class.forName("javax.persistence.EntityGraph");
-                isJPA21 = true;
-            } catch (ClassNotFoundException e) {
-            }
-
-            JPA_2_1 = isJPA21;
-        }
-
-        public JPAInfo(EntityManager em) {
-            boolean isHibernate = false;
-
-            try {
-                Class<?> sessionClass = Class.forName("org.hibernate.Session");
-                Object o = em.unwrap(sessionClass);
-                isHibernate = o != null;
-            } catch (ClassNotFoundException e) {
-            }
-            this.isHibernate = isHibernate;
-        }
-    }
 }

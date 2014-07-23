@@ -45,18 +45,18 @@ public class JoinManager {
     private final QueryGenerator queryGenerator;
     private final String joinRestrictionKeyword;
 
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, AbstractBaseQueryBuilder.JPAInfo jpaInfo) {
+    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, JPAInfo jpaInfo) {
         this.rootAliasInfo = new AliasInfo(rootAlias, "", true);
         this.joinAliasInfos.put(rootAlias, rootAliasInfo);
         this.rootNode = new JoinNode(rootAliasInfo, null, false, null);
         this.clazz = clazz;
         this.queryGenerator = queryGenerator;
         
-        if(AbstractBaseQueryBuilder.JPAInfo.JPA_2_1){
+        if (jpaInfo.isJPA21) {
             joinRestrictionKeyword = " ON ";
-        }else if(jpaInfo.isHibernate){ //TODO: add version check
+        } else if (jpaInfo.isHibernate) { 
             joinRestrictionKeyword = " WITH ";
-        }else{// TODO: add workaround for hibernate
+        } else {
             throw new UnsupportedOperationException("Unsupported JPA provider");
         }
     }
