@@ -20,9 +20,12 @@ import com.blazebit.persistence.Filterable;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.filter.ContainsFilter;
+import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
+import com.blazebit.persistence.view.filter.EndsWithIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.ExactFilter;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
+import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -42,15 +45,33 @@ public class FilterTest {
     }
     
     @Test
+    public void testContainsIgnoreCase() {
+        Filter filter = new ContainsIgnoreCaseFilter(value);
+        verifyFilter(filter, expression).like("%" + value + "%", false);
+    }
+    
+    @Test
     public void testEndsWith() {
         Filter filter = new EndsWithFilter(value);
         verifyFilter(filter, expression).like("%" + value);
     }
     
     @Test
+    public void testEndsWithIgnoreCase() {
+        Filter filter = new EndsWithIgnoreCaseFilter(value);
+        verifyFilter(filter, expression).like("%" + value, false);
+    }
+    
+    @Test
     public void testStartsWith() {
         Filter filter = new StartsWithFilter(value);
         verifyFilter(filter, expression).like(value + "%");
+    }
+    
+    @Test
+    public void testStartsWithIgnoreCase() {
+        Filter filter = new StartsWithIgnoreCaseFilter(value);
+        verifyFilter(filter, expression).like(value + "%", false);
     }
     
     @Test
