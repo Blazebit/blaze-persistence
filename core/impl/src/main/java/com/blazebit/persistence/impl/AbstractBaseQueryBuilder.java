@@ -97,8 +97,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = new QueryGenerator(parameterManager);
         
         this.joinManager = new JoinManager(alias, clazz, queryGenerator);
-        this.whereManager = new WhereManager<U>(queryGenerator, parameterManager);
-        this.havingManager = new HavingManager<U>(queryGenerator, parameterManager);
+        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager);
+        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
                 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager);
