@@ -56,7 +56,7 @@ public class JoinManager {
             joinRestrictionKeyword = " ON ";
         }else if(jpaInfo.isHibernate){ //TODO: add version check
             joinRestrictionKeyword = " WITH ";
-        }else{// TODO: add workaround for hibernate
+        }else{
             throw new UnsupportedOperationException("Unsupported JPA provider");
         }
     }
@@ -153,8 +153,6 @@ public class JoinManager {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
-            // normalize the path, i.e. if it starts at the root alias, remove this part
-//            normalizePath(pathExpression);
             JoinResult result = implicitJoin(pathExpression.getPath(), objectLeafAllowed, fromSelect);
             pathExpression.setBaseNode(result.baseNode);
             pathExpression.setField(result.field);
@@ -201,8 +199,6 @@ public class JoinManager {
             // First we extract the field by which should be ordered
             field = normalizedPath.substring(fieldStartDotIndex + 1);
             String joinPath = normalizedPath.substring(0, fieldStartDotIndex);
-            //TEST
-//            joinPath = normalizedPath;
             AliasInfo potentialBaseInfo;
             if ((dotIndex = joinPath.indexOf('.')) != -1) {
                 // We found a dot in the path, so it either uses an alias or does chained joining
@@ -219,6 +215,7 @@ public class JoinManager {
                 String relativePath = normalizedPath.substring(aliasNode.getAliasInfo().getAlias().length() + 1);
                 normalizedPath = potentialBasePath + '.' + relativePath;
                 String relativeJoinPath;
+                
                 if (relativePath.indexOf('.') == -1) {
                     // relativePath contains the field only                    
                     if (objectLeafAllowed) {
@@ -235,7 +232,7 @@ public class JoinManager {
                     relativeJoinPath = relativePath.substring(0, relativePath.length() - field.length() - 1);
                     if (objectLeafAllowed) {
                         // Note: field cannot be null
-                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath + (!relativeJoinPath.isEmpty() ? "." : "") + field, null, null, null, false, true, fromSelect);
+                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath + "." + field, null, null, null, false, true, fromSelect);
                         // if the field is not joinable we must not set the field to null
                         if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
                             field = null;
@@ -244,21 +241,7 @@ public class JoinManager {
                         baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, field, null, false, true, fromSelect);
                     }
                 }
-                //TEST
-//                relativeJoinPath = relativePath;
-//                if (relativeJoinPath.isEmpty()) {
-
-//                } else {
-//                    baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, null, false, true, fromSelect);
-//                    if (baseNode.getAliasInfo().getAbsolutePath().endsWith(relativeJoinPath)) {
-//                        field = null;
-//                    }
-//                }
             } else {
-                //                String potentialRootProperty = ExpressionUtils.getFirstPathElement(normalizedPath);
-                //                if (ReflectionUtils.getField(clazz, potentialRootProperty) == null) {
-                //                    throw new IllegalStateException("Unresolved alias: " + normalizedPath);
-                //                }
                 // check if field is joinable
                 // The given path is relative to the root
                 if (objectLeafAllowed) {
@@ -271,9 +254,6 @@ public class JoinManager {
                 } else {
                     baseNode = createOrUpdateNode(rootNode, "", joinPath, null, field, null, false, true, fromSelect);
                 }
-//                if (baseNode.getAliasInfo().getAbsolutePath().endsWith(joinPath)) {
-//                    field = null;
-//                }
             }
         } else {
             // The given path may be relative to the root or it might be an alias
