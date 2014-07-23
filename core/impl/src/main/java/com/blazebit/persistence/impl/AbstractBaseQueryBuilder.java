@@ -86,14 +86,12 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
         }
         
         this.fromClazz = this.resultClazz = clazz;
-        
-        this.joinManager = new JoinManager(alias, clazz);
                 
         this.parameterManager = parameterManager;
         
         this.queryGenerator = new QueryGenerator(parameterManager);
         
-        
+        this.joinManager = new JoinManager(alias, clazz, queryGenerator);
         this.whereManager = new WhereManager<U>(queryGenerator, parameterManager);
         this.havingManager = new HavingManager<U>(queryGenerator, parameterManager);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
@@ -338,7 +336,6 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
         whereManager.applyTransformer(arrayTransformer);
         groupByManager.applyTransformer(arrayTransformer);
         orderByManager.applyTransformer(arrayTransformer);
-        whereManager.rootPredicate.predicate.getChildren().addAll(arrayTransformer.getAdditionalWherePredicates());
     }
 
     @Override

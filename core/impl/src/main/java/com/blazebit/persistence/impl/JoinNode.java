@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -34,6 +35,8 @@ public class JoinNode {
     private Class<?> propertyClass;
     // Use TreeMap so that joins get applied alphabetically for easier testing
     private final Map<String, JoinNode> nodes = new TreeMap<String, JoinNode>();
+    
+    private Predicate withPredicate;
 
     public JoinNode(AliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass) {
         this.aliasInfo = aliasInfo;
@@ -84,6 +87,14 @@ public class JoinNode {
 
     public void setPropertyClass(Class<?> propertyClass) {
         this.propertyClass = propertyClass;
+    }
+
+    public Predicate getWithPredicate() {
+        return withPredicate;
+    }
+
+    public void setWithPredicate(Predicate withPredicate) {
+        this.withPredicate = withPredicate;
     }
 }
 
