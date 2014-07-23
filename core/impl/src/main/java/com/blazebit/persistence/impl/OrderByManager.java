@@ -32,6 +32,20 @@ public class OrderByManager extends AbstractManager {
         super(queryGenerator, parameterManager);
     }
     
+    boolean hasNonIdOrderBys(String idName) {
+        if (orderByInfos.size() < 1) {
+            return false;
+        }
+        
+        for (OrderByInfo orderBy : orderByInfos) {
+            if (!idName.equals(orderBy.getExpression().toString())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     void orderBy(Expression expr, boolean ascending, boolean nullFirst){
         orderByInfos.add(new OrderByInfo(expr, ascending, nullFirst));
         registerParameterExpressions(expr);
@@ -49,12 +63,26 @@ public class OrderByManager extends AbstractManager {
         }
     }
     
-    String buildOrderBy() {
-        
+    void buildSelectClauses(StringBuilder sb) {
         if (orderByInfos.isEmpty()) {
-            return "";
+            return ;
         }
-        StringBuilder sb = new StringBuilder();
+        
+        queryGenerator.setQueryBuffer(sb);
+        Iterator<OrderByInfo> iter = orderByInfos.iterator();
+        OrderByInfo orderByInfo = iter.next();
+        orderByInfo.getExpression().accept(queryGenerator);
+        while (iter.hasNext()) {
+            sb.append(", ");
+            orderByInfo = iter.next();
+            orderByInfo.getExpression().accept(queryGenerator);
+        }
+    }
+    
+    void buildOrderBy(StringBuilder sb) {
+        if (orderByInfos.isEmpty()) {
+            return ;
+        }
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
@@ -63,7 +91,6 @@ public class OrderByManager extends AbstractManager {
             sb.append(", ");
             applyOrderBy(sb, iter.next());
         }
-        return sb.toString();
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy) {

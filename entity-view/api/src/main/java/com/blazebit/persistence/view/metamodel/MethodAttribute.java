@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.Filter;
 import java.lang.reflect.Method;
 
 /**
@@ -40,4 +41,11 @@ public interface MethodAttribute<X, Y> extends MappingAttribute<X, Y> {
      * @return The getter java method of this attribute
      */
     public Method getJavaMethod();
+
+    /**
+     * Returns the filter mapping of the attribute.
+     *
+     * @return The filter mapping of the attribtue
+     */
+    public Class<? extends Filter> getFilterMapping();
 }

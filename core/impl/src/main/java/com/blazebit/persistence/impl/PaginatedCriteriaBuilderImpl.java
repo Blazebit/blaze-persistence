@@ -20,6 +20,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -75,6 +76,28 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             return new PagedListImpl<T>(totalSize);
         }
         
+        Metamodel m = em.getMetamodel();
+        EntityType<?> entityType = m.entity(fromClazz);
+        String idName = entityType.getId(entityType.getIdType()
+            .getJavaType())
+            .getName();
+        
+        String idClause = new StringBuilder(joinManager.getRootAlias())
+            .append('.')
+            .append(idName)
+            .toString();
+        
+        if (orderByManager.hasNonIdOrderBys(idClause)) {
+            // If we have order bys, 
+            List newIds = new ArrayList(ids.size());
+            
+            for (int i = 0; i < ids.size(); i++) {
+                newIds.add(((Object[]) ids.get(i))[0]);
+            }
+            
+            ids = newIds;
+        }
+        
         parameterManager.addParameterMapping(idParamName, ids);
 
         PagedList<T> pagedResultList = new PagedListImpl<T>(super.getResultList(), totalSize);
@@ -94,10 +117,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        countQuery.append(joinManager.buildJoins(false));
-        countQuery.append(whereManager.buildClause());
-        countQuery.append(groupByManager.buildGroupBy());
-        countQuery.append(havingManager.buildClause());
+        joinManager.buildJoins(false, countQuery);
+        whereManager.buildClause(countQuery);
+        groupByManager.buildGroupBy(countQuery);
+        havingManager.buildClause(countQuery);
         return countQuery.toString();
     }
 
@@ -122,31 +145,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        sb.append(joinManager.buildJoins(true));
+        joinManager.buildJoins(true, sb);
 
-        String whereClause = whereManager.buildClause(true);
-        if (whereClause.isEmpty()) {
-            sb.append(" WHERE ")
-                .append(joinManager.getRootAlias())
-                .append('.')
-                .append(idName)
-                .append(" IN (:")
-                .append(idParamName)
-                .append(")");
-        } else {
-            sb.append(whereClause);
-            sb.append(" AND ")
-                .append(joinManager.getRootAlias())
-                .append('.')
-                .append(idName)
-                .append(" IN (:")
-                .append(idParamName)
-                .append(")");
-        }
+        sb.append(" WHERE ")
+            .append(joinManager.getRootAlias())
+            .append('.')
+            .append(idName)
+            .append(" IN (:")
+            .append(idParamName)
+            .append(")");
 
-        sb.append(groupByManager.buildGroupBy());
-        sb.append(havingManager.buildClause());
-        sb.append(orderByManager.buildOrderBy());
+        groupByManager.buildGroupBy(sb);
+        havingManager.buildClause(sb);
+        orderByManager.buildOrderBy(sb);
 
         return sb.toString();
     }
@@ -163,20 +174,28 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         applyImplicitJoins();
         applyArrayTransformations();
+        
+        String idClause = new StringBuilder(joinManager.getRootAlias())
+            .append('.')
+            .append(idName)
+            .toString();
 
         idQuery.append("SELECT DISTINCT ")
-            .append(joinManager.getRootAlias())
-            .append('.')
-            .append(idName);
+            .append(idClause);
+        
+        if (orderByManager.hasNonIdOrderBys(idClause)) {
+            idQuery.append(", ");
+            orderByManager.buildSelectClauses(idQuery);
+        }
         idQuery.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        idQuery.append(joinManager.buildJoins(false));
-        idQuery.append(whereManager.buildClause());
-        idQuery.append(groupByManager.buildGroupBy());
-        idQuery.append(havingManager.buildClause());
-        idQuery.append(orderByManager.buildOrderBy());
+        joinManager.buildJoins(false, idQuery);
+        whereManager.buildClause(idQuery);
+        groupByManager.buildGroupBy(idQuery);
+        havingManager.buildClause(idQuery);
+        orderByManager.buildOrderBy(idQuery);
 
         return idQuery.toString();
     }

@@ -65,10 +65,8 @@ public class JoinManager {
         return rootAliasInfo.getAlias();
     }
 
-    String buildJoins(boolean includeSelect) {
-        StringBuilder sb = new StringBuilder();
+    void buildJoins(boolean includeSelect, StringBuilder sb) {
         applyJoins(sb, rootAliasInfo, rootNode.getNodes(), includeSelect);
-        return sb.toString();
     }
 
     AliasInfo getAliasInfoByJoinPath(String joinPath) {

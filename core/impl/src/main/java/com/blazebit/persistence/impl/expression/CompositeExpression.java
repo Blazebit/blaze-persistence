@@ -40,7 +40,13 @@ public class CompositeExpression implements Expression {
 
     @Override
     public String toString() {
-        return expressions.toString();
+        StringBuilder sb = new StringBuilder();
+        
+        for (Expression exp : expressions) {
+            sb.append(exp);
+        }
+        
+        return sb.toString();
     }
 
     @Override

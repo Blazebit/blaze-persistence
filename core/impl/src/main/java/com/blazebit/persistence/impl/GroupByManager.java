@@ -39,11 +39,9 @@ public class GroupByManager extends AbstractManager{
         registerParameterExpressions(expr);
     }
     
-    String buildGroupBy(){
-        StringBuilder sb = new StringBuilder();
+    void buildGroupBy(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
         applyGroupBys(queryGenerator, sb, groupByInfos);
-        return sb.toString();
     }
     
     void applyGroupBys(QueryGenerator queryGenerator, StringBuilder sb, List<NodeInfo> groupBys) {

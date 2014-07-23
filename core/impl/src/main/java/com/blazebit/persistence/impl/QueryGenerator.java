@@ -51,7 +51,6 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     private StringBuilder sb;
     private final ParameterManager parameterManager;
     private boolean replaceSelectAliases = true;
-    private boolean generateRequiredMapKeyFiltersOnly = false;
     // cyclic dependency
     private SelectManager<?> selectManager;
 
@@ -70,10 +69,6 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
 
     void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
-    }
-
-    public void setGenerateRequiredMapKeyFiltersOnly(boolean generateRequiredMapKeyFiltersOnly) {
-        this.generateRequiredMapKeyFiltersOnly = generateRequiredMapKeyFiltersOnly;
     }
 
     @Override
@@ -97,7 +92,7 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
                     sb.append(and);
                 }
 
-            } else if (child instanceof EqPredicate || generateRequiredMapKeyFiltersOnly == false) {
+            } else {
                 int len = sb.length();
                 child.accept(this);
                 if (len < sb.length()) {
@@ -131,7 +126,7 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
                     sb.append(or);
                 }
 
-            } else if (child instanceof EqPredicate || generateRequiredMapKeyFiltersOnly == false) {
+            } else {
                 int len = sb.length();
                 child.accept(this);
                 if (len < sb.length()) {
@@ -152,9 +147,7 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
 
     @Override
     public void visit(EqPredicate predicate) {
-        if (generateRequiredMapKeyFiltersOnly == false || predicate.isRequiredByMapValueSelect() == true) {
-            visitQuantifiableBinaryPredicate(predicate, " = ");
-        }
+        visitQuantifiableBinaryPredicate(predicate, " = ");
     }
 
     @Override

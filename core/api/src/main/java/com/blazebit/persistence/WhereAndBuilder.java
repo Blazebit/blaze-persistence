@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface WhereAndBuilder<T> extends Filterable<WhereAndBuilder<T>> {
+public interface WhereAndBuilder<T> extends BaseFilterable<WhereAndBuilder<T>> {
 
     /**
      * Finishes the AND predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

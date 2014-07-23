@@ -18,7 +18,9 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -37,14 +39,16 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     private final ViewType<X> declaringType;
     private final Method javaMethod;
     private final Class<Y> javaType;
+    private final Class<? extends Filter> filterMapping;
     private final String mapping;
     private final boolean mappingParameter;
 
-    private MethodAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
+    private MethodAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Class<? extends Filter> filterMapping) {
         this.name = StringUtils.firstToLower(method.getName().substring(3));
         this.declaringType = viewType;
         this.javaMethod = method;
         this.javaType = (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
+        this.filterMapping = filterMapping;
         
         if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
@@ -78,6 +82,11 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     }
 
     @Override
+    public Class<? extends Filter> getFilterMapping() {
+        return filterMapping;
+    }
+
+    @Override
     public String getMapping() {
         return mapping;
     }
@@ -93,7 +102,10 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
             return null;
         }
         
-        return new MethodAttributeImpl<X, Object>(viewType, method, mapping);
+        MappingFilter mappingFilter = AnnotationUtils.findAnnotation(method, MappingFilter.class);
+        Class<? extends Filter> filterMapping = mappingFilter == null ? null : mappingFilter.value();
+        
+        return new MethodAttributeImpl<X, Object>(viewType, method, mapping, filterMapping);
     }
     
     public static String validate(ViewType<?> viewType, Method m) {

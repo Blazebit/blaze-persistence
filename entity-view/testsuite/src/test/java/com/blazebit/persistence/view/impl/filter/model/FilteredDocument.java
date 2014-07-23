@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.WhereOrBuilder;
+package com.blazebit.persistence.view.impl.filter.model;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.filter.ContainsFilter;
 
 /**
  *
- * @author ccbem
+ * @author Christian
  */
-public class WhereManager<U> extends PredicateManager<U> {
-
-    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
-        super(queryGenerator, parameterManager);
-    }
-
-    @Override
-    protected String getClauseName() {
-        return "WHERE";
-    }
-
-    WhereOrBuilder<U> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate));
-    }
-
+@EntityView(Document.class)
+public interface FilteredDocument {
+    
+    @MappingFilter(ContainsFilter.class)
+    public String getName();
+    
+    @Mapping("contacts[:index].name")
+    public String getContactName();
 }

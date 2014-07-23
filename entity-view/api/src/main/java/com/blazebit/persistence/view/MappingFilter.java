@@ -14,23 +14,27 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence;
+package com.blazebit.persistence.view;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * An interface for builders that support filtering.
- * This is related to the fact, that a query builder supports where clauses.
+ * TODO: javadoc
  *
- * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface Filterable<T extends Filterable<T>> extends BaseFilterable<T> {
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MappingFilter {
     
     /**
-     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
+     * TODO: javadoc
      *
-     * @return The or predicate builder for the where clause
+     * @return
      */
-    public WhereOrBuilder<? extends T> whereOr();
+    Class<? extends Filter> value();
 }

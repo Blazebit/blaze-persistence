@@ -365,11 +365,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        sb.append(joinManager.buildJoins(true));
-        sb.append(whereManager.buildClause());
-        sb.append(groupByManager.buildGroupBy());
-        sb.append(havingManager.buildClause());
-        sb.append(orderByManager.buildOrderBy());
+        joinManager.buildJoins(true, sb);
+        whereManager.buildClause(sb);
+        groupByManager.buildGroupBy(sb);
+        havingManager.buildClause(sb);
+        orderByManager.buildOrderBy(sb);
         return sb.toString();
     }
 
