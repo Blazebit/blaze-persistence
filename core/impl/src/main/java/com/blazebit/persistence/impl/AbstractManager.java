@@ -36,7 +36,7 @@ public class AbstractManager {
             } else {
                 // Value was not set so we only have an unsatisfied parameter name which we register
                 if(AbstractQueryBuilder.idParamName.equals(expression.getName())){
-                    throw new IllegalArgumentException(String.format("The parameter name \"%s\" is reserved - use a different name"));
+                    throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
                 }else{
                     parameterManager.registerParameterName(expression.getName());
                 }

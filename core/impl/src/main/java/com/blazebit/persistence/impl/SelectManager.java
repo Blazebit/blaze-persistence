@@ -114,8 +114,7 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void select(AbstractBaseQueryBuilder<?, ?> builder, String expression, String selectAlias) {
-        Expression expr = Expressions.createSimpleExpression(expression);
+    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias);
         if (selectAlias != null) {
             selectAliasToInfoMap.put(selectAlias, selectInfo);
@@ -153,7 +152,7 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        //TODO: maybe unify with selectNew(ObjectBuilder)
+        
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -166,13 +165,12 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        //TODO: maybe unify with selectNew(ObjectBuilder)
+        
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
-    //TODO: create tests
     void selectNew(ObjectBuilder<?> builder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
@@ -180,8 +178,23 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
+        
+        String[] expressions = builder.getExpressions();
+        
+        if (expressions == null || expressions.length == 0) {
+            throw new IllegalArgumentException("The object builder '" + builder + "' returned no or empty expressions.");
+        }
 
-        for (String expression : builder.getExpressions()) {
+        for (int i = 0; i < expressions.length; i++) {
+            String expression = expressions[i];
+            
+            if (expression == null) {
+                throw new NullPointerException("Illegal null expression returned from obejct builder '" + objectBuilder + "' at index: " + i);
+            }
+            if (expression.isEmpty()) {
+                throw new IllegalArgumentException("Illegal empty expression returned from object builder '" + objectBuilder + "' at index: " + i);
+            }
+            
             Expression expr = Expressions.createSimpleExpression(expression);
             registerParameterExpressions(expr);
             SelectInfo selectInfo = new SelectInfo(expr, null);

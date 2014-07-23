@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -29,19 +28,19 @@ import javax.persistence.metamodel.Metamodel;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @author Christian Beikov
  */
-// TODO: maybe unify PaginatedCriterBuilder and CriteriaBuilder? We could view the CriteriaBuilder as the standard case with 1 single page containing all entries
-public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
+public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements
+    PaginatedCriteriaBuilder<T> {
+
     private final int firstRow;
     private final int pageSize;
-    
+
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, int firstRow, int pageSize) {
         super(baseBuilder);
         this.firstRow = firstRow;
         this.pageSize = pageSize;
-//        this.parameters = baseBuilder.parameters;
-//        super.paramNameGenerator = baseBuilder.paramNameGenerator;
     }
 
     @Override
@@ -49,38 +48,39 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         String countQueryString = getPageCountQueryString();
         Query countQuery = em.createQuery(countQueryString);
         parameterizeQuery(countQuery);
-        
+
         long totalSize = (Long) countQuery.getSingleResult();
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
-        
-        // Lossy conversion since JPQL COUNT returns a long
-        List ids = idQuery.setFirstResult((int)firstRow).setMaxResults((int)pageSize).getResultList();
+
+        List ids = idQuery.setFirstResult((int) firstRow)
+            .setMaxResults((int) pageSize)
+            .getResultList();
         parameterManager.addParameterMapping(idParamName, ids);
-        
+
         PagedList<T> pagedResultList = new PagedListImpl<T>(totalSize);
         pagedResultList.addAll(super.getResultList());
         return pagedResultList;
     }
-    
+
     @Override
     public String getPageCountQueryString() {
         verifyBuilderEnded();
         StringBuilder countQuery = new StringBuilder();
-        
+
         applyImplicitJoins();
         applyArrayTransformations();
-        
+
         countQuery.append("SELECT COUNT(*)");
-        countQuery.append(" FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
+        countQuery.append(" FROM ")
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
         countQuery.append(joinManager.buildJoins(false));
         countQuery.append(whereManager.buildClause());
-        countQuery.append(groupByManager.buildGroupBy());        
+        countQuery.append(groupByManager.buildGroupBy());
         countQuery.append(havingManager.buildClause());
-//        applyWhere(queryGenerator, sb);
-//        applyGroupBys(queryGenerator, sb, groupByInfos);
-//        applyHavings(queryGenerator, sb);
         return countQuery.toString();
     }
 
@@ -90,48 +90,66 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         StringBuilder sb = new StringBuilder();
         applyImplicitJoins();
         applyArrayTransformations();
-        
+
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
-        String idName = entityType.getId(entityType.getIdType().getJavaType()).getName();
-        
-        
+        String idName = entityType.getId(entityType.getIdType()
+            .getJavaType())
+            .getName();
+
         sb.append(selectManager.buildSelect());
-        if(sb.length() > 0){
+        if (sb.length() > 0) {
             sb.append(' ');
         }
-        sb.append("FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
+        sb.append("FROM ")
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
         sb.append(joinManager.buildJoins(true));
-        
+
         sb.append(whereManager.buildClause(true));
-        sb.append(" AND ").append(joinManager.getRootAlias()).append('.').append(idName).append(" IN (:").append(idParamName).append(")");
-        
-        sb.append(groupByManager.buildGroupBy());        
+        sb.append(" AND ")
+            .append(joinManager.getRootAlias())
+            .append('.')
+            .append(idName)
+            .append(" IN (:")
+            .append(idParamName)
+            .append(")");
+
+        sb.append(groupByManager.buildGroupBy());
         sb.append(havingManager.buildClause());
         sb.append(orderByManager.buildOrderBy());
-                
+
         return sb.toString();
     }
-    
+
     @Override
     public String getPageIdQueryString() {
         verifyBuilderEnded();
         StringBuilder idQuery = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
-        String idName = entityType.getId(entityType.getIdType().getJavaType()).getName();
-        
+        String idName = entityType.getId(entityType.getIdType()
+            .getJavaType())
+            .getName();
+
         applyImplicitJoins();
         applyArrayTransformations();
-        
-        idQuery.append("SELECT DISTINCT ").append(joinManager.getRootAlias()).append('.').append(idName);
-        idQuery.append(" FROM ").append(fromClazz.getSimpleName()).append(' ').append(joinManager.getRootAlias());
+
+        idQuery.append("SELECT DISTINCT ")
+            .append(joinManager.getRootAlias())
+            .append('.')
+            .append(idName);
+        idQuery.append(" FROM ")
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
         idQuery.append(joinManager.buildJoins(false));
         idQuery.append(whereManager.buildClause());
-        idQuery.append(groupByManager.buildGroupBy());        
+        idQuery.append(groupByManager.buildGroupBy());
         idQuery.append(havingManager.buildClause());
         idQuery.append(orderByManager.buildOrderBy());
-        
+
         return idQuery.toString();
     }
 
@@ -139,7 +157,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<PaginatedCriteriaBuilder<Y>>) super.selectNew(clazz);
     }
-    
+
     @Override
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (PaginatedCriteriaBuilder<Y>) super.selectNew(builder);

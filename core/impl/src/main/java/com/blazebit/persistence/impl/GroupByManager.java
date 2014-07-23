@@ -35,11 +35,9 @@ public class GroupByManager extends AbstractManager{
         groupByInfos = new ArrayList<NodeInfo>();
     }
     
-    void groupBy(String expression){
-        Expression exp = Expressions.createSimpleExpression(expression);
-        groupByInfos.add(new NodeInfo(exp));
-        
-        registerParameterExpressions(exp);
+    void groupBy(Expression expr){
+        groupByInfos.add(new NodeInfo(expr));
+        registerParameterExpressions(expr);
     }
     
     String buildGroupBy(){

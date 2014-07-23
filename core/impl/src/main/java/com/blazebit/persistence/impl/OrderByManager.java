@@ -33,11 +33,9 @@ public class OrderByManager extends AbstractManager {
         super(queryGenerator, parameterManager);
     }
     
-    void orderBy(String expression, boolean ascending, boolean nullFirst){
-        Expression exp = Expressions.createSimpleExpression(expression);
-        orderByInfos.add(new OrderByInfo(exp, ascending, nullFirst));
-        
-        registerParameterExpressions(exp);
+    void orderBy(Expression expr, boolean ascending, boolean nullFirst){
+        orderByInfos.add(new OrderByInfo(expr, ascending, nullFirst));
+        registerParameterExpressions(expr);
     }
     
     void acceptVisitor(Expression.Visitor v){
