@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
  * It is invoked to create criteria builders.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface CriteriaProvider {
 

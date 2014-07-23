@@ -24,6 +24,7 @@ import javax.persistence.EntityManager;
  * Bootstrap class that is used to obtain a {@linkplain CriteriaBuilder} instance.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public class Criteria {
 

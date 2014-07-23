@@ -24,6 +24,7 @@ import javax.persistence.TypedQuery;
  * It is invoked to transform a JPA query.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface QueryTransformer {
 

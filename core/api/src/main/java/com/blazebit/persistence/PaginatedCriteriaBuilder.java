@@ -22,6 +22,7 @@ import javax.persistence.Tuple;
  *
  * @param <T> The query result type
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCriteriaBuilder<T>> {
 

@@ -19,9 +19,11 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
@@ -36,13 +38,23 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     private final Method javaMethod;
     private final Class<Y> javaType;
     private final String mapping;
+    private final boolean mappingParameter;
 
-    private MethodAttributeImpl(ViewType<X> viewType, Method method, Mapping mapping) {
+    private MethodAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
         this.name = StringUtils.firstToLower(method.getName().substring(3));
         this.declaringType = viewType;
         this.javaMethod = method;
         this.javaType = (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
-        this.mapping = mapping.value();
+        
+        if (mapping instanceof Mapping) {
+            this.mapping = ((Mapping) mapping).value();
+            this.mappingParameter = false;
+        } else if (mapping instanceof MappingParameter) {
+            this.mapping = ((MappingParameter) mapping).value();
+            this.mappingParameter = true;
+        } else {
+            throw new IllegalArgumentException("Invalid mapping annotation " + mapping);
+        }
     }
 
     @Override
@@ -69,9 +81,14 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     public String getMapping() {
         return mapping;
     }
+
+    @Override
+    public boolean isMappingParameter() {
+        return mappingParameter;
+    }
     
     public static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method) {
-        Mapping mapping = getMapping(viewType, method);
+        Annotation mapping = getMapping(viewType, method);
         if (mapping == null) {
             return null;
         }
@@ -106,11 +123,21 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
         return StringUtils.firstToLower(m.getName().substring(3));
     }
     
-    private static Mapping getMapping(ViewType<?> viewType, Method m) {        
+    private static Annotation getMapping(ViewType<?> viewType, Method m) {        
         Class<?> entityClass = viewType.getEntityClass();
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
         
         if (mapping == null) {
+            MappingParameter mappingParameter = AnnotationUtils.findAnnotation(m, MappingParameter.class);
+            
+            if (mappingParameter != null) {
+                if (mappingParameter.value().isEmpty()) {
+                    throw new IllegalArgumentException("Illegal empty mapping parameter for the getter '" + m.getName() +  "' in the entity view'" + viewType.getJavaType().getName() + "'!");
+                }
+        
+                return mappingParameter;
+            }
+            
             // Implicit mapping
             String attributeName = StringUtils.firstToLower(m.getName().substring(3));
             
@@ -124,6 +151,10 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
             }
             
             mapping = new MappingLiteral(attributeName);
+        }
+        
+        if (mapping.value().isEmpty()) {
+            throw new IllegalArgumentException("Illegal empty mapping for the getter '" + m.getName() +  "' in the entity view'" + viewType.getJavaType().getName() + "'!");
         }
         
         return mapping;

@@ -24,6 +24,7 @@ import javax.persistence.Tuple;
  * @param <T> The query result type
  * @param <X> The concrete builder type
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X> {
 

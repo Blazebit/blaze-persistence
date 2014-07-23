@@ -71,6 +71,10 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
             this.mapping = mappingAnnotation.value();
                 this.mappingParameter = false;
         }
+        
+        if (mapping.isEmpty()) {
+            throw new IllegalArgumentException("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
+        }
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.List;
  *
  * @param <T> The type that this builder produces
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface ObjectBuilder<T> {
 

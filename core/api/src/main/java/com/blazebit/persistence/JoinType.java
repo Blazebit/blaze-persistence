@@ -19,6 +19,7 @@ package com.blazebit.persistence;
  * The different join types which are possible.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public enum JoinType {
 

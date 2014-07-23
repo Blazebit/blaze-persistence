@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 /**
+ * Represents an attribute of a view type specified by a constructor parameter.
  *
- * @author cpbec
+ * @param <X> The type of the declaring entity view
+ * @param <Y> The type of attribute
+ * @author Christian Beikov
+ * @since 1.0
  */
-public interface ParameterAttribute<X, Y> extends MappingAttribute<X, Y>{
-    
+public interface ParameterAttribute<X, Y> extends MappingAttribute<X, Y> {
+
+    /**
+     * Returns the index of the parameter within the constructor.
+     *
+     * @return The index of the parameter within the constructor
+     */
     public int getIndex();
-    
-    public boolean isMappingParameter();
-    
+
+    /**
+     * Returns the declaring constructor.
+     *
+     * @return The declaring constructor
+     */
     public MappingConstructor<X> getDeclaringConstructor();
 }
