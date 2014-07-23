@@ -23,6 +23,7 @@ import javax.persistence.Tuple;
 
 /**
  *
+ * @param <T> The query result type
  * @author Christian Beikov
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {

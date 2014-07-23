@@ -76,13 +76,15 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T between(Object start, Object end) {
-        if(start == null || end == null) throw new NullPointerException();
+        if(start == null) throw new NullPointerException("start");
+        if(end == null) throw new NullPointerException("end");
         return chain(new BetweenPredicate(leftExpression, new ParameterExpression(start), new ParameterExpression(end)));
     }
 
     @Override
     public T notBetween(Object start, Object end) {
-        if(start == null || end == null) throw new NullPointerException();
+        if(start == null) throw new NullPointerException("start");
+        if(end == null) throw new NullPointerException("end");
         return chain(new NotPredicate(new BetweenPredicate(leftExpression, new ParameterExpression(start), new ParameterExpression(end))));
     }
 
@@ -93,7 +95,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T eq(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new EqPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -109,7 +111,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T notEq(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new NotPredicate(new EqPredicate(leftExpression, new ParameterExpression(value))));
     }
 
@@ -125,7 +127,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T gt(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new GtPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -141,7 +143,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T ge(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new GePredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -157,7 +159,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T lt(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new LtPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -173,7 +175,7 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T le(Object value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new LePredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -184,13 +186,13 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
 
     @Override
     public T in(List<?> values) {
-        if(values == null) throw new NullPointerException();
+        if(values == null) throw new NullPointerException("values");
         return chain(new InPredicate(leftExpression, new ParameterExpression(values)));
     }
 
     @Override
     public T notIn(List<?> values) {
-        if(values == null) throw new NullPointerException();
+        if(values == null) throw new NullPointerException("values");
         return chain(new NotPredicate(new InPredicate(leftExpression, new ParameterExpression(values))));
     }
     
@@ -226,19 +228,19 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     
     @Override
     public T like(String value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), true, null));
     }
 
     @Override
     public T like(String value, boolean caseSensitive) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null));
     }
 
     @Override
     public T like(String value, boolean caseSensitive, Character escapeCharacter) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, escapeCharacter));
     }
     
@@ -259,19 +261,19 @@ public class RestrictionBuilderImpl<T> extends AbstractBuilderEndedListener impl
     
     @Override
     public T notLike(String value) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), true, null)));
     }
     
     @Override
     public T notLike(String value, boolean caseSensitive) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null)));
     }
 
     @Override
     public T notLike(String value, boolean caseSensitive, Character escapeCharacter) {
-        if(value == null) throw new NullPointerException();
+        if(value == null) throw new NullPointerException("value");
         return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, escapeCharacter)));
     }
 

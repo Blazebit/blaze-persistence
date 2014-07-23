@@ -23,7 +23,6 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,11 +46,6 @@ public class ArrayExpressionTransformer {
         return transform(original, false);
     }
     
-    /**
-     *
-     * @param original
-     * @return the transformed expression
-     */
     public Expression transform(Expression original, boolean selectClause) {
         // TODO: transform the original expression and apply changes in the criteria builder
         if (original instanceof FooExpression || original instanceof ParameterExpression) {

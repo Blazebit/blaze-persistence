@@ -124,10 +124,10 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
                     continue OUTER;
                 } else {
                     if (attributes[i].isMappingParameter()) {
-                        mappings[i + attributes.length] = "NULLIF(1,1)";
+                        mappings[i] = "NULLIF(1,1)";
                         parameterMappings[i + attributes.length] = attributes[i].getMapping();
                     } else {
-                        mappings[i + attributes.length] = attributes[i].getMapping();
+                        mappings[i] = attributes[i].getMapping();
                     }
                 }
             }

@@ -17,7 +17,6 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;

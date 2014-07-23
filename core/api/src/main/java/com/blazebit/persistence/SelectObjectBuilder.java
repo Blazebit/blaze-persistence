@@ -29,15 +29,17 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
      *
      * @param expression The expression to add
      * @return This select object builder
+     * @throws IllegalStateException Is thrown when the argument position is already taken
      */
     public SelectObjectBuilder<T> with(String expression);
 
     /**
-     * Adds the given expression at the given position, possibly overwriting existing expressions, to the arguments for the select new select clause.
+     * Adds the given expression at the given position to the arguments for the select new select clause.
      *
      * @param position   The position at which the expression should be added
      * @param expression The expression to add
      * @return This select object builder
+     * @throws IllegalStateException Is thrown when the argument position is already taken
      */
     public SelectObjectBuilder<T> with(int position, String expression);
 

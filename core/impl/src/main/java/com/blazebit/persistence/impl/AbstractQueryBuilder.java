@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
@@ -38,7 +39,8 @@ import javax.persistence.TypedQuery;
  * @author Moritz Becker
  * @author Christian Beikov
  */
-public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements QueryBuilder<T, X> {
+public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
+    QueryBuilder<T, X> {
 
     /**
      * Create flat copy of builder
@@ -55,7 +57,8 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public List<T> getResultList() {
-        return getQuery().getResultList();
+        return getQuery()
+            .getResultList();
     }
 
     @Override
@@ -86,7 +89,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (clazz == null) {
             throw new NullPointerException("clazz");
         }
-        
+
         verifyBuilderEnded();
         resultClazz = (Class<T>) clazz;
         return selectManager.selectNew(this, clazz);
@@ -97,7 +100,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (constructor == null) {
             throw new NullPointerException("constructor");
         }
-        
+
         verifyBuilderEnded();
         resultClazz = (Class<T>) constructor.getDeclaringClass();
         return selectManager.selectNew(this, constructor);
@@ -108,7 +111,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (objectBuilder == null) {
             throw new NullPointerException("objectBuilder");
         }
-        
+
         verifyBuilderEnded();
         selectManager.selectNew(objectBuilder);
         return (QueryBuilder<Y, ?>) this;
@@ -148,7 +151,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (alias.isEmpty()) {
             throw new IllegalArgumentException("Empty alias");
         }
-        
+
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch);
         return (X) this;
@@ -165,7 +168,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         return query;
     }
 
-    void parameterizeQuery(javax.persistence.Query q) {
+    void parameterizeQuery(Query q) {
         for (Parameter<?> p : q.getParameters()) {
             if (!isParameterSet(p.getName())) {
                 throw new IllegalStateException("Unsatisfied parameter " + p.getName());
@@ -192,7 +195,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public boolean isParameterSet(String name) {
         return parameterManager.isParameterSet(name);
     }
-    
+
     @Override
     public Parameter<?> getParameter(String name) {
         return parameterManager.getParameter(name);
