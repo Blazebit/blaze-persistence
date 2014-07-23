@@ -21,9 +21,12 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
+import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  *
@@ -32,9 +35,13 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 public class EntityViewManagerImpl implements EntityViewManager {
     
     private final ViewMetamodel metamodel;
+    private final ProxyFactory proxyFactory;
+    private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
-        metamodel = new ViewMetamodelImpl(config.getEntityViews());
+        this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
+        this.proxyFactory = new ProxyFactory();
+        this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
     }
 
     @Override
@@ -69,7 +76,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
-        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(viewType, mappingConstructor, criteriaBuilder));
+        ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(viewType, mappingConstructor);
+        ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
+        
+        if (value == null) {
+            value = key.createValue(proxyFactory);
+            ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
+            
+            if (oldValue != null) {
+                value = oldValue;
+            }
+        }
+        
+        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>((ViewTypeObjectBuilderTemplate<T>) value, criteriaBuilder));
     }
     
 }

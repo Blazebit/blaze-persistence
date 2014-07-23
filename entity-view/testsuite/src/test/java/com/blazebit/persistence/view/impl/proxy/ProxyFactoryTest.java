@@ -41,6 +41,8 @@ import org.junit.Test;
  */
 public class ProxyFactoryTest {
     
+    private final ProxyFactory proxyFactory = new ProxyFactory();
+    
     private ViewMetamodel getViewMetamodel() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(DocumentInterfaceView.class);
@@ -51,7 +53,7 @@ public class ProxyFactoryTest {
     @Test
     public void testInterfaceProxy() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = ProxyFactory.getProxy(viewType);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
         
         // The parameter order is contacts, firstContactPerson, id, name
         Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Map.class, Person.class, Long.class, Person.class, String.class);
@@ -83,7 +85,7 @@ public class ProxyFactoryTest {
     @Test
     public void testClassProxy() throws Exception {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
-        Class<? extends DocumentClassView> proxyClass = ProxyFactory.getProxy(viewType);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         // The parameter order is contacts, firstContactPerson, id, name
         Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
@@ -119,7 +121,7 @@ public class ProxyFactoryTest {
     @Test
     public void testInterfaceProxyStructure() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = ProxyFactory.getProxy(viewType);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
         
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
         assertNotNull(proxyClass.getDeclaredConstructor(Map.class, Person.class, Long.class, Person.class, String.class));
@@ -137,7 +139,7 @@ public class ProxyFactoryTest {
     @Test
     public void testClassProxyStructure() throws Exception {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
-        Class<? extends DocumentClassView> proxyClass = ProxyFactory.getProxy(viewType);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
         assertNotNull(proxyClass.getDeclaredConstructor(Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class));

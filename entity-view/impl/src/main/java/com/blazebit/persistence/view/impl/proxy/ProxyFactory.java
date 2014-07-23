@@ -50,10 +50,15 @@ import javassist.bytecode.MethodInfo;
  */
 public class ProxyFactory {
     
-    private static final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private static final AtomicInteger classCounter = new AtomicInteger();
+    private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final ClassPool pool;
+
+    public ProxyFactory() {
+        this.pool = new ClassPool();
+    }
     
-    public static <T> Class<? extends T> getProxy(ViewType<T> viewType) {
+    public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
         Class<T> clazz = viewType.getJavaType();
         Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
         
@@ -69,9 +74,8 @@ public class ProxyFactory {
         return proxyClass;
     }
 
-    private static <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
+    private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
         Class<?> clazz = viewType.getJavaType();
-        ClassPool pool = ClassPool.getDefault();
         CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + classCounter.getAndIncrement());
         CtClass superCc;
         
@@ -97,7 +101,7 @@ public class ProxyFactory {
                 Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
                 
                 // Create the field from the attribute
-                CtField attributeField = new CtField(getType(pool, attribute), attribute.getName(), cc);
+                CtField attributeField = new CtField(getType(attribute), attribute.getName(), cc);
                 attributeField.setModifiers(getModifiers(setter != null));
                 String genericSignature = getGenericSignature(attribute, attributeField);
                 if (genericSignature != null) {
@@ -115,7 +119,7 @@ public class ProxyFactory {
                 }
                 
                 if (createBridges) {
-                    CtMethod getterBridge = createGetterBridge(cc, pool, getter, attributeGetter);
+                    CtMethod getterBridge = createGetterBridge(cc, getter, attributeGetter);
                     cc.addMethod(getterBridge);
                 }
                 cc.addMethod(attributeGetter);
@@ -128,7 +132,7 @@ public class ProxyFactory {
                     }
                         
                     if (createBridges) {
-                        CtMethod setterBridge = createSetterBridge(cc, pool, setter, attributeSetter);
+                        CtMethod setterBridge = createSetterBridge(cc, setter, attributeSetter);
                         cc.addMethod(setterBridge);
                     }
                     cc.addMethod(attributeSetter);
@@ -153,7 +157,7 @@ public class ProxyFactory {
                 System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, attributes.size());
                 
                 // Append super constructor parameters to default constructor parameters
-                CtConstructor superConstructor = findConstructor(pool, superCc, constructor);
+                CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, attributes.size(), superConstructor.getParameterTypes().length);
                 
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes));
@@ -167,7 +171,7 @@ public class ProxyFactory {
         }
     }
 
-    private static CtMethod createGetterBridge(CtClass cc, ClassPool pool, Method getter, CtMethod attributeGetter) throws NotFoundException, CannotCompileException {
+    private CtMethod createGetterBridge(CtClass cc, Method getter, CtMethod attributeGetter) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         CtClass bridgeReturnType = pool.get(getter.getReturnType().getName());
         String desc = "()" + Descriptor.of(bridgeReturnType);
@@ -183,7 +187,7 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private static CtMethod createSetterBridge(CtClass cc, ClassPool pool, Method setter, CtMethod attributeSetter) throws NotFoundException, CannotCompileException {
+    private CtMethod createSetterBridge(CtClass cc, Method setter, CtMethod attributeSetter) throws NotFoundException, CannotCompileException {
         ConstPool cp = cc.getClassFile2().getConstPool();
         CtClass bridgeParameterType = pool.get(setter.getParameterTypes()[0].getName());
         String desc = "(" + Descriptor.of(bridgeParameterType) + ")V";
@@ -201,7 +205,7 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
     
-    private static CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes) throws CannotCompileException {
+    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes) throws CannotCompileException {
         CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
         ctConstructor.setModifiers(Modifier.PUBLIC);
         StringBuilder sb = new StringBuilder();
@@ -224,7 +228,7 @@ public class ProxyFactory {
         return ctConstructor;
     }
 
-    private static CtConstructor findConstructor(ClassPool pool, CtClass superCc, MappingConstructor<?> constructor) throws NotFoundException {
+    private CtConstructor findConstructor(CtClass superCc, MappingConstructor<?> constructor) throws NotFoundException {
         List<ParameterAttribute<?, ?>> parameterAttributes = (List<ParameterAttribute<?, ?>>) constructor.getParameterAttributes();
         CtClass[] parameterTypes = new CtClass[parameterAttributes.size()];
         
@@ -235,11 +239,11 @@ public class ProxyFactory {
         return superCc.getDeclaredConstructor(parameterTypes);
     }
     
-    private static CtClass getType(ClassPool pool, MethodAttribute<?, ?> attribute) throws NotFoundException {
+    private CtClass getType(MethodAttribute<?, ?> attribute) throws NotFoundException {
         return pool.get(attribute.getJavaType().getName());
     }
 
-    private static int getModifiers(boolean hasSetter) {
+    private int getModifiers(boolean hasSetter) {
         if (hasSetter) {
             return Modifier.PRIVATE;
         } else {
@@ -247,7 +251,7 @@ public class ProxyFactory {
         }
     }
 
-    private static String getGenericSignature(MethodAttribute<?, ?> attribute, CtField attributeField) throws NotFoundException {
+    private String getGenericSignature(MethodAttribute<?, ?> attribute, CtField attributeField) throws NotFoundException {
         Class[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(attribute.getDeclaringType().getJavaType(), attribute.getJavaMethod());
         if (typeArguments.length == 0) {
             return null;
