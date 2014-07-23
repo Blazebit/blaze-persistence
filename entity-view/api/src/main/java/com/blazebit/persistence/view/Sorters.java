@@ -41,6 +41,24 @@ public final class Sorters {
         return new DefaultSorter(false, nullFirst);
     }
 
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public static Sorter ascending() {
+        return new DefaultSorter(true, false);
+    }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public static Sorter descending() {
+        return new DefaultSorter(false, false);
+    }
+
     private static class DefaultSorter implements Sorter {
         private final boolean ascending;
         private final boolean nullFirst;
