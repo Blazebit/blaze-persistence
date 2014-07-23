@@ -36,8 +36,7 @@ import java.util.Map;
 //TODO: maybe implement contacts[1] = x1 AND contacts[2] = x2?
 public class ArrayExpressionTransformer {
 
-    private Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
-    private List<Predicate> additionalWherePredicates = new ArrayList<Predicate>();
+    private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
     private final JoinManager joinManager;
 
     public ArrayExpressionTransformer(JoinManager joinManager) {
@@ -87,22 +86,9 @@ public class ArrayExpressionTransformer {
                 absBasePath += "." + path.getField();
             }
             
-            String rootAlias;
             if(path.getExpressions().get(0).toString().equals(joinManager.getRootAlias())){
                 loopEndIndex = 1;
             }
-            
-//            String[] absBasePathParts = absBasePath.split(".");
-//            StringBuilder basePath 
-//            for(int i = absBasePathParts.length - path.getExpressions().size(); i < absBasePathParts.length; i++){
-//                
-//            }
-//            path.getExpressions().
-            
-//            int lastDotIndex;
-//            if((lastDotIndex = absBasePath.lastIndexOf('.')) != -1){
-//                absolutePathBuilder.append(absBasePath.substring(0, lastDotIndex));
-//            }
         } else {
             throw new IllegalStateException("Path expression without base node");
         }
@@ -112,26 +98,26 @@ public class ArrayExpressionTransformer {
         for (int i = path.getExpressions().size() - 1; i >= loopEndIndex; i--) {
 
             PathElementExpression expr = path.getExpressions().get(i);
-            arrayExp = null;
 
             if (expr instanceof ArrayExpression) {
                 arrayExp = (ArrayExpression) expr;
 
                 String currentAbsPath = absBasePath;
-//                currentAbsPath = currentAbsPath + arrayExp.getBase().toString();
-//                String alias = joinManager.getAliasInfoByJoinPath(currentAbsPath).getAlias();
                 TransformationInfo transInfo = new TransformationInfo(currentAbsPath, arrayExp.getIndex().toString());
                 EqPredicate valueKeyFilterPredicate;
                 if ((valueKeyFilterPredicate = transformedPathFilterMap.get(transInfo)) == null) {
                     CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
                     keyExpression.getExpressions().add(new FooExpression("KEY("));
 
-                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(/*transformedPath.getExpressions()*/));
+                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>());
                     keyPath.getExpressions().add(arrayExp.getBase());
                     keyExpression.getExpressions().add(keyPath);
                     keyExpression.getExpressions().add(new FooExpression(")"));
                     valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExp.getIndex());
-                    addWherePredicate(valueKeyFilterPredicate);
+                    
+                    //TODO: change path.getBaseNode() to be the join node for the first path element
+                    // so for contacts.partnerDocument.versions return contacts and not versions
+                    joinManager.findNode(absBasePath).setWithPredicate(valueKeyFilterPredicate);
                     transformedPathFilterMap.put(transInfo, valueKeyFilterPredicate);
 
                 }
@@ -159,6 +145,7 @@ public class ArrayExpressionTransformer {
             }
         }
 
+        // convert occurrence of a.b.c.d[xy] to d and ab.c.d[xy].z to d.z
         if (farRightArrayExp != null) {
             // add value for last array expression
             CompositeExpression valueExpression = new CompositeExpression(new ArrayList<Expression>());
@@ -171,9 +158,7 @@ public class ArrayExpressionTransformer {
                 valuePath.getExpressions().addAll(farRightValuePath.getExpressions());
                 valueExpression.getExpressions().add(valuePath);
             } else {
-//                valueExpression.getExpressions().add(new FooExpression("VALUE("));
                 valueExpression.getExpressions().add(valuePath);
-//                valueExpression.getExpressions().add(new FooExpression(")"));
             }
             
             if(selectClause == true){
@@ -184,14 +169,6 @@ public class ArrayExpressionTransformer {
         }
 
         return original;
-    }
-
-    private void addWherePredicate(Predicate predicate) {
-        additionalWherePredicates.add(predicate);
-    }
-
-    List<Predicate> getAdditionalWherePredicates() {
-        return additionalWherePredicates;
     }
     
     private static class TransformationInfo {

@@ -82,6 +82,7 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
             predicate.getChildren().get(0).accept(this);
             return;
         }
+        final int startLen = sb.length();
         final String and = " AND ";
         for (Predicate child : predicate.getChildren()) {
             if (child instanceof OrPredicate) {
@@ -104,15 +105,8 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
                 }
             }
         }
-//        char[] currentPostfix = new char[and.length()];
-//        int len = sb.length();
-//        sb.getChars(len-and.length(), and.length(), currentPostfix, 0);
-//        if(and.equals(String.valueOf(currentPostfix))){
-//            //remove unused " AND " postfix
-//            sb.delete(len-and.length(), and.length());
-//        }   
 
-        if (predicate.getChildren().size() > 1) {
+        if (startLen < sb.length()) {
             sb.delete(sb.length() - and.length(), sb.length());
         }
     }
