@@ -194,9 +194,9 @@ public interface RestrictionBuilder<T> {
      */
     public T leExpression(String expression);
 
-    public SubqueryInitiator in();
+    public SubqueryInitiator<T> in();
 
-    public SubqueryInitiator notIn();
+    public SubqueryInitiator<T> notIn();
 
     /**
      * Finishes the IN predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

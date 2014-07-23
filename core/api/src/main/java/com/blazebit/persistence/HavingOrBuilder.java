@@ -37,5 +37,5 @@ public interface HavingOrBuilder<T> extends Aggregateable<HavingOrBuilder<T>> {
      *
      * @return The having and builder
      */
-    public HavingAndBuilder<HavingOrBuilder<T>> havingAnd();
+    public HavingAndBuilder<? extends HavingOrBuilder<T>> havingAnd();
 }

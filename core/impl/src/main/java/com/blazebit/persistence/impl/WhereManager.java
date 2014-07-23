@@ -23,8 +23,8 @@ import com.blazebit.persistence.WhereOrBuilder;
  */
 public class WhereManager<U> extends PredicateManager<U> {
 
-    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
-        super(queryGenerator, parameterManager);
+    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
+        super(queryGenerator, parameterManager, subqueryInitFactory);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class WhereManager<U> extends PredicateManager<U> {
     }
 
     WhereOrBuilder<U> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate));
+        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory));
     }
 
     String buildClause(boolean generateRequiredMapKeyFiltersOnly) {

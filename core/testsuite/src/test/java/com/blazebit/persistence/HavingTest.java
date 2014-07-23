@@ -30,7 +30,6 @@ public class HavingTest extends AbstractPersistenceTest {
     public void testHaving(){
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.age").gt(0);
-        
         assertEquals("FROM Document d LEFT JOIN d.owner owner GROUP BY owner HAVING d.age > :param_0", criteria.getQueryString());
     }
     

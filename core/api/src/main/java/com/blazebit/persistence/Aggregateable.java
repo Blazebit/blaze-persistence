@@ -40,5 +40,5 @@ public interface Aggregateable<T extends Aggregateable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<T> havingExists();
+    public SubqueryInitiator<? extends T> havingExists();
 }

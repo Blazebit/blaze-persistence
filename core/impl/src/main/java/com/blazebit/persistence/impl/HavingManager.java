@@ -21,8 +21,8 @@ package com.blazebit.persistence.impl;
  * @author ccbem
  */
 public class HavingManager<U> extends PredicateManager<U>{
-    HavingManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
-        super(queryGenerator, parameterManager);
+    HavingManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
+        super(queryGenerator, parameterManager, subqueryInitFactory);
     }
 
     @Override
@@ -31,6 +31,6 @@ public class HavingManager<U> extends PredicateManager<U>{
     }
     
     HavingOrBuilderImpl<U> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new HavingOrBuilderImpl<U>((U) builder, rootPredicate));
+        return rootPredicate.startBuilder(new HavingOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory));
     }
 }

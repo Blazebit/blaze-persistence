@@ -17,6 +17,8 @@ package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.BuilderEndedListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -24,21 +26,23 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Christian Beikov
  * @author Moritz Becker
  */
-public abstract class AbstractQuantifiablePredicateBuilder<T> implements
+public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEndedListenerImpl implements
     QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final BuilderEndedListener listener;
     private final boolean wrapNot;
     protected final Expression leftExpression;
+    protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected PredicateQuantifier quantifier = PredicateQuantifier.ONE;
     private Predicate predicate;
 
-    public AbstractQuantifiablePredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, boolean wrapNot) {
+    public AbstractQuantifiablePredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.wrapNot = wrapNot;
         this.leftExpression = leftExpression;
+        this.subqueryInitFactory = subqueryInitFactory;
     }
     
     protected T chain(Predicate predicate) {
@@ -48,15 +52,15 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> implements
     }
 
     @Override
-    public SubqueryInitiator<AbstractQuantifiablePredicateBuilder<T>> all() {
+    public SubqueryInitiator<? extends QuantifiableBinaryPredicateBuilder<T>> all() {
         this.quantifier = PredicateQuantifier.ALL;
-        throw new UnsupportedOperationException("not supported");
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
 
     @Override
-    public SubqueryInitiator<AbstractQuantifiablePredicateBuilder<T>> any() {
+    public SubqueryInitiator<? extends QuantifiableBinaryPredicateBuilder<T>> any() {
         this.quantifier = PredicateQuantifier.ANY;
-        throw new UnsupportedOperationException("not supported");
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
 
     @Override

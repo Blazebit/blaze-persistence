@@ -29,16 +29,18 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author cpbec
  */
-public class HavingAndBuilderImpl<T> extends AbstractBuilderEndedListener implements HavingAndBuilder<T>, PredicateBuilder {
+public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements HavingAndBuilder<T>, PredicateBuilder {
     
     private final T result;
     private final BuilderEndedListener listener;
     private final AndPredicate predicate;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public HavingAndBuilderImpl(T result, BuilderEndedListener listener) {
+    public HavingAndBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new AndPredicate();
+        this.subqueryInitFactory = subqueryInitFactory;
     }
     
     @Override
@@ -61,16 +63,16 @@ public class HavingAndBuilderImpl<T> extends AbstractBuilderEndedListener implem
 
     @Override
     public HavingOrBuilder<HavingAndBuilder<T>> havingOr() {
-        return startBuilder(new HavingOrBuilderImpl<HavingAndBuilder<T>>(this, this));
+        return startBuilder(new HavingOrBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory));
     }
 
     @Override
     public RestrictionBuilder<? extends HavingAndBuilder<T>> having(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<HavingAndBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression)));
+        return startBuilder(new RestrictionBuilderImpl<HavingAndBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
     }
 
     @Override
-    public SubqueryInitiator<HavingAndBuilder<T>> havingExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<? extends HavingAndBuilder<T>> havingExists() {
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
 }

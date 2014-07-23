@@ -32,22 +32,24 @@ import java.util.List;
  *
  * @author cpbec
  */
-public class CaseWhenBuilderImpl<T> extends AbstractBuilderEndedListener implements CaseWhenBuilder<T>, CaseWhenThenBuilder<CaseWhenBuilder<T>> {
+public class CaseWhenBuilderImpl<T> extends BuilderEndedListenerImpl implements CaseWhenBuilder<T>, CaseWhenThenBuilder<CaseWhenBuilder<T>> {
     
     private final T result;
     private final List<Object[]> whenThenClauses;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     private Expression elseExpression;
     
     private Predicate whenPredicate;
     
-    public CaseWhenBuilderImpl(T result) {
+    public CaseWhenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.whenThenClauses = new ArrayList<Object[]>();
+        this.subqueryInitFactory = subqueryInitFactory;
     }
     
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, Expressions.createSimpleExpression(expression)));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
     }
     
     @Override
@@ -61,12 +63,12 @@ public class CaseWhenBuilderImpl<T> extends AbstractBuilderEndedListener impleme
     
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd() {
-        return new CaseWhenAndThenBuilderImpl<CaseWhenBuilder<T>>(this);
+        return new CaseWhenAndThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory);
     }
     
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> whenOr() {
-        return new CaseWhenOrThenBuilderImpl<CaseWhenBuilder<T>>(this);
+        return new CaseWhenOrThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory);
     }
     
     @Override
