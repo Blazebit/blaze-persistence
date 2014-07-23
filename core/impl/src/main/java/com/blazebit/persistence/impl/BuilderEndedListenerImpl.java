@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -23,11 +24,19 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author Christian Beikov
  */
-public class AbstractBuilderEndedListener implements BuilderEndedListener {
+//TODO: restructure this
+public class BuilderEndedListenerImpl implements BuilderEndedListener, SubqueryBuilderListener {
 
     private PredicateBuilder currentBuilder;
+    private SubqueryBuilder currentSubqueryBuilder;
 
     protected void verifyBuilderEnded() {
+        if (currentBuilder != null) {
+            throw new IllegalStateException("A builder was not ended properly.");
+        }
+    }
+    
+    protected void verifySubqueryBuilderEnded() {
         if (currentBuilder != null) {
             throw new IllegalStateException("A builder was not ended properly.");
         }
@@ -41,6 +50,7 @@ public class AbstractBuilderEndedListener implements BuilderEndedListener {
         currentBuilder = builder;
         return builder;
     }
+    
 
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
@@ -48,6 +58,23 @@ public class AbstractBuilderEndedListener implements BuilderEndedListener {
             throw new IllegalStateException("There was an attempt to end a builder that was not started or already closed.");
         }
         currentBuilder = null;
+    }
+
+    @Override
+    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+        if (currentSubqueryBuilder == null) {
+            throw new IllegalStateException("There was an attempt to end a builder that was not started or already closed.");
+        }
+        currentSubqueryBuilder = null;
+    }
+
+    @Override
+    public void onBuilderStarted(SubqueryBuilder<?> builder) {
+        if (currentSubqueryBuilder != null) {
+            throw new IllegalStateException("There was an attempt to start a builder but a previous builder was not ended.");
+        }
+
+        currentSubqueryBuilder = builder;
     }
 
 }

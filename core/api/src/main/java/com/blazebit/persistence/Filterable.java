@@ -40,5 +40,5 @@ public interface Filterable<T extends Filterable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<T> whereExists();
+    public SubqueryInitiator<? extends T> whereExists();
 }

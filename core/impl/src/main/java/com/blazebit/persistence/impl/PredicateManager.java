@@ -29,12 +29,13 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * @author ccbem
  */
 public abstract class PredicateManager<U> extends AbstractManager {
-
+    protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
 
-    PredicateManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
+    PredicateManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
         super(queryGenerator, parameterManager);
         this.rootPredicate = new RootPredicate();
+        this.subqueryInitFactory = subqueryInitFactory;
     }
 
     RootPredicate getRootPredicate() {
@@ -42,7 +43,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
 
     RestrictionBuilder<U> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr));
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr, subqueryInitFactory));
     }
 
     void applyTransformer(ArrayExpressionTransformer transformer) {
@@ -81,7 +82,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
         }
     }
 
-    class RootPredicate extends AbstractBuilderEndedListener {
+    class RootPredicate extends BuilderEndedListenerImpl {
 
         final AndPredicate predicate;
 

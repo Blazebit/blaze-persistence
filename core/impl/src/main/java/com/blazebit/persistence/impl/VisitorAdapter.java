@@ -164,6 +164,6 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
 
     @Override
     public void visit(InSubqueryPredicate predicate) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        predicate.getLeft().accept(this);
     }
 }
