@@ -58,6 +58,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final JoinManager joinManager;
     private final QueryGenerator queryGenerator;
 
+    private final JPAInfo jpaInfo;
+
     /**
      * Create flat copy of builder
      *
@@ -76,6 +78,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
         this.queryTransformer = builder.queryTransformer;
+        this.jpaInfo = builder.jpaInfo;
     }
 
     protected AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias, ParameterManager parameterManager) {
@@ -89,13 +92,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new NullPointerException("clazz");
         }
 
+        this.jpaInfo = new JPAInfo(em);
         this.fromClazz = this.resultClazz = clazz;
 
         this.parameterManager = parameterManager;
 
         this.queryGenerator = new QueryGenerator(parameterManager);
 
-        this.joinManager = new JoinManager(alias, clazz, queryGenerator);
+        this.joinManager = new JoinManager(alias, clazz, queryGenerator, jpaInfo);
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
@@ -381,4 +385,32 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             "No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
 
+    static class JPAInfo {
+
+        public final static boolean JPA_2_1;
+        public final boolean isHibernate;
+
+        static {
+            boolean isJPA21 = false;
+            try {
+                Class.forName("javax.persistence.EntityGraph");
+                isJPA21 = true;
+            } catch (ClassNotFoundException e) {
+            }
+
+            JPA_2_1 = isJPA21;
+        }
+
+        public JPAInfo(EntityManager em) {
+            boolean isHibernate = false;
+
+            try {
+                Class<?> sessionClass = Class.forName("org.hibernate.Session");
+                Object o = em.unwrap(sessionClass);
+                isHibernate = o != null;
+            } catch (ClassNotFoundException e) {
+            }
+            this.isHibernate = isHibernate;
+        }
+    }
 }

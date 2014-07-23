@@ -43,13 +43,22 @@ public class JoinManager {
     // root entity class
     private final Class<?> clazz;
     private final QueryGenerator queryGenerator;
+    private final String joinRestrictionKeyword;
 
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator) {
+    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, AbstractBaseQueryBuilder.JPAInfo jpaInfo) {
         this.rootAliasInfo = new AliasInfo(rootAlias, "", true);
         this.joinAliasInfos.put(rootAlias, rootAliasInfo);
         this.rootNode = new JoinNode(rootAliasInfo, null, false, null);
         this.clazz = clazz;
         this.queryGenerator = queryGenerator;
+        
+        if(AbstractBaseQueryBuilder.JPAInfo.JPA_2_1){
+            joinRestrictionKeyword = " ON ";
+        }else if(jpaInfo.isHibernate){ //TODO: add version check
+            joinRestrictionKeyword = " WITH ";
+        }else{// TODO: add workaround for hibernate
+            throw new UnsupportedOperationException("Unsupported JPA provider");
+        }
     }
 
     String getRootAlias() {
@@ -94,7 +103,7 @@ public class JoinManager {
             sb.append(joinBase.getAlias()).append('.').append(relation).append(' ').append(node.getAliasInfo().getAlias());
 
             if (node.getWithPredicate() != null) {
-                sb.append(" WITH ");
+                sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
                 node.getWithPredicate().accept(queryGenerator);
             }
@@ -211,24 +220,34 @@ public class JoinManager {
                 normalizedPath = potentialBasePath + '.' + relativePath;
                 String relativeJoinPath;
                 if (relativePath.indexOf('.') == -1) {
-                    // relativePath contains the field only
-                    relativeJoinPath = "";
+                    // relativePath contains the field only                    
+                    if (objectLeafAllowed) {
+                        // Note: field cannot be null
+                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, field, null, null, null, false, true, fromSelect);
+                        if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
+                            field = null;
+                        }
+                    } else {
+                        // although the join path is empty we need to do the call since we might have to reset the selectOnly flag in the potentialBasePath nodes
+                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, "", null, field, null, false, true, fromSelect);
+                    }
                 } else {
                     relativeJoinPath = relativePath.substring(0, relativePath.length() - field.length() - 1);
+                    if (objectLeafAllowed) {
+                        // Note: field cannot be null
+                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath + (!relativeJoinPath.isEmpty() ? "." : "") + field, null, null, null, false, true, fromSelect);
+                        // if the field is not joinable we must not set the field to null
+                        if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
+                            field = null;
+                        }
+                    } else {
+                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, field, null, false, true, fromSelect);
+                    }
                 }
                 //TEST
 //                relativeJoinPath = relativePath;
 //                if (relativeJoinPath.isEmpty()) {
-                if (objectLeafAllowed) {
-                    // Note: field cannot be null
-                    baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath + (!relativeJoinPath.isEmpty() ? "." : "") + field, null, null, null, false, true, fromSelect);
-                    // if the field is not joinable we must not set the field to null
-                    if(baseNode.getAliasInfo().getAbsolutePath().endsWith(field)){
-                        field = null;
-                    }
-                } else {
-                    baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, field, null, false, true, fromSelect);
-                }
+
 //                } else {
 //                    baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, null, false, true, fromSelect);
 //                    if (baseNode.getAliasInfo().getAbsolutePath().endsWith(relativeJoinPath)) {
@@ -246,7 +265,7 @@ public class JoinManager {
                     // Note: field cannot be null
                     baseNode = createOrUpdateNode(rootNode, "", joinPath + (!joinPath.isEmpty() ? "." : "") + field, null, null, null, false, true, fromSelect);
                     // if the field is not joinable we must not set the field to null
-                    if(baseNode.getAliasInfo().getAbsolutePath().endsWith(field)){
+                    if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
                         field = null;
                     }
                 } else {
@@ -294,10 +313,6 @@ public class JoinManager {
         String joinAlias = alias;
         String[] pathElements = (joinPath + (!joinPath.isEmpty() && field != null ? "." : "") + (field == null ? "" : field)).split("\\.");
 
-        if (pathElements[0].isEmpty()) {
-            System.out.println("break");
-        }
-
         if (!fromSelect && !basePath.isEmpty()) {
             // updated base path nodes
             baseNode.setSelectOnly(false);
@@ -309,13 +324,8 @@ public class JoinManager {
                 currentNode = baseNode;
             }
         }
-        //        for (int i = 0; i < loopBound; i++) {
-        //            // TODO: Implement model aware joining or use fetch profiles or so to decide the join types automatically
-        //            currentNode = getOrCreate(currentPath, currentNode, pathElements[i], pathElements[i], JoinType.LEFT, false,
-        //                    "Ambiguous implicit join", true);
-        //        }
-        //        getOrCreate(currentPath, currentNode, pathElements[pathElements.length - 1], joinAlias, type, fetch,
-        //                "Ambiguous alias", implicit);
+        // TODO: Implement model aware joining or use fetch profiles or so to decide the join types automatically
+
         Class<?> currentClass;
         if (baseNode.getPropertyClass() == null) {
             currentClass = clazz;
