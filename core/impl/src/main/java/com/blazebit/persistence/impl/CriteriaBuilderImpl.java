@@ -23,9 +23,7 @@ import javax.persistence.Tuple;
 
 /**
  *
- * This class uses normalized paths(path expressions without the root alias)
- *
- * @author cpbec
+ * @author Christian Beikov
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 

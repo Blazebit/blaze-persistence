@@ -24,6 +24,8 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -33,9 +35,12 @@ import javax.persistence.Tuple;
 
 /**
  *
- * @author ccbem
+ * @param <T> The query result type
+ * @param <X> The concrete builder type
+ * @author Moritz Becker
+ * @author Christian Beikov
  */
-public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> implements BaseQueryBuilder<T, U>{
+public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>{
     
     protected static final Logger log = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     protected static final String idParamName = "ids";
@@ -47,8 +52,8 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
 
     protected final ParameterManager parameterManager;
     protected final SelectManager<T> selectManager;
-    protected final WhereManager<U> whereManager;
-    protected final HavingManager<U> havingManager;
+    protected final WhereManager<X> whereManager;
+    protected final HavingManager<X> havingManager;
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
@@ -65,8 +70,8 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
-        this.whereManager = (WhereManager<U>) builder.whereManager;
-        this.havingManager = (HavingManager<U>) builder.havingManager;
+        this.whereManager = (WhereManager<X>) builder.whereManager;
+        this.havingManager = (HavingManager<X>) builder.havingManager;
         this.groupByManager = builder.groupByManager;
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
@@ -92,8 +97,8 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
         this.queryGenerator = new QueryGenerator(parameterManager);
         
         this.joinManager = new JoinManager(alias, clazz, queryGenerator);
-        this.whereManager = new WhereManager<U>(queryGenerator, parameterManager);
-        this.havingManager = new HavingManager<U>(queryGenerator, parameterManager);
+        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager);
+        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
                 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager);
@@ -114,21 +119,21 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
      * Select methods
      */
     @Override
-    public U distinct() {
+    public X distinct() {
         selectManager.distinct();
-        return (U) this;
+        return (X) this;
     }
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public CaseWhenBuilder<U> selectCase() {
-        return new CaseWhenBuilderImpl<U>((U) this);
+    public CaseWhenBuilder<X> selectCase() {
+        return new CaseWhenBuilderImpl<X>((X) this);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenBuilder<U> selectCase(String expression) {
-        return new SimpleCaseWhenBuilderImpl<U>((U) this, expression);
+    public SimpleCaseWhenBuilder<X> selectCase(String expression) {
+        return new SimpleCaseWhenBuilderImpl<X>((X) this, expression);
     }
 
     @Override
@@ -138,15 +143,13 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
 
     @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression, String selectAlias) {
-        if (expression == null) {
-            throw new NullPointerException("expression");
-        }
-        if (expression.isEmpty() || (selectAlias != null && selectAlias.isEmpty())) {
+        Expression expr = Expressions.createSimpleExpression(expression);
+        if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
         resultClazz = (Class<T>) Tuple.class;
-        selectManager.select(this, expression, selectAlias);
+        selectManager.select(this, expr, selectAlias);
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
     
@@ -154,18 +157,13 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
      * Where methods
      */
     @Override
-    public RestrictionBuilder<U> where(String expression) {
-        if (expression == null) {
-            throw new NullPointerException("expression");
-        }
-        if (expression.isEmpty()) {
-            throw new IllegalArgumentException("expression");
-        }
-        return whereManager.restrict(this, expression);
+    public RestrictionBuilder<X> where(String expression) {
+        Expression expr = Expressions.createSimpleExpression(expression);
+        return whereManager.restrict(this, expr);
     }
 
     @Override
-    public WhereOrBuilder<U> whereOr() {
+    public WhereOrBuilder<X> whereOr() {
         return whereManager.whereOr(this);
     }
 
@@ -178,33 +176,35 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
      * Group by methods
      */
     @Override
-    public U groupBy(String... paths) {
+    public X groupBy(String... paths) {
         for (String path : paths) {
             groupBy(path);
         }
-        return (U) this;
+        return (X) this;
     }
 
     @Override
-    public U groupBy(String expression) {
+    public X groupBy(String expression) {
+        Expression expr = Expressions.createSimpleExpression(expression);
         verifyBuilderEnded();
-        groupByManager.groupBy(expression);
-        return (U) this;
+        groupByManager.groupBy(expr);
+        return (X) this;
     }
 
     /*
      * Having methods
      */
     @Override
-    public RestrictionBuilder<U> having(String expression) {
+    public RestrictionBuilder<X> having(String expression) {
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException();
         }
-        return havingManager.restrict(this, expression);
+        Expression expr = Expressions.createSimpleExpression(expression);
+        return havingManager.restrict(this, expr);
     }
 
     @Override
-    public HavingOrBuilder<U> havingOr() {
+    public HavingOrBuilder<X> havingOr() {
         return havingManager.havingOr(this);
     }
 
@@ -217,23 +217,23 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
      * Order by methods
      */
     @Override
-    public U orderByDesc(String path) {
-        return orderBy(path, false, false);
+    public X orderByDesc(String expression) {
+        return orderBy(expression, false, false);
     }
 
     @Override
-    public U orderByAsc(String path) {
-        return orderBy(path, true, false);
+    public X orderByAsc(String expression) {
+        return orderBy(expression, true, false);
     }
 
     @Override
-    public U orderByDesc(String path, boolean nullFirst) {
-        return orderBy(path, false, nullFirst);
+    public X orderByDesc(String expression, boolean nullFirst) {
+        return orderBy(expression, false, nullFirst);
     }
 
     @Override
-    public U orderByAsc(String path, boolean nullFirst) {
-        return orderBy(path, true, nullFirst);
+    public X orderByAsc(String expression, boolean nullFirst) {
+        return orderBy(expression, true, nullFirst);
     }
 
     protected void verifyBuilderEnded() {
@@ -243,53 +243,54 @@ public class AbstractBaseQueryBuilder<T, U extends BaseQueryBuilder<T, U>> imple
     }
     
     @Override
-    public U orderBy(String expression, boolean ascending, boolean nullFirst) {
-        if (expression == null) {
-            throw new NullPointerException("expression");
-        }
-        if (expression.isEmpty()) {
-            throw new IllegalArgumentException("expression");
-        }
+    public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+        Expression expr = Expressions.createSimpleExpression(expression);
         verifyBuilderEnded();
-        orderByManager.orderBy(expression, ascending, nullFirst);
-        return (U) this;
+        orderByManager.orderBy(expr, ascending, nullFirst);
+        return (X) this;
     }
 
     /*
      * Join methods
      */
     @Override
-    public U innerJoin(String path, String alias) {
+    public X innerJoin(String path, String alias) {
         return join(path, alias, JoinType.INNER);
     }
 
     @Override
-    public U leftJoin(String path, String alias) {
+    public X leftJoin(String path, String alias) {
         return join(path, alias, JoinType.LEFT);
     }
 
     @Override
-    public U rightJoin(String path, String alias) {
+    public X rightJoin(String path, String alias) {
         return join(path, alias, JoinType.RIGHT);
     }
 
     @Override
-    public U outerJoin(String path, String alias) {
+    public X outerJoin(String path, String alias) {
         return join(path, alias, JoinType.OUTER);
     }
 
     
     @Override
-    public U join(String path, String alias, JoinType type) {
-        if (path == null || alias == null || type == null) {
-            throw new NullPointerException();
+    public X join(String path, String alias, JoinType type) {
+        if (path == null) {
+            throw new NullPointerException("path");
+        }
+        if (alias == null) {
+            throw new NullPointerException("alias");
+        }
+        if (type == null) {
+            throw new NullPointerException("type");
         }
         if (alias.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Empty alias");
         }
         verifyBuilderEnded();
         joinManager.join(path, alias, type, false);
-        return (U) this;
+        return (X) this;
     }
 
     protected void applyImplicitJoins() {

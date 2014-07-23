@@ -33,9 +33,12 @@ import javax.persistence.TypedQuery;
 
 /**
  *
- * @author ccbem
+ * @param <T> The query result type
+ * @param <X> The concrete builder type
+ * @author Moritz Becker
+ * @author Christian Beikov
  */
-public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> extends AbstractBaseQueryBuilder<T, U> implements QueryBuilder<T, U> {
+public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements QueryBuilder<T, X> {
 
     /**
      * Create flat copy of builder
@@ -61,25 +64,29 @@ public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> exte
     }
 
     @Override
-    public U setParameter(String name, Object value) {
+    public X setParameter(String name, Object value) {
         parameterManager.satisfyParameter(name, value);
-        return (U) this;
+        return (X) this;
     }
 
     @Override
-    public U setParameter(String name, Calendar value, TemporalType temporalType) {
+    public X setParameter(String name, Calendar value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
-        return (U) this;
+        return (X) this;
     }
 
     @Override
-    public U setParameter(String name, Date value, TemporalType temporalType) {
+    public X setParameter(String name, Date value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
-        return (U) this;
+        return (X) this;
     }
 
     @Override
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Class<Y> clazz) {
+        if (clazz == null) {
+            throw new NullPointerException("clazz");
+        }
+        
         verifyBuilderEnded();
         resultClazz = (Class<T>) clazz;
         return selectManager.selectNew(this, clazz);
@@ -87,49 +94,64 @@ public abstract class AbstractQueryBuilder<T, U extends QueryBuilder<T, U>> exte
 
     @Override
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Constructor<Y> constructor) {
+        if (constructor == null) {
+            throw new NullPointerException("constructor");
+        }
+        
         verifyBuilderEnded();
         resultClazz = (Class<T>) constructor.getDeclaringClass();
         return selectManager.selectNew(this, constructor);
     }
 
     @Override
-    public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder) {
+    public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> objectBuilder) {
+        if (objectBuilder == null) {
+            throw new NullPointerException("objectBuilder");
+        }
+        
         verifyBuilderEnded();
-        selectManager.selectNew(builder);
+        selectManager.selectNew(objectBuilder);
         return (QueryBuilder<Y, ?>) this;
     }
 
     @Override
-    public U innerJoinFetch(String path, String alias) {
+    public X innerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.INNER, true);
     }
 
     @Override
-    public U leftJoinFetch(String path, String alias) {
+    public X leftJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.LEFT, true);
     }
 
     @Override
-    public U rightJoinFetch(String path, String alias) {
+    public X rightJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.RIGHT, true);
     }
 
     @Override
-    public U outerJoinFetch(String path, String alias) {
+    public X outerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.OUTER, true);
     }
 
     @Override
-    public U join(String path, String alias, JoinType type, boolean fetch) {
-        if (path == null || alias == null || type == null) {
-            throw new NullPointerException();
+    public X join(String path, String alias, JoinType type, boolean fetch) {
+        if (path == null) {
+            throw new NullPointerException("path");
+        }
+        if (alias == null) {
+            throw new NullPointerException("alias");
+        }
+        if (type == null) {
+            throw new NullPointerException("type");
         }
         if (alias.isEmpty()) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Empty alias");
         }
+        
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch);
-        return (U) this;
+        return (X) this;
     }
 
     @Override

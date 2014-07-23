@@ -22,7 +22,7 @@ import javax.persistence.EntityManager;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
  */
 public class CriteriaProviderImpl implements CriteriaProvider  {
 
