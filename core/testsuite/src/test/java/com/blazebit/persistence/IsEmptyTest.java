@@ -17,7 +17,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ import org.junit.Test;
 public class IsEmptyTest extends AbstractPersistenceTest {
     @Test
     public void testIsEmpty(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isEmpty();
         
         assertEquals("FROM Document d WHERE d.name IS EMPTY", criteria.getQueryString());
@@ -36,7 +35,7 @@ public class IsEmptyTest extends AbstractPersistenceTest {
     
     @Test
     public void testIsNotEmpty(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotEmpty();
         
         assertEquals("FROM Document d WHERE NOT d.name IS EMPTY", criteria.getQueryString());

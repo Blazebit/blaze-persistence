@@ -24,15 +24,17 @@ import javax.persistence.EntityManager;
  * @author ccbem
  */
 public class SubqueryInitiatorFactory {
+    private final CriteriaBuilderFactoryImpl cbf;
     private final EntityManager em;
     private final ParameterManager parameterManager;
 
-    public SubqueryInitiatorFactory(EntityManager em, ParameterManager parameterManager) {
+    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager) {
+        this.cbf = cbf;
         this.em = em;
         this.parameterManager = parameterManager;
     }
     
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener){
-        return new SubqueryInitiatorImpl<T>(em, result, parameterManager, listener);
+        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, listener);
     }
 }

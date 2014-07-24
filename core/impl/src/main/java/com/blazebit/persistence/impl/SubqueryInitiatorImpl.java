@@ -25,13 +25,15 @@ import javax.persistence.EntityManager;
  * @author ccbem
  */
 public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
+    private final CriteriaBuilderFactoryImpl cbf;
     private final EntityManager em;
     private final X result;
     private final ParameterManager parameterManager;
     private final SubqueryBuilderListener listener;
     private SubqueryBuilder currentSubqueryBuilder;
     
-    public SubqueryInitiatorImpl(EntityManager em, X result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
+    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
+        this.cbf = cbf;
         this.em = em;
         this.result = result;
         this.parameterManager = parameterManager;
@@ -40,14 +42,14 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
-        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, clazz.getSimpleName().toLowerCase(), result, parameterManager, listener);
+        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, clazz.getSimpleName().toLowerCase(), result, parameterManager, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, alias, result, parameterManager, listener);
+        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, alias, result, parameterManager, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

@@ -18,7 +18,6 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.spi.Criteria;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -30,7 +29,7 @@ import org.junit.Test;
 public class SubqueryTest extends AbstractPersistenceTest {
     @Test
     public void testWhereExsits(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         // query all documents that are owned by somebody
         System.out.println(crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString());
     }

@@ -17,7 +17,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ import org.junit.Test;
 public class IsNullTest extends AbstractPersistenceTest {
     @Test
     public void testIsNull(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNull();
         
         assertEquals("FROM Document d WHERE d.name IS NULL", criteria.getQueryString());
@@ -36,7 +35,7 @@ public class IsNullTest extends AbstractPersistenceTest {
     
     @Test
     public void testIsNotNull(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotNull();
         
         assertEquals("FROM Document d WHERE NOT d.name IS NULL", criteria.getQueryString());

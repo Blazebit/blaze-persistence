@@ -183,6 +183,13 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Select methods
      */
     /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public <Y> QueryBuilder<Y, ?> select(Class<Y> clazz);
+    
+    /**
      * Starts a {@link SelectObjectBuilder} for the given class. The types of the parameter arguments used in the {@link SelectObjectBuilder} must match a constructor of the given class.
      *
      * @param <Y>   The new query result type specified by the given class

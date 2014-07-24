@@ -19,7 +19,6 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.model.DocumentViewModel;
-import com.blazebit.persistence.spi.Criteria;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -55,7 +54,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
 
     @Test
     public void testSelectNewDocumentViewModel() {
-        CriteriaBuilder<DocumentViewModel> criteria = Criteria.from(em, Document.class)
+        CriteriaBuilder<DocumentViewModel> criteria = cbf.from(em, Document.class)
                 .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
 
         assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC NULLS LAST", criteria.getQueryString());
@@ -72,7 +71,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
 
     @Test
     public void testSelectNewDocument() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.name").end().where("LENGTH(d.name)").le(4).orderByAsc("d.name");
         assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC NULLS LAST", criteria.getQueryString());
         List<Document> actual = criteria.getQuery().getResultList();
@@ -108,7 +107,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
 //    
 //    @Test
 //    public void testSelectNewModel(){
-//        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
 //        criteria.selectNew(Document.class).with("d.author.name").end().where("d.title.length").lt(4);
 //        
 //        
@@ -117,13 +116,13 @@ public class SelectNewTest extends AbstractPersistenceTest {
 //    
 //    @Test(expected = NullPointerException.class)
 //    public void testSelectNewNullClass(){
-//        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
 //        criteria.selectNew((Class<Document>)null);        
 //    }
 //    
 //    @Test(expected = NullPointerException.class)
 //    public void testSelectNewNullConstructor(){
-//        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
 //        criteria.selectNew((Constructor<Document>)null);        
 //    }
 }

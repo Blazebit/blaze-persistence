@@ -19,7 +19,7 @@ package com.blazebit.persistence.view;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.spi.Criteria;
+import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.view.model.DocumentViewAbstractClass;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -76,7 +76,7 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
     
     @Test
     public void testAbstractClass() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d")
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
         List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
         

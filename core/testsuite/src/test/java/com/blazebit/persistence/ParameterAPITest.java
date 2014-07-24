@@ -17,7 +17,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
@@ -36,25 +35,25 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     
     @Test(expected = IllegalArgumentException.class)
     public void testSetParameter_noSuchParamter(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
         crit.setParameter("index", 0);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testSetDateParameter_noSuchParamter(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
         crit.setParameter("index", new Date(), TemporalType.DATE);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testSetCalendarParameter_noSuchParamter(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
         crit.setParameter("index", Calendar.getInstance(), TemporalType.DATE);
     }
     
     @Test
     public void test(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
         crit.select("contacts[:index]")
                 .where("contacts[:where_index]").isNotNull()
                 .where("name").eq("MyDoc")
@@ -91,19 +90,19 @@ public class ParameterAPITest extends AbstractPersistenceTest{
     
     @Test(expected = IllegalArgumentException.class)
     public void testReservedParameterName1(){
-        Criteria.from(em, Document.class).select("contacts[:ids]");
+        cbf.from(em, Document.class).select("contacts[:ids]");
     }
     
     @Test
     public void testUseParameterTwoTimes(){
-        CriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class).select(":test")
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class).select(":test")
             .where("contacts[:test]").isNull();
         assertFalse(cb.isParameterSet("test"));
     }
     
     @Test
     public void testIsParameterSetWithNonExistingParameter(){
-        CriteriaBuilder<Document> cb = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         assertFalse(cb.isParameterSet("test"));
     }
 }

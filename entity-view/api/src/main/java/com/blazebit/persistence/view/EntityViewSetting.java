@@ -178,6 +178,15 @@ public class EntityViewSetting<T> {
     public int getMaxRows() {
         return maxRows;
     }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public boolean hasSorters() {
+        return !attributeSorters.isEmpty() || !sorters.isEmpty();
+    }
 
     /**
      * TODO: javadoc
@@ -193,8 +202,44 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
+    public Map<String, Sorter> getAttributeSorters() {
+        return attributeSorters;
+    }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public boolean hasFilters() {
+        return !attributeFilters.isEmpty() || !filters.isEmpty();
+    }
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public Map<String, Filter> getFilters() {
         return filters;
+    }
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public Map<String, String> getAttributeFilters() {
+        return attributeFilters;
+    }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public boolean hasOptionalParameters() {
+        return !optionalParameters.isEmpty();
     }
 
     /**

@@ -124,19 +124,6 @@ public class SelectManager<T> extends AbstractManager {
         objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(this);
         registerParameterExpressions(expr);
     }
-
-//    public U select(Class<? extends T> clazz) {
-//        throw new UnsupportedOperationException();
-//    }
-//
-//    public U select(Constructor<? extends T> constructor) {
-//        throw new UnsupportedOperationException();
-//    }
-//
-//    // TODO: needed?
-//    public U select(ObjectBuilder<? extends T> builder) {
-//        throw new UnsupportedOperationException();
-//    }
 //    public CaseWhenBuilder<U> selectCase() {
 //        return new CaseWhenBuilderImpl<U>((U) this);
 //    }

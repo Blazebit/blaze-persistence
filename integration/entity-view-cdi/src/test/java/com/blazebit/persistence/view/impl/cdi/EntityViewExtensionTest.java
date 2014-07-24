@@ -16,9 +16,14 @@
 
 package com.blazebit.persistence.view.impl.cdi;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
-import javax.ejb.embeddable.EJBContainer;
 import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
+import javax.persistence.PersistenceUnit;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
@@ -31,8 +36,12 @@ import static  org.junit.Assert.*;
  */
 public class EntityViewExtensionTest {
     
+    @PersistenceUnit
+    private EntityManagerFactory emf;
     @Inject
     private EntityViewManager evm;
+    @Inject
+    private CriteriaBuilderFactory cbf;
     
     @Test
     public void testInjection() throws Exception {
@@ -42,7 +51,11 @@ public class EntityViewExtensionTest {
         BeanProvider.injectFields(this);
             
         assertNotNull(evm);
+        assertNotNull(TestEnricher.config);
         assertFalse(evm.getMetamodel().getViews().isEmpty());
+        assertNotNull(evm.getMetamodel().view(TestView.class));
+        CriteriaBuilder<TestView> cb = cbf.from(emf.createEntityManager(), TestEntity.class, "t").select(TestView.class);
+        assertEquals("SELECT t.id FROM TestEntity t", cb.getQueryString());
         
         container.shutdown();
     }

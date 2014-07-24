@@ -13,9 +13,11 @@
     <artifactId>blaze-persistence-integration</artifactId>
     <packaging>pom</packaging>
 	
-    <name>Blazebit Persistence JPA Integrations</name>
+    <name>Blazebit Persistence Integrations</name>
 
     <modules>
         <module>hibernate</module>
+        <module>core-cdi</module>
+        <module>entity-view-cdi</module>
     </modules>
 </project>

@@ -30,6 +30,9 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>> 
      * Covariant overrides.
      */
     @Override
+    public <Y> CriteriaBuilder<Y> select(Class<Y> clazz);
+    
+    @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
     @Override

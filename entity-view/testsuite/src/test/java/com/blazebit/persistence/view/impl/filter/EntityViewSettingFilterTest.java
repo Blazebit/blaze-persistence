@@ -22,7 +22,7 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.spi.Criteria;
+import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Filter;
@@ -95,7 +95,7 @@ public class EntityViewSettingFilterTest extends AbstractPersistenceTest {
         EntityViewSetting<FilteredDocument> setting = new EntityViewSetting<FilteredDocument>(FilteredDocument.class, 0, 1);
         
         // Query
-        CriteriaBuilder<Document> cb = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("name", "Test");
         setting.addAttributeSorter("name", Sorters.descending());
         setting.addOptionalParameter("index", 1);

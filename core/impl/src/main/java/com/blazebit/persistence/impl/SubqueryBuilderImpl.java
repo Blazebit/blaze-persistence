@@ -29,8 +29,8 @@ public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, Subq
     private final SubqueryBuilderListener listener;
     
     //TODO: prevent duplication of aliases from the main query
-    public SubqueryBuilderImpl(EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
-        super(em, Tuple.class, fromClazz, alias, parameterManager);
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
+        super(cbf, em, Tuple.class, fromClazz, alias, parameterManager);
         this.result = result;
         this.listener = listener;
     }

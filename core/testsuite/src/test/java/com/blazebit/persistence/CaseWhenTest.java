@@ -16,7 +16,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -29,7 +28,7 @@ public class CaseWhenTest extends AbstractPersistenceTest {
     
     @Test
     public void testCaseWhen() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
         criteria.selectCase("document.type")
             .when("'vertrag'", "2")
             .when("'info'", "1")

@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.spi;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.spi.CriteriaProvider;
-import javax.persistence.EntityManager;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  */
-public class CriteriaProviderImpl implements CriteriaProvider  {
-
-    @Override
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
-        return new CriteriaBuilderImpl<T>(em, clazz, clazz.getSimpleName().toLowerCase());
-    }
-
-    @Override
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
-        return new CriteriaBuilderImpl<T>(em, clazz, alias);
-    }
+public interface CriteriaBuilderConfiguration {
     
+    public <T> void registerObjectBuilder(Class<T> clazz, ObjectBuilderFactory<T> factory);
+    
+    public Map<Class<?>, ObjectBuilderFactory<?>> getObjectBuilders();
+    
+    public void registerQueryTransformer(QueryTransformer clazz);
+    
+    public List<QueryTransformer> getQueryTransformers();
+    
+    public CriteriaBuilderFactory createCriteriaBuilderFactory();
 }
