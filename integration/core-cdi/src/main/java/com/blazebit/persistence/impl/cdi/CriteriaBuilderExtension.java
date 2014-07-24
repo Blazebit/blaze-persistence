@@ -21,20 +21,17 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import java.util.ArrayList;
-import java.util.List;
-import javax.annotation.PostConstruct;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Any;
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
-import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.inject.Inject;
+import org.apache.deltaspike.core.api.literal.AnyLiteral;
 import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
@@ -47,8 +44,33 @@ public class CriteriaBuilderExtension implements Extension {
     
     private final CriteriaBuilderConfiguration configuration = Criteria.getDefault();
     
-    void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm, @Any Instance<ConfigurationEnricher<CriteriaBuilderConfiguration>> configurationEnrichers) {
-        for (ConfigurationEnricher<CriteriaBuilderConfiguration> enricher : configurationEnrichers) {
+//    void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm, @Any Instance<ConfigurationEnricher<CriteriaBuilderConfiguration>> configurationEnrichers) {
+//        for (ConfigurationEnricher<CriteriaBuilderConfiguration> enricher : configurationEnrichers) {
+//            enricher.beforeBuild(configuration, abd);
+//        }
+    void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        Type beanType = new ParameterizedType() {
+
+            @Override
+            public Type[] getActualTypeArguments() {
+                return new Type[] { CriteriaBuilderConfiguration.class };
+            }
+
+            @Override
+            public Type getRawType() {
+                return ConfigurationEnricher.class;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+        };
+        Set<Bean<?>> beans = bm.getBeans(beanType, new AnyLiteral());
+        
+        for (Bean<?> bean : beans) {
+            CreationalContext<?> ctx = bm.createCreationalContext(bean);
+            ConfigurationEnricher<CriteriaBuilderConfiguration> enricher = (ConfigurationEnricher<CriteriaBuilderConfiguration>) bm.getReference(bean, bean.getBeanClass(), ctx);
             enricher.beforeBuild(configuration, abd);
         }
         
