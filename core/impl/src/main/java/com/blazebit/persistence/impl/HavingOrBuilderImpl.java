@@ -75,5 +75,9 @@ public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     public SubqueryInitiator<? extends HavingOrBuilder<T>> havingExists() {
         return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
-    
+
+    @Override
+    public SubqueryInitiator<? extends HavingOrBuilder<T>> havingNotExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }

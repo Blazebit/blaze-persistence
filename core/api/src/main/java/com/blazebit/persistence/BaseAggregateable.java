@@ -40,5 +40,13 @@ public interface BaseAggregateable<T extends BaseAggregateable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<T> havingExists();
+    public SubqueryInitiator<? extends T> havingExists();
+    
+    /**
+     * Starts an exists predicate for the having clause with a subquery on the right hand side.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<? extends T> havingNotExists();
 }

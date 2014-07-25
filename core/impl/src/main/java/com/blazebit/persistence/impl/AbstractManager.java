@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
  */
 public class AbstractManager {
 
-    final QueryGenerator queryGenerator;
+    protected final QueryGenerator queryGenerator;
     protected final ParameterManager parameterManager;
     private final VisitorAdapter parameterRegistrationVisitor = new VisitorAdapter() {
         @Override

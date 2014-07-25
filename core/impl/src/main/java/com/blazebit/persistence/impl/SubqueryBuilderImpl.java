@@ -28,8 +28,9 @@ public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, Subq
     private final U result;
     private final SubqueryBuilderListener listener;
     
-    public SubqueryBuilderImpl(EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener) {
-        super(em, Tuple.class, fromClazz, alias, parameterManager, aliasManager);
+
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener) {
+        super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager);
         this.result = result;
         this.listener = listener;
     }

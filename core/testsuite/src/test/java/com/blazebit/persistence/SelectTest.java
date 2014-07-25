@@ -150,7 +150,7 @@ public class SelectTest extends AbstractPersistenceTest {
     
     @Test
     public void testAmbiguousAliasReplacement(){
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "name").where("d.name").eq("abc").getQueryString();
         
         String expected = "SELECT d.name AS name FROM Document d WHERE name = :param_0";

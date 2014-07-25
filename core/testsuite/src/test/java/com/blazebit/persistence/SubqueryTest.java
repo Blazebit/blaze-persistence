@@ -17,7 +17,6 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.spi.Criteria;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -29,7 +28,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
 
     @Test
     public void testRootAliasInSubquery() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
         String expected = "FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE ownedDocuments = d)";
 
@@ -41,7 +40,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
     public void testAmbiguousSelectAliases() {
         // we decided that this should not throw an exception
         // - we first check for existing aliases and if none exist we check if an implicit root alias is possible
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "name").where("id").in().from(Person.class).select("id").where("name").eqExpression("name").end().getQueryString();
         String expected = "SELECT d.name AS name FROM Document d WHERE d.id IN "
                 + "(SELECT person.id FROM Person person WHERE name = name)";
@@ -52,7 +51,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
 
     @Test
     public void testSelectAliases() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "n").where("id")
                 .in().from(Person.class).select("id").where("d.name").eqExpression("name")
                 .end()
@@ -66,7 +65,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
 
     @Test
     public void testMultipleSubqueriesWithSelectAliases() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "n")
                 .where("id")
                 .in().from(Person.class).select("id").where("name").eqExpression("d.name").end()
@@ -85,7 +84,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
 
     @Test
     public void testMultipleSubqueriesWithJoinAliases() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "n")
                 .leftJoin("versions", "v")
                 .where("id")
@@ -104,7 +103,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
     
     @Test
     public void testImplicitAliasPostfixing() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "n")
                 .where("SIZE(d.versions)").lt(5)
                 .where("id")
@@ -120,7 +119,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
     
     @Test
     public void testImplicitRootAliasPostfixing() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "document");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "document");
         crit.select("name", "n")
                 .leftJoin("versions", "v")
                 .where("SIZE(document.versions)").lt(5)
@@ -137,7 +136,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
     
     @Test(expected = IllegalStateException.class)
     public void testSubqueryWithoutSelect() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("id").in().from(Person.class).where("ownedDocuments").eqExpression("d").end().getQueryString();
         String expected = "FROM Document d WHERE d.id IN (SELECT * FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE ownedDocuments = d)";
 
@@ -147,7 +146,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
 
     @Test
     public void testMultipleSubqueriesWithParameters() {
-        CriteriaBuilder<Document> crit = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "n")
                 .where("id")
                 .in().from(Person.class).select("id").where("d.name").eq("name").end()

@@ -13,40 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
- * An interface for builders that support filtering.
- * This is related to the fact, that a query builder supports where clauses.
+ * An interface for builders that support filtering. This is related to the
+ * fact, that a query builder supports where clauses.
  *
  * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
 public interface Filterable<T extends Filterable<T>> extends BaseFilterable<T> {
-    
+
     /**
-     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
+     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of
+     * disjunctiv connected predicates. When the builder finishes, the predicate
+     * is added to the parent predicate container represented by the type
+     * {@linkplain X}.
      *
      * @return The or predicate builder for the where clause
      */
-    public RestrictionBuilder<? extends T> where(String expression);
-
-    /**
-     * Starts an exists predicate for the where clause with a subquery on the right hand side.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
-     *
-     * @return The subquery initiator for building a subquery
-     */
-    public SubqueryInitiator<? extends T> whereExists();
-    
-    /**
-     * Starts an not exists predicate for the where clause with a subquery on the right hand side.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
-     *
-     * @return The subquery initiator for building a subquery
-     */
-    public SubqueryInitiator<? extends T> whereNotExists();
+    public WhereOrBuilder<? extends T> whereOr();
 }

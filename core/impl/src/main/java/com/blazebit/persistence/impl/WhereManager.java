@@ -92,11 +92,4 @@ public class WhereManager<U> extends PredicateManager<U> {
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryBuilderListener);
     }
 
-    String buildClause(boolean generateRequiredMapKeyFiltersOnly) {
-        queryGenerator.setGenerateRequiredMapKeyFiltersOnly(generateRequiredMapKeyFiltersOnly);
-        String clause = super.buildClause();
-        queryGenerator.setGenerateRequiredMapKeyFiltersOnly(false);
-        return clause;
-    }
-
 }

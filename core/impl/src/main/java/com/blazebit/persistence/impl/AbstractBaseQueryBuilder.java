@@ -128,7 +128,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(em, clazz, clazz, alias, new ParameterManager(), new AliasManager());
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager());
     }
 
 
@@ -233,6 +233,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<X> havingExists() {
+        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
+    }
+    
+    @Override
+    public SubqueryInitiator<X> havingNotExists() {
         return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 

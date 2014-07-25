@@ -75,4 +75,9 @@ public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements
     public SubqueryInitiator<HavingAndBuilder<T>> havingExists() {
         return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, this);
     }
+
+    @Override
+    public SubqueryInitiator<? extends HavingAndBuilder<T>> havingNotExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 }
