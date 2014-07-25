@@ -25,6 +25,7 @@ public class JoinVisitor extends VisitorAdapter {
 
     private final JoinManager joinManager;
     private final SelectManager<?> selectManager;
+    private final AliasManager aliasManager = null;
     private boolean joinWithObjectLeafAllowed = true;
     private boolean fromSelect = false;
 
@@ -43,31 +44,9 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        String path = expression.getPath();
-        String potentialSelectAlias = getFirstPathElement(path);
-
-        // do not join select aliases
-        if (selectManager.getSelectAliasToInfoMap().containsKey(potentialSelectAlias)) {
-            if (!potentialSelectAlias.equals(path)) {
-                throw new IllegalStateException("Path starting with select alias not allowed");
-            }
-            return;
-        }
-
         joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromSelect);
     }
     
-    private String getFirstPathElement(String path) {
-        String elem;
-        int firstDotIndex;
-        if ((firstDotIndex = path.indexOf('.')) == -1) {
-            elem = path;
-        } else {
-            elem = path.substring(0, firstDotIndex);
-        }
-        return elem;
-    }
-
     public boolean isJoinWithObjectLeafAllowed() {
         return joinWithObjectLeafAllowed;
     }

@@ -26,13 +26,15 @@ import javax.persistence.EntityManager;
 public class SubqueryInitiatorFactory {
     private final EntityManager em;
     private final ParameterManager parameterManager;
+    private final AliasManager aliasManager;
 
-    public SubqueryInitiatorFactory(EntityManager em, ParameterManager parameterManager) {
+    public SubqueryInitiatorFactory(EntityManager em, ParameterManager parameterManager, AliasManager aliasManager) {
         this.em = em;
         this.parameterManager = parameterManager;
+        this.aliasManager = aliasManager;
     }
     
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener){
-        return new SubqueryInitiatorImpl<T>(em, result, parameterManager, listener);
+        return new SubqueryInitiatorImpl<T>(em, result, parameterManager, aliasManager, listener);
     }
 }

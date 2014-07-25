@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * @author Christian Beikov
  */
 //TODO: restructure this
-public class BuilderEndedListenerImpl implements BuilderEndedListener, SubqueryBuilderListener {
+public class BuilderEndedListenerImpl implements PredicateBuilderEndedListener, SubqueryBuilderListener {
 
     private PredicateBuilder currentBuilder;
     private SubqueryBuilder currentSubqueryBuilder;

@@ -109,16 +109,4 @@ public class ArrayExpressionTest extends AbstractPersistenceTest {
         
         assertEquals("SELECT p AS x FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c WITH KEY(c) = 1 WHERE c >= :param_0", criteria.getQueryString());
     }
-    
-    @Test
-    public void testGetResultList() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
-        CriteriaBuilder<Tuple> tupleCrit = criteria.select("owner.localized[1]", "l").leftJoin("owner.localized", "localized").leftJoin("d.contacts", "contacts").where("contacts[1].name").like("%arl%");
-        System.out.println(tupleCrit.getQueryString());
-        List<Tuple> results = tupleCrit.getResultList();
-
-        
-        em.createQuery("SELECT contacts AS l FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WITH KEY(contacts) = 1 WHERE contacts.name LIKE '%arl%'", Tuple.class).getResultList();
-//        System.out.println(results);
-    }
 }

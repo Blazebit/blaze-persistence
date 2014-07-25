@@ -22,8 +22,10 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
@@ -48,25 +50,25 @@ import java.util.List;
 public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implements RestrictionBuilder<T>, PredicateBuilder {
 
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final Expression leftExpression;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
-    
-    public RestrictionBuilderImpl(T result, BuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
+
+    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
         this.leftExpression = leftExpression;
         this.listener = listener;
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
     }
-    
+
     private T chain(Predicate predicate) {
         verifyBuilderEnded();
         this.predicate = predicate;
         listener.onBuilderEnded(this);
         return result;
     }
-    
+
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
@@ -81,15 +83,23 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T between(Object start, Object end) {
-        if(start == null) throw new NullPointerException("start");
-        if(end == null) throw new NullPointerException("end");
+        if (start == null) {
+            throw new NullPointerException("start");
+        }
+        if (end == null) {
+            throw new NullPointerException("end");
+        }
         return chain(new BetweenPredicate(leftExpression, new ParameterExpression(start), new ParameterExpression(end)));
     }
 
     @Override
     public T notBetween(Object start, Object end) {
-        if(start == null) throw new NullPointerException("start");
-        if(end == null) throw new NullPointerException("end");
+        if (start == null) {
+            throw new NullPointerException("start");
+        }
+        if (end == null) {
+            throw new NullPointerException("end");
+        }
         return chain(new NotPredicate(new BetweenPredicate(leftExpression, new ParameterExpression(start), new ParameterExpression(end))));
     }
 
@@ -100,7 +110,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T eq(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new EqPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -116,7 +128,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T notEq(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new NotPredicate(new EqPredicate(leftExpression, new ParameterExpression(value))));
     }
 
@@ -132,7 +146,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T gt(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new GtPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -148,7 +164,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T ge(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new GePredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -164,7 +182,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T lt(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new LtPredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -180,7 +200,9 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T le(Object value) {
-        if(value == null) throw new NullPointerException("value");
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
         return chain(new LePredicate(leftExpression, new ParameterExpression(value)));
     }
 
@@ -191,16 +213,20 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T in(List<?> values) {
-        if(values == null) throw new NullPointerException("values");
+        if (values == null) {
+            throw new NullPointerException("values");
+        }
         return chain(new InPredicate(leftExpression, new ParameterExpression(values)));
     }
 
     @Override
     public T notIn(List<?> values) {
-        if(values == null) throw new NullPointerException("values");
+        if (values == null) {
+            throw new NullPointerException("values");
+        }
         return chain(new NotPredicate(new InPredicate(leftExpression, new ParameterExpression(values))));
     }
-    
+
     @Override
     public T isNull() {
         return chain(new IsNullPredicate(leftExpression));
@@ -210,45 +236,52 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
     public T isNotNull() {
         return chain(new NotPredicate(new IsNullPredicate(leftExpression)));
     }
-
+    
     @Override
     public T isEmpty() {
-        return chain(new IsEmptyPredicate(leftExpression));
+        
+        return chain(new IsEmptyPredicate(makeCollectionValued(leftExpression)));
     }
 
     @Override
     public T isNotEmpty() {
-        return chain(new NotPredicate(new IsEmptyPredicate(leftExpression)));
+        return chain(new NotPredicate(new IsEmptyPredicate(makeCollectionValued(leftExpression))));
     }
 
     @Override
     public T isMemberOf(String expression) {
-        return chain(new IsMemberOfPredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new IsMemberOfPredicate(leftExpression, makeCollectionValued(Expressions.createSimpleExpression(expression))));
     }
 
     @Override
     public T isNotMemberOf(String expression) {
-        return chain(new NotPredicate(new IsMemberOfPredicate(leftExpression, Expressions.createSimpleExpression(expression))));
+        return chain(new NotPredicate(new IsMemberOfPredicate(leftExpression, makeCollectionValued(Expressions.createSimpleExpression(expression)))));
     }
-    
+
     @Override
     public T like(String value) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), true, null));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), true, null));
     }
 
     @Override
     public T like(String value, boolean caseSensitive) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, null));
     }
 
     @Override
     public T like(String value, boolean caseSensitive, Character escapeCharacter) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, escapeCharacter));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, escapeCharacter));
     }
-    
+
     @Override
     public T likeExpression(String expression) {
         return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), true, null));
@@ -258,28 +291,34 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
     public T likeExpression(String expression, boolean caseSensitive) {
         return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, null));
     }
-    
+
     @Override
     public T likeExpression(String expression, boolean caseSensitive, Character escapeCharacter) {
         return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, escapeCharacter));
     }
-    
+
     @Override
     public T notLike(String value) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), true, null)));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object) value), true, null)));
     }
-    
+
     @Override
     public T notLike(String value, boolean caseSensitive) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, null)));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, null)));
     }
 
     @Override
     public T notLike(String value, boolean caseSensitive, Character escapeCharacter) {
-        if(value == null) throw new NullPointerException("value");
-        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object)value), caseSensitive, escapeCharacter)));
+        if (value == null) {
+            throw new NullPointerException("value");
+        }
+        return chain(new NotPredicate(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, escapeCharacter)));
     }
 
     @Override
@@ -316,21 +355,27 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
         Predicate pred;
-        if(predicate instanceof NotPredicate){
+        if (predicate instanceof NotPredicate) {
             // unwrap not predicate
-            pred = ((NotPredicate)predicate).getPredicate();
-        }else{
+            pred = ((NotPredicate) predicate).getPredicate();
+        } else {
             pred = predicate;
         }
-        
-        if(pred instanceof SubqueryPredicate){
-            ((SubqueryPredicate)pred).setSubqueryBuilder(builder);
-        }else{
+
+        if (pred instanceof SubqueryPredicate) {
+            ((SubqueryPredicate) pred).setSubqueryBuilder(builder);
+        } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate was not a SubqueryPredicate");
         }
         listener.onBuilderEnded(this);
     }
-    
-    
 
+    private Expression makeCollectionValued(Expression expr){
+        if (leftExpression instanceof PathExpression) {
+            ((PathExpression) leftExpression).setCollectionValued(true);
+        } else {
+            throw new SyntaxErrorException("Function expects collection valued path and cannot be applied to expression [" + leftExpression + "]");
+        }
+        return expr;
+    }
 }

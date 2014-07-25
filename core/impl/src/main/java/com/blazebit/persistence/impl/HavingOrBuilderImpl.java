@@ -20,7 +20,7 @@ import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expressions;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -32,11 +32,11 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements HavingOrBuilder<T>, PredicateBuilder {
 
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final OrPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public HavingOrBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new OrPredicate();

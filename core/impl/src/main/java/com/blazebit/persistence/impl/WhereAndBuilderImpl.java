@@ -22,7 +22,7 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -33,11 +33,11 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements WhereAndBuilder<T>, PredicateBuilder {
     
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public WhereAndBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new AndPredicate();
@@ -75,6 +75,11 @@ public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements 
 
     @Override
     public SubqueryInitiator<? extends WhereAndBuilder<T>> whereExists() {
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    }
+    
+    @Override
+    public SubqueryInitiator<? extends WhereAndBuilder<T>> whereNotExists() {
         return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
 }

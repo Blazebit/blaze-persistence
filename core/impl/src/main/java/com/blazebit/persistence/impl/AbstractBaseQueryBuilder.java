@@ -41,7 +41,7 @@ import javax.persistence.Tuple;
  */
 public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
 
-    protected static final Logger log = Logger.getLogger(CriteriaBuilderImpl.class.getName());
+    protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     protected static final String idParamName = "ids";
 
     protected final Class<?> fromClazz;
@@ -62,6 +62,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final JPAInfo jpaInfo;
     
     private final BuilderEndedListenerImpl subqueryBuilderListener = new BuilderEndedListenerImpl();
+    
+    private final AliasManager aliasManager;
 
     /**
      * Create flat copy of builder
@@ -83,14 +85,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryTransformer = builder.queryTransformer;
         this.jpaInfo = builder.jpaInfo;
         this.subqueryInitFactory = builder.subqueryInitFactory;
+        this.aliasManager = builder.aliasManager;
     }
 
-    protected AbstractBaseQueryBuilder(EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager) {
+    protected AbstractBaseQueryBuilder(EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager) {
         if (em == null) {
             throw new NullPointerException("em");
-        }
-        if (alias == null) {
-            throw new NullPointerException("alias");
         }
         if (fromClazz == null) {
             throw new NullPointerException("fromClazz");
@@ -102,19 +102,19 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.jpaInfo = new JPAInfo(em);
         this.fromClazz = fromClazz;
         this.resultClazz = resultClazz;
-
+        this.aliasManager = new AliasManager(aliasManager);
         this.parameterManager = parameterManager;
         
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(em, parameterManager);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(em, parameterManager, this.aliasManager);
 
-        this.queryGenerator = new QueryGenerator(parameterManager);
+        this.queryGenerator = new QueryGenerator(parameterManager, this);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo);
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this);
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies
@@ -124,7 +124,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias) {
-        this(em, clazz, clazz, alias, new ParameterManager());
+        this(em, clazz, clazz, alias, new ParameterManager(), new AliasManager());
     }
 
 
@@ -182,7 +182,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<? extends X> whereExists() {
-        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
+        return whereManager.whereExists((X) this);
+    }
+    
+    @Override
+    public SubqueryInitiator<? extends X> whereNotExists() {
+        return whereManager.whereNotExists((X) this);
     }
 
     /*

@@ -186,11 +186,6 @@ public class JoinTest extends AbstractPersistenceTest {
     }
     
     @Test(expected = NullPointerException.class)
-    public void testConstructorAliasNull(){
-        Criteria.from(em, Document.class, null);
-    }
-    
-    @Test(expected = NullPointerException.class)
     public void testConstructorClassNull(){
         Criteria.from(em, null, "d");
     }
@@ -269,7 +264,6 @@ public class JoinTest extends AbstractPersistenceTest {
         
         criteria.where("versions.document.name").eq(0).leftJoin("a.partners", "p");
         
-        System.out.println(criteria.getQueryString());
         assertEquals("FROM Document a LEFT JOIN a.partners p LEFT JOIN a.versions versions LEFT JOIN versions.document document WHERE document.name = :param_0", criteria.getQueryString());
     }
     
@@ -281,7 +275,6 @@ public class JoinTest extends AbstractPersistenceTest {
         criteria1.where("p.ownedDocuments.name").eq(0).leftJoin("a.partners", "p");
         criteria2.leftJoin("a.partners", "p").where("p.ownedDocuments.name").eq(0);
         
-        System.out.println(criteria1.getQueryString());
         assertEquals("FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.name = :param_0", criteria1.getQueryString());
         assertEquals("FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.name = :param_0", criteria2.getQueryString());
     }

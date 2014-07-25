@@ -24,19 +24,21 @@ import javax.persistence.Tuple;
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder< U>> implements SubqueryBuilder<U> /* TODO: is Tuple OK?*/ {
+public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> {
     private final U result;
     private final SubqueryBuilderListener listener;
     
-    //TODO: prevent duplication of aliases from the main query
-    public SubqueryBuilderImpl(EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
-        super(em, Tuple.class, fromClazz, alias, parameterManager);
+    public SubqueryBuilderImpl(EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener) {
+        super(em, Tuple.class, fromClazz, alias, parameterManager, aliasManager);
         this.result = result;
         this.listener = listener;
     }
     
     @Override
     public U end() {
+        if(selectManager.getSelectInfoCount() == 0){
+            throw new IllegalStateException("A subquery without a select clause is not allowed");
+        }
         listener.onBuilderEnded(this);
         return result;
     }

@@ -30,14 +30,14 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEnd
     QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final boolean wrapNot;
     protected final Expression leftExpression;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected PredicateQuantifier quantifier = PredicateQuantifier.ONE;
     private Predicate predicate;
 
-    public AbstractQuantifiablePredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
+    public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.wrapNot = wrapNot;

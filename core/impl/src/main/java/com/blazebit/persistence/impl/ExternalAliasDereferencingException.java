@@ -16,13 +16,24 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-
 /**
  *
  * @author ccbem
  */
-public interface AliasInfo {
-    String getAlias();
-    BaseQueryBuilder<?, ?> getAliasOwner();
+public class ExternalAliasDereferencingException extends RuntimeException {
+
+    public ExternalAliasDereferencingException() {
+    }
+    
+    public ExternalAliasDereferencingException(String msg){
+        super(msg);
+    }
+    
+    public ExternalAliasDereferencingException(Throwable t){
+        super(t);
+    }
+    
+    public ExternalAliasDereferencingException(String msg, Throwable t){
+        super(msg, t);
+    }
 }

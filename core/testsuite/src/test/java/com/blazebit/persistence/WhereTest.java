@@ -90,7 +90,6 @@ public class WhereTest extends AbstractPersistenceTest {
                         .where("d.versions.url").like("ftp://%")
                     .endAnd()
                 .endOr();   
-        System.out.println(criteria.getQueryString());
         assertEquals("FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.name > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)", criteria.getQueryString());
     }
     

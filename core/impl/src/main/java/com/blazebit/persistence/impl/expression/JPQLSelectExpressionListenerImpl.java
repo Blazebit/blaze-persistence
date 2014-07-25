@@ -19,6 +19,7 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionBaseListener;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -28,7 +29,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * @author Moritz Becker
  */
 class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
-
+    private static final Logger LOG = Logger.getLogger(JPQLSelectExpressionListenerImpl.class.getName());
+    
     public JPQLSelectExpressionListenerImpl() {
     }
 
@@ -43,6 +45,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     private CompositeExpression root = new CompositeExpression(new ArrayList<Expression>());
     private PathExpression path;
+    private boolean startCollectionValuedPath = false;
 
     private PropertyExpression arrayExprBase;
     private Expression arrayExprIndex;
@@ -141,6 +144,8 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             }
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
+            path.setCollectionValued(startCollectionValuedPath);
+            startCollectionValuedPath = false;
         } else if (ctx == ContextType.ARRAY) {
             ArrayExpression arrayExpr;
             if (arrayExprIndex != null) {
@@ -512,7 +517,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             subexpressionDelegate.visitTerminal(node);
         } else {
-            System.out.println("visitTerminal " + node.getText());
+            LOG.finest("visitTerminal " + node.getText());
 
             if (node.getSymbol().getText().equals("]")) {
                 if (fooBuilder.length() > 0) {
@@ -525,7 +530,10 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                 if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Input_parameter){
                     // cut of ':' at the start
                     root.getExpressions().add(new ParameterExpression(node.getText().substring(1)));
-                }else{
+                } else{
+                    if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function){
+                        startCollectionValuedPath = true;
+                    }
                     fooBuilder.append(node.getSymbol().getText());
                 }
             } else if (ctx == ContextType.ARRAY) {
@@ -557,7 +565,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             ctx.enterRule(subexpressionDelegate);
         } else {
-            System.out.println("enter" + ctx.getClass().getSimpleName());
+            LOG.finest("enter" + ctx.getClass().getSimpleName());
         }
     }
 
@@ -566,7 +574,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             ctx.exitRule(subexpressionDelegate);
         } else {
-            System.out.println("exit" + ctx.getClass().getSimpleName());
+            LOG.finest("exit" + ctx.getClass().getSimpleName());
         }
     }
 }

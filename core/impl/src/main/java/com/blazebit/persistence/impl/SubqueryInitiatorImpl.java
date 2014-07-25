@@ -28,26 +28,27 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final EntityManager em;
     private final X result;
     private final ParameterManager parameterManager;
+    private final AliasManager aliasManager;
     private final SubqueryBuilderListener listener;
-    private SubqueryBuilder currentSubqueryBuilder;
     
-    public SubqueryInitiatorImpl(EntityManager em, X result, ParameterManager parameterManager, SubqueryBuilderListener listener) {
+    public SubqueryInitiatorImpl(EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener) {
         this.em = em;
         this.result = result;
         this.parameterManager = parameterManager;
+        this.aliasManager = aliasManager;
         this.listener = listener;
     }
     
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
-        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, clazz.getSimpleName().toLowerCase(), result, parameterManager, listener);
+        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, null, result, parameterManager, aliasManager, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, alias, result, parameterManager, listener);
+        SubqueryBuilder<X> subqueryBuilder = new SubqueryBuilderImpl<X>(em, clazz, alias, result, parameterManager, aliasManager, listener);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

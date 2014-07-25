@@ -42,7 +42,7 @@ public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
 
     public static class GtPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-        public GtPredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
+        public GtPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
             super(result, listener, leftExpression, false, subqueryInitFactory);
         }
 

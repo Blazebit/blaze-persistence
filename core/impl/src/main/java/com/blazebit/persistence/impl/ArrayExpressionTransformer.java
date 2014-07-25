@@ -84,7 +84,8 @@ public class ArrayExpressionTransformer {
                 loopEndIndex = 1;
             }
         } else {
-            throw new IllegalStateException("Path expression without base node");
+            // this case is for single select and join aliases
+            return original;
         }
 
         //TODO: set baseNodes on created PathExpressions

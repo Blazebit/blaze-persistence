@@ -46,7 +46,7 @@ public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
     
     public static class EqPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-        public EqPredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
+        public EqPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
             super(result, listener, leftExpression, wrapNot, subqueryInitFactory);
         }
        

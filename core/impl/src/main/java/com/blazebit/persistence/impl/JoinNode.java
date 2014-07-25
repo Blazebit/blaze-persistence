@@ -26,7 +26,7 @@ import java.util.TreeMap;
  */
 public class JoinNode {
 
-    private AliasInfo aliasInfo;
+    private JoinAliasInfo aliasInfo;
     private JoinType type = JoinType.LEFT;
     private boolean fetch = false;
     // This flag indicates if this join node is required from a select expression only
@@ -38,7 +38,7 @@ public class JoinNode {
     
     private Predicate withPredicate;
 
-    public JoinNode(AliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass) {
+    public JoinNode(JoinAliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass) {
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.fetch = fetch;
@@ -53,11 +53,11 @@ public class JoinNode {
         this.selectOnly = selectOnly;
     }
 
-    public AliasInfo getAliasInfo() {
+    public JoinAliasInfo getAliasInfo() {
         return aliasInfo;
     }
 
-    public void setAliasInfo(AliasInfo aliasInfo) {
+    public void setAliasInfo(JoinAliasInfo aliasInfo) {
         this.aliasInfo = aliasInfo;
     }
 

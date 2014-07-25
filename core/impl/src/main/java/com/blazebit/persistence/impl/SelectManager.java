@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
@@ -44,14 +45,18 @@ public class SelectManager<T> extends AbstractManager {
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
     // Maps alias to SelectInfo
-    private final Map<String, SelectInfo> selectAliasToInfoMap = new HashMap<String, SelectInfo>();
+//    private final Map<String, SelectInfo> selectAliasToInfoMap = new HashMap<String, SelectInfo>();
     // needed for tuple/alias matching
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
     private final Map<String, SelectInfo> selectAbsolutePathToInfoMap = new HashMap<String, SelectInfo>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
+    private final AliasManager aliasManager;
+    private final BaseQueryBuilder<?, ?> aliasOwner;
 
-    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
+    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner) {
         super(queryGenerator, parameterManager);
+        this.aliasManager = aliasManager;
+        this.aliasOwner = aliasOwner;
     }
 
     void verifyBuilderEnded() {
@@ -66,8 +71,8 @@ public class SelectManager<T> extends AbstractManager {
         return selectAbsolutePathToInfoMap;
     }
 
-    public Map<String, SelectInfo> getSelectAliasToInfoMap() {
-        return selectAliasToInfoMap;
+    public int getSelectInfoCount() {
+        return selectInfos.size();
     }
 
     public Map<String, Integer> getSelectAliasToPositionMap() {
@@ -115,9 +120,10 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
-        SelectInfo selectInfo = new SelectInfo(expr, selectAlias);
+        SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
         if (selectAlias != null) {
-            selectAliasToInfoMap.put(selectAlias, selectInfo);
+            aliasManager.registerAliasInfo(selectInfo);
+//            selectAliasToInfoMap.put(selectAlias, selectInfo);
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         selectInfos.add(selectInfo);
@@ -152,7 +158,7 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        
+
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -165,7 +171,7 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        
+
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
@@ -178,26 +184,26 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        
+
         String[] expressions = builder.getExpressions();
-        
+
         if (expressions == null || expressions.length == 0) {
             throw new IllegalArgumentException("The object builder '" + builder + "' returned no or empty expressions.");
         }
 
         for (int i = 0; i < expressions.length; i++) {
             String expression = expressions[i];
-            
+
             if (expression == null) {
                 throw new NullPointerException("Illegal null expression returned from obejct builder '" + objectBuilder + "' at index: " + i);
             }
             if (expression.isEmpty()) {
                 throw new IllegalArgumentException("Illegal empty expression returned from object builder '" + objectBuilder + "' at index: " + i);
             }
-            
+
             Expression expr = Expressions.createSimpleExpression(expression);
             registerParameterExpressions(expr);
-            SelectInfo selectInfo = new SelectInfo(expr, null);
+            SelectInfo selectInfo = new SelectInfo(expr);
             selectInfos.add(selectInfo);
         }
         objectBuilder = (ObjectBuilder<T>) builder;
@@ -217,34 +223,25 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    private void applySelects(QueryGenerator queryGenerator, StringBuilder sb, List<SelectInfo> selects) {
-        if (selects.isEmpty()) {
-            return;
-        }
-        sb.append("SELECT ");
-        if (distinct) {
-            sb.append("DISTINCT ");
-        }
-        // we must not replace select alias since we would loose the original expressions
-        queryGenerator.setReplaceSelectAliases(false);
-        Iterator<SelectInfo> iter = selects.iterator();
-        applySelect(queryGenerator, sb, iter.next());
-        while (iter.hasNext()) {
-            sb.append(", ");
-            applySelect(queryGenerator, sb, iter.next());
-        }
-        sb.append(" ");
-        queryGenerator.setReplaceSelectAliases(true);
-    }
-
     protected void populateSelectAliasAbsolutePaths() {
         selectAbsolutePathToInfoMap.clear();
-        for (Map.Entry<String, SelectInfo> selectAliasEntry : selectAliasToInfoMap.entrySet()) {
-            Expression selectExpr = selectAliasEntry.getValue().getExpression();
-            if (selectExpr instanceof PathExpression) {
-                PathExpression pathExpr = (PathExpression) selectExpr;
-                String absPath = pathExpr.getBaseNode().getAliasInfo().getAbsolutePath();
-                selectAbsolutePathToInfoMap.put(absPath, selectAliasEntry.getValue());
+        for (Map.Entry<String, AliasInfo> selectAliasEntry : aliasManager.getAliasMapForBottomLevel().entrySet()) {
+            if (selectAliasEntry.getValue() instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) selectAliasEntry.getValue();
+                Expression selectExpr = selectInfo.getExpression();
+                if (selectExpr instanceof PathExpression) {
+                    PathExpression pathExpr = (PathExpression) selectExpr;
+                    String absPath = pathExpr.getBaseNode().getAliasInfo().getAbsolutePath();
+                    if (absPath.isEmpty()) {
+                        // if the absPath is empty the pathExpr is relative to the root and we
+                        // must not insert any select info for this
+                        absPath = pathExpr.getField();
+                        
+                    }else{
+                        absPath += "." + pathExpr.getField();
+                    }
+                    selectAbsolutePathToInfoMap.put(absPath, selectInfo);
+                }
             }
         }
     }
@@ -283,21 +280,31 @@ public class SelectManager<T> extends AbstractManager {
 
     }
 
-    static class SelectInfo extends NodeInfo {
+    static class SelectInfo extends NodeInfo implements AliasInfo {
 
-        private String alias;
+        private final String alias;
+        private final BaseQueryBuilder<?, ?> aliasOwner;
 
         public SelectInfo(Expression expression) {
             super(expression);
+            this.alias = null;
+            this.aliasOwner = null;
         }
 
-        public SelectInfo(Expression expression, String alias) {
+        public SelectInfo(Expression expression, String alias, BaseQueryBuilder<?, ?> aliasOwner) {
             super(expression);
             this.alias = alias;
+            this.aliasOwner = aliasOwner;
         }
 
+        @Override
         public String getAlias() {
             return alias;
+        }
+
+        @Override
+        public BaseQueryBuilder<?, ?> getAliasOwner() {
+            return aliasOwner;
         }
     }
 }

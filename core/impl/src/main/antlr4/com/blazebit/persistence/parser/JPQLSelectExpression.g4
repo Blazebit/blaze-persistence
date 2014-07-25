@@ -107,6 +107,7 @@ simple_expression : single_valued_path_expression |
                         function_invocation ;
 
  string_expression : state_field_path_expression |
+                     single_element_path_expression |
                        String_literal |
                        Input_parameter |
                        functions_returning_strings |
@@ -149,7 +150,7 @@ simple_expression : single_valued_path_expression |
                                   'ABS('arithmetic_expression')' |
                                   'SQRT('arithmetic_expression')' |
                                   'MOD('arithmetic_expression',' arithmetic_expression')' |
-                                  'SIZE('collection_valued_path_expression')' |
+                                  Size_function '('collection_valued_path_expression')' |
                                   'INDEX('Identification_variable')';
 
  functions_returning_datetime : 'CURRENT_DATE' | 'CURRENT_TIME' | 'CURRENT_TIMESTAMP';

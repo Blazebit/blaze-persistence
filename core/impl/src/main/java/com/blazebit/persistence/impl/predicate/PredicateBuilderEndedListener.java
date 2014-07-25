@@ -19,7 +19,7 @@ package com.blazebit.persistence.impl.predicate;
  *
  * @author cpbec
  */
-public interface BuilderEndedListener {
+public interface PredicateBuilderEndedListener {
     
     public void onBuilderEnded(PredicateBuilder o);
 }

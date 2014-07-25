@@ -56,7 +56,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         private List<TupleElement<?>> tupleElements;
 
         private TupleImpl(Object[] tuple, String[] aliases) {
-            if (tuple.length != selectManager.getSelectAliasToInfoMap().size()) {
+            if (tuple.length != selectManager.getSelectInfoCount()) {
                 throw new IllegalArgumentException(
                         "Size mismatch between tuple result [" + tuple.length
                         + "] and expected tuple elements [" + selectManager.getSelectAbsolutePathToInfoMap().size() + "]"

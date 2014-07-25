@@ -20,7 +20,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expressions;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -32,11 +32,11 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 public class WhereOrBuilderImpl<T> extends BuilderEndedListenerImpl implements WhereOrBuilder<T>, PredicateBuilder {
 
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final OrPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public WhereOrBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public WhereOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new OrPredicate();
@@ -76,4 +76,8 @@ public class WhereOrBuilderImpl<T> extends BuilderEndedListenerImpl implements W
         return subqueryInitFactory.createSubqueryInitiator(this, this);
     }
     
+    @Override
+    public SubqueryInitiator<? extends WhereOrBuilder<T>> whereNotExists() {
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    }
 }

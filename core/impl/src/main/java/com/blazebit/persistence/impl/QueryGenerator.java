@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
@@ -26,6 +27,7 @@ import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
@@ -54,14 +56,11 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     private boolean generateRequiredMapKeyFiltersOnly = false;
     // cyclic dependency
     private SelectManager<?> selectManager;
+    private final BaseQueryBuilder<?,?> aliasOwner;
 
-    public QueryGenerator(ParameterManager parameterManager) {
+    public QueryGenerator(ParameterManager parameterManager, BaseQueryBuilder<?,?> aliasOwner) {
         this.parameterManager = parameterManager;
-    }
-
-    public QueryGenerator(SelectManager<?> selectManager, ParameterManager parameterManager) {
-        this(parameterManager);
-        this.selectManager = selectManager;
+        this.aliasOwner = aliasOwner;
     }
 
     void setSelectManager(SelectManager<?> selectManager) {
@@ -229,6 +228,13 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
         sb.append(predicate.getRight().getQueryString());
         sb.append(")");
     }
+
+    @Override
+    public void visit(ExistsPredicate predicate) {
+        sb.append("EXISTS (");
+        sb.append(predicate.getBuilder().getQueryString());
+        sb.append(")");
+    }
     
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         predicate.getLeft().accept(this);
@@ -267,14 +273,12 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     //TODO: remove
     @Override
     public void visit(PropertyExpression expression) {
-
     }
 
     @Override
     public void visit(ParameterExpression expression) {
         String paramName;
         if (expression.getName() == null) {
-//            paramName = parameterManager.getParamNameForObject(expression.getValue());
             throw new IllegalStateException("Unsatisfied parameter " + expression.getName());
         } else {
             paramName = expression.getName();
@@ -300,12 +304,17 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
         if (replaceSelectAliases) {
             if (expression.getBaseNode() != null) {
                 String absPath = expression.getBaseNode().getAliasInfo().getAbsolutePath();
+                if(absPath.isEmpty()){
+                    absPath = expression.getField();
+                }else{
+                    absPath += "." + expression.getField();
+                }
                 SelectInfo selectInfo = selectManager.getSelectAbsolutePathToInfoMap().get(absPath);
-                if (selectInfo != null) {
+                if (selectInfo != null && selectInfo.getAliasOwner() == aliasOwner) {
                     sb.append(selectInfo.getAlias());
                     return;
                 }
-            }
+            }// else the expression is a pure alias and does not require to be replaced
         }
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());

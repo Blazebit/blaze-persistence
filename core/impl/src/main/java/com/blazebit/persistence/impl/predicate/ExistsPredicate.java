@@ -14,15 +14,29 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 
 /**
  *
  * @author ccbem
  */
-public interface AliasInfo {
-    String getAlias();
-    BaseQueryBuilder<?, ?> getAliasOwner();
+public class ExistsPredicate implements SubqueryPredicate {
+    private SubqueryBuilder<?> subqueryBuilder;
+    
+    @Override
+    public void setSubqueryBuilder(SubqueryBuilder<?> builder) {
+        this.subqueryBuilder = builder;
+    }
+
+    public SubqueryBuilder<?> getBuilder() {
+        return subqueryBuilder;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+    
 }

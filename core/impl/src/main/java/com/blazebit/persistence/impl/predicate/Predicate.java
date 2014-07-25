@@ -50,6 +50,8 @@ public interface Predicate {
         public void visit(GePredicate predicate);
         public void visit(LtPredicate predicate);
         public void visit(LePredicate predicate);
+        
+        public void visit(ExistsPredicate predicate);
     }
     
     /**

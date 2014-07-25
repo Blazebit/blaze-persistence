@@ -133,19 +133,6 @@ public class PaginationTest extends AbstractPersistenceTest {
         assertEquals("DOC5", result.get(0).getName());
     }
     
-//    @Test
-    public void testGetResultList() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
-        CriteriaBuilder<Tuple> tupleCrit = criteria.select("owner.localized[1]", "l").leftJoin("owner.localized", "localized").leftJoin("d.contacts", "contacts").where("contacts[1].name").like("%arl%");
-        System.out.println(tupleCrit.getQueryString());
-        List<Tuple> results = tupleCrit.getResultList();
-        for(Tuple t : results){
-            System.out.println(t.get("l"));
-        }
-        
-        em.createQuery("SELECT VALUE(contacts) AS l FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.contacts contacts WHERE contacts.name LIKE '%arl%' AND KEY(contacts) = 1", Tuple.class).getResultList();
-    }
-    
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";

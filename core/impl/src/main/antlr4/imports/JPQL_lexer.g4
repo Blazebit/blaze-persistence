@@ -15,7 +15,9 @@
  */
 lexer grammar JPQL_lexer;
  
- String_literal : '\'' ~[\']* '\'';
+ Size_function : 'SIZE';
+ 
+String_literal : '\'' ~[\']* '\'';
  
  Character_literal : '\''JavaLetter'\'';
  

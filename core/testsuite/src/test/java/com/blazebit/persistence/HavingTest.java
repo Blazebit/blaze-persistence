@@ -86,7 +86,6 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().having("d.partners.name").gt(0).having("d.versions.url").like("http://%").endOr().havingOr().having("d.versions.date").lt(10).having("d.versions.url").like("ftp://%").endOr();   
         
-        System.out.println(criteria.getQueryString());
         assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING (partners.name > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)", criteria.getQueryString());
     }
     

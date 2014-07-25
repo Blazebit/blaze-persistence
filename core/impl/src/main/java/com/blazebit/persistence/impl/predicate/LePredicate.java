@@ -42,7 +42,7 @@ public class LePredicate extends QuantifiableBinaryExpressionPredicate {
 
     public static class LePredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-        public LePredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
+        public LePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
             super(result, listener, leftExpression, false, subqueryInitFactory);
         }
 

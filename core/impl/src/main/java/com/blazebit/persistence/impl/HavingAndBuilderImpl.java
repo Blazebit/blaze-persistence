@@ -21,7 +21,7 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -32,11 +32,11 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements HavingAndBuilder<T>, PredicateBuilder {
     
     private final T result;
-    private final BuilderEndedListener listener;
+    private final PredicateBuilderEndedListener listener;
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public HavingAndBuilderImpl(T result, BuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public HavingAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new AndPredicate();

@@ -86,25 +86,6 @@ public class SelectNewTest extends AbstractPersistenceTest {
         }
     }
 
-    @Test
-    public void testTest() {
-        Person p = new Person();
-        p.getLocalized().put(2, "JUHU");
-        em.persist(p);
-
-        Document d = new Document("Doc1");
-        d.getPartners().add(p);
-        d.getContacts().put(1, p);
-        em.persist(d);
-        List<String> expected = (List<String>) em.createQuery("SELECT VALUE(x.localized) FROM Document d LEFT JOIN d.contacts x WHERE KEY(x)=1 AND KEY(x.localized)=2").getResultList();
-
-        System.out.println(expected);
-//        assertEquals(expected.size(), actual.size());
-//        for(int i = 0; i < actual.size(); i++){
-//            assertEquals(actual.get(i).getName(), expected.get(i).getName());
-//        }
-    }
-
 //    
 //    @Test
 //    public void testSelectNewModel(){

@@ -43,7 +43,7 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
 
     public static class GePredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-        public GePredicateBuilder(T result, BuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
+        public GePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
             super(result, listener, leftExpression, false, subqueryInitFactory);
         }
 

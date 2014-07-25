@@ -28,7 +28,7 @@ public class CriteriaProviderImpl implements CriteriaProvider  {
 
     @Override
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
-        return new CriteriaBuilderImpl<T>(em, clazz, clazz.getSimpleName().toLowerCase());
+        return new CriteriaBuilderImpl<T>(em, clazz, null);
     }
 
     @Override

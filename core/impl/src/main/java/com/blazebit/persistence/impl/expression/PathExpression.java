@@ -29,6 +29,7 @@ public class PathExpression implements Expression {
     private final List<PathElementExpression> pathProperties;
     private JoinNode baseNode;
     private String field;
+    private boolean collectionValued = false;
 
     public PathExpression() {
         this.pathProperties = new ArrayList<PathElementExpression>();
@@ -61,6 +62,14 @@ public class PathExpression implements Expression {
 
     public void setField(String field) {
         this.field = field;
+    }
+
+    public boolean isCollectionValued() {
+        return collectionValued;
+    }
+
+    public void setCollectionValued(boolean collectionValued) {
+        this.collectionValued = collectionValued;
     }
 
     public String getPath() {
