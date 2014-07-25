@@ -123,10 +123,10 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Paginates the results of this query.
      *
      * @param firstRow The position of the first result to retrieve, numbered from 0
-     * @param pageSize The maximum number of results to retrieve
+     * @param maxRows The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      */
-    public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize);
+    public PaginatedCriteriaBuilder<T> page(int firstRow, int maxRows);
 
     /*
      * Join methods
@@ -182,6 +182,13 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /*
      * Select methods
      */
+    /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public <Y> QueryBuilder<Y, ?> select(Class<Y> clazz);
+    
     /**
      * Starts a {@link SelectObjectBuilder} for the given class. The types of the parameter arguments used in the {@link SelectObjectBuilder} must match a constructor of the given class.
      *

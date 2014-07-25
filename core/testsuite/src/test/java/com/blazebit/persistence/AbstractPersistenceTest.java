@@ -19,6 +19,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -31,6 +32,7 @@ import org.junit.BeforeClass;
  */
 public class AbstractPersistenceTest {
     protected static EntityManager em;
+    protected static CriteriaBuilderFactory cbf;
     
     @BeforeClass
     public static void init() {
@@ -54,5 +56,8 @@ public class AbstractPersistenceTest {
 
         EntityManagerFactory factory = cfg.buildEntityManagerFactory();
         em = factory.createEntityManager();
+        
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        cbf = config.createCriteriaBuilderFactory();
     }
 }

@@ -20,6 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
 import java.util.Date;
@@ -51,8 +52,8 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         super(builder);
     }
 
-    public AbstractQueryBuilder(EntityManager em, Class<T> clazz, String alias) {
-        super(em, clazz, alias);
+    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
+        super(cbf, em, clazz, alias);
     }
 
     @Override
@@ -85,13 +86,29 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public <Y> QueryBuilder<Y, ?> select(Class<Y> clazz) {
+        if (clazz == null) {
+            throw new NullPointerException("clazz");
+        }
+        
+        verifyBuilderEnded();
+        ObjectBuilderFactory<Y> objectBuilderFactory = cbf.getObjectBuilderFactory(clazz);
+        
+        if (objectBuilderFactory == null) {
+            throw new IllegalArgumentException("No object builder was registered for the class: " + clazz.getName());
+        }
+        
+        ObjectBuilder<Y> objectBuilder = objectBuilderFactory.createObjectBuilder((QueryBuilder<Y, ?>) this);
+        return selectNew(objectBuilder);
+    }
+
+    @Override
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Class<Y> clazz) {
         if (clazz == null) {
             throw new NullPointerException("clazz");
         }
 
         verifyBuilderEnded();
-        resultClazz = (Class<T>) clazz;
         return selectManager.selectNew(this, clazz);
     }
 
@@ -102,7 +119,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         }
 
         verifyBuilderEnded();
-        resultClazz = (Class<T>) constructor.getDeclaringClass();
         return selectManager.selectNew(this, constructor);
     }
 
@@ -161,7 +177,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public TypedQuery<T> getQuery() {
         TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString(), Object[].class);
         if (selectManager.getSelectObjectBuilder() != null) {
-            queryTransformer.transformQuery(query, selectManager.getSelectObjectBuilder());
+            transformQuery(query);
         }
 
         parameterizeQuery(query);

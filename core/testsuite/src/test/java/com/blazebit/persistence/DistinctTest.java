@@ -16,7 +16,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ public class DistinctTest extends AbstractPersistenceTest {
 
     @Test
     public void testDistinct() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners.name").distinct();
         
         assertEquals("SELECT DISTINCT partners.name FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
@@ -36,7 +35,7 @@ public class DistinctTest extends AbstractPersistenceTest {
     
     @Test(expected = IllegalStateException.class)
     public void testDistinctWithoutSelect() {
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.distinct();     
     }
     

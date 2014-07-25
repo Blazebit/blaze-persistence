@@ -158,6 +158,16 @@
                 <artifactId>blaze-persistence-integration-hibernate</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-core-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
                         
             <!-- Platform dependencies -->
                         

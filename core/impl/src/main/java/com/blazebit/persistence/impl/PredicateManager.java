@@ -59,14 +59,16 @@ public abstract class PredicateManager<U> extends AbstractManager {
         rootPredicate.predicate.accept(v);
     }
 
-    String buildClause() {
-        StringBuilder sb = new StringBuilder();
+    void buildClause(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
         applyPredicate(queryGenerator, sb);
-        return sb.toString();
     }
 
     protected abstract String getClauseName();
+    
+//    boolean hasPredicates() {
+//        return !rootPredicate.predicate.getChildren().isEmpty();
+//    }
 
     void applyPredicate(QueryGenerator queryGenerator, StringBuilder sb) {
         if (rootPredicate.predicate.getChildren().isEmpty()) {
@@ -75,11 +77,6 @@ public abstract class PredicateManager<U> extends AbstractManager {
         sb.append(' ').append(getClauseName()).append(' ');
         final String initialClause = sb.toString();
         rootPredicate.predicate.accept(queryGenerator);
-        
-        // in case no predicate was generated, we remove the clause name
-        if(initialClause.equals(sb.toString())){
-            sb.setLength(0);
-        }
     }
 
     class RootPredicate extends BuilderEndedListenerImpl {

@@ -19,7 +19,6 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.model.DocumentViewModel;
-import com.blazebit.persistence.spi.Criteria;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
@@ -83,7 +82,7 @@ public class PaginationTest extends AbstractPersistenceTest {
     
     @Test
     public void simpleTest() {
-        CriteriaBuilder<DocumentViewModel> crit = Criteria.from(em, Document.class, "d")
+        CriteriaBuilder<DocumentViewModel> crit = cbf.from(em, Document.class, "d")
                 .selectNew(DocumentViewModel.class)
                     .with("d.name")
                     .with("CONCAT(d.owner.name, ' user')")
@@ -138,7 +137,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         String expectedCountQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
         String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = :contactNr LEFT JOIN d.owner owner WHERE d.id IN (:ids)";
-        PaginatedCriteriaBuilder<Tuple> cb = Criteria.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
                 .page(0, 1);
@@ -149,7 +148,7 @@ public class PaginationTest extends AbstractPersistenceTest {
     
     @Test
     public void testSelectEmptyResultList() {
-        PaginatedCriteriaBuilder<Document> cb = Criteria.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
             .where("name").isNull()
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());

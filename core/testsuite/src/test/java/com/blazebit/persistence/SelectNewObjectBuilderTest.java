@@ -19,7 +19,6 @@ package com.blazebit.persistence;
 import static com.blazebit.persistence.AbstractPersistenceTest.em;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Version;
-import com.blazebit.persistence.spi.Criteria;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.*;
@@ -56,7 +55,7 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
 
     @Test
     public void testSelectNewDocumentObjectBuilder() {
-        CriteriaBuilder<String[]> criteria = Criteria.from(em, Document.class, "d")
+        CriteriaBuilder<String[]> criteria = cbf.from(em, Document.class, "d")
             .selectNew(new ObjectBuilder<String[]>() {
 
             @Override

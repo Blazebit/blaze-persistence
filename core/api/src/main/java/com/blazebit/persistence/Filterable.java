@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence;
 
 /**
- * A base interface for builders that support filtering.
+ * An interface for builders that support filtering.
  * This is related to the fact, that a query builder supports where clauses.
  *
  * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface Filterable<T extends Filterable<T>> {
-
+public interface Filterable<T extends Filterable<T>> extends BaseFilterable<T> {
+    
     /**
-     * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
      *
-     * @param expression The left hand expression for a where predicate
-     * @return The restriction builder for the given expression
+     * @return The or predicate builder for the where clause
      */
     public RestrictionBuilder<? extends T> where(String expression);
 

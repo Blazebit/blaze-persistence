@@ -19,6 +19,7 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -31,6 +32,7 @@ import java.util.ServiceLoader;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -44,10 +46,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     protected static final String idParamName = "ids";
 
+    protected final CriteriaBuilderFactoryImpl cbf;
     protected final Class<?> fromClazz;
-    protected Class<T> resultClazz;
     protected final EntityManager em;
-    protected final QueryTransformer queryTransformer;
 
     protected final ParameterManager parameterManager;
     protected final SelectManager<T> selectManager;
@@ -60,9 +61,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
     private final JPAInfo jpaInfo;
-    
+
     private final BuilderEndedListenerImpl subqueryBuilderListener = new BuilderEndedListenerImpl();
-    
+
     private final AliasManager aliasManager;
 
     /**
@@ -71,8 +72,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      * @param builder
      */
     protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
+        this.cbf = builder.cbf;
         this.fromClazz = builder.fromClazz;
-        this.resultClazz = builder.resultClazz;
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
@@ -82,13 +83,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
-        this.queryTransformer = builder.queryTransformer;
         this.jpaInfo = builder.jpaInfo;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
     }
 
-    protected AbstractBaseQueryBuilder(EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager) {
+
+        if (cbf == null) {
+            throw new NullPointerException("cbf");
+        }
         if (em == null) {
             throw new NullPointerException("em");
         }
@@ -99,13 +103,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new NullPointerException("resultClazz");
         }
 
+        this.cbf = cbf;
         this.jpaInfo = new JPAInfo(em);
         this.fromClazz = fromClazz;
-        this.resultClazz = resultClazz;
         this.aliasManager = new AliasManager(aliasManager);
+
         this.parameterManager = parameterManager;
-        
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(em, parameterManager, this.aliasManager);
+
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager);
 
         this.queryGenerator = new QueryGenerator(parameterManager, this);
 
@@ -120,10 +125,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
-        this.queryTransformer = getQueryTransformer();
     }
 
-    public AbstractBaseQueryBuilder(EntityManager em, Class<T> clazz, String alias) {
+    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
         this(em, clazz, clazz, alias, new ParameterManager(), new AliasManager());
     }
 
@@ -161,7 +165,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        resultClazz = (Class<T>) Tuple.class;
         selectManager.select(this, expr, selectAlias);
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
@@ -184,10 +187,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public SubqueryInitiator<? extends X> whereExists() {
         return whereManager.whereExists((X) this);
     }
-    
+
     @Override
     public SubqueryInitiator<? extends X> whereNotExists() {
         return whereManager.whereNotExists((X) this);
+
     }
 
     /*
@@ -215,7 +219,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public RestrictionBuilder<X> having(String expression) {
         if (groupByManager.getGroupByInfos()
-            .isEmpty()) {
+                .isEmpty()) {
             throw new IllegalStateException();
         }
         Expression expr = Expressions.createSimpleExpression(expression);
@@ -228,7 +232,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<? extends X> havingExists() {
+    public SubqueryInitiator<X> havingExists() {
         return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
     }
 
@@ -378,26 +382,20 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             sb.append(' ');
         }
         sb.append("FROM ")
-            .append(fromClazz.getSimpleName())
-            .append(' ')
-            .append(joinManager.getRootAlias());
-        sb.append(joinManager.buildJoins(true));
-        sb.append(whereManager.buildClause());
-        sb.append(groupByManager.buildGroupBy());
-        sb.append(havingManager.buildClause());
-        sb.append(orderByManager.buildOrderBy());
+                .append(fromClazz.getSimpleName())
+                .append(' ')
+                .append(joinManager.getRootAlias());
+        joinManager.buildJoins(true, sb);
+        whereManager.buildClause(sb);
+        groupByManager.buildGroupBy(sb);
+        havingManager.buildClause(sb);
+        orderByManager.buildOrderBy(sb);
         return sb.toString();
     }
 
-    private QueryTransformer getQueryTransformer() {
-        ServiceLoader<QueryTransformer> serviceLoader = ServiceLoader.load(QueryTransformer.class);
-        Iterator<QueryTransformer> iterator = serviceLoader.iterator();
-
-        if (iterator.hasNext()) {
-            return iterator.next();
+    protected void transformQuery(TypedQuery<T> query) {
+        for (QueryTransformer transformer : cbf.getQueryTransformers()) {
+            transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
-
-        throw new IllegalStateException(
-            "No QueryTransformer found on the class path. Please check if a valid implementation is on the class path.");
     }
 }

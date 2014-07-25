@@ -28,8 +28,13 @@ import javax.persistence.Tuple;
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 
-    public CriteriaBuilderImpl(EntityManager em, Class<T> clazz, String alias) {
-        super(em, clazz, alias);
+    public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
+        super(cbf, em, clazz, alias);
+    }
+
+    @Override
+    public <Y> CriteriaBuilder<Y> select(Class<Y> clazz) {
+        return (CriteriaBuilder<Y>) super.select(clazz);
     }
 
     @Override

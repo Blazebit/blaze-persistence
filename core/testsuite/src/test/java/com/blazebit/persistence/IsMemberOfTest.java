@@ -17,7 +17,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.spi.Criteria;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -28,7 +27,7 @@ import org.junit.Test;
 public class IsMemberOfTest extends AbstractPersistenceTest {
     @Test
     public void testIsMemberOf(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isMemberOf("d.versions.document.name");
         
         assertEquals("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document WHERE d.name MEMBER OF document.name", criteria.getQueryString());
@@ -36,19 +35,19 @@ public class IsMemberOfTest extends AbstractPersistenceTest {
     
     @Test(expected = NullPointerException.class)
     public void testIsMemberOfNull(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isMemberOf(null);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testIsMemberOfEmpty(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isMemberOf("");
     }
     
     @Test
     public void testIsNotMemberOf(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotMemberOf("d.versions.document.name");
         
         assertEquals("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document WHERE NOT d.name MEMBER OF document.name", criteria.getQueryString());
@@ -56,13 +55,13 @@ public class IsMemberOfTest extends AbstractPersistenceTest {
     
     @Test(expected = NullPointerException.class)
     public void testIsNotMemberOfNull(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotMemberOf(null);
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testIsNotMemberOfEmpty(){
-        CriteriaBuilder<Document> criteria = Criteria.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotMemberOf("");
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.Filter;
+
 /**
  * Represents an attribute of a view type.
  *

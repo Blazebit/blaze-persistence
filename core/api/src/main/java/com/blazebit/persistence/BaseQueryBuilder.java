@@ -26,7 +26,7 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X> {
+public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X> {
 
     /**
      * Returns the query string for the built query.
@@ -127,64 +127,6 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     public BaseQueryBuilder<Tuple, ?> select(String expression, String alias);
 
     /*
-     * Order by methods
-     */
-    /**
-     * Adds an order by clause with the given expression to the query.
-     *
-     * @param expression The expression for the order by clause
-     * @param ascending  Wether the order should be ascending or descending.
-     * @param nullFirst  Wether null elements should be ordered first or not.
-     * @return The query builder for chaining calls
-     */
-    public X orderBy(String expression, boolean ascending, boolean nullFirst);
-
-    /**
-     * Like {@link BaseQueryBuilder#orderByAsc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
-     *
-     * @param expression The expression for the order by clause
-     * @return The query builder for chaining calls
-     */
-    public X orderByAsc(String expression);
-
-    /**
-     * Like {@link BaseQueryBuilder#orderBy(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to true.
-     *
-     * @param expression The expression for the order by clause
-     * @param nullFirst  Wether null elements should be ordered first or not.
-     * @return The query builder for chaining calls
-     */
-    public X orderByAsc(String expression, boolean nullFirst);
-
-    /**
-     * Like {@link BaseQueryBuilder#orderByDesc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
-     *
-     * @param expression The expression for the order by clause
-     * @return The query builder for chaining calls
-     */
-    public X orderByDesc(String expression);
-
-    /**
-     * Like {@link BaseQueryBuilder#orderBy(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to false.
-     *
-     * @param expression The expression for the order by clause
-     * @param nullFirst  Wether null elements should be ordered first or not.
-     * @return The query builder for chaining calls
-     */
-    public X orderByDesc(String expression, boolean nullFirst);
-
-    /*
-     * Where methods
-     */
-    /**
-     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
-     *
-     * @return The or predicate builder for the where clause
-     */
-    public WhereOrBuilder<? extends X> whereOr();
-
-    /*
      * Group by methods
      */
     /**
@@ -202,15 +144,4 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X groupBy(String expression);
-
-    /*
-     * Having methods
-     */
-    /**
-     * Starts a {@link HavingOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
-     *
-     * @return The or predicate builder for the having clause
-     */
-    public HavingOrBuilder<? extends X> havingOr();
 }

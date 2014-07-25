@@ -17,8 +17,10 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
@@ -74,8 +76,22 @@ public class EntityViewManagerImpl implements EntityViewManager {
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
+
+    @Override
+    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(ViewType<T> viewType) {
+        return new ObjectBuilderFactoryImpl<T>(getTemplate(viewType, null));
+    }
+
+    @Override
+    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(MappingConstructor<T> mappingConstructor) {
+        return new ObjectBuilderFactoryImpl<T>(getTemplate(mappingConstructor.getDeclaringType(), mappingConstructor));
+    }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
+        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(getTemplate(viewType, mappingConstructor), criteriaBuilder));
+    }
+    
+    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
         ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(viewType, mappingConstructor);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
         
@@ -88,7 +104,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             }
         }
         
-        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>((ViewTypeObjectBuilderTemplate<T>) value, criteriaBuilder));
+        return (ViewTypeObjectBuilderTemplate<T>) value;
     }
     
 }
