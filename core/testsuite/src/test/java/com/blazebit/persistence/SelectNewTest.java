@@ -16,8 +16,8 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.model.DocumentCount;
 import com.blazebit.persistence.model.DocumentViewModel;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -83,6 +83,20 @@ public class SelectNewTest extends AbstractPersistenceTest {
         for (int i = 0; i < actual.size(); i++) {
             assertEquals(actual.get(i).getName(), expected.get(i).getName());
         }
+    }
+    
+    @Test
+    public void testSelectNewSubquery() {
+        CriteriaBuilder<DocumentCount> crit = cbf.from(em, Document.class, "d")
+            .selectNew(DocumentCount.class).with().from(Document.class).select("COUNT(*)").end().end();
+        
+        assertEquals("SELECT (SELECT COUNT(*) FROM Document document) FROM Document d", crit.getQueryString());
+        List<DocumentCount> actual = crit.getResultList();
+        
+        /* expected */
+        Long expectedCount = (Long) em.createQuery("SELECT COUNT(*) FROM Document d").getSingleResult();
+        
+        assertEquals((long) expectedCount, actual.size());
     }
 
 //    

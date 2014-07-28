@@ -51,14 +51,12 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
 public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
 
     private StringBuilder sb;
-    private final ParameterManager parameterManager;
     private boolean replaceSelectAliases = true;
     // cyclic dependency
     private SelectManager<?> selectManager;
     private final BaseQueryBuilder<?,?> aliasOwner;
 
-    public QueryGenerator(ParameterManager parameterManager, BaseQueryBuilder<?,?> aliasOwner) {
-        this.parameterManager = parameterManager;
+    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner) {
         this.aliasOwner = aliasOwner;
     }
 

@@ -25,6 +25,14 @@ package com.blazebit.persistence;
 public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
 
     /**
+     * Starts a subquery builder which allows the result of the specified subquery
+     * to be passed as argument to the select new clause.
+     *
+     * @return A starting point for the subquery specification
+     */
+    public SubqueryInitiator<? extends SelectObjectBuilder<T>> with();
+    
+    /**
      * Adds the given expression to the arguments for the select new select clause.
      *
      * @param expression The expression to add

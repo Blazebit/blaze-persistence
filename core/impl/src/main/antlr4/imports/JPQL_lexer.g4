@@ -15,6 +15,8 @@
  */
 lexer grammar JPQL_lexer;
  
+Star_operator : '*';
+    
  Size_function : 'SIZE';
  
 String_literal : '\'' ~[\']* '\'';

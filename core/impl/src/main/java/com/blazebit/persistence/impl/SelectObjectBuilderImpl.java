@@ -18,8 +18,11 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -27,16 +30,18 @@ import java.util.TreeMap;
  *
  * @author ccbem
  */
-public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> implements SelectObjectBuilder<T>{
+public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends BuilderEndedListenerImpl implements SelectObjectBuilder<T>{
 
     private final T result;
     // maps positions to expressions
     private final SortedMap<Integer, Expression> expressions = new TreeMap<Integer, Expression>();
     private final SelectObjectBuilderEndedListener listener;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
     
-    public SelectObjectBuilderImpl(T result, SelectObjectBuilderEndedListener listener) {
+    public SelectObjectBuilderImpl(T result, SelectObjectBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
+        this.subqueryInitFactory = subqueryInitFactory;
     }
 
     @Override
@@ -65,16 +70,17 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> implements Se
         listener.onBuilderEnded(expressions.values());
         return result;
     } 
+
+    @Override
+    public SubqueryInitiator<? extends SelectObjectBuilder<T>> with(){
+        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    }
+
+    @Override
+    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+        super.onBuilderEnded(builder);
+        expressions.put(expressions.size(), new SubqueryExpression(builder));
+    }
     
-//    void applyTransformer(ArrayExpressionTransformer transformer){
-//        for(Map.Entry<Integer, Expression> entry : expressions.entrySet()){
-//            entry.setValue(transformer.transform(entry.getValue()));
-//        }
-//    }
-//    
-//    void acceptVisitor(Visitor visitor){
-//        for(Expression e : expressions.values()){
-//            e.accept(visitor);
-//        }
-//    }
+    
 }

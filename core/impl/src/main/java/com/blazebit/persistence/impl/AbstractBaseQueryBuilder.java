@@ -112,14 +112,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager);
 
-        this.queryGenerator = new QueryGenerator(parameterManager, this);
+        this.queryGenerator = new QueryGenerator(this);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this);
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies

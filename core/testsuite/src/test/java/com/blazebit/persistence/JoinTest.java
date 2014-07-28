@@ -277,4 +277,10 @@ public class JoinTest extends AbstractPersistenceTest {
         assertEquals("FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.name = :param_0", criteria1.getQueryString());
         assertEquals("FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.name = :param_0", criteria2.getQueryString());
     }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testFetchJoinCheck(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        crit.select("name").join("d.versions", "versions", JoinType.LEFT, true);
+    }
 }
