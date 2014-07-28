@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence;
 
+import static com.blazebit.persistence.AbstractPersistenceTest.cbf;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -114,5 +117,23 @@ public class HavingTest extends AbstractPersistenceTest {
     public void testHavingNull(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having(null);      
+    }
+    
+    @Test
+    public void testHavingExists(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name").havingExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d GROUP BY d.name HAVING EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testHavingNotExists(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name").havingNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d GROUP BY d.name HAVING NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
     }
 }

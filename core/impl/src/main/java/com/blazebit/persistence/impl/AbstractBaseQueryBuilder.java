@@ -185,12 +185,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<? extends X> whereExists() {
-        return whereManager.whereExists((X) this);
+        return whereManager.restrictExists((X) this);
     }
 
     @Override
     public SubqueryInitiator<? extends X> whereNotExists() {
-        return whereManager.whereNotExists((X) this);
+        return whereManager.restrictNotExists((X) this);
 
     }
 
@@ -220,7 +220,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public RestrictionBuilder<X> having(String expression) {
         if (groupByManager.getGroupByInfos()
                 .isEmpty()) {
-            throw new IllegalStateException();
+            throw new IllegalStateException("Having without group by");
         }
         Expression expr = Expressions.createSimpleExpression(expression);
         return havingManager.restrict(this, expr);
@@ -228,17 +228,29 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public HavingOrBuilder<X> havingOr() {
+        if (groupByManager.getGroupByInfos()
+                .isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
         return havingManager.havingOr(this);
     }
 
     @Override
     public SubqueryInitiator<X> havingExists() {
-        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
+        if (groupByManager.getGroupByInfos()
+                .isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrictExists((X) this);
     }
     
     @Override
     public SubqueryInitiator<X> havingNotExists() {
-        return subqueryInitFactory.createSubqueryInitiator((X) this, subqueryBuilderListener);
+        if (groupByManager.getGroupByInfos()
+                .isEmpty()) {
+            throw new IllegalStateException("Having without group by");
+        }
+        return havingManager.restrictNotExists((X) this);
     }
 
     /*

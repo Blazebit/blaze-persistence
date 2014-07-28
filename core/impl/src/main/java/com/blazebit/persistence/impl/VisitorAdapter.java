@@ -24,6 +24,7 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -31,7 +32,6 @@ import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.InSubqueryPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
@@ -164,9 +164,10 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     }
 
     @Override
-    public void visit(InSubqueryPredicate predicate) {
-        predicate.getLeft().accept(this);
+    public void visit(SubqueryExpression expression) {
     }
+    
+    
 
     @Override
     public void visit(ExistsPredicate predicate) {

@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
@@ -52,14 +54,25 @@ public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
        
         @Override
         public T value(Object value) {
-            return chain(new EqPredicate(leftExpression, new ParameterExpression(value), quantifier));
+            return chain(new EqPredicate(leftExpression, new ParameterExpression(value), PredicateQuantifier.ONE));
         }
 
         @Override
         public T expression(String expression) {
-            return chain(new EqPredicate(leftExpression, Expressions.createSimpleExpression(expression), quantifier));
+            return chain(new EqPredicate(leftExpression, Expressions.createSimpleExpression(expression), PredicateQuantifier.ONE));
         }
-        
+
+        @Override
+        public SubqueryInitiator<T> all() {
+            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ALL));
+            return super.all();
+        }
+
+        @Override
+        public SubqueryInitiator<T> any() {
+            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ANY));
+            return super.any();
+        }
     }
 
     public boolean isRequiredByMapValueSelect() {

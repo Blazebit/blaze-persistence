@@ -43,9 +43,7 @@ public interface Predicate {
         public void visit(BetweenPredicate predicate);
         
         public void visit(InPredicate predicate);
-        
-        public void visit(InSubqueryPredicate predicate);
-        
+                
         public void visit(GtPredicate predicate);
         public void visit(GePredicate predicate);
         public void visit(LtPredicate predicate);

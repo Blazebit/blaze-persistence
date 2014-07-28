@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence;
 
+import static com.blazebit.persistence.AbstractPersistenceTest.cbf;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -89,5 +92,41 @@ public class LessTest extends AbstractPersistenceTest {
     public void testLeExpressionNull(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").leExpression(null);        
+    }
+    
+    @Test
+    public void testLeAll(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").le().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name <= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testLeAny(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").le().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name <= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testLtAll(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").lt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name < ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testLtAny(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").lt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
     }
 }

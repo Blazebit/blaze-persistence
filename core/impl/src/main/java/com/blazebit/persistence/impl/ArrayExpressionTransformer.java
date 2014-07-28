@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,7 +49,7 @@ public class ArrayExpressionTransformer {
     
     public Expression transform(Expression original, boolean selectClause) {
         // TODO: transform the original expression and apply changes in the criteria builder
-        if (original instanceof FooExpression || original instanceof ParameterExpression) {
+        if (original instanceof FooExpression || original instanceof ParameterExpression || original instanceof SubqueryExpression) {
             return original;
         }
 

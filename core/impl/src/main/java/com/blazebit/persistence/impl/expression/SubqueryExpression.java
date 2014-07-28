@@ -13,31 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.predicate;
+
+package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
  * @author ccbem
  */
-public class InSubqueryPredicate implements SubqueryPredicate {
+public class SubqueryExpression implements Expression {
+    private final SubqueryBuilder<?> builder;
 
-    private Expression left;
-    private SubqueryBuilder<?> right;
-
-    public InSubqueryPredicate(Expression left) {
-        this.left = left;
-    }
-
-    public Expression getLeft() {
-        return left;
-    }
-
-    public SubqueryBuilder<?> getRight() {
-        return right;
+    public SubqueryExpression(SubqueryBuilder<?> builder) {
+        this.builder = builder;
     }
 
     @Override
@@ -45,9 +34,7 @@ public class InSubqueryPredicate implements SubqueryPredicate {
         visitor.visit(this);
     }
 
-    @Override
-    public void setSubqueryBuilder(SubqueryBuilder<?> builder) {
-        this.right = builder;
+    public SubqueryBuilder<?> getBuilder() {
+        return builder;
     }
-
 }

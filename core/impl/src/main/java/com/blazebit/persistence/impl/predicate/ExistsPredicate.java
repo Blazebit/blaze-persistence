@@ -17,21 +17,16 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
  * @author ccbem
  */
-public class ExistsPredicate implements SubqueryPredicate {
-    private SubqueryBuilder<?> subqueryBuilder;
-    
-    @Override
-    public void setSubqueryBuilder(SubqueryBuilder<?> builder) {
-        this.subqueryBuilder = builder;
-    }
+public class ExistsPredicate extends UnaryExpressionPredicate {
 
-    public SubqueryBuilder<?> getBuilder() {
-        return subqueryBuilder;
+    public ExistsPredicate() {
+        super(null);
     }
 
     @Override

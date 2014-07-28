@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence;
 
+import static com.blazebit.persistence.AbstractPersistenceTest.cbf;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -154,5 +157,23 @@ public class WhereTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.partners.name").gt(0);
         criteria.where("d.partners.name");
+    }
+    
+    @Test
+    public void testWhereExists(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereNotExists(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
     }
 }

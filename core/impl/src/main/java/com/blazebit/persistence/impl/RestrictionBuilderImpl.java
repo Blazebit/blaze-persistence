@@ -23,6 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expressions;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
@@ -30,7 +31,6 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.InSubqueryPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
@@ -40,7 +40,6 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.SubqueryPredicate;
 import java.util.List;
 
 /**
@@ -339,14 +338,14 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
     @Override
     public SubqueryInitiator<T> in() {
         verifyBuilderEnded();
-        this.predicate = new InSubqueryPredicate(leftExpression);
+        this.predicate = new InPredicate(leftExpression, null);
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
-        this.predicate = new NotPredicate(new InSubqueryPredicate(leftExpression));
+        this.predicate = new NotPredicate(new InPredicate(leftExpression, null));
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
@@ -362,8 +361,8 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
             pred = predicate;
         }
 
-        if (pred instanceof SubqueryPredicate) {
-            ((SubqueryPredicate) pred).setSubqueryBuilder(builder);
+        if(pred instanceof InPredicate){
+            ((InPredicate)pred).setRight(new SubqueryExpression(builder));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate was not a SubqueryPredicate");
         }

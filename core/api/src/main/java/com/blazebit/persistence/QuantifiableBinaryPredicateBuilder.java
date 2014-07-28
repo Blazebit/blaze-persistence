@@ -31,7 +31,7 @@ public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBu
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator all();
+    public SubqueryInitiator<T> all();
 
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of a predicate that uses the ANY quantor.
@@ -39,5 +39,5 @@ public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBu
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator any();
+    public SubqueryInitiator<T> any();
 }

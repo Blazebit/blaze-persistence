@@ -24,7 +24,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public abstract class UnaryExpressionPredicate implements Predicate {
     
-    protected final Expression expression;
+    protected Expression expression;
 
     public UnaryExpressionPredicate(Expression expression) {
         this.expression = expression;
@@ -33,5 +33,8 @@ public abstract class UnaryExpressionPredicate implements Predicate {
     public Expression getExpression() {
         return expression;
     }
-    
+
+    public void setExpression(Expression expression) {
+        this.expression = expression;
+    }
 }

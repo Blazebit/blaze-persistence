@@ -16,10 +16,12 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
  *
@@ -27,14 +29,13 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  */
 public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEndedListenerImpl implements
-    QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
+        QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
     private final boolean wrapNot;
     protected final Expression leftExpression;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
-    protected PredicateQuantifier quantifier = PredicateQuantifier.ONE;
     private Predicate predicate;
 
     public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
@@ -44,23 +45,48 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEnd
         this.leftExpression = leftExpression;
         this.subqueryInitFactory = subqueryInitFactory;
     }
-    
+
     protected T chain(Predicate predicate) {
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
         listener.onBuilderEnded(this);
         return result;
     }
-
-    @Override
-    public SubqueryInitiator<? extends QuantifiableBinaryPredicateBuilder<T>> all() {
-        this.quantifier = PredicateQuantifier.ALL;
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    
+    protected void chainSubquery(Predicate predicate) {
+        this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
     }
 
     @Override
-    public SubqueryInitiator<? extends QuantifiableBinaryPredicateBuilder<T>> any() {
-        this.quantifier = PredicateQuantifier.ANY;
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<T> all() {
+        verifyBuilderEnded();
+        return subqueryInitFactory.createSubqueryInitiator(result, this);
+    }
+
+    @Override
+    public SubqueryInitiator<T> any() {
+        verifyBuilderEnded();
+        return subqueryInitFactory.createSubqueryInitiator(result, this);
+    }
+
+    @Override
+    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+        super.onBuilderEnded(builder);
+        // set the finished subquery builder on the previously created predicate
+        Predicate pred;
+        if (predicate instanceof NotPredicate) {
+            // unwrap not predicate
+            pred = ((NotPredicate) predicate).getPredicate();
+        } else {
+            pred = predicate;
+        }
+
+        if (pred instanceof BinaryExpressionPredicate) {
+            ((BinaryExpressionPredicate) pred).setRight(new SubqueryExpression(builder));
+        } else {
+            throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
+        }
+
+        listener.onBuilderEnded(this);
     }
 
     @Override

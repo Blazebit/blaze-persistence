@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence;
 
+import static com.blazebit.persistence.AbstractPersistenceTest.cbf;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -126,4 +129,22 @@ public class EqTest extends AbstractPersistenceTest {
 //        
 //        assertEquals("FROM Document d LEFT JOIN d.partners partners WHERE d.age != ANY(partners.age)", criteria.getQueryString());
 //    }
+    
+    @Test
+    public void testEqAll(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").eq().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testEqAny(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").eq().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
 }
