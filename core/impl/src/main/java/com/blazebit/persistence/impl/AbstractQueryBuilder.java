@@ -133,6 +133,12 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         return (QueryBuilder<Y, ?>) this;
     }
 
+    private void checkFetchJoinAllowed(){
+        if(selectManager.getSelectInfoCount() > 0){
+            throw new IllegalStateException("Fetch joins are only possible if the root entity is selected");
+        }
+    }
+    
     @Override
     public X innerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.INNER, true);
@@ -168,6 +174,10 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalArgumentException("Empty alias");
         }
 
+        if(fetch == true){
+            checkFetchJoinAllowed();
+        }
+        
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch);
         return (X) this;
