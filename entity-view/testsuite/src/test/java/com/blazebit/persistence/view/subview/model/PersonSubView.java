@@ -14,33 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.basic.model;
+package com.blazebit.persistence.view.subview.model;
 
-import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-@EntityView(Document.class)
-public interface DocumentViewInterface extends IdHolderView<Long> {
+@EntityView(Person.class)
+public interface PersonSubView {
     
     public String getName();
     
-    @MappingSubquery(CountSubqueryProvider.class)
-    public Long getContactCount();
-    
-    @Mapping("contacts2[:contactPersonNumber]")
-    public Person getMyContactPerson();
-    
-    @Mapping("contacts[1]")
-    public Person getFirstContactPerson();
-    
     @MappingParameter("contactPersonNumber")
-    public Integer getContactPersonNumber2();
+    public Integer getContactPersonNumber();
 }

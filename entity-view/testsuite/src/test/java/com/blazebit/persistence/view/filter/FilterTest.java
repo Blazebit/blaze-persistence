@@ -81,10 +81,8 @@ public class FilterTest {
     }
     
     public RestrictionBuilder<?> verifyFilter(Filter filter, String expression) {
-        Filterable<?> filterable = Mockito.mock(Filterable.class);
         RestrictionBuilder<?> restrictionBuilder = Mockito.mock(RestrictionBuilder.class);
-        Mockito.when(filterable.where(expression)).thenReturn((RestrictionBuilder) restrictionBuilder);
-        filter.apply((Filterable) filterable, expression);
-        return Mockito.verify(filterable.where(expression));
+        filter.apply(restrictionBuilder);
+        return Mockito.verify(restrictionBuilder);
     }
 }

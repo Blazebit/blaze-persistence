@@ -17,30 +17,27 @@
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.filter.ContainsFilter;
+import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
 @EntityView(Document.class)
-public interface DocumentViewInterface extends IdHolderView<Long> {
+public interface FilteredDocument {
     
+    @MappingFilter(ContainsFilter.class)
     public String getName();
     
+    @MappingFilter(GreaterOrEqualFilter.class)
     @MappingSubquery(CountSubqueryProvider.class)
-    public Long getContactCount();
+    public String getContactCount();
     
-    @Mapping("contacts2[:contactPersonNumber]")
-    public Person getMyContactPerson();
-    
-    @Mapping("contacts[1]")
-    public Person getFirstContactPerson();
-    
-    @MappingParameter("contactPersonNumber")
-    public Integer getContactPersonNumber2();
+    @Mapping("contacts[:index].name")
+    public String getContactName();
 }

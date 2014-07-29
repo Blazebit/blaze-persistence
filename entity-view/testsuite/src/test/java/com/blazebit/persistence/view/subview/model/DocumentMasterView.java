@@ -14,24 +14,32 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.filter.model;
+package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingFilter;
-import com.blazebit.persistence.view.filter.ContainsFilter;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
- * @author Christian
+ * @author cpbec
  */
 @EntityView(Document.class)
-public interface FilteredDocument {
+public interface DocumentMasterView {
     
-    @MappingFilter(ContainsFilter.class)
     public String getName();
     
-    @Mapping("contacts[:index].name")
-    public String getContactName();
+    @Mapping("contacts[:contactPersonNumber]")
+    public PersonSubView getMyContactPerson();
+    
+    @Mapping("contacts2")
+    public Map<Integer, PersonSubView> getContacts();
+    
+    @Mapping("partners")
+    public Set<PersonSubView> getPartners();
 }

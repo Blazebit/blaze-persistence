@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.basic;
+package com.blazebit.persistence.view.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.Criteria;
-import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
+import com.blazebit.persistence.view.basic.AbstractEntityViewPersistenceTest;
+import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +31,7 @@ import org.junit.Test;
  *
  * @author cpbec
  */
-public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
+public class SubviewTest extends AbstractEntityViewPersistenceTest {
     
     private Document doc1;
     private Document doc2;
@@ -63,6 +63,9 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
             em.persist(o1);
             em.persist(o2);
             
+            doc1.getPartners().add(o1);
+            doc2.getPartners().add(o2);
+            
             em.persist(doc1);
             em.persist(doc2);
             
@@ -78,22 +81,15 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
     public void testInterface() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
-        List<DocumentViewInterface> results = evm.applyObjectBuilder(DocumentViewInterface.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
+        List<DocumentMasterView> results = evm.applyObjectBuilder(DocumentMasterView.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
         
         assertEquals(2, results.size());
         // Doc1
-        assertEquals(doc1.getId(), results.get(0).getId());
-        assertEquals(doc1.getName(), results.get(0).getName());
-        assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
-        assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
-        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
-        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
-        // Doc2
-        assertEquals(doc2.getId(), results.get(1).getId());
-        assertEquals(doc2.getName(), results.get(1).getName());
-        assertEquals(doc2.getContacts().get(1), results.get(1).getFirstContactPerson());
-        assertEquals(doc2.getContacts2().get(2), results.get(1).getMyContactPerson());
-        assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
-        assertEquals(Long.valueOf(1), results.get(1).getContactCount());
+//        assertEquals(doc1.getId(), results.get(0).getId());
+//        assertEquals(doc1.getName(), results.get(0).getName());
+//        assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
+//        assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
+//        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
+//        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
     }
 }
