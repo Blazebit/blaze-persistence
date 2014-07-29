@@ -16,11 +16,14 @@
 
 package com.blazebit.persistence.view.subview;
 
+import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.basic.AbstractEntityViewPersistenceTest;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subview.model.DocumentMasterView;
+import com.blazebit.persistence.view.subview.model.PersonSubView;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +34,7 @@ import org.junit.Test;
  *
  * @author cpbec
  */
-public class SubviewTest extends AbstractEntityViewPersistenceTest {
+public class SubviewTest extends AbstractPersistenceTest {
     
     private Document doc1;
     private Document doc2;
@@ -79,6 +82,10 @@ public class SubviewTest extends AbstractEntityViewPersistenceTest {
     
     @Test
     public void testInterface() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(PersonSubView.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
         List<DocumentMasterView> results = evm.applyObjectBuilder(DocumentMasterView.class, criteria).setParameter("contactPersonNumber", 2).getResultList();

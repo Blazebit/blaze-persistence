@@ -19,6 +19,8 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -45,6 +47,7 @@ public class SelectManager<T> extends AbstractManager {
     private boolean distinct = false;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
+    private SubqueryBuilderListenerImpl subqueryBuilderListener;
     // Maps alias to SelectInfo
 //    private final Map<String, SelectInfo> selectAliasToInfoMap = new HashMap<String, SelectInfo>();
     // needed for tuple/alias matching
@@ -128,6 +131,42 @@ public class SelectManager<T> extends AbstractManager {
             selectInfo.setExpression(transformed);
         }
     }
+    
+    <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias) {
+        if (subqueryBuilderListener != null) {
+            throw new IllegalStateException("A builder was not ended properly.");
+        }
+        
+        subqueryBuilderListener = new SubqueryBuilderListenerImpl(selectAlias);
+        return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
+    }
+    
+    private class SubqueryBuilderListenerImpl extends BuilderEndedListenerImpl {
+        
+        private final String selectAlias;
+
+        public SubqueryBuilderListenerImpl(String selectAlias) {
+            this.selectAlias = selectAlias;
+        }
+
+        @Override
+        public void onBuilderEnded(SubqueryBuilder<?> builder) {
+            super.onBuilderEnded(builder);
+            Expression expr = new SubqueryExpression(builder);
+            SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
+            if (selectAlias != null) {
+                aliasManager.registerAliasInfo(selectInfo);
+    //            selectAliasToInfoMap.put(selectAlias, selectInfo);
+                selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
+            }
+            selectInfos.add(selectInfo);
+
+            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
+                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(SelectManager.this);
+            }
+            registerParameterExpressions(expr);
+        }
+    }
 
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
@@ -137,7 +176,10 @@ public class SelectManager<T> extends AbstractManager {
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         selectInfos.add(selectInfo);
-        objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(this);
+        
+        if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
+            objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(this);
+        }
         registerParameterExpressions(expr);
     }
 //    public CaseWhenBuilder<U> selectCase() {
@@ -174,46 +216,16 @@ public class SelectManager<T> extends AbstractManager {
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
-    void selectNew(ObjectBuilder<?> builder) {
+    void selectNew(QueryBuilder<?, ?> builder, ObjectBuilder<?> objectBuilder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-
-        String[][] expressions = builder.getExpressions();
-
-        if (expressions == null || expressions.length == 0) {
-            throw new IllegalArgumentException("The object builder '" + builder + "' returned no or empty expressions.");
-        }
-
-        for (int i = 0; i < expressions.length; i++) {
-            String[] expression = expressions[i];
-
-            if (expression == null) {
-                throw new NullPointerException("Illegal null expression returned from obejct builder '" + objectBuilder + "' at index: " + i);
-            }
-            if (expression.length != 2) {
-                throw new IllegalArgumentException("Illegal expression with invalid array length '" + expression.length + "' returned from object builder '" + objectBuilder + "' at index: " + i);
-            }
-            if (expression[0].isEmpty()) {
-                throw new IllegalArgumentException("Illegal empty expression returned from object builder '" + objectBuilder + "' at index: " + i);
-            }
-
-            Expression expr = expressionFactory.createSimpleExpression(expression[0]);
-            registerParameterExpressions(expr);
-            SelectInfo selectInfo;
-            
-            if (expression[1] != null) {
-                selectInfo = new SelectInfo(expr, expression[1], aliasOwner);
-            } else {
-                selectInfo = new SelectInfo(expr);
-            }
-            
-            selectInfos.add(selectInfo);
-        }
-        objectBuilder = (ObjectBuilder<T>) builder;
+        
+        objectBuilder.applySelects(builder);
+        this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
 
     void distinct() {

@@ -175,6 +175,20 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
+    public SubqueryInitiator<X> selectSubquery() {
+        return selectSubquery(null);
+    }
+
+    @Override
+    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        verifyBuilderEnded();
+        return selectManager.selectSubquery((X) this, selectAlias);
+    }
+
+    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> where() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.QueryBuilder;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
@@ -71,8 +72,7 @@ public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public String[][] getExpressions() {
-        return null;
+    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
     }
 
 }

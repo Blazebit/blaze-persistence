@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.view.SubqueryProvider;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
 public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
     
     public final Constructor<? extends T> proxyConstructor;
-    public final String[][] mappings;
+    public final Object[][] mappings;
     public final String[] parameterMappings;
     public final boolean hasParameters;
     private final QueryBuilder<?, ?> queryBuilder;
@@ -70,7 +71,30 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
     }
     
     @Override
-    public String[][] getExpressions() {
-        return mappings;
+    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+        for (Object[] mapping : mappings) {
+            if (mapping[0] instanceof Class) {
+                Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
+                SubqueryProvider provider;
+                
+                try {
+                    provider = subqueryProviderClass.newInstance();
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
+                }
+
+                if (mapping[1] != null) {
+                    provider.createSubquery(queryBuilder.selectSubquery((String) mapping[1]));
+                } else {
+                    provider.createSubquery(queryBuilder.selectSubquery());
+                }
+            } else {
+                if (mapping[1] != null) {
+                    queryBuilder.select((String) mapping[0], (String) mapping[1]);
+                } else {
+                    queryBuilder.select((String) mapping[0]);
+                }
+            }
+        }
     }
 }

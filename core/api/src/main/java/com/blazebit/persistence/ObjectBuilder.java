@@ -27,11 +27,11 @@ import java.util.List;
 public interface ObjectBuilder<T> {
 
     /**
-     * Returns the expressions that should be selected by a {@link QueryBuilder}.
-     *
-     * @return The expression that should be selected
+     * TODO: javadoc
+     * 
+     * @return
      */
-    public String[][] getExpressions();
+    public void applySelects(QueryBuilder<?, ?> queryBuilder);
 
     /**
      * Builds an object of the target type {@linkplain T} from the given tuple.
