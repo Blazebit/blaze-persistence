@@ -147,4 +147,13 @@ public class EqTest extends AbstractPersistenceTest {
         
         Assert.assertEquals(expected, crit.getQueryString());
     }
+    
+    @Test
+    public void testEqOne(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").eq().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name = (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
 }

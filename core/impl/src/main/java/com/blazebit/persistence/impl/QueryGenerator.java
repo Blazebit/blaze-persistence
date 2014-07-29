@@ -225,9 +225,13 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
             sb.append(predicate.getQuantifier().toString());
             sb.append("(");
+        }else if(predicate.getRight() instanceof SubqueryExpression){
+            sb.append("(");
         }
         predicate.getRight().accept(this);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
+            sb.append(")");
+        }else if(predicate.getRight() instanceof SubqueryExpression){
             sb.append(")");
         }
     }

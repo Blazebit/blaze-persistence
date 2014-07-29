@@ -103,6 +103,15 @@ public class GreaterTest extends AbstractPersistenceTest {
     }
     
     @Test
+    public void testGeOne(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").ge().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name >= (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
     public void testGtAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").gt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
@@ -116,6 +125,15 @@ public class GreaterTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").gt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "FROM Document d WHERE d.name > ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testGtOne(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").gt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name > (SELECT p.id FROM Person p WHERE p.name = d.name)";
         
         Assert.assertEquals(expected, crit.getQueryString());
     }

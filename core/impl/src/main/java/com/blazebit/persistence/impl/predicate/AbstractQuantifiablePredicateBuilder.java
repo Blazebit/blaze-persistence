@@ -39,6 +39,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEnd
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     protected final ExpressionFactory expressionFactory;
+    private SubqueryInitiator<T> subqueryInitiator;
 
     public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -95,5 +96,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEnd
     @Override
     public Predicate getPredicate() {
         return predicate;
+    }
+    
+    protected SubqueryInitiator<T> getSubqueryInitiator(){
+        if(subqueryInitiator == null){
+            subqueryInitiator = subqueryInitFactory.createSubqueryInitiator(result, this);
+        }
+        return subqueryInitiator;
     }
 }

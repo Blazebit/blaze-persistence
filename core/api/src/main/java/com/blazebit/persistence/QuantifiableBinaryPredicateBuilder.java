@@ -23,7 +23,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBuilder<T> {
+public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBuilder<T>, SubqueryInitiator<T> {
 
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of a predicate that uses the ALL quantor.

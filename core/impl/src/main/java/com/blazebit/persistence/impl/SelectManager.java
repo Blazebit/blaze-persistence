@@ -76,6 +76,11 @@ public class SelectManager<T> extends AbstractManager {
         return selectAbsolutePathToInfoMap;
     }
 
+    public List<SelectManager.SelectInfo> getSelectInfos(){
+        return selectInfos;
+    }
+    
+    @Deprecated
     public int getSelectInfoCount() {
         return selectInfos.size();
     }
@@ -278,7 +283,7 @@ public class SelectManager<T> extends AbstractManager {
 
     }
 
-    static class SelectInfo extends NodeInfo implements AliasInfo {
+    public static class SelectInfo extends NodeInfo implements AliasInfo {
 
         private final String alias;
         private final BaseQueryBuilder<?, ?> aliasOwner;

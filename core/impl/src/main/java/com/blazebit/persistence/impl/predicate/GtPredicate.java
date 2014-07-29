@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -69,6 +70,16 @@ public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
             return super.any();
         }
         
-        
+        @Override
+        public SubqueryBuilder<T> from(Class<?> clazz) {
+            chainSubquery(new GtPredicate(leftExpression, null, PredicateQuantifier.ONE));
+            return getSubqueryInitiator().from(clazz);
+        }
+
+        @Override
+        public SubqueryBuilder<T> from(Class<?> clazz, String alias) {
+            chainSubquery(new GtPredicate(leftExpression, null, PredicateQuantifier.ONE));
+            return getSubqueryInitiator().from(clazz, alias);
+        }
     }
 }

@@ -113,6 +113,15 @@ public class LessTest extends AbstractPersistenceTest {
     }
     
     @Test
+    public void testLeOne(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").le().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name <= (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
     public void testLtAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").lt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
@@ -126,6 +135,15 @@ public class LessTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").lt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "FROM Document d WHERE d.name < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testLtOne(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("name").lt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "FROM Document d WHERE d.name < (SELECT p.id FROM Person p WHERE p.name = d.name)";
         
         Assert.assertEquals(expected, crit.getQueryString());
     }
