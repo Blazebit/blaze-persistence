@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.filter.model;
+package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.filter.ContainsFilter;
+import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
 
 /**
  *
@@ -31,6 +33,10 @@ public interface FilteredDocument {
     
     @MappingFilter(ContainsFilter.class)
     public String getName();
+    
+    @MappingFilter(GreaterOrEqualFilter.class)
+    @MappingSubquery(CountSubqueryProvider.class)
+    public String getContactCount();
     
     @Mapping("contacts[:index].name")
     public String getContactName();

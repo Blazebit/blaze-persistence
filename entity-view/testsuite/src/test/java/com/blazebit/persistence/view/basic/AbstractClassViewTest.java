@@ -48,6 +48,8 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
             Person o2 = new Person("pers2");
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
+            o1.setPartnerDocument(doc1);
+            o2.setPartnerDocument(doc2);
             
             doc1.setAge(10);
             doc1.setOwner(o1);
@@ -88,6 +90,8 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
         assertEquals(doc1.getAge() + 1, results.get(0).getAge());
         assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber());
+        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
+        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -95,5 +99,7 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
         assertEquals(doc2.getAge() + 1, results.get(1).getAge());
         assertEquals(doc2.getContacts2().get(2), results.get(1).getMyContactPerson());
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber());
+        assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
+        assertEquals(Long.valueOf(1), results.get(1).getContactCount());
     }
 }

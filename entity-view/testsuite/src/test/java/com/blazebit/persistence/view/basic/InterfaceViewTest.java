@@ -48,6 +48,8 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
             Person o2 = new Person("pers2");
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
+            o1.setPartnerDocument(doc1);
+            o2.setPartnerDocument(doc2);
             
             doc1.setOwner(o1);
             doc2.setOwner(o2);
@@ -84,10 +86,14 @@ public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
         assertEquals(doc1.getName(), results.get(0).getName());
         assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
         assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
+        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
+        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
         assertEquals(doc2.getContacts().get(1), results.get(1).getFirstContactPerson());
         assertEquals(doc2.getContacts2().get(2), results.get(1).getMyContactPerson());
+        assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
+        assertEquals(Long.valueOf(1), results.get(1).getContactCount());
     }
 }

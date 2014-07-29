@@ -20,6 +20,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 
 /**
@@ -39,4 +40,7 @@ public interface DocumentViewInterface extends IdHolderView<Long> {
     
     @Mapping("contacts[1]")
     public Person getFirstContactPerson();
+    
+    @MappingParameter("contactPersonNumber")
+    public Integer getContactPersonNumber2();
 }

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.basic;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -99,14 +100,14 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
     public void testMappingAttributesInterfaceView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Set<MethodAttribute<? super DocumentViewInterface, ?>> attributes = viewMetamodel.view(DocumentViewInterface.class).getAttributes();
-        assertEquals(4, attributes.size());
+        assertEquals(6, attributes.size());
     }
     
     @Test
     public void testMappingAttributesClassView() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
         Set<MethodAttribute<? super DocumentViewAbstractClass, ?>> attributes = viewMetamodel.view(DocumentViewAbstractClass.class).getAttributes();
-        assertEquals(4, attributes.size());
+        assertEquals(6, attributes.size());
     }
     
     @Test
@@ -117,6 +118,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
         assertEquals("id", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(Long.class, attribute.getJavaType());
         assertEquals(IdHolderView.class.getMethod("getId"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -130,6 +134,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
         assertEquals("id", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(Long.class, attribute.getJavaType());
         assertEquals(IdHolderView.class.getMethod("getId"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -143,6 +150,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertEquals("name", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(String.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getName"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -156,6 +166,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertEquals("name", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(String.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getName"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -169,6 +182,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("firstContactPerson", attribute.getName());
         assertEquals("contacts[1]", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(Person.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getFirstContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -195,6 +211,9 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
         assertEquals("contacts2[:contactPersonNumber]", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(Person.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
@@ -208,8 +227,75 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
         assertEquals("contacts2[:contactPersonNumber]", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
         assertEquals(Person.class, attribute.getJavaType());
         assertEquals(DocumentViewInterface.class.getMethod("getMyContactPerson"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
+    public void testMappingParameterInterfaceView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("contactPersonNumber");
+        assertNotNull(attribute);
+        assertEquals("contactPersonNumber", attribute.getName());
+        assertEquals("contactPersonNumber", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertTrue(attribute.isMappingParameter());
+        assertEquals(Integer.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getContactPersonNumber"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
+    public void testMappingParameterClassView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("contactPersonNumber");
+        assertNotNull(attribute);
+        assertEquals("contactPersonNumber", attribute.getName());
+        assertEquals("contactPersonNumber", attribute.getMapping());
+        assertNull(attribute.getSubqueryProvider());
+        assertFalse(attribute.isSubqueryMapping());
+        assertTrue(attribute.isMappingParameter());
+        assertEquals(Integer.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getContactPersonNumber"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
+    public void testMappingSubqueryInterfaceView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("contactCount");
+        assertNotNull(attribute);
+        assertEquals("contactCount", attribute.getName());
+        assertNull(attribute.getMapping());
+        assertEquals(CountSubqueryProvider.class, attribute.getSubqueryProvider());
+        assertTrue(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
+        assertEquals(Long.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getContactCount"), attribute.getJavaMethod());
+        assertEquals(viewType, attribute.getDeclaringType());
+    }
+    
+    @Test
+    public void testMappingSubqueryClassView() throws Exception {
+        ViewMetamodel viewMetamodel = getViewMetamodel();
+        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("contactCount");
+        assertNotNull(attribute);
+        assertEquals("contactCount", attribute.getName());
+        assertNull(attribute.getMapping());
+        assertEquals(CountSubqueryProvider.class, attribute.getSubqueryProvider());
+        assertTrue(attribute.isSubqueryMapping());
+        assertFalse(attribute.isMappingParameter());
+        assertEquals(Long.class, attribute.getJavaType());
+        assertEquals(DocumentViewInterface.class.getMethod("getContactCount"), attribute.getJavaMethod());
         assertEquals(viewType, attribute.getDeclaringType());
     }
     
