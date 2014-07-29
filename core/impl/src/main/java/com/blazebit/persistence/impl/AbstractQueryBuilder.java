@@ -20,7 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
@@ -53,7 +53,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         super(builder);
     }
 
-    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactory expressionFactory) {
+    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
         super(cbf, em, clazz, alias, expressionFactory);
     }
 

@@ -36,6 +36,7 @@ public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     private final OrPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    
     public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;

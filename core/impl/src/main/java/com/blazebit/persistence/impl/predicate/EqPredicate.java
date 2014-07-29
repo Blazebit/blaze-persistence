@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;

@@ -19,16 +19,15 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.util.Iterator;
-import java.util.ServiceLoader;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -113,7 +112,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         
         this.parameterManager = parameterManager;
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, expressionFactory);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, new SubqueryExpressionFactory());
 
         this.queryGenerator = new QueryGenerator(this);
 
@@ -130,7 +129,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.em = em;
     }
 
-    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactory expressionFactory) {
+    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
         this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager(), expressionFactory);
     }
 

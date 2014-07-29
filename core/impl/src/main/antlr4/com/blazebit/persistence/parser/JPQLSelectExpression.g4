@@ -20,6 +20,10 @@ import JPQL_lexer;
 
 parseSimpleExpression : simple_expression 
     ;
+
+parseSimpleSubqueryExpression : simple_subquery_expression 
+    ;
+
 parseScalarExpression
     : scalar_expression;
 parseCaseOperandExpression
@@ -28,6 +32,12 @@ parseCaseOperandExpression
 simple_expression : single_valued_path_expression |
                        scalar_expression |
                        aggregate_expression |
+                   ;
+
+simple_subquery_expression : single_valued_path_expression |
+                       scalar_expression |
+                       aggregate_expression |
+                       'OUTER(' single_valued_path_expression  ')' 
                    ;
  
  qualified_identification_variable : composable_qualified_identification_variable |

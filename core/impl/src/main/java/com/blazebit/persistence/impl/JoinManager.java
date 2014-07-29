@@ -53,8 +53,9 @@ public class JoinManager {
     private final AliasManager aliasManager;
     private final BaseQueryBuilder<?, ?> aliasOwner;
     private final Metamodel metamodel; // needed for model-aware joins
+    private final JoinManager parent;
 
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel) {
+    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
         if (rootAlias == null) {
             rootAlias = aliasManager.generatePostfixedAlias(clazz.getSimpleName().toLowerCase());
         }
@@ -68,6 +69,7 @@ public class JoinManager {
         this.aliasManager = aliasManager;
         this.aliasOwner = aliasOwner;
         this.metamodel = metamodel;
+        this.parent = parent;
 
         if (jpaInfo.isJPA21) {
             joinRestrictionKeyword = " ON ";
@@ -77,6 +79,10 @@ public class JoinManager {
             throw new UnsupportedOperationException("Unsupported JPA provider");
         }
 
+    }
+    
+    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel) {
+        this(rootAlias, clazz, queryGenerator, jpaInfo, aliasManager, aliasOwner, metamodel, null);
     }
 
     String getRootAlias() {
@@ -208,6 +214,12 @@ public class JoinManager {
                 // The given path is relative to the root
                 createOrUpdateNode(rootNode, "", normalizedPath, alias, null, type, fetch, false, true);
             }
+        }
+    }
+    
+    void implicitParentJoin(Expression expression){
+        if(parent == null){
+            
         }
     }
 
