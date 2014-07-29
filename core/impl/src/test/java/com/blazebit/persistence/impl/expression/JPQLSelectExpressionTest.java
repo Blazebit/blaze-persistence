@@ -19,10 +19,14 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import static org.junit.Assert.assertTrue;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -30,13 +34,26 @@ import org.junit.Test;
  * @author ccbem
  */
 public class JPQLSelectExpressionTest {
+    
+    private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+    
+    @BeforeClass
+    public static void initLogging() {        
+        try { 
+            LogManager.getLogManager().readConfiguration(JPQLSelectExpressionTest.class.getResourceAsStream("/logging.properties")); 
+        } catch ( Exception e ) { 
+            e.printStackTrace(System.err); 
+        }
+    }
 
     private CompositeExpression parse(String expr) {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expr));
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens);
+        p.setTrace(LOG.isLoggable(Level.FINEST));
         JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx = p.parseSimpleExpression();
 
+        LOG.finest(ctx.toStringTree());
         ParseTreeWalker w = new ParseTreeWalker();
 
         JPQLSelectExpressionListenerImpl listener = new JPQLSelectExpressionListenerImpl();
@@ -72,7 +89,18 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
-    public void testParser1() {
+    public void testAggregateExpressionSinglePath() {
+        CompositeExpression result = parse("AVG(age)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 3);
+        assertTrue(expressions.get(0).equals(new FooExpression("AVG(")));
+        assertTrue(expressions.get(1).equals(path("age")));
+        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+    }
+
+    @Test
+    public void testAggregateExpressionMultiplePath() {
         CompositeExpression result = parse("AVG(d.age)");
         List<Expression> expressions = result.getExpressions();
 

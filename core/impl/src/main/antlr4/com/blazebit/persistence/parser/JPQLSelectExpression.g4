@@ -31,7 +31,7 @@ parseCaseOperandExpression
 
 simple_expression : single_valued_path_expression |
                        scalar_expression |
-                       aggregate_expression |
+                       aggregate_expression
                    ;
 
 simple_subquery_expression : single_valued_path_expression |
@@ -49,7 +49,6 @@ simple_subquery_expression : single_valued_path_expression |
  single_valued_path_expression 
      : qualified_identification_variable
      | state_field_path_expression 
-     | single_valued_object_path_expression
      | single_element_path_expression
      ;
  
@@ -81,8 +80,8 @@ simple_subquery_expression : single_valued_path_expression |
  single_element_path_expression : general_path_start
                               ;
 
- aggregate_expression : ( 'AVG' | 'MAX' | 'MIN' | 'SUM' ) '('('DISTINCT')? state_field_path_expression')' 
-                        | 'COUNT' '('(('DISTINCT')? Identification_variable | state_field_path_expression  | single_valued_object_path_expression | Star_operator)')' ;
+ aggregate_expression : ( 'AVG' | 'MAX' | 'MIN' | 'SUM' ) '('('DISTINCT')? (single_element_path_expression | state_field_path_expression)')' 
+                        | 'COUNT' '('(('DISTINCT')? (single_element_path_expression | state_field_path_expression) | Star_operator)')' ;
 
  /*derived_path_expression : simple_derived_path'.'Single_valued_object_field |
                              simple_derived_path'.'Collection_valued_field;

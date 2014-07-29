@@ -145,9 +145,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (parameterAttributes[i].isMappingParameter()) {
                         mappings[i + attributes.length][0] = "NULLIF(1,1)";
                         parameterMappings[i + attributes.length] = parameterAttributes[i].getMapping();
-                    } else if (attributes[i].isSubqueryMapping()) {
+                    } else if (parameterAttributes[i].isSubqueryMapping()) {
                         mappings[i + attributes.length][0] = parameterAttributes[i].getSubqueryProvider();
-                        
                     } else {
                         mappings[i + attributes.length][0] = parameterAttributes[i].getMapping();
                     }
