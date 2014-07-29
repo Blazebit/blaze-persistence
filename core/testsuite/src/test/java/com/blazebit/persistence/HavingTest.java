@@ -32,7 +32,7 @@ public class HavingTest extends AbstractPersistenceTest {
     public void testHaving(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.age").gt(0);
-        assertEquals("FROM Document d LEFT JOIN d.owner owner GROUP BY owner HAVING d.age > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age > :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -40,7 +40,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.age + 1").gt(0);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner GROUP BY owner HAVING d.age+1 > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age+1 > :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -48,7 +48,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.partners.name").gt(0);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -56,7 +56,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.partners.name + 1").gt(0);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name+1 > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name+1 > :param_0", criteria.getQueryString());
     }
 
     @Test
@@ -64,7 +64,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").having("d.partners.name").gt(0).having("d.versions.url").like("http://%");     
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING partners.name > :param_0 AND versions.url LIKE :param_1", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING partners.name > :param_0 AND versions.url LIKE :param_1", criteria.getQueryString());
     }
     
     @Test
@@ -72,7 +72,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().having("d.partners.name").gt(0).having("d.versions.url").like("http://%").endOr();   
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING partners.name > :param_0 OR versions.url LIKE :param_1", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING partners.name > :param_0 OR versions.url LIKE :param_1", criteria.getQueryString());
     }
     
     @Test
@@ -80,7 +80,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().havingAnd().having("d.partners.name").gt(0).having("d.versions.url").like("http://%").endAnd().havingAnd().having("d.versions.date").lt(10).having("d.versions.url").like("ftp://%").endAnd().endOr();   
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING (partners.name > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING (partners.name > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)", criteria.getQueryString());
     }
     
     @Test
@@ -88,7 +88,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().having("d.partners.name").gt(0).having("d.versions.url").like("http://%").endOr().havingOr().having("d.versions.date").lt(10).having("d.versions.url").like("ftp://%").endOr();   
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING (partners.name > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners LEFT JOIN d.versions versions GROUP BY owner HAVING (partners.name > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)", criteria.getQueryString());
     }
     
     @Test
@@ -96,7 +96,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().having("d.partners.name").gt(0).endOr();   
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -104,7 +104,7 @@ public class HavingTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner").havingOr().havingAnd().having("d.partners.name").gt(0).endAnd().endOr();   
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING partners.name > :param_0", criteria.getQueryString());
     }
     
     @Test(expected = IllegalStateException.class)

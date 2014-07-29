@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl.predicate;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 
 /**
@@ -44,8 +44,8 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
 
     public static class GePredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-        public GePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
-            super(result, listener, leftExpression, false, subqueryInitFactory);
+        public GePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+            super(result, listener, leftExpression, false, subqueryInitFactory, expressionFactory);
         }
 
         @Override
@@ -55,7 +55,7 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
 
         @Override
         public T expression(String expression) {
-            return chain(new GePredicate(leftExpression, Expressions.createSimpleExpression(expression), PredicateQuantifier.ONE));
+            return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
         }
 
         @Override

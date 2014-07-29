@@ -63,7 +63,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").likeExpression("d.owner.name", false, null);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE " + getCaseInsensitiveLike("d.name", "owner.name", null), criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE " + getCaseInsensitiveLike("d.name", "owner.name", null), criteria.getQueryString());
     }
     
     @Test
@@ -71,7 +71,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").likeExpression("d.owner.name", true, null);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE d.name LIKE owner.name", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE d.name LIKE owner.name", criteria.getQueryString());
     }
     
     @Test
@@ -79,7 +79,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").likeExpression("d.owner.name", true, '\\');
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE d.name LIKE owner.name ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE d.name LIKE owner.name ESCAPE '\\'", criteria.getQueryString());
     }
     
     @Test(expected = NullPointerException.class)
@@ -128,7 +128,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", false, null);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE " + getCaseInsensitiveNotLike("d.name", "owner.name", null), criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE " + getCaseInsensitiveNotLike("d.name", "owner.name", null), criteria.getQueryString());
     }
     
     @Test
@@ -136,7 +136,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").likeExpression("d.owner.name", false, '\\');
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE " + getCaseInsensitiveLike("d.name", "owner.name", '\\'), criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE " + getCaseInsensitiveLike("d.name", "owner.name", '\\'), criteria.getQueryString());
     }
     
     @Test
@@ -144,7 +144,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", false, '\\');
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE " + getCaseInsensitiveNotLike("d.name", "owner.name", '\\'), criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE " + getCaseInsensitiveNotLike("d.name", "owner.name", '\\'), criteria.getQueryString());
     }
     
     @Test
@@ -152,7 +152,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", true, null);
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE NOT d.name LIKE owner.name", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE NOT d.name LIKE owner.name", criteria.getQueryString());
     }
     
     @Test
@@ -160,7 +160,7 @@ public class LikeTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", true, '\\');
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE NOT d.name LIKE owner.name ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE NOT d.name LIKE owner.name ESCAPE '\\'", criteria.getQueryString());
     }
     
     @Test(expected = NullPointerException.class)

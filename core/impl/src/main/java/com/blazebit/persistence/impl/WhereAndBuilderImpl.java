@@ -20,7 +20,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -36,12 +36,14 @@ public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     private final PredicateBuilderEndedListener listener;
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final ExpressionFactory expressionFactory;
     
-    public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new AndPredicate();
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
     
     @Override
@@ -64,13 +66,13 @@ public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements 
 
     @Override
     public WhereOrBuilder<WhereAndBuilder<T>> whereOr() {
-        return startBuilder(new WhereOrBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory));
+        return startBuilder(new WhereOrBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
     }
  
     @Override
     public RestrictionBuilder<? extends WhereAndBuilder<T>> where(String expression) {
-        Expression exp = Expressions.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<WhereAndBuilderImpl<T>>(this, this, exp, subqueryInitFactory));
+        Expression exp = expressionFactory.createSimpleExpression(expression);
+        return startBuilder(new RestrictionBuilderImpl<WhereAndBuilderImpl<T>>(this, this, exp, subqueryInitFactory, expressionFactory));
     }
 
     @Override

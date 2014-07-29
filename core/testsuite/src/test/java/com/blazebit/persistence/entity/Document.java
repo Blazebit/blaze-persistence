@@ -115,7 +115,7 @@ public class Document {
         this.partners = partners;
     }
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     public Person getOwner() {
         return owner;
     }

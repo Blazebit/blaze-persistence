@@ -283,4 +283,12 @@ public class JoinTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
         crit.select("name").join("d.versions", "versions", JoinType.LEFT, true);
     }
+    
+    @Test
+    public void testModelAwareJoin(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        crit.select("owner.name");
+        
+        assertEquals("SELECT owner.name FROM Document a JOIN a.owner owner", crit.getQueryString());
+    }
 }

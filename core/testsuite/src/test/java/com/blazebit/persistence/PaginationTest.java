@@ -98,16 +98,16 @@ public class PaginationTest extends AbstractPersistenceTest {
         //TODO: use metamodel for model-aware joining
         
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 "
+        String expectedCountQuery = "SELECT COUNT(*) FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 "
                 + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(localized) LIKE UPPER(:param_2)";
         
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
-        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 "
+        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 "
                 + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(localized) LIKE UPPER(:param_2) "
                 + "ORDER BY d.id ASC NULLS LAST";
         
         String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name,' user'), COALESCE(localized,'no item'), partnerDocument.name FROM Document d "
-                + "LEFT JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
+                + "JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
                 + "WHERE d.id IN (:ids) "
                 + "ORDER BY d.id ASC NULLS LAST";
         
@@ -134,9 +134,9 @@ public class PaginationTest extends AbstractPersistenceTest {
     
     @Test
     public void testSelectIndexedWithParameter() {
-        String expectedCountQuery = "SELECT COUNT(*) FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
-        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.owner owner WHERE owner.name = :param_0";
-        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = :contactNr LEFT JOIN d.owner owner WHERE d.id IN (:ids)";
+        String expectedCountQuery = "SELECT COUNT(*) FROM Document d JOIN d.owner owner WHERE owner.name = :param_0";
+        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d JOIN d.owner owner WHERE owner.name = :param_0";
+        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = :contactNr JOIN d.owner owner WHERE d.id IN (:ids)";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")

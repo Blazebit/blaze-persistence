@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 
 import static com.blazebit.persistence.AbstractPersistenceTest.em;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -36,14 +37,22 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
+            Person p = new Person("Karl");
+            em.persist(p);
+            
             Version v1 = new Version();
             Version v2 = new Version();
             Version v3 = new Version();
             em.persist(v1);
             em.persist(v2);
             em.persist(v3);
-            em.persist(new Document("Doc1", v1, v3));
-            em.persist(new Document("Doc2", v2));
+            
+            Document doc1 = new Document("Doc1", v1, v3);
+            doc1.setOwner(p);
+            Document doc2 = new Document("Doc2", v2);
+            doc2.setOwner(p);
+            em.persist(doc1);
+            em.persist(doc2);
 
             em.flush();
             tx.commit();

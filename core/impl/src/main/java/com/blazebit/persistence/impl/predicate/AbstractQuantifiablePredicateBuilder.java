@@ -21,6 +21,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
@@ -37,13 +38,15 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends BuilderEnd
     protected final Expression leftExpression;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
+    protected final ExpressionFactory expressionFactory;
 
-    public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
+    public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
         this.wrapNot = wrapNot;
         this.leftExpression = leftExpression;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
 
     protected T chain(Predicate predicate) {

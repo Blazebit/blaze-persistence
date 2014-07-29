@@ -19,7 +19,7 @@ import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -35,12 +35,13 @@ public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     private final PredicateBuilderEndedListener listener;
     private final OrPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
-    
-    public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    private final ExpressionFactory expressionFactory;
+    public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
         this.predicate = new OrPredicate();
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
     
     @Override
@@ -63,12 +64,12 @@ public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements 
 
     @Override
     public HavingAndBuilder<HavingOrBuilder<T>> havingAnd() {
-        return startBuilder(new HavingAndBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory));
+        return startBuilder(new HavingAndBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
     }
 
     @Override
     public RestrictionBuilder<? extends HavingOrBuilder<T>> having(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<HavingOrBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
+        return startBuilder(new RestrictionBuilderImpl<HavingOrBuilderImpl<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
 
     @Override

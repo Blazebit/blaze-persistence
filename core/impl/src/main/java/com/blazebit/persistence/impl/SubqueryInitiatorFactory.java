@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
 
 /**
@@ -28,15 +29,17 @@ public class SubqueryInitiatorFactory {
     private final EntityManager em;
     private final ParameterManager parameterManager;
     private final AliasManager aliasManager;
+    private final ExpressionFactory expressionFactory;
 
-    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager) {
+    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, ExpressionFactory expressionFactory) {
 		this.cbf = cbf;
         this.em = em;
         this.parameterManager = parameterManager;
         this.aliasManager = aliasManager;
+        this.expressionFactory = expressionFactory;
     }
     
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener){
-        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, listener);
+        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, listener, expressionFactory);
     }
 }

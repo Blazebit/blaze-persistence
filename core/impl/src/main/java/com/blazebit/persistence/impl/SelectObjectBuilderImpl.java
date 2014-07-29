@@ -21,7 +21,7 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -37,11 +37,13 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Build
     private final SortedMap<Integer, Expression> expressions = new TreeMap<Integer, Expression>();
     private final SelectObjectBuilderEndedListener listener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final ExpressionFactory expressionFactory;
     
-    public SelectObjectBuilderImpl(T result, SelectObjectBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+    public SelectObjectBuilderImpl(T result, SelectObjectBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
 
     @Override
@@ -50,7 +52,7 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Build
             throw new IllegalStateException("Argument for position " + expressions.size() + " already specified");
         }
         
-        Expression exp = Expressions.createSimpleExpression(expression);
+        Expression exp = expressionFactory.createSimpleExpression(expression);
         expressions.put(expressions.size(), exp);
         return this;
     }
@@ -60,7 +62,7 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Build
         if(expressions.containsKey(position)){
             throw new IllegalStateException("Argument for position " + position + " already specified");
         }
-        Expression exp = Expressions.createSimpleExpression(expression);
+        Expression exp = expressionFactory.createSimpleExpression(expression);
         expressions.put(position, exp);
         return this;
     }

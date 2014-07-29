@@ -19,7 +19,7 @@ import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 
 /**
@@ -47,9 +47,9 @@ public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
     }
     
     public static class EqPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
-
-        public EqPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory) {
-            super(result, listener, leftExpression, wrapNot, subqueryInitFactory);
+        
+        public EqPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+            super(result, listener, leftExpression, wrapNot, subqueryInitFactory, expressionFactory);
         }
        
         @Override
@@ -59,7 +59,7 @@ public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
 
         @Override
         public T expression(String expression) {
-            return chain(new EqPredicate(leftExpression, Expressions.createSimpleExpression(expression), PredicateQuantifier.ONE));
+            return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
         }
 
         @Override

@@ -47,7 +47,7 @@ public class GreaterTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").gtExpression("d.owner.name");
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE d.age > owner.name", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE d.age > owner.name", criteria.getQueryString());
     }
     
     @Test(expected = NullPointerException.class)
@@ -75,7 +75,7 @@ public class GreaterTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").geExpression("d.owner.name");
         
-        assertEquals("FROM Document d LEFT JOIN d.owner owner WHERE d.age >= owner.name", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner WHERE d.age >= owner.name", criteria.getQueryString());
     }
     
     @Test(expected = NullPointerException.class)

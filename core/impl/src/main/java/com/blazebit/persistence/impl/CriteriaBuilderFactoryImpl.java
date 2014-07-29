@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
@@ -34,10 +35,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory{
     
     private final List<QueryTransformer> queryTransformers;
     private final Map<Class<?>, ObjectBuilderFactory<?>> objectBuilders;
+    private final ExpressionFactory expressionFactory;
     
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.objectBuilders = new HashMap<Class<?>, ObjectBuilderFactory<?>>(config.getObjectBuilders());
+        this.expressionFactory = new ExpressionFactory();
     }
     
     public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Class<T> clazz) {
@@ -50,12 +53,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory{
 
     @Override
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
-        return new CriteriaBuilderImpl<T>(this, em, clazz, clazz.getSimpleName().toLowerCase());
+        return new CriteriaBuilderImpl<T>(this, em, clazz, clazz.getSimpleName().toLowerCase(), expressionFactory);
     }
 
     @Override
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
-        return new CriteriaBuilderImpl<T>(this, em, clazz, alias);
+        return new CriteriaBuilderImpl<T>(this, em, clazz, alias, expressionFactory);
     }
     
 }

@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
@@ -29,8 +30,8 @@ public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, Subq
     private final SubqueryBuilderListener listener;
     
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener) {
-        super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager);
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
+        super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, expressionFactory);
         this.result = result;
         this.listener = listener;
     }

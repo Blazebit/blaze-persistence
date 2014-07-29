@@ -25,7 +25,7 @@ import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -65,6 +65,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final BuilderEndedListenerImpl subqueryBuilderListener = new BuilderEndedListenerImpl();
 
     private final AliasManager aliasManager;
+    private final ExpressionFactory expressionFactory;
 
     /**
      * Create flat copy of builder
@@ -86,9 +87,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.jpaInfo = builder.jpaInfo;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
+        this.expressionFactory = builder.expressionFactory;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, ExpressionFactory expressionFactory) {
 
         if (cbf == null) {
             throw new NullPointerException("cbf");
@@ -107,19 +109,20 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.jpaInfo = new JPAInfo(em);
         this.fromClazz = fromClazz;
         this.aliasManager = new AliasManager(aliasManager);
-
+        this.expressionFactory = expressionFactory;
+        
         this.parameterManager = parameterManager;
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, expressionFactory);
 
         this.queryGenerator = new QueryGenerator(this);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this);
-        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
-        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory);
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel());
+        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory, expressionFactory);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies
@@ -127,8 +130,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.em = em;
     }
 
-    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager());
+    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactory expressionFactory) {
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager(), expressionFactory);
     }
 
 
@@ -144,13 +147,13 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
     public CaseWhenBuilder<X> selectCase() {
-        return new CaseWhenBuilderImpl<X>((X) this, subqueryInitFactory);
+        return new CaseWhenBuilderImpl<X>((X) this, subqueryInitFactory, expressionFactory);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
     public SimpleCaseWhenBuilder<X> selectCase(String expression) {
-        return new SimpleCaseWhenBuilderImpl<X>((X) this, expression);
+        return new SimpleCaseWhenBuilderImpl<X>((X) this, expressionFactory, expression);
     }
 
     @Override
@@ -160,7 +163,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression, String selectAlias) {
-        Expression expr = Expressions.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -174,7 +177,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public RestrictionBuilder<X> where(String expression) {
-        Expression expr = Expressions.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         return whereManager.restrict(this, expr);
     }
 
@@ -207,7 +210,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X groupBy(String expression) {
-        Expression expr = Expressions.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
         return (X) this;
@@ -222,7 +225,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        Expression expr = Expressions.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         return havingManager.restrict(this, expr);
     }
 
@@ -285,7 +288,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
-        Expression expr = Expressions.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
         orderByManager.orderBy(expr, ascending, nullFirst);
         return (X) this;

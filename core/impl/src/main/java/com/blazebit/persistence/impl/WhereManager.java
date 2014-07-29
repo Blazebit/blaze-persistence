@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
  *
@@ -23,8 +24,8 @@ import com.blazebit.persistence.WhereOrBuilder;
  */
 public class WhereManager<U> extends PredicateManager<U> {
 
-    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory) {
-        super(queryGenerator, parameterManager, subqueryInitFactory);
+    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+        super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
     }
 
     @Override
@@ -33,6 +34,6 @@ public class WhereManager<U> extends PredicateManager<U> {
     }
 
     WhereOrBuilder<U> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory));
+        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 }

@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,25 +32,27 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T> {
     private final Expression caseOperandExpression;
     private final List<Expression[]> whenExpressions;
     private Expression elseExpression;
+    private final ExpressionFactory expressionFactory;
     
-    public SimpleCaseWhenBuilderImpl(T result, String caseOperandExpression) {
+    public SimpleCaseWhenBuilderImpl(T result, ExpressionFactory expressionFactory, String caseOperandExpression) {
         this.result = result;
-        this.caseOperandExpression = Expressions.createCaseOperandExpression(caseOperandExpression);
+        this.caseOperandExpression = expressionFactory.createCaseOperandExpression(caseOperandExpression);
         this.whenExpressions = new ArrayList<Expression[]>();
+        this.expressionFactory = expressionFactory;
     }
 
     @Override
     public SimpleCaseWhenBuilder<T> when(String expression, String thenExpression) {
         Expression[] whenExpression = new Expression[2];
-        whenExpression[0] = Expressions.createScalarExpression(expression);
-        whenExpression[1] = Expressions.createScalarExpression(thenExpression);
+        whenExpression[0] = expressionFactory.createScalarExpression(expression);
+        whenExpression[1] = expressionFactory.createScalarExpression(thenExpression);
         whenExpressions.add(whenExpression);
         return this;
     }
 
     @Override
     public T thenElse(String elseExpression) {
-        this.elseExpression = Expressions.createScalarExpression(elseExpression);
+        this.elseExpression = expressionFactory.createScalarExpression(elseExpression);
         return result;
     }
     

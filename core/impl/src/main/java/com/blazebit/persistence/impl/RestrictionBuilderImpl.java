@@ -20,7 +20,7 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -53,12 +53,14 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
     private final Expression leftExpression;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
-
-    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory) {
+    private final ExpressionFactory expressionFactory;
+    
+    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.leftExpression = leftExpression;
         this.listener = listener;
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
 
     private T chain(Predicate predicate) {
@@ -104,7 +106,7 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> eq() {
-        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory));
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -117,12 +119,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T eqExpression(String expression) {
-        return chain(new EqPredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> notEq() {
-        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, true, subqueryInitFactory));
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, true, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -135,12 +137,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T notEqExpression(String expression) {
-        return chain(new NotPredicate(new EqPredicate(leftExpression, Expressions.createSimpleExpression(expression))));
+        return chain(new NotPredicate(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression))));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> gt() {
-        return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
+        return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -153,12 +155,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T gtExpression(String expression) {
-        return chain(new GtPredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new GtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> ge() {
-        return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
+        return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -171,12 +173,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T geExpression(String expression) {
-        return chain(new GePredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> lt() {
-        return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
+        return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -189,12 +191,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T ltExpression(String expression) {
-        return chain(new LtPredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> le() {
-        return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory));
+        return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -207,7 +209,7 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T leExpression(String expression) {
-        return chain(new LePredicate(leftExpression, Expressions.createSimpleExpression(expression)));
+        return chain(new LePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
     }
 
     @Override
@@ -249,12 +251,12 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T isMemberOf(String expression) {
-        return chain(new IsMemberOfPredicate(leftExpression, makeCollectionValued(Expressions.createSimpleExpression(expression))));
+        return chain(new IsMemberOfPredicate(leftExpression, makeCollectionValued(expressionFactory.createSimpleExpression(expression))));
     }
 
     @Override
     public T isNotMemberOf(String expression) {
-        return chain(new NotPredicate(new IsMemberOfPredicate(leftExpression, makeCollectionValued(Expressions.createSimpleExpression(expression)))));
+        return chain(new NotPredicate(new IsMemberOfPredicate(leftExpression, makeCollectionValued(expressionFactory.createSimpleExpression(expression)))));
     }
 
     @Override
@@ -283,17 +285,17 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T likeExpression(String expression) {
-        return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), true, null));
+        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), true, null));
     }
 
     @Override
     public T likeExpression(String expression, boolean caseSensitive) {
-        return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, null));
+        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, null));
     }
 
     @Override
     public T likeExpression(String expression, boolean caseSensitive, Character escapeCharacter) {
-        return chain(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, escapeCharacter));
+        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, escapeCharacter));
     }
 
     @Override
@@ -322,17 +324,17 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
 
     @Override
     public T notLikeExpression(String expression) {
-        return chain(new NotPredicate(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), true, null)));
+        return chain(new NotPredicate(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), true, null)));
     }
 
     @Override
     public T notLikeExpression(String expression, boolean caseSensitive) {
-        return chain(new NotPredicate(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, null)));
+        return chain(new NotPredicate(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, null)));
     }
 
     @Override
     public T notLikeExpression(String expression, boolean caseSensitive, Character escapeCharacter) {
-        return chain(new NotPredicate(new LikePredicate(leftExpression, Expressions.createSimpleExpression(expression), caseSensitive, escapeCharacter)));
+        return chain(new NotPredicate(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, escapeCharacter)));
     }
 
     @Override

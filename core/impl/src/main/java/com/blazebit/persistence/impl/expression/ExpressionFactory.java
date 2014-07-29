@@ -32,29 +32,11 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  *
  * @author Moritz Becker
  */
-public final class Expressions {
+public final class ExpressionFactory {
 
-    private static final ANTLRErrorListener errorListener = new ANTLRErrorListener() {
+    
 
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new SyntaxErrorException("line " + line + ":" + charPositionInLine + " " + msg);
-        }
-
-        @Override
-        public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-        }
-
-        @Override
-        public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-        }
-
-        @Override
-        public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-        }
-    };
-
-    public static Expression createSimpleExpression(String expression) {
+    public Expression createSimpleExpression(String expression) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -85,11 +67,31 @@ public final class Expressions {
         return expr;
     }
 
-    public static Expression createCaseOperandExpression(String caseOperandExpression) {
+    public Expression createCaseOperandExpression(String caseOperandExpression) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    public static Expression createScalarExpression(String expression) {
+    public Expression createScalarExpression(String expression) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    private static final ANTLRErrorListener errorListener = new ANTLRErrorListener() {
+
+        @Override
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+            throw new SyntaxErrorException("line " + line + ":" + charPositionInLine + " " + msg);
+        }
+
+        @Override
+        public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+        }
+
+        @Override
+        public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+        }
+
+        @Override
+        public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+        }
+    };
 }

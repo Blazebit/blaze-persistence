@@ -21,7 +21,7 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.objectbuilder.ClassObjectBuilder;
@@ -54,12 +54,14 @@ public class SelectManager<T> extends AbstractManager {
     private final AliasManager aliasManager;
     private final BaseQueryBuilder<?, ?> aliasOwner;
     private final SubqueryInitiatorFactory subqueryInitFactory;
-
-    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, SubqueryInitiatorFactory subqueryInitFactory) {
+    private final ExpressionFactory expressionFactory;
+    
+    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.aliasOwner = aliasOwner;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
 
     void verifyBuilderEnded() {
@@ -149,7 +151,7 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -162,7 +164,7 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -191,7 +193,7 @@ public class SelectManager<T> extends AbstractManager {
                 throw new IllegalArgumentException("Illegal empty expression returned from object builder '" + objectBuilder + "' at index: " + i);
             }
 
-            Expression expr = Expressions.createSimpleExpression(expression);
+            Expression expr = expressionFactory.createSimpleExpression(expression);
             registerParameterExpressions(expr);
             SelectInfo selectInfo = new SelectInfo(expr);
             selectInfos.add(selectInfo);

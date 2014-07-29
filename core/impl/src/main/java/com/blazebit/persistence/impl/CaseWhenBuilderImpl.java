@@ -22,7 +22,7 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import java.util.ArrayList;
@@ -37,43 +37,45 @@ public class CaseWhenBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     private final T result;
     private final List<Object[]> whenThenClauses;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final ExpressionFactory expressionFactory;
     private Expression elseExpression;
     
     private Predicate whenPredicate;
     
-    public CaseWhenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory) {
+    public CaseWhenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.whenThenClauses = new ArrayList<Object[]>();
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
     
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
     
     @Override
     public CaseWhenBuilder<T> then(String expression) {
         Object[] whenThenClause = new Object[2];
         whenThenClause[0] = this.whenPredicate;
-        whenThenClause[1] = Expressions.createScalarExpression(expression);
+        whenThenClause[1] = expressionFactory.createScalarExpression(expression);
         whenThenClauses.add(whenThenClause);
         return this;
     }
     
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd() {
-        return new CaseWhenAndThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory);
+        return new CaseWhenAndThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory, expressionFactory);
     }
     
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> whenOr() {
-        return new CaseWhenOrThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory);
+        return new CaseWhenOrThenBuilderImpl<CaseWhenBuilder<T>>(this, subqueryInitFactory, expressionFactory);
     }
     
     @Override
     public T thenElse(String elseExpression) {
-        this.elseExpression = Expressions.createScalarExpression(elseExpression);
+        this.elseExpression = expressionFactory.createScalarExpression(elseExpression);
         return result;
     }
     

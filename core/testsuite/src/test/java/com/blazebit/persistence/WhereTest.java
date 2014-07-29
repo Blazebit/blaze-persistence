@@ -60,7 +60,7 @@ public class WhereTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.owner.ownedDocuments.age + 1").ge(25);
 
-        assertEquals("FROM Document d LEFT JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age+1 >= :param_0", criteria.getQueryString());
+        assertEquals("FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age+1 >= :param_0", criteria.getQueryString());
     }
 
     @Test

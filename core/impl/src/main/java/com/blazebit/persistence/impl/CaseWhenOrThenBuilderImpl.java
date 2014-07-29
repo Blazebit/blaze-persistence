@@ -20,7 +20,7 @@ import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.impl.expression.Expressions;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
  *
@@ -30,20 +30,22 @@ public class CaseWhenOrThenBuilderImpl<T> extends BuilderEndedListenerImpl imple
     
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
-
-    public CaseWhenOrThenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory) {
+    private final ExpressionFactory expressionFactory;
+    
+    public CaseWhenOrThenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
     }
 
     @Override
     public RestrictionBuilder<CaseWhenOrThenBuilderImpl<T>> or(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, this, Expressions.createSimpleExpression(expression), subqueryInitFactory));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
     
     @Override
     public CaseWhenAndBuilder<CaseWhenOrThenBuilderImpl<T>> and() {
-        return new CaseWhenAndThenBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, subqueryInitFactory);
+        return new CaseWhenAndThenBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, subqueryInitFactory, expressionFactory);
     }
 
     @Override
