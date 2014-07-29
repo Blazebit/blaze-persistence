@@ -93,11 +93,20 @@ public class SubviewTest extends AbstractPersistenceTest {
         
         assertEquals(2, results.size());
         // Doc1
-//        assertEquals(doc1.getId(), results.get(0).getId());
-//        assertEquals(doc1.getName(), results.get(0).getName());
-//        assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
-//        assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
-//        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
-//        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
+        assertEquals(doc1.getName(), results.get(0).getName());
+        assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
+        assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
+        assertEquals(doc1.getContacts2().get(1).getName(), results.get(0).getContacts().get(1).getName());
+        assertEquals(doc1.getContacts2().get(2).getName(), results.get(0).getContacts().get(2).getName());
+        assertEquals(doc1.getPartners().size(), results.get(0).getPartners().size());
+        assertEquals(doc1.getPartners().iterator().next().getName(), results.get(0).getPartners().iterator().next().getName());
+        // Doc2
+        assertEquals(doc2.getName(), results.get(1).getName());
+        assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
+        assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
+        assertEquals(doc2.getContacts2().get(1).getName(), results.get(1).getContacts().get(1).getName());
+        assertEquals(doc2.getContacts2().get(2).getName(), results.get(1).getContacts().get(2).getName());
+        assertEquals(doc2.getPartners().size(), results.get(1).getPartners().size());
+        assertEquals(doc2.getPartners().iterator().next().getName(), results.get(1).getPartners().iterator().next().getName());
     }
 }

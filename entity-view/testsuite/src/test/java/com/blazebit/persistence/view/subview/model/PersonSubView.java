@@ -28,7 +28,4 @@ import com.blazebit.persistence.view.MappingParameter;
 public interface PersonSubView {
     
     public String getName();
-    
-    @MappingParameter("contactPersonNumber")
-    public Integer getContactPersonNumber();
 }
