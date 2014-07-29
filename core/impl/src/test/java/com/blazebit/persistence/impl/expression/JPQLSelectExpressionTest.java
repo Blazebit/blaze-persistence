@@ -135,6 +135,17 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
+    public void testCountIdExpression() {
+        CompositeExpression result = parse("COUNT(id)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 3);
+        assertTrue(expressions.get(0).equals(new FooExpression("COUNT(")));
+        assertTrue(expressions.get(1).equals(path("id")));
+        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+    }
+
+    @Test
     public void testArrayExpression() {
         CompositeExpression result = parse("versions[test]");
         List<Expression> expressions = result.getExpressions();
