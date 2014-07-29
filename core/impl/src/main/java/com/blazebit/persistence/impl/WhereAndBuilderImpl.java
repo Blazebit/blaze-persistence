@@ -70,18 +70,18 @@ public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     }
  
     @Override
-    public RestrictionBuilder<? extends WhereAndBuilder<T>> where(String expression) {
+    public RestrictionBuilder<WhereAndBuilder<T>> where(String expression) {
         Expression exp = expressionFactory.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<WhereAndBuilderImpl<T>>(this, this, exp, subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, exp, subqueryInitFactory, expressionFactory));
     }
 
     @Override
-    public SubqueryInitiator<? extends WhereAndBuilder<T>> whereExists() {
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<WhereAndBuilder<T>> whereExists() {
+        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, this);
     }
     
     @Override
-    public SubqueryInitiator<? extends WhereAndBuilder<T>> whereNotExists() {
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<WhereAndBuilder<T>> whereNotExists() {
+        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, this);
     }
 }

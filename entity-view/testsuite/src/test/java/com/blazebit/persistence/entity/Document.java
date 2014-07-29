@@ -28,6 +28,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -58,8 +59,9 @@ public class Document {
         this.name = name;
     }
     
-    public Document(String name, Version ... versions){
+    public Document(String name, Person owner, Version ... versions){
         this.name = name;
+        this.owner = owner;
         this.versions.addAll(Arrays.asList(versions));
     }
 
@@ -116,6 +118,7 @@ public class Document {
         this.partners = partners;
     }
 
+    @ManyToOne(optional = false)
     public Person getOwner() {
         return owner;
     }

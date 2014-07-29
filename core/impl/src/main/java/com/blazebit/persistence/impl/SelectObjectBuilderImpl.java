@@ -74,8 +74,8 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Build
     } 
 
     @Override
-    public SubqueryInitiator<? extends SelectObjectBuilder<T>> with(){
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<SelectObjectBuilder<T>> with(){
+        return subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this);
     }
 
     @Override

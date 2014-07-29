@@ -22,6 +22,8 @@ import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -41,7 +43,9 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     private final Class<Y> javaType;
     private final Class<? extends Filter> filterMapping;
     private final String mapping;
+    private final Class<? extends SubqueryProvider> subqueryProvider;
     private final boolean mappingParameter;
+    private final boolean subqueryMapping;
 
     private MethodAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Class<? extends Filter> filterMapping) {
         this.name = StringUtils.firstToLower(method.getName().substring(3));
@@ -52,10 +56,19 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
         
         if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
+            this.subqueryProvider = null;
             this.mappingParameter = false;
+            this.subqueryMapping = false;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
+            this.subqueryProvider = null;
             this.mappingParameter = true;
+            this.subqueryMapping = false;
+        } else if (mapping instanceof MappingSubquery) {
+            this.mapping = null;
+            this.subqueryProvider = ((MappingSubquery) mapping).value();
+            this.mappingParameter = false;
+            this.subqueryMapping = true;
         } else {
             throw new IllegalArgumentException("Invalid mapping annotation " + mapping);
         }
@@ -94,6 +107,16 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     @Override
     public boolean isMappingParameter() {
         return mappingParameter;
+    }
+
+    @Override
+    public Class<? extends SubqueryProvider> getSubqueryProvider() {
+        return subqueryProvider;
+    }
+
+    @Override
+    public boolean isSubqueryMapping() {
+        return subqueryMapping;
     }
     
     public static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method) {
@@ -148,6 +171,12 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
                 }
         
                 return mappingParameter;
+            }
+            
+            MappingSubquery mappingSubquery = AnnotationUtils.findAnnotation(m, MappingSubquery.class);
+            
+            if (mappingSubquery != null) {
+                return mappingSubquery;
             }
             
             // Implicit mapping

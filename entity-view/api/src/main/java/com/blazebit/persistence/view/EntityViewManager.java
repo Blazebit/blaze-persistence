@@ -37,6 +37,8 @@ public interface EntityViewManager {
      */
     public ViewMetamodel getMetamodel();
     
+    public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument);
+    
     /**
      * TODO: javadoc
      * 

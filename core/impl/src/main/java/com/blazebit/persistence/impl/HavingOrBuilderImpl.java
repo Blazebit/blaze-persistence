@@ -68,17 +68,17 @@ public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements 
     }
 
     @Override
-    public RestrictionBuilder<? extends HavingOrBuilder<T>> having(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<HavingOrBuilderImpl<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+    public RestrictionBuilder<HavingOrBuilder<T>> having(String expression) {
+        return startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
 
     @Override
-    public SubqueryInitiator<? extends HavingOrBuilder<T>> havingExists() {
-        return subqueryInitFactory.createSubqueryInitiator(this, this);
+    public SubqueryInitiator<HavingOrBuilder<T>> havingExists() {
+        return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, this);
     }
 
     @Override
-    public SubqueryInitiator<? extends HavingOrBuilder<T>> havingNotExists() {
+    public SubqueryInitiator<HavingOrBuilder<T>> havingNotExists() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

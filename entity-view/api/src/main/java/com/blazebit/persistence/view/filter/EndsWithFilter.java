@@ -5,26 +5,10 @@ import com.blazebit.persistence.view.Filter;
 
 
 /**
- * TODO: javadoc
+     * Constructs a new {@linkplain EndsWithFilter} which only retains elements that end the given value in the left hand side.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class EndsWithFilter implements Filter {
-
-    private final String value;
-
-    /**
-     * Constructs a new {@linkplain EndsWithFilter} which only retains elements that end the given value in the left hand side.
-     * 
-     * @param value The value the left hand side has to end with
-     */
-    public EndsWithFilter(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public <T extends Filterable<T>> T apply(T filterable, String expression) {
-        return filterable.where(expression).like("%" + value);
-    }
+public interface EndsWithFilter extends Filter {
 }

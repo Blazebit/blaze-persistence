@@ -32,7 +32,7 @@ import java.util.Set;
 public class ViewTypeObjectBuilderTemplate<T> {
     
     private final Constructor<? extends T> proxyConstructor;
-    private final String[] mappings;
+    private final String[][] mappings;
     private final String[] parameterMappings;
     private final boolean hasParameters;
     
@@ -87,7 +87,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         
         Object[] result = getConstructorAndMappings(proxyFactory.getProxy(viewType), viewType, constructor);
         this.proxyConstructor = (Constructor<? extends T>) result[0];
-        this.mappings = (String[]) result[1];
+        this.mappings = (String[][]) result[1];
         this.parameterMappings = (String[]) result[2];
         boolean parameterFound = false;
         
@@ -114,7 +114,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         
         int length = attributes.length + parameterAttributes.length;
-        String mappings[] = new String[length];
+        String mappings[][] = new String[length][2];
         String parameterMappings[] = new String[length];
         
         OUTER: for (Constructor<?> constructor : constructors) {
@@ -127,10 +127,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     continue OUTER;
                 } else {
                     if (attributes[i].isMappingParameter()) {
-                        mappings[i] = "NULLIF(1,1)";
+                        mappings[i][0] = "NULLIF(1,1)";
                         parameterMappings[i + attributes.length] = attributes[i].getMapping();
                     } else {
-                        mappings[i] = attributes[i].getMapping();
+                        mappings[i][0] = attributes[i].getMapping();
+                        mappings[i][1] = attributes[i].getName();
                     }
                 }
             }
@@ -139,10 +140,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     continue OUTER;
                 } else {
                     if (parameterAttributes[i].isMappingParameter()) {
-                        mappings[i + attributes.length] = "NULLIF(1,1)";
+                        mappings[i + attributes.length][0] = "NULLIF(1,1)";
                         parameterMappings[i + attributes.length] = parameterAttributes[i].getMapping();
                     } else {
-                        mappings[i + attributes.length] = parameterAttributes[i].getMapping();
+                        mappings[i + attributes.length][0] = parameterAttributes[i].getMapping();
                     }
                 }
             }
@@ -157,7 +158,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return proxyConstructor;
     }
 
-    public String[] getMappings() {
+    public String[][] getMappings() {
         return mappings;
     }
 

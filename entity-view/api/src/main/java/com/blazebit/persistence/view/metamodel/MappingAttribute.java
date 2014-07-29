@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.Filter;
+import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
  * Represents an attribute of a view type.
@@ -44,7 +45,7 @@ public interface MappingAttribute<X, Y> {
     /**
      * Returns the mapping of the attribute.
      *
-     * @return The mapping of the attribtue
+     * @return The mapping of the attribute
      */
     public String getMapping();
 
@@ -54,4 +55,18 @@ public interface MappingAttribute<X, Y> {
      * @return True if this attribute maps to a query parameter, otherwise false
      */
     public boolean isMappingParameter();
+
+    /**
+     * Returns the subquery provider of the attribute.
+     *
+     * @return The subquery provider of the attribute
+     */
+    public Class<? extends SubqueryProvider> getSubqueryProvider();
+
+    /**
+     * Returns true if this attribute maps to a subquery provider, otherwise false.
+     *
+     * @return True if this attribute maps to a subquery provider, otherwise false
+     */
+    public boolean isSubqueryMapping();
 }

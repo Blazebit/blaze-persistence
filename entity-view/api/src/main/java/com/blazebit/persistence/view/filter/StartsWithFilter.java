@@ -5,26 +5,11 @@ import com.blazebit.persistence.view.Filter;
 
 
 /**
- * TODO: javadoc
+     * Constructs a new {@linkplain StartsWithFilter} which only retains elements that start with the given value in the left hand side.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class StartsWithFilter implements Filter {
+public interface StartsWithFilter extends Filter {
 
-    private final String value;
-
-    /**
-     * Constructs a new {@linkplain StartsWithFilter} which only retains elements that start with the given value in the left hand side.
-     * 
-     * @param value The value the left hand side has to start with
-     */
-    public StartsWithFilter(String value) {
-        this.value = value;
-    }
-
-    @Override
-    public <T extends Filterable<T>> T apply(T filterable, String expression) {
-        return filterable.where(expression).like(value + "%");
-    }
 }

@@ -1,12 +1,13 @@
 package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.Filterable;
+import com.blazebit.persistence.RestrictionBuilder;
 
 
 /**
  * TODO: javadoc
  * 
- * Filters must have either an empty constructor or a constructor that accepts {@linkplain String} or {@linkplain Object}.
+ * Filters must have either an empty constructor or a constructor that accepts {@linkplain Object}.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -18,5 +19,5 @@ public interface Filter {
      *
      * @return
      */
-    public <T extends Filterable<T>> T apply(T filterable, String expression);
+    public <T> T apply(RestrictionBuilder<T> rb);
 }

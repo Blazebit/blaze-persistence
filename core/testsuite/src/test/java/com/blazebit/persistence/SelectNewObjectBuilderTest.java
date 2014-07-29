@@ -64,8 +64,8 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
             .selectNew(new ObjectBuilder<String[]>() {
 
             @Override
-            public String[] getExpressions() {
-                return new String[] { "name", "UPPER(name)", "LOWER(name)" };
+            public String[][] getExpressions() {
+                return new String[][] { {"name", "name"}, {"UPPER(name)", "upperName"}, {"LOWER(name)", "lowerName"} };
             }
 
             @Override
@@ -78,7 +78,7 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
                 return list;
             }
         });
-        assertEquals("SELECT d.name, UPPER(d.name), LOWER(d.name) FROM Document d", criteria.getQueryString());
+        assertEquals("SELECT d.name AS name, UPPER(d.name) AS upperName, LOWER(d.name) AS lowerName FROM Document d", criteria.getQueryString());
         List<String[]> actual = criteria.getQuery().getResultList();
 
         assertArrayEquals(new String[] {"Doc1", "DOC1", "doc1"}, actual.get(0));

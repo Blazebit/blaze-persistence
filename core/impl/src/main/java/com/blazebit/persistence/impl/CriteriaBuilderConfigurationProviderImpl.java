@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
 
@@ -24,7 +23,6 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
  *
  * @author Christian
  */
-@ServiceProvider(CriteriaBuilderConfigurationProvider.class)
 public class CriteriaBuilderConfigurationProviderImpl implements CriteriaBuilderConfigurationProvider {
 
     @Override

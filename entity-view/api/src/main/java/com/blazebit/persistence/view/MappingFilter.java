@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  * @author Christian Beikov
  * @since 1.0
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MappingFilter {
     

@@ -187,12 +187,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<? extends X> whereExists() {
+    public SubqueryInitiator<X> whereExists() {
         return whereManager.restrictExists((X) this);
     }
 
     @Override
-    public SubqueryInitiator<? extends X> whereNotExists() {
+    public SubqueryInitiator<X> whereNotExists() {
         return whereManager.restrictNotExists((X) this);
 
     }

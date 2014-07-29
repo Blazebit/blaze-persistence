@@ -25,19 +25,19 @@ import javax.persistence.Tuple;
  *
  * @author ccbem
  */
-public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<U>> implements SubqueryBuilder<U> {
-    private final U result;
+public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T> {
+    private final T result;
     private final SubqueryBuilderListener listener;
     
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, U result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
         super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, expressionFactory);
         this.result = result;
         this.listener = listener;
     }
     
     @Override
-    public U end() {
+    public T end() {
         if(selectManager.getSelectInfoCount() == 0){
             throw new IllegalStateException("A subquery without a select clause is not allowed");
         }
@@ -46,12 +46,12 @@ public class SubqueryBuilderImpl<U> extends AbstractBaseQueryBuilder<Tuple, Subq
     }
 
     @Override
-    public SubqueryBuilder<U> select(String expression) {
-        return (SubqueryBuilder<U>) super.select(expression);
+    public SubqueryBuilder<T> select(String expression) {
+        return (SubqueryBuilder<T>) super.select(expression);
     }
 
     @Override
-    public SubqueryBuilder<U> select(String expression, String alias) {
-        return (SubqueryBuilder<U>) super.select(expression, alias);
+    public SubqueryBuilder<T> select(String expression, String alias) {
+        return (SubqueryBuilder<T>) super.select(expression, alias);
     }
 }

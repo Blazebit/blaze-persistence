@@ -24,6 +24,13 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface BaseAggregateable<T extends BaseAggregateable<T>> {
+    
+    /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public SubqueryInitiator<RestrictionBuilder<T>> having();
 
     /**
      * Starts a {@link RestrictionBuilder} for a having predicate with the given expression as left hand expression.
@@ -32,7 +39,7 @@ public interface BaseAggregateable<T extends BaseAggregateable<T>> {
      * @param expression The left hand expression for a having predicate
      * @return The restriction builder for the given expression
      */
-    public RestrictionBuilder<? extends T> having(String expression);
+    public RestrictionBuilder<T> having(String expression);
 
     /**
      * Starts an exists predicate for the having clause with a subquery on the right hand side.
@@ -40,7 +47,7 @@ public interface BaseAggregateable<T extends BaseAggregateable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<? extends T> havingExists();
+    public SubqueryInitiator<T> havingExists();
     
     /**
      * Starts an exists predicate for the having clause with a subquery on the right hand side.
@@ -48,5 +55,5 @@ public interface BaseAggregateable<T extends BaseAggregateable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<? extends T> havingNotExists();
+    public SubqueryInitiator<T> havingNotExists();
 }

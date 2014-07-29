@@ -5,9 +5,8 @@ import java.util.Map;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -23,9 +22,8 @@ public class EntityViewSetting<T> {
     private final int firstRow;
     private final int maxRows;
     private final Map<String, Sorter> sorters = new HashMap<String, Sorter>();
-    private final Map<String, Filter> filters = new HashMap<String, Filter>();
-    private final Map<String, Sorter> attributeSorters = new HashMap<String, Sorter>();
-    private final Map<String, String> attributeFilters = new HashMap<String, String>();
+    private final Map<Object, Filter> filters = new HashMap<Object, Filter>();
+    private final Map<String, Object> attributeFilters = new HashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
     
     /**
@@ -48,13 +46,24 @@ public class EntityViewSetting<T> {
      */
     public PaginatedCriteriaBuilder<T> apply(EntityViewManager evm, CriteriaBuilder<?> cb) {
         ViewType<T> viewType = evm.getMetamodel().view(entityViewClass);
-        resolveAttributeFilters(viewType);
-        resolveAttributeSorters(viewType);
+        resolveAttributeFilters(evm, viewType);
         
         // Add filters
         if (!filters.isEmpty()) {
-            for (Map.Entry<String, Filter> filterEntry : filters.entrySet()) {
-                filterEntry.getValue().apply(cb, filterEntry.getKey());
+            for (Map.Entry<Object, Filter> filterEntry : filters.entrySet()) {
+                Object key = filterEntry.getKey();
+                
+                if (key instanceof Class) {
+                    Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) key;
+                    try {
+                        SubqueryProvider provider = subqueryProviderClass.newInstance();
+                        filterEntry.getValue().apply(provider.createSubquery(cb.where()));
+                    } catch (Exception ex) {
+                        throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
+                    }
+                } else {
+                    filterEntry.getValue().apply(cb.where((String) key));
+                }
             }
         }
 
@@ -112,17 +121,8 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
-    public void addAttributeSorter(String attributeName, Sorter sorter) {
-        this.attributeSorters.put(attributeName, sorter);
-    }
-    
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public void addAttributeSorter(Map<String, Sorter> attributeSorters) {
-        this.attributeSorters.putAll(attributeSorters);
+    public void addSorter(String expression, Sorter sorter) {
+        this.sorters.put(expression, sorter);
     }
     
     /**
@@ -185,7 +185,7 @@ public class EntityViewSetting<T> {
      * @return
      */
     public boolean hasSorters() {
-        return !attributeSorters.isEmpty() || !sorters.isEmpty();
+        return !sorters.isEmpty();
     }
 
     /**
@@ -195,15 +195,6 @@ public class EntityViewSetting<T> {
      */
     public Map<String, Sorter> getSorters() {
         return sorters;
-    }
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public Map<String, Sorter> getAttributeSorters() {
-        return attributeSorters;
     }
     
     /**
@@ -220,7 +211,7 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
-    public Map<String, Filter> getFilters() {
+    public Map<Object, Filter> getFilters() {
         return filters;
     }
 
@@ -229,7 +220,7 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
-    public Map<String, String> getAttributeFilters() {
+    public Map<String, Object> getAttributeFilters() {
         return attributeFilters;
     }
     
@@ -250,69 +241,28 @@ public class EntityViewSetting<T> {
     public Map<String, Object> getOptionalParameters() {
         return optionalParameters;
     }
-
-    private void resolveAttributeSorters(ViewType<?> viewType) {
-        Iterator<Map.Entry<String, Sorter>> iter = attributeSorters.entrySet().iterator();
-        
-        while (iter.hasNext()) {
-            Map.Entry<String, Sorter> attributeSorterEntry = iter.next();
-            String attributeName = attributeSorterEntry.getKey();
-            sorters.put(viewType.getAttribute(attributeName).getMapping(), attributeSorterEntry.getValue());
-            iter.remove();
-        }
-    }
     
-    private void resolveAttributeFilters(ViewType<?> viewType) {
-        Iterator<Map.Entry<String, String>> iter = attributeFilters.entrySet().iterator();
+    private void resolveAttributeFilters(EntityViewManager evm, ViewType<?> viewType) {
+        Iterator<Map.Entry<String, Object>> iter = attributeFilters.entrySet().iterator();
         
         while (iter.hasNext()) {
-            Map.Entry<String, String> attributeFilterEntry = iter.next();
+            Map.Entry<String, Object> attributeFilterEntry = iter.next();
             String attributeName = attributeFilterEntry.getKey();
-            String filterValue = attributeFilterEntry.getValue();
-            Class<? extends Filter> filterClass = viewType.getAttribute(attributeName).getFilterMapping();
+            Object filterValue = attributeFilterEntry.getValue();
+            MethodAttribute<?, ?> attribute = viewType.getAttribute(attributeName);
+            Class<? extends Filter> filterClass = attribute.getFilterMapping();
             if (filterClass == null) {
                 throw new IllegalArgumentException("No filter mapping given for the attribute '" + attributeName + "' in the entity view type '" + viewType.getJavaType().getName() + "'");
             }
             
-            Filter filter = null;
+            Filter filter = evm.createFilter(filterClass, attribute.getJavaType(), filterValue);
             
-            try {
-                Constructor<?>[] constructors = filterClass.getDeclaredConstructors();
-                Constructor<? extends Filter> filterConstructor = findConstructor(constructors, String.class);
-
-                if (filterConstructor != null) {
-                    filter = filterConstructor.newInstance(filterValue);
-                } else {
-                    filterConstructor = findConstructor(constructors, Object.class);
-
-                    if  (filterConstructor != null) {
-                        filter = filterConstructor.newInstance((Object) filterValue);
-                    } else {
-                        filterConstructor = findConstructor(constructors);
-
-                        if (filterConstructor == null) {
-                            throw new IllegalArgumentException("No suitable constructor found for filter class '" + filterClass.getName() + "'");
-                        }
-
-                        filter = filterConstructor.newInstance();
-                    }
-                }
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not create an instance of the filter class '" + filterClass.getName() + "'", ex);
+            if (attribute.isSubqueryMapping()) {
+                filters.put(attribute.getSubqueryProvider(), filter);
+            } else {
+                filters.put(attribute.getMapping(), filter);
             }
-            
-            filters.put(viewType.getAttribute(attributeName).getMapping(), filter);
             iter.remove();
         }
-    }
-
-    private Constructor<? extends Filter> findConstructor(Constructor<?>[] constructors, Class<?>... classes) {
-        for (int i = 0; i < constructors.length; i++) {
-            if (Arrays.equals(constructors[i].getParameterTypes(), classes)) {
-                return (Constructor<? extends Filter>) constructors[i];
-            }
-        }
-        
-        return null;
     }
 }
