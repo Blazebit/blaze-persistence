@@ -57,8 +57,9 @@ public class Document {
         this.name = name;
     }
     
-    public Document(String name, Version ... versions){
+    public Document(String name, Person owner, Version ... versions){
         this.name = name;
+        this.owner = owner;
         this.versions.addAll(Arrays.asList(versions));
     }
 

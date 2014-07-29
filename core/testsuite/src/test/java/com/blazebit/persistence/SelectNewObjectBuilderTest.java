@@ -47,12 +47,8 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
             em.persist(v2);
             em.persist(v3);
             
-            Document doc1 = new Document("Doc1", v1, v3);
-            doc1.setOwner(p);
-            Document doc2 = new Document("Doc2", v2);
-            doc2.setOwner(p);
-            em.persist(doc1);
-            em.persist(doc2);
+            em.persist(new Document("Doc1", p, v1, v3));
+            em.persist(new Document("Doc2", p, v2));
 
             em.flush();
             tx.commit();

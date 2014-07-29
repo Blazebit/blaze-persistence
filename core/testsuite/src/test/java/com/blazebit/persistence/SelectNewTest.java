@@ -16,8 +16,10 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.model.DocumentCount;
+import com.blazebit.persistence.model.DocumentPartnerView;
 import com.blazebit.persistence.model.DocumentViewModel;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -35,14 +37,23 @@ public class SelectNewTest extends AbstractPersistenceTest {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
+            Person p = new Person("Karl");
+            p.getLocalized().put(1, "msg1");
+            p.getLocalized().put(2, "msg2");
+            em.persist(p);
+            
             Version v1 = new Version();
             Version v2 = new Version();
             Version v3 = new Version();
             em.persist(v1);
             em.persist(v2);
             em.persist(v3);
-            em.persist(new Document("Doc1", v1, v3));
-            em.persist(new Document("Doc2", v2));
+            
+            Document doc1 = new Document("Doc1", p, v1, v3);
+            doc1.getPartners().add(p);
+            em.persist(doc1);
+            p.setPartnerDocument(doc1);
+            em.persist(new Document("Doc2", p, v2));
 
             em.flush();
             tx.commit();
@@ -97,6 +108,20 @@ public class SelectNewTest extends AbstractPersistenceTest {
         Long expectedCount = (Long) em.createQuery("SELECT COUNT(*) FROM Document d").getSingleResult();
         
         assertEquals((long) expectedCount, actual.size());
+    }
+    
+    @Test
+    public void testSelectCollection() {
+        CriteriaBuilder<DocumentPartnerView> crit = cbf.from(em, Document.class, "d")
+            .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
+        em.createQuery("SELECT new com.blazebit.persistence.model.DocumentPartnerView(elements(partners), elements(localized)) FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized").getResultList();
+        assertEquals("SELECT d.id, partners FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
+        List<DocumentPartnerView> actual = crit.getResultList();
+        
+        /* expected */
+//        Long expectedCount = (Long) em.createQuery("SELECT COUNT(*) FROM Document d").getSingleResult();
+        
+//        assertEquals((long) expectedCount, actual.size());
     }
 
 //    
