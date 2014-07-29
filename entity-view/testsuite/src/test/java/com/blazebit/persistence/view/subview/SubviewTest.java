@@ -86,6 +86,7 @@ public class SubviewTest extends AbstractPersistenceTest {
         cfg.addEntityView(DocumentMasterView.class);
         cfg.addEntityView(PersonSubView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
+        
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
         List<DocumentMasterView> results = evm.applyObjectBuilder(DocumentMasterView.class, criteria).setParameter("contactPersonNumber", 2).getResultList();

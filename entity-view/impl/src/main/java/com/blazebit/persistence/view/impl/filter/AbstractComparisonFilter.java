@@ -51,7 +51,7 @@ public abstract class AbstractComparisonFilter implements Filter {
     @Override
     public <T> T apply(RestrictionBuilder<T> rb) {
         if (subqueryProvider == null) {
-            return apply(rb);
+            return applyRestriction(rb);
         } else {
             return subqueryProvider.createSubquery(applySubquery(rb));
         }

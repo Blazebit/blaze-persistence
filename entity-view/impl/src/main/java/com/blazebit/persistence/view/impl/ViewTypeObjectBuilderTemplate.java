@@ -128,7 +128,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 } else {
                     if (attributes[i].isMappingParameter()) {
                         mappings[i][0] = "NULLIF(1,1)";
-                        parameterMappings[i + attributes.length] = attributes[i].getMapping();
+                        parameterMappings[i] = attributes[i].getMapping();
                     } else if (attributes[i].isSubqueryMapping()) {
                         mappings[i][0] = attributes[i].getSubqueryProvider();
                         mappings[i][1] = attributes[i].getName();
