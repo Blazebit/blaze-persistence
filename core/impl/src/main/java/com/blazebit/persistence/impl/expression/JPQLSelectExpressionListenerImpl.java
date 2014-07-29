@@ -566,7 +566,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void visitErrorNode(ErrorNode node) {
-        throw new IllegalStateException("Parsing failed: " + node.getText());
+        throw new SyntaxErrorException("Parsing failed: " + node.getText());
     }
 
     @Override

@@ -230,7 +230,7 @@ public class JPQLSelectExpressionTest {
         assertTrue(expressions.get(0).equals(path("versions[:index]")));
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = SyntaxErrorException.class)
     public void testArrayWithInvalidParameterIndex() {
         parse("versions[:index.b]");
     }
