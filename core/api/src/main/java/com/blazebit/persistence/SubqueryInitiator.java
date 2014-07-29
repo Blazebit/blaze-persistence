@@ -22,19 +22,19 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SubqueryInitiator<U> {
+public interface SubqueryInitiator<T> {
 
     /**
      * TODO: javadoc
      *
      * @return
      */
-    public SubqueryBuilder<U> from(Class<?> clazz);
+    public SubqueryBuilder<T> from(Class<?> clazz);
 
     /**
      * TODO: javadoc
      *
      * @return
      */
-    public SubqueryBuilder<U> from(Class<?> clazz, String alias);
+    public SubqueryBuilder<T> from(Class<?> clazz, String alias);
 }

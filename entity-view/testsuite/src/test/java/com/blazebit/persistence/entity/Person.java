@@ -35,6 +35,7 @@ import javax.persistence.OneToMany;
 public class Person {
     private Long id;
     private String name;
+    private long age;
     private Document partnerDocument;
     private Set<Document> ownedDocuments = new HashSet<Document>();
     private Map<Integer, String> localized = new HashMap<Integer, String>();
@@ -89,5 +90,13 @@ public class Person {
 
     public void setLocalized(Map<Integer, String> localized) {
         this.localized = localized;
+    }
+
+    public long getAge() {
+        return age;
+    }
+
+    public void setAge(long age) {
+        this.age = age;
     }
 }

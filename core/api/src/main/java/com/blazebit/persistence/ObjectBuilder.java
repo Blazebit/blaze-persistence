@@ -31,7 +31,7 @@ public interface ObjectBuilder<T> {
      *
      * @return The expression that should be selected
      */
-    public String[] getExpressions();
+    public String[][] getExpressions();
 
     /**
      * Builds an object of the target type {@linkplain T} from the given tuple.

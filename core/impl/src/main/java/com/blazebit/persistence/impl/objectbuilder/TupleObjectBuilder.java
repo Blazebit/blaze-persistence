@@ -45,7 +45,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     }
 
     @Override
-    public String[] getExpressions() {
+    public String[][] getExpressions() {
         return null;
     }
 

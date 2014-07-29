@@ -19,6 +19,7 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinType;
+
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -28,6 +29,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
+
+
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -171,6 +174,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
 
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> where() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     /*
      * Where methods
      */
@@ -186,12 +194,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<? extends X> whereExists() {
+    public SubqueryInitiator<X> whereExists() {
         return whereManager.restrictExists((X) this);
     }
 
     @Override
-    public SubqueryInitiator<? extends X> whereNotExists() {
+    public SubqueryInitiator<X> whereNotExists() {
         return whereManager.restrictNotExists((X) this);
 
     }
@@ -215,6 +223,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return (X) this;
     }
 
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> having() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
     /*
      * Having methods
      */
@@ -418,3 +431,4 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
     }
 }
+

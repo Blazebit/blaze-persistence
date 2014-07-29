@@ -30,7 +30,7 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
      *
      * @return A starting point for the subquery specification
      */
-    public SubqueryInitiator<? extends SelectObjectBuilder<T>> with();
+    public SubqueryInitiator<SelectObjectBuilder<T>> with();
     
     /**
      * Adds the given expression to the arguments for the select new select clause.

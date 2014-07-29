@@ -24,6 +24,13 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface BaseFilterable<T extends BaseFilterable<T>> {
+    
+    /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public SubqueryInitiator<RestrictionBuilder<T>> where();
 
     /**
      * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.
@@ -32,7 +39,7 @@ public interface BaseFilterable<T extends BaseFilterable<T>> {
      * @param expression The left hand expression for a where predicate
      * @return The restriction builder for the given expression
      */
-    public RestrictionBuilder<? extends T> where(String expression);
+    public RestrictionBuilder<T> where(String expression);
 
     /**
      * Starts an exists predicate for the where clause with a subquery on the right hand side.
@@ -40,7 +47,7 @@ public interface BaseFilterable<T extends BaseFilterable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<? extends T> whereExists();
+    public SubqueryInitiator<T> whereExists();
     
     /**
      * Starts an not exists predicate for the where clause with a subquery on the right hand side.
@@ -48,5 +55,5 @@ public interface BaseFilterable<T extends BaseFilterable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
-    public SubqueryInitiator<? extends T> whereNotExists();
+    public SubqueryInitiator<T> whereNotExists();
 }

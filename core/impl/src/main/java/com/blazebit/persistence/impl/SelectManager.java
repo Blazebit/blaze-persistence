@@ -182,25 +182,35 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        String[] expressions = builder.getExpressions();
+        String[][] expressions = builder.getExpressions();
 
         if (expressions == null || expressions.length == 0) {
             throw new IllegalArgumentException("The object builder '" + builder + "' returned no or empty expressions.");
         }
 
         for (int i = 0; i < expressions.length; i++) {
-            String expression = expressions[i];
+            String[] expression = expressions[i];
 
             if (expression == null) {
                 throw new NullPointerException("Illegal null expression returned from obejct builder '" + objectBuilder + "' at index: " + i);
             }
-            if (expression.isEmpty()) {
+            if (expression.length != 2) {
+                throw new IllegalArgumentException("Illegal expression with invalid array length '" + expression.length + "' returned from object builder '" + objectBuilder + "' at index: " + i);
+            }
+            if (expression[0].isEmpty()) {
                 throw new IllegalArgumentException("Illegal empty expression returned from object builder '" + objectBuilder + "' at index: " + i);
             }
 
-            Expression expr = expressionFactory.createSimpleExpression(expression);
+            Expression expr = expressionFactory.createSimpleExpression(expression[0]);
             registerParameterExpressions(expr);
-            SelectInfo selectInfo = new SelectInfo(expr);
+            SelectInfo selectInfo;
+            
+            if (expression[1] != null) {
+                selectInfo = new SelectInfo(expr, expression[1], aliasOwner);
+            } else {
+                selectInfo = new SelectInfo(expr);
+            }
+            
             selectInfos.add(selectInfo);
         }
         objectBuilder = (ObjectBuilder<T>) builder;

@@ -29,7 +29,7 @@ import java.util.List;
 public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
     
     public final Constructor<? extends T> proxyConstructor;
-    public final String[] mappings;
+    public final String[][] mappings;
     public final String[] parameterMappings;
     public final boolean hasParameters;
     private final QueryBuilder<?, ?> queryBuilder;
@@ -70,7 +70,7 @@ public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
     }
     
     @Override
-    public String[] getExpressions() {
+    public String[][] getExpressions() {
         return mappings;
     }
 }

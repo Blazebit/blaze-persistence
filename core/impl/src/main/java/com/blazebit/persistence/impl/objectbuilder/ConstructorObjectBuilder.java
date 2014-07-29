@@ -50,7 +50,7 @@ public class ConstructorObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public String[] getExpressions() {
+    public String[][] getExpressions() {
         return null;
     }
     

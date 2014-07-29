@@ -69,8 +69,8 @@ public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements
     }
 
     @Override
-    public RestrictionBuilder<? extends HavingAndBuilder<T>> having(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<HavingAndBuilderImpl<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+    public RestrictionBuilder<HavingAndBuilder<T>> having(String expression) {
+        return startBuilder(new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -79,7 +79,12 @@ public class HavingAndBuilderImpl<T> extends BuilderEndedListenerImpl implements
     }
 
     @Override
-    public SubqueryInitiator<? extends HavingAndBuilder<T>> havingNotExists() {
+    public SubqueryInitiator<HavingAndBuilder<T>> havingNotExists() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> having() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

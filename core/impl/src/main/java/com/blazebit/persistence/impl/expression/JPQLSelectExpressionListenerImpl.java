@@ -267,9 +267,8 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
     @Override
     public void enterParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
     }
-
-    @Override
-    public void exitParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
+    
+    private void exitExpressionListener(){
         if (subexpressionDelegate != null) {
             return;
         }
@@ -277,6 +276,16 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (fooBuilder.length() > 0) {
             root.getExpressions().add(new FooExpression(fooBuilder.toString()));
         }
+    }
+
+    @Override
+    public void exitParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
+        exitExpressionListener();
+    }
+
+    @Override
+    public void exitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
+        exitExpressionListener();
     }
 
     private void arrayContext() {
