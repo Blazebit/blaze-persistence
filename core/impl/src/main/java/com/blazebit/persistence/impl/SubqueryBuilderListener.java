@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author ccbem
  */
-public interface SubqueryBuilderListener {
-    public void onBuilderEnded(SubqueryBuilder<?> builder);
-    public void onBuilderStarted(SubqueryBuilder<?> builder);
+public interface SubqueryBuilderListener<T> {
+    public void onBuilderEnded(SubqueryBuilder<T> builder);
+    public void onBuilderStarted(SubqueryBuilder<T> builder);
 }

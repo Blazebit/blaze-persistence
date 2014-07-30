@@ -220,7 +220,13 @@ public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
     }
     
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
+        if(predicate.getLeft() instanceof SubqueryExpression){
+            sb.append("(");
+        }
         predicate.getLeft().accept(this);
+        if(predicate.getLeft() instanceof SubqueryExpression){
+            sb.append(")");
+        }
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
             sb.append(predicate.getQuantifier().toString());

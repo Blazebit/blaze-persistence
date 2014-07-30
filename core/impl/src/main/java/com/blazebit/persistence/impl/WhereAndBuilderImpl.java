@@ -30,7 +30,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author cpbec
  */
-public class WhereAndBuilderImpl<T> extends BuilderEndedListenerImpl implements WhereAndBuilder<T>, PredicateBuilder {
+public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements WhereAndBuilder<T>, PredicateBuilder {
     
     private final T result;
     private final PredicateBuilderEndedListener listener;

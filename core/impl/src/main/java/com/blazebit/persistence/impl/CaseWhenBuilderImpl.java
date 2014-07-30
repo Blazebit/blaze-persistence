@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author cpbec
  */
-public class CaseWhenBuilderImpl<T> extends BuilderEndedListenerImpl implements CaseWhenBuilder<T>, CaseWhenThenBuilder<CaseWhenBuilder<T>> {
+public class CaseWhenBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenBuilder<T>, CaseWhenThenBuilder<CaseWhenBuilder<T>> {
     
     private final T result;
     private final List<Object[]> whenThenClauses;

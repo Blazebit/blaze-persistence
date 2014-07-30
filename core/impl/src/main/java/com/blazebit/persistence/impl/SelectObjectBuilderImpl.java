@@ -30,7 +30,7 @@ import java.util.TreeMap;
  *
  * @author ccbem
  */
-public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends BuilderEndedListenerImpl implements SelectObjectBuilder<T>{
+public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<T> implements SelectObjectBuilder<T>{
 
     private final T result;
     // maps positions to expressions
@@ -79,7 +79,7 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Build
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+    public void onBuilderEnded(SubqueryBuilder<T> builder) {
         super.onBuilderEnded(builder);
         expressions.put(expressions.size(), new SubqueryExpression(builder));
     }

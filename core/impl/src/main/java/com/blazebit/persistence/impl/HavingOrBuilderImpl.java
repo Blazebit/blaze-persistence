@@ -29,7 +29,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author cpbec
  */
-public class HavingOrBuilderImpl<T> extends BuilderEndedListenerImpl implements HavingOrBuilder<T>, PredicateBuilder {
+public class HavingOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements HavingOrBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;

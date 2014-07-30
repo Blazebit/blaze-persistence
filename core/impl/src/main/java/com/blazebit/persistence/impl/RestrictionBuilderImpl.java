@@ -46,11 +46,11 @@ import java.util.List;
  *
  * @author cpbec
  */
-public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implements RestrictionBuilder<T>, PredicateBuilder {
+public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements RestrictionBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final Expression leftExpression;
+    private Expression leftExpression;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     private final ExpressionFactory expressionFactory;
@@ -61,6 +61,17 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+    }
+    
+    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+        this.listener = listener;
+        this.result = result;
+        this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
+    }
+
+    public void setLeftExpression(Expression leftExpression) {
+        this.leftExpression = leftExpression;
     }
 
     private T chain(Predicate predicate) {
@@ -352,7 +363,7 @@ public class RestrictionBuilderImpl<T> extends BuilderEndedListenerImpl implemen
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<?> builder) {
+    public void onBuilderEnded(SubqueryBuilder<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
         Predicate pred;

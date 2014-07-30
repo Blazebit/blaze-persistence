@@ -41,4 +41,6 @@ public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuil
 
     @Override
     public SubqueryBuilder<T> select(String expression, String alias);
+    
+    public T getResult();
 }

@@ -64,8 +64,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     private final JPAInfo jpaInfo;
 
-    private final BuilderEndedListenerImpl subqueryBuilderListener = new BuilderEndedListenerImpl();
-
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
 
@@ -176,7 +174,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> where() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return whereManager.restrict(this);
     }
     
     /*
@@ -225,7 +223,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> having() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return havingManager.restrict(this);
     }
     
     /*
@@ -295,7 +293,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
-        subqueryBuilderListener.verifySubqueryBuilderEnded();
     }
 
     @Override

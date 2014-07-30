@@ -26,7 +26,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  *
  * @author cpbec
  */
-public class CaseWhenAndThenBuilderImpl<T> extends BuilderEndedListenerImpl implements CaseWhenAndThenBuilder<T>, CaseWhenAndBuilder<T> {
+public class CaseWhenAndThenBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndThenBuilder<T>, CaseWhenAndBuilder<T> {
     
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
