@@ -55,12 +55,15 @@ public class EntityViewSetting<T> {
                 
                 if (key instanceof Class) {
                     Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) key;
+                    SubqueryProvider provider;
+                    
                     try {
-                        SubqueryProvider provider = subqueryProviderClass.newInstance();
-                        filterEntry.getValue().apply(provider.createSubquery(cb.where()));
+                        provider = subqueryProviderClass.newInstance();
                     } catch (Exception ex) {
                         throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
                     }
+                    
+                    filterEntry.getValue().apply(provider.createSubquery(cb.where()));
                 } else {
                     filterEntry.getValue().apply(cb.where((String) key));
                 }

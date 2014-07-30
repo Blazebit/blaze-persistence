@@ -64,8 +64,10 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
             .selectNew(new ObjectBuilder<String[]>() {
 
             @Override
-            public String[][] getExpressions() {
-                return new String[][] { {"name", "name"}, {"UPPER(name)", "upperName"}, {"LOWER(name)", "lowerName"} };
+            public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+                queryBuilder.select("name", "name")
+                    .select("UPPER(name)", "upperName")
+                    .select("LOWER(name)", "lowerName");
             }
 
             @Override

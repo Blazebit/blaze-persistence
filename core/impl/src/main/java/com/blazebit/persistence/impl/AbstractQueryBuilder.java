@@ -130,7 +130,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         }
 
         verifyBuilderEnded();
-        selectManager.selectNew(objectBuilder);
+        selectManager.selectNew(this, objectBuilder);
         return (QueryBuilder<Y, ?>) this;
     }
 

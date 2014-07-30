@@ -16,18 +16,17 @@
 
 package com.blazebit.persistence.view.subquery;
 
+import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.basic.AbstractEntityViewPersistenceTest;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subquery.model.DocumentWithSubquery;
-import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.EntityTransaction;
-import javax.persistence.Query;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -36,7 +35,7 @@ import static org.junit.Assert.*;
  *
  * @author Christian
  */
-public class MappingSubqueryTest extends AbstractEntityViewPersistenceTest {
+public class MappingSubqueryTest extends AbstractPersistenceTest {
     
     private Document doc1;
     private Document doc2;
@@ -87,6 +86,10 @@ public class MappingSubqueryTest extends AbstractEntityViewPersistenceTest {
     
     @Test
     public void testSubquery() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentWithSubquery.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
+        
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class).orderByAsc("id");
         List<DocumentWithSubquery> list = evm.applyObjectBuilder(DocumentWithSubquery.class, cb).getResultList();
         
@@ -99,6 +102,10 @@ public class MappingSubqueryTest extends AbstractEntityViewPersistenceTest {
     
     @Test
     public void testSubqueryEntityViewSettings() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentWithSubquery.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
+        
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery> setting = new EntityViewSetting<DocumentWithSubquery>(DocumentWithSubquery.class, 0, 1);
         setting.addAttributeFilter("contactCount", "0");

@@ -106,13 +106,19 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 if  (filterConstructor != null) {
                     return filterConstructor.newInstance(expectedType);
                 } else {
-                    filterConstructor = findConstructor(constructors);
-                    
-                    if (filterConstructor == null) {
-                        throw new IllegalArgumentException("No suitable constructor found for filter class '" + filterClass.getName() + "'");
-                    }
+                    filterConstructor = findConstructor(constructors, Object.class);
+                
+                    if  (filterConstructor != null) {
+                        return filterConstructor.newInstance(argument);
+                    } else {
+                        filterConstructor = findConstructor(constructors);
 
-                    return filterConstructor.newInstance();
+                        if (filterConstructor == null) {
+                            throw new IllegalArgumentException("No suitable constructor found for filter class '" + filterClass.getName() + "'");
+                        }
+
+                        return filterConstructor.newInstance();
+                    }
                 }
             }
         } catch (Exception ex) {

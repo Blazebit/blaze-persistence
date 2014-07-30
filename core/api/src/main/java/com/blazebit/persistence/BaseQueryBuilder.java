@@ -108,6 +108,19 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return
      */
     public SimpleCaseWhenBuilder<? extends X> selectCase(String expression);
+    
+    /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public SubqueryInitiator<X> selectSubquery();
+    /**
+     * TODO: javadoc
+     * 
+     * @return 
+     */
+    public SubqueryInitiator<X> selectSubquery(String alias);
 
     /**
      * Adds a select clause with the given expression to the query.

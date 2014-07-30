@@ -30,7 +30,6 @@ import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 
-
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -110,7 +109,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.fromClazz = fromClazz;
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-        
+
         this.parameterManager = parameterManager;
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, new SubqueryExpressionFactory());
@@ -173,10 +172,25 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
+    public SubqueryInitiator<X> selectSubquery() {
+        return selectSubquery(null);
+    }
+
+    @Override
+    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        verifyBuilderEnded();
+        return selectManager.selectSubquery((X) this, selectAlias);
+    }
+
+    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> where() {
         return whereManager.restrict(this);
+
     }
-    
+
     /*
      * Where methods
      */
@@ -224,8 +238,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> having() {
         return havingManager.restrict(this);
+
     }
-    
+
     /*
      * Having methods
      */
@@ -256,7 +271,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         return havingManager.restrictExists((X) this);
     }
-    
+
     @Override
     public SubqueryInitiator<X> havingNotExists() {
         if (groupByManager.getGroupByInfos()
@@ -293,6 +308,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
+
     }
 
     @Override
@@ -428,4 +444,3 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
     }
 }
-

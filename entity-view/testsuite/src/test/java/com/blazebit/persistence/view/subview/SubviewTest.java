@@ -16,11 +16,14 @@
 
 package com.blazebit.persistence.view.subview;
 
+import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.basic.AbstractEntityViewPersistenceTest;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subview.model.DocumentMasterView;
+import com.blazebit.persistence.view.subview.model.PersonSubView;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -31,7 +34,7 @@ import org.junit.Test;
  *
  * @author cpbec
  */
-public class SubviewTest extends AbstractEntityViewPersistenceTest {
+public class SubviewTest extends AbstractPersistenceTest {
     
     private Document doc1;
     private Document doc2;
@@ -79,17 +82,31 @@ public class SubviewTest extends AbstractEntityViewPersistenceTest {
     
     @Test
     public void testInterface() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(PersonSubView.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
+        
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
         List<DocumentMasterView> results = evm.applyObjectBuilder(DocumentMasterView.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
         
         assertEquals(2, results.size());
         // Doc1
-//        assertEquals(doc1.getId(), results.get(0).getId());
-//        assertEquals(doc1.getName(), results.get(0).getName());
-//        assertEquals(doc1.getContacts().get(1), results.get(0).getFirstContactPerson());
-//        assertEquals(doc1.getContacts2().get(2), results.get(0).getMyContactPerson());
-//        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
-//        assertEquals(Long.valueOf(1), results.get(0).getContactCount());
+        assertEquals(doc1.getName(), results.get(0).getName());
+        assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
+        assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
+        assertEquals(doc1.getContacts2().get(1).getName(), results.get(0).getContacts().get(1).getName());
+        assertEquals(doc1.getContacts2().get(2).getName(), results.get(0).getContacts().get(2).getName());
+        assertEquals(doc1.getPartners().size(), results.get(0).getPartners().size());
+        assertEquals(doc1.getPartners().iterator().next().getName(), results.get(0).getPartners().iterator().next().getName());
+        // Doc2
+        assertEquals(doc2.getName(), results.get(1).getName());
+        assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
+        assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
+        assertEquals(doc2.getContacts2().get(1).getName(), results.get(1).getContacts().get(1).getName());
+        assertEquals(doc2.getContacts2().get(2).getName(), results.get(1).getContacts().get(2).getName());
+        assertEquals(doc2.getPartners().size(), results.get(1).getPartners().size());
+        assertEquals(doc2.getPartners().iterator().next().getName(), results.get(1).getPartners().iterator().next().getName());
     }
 }

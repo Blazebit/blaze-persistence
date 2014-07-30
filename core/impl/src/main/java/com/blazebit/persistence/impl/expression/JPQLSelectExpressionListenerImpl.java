@@ -29,7 +29,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * @author Moritz Becker
  */
 class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
-    private static final Logger LOG = Logger.getLogger(JPQLSelectExpressionListenerImpl.class.getName());
+    private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     
     public JPQLSelectExpressionListenerImpl() {
     }

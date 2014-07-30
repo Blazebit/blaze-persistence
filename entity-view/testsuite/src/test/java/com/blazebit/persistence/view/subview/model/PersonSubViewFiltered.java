@@ -16,30 +16,19 @@
 
 package com.blazebit.persistence.view.subview.model;
 
-import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-@EntityView(Document.class)
-public interface DocumentMasterView {
+@EntityView(Person.class)
+public interface PersonSubViewFiltered {
     
     public String getName();
     
-    @Mapping("contacts[:contactPersonNumber]")
-    public PersonSubViewFiltered getMyContactPerson();
-    
-    @Mapping("contacts2")
-    public Map<Integer, PersonSubView> getContacts();
-    
-    @Mapping("partners")
-    public Set<PersonSubView> getPartners();
+    @MappingParameter("contactPersonNumber")
+    public Integer getContactPersonNumber();
 }
