@@ -135,7 +135,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     } else {
                         MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attributes[i];
                         
-                        if (!parameterAttributes[i].isCollection() && ((SingularAttribute) attributes[i]).isQueryParameter()) {
+                        if (!attributes[i].isCollection() && ((SingularAttribute) attributes[i]).isQueryParameter()) {
                             mappings[i][0] = "NULLIF(1,1)";
                             parameterMappings[i] = mappingAttribute.getMapping();
                         } else {
