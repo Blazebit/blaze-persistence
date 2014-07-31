@@ -37,7 +37,7 @@ simple_expression : single_valued_path_expression |
 simple_subquery_expression : single_valued_path_expression |
                        scalar_expression |
                        aggregate_expression |
-                       'OUTER(' single_valued_path_expression  ')' 
+                       Outer_function '(' single_valued_path_expression  ')' 
                    ;
  
  qualified_identification_variable : composable_qualified_identification_variable |

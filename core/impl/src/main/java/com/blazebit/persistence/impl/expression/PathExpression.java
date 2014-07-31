@@ -113,17 +113,7 @@ public class PathExpression implements Expression {
 
     @Override
     public String toString() {
-        Iterator<PathElementExpression> iter = pathProperties.iterator();
-        StringBuilder sb = new StringBuilder();
-        if (iter.hasNext()) {
-            sb.append(iter.next());
-        }
-
-        while (iter.hasNext()) {
-            sb.append('.')
-                .append(iter.next());
-        }
-        return sb.toString();
+        return getPath();
     }
 
 }

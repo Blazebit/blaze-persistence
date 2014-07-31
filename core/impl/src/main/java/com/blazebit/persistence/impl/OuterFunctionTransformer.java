@@ -16,6 +16,13 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.CompositeExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.OuterExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import java.util.ArrayList;
+
 /**
  * This Transformer runs through the expressions of the query
  * For each OUTER(pp) expression it performs an implicitJoin for the join manager
@@ -26,6 +33,39 @@ package com.blazebit.persistence.impl;
  * user can specify the absolute path in a normalized form.
  * @author ccbem
  */
-public class OuterFunctionTransformer {
+public class OuterFunctionTransformer implements ExpressionTransformer {
+    private final JoinManager joinManager;
+
+    public OuterFunctionTransformer(JoinManager joinManager) {
+        this.joinManager = joinManager;
+    }
+    
+    @Override
+    public Expression transform(Expression original) {
+        return transform(original, false);
+    }
+
+    @Override
+    public Expression transform(Expression original, boolean selectClause) {
+        if(original instanceof CompositeExpression){
+            CompositeExpression compExpr = (CompositeExpression) original;
+            CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
+            for(Expression e : compExpr.getExpressions()){
+                transformed.getExpressions().add(transform(e, selectClause));
+            }
+            return transformed;
+        }
+        
+        if(!(original instanceof OuterExpression)){
+            return original;
+        }
+        PathExpression path = ((OuterExpression) original).getPath();
+        
+        if(joinManager.getParent() != null){
+            joinManager.getParent().implicitJoin(path, true, selectClause, true);
+        }
+        
+        return path;
+    }
     
 }

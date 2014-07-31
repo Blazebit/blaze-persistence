@@ -19,7 +19,6 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.model.DocumentViewModel;
-import java.util.List;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;

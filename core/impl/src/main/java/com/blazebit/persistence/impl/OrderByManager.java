@@ -57,7 +57,7 @@ public class OrderByManager extends AbstractManager {
         }
     }
     
-    void applyTransformer(ArrayExpressionTransformer transformer){
+    void applyTransformer(ExpressionTransformer transformer){
         for (OrderByInfo orderBy : orderByInfos) {
             orderBy.setExpression(transformer.transform(orderBy.getExpression()));
         }

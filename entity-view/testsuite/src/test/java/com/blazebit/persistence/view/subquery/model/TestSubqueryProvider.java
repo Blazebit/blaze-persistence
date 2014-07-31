@@ -29,7 +29,7 @@ public class TestSubqueryProvider implements SubqueryProvider {
     @Override
     public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
         return subqueryBuilder.from(Person.class)
-            .where("partnerDocument.id").eq("OUTER(id)")
+            .where("partnerDocument.id").eqExpression("OUTER(id)")
             .select("COUNT(id)")
             .end();
     }

@@ -21,6 +21,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -107,29 +108,34 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @Override
     public String getPageCountQueryString() {
         verifyBuilderEnded();
-        StringBuilder countQuery = new StringBuilder();
+        StringBuilder sbSelectFrom = new StringBuilder();
 
         applyImplicitJoins();
-        applyArrayTransformations();
+        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
 
-        countQuery.append("SELECT COUNT(*)");
-        countQuery.append(" FROM ")
+        sbSelectFrom.append("SELECT COUNT(*)");
+        sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        joinManager.buildJoins(false, countQuery);
-        whereManager.buildClause(countQuery);
-        groupByManager.buildGroupBy(countQuery);
-        havingManager.buildClause(countQuery);
-        return countQuery.toString();
+        
+        StringBuilder sbRemaining = new StringBuilder();
+        whereManager.buildClause(sbRemaining);
+        groupByManager.buildGroupBy(sbRemaining);
+        havingManager.buildClause(sbRemaining);
+        
+        StringBuilder sbJoin = new StringBuilder();
+        joinManager.buildJoins(false, sbJoin);
+        
+        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 
     @Override
     public String getQueryString() {
         verifyBuilderEnded();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sbSelectFrom = new StringBuilder();
         applyImplicitJoins();
-        applyArrayTransformations();
+        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
 
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
@@ -137,17 +143,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .getJavaType())
             .getName();
 
-        sb.append(selectManager.buildSelect());
-        if (sb.length() > 0) {
-            sb.append(' ');
+        sbSelectFrom.append(selectManager.buildSelect());
+        if (sbSelectFrom.length() > 0) {
+            sbSelectFrom.append(' ');
         }
-        sb.append("FROM ")
+        sbSelectFrom.append("FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        joinManager.buildJoins(true, sb);
 
-        sb.append(" WHERE ")
+        StringBuilder sbRemaining = new StringBuilder();
+        sbRemaining.append(" WHERE ")
             .append(joinManager.getRootAlias())
             .append('.')
             .append(idName)
@@ -155,17 +161,20 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(idParamName)
             .append(")");
 
-        groupByManager.buildGroupBy(sb);
-        havingManager.buildClause(sb);
-        orderByManager.buildOrderBy(sb);
+        groupByManager.buildGroupBy(sbRemaining);
+        havingManager.buildClause(sbRemaining);
+        orderByManager.buildOrderBy(sbRemaining);
+        
+        StringBuilder sbJoin = new StringBuilder();
+        joinManager.buildJoins(true, sbJoin);
 
-        return sb.toString();
+        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 
     @Override
     public String getPageIdQueryString() {
         verifyBuilderEnded();
-        StringBuilder idQuery = new StringBuilder();
+        StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
         String idName = entityType.getId(entityType.getIdType()
@@ -173,31 +182,35 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .getName();
 
         applyImplicitJoins();
-        applyArrayTransformations();
+        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
         
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
             .toString();
 
-        idQuery.append("SELECT DISTINCT ")
+        sbSelectFrom.append("SELECT DISTINCT ")
             .append(idClause);
         
         if (orderByManager.hasNonIdOrderBys(idClause)) {
-            idQuery.append(", ");
-            orderByManager.buildSelectClauses(idQuery);
+            sbSelectFrom.append(", ");
+            orderByManager.buildSelectClauses(sbSelectFrom);
         }
-        idQuery.append(" FROM ")
+        sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        joinManager.buildJoins(false, idQuery);
-        whereManager.buildClause(idQuery);
-        groupByManager.buildGroupBy(idQuery);
-        havingManager.buildClause(idQuery);
-        orderByManager.buildOrderBy(idQuery);
+        
+        StringBuilder sbRemaining = new StringBuilder();
+        whereManager.buildClause(sbRemaining);
+        groupByManager.buildGroupBy(sbRemaining);
+        havingManager.buildClause(sbRemaining);
+        orderByManager.buildOrderBy(sbRemaining);
+        
+        StringBuilder sbJoin = new StringBuilder();
+        joinManager.buildJoins(false, sbJoin);
 
-        return idQuery.toString();
+        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 
     @Override

@@ -29,6 +29,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
+import java.util.Arrays;
+import java.util.List;
 
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -89,7 +91,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.expressionFactory = builder.expressionFactory;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, ExpressionFactory expressionFactory) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
 
         if (cbf == null) {
             throw new NullPointerException("cbf");
@@ -112,11 +114,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, new SubqueryExpressionFactory());
-
         this.queryGenerator = new QueryGenerator(this);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel());
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
+        
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
+        
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
@@ -130,7 +133,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager(), expressionFactory);
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager(), null, expressionFactory);
     }
 
 
@@ -376,7 +379,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setJoinWithObjectLeafAllowed(true);
     }
 
-    protected void applyArrayTransformations() {
+    protected void applyExpressionTransformers(List<ExpressionTransformer> transformers) {
         // run through expressions
         // for each arrayExpression, look up the alias in the joinManager's aliasMap
         // do the transformation using the alias
@@ -398,17 +401,18 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // or we remember the already transfomred path in a Set<(BaseNode, RelativePath)> - maybe this would be sufficient
         // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
         // two different indices for the same array we would output the two accesses for the subpath and the access for the current path just once (and not once for each distinct subpath)
-        ArrayExpressionTransformer arrayTransformer = new ArrayExpressionTransformer(joinManager);
-        selectManager.applyTransformer(arrayTransformer);
-        whereManager.applyTransformer(arrayTransformer);
-        groupByManager.applyTransformer(arrayTransformer);
-        orderByManager.applyTransformer(arrayTransformer);
+        for(ExpressionTransformer transformer : transformers){
+            selectManager.applyTransformer(transformer);
+            whereManager.applyTransformer(transformer);
+            groupByManager.applyTransformer(transformer);
+            orderByManager.applyTransformer(transformer);
+        }
     }
 
     @Override
     public String getQueryString() {
         verifyBuilderEnded();
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sbSelectFrom = new StringBuilder();
         // resolve unresolved aliases, object model etc.
         // we must do implicit joining at the end because we can only do
         // the aliases resolving at the end and alias resolving must happen before
@@ -419,22 +423,34 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // join("a.b", "b").where("b.c")
         // in the first case
         applyImplicitJoins();
-        applyArrayTransformations();
+        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
 
-        sb.append(selectManager.buildSelect());
-        if (sb.length() > 0) {
-            sb.append(' ');
+        sbSelectFrom.append(selectManager.buildSelect());
+        if (sbSelectFrom.length() > 0) {
+            sbSelectFrom.append(' ');
         }
-        sb.append("FROM ")
+        sbSelectFrom.append("FROM ")
                 .append(fromClazz.getSimpleName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
-        joinManager.buildJoins(true, sb);
-        whereManager.buildClause(sb);
-        groupByManager.buildGroupBy(sb);
-        havingManager.buildClause(sb);
-        orderByManager.buildOrderBy(sb);
-        return sb.toString();
+        
+        
+        
+        StringBuilder sbRemaining = new StringBuilder();
+        whereManager.buildClause(sbRemaining);
+        groupByManager.buildGroupBy(sbRemaining);
+        havingManager.buildClause(sbRemaining);
+        orderByManager.buildOrderBy(sbRemaining);
+        
+        /**
+         * We must build the joins at the end
+         * This way, subqueries will be generated before the joins of the parent query are printed
+         * which is necessary for the OUTER() functions in subqueries to take effect.
+         */
+        StringBuilder sbJoin = new StringBuilder();
+        joinManager.buildJoins(true, sbJoin);
+        
+        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 
     protected void transformQuery(TypedQuery<T> query) {

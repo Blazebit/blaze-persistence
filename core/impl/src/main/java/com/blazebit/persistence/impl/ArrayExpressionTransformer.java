@@ -34,7 +34,7 @@ import java.util.Map;
  * @author cpbec
  */
 //TODO: maybe implement contacts[1] = x1 AND contacts[2] = x2?
-public class ArrayExpressionTransformer {
+public class ArrayExpressionTransformer implements ExpressionTransformer {
 
     private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
     private final JoinManager joinManager;
@@ -43,16 +43,13 @@ public class ArrayExpressionTransformer {
         this.joinManager = joinManager;
     }
 
+    @Override
     public Expression transform(Expression original) {
         return transform(original, false);
     }
     
+    @Override
     public Expression transform(Expression original, boolean selectClause) {
-        // TODO: transform the original expression and apply changes in the criteria builder
-        if (original instanceof FooExpression || original instanceof ParameterExpression || original instanceof SubqueryExpression) {
-            return original;
-        }
-
         if (original instanceof CompositeExpression) {
             CompositeExpression composite = (CompositeExpression) original;
             CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
@@ -63,7 +60,7 @@ public class ArrayExpressionTransformer {
         }
 
         if (!(original instanceof PathExpression)) {
-            throw new IllegalArgumentException("Probably a programming error");
+            return original;
         }
 
         PathExpression path = (PathExpression) original;

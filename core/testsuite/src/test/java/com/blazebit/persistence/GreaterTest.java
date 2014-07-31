@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence;
 
-import static com.blazebit.persistence.AbstractPersistenceTest.cbf;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import org.junit.Assert;

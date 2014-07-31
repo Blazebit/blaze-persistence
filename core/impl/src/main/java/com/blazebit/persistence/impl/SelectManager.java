@@ -124,7 +124,7 @@ public class SelectManager<T> extends AbstractManager {
 
     }
 
-    void applyTransformer(ArrayExpressionTransformer transformer) {
+    void applyTransformer(ExpressionTransformer transformer) {
         // carry out transformations
         for (SelectInfo selectInfo : selectInfos) {
             Expression transformed = transformer.transform(selectInfo.getExpression(), true);

@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.OuterExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -166,11 +167,14 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     @Override
     public void visit(SubqueryExpression expression) {
     }
-    
-    
 
     @Override
     public void visit(ExistsPredicate predicate) {
+    }
+
+    @Override
+    public void visit(OuterExpression expression) {
+        expression.getPath().accept(this);
     }
     
 }

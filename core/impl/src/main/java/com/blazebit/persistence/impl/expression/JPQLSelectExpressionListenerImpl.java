@@ -40,11 +40,12 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     enum ContextType {
 
-        FOO, PATH, ARRAY, PARAM
+        FOO, PATH, ARRAY, OUTER
     }
 
     private CompositeExpression root = new CompositeExpression(new ArrayList<Expression>());
     private PathExpression path;
+    private OuterExpression outerExpression;
     private boolean startCollectionValuedPath = false;
 
     private PropertyExpression arrayExprBase;
@@ -77,7 +78,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        fooContext();
+        if(outerExpression == null){
+            fooContext();
+        }else{
+            outerContext();
+        }
     }
 
     @Override
@@ -96,7 +101,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        fooContext();
+        if(outerExpression == null){
+            fooContext();
+        }else{
+            outerContext();
+        }
     }
 
     @Override
@@ -114,7 +123,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        fooContext();
+        if(outerExpression == null){
+            fooContext();
+        }else{
+            outerContext();
+        }
     }
 
     @Override
@@ -132,7 +145,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        fooContext();
+        if(outerExpression == null){
+            fooContext();
+        }else{
+            outerContext();
+        }
     }
 
     private void pathContext() {
@@ -144,6 +161,12 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             }
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
+            path.setCollectionValued(startCollectionValuedPath);
+            startCollectionValuedPath = false;
+        } else if(ctx == ContextType.OUTER){
+            ctx = ContextType.PATH;
+            path = new PathExpression(new ArrayList<PathElementExpression>());
+            outerExpression.setPath(path);
             path.setCollectionValued(startCollectionValuedPath);
             startCollectionValuedPath = false;
         } else if (ctx == ContextType.ARRAY) {
@@ -163,19 +186,28 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             ctx = ContextType.PATH;
         }
     }
-
-    private void paramContext() {
-        if (this.ctx == ContextType.FOO) {
-            ctx = ContextType.PARAM;
-        }
-    }
     
     private void fooContext() {
         if (this.ctx == ContextType.PATH) {
             ctx = ContextType.FOO;
             root.getExpressions().add(path);
-        }else if(this.ctx == ContextType.PARAM){
+        }else if(this.ctx == ContextType.OUTER){
             ctx = ContextType.FOO;
+            root.getExpressions().add(outerExpression);
+            outerExpression = null;
+        }
+    }
+    
+    private void outerContext(){
+        if(this.ctx == ContextType.FOO){
+            if (fooBuilder.length() > 0) {
+                root.getExpressions().add(new FooExpression(fooBuilder.toString()));
+                fooBuilder.setLength(0);
+            }
+            outerExpression = new OuterExpression();
+            this.ctx = ContextType.OUTER;
+        }else if(this.ctx == ContextType.PATH){
+            this.ctx = ContextType.OUTER;
         }
     }
 
@@ -224,8 +256,6 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     @Override
     public void enterGeneral_subpath(JPQLSelectExpressionParser.General_subpathContext ctx) {
-//        root.getExpressions().add(new PropertyExpression(ctx.getText()));
-//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -539,6 +569,8 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                 if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Input_parameter){
                     // cut of ':' at the start
                     root.getExpressions().add(new ParameterExpression(node.getText().substring(1)));
+                } else if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Outer_function){
+                    outerContext();
                 } else{
                     if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function){
                         startCollectionValuedPath = true;
@@ -548,6 +580,10 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             } else if (ctx == ContextType.ARRAY) {
                 if (node.getSymbol().getText().equals("[")) {
                     subexpressionDelegate = new JPQLSelectExpressionListenerImpl(this);
+                }
+            } else if (ctx == ContextType.OUTER){
+                if(node.getSymbol().getText().equals(")")){
+                    fooContext();
                 }
             }
         }

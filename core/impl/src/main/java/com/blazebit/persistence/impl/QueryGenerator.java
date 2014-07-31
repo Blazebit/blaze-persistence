@@ -48,7 +48,7 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
  *
  * @author ccbem
  */
-public class QueryGenerator implements Predicate.Visitor, Expression.Visitor {
+public class QueryGenerator extends VisitorAdapter {
 
     private StringBuilder sb;
     private boolean replaceSelectAliases = true;

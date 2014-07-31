@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence;
 
-import static com.blazebit.persistence.AbstractPersistenceTest.em;
 import com.blazebit.persistence.entity.Document;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;

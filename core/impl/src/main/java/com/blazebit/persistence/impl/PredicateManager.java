@@ -76,9 +76,9 @@ public abstract class PredicateManager<U> extends AbstractManager {
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
     }
 
-    void applyTransformer(ArrayExpressionTransformer transformer) {
+    void applyTransformer(ExpressionTransformer transformer) {
         // carry out transformations
-        rootPredicate.predicate.accept(new ArrayTransformationVisitor(transformer));
+        rootPredicate.predicate.accept(new TransformationVisitor(transformer));
     }
 
     void verifyBuilderEnded() {
@@ -129,11 +129,11 @@ public abstract class PredicateManager<U> extends AbstractManager {
         }
     }
 
-    private static class ArrayTransformationVisitor extends VisitorAdapter {
+    private static class TransformationVisitor extends VisitorAdapter {
 
-        private final ArrayExpressionTransformer transformer;
+        private final ExpressionTransformer transformer;
 
-        public ArrayTransformationVisitor(ArrayExpressionTransformer transformer) {
+        public TransformationVisitor(ExpressionTransformer transformer) {
             this.transformer = transformer;
         }
 

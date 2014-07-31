@@ -36,6 +36,8 @@ public interface Expression {
         public void visit(FooExpression expression);
         
         public void visit(SubqueryExpression expression);
+        
+        public void visit(OuterExpression expression);
     }
 
     /**

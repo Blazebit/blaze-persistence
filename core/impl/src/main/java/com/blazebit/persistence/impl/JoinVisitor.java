@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.OuterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 
 /**
@@ -44,7 +45,12 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromSelect);
+        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromSelect, false);
+    }
+
+    @Override
+    public void visit(OuterExpression expression) {
+        // do not join outer expressions
     }
     
     public boolean isJoinWithObjectLeafAllowed() {

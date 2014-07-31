@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.basic.model;
+package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author Christian
+ * @author ccbem
  */
-public class CountSubqueryProvider implements SubqueryProvider {
+public interface ExpressionTransformer {
 
-    @Override
-    public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
-        return subqueryBuilder.from(Person.class)
-            .where("partnerDocument.id").eqExpression("OUTER(id)")
-            .select("COUNT(person.id)")
-            .end();
-    }
+    Expression transform(Expression original);
+
+    Expression transform(Expression original, boolean selectClause);
     
 }

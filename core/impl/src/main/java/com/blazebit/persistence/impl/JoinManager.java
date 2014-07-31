@@ -80,10 +80,6 @@ public class JoinManager {
         }
 
     }
-    
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel) {
-        this(rootAlias, clazz, queryGenerator, jpaInfo, aliasManager, aliasOwner, metamodel, null);
-    }
 
     String getRootAlias() {
         return rootAliasInfo.getAlias();
@@ -131,7 +127,7 @@ public class JoinManager {
         }
     }
 
-    private boolean isSkipablePath(String path, boolean fromSelect) {
+    private boolean isSkipablePath(String path, boolean fromSelect, boolean fromSubquery) {
         int firstDotIndex = path.indexOf('.');
         boolean singlePathElement;
         String startAlias;
@@ -162,7 +158,7 @@ public class JoinManager {
             }
         }
 
-        if (aliasInfo instanceof SelectManager.SelectInfo && !fromSelect) {
+        if (aliasInfo instanceof SelectManager.SelectInfo && !fromSelect && !fromSubquery) {
             // select alias
             if (!singlePathElement) {
                 throw new IllegalStateException("Path starting with select alias not allowed");
@@ -175,7 +171,7 @@ public class JoinManager {
     }
 
     void join(String path, String alias, JoinType type, boolean fetch) {
-        if (isSkipablePath(path, false)) {
+        if (isSkipablePath(path, false, false)) {
             return;
         }
         String normalizedPath;
@@ -217,19 +213,17 @@ public class JoinManager {
         }
     }
     
-    void implicitParentJoin(Expression expression){
-        if(parent == null){
-            
-        }
+    public JoinManager getParent() {
+        return parent;
     }
-
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect) {
+    
+    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
             String path = pathExpression.getPath();
             String normalizedPath = normalizePath(path);
-            if (isSkipablePath(path, fromSelect)) {
+            if (isSkipablePath(path, fromSelect, fromSubquery)) {
                 return;
             }
             JoinResult result = implicitJoin(normalizedPath, objectLeafAllowed, fromSelect);
@@ -250,12 +244,12 @@ public class JoinManager {
             //also do implicit joins for array indices
             for (PathElementExpression pathElem : pathExpression.getExpressions()) {
                 if (pathElem instanceof ArrayExpression) {
-                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromSelect);
+                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromSelect, fromSubquery);
                 }
             }
         } else if (expression instanceof CompositeExpression) {
             for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromSelect);
+                implicitJoin(exp, objectLeafAllowed, fromSelect, fromSubquery);
             }
         }
     }

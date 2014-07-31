@@ -14,20 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.model;
+package com.blazebit.persistence.impl.expression;
+
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  *
  * @author ccbem
  */
-public class DocumentPartnerView {
-    private final Object partners;
-
-    public DocumentPartnerView(Object partners, Object localized) {
-        this.partners = partners;
+public class ExpressionFactoryTest {
+    private ExpressionFactory ef;
+    
+    @Before
+    public void createFactory(){
+        ef = new ExpressionFactoryImpl();
     }
-
-    public Object getPartners() {
-        return partners;
-    }    
+    
+    @Test
+    public void testPerformance(){
+        ef.createSimpleExpression("Hello.world.criteria.api");
+    }
 }

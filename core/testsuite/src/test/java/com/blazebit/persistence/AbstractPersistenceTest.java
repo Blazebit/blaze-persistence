@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -24,18 +23,20 @@ import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import org.hibernate.ejb.Ejb3Configuration;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 
 /**
  *
  * @author ccbem
  */
 public class AbstractPersistenceTest {
-    protected static EntityManager em;
-    protected static CriteriaBuilderFactory cbf;
-    
-    @BeforeClass
-    public static void init() {
+
+    protected EntityManager em;
+    protected CriteriaBuilderFactory cbf;
+
+    @Before
+    public void init() {
         Properties properties = new Properties();
         properties.put("javax.persistence.provider", "org.hibernate.ejb.HibernatePersistence");
         properties.put("javax.persistence.transactionType", "RESOURCE_LOCAL");
@@ -56,8 +57,13 @@ public class AbstractPersistenceTest {
 
         EntityManagerFactory factory = cfg.buildEntityManagerFactory();
         em = factory.createEntityManager();
-        
+
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         cbf = config.createCriteriaBuilderFactory();
+    }
+
+    @After
+    public void destruct() {
+        em.getEntityManagerFactory().close();
     }
 }

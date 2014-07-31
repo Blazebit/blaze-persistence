@@ -1,0 +1,46 @@
+/*
+ * Copyright 2014 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.blazebit.persistence;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import org.junit.Assert;
+import org.junit.Test;
+
+/**
+ *
+ * @author ccbem
+ */
+public class OuterFunctionTest extends AbstractPersistenceTest{
+
+    @Test
+    public void testOuter1() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where().from(Person.class, "p").select("id").where("OUTER(owner.name)").eqExpression("OUTER(name)").end().eqExpression("partners.id");
+        String expected = "FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE owner.name = d.name) = partners.id";
+
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testOuter2() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where().from(Person.class, "p").select("id").where("OUTER(id)").eqExpression("id").end().eqExpression("partners.id");
+        String expected = "FROM Document d LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE d.id = p.id) = partners.id";
+
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+}

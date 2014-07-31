@@ -16,8 +16,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import java.util.List;
-import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 

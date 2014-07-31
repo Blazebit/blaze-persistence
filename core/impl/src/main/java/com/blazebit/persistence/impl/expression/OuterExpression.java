@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.model;
+package com.blazebit.persistence.impl.expression;
 
 /**
  *
  * @author ccbem
  */
-public class DocumentPartnerView {
-    private final Object partners;
+public class OuterExpression implements Expression {
+    private PathExpression path;
 
-    public DocumentPartnerView(Object partners, Object localized) {
-        this.partners = partners;
+    public void setPath(PathExpression path) {
+        this.path = path;
     }
-
-    public Object getPartners() {
-        return partners;
-    }    
+    
+    public PathExpression getPath() {
+        return path;
+    }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+    
 }
