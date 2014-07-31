@@ -52,4 +52,11 @@ public interface Attribute<X, Y> {
      * @return True if this attribute is a collection, otherwise false
      */
     public boolean isCollection();
+    
+    /**
+     * Returns true if this attribute is a subview, otherwise false.
+     *
+     * @return True if this attribute is a subview, otherwise false
+     */
+    public boolean isSubview();
 }

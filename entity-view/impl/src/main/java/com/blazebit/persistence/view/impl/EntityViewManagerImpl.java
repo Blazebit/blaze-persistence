@@ -181,7 +181,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
         
         if (value == null) {
-            value = key.createValue(proxyFactory);
+            value = key.createValue(this, proxyFactory);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
             
             if (oldValue != null) {

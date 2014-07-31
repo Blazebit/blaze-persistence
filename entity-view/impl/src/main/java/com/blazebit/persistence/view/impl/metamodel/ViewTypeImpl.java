@@ -50,7 +50,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Map<ParametersKey, MappingConstructor<X>> constructors;
     private final Map<String, MappingConstructor<X>> constructorIndex;
     
-    public ViewTypeImpl(Class<? extends X> clazz) {
+    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
         this.javaType = (Class<X>) clazz;
         
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
@@ -78,7 +78,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
                 String attributeName = AbstractMethodAttribute.validate(this, method);
                 
                 if (attributeName != null && !attributes.containsKey(attributeName)) {
-                    MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method);
+                    MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
                     if (attribute != null) {
                         attributes.put(attribute.getName(), attribute);
                     }
@@ -94,13 +94,13 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructor<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor);
+            MappingConstructor<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
     }
     
-    private static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method) {
+    private static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
@@ -109,17 +109,17 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         Class<?> attributeType = method.getReturnType();
         
         if (Collection.class == attributeType) {
-            return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping);
+            return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (List.class == attributeType) {
-            return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping);
+            return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (Set.class == attributeType) {
-            return new MethodMappingSetAttributeImpl<X, Object>(viewType, method, mapping);
+            return new MethodMappingSetAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (Map.class == attributeType) {
-            return new MethodMappingMapAttributeImpl<X, Object, Object>(viewType, method, mapping);
+            return new MethodMappingMapAttributeImpl<X, Object, Object>(viewType, method, mapping, entityViews);
         } else if (mapping instanceof MappingSubquery) {
-            return new MethodSubquerySingularAttributeImpl<X, Object>(viewType, method, mapping);
+            return new MethodSubquerySingularAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else {
-            return new MethodMappingSingularAttributeImpl<X, Object>(viewType, method, mapping);
+            return new MethodMappingSingularAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         }
     }
 

@@ -23,6 +23,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -32,8 +33,8 @@ public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappin
 
     private final Class<K> keyType;
     
-    public MethodMappingMapAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
-        super(viewType, method, mapping);
+    public MethodMappingMapAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+        super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.keyType = (Class<K>) typeArguments[0];
     }
@@ -41,6 +42,11 @@ public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappin
     @Override
     public Class<K> getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.MAP;
     }
     
 }

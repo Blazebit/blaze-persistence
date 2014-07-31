@@ -31,6 +31,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Set;
 
 /**
  *
@@ -47,12 +48,14 @@ public abstract class AbstractMethodAttribute<X, Y> implements MethodAttribute<X
     private final Class<? extends SubqueryProvider> subqueryProvider;
     private final boolean mappingParameter;
     private final boolean subqueryMapping;
+    private final boolean subview;
 
-    protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping) {        
+    protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {        
         this.name = StringUtils.firstToLower(method.getName().substring(3));
         this.declaringType = viewType;
         this.javaMethod = method;
         this.javaType = (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
+        this.subview = entityViews.contains(javaType);
         MappingFilter mappingFilter = AnnotationUtils.findAnnotation(method, MappingFilter.class);
         this.filterMapping = mappingFilter == null ? null : mappingFilter.value();
         
@@ -120,6 +123,11 @@ public abstract class AbstractMethodAttribute<X, Y> implements MethodAttribute<X
     @Override
     public boolean isSubquery() {
         return subqueryMapping;
+    }
+
+    @Override
+    public boolean isSubview() {
+        return subview;
     }
     
     public static String validate(ViewType<?> viewType, Method m) {

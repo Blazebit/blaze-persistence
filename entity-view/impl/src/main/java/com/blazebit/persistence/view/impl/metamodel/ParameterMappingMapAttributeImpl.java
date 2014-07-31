@@ -22,6 +22,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -31,8 +32,8 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
 
     private final Class<K> keyType;
     
-    public ParameterMappingMapAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping) {
-        super(mappingConstructor, index, mapping);
+    public ParameterMappingMapAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(mappingConstructor, index, mapping, entityViews);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.keyType = (Class<K>) typeArguments[0];
@@ -41,6 +42,11 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
     @Override
     public Class<K> getKeyType() {
         return keyType;
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.MAP;
     }
     
 }

@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  *
@@ -29,8 +30,8 @@ import java.lang.reflect.Method;
  */
 public class MethodSubquerySingularAttributeImpl<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
-    public MethodSubquerySingularAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
-        super(viewType, method, mapping);
+    public MethodSubquerySingularAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+        super(viewType, method, mapping, entityViews);
     }
  
 }

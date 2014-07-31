@@ -29,8 +29,13 @@ import java.util.Set;
  */
 public class MethodMappingSetAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public MethodMappingSetAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
-        super(viewType, method, mapping);
+    public MethodMappingSetAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+        super(viewType, method, mapping, entityViews);
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.SET;
     }
     
 }

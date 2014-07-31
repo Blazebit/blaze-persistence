@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -27,8 +28,13 @@ import java.util.List;
  */
 public class ParameterMappingListAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
-    public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping) {
-        super(mappingConstructor, index, mapping);
+    public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(mappingConstructor, index, mapping, entityViews);
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.LIST;
     }
     
 }
