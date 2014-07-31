@@ -16,16 +16,21 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import java.util.Map;
+
+
 /**
+ * 
+ * TODO: javadoc
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> {
     
     /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
+     * TODO: javadoc
+     * 
+     * @return 
      */
-    public String getMapping();
+    public Class<K> getKeyType();
 }

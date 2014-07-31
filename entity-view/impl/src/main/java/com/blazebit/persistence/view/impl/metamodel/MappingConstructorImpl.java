@@ -16,14 +16,21 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -34,7 +41,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final String name;
     private final ViewType<X> declaringType;
     private final Constructor<X> javaConstructor;
-    private final List<ParameterAttribute<X, ?>> parameters;
+    private final List<ParameterAttribute<? super X, ?>> parameters;
     
     public MappingConstructorImpl(ViewType<X> viewType, String name, Constructor<X> constructor) {
         this.name = name;
@@ -42,9 +49,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.javaConstructor = constructor;
         
         int parameterCount = constructor.getParameterTypes().length;
-        List<ParameterAttribute<X, ?>> parameters = new ArrayList<ParameterAttribute<X, ?>>(parameterCount);
+        List<ParameterAttribute<? super X, ?>> parameters = new ArrayList<ParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
-            parameters.add(new ParameterAttributeImpl<X, Object>(this, i));
+            parameters.add(createParameterAttribute(this, i));
         }
         
         this.parameters = Collections.unmodifiableList(parameters);
@@ -58,6 +65,29 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
         
         return viewConstructor.value();
+    }
+    
+    private static <X> ParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index) {
+        Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
+        if (mapping == null) {
+            return null;
+        }
+        
+        Class<?> attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
+        
+        if (Collection.class == attributeType) {
+            return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping);
+        } else if (List.class == attributeType) {
+            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping);
+        } else if (Set.class == attributeType) {
+            return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping);
+        } else if (Map.class == attributeType) {
+            return new ParameterMappingMapAttributeImpl<X, Object, Object>(constructor, index, mapping);
+        } else if (mapping instanceof MappingSubquery) {
+            return new ParameterSubquerySingularAttributeImpl<X, Object>(constructor, index, mapping);
+        } else {
+            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping);
+        }
     }
 
     @Override
@@ -76,12 +106,12 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     @Override
-    public List<ParameterAttribute<X, ?>> getParameterAttributes() {
+    public List<ParameterAttribute<? super X, ?>> getParameterAttributes() {
         return parameters;
     }
 
     @Override
-    public ParameterAttribute<X, ?> getParameterAttribute(int index) {
+    public ParameterAttribute<? super X, ?> getParameterAttribute(int index) {
         return parameters.get(index);
     }
 }

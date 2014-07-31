@@ -16,16 +16,18 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.SubqueryProvider;
+
 /**
  *
  * @author cpbec
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
-    
+public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
+
     /**
-     * Returns the mapping of the attribute.
+     * Returns the subquery provider of the attribute.
      *
-     * @return The mapping of the attribute
+     * @return The subquery provider of the attribute
      */
-    public String getMapping();
+    public Class<? extends SubqueryProvider> getSubqueryProvider();
 }

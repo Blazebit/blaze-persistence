@@ -17,9 +17,12 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -109,7 +112,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (mappingConstructor == null) {
             parameterAttributes = new ParameterAttribute<?, ?>[0];
         } else {
-            List<ParameterAttribute<T, ?>> parameterAttributeList = mappingConstructor.getParameterAttributes();
+            List<ParameterAttribute<? super T, ?>> parameterAttributeList = mappingConstructor.getParameterAttributes();
             parameterAttributes = parameterAttributeList.toArray(new ParameterAttribute<?, ?>[parameterAttributeList.size()]);
         }
         
@@ -126,15 +129,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 if (attributes[i].getJavaType() != parameterTypes[i]) {
                     continue OUTER;
                 } else {
-                    if (attributes[i].isMappingParameter()) {
-                        mappings[i][0] = "NULLIF(1,1)";
-                        parameterMappings[i] = attributes[i].getMapping();
-                    } else if (attributes[i].isSubqueryMapping()) {
-                        mappings[i][0] = attributes[i].getSubqueryProvider();
+                    if (attributes[i].isSubquery()) {
+                        mappings[i][0] = ((SubqueryAttribute<? super T, ?>) attributes[i]).getSubqueryProvider();
                         mappings[i][1] = attributes[i].getName();
                     } else {
-                        mappings[i][0] = attributes[i].getMapping();
-                        mappings[i][1] = attributes[i].getName();
+                        MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attributes[i];
+                        
+                        if (!parameterAttributes[i].isCollection() && ((SingularAttribute) attributes[i]).isQueryParameter()) {
+                            mappings[i][0] = "NULLIF(1,1)";
+                            parameterMappings[i] = mappingAttribute.getMapping();
+                        } else {
+                            mappings[i][0] = mappingAttribute.getMapping();
+                            mappings[i][1] = attributes[i].getName();
+                        }
                     }
                 }
             }
@@ -142,13 +149,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 if (parameterAttributes[i].getJavaType() != parameterTypes[i + attributes.length]) {
                     continue OUTER;
                 } else {
-                    if (parameterAttributes[i].isMappingParameter()) {
-                        mappings[i + attributes.length][0] = "NULLIF(1,1)";
-                        parameterMappings[i + attributes.length] = parameterAttributes[i].getMapping();
-                    } else if (parameterAttributes[i].isSubqueryMapping()) {
-                        mappings[i + attributes.length][0] = parameterAttributes[i].getSubqueryProvider();
+                    if (parameterAttributes[i].isSubquery()) {
+                        mappings[i + attributes.length][0] = ((SubqueryAttribute<? super T, ?>) parameterAttributes[i]).getSubqueryProvider();
                     } else {
-                        mappings[i + attributes.length][0] = parameterAttributes[i].getMapping();
+                        MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) parameterAttributes[i];
+                        
+                        if (!parameterAttributes[i].isCollection() && ((SingularAttribute) parameterAttributes[i]).isQueryParameter()) {
+                            mappings[i + attributes.length][0] = "NULLIF(1,1)";
+                            parameterMappings[i + attributes.length] = mappingAttribute.getMapping();
+                        } else {
+                            mappings[i + attributes.length][0] = mappingAttribute.getMapping();
+                        }
                     }
                 }
             }

@@ -53,7 +53,7 @@ public interface MappingConstructor<X> {
      *
      * @return The parameter attributes of this mapping constructor
      */
-    public List<ParameterAttribute<X, ?>> getParameterAttributes();
+    public List<ParameterAttribute<? super X, ?>> getParameterAttributes();
 
     /**
      * Returns the parameter attribute of this mapping constructor at the given index if it exists, otherwise null.
@@ -61,5 +61,5 @@ public interface MappingConstructor<X> {
      * @param index The index at which the parameter is located
      * @return The parameter attribute of this mapping constructor at the given index if it exists, otherwise null.
      */
-    public ParameterAttribute<X, ?> getParameterAttribute(int index);
+    public ParameterAttribute<? super X, ?> getParameterAttribute(int index);
 }

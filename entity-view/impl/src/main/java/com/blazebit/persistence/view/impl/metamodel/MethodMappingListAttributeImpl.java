@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.metamodel;
+package com.blazebit.persistence.view.impl.metamodel;
+
+import com.blazebit.persistence.view.Filter;
+import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  *
  * @author cpbec
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
+
+    public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
+        super(viewType, method, mapping);
+    }
     
-    /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
-     */
-    public String getMapping();
 }

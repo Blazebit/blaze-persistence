@@ -36,7 +36,7 @@ public interface FilteredDocument {
     
     @MappingFilter(GreaterOrEqualFilter.class)
     @MappingSubquery(CountSubqueryProvider.class)
-    public String getContactCount();
+    public Long getContactCount();
     
     @Mapping("contacts[:index].name")
     public String getContactName();

@@ -5,7 +5,10 @@ import java.util.Map;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.util.Iterator;
 
@@ -260,10 +263,10 @@ public class EntityViewSetting<T> {
             
             Filter filter = evm.createFilter(filterClass, attribute.getJavaType(), filterValue);
             
-            if (attribute.isSubqueryMapping()) {
-                filters.put(attribute.getSubqueryProvider(), filter);
+            if (attribute.isSubquery()) {
+                filters.put(((SubqueryAttribute<?, ?>) attribute).getSubqueryProvider(), filter);
             } else {
-                filters.put(attribute.getMapping(), filter);
+                filters.put(((MappingAttribute<?, ?>) attribute).getMapping(), filter);
             }
             iter.remove();
         }
