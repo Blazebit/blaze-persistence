@@ -26,7 +26,7 @@ import java.lang.reflect.Method;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface MethodAttribute<X, Y> extends MappingAttribute<X, Y> {
+public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
 
     /**
      * Returns the name of this attribute.

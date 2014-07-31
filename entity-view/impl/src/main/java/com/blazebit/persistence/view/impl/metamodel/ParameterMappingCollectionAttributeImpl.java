@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.metamodel;
+package com.blazebit.persistence.view.impl.metamodel;
+
+import com.blazebit.persistence.view.metamodel.CollectionAttribute;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
 
 /**
  *
  * @author cpbec
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public class ParameterMappingCollectionAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
+
+    public ParameterMappingCollectionAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping) {
+        super(mappingConstructor, index, mapping);
+    }
     
-    /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
-     */
-    public String getMapping();
 }

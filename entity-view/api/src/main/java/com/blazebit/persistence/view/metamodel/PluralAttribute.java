@@ -16,16 +16,33 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+
 /**
+ * 
+ * TODO: javadoc
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
     
     /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
+     * TODO: javadoc 
+     * 
+     * @return 
      */
-    public String getMapping();
+    public CollectionType getCollectionType();
+    
+    /**
+     * TODO: javadoc 
+     * 
+     * @return 
+     */
+    public Class<E> getElementType();
+    
+    public static enum CollectionType {
+        COLLECTION,
+        LIST,
+        MAP,
+        SET;
+    }
 }

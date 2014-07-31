@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
@@ -30,7 +31,7 @@ import java.lang.annotation.Annotation;
  *
  * @author cpbec
  */
-public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
+public abstract class AbstractParameterAttribute<X, Y> implements ParameterAttribute<X, Y> {
     
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
@@ -40,51 +41,53 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
     private final boolean mappingParameter;
     private final boolean subqueryMapping;
     
-    public ParameterAttributeImpl(MappingConstructor<X> constructor, int index) {
+    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping) {
         this.index = index;
         this.declaringConstructor = constructor;
         this.javaType = (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index];
         
-        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
-        Mapping mappingAnnotation = null;
-        MappingParameter mappingParameterAnnotation = null;
-        MappingSubquery mappingSubqueryAnnotation = null;
-        
-        for (int i = 0; i < annotations.length; i++) {
-            if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
-                mappingAnnotation = (Mapping) annotations[i];
-                break;
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
-                mappingParameterAnnotation = (MappingParameter) annotations[i];
-                break;
-            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingSubquery.class)) {
-                mappingSubqueryAnnotation = (MappingSubquery) annotations[i];
-                break;
-            }
-        }
-        
-        if (mappingAnnotation != null) {
-            this.mapping = mappingAnnotation.value();
+        if (mapping instanceof Mapping) {
+            this.mapping = ((Mapping) mapping).value();
             this.subqueryProvider = null;
             this.mappingParameter = false;
             this.subqueryMapping = false;
-        } else if (mappingParameterAnnotation != null) {
-            this.mapping = mappingParameterAnnotation.value();
+        } else if (mapping instanceof MappingParameter) {
+            this.mapping = ((MappingParameter) mapping).value();
             this.subqueryProvider = null;
             this.mappingParameter = true;
             this.subqueryMapping = false;
-        } else if (mappingSubqueryAnnotation != null) {
+        } else if (mapping instanceof MappingSubquery) {
             this.mapping = null;
-            this.subqueryProvider = mappingSubqueryAnnotation.value();
+            this.subqueryProvider = ((MappingSubquery) mapping).value();
             this.mappingParameter = false;
             this.subqueryMapping = true;
         } else {
             throw new IllegalArgumentException("No mapping annotation could be found for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
         }
         
-        if (mapping.isEmpty()) {
+        if (this.mapping != null && this.mapping.isEmpty()) {
             throw new IllegalArgumentException("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
         }
+    }
+    
+    public static Annotation getMapping(MappingConstructor<?> constructor, int index) {
+        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
+        
+        for (int i = 0; i < annotations.length; i++) {
+            if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
+                return annotations[i];
+            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
+                return annotations[i];
+            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingSubquery.class)) {
+                return annotations[i];
+            }
+        }
+        
+        return null;
+    }
+    
+    public PluralAttribute.CollectionType getCollectionType() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -92,18 +95,16 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
         return index;
     }
     
-    @Override
-    public boolean isMappingParameter() {
+    public boolean isQueryParameter() {
         return mappingParameter;
     }
 
-    @Override
     public Class<? extends SubqueryProvider> getSubqueryProvider() {
         return subqueryProvider;
     }
 
     @Override
-    public boolean isSubqueryMapping() {
+    public boolean isSubquery() {
         return subqueryMapping;
     }
 
@@ -122,7 +123,6 @@ public class ParameterAttributeImpl<X, Y> implements ParameterAttribute<X, Y> {
         return javaType;
     }
 
-    @Override
     public String getMapping() {
         return mapping;
     }

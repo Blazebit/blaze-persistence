@@ -18,17 +18,21 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -71,10 +75,10 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         
         for (Class<?> type : ReflectionUtils.getSuperTypes(clazz)) {
             for (Method method : type.getDeclaredMethods()) {
-                String attributeName = MethodAttributeImpl.validate(this, method);
+                String attributeName = AbstractMethodAttribute.validate(this, method);
                 
                 if (attributeName != null && !attributes.containsKey(attributeName)) {
-                    MethodAttribute<? super X, ?> attribute = MethodAttributeImpl.createMethodAttribute(this, method);
+                    MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method);
                     if (attribute != null) {
                         attributes.put(attribute.getName(), attribute);
                     }
@@ -93,6 +97,29 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             MappingConstructor<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
+        }
+    }
+    
+    private static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method) {
+        Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
+        if (mapping == null) {
+            return null;
+        }
+        
+        Class<?> attributeType = method.getReturnType();
+        
+        if (Collection.class == attributeType) {
+            return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping);
+        } else if (List.class == attributeType) {
+            return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping);
+        } else if (Set.class == attributeType) {
+            return new MethodMappingSetAttributeImpl<X, Object>(viewType, method, mapping);
+        } else if (Map.class == attributeType) {
+            return new MethodMappingMapAttributeImpl<X, Object, Object>(viewType, method, mapping);
+        } else if (mapping instanceof MappingSubquery) {
+            return new MethodSubquerySingularAttributeImpl<X, Object>(viewType, method, mapping);
+        } else {
+            return new MethodMappingSingularAttributeImpl<X, Object>(viewType, method, mapping);
         }
     }
 

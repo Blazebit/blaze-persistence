@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
@@ -35,7 +36,7 @@ import java.lang.reflect.Modifier;
  *
  * @author cpbec
  */
-public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
+public abstract class AbstractMethodAttribute<X, Y> implements MethodAttribute<X, Y> {
     
     private final String name;
     private final ViewType<X> declaringType;
@@ -47,12 +48,13 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     private final boolean mappingParameter;
     private final boolean subqueryMapping;
 
-    private MethodAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Class<? extends Filter> filterMapping) {
+    protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping) {        
         this.name = StringUtils.firstToLower(method.getName().substring(3));
         this.declaringType = viewType;
         this.javaMethod = method;
         this.javaType = (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
-        this.filterMapping = filterMapping;
+        MappingFilter mappingFilter = AnnotationUtils.findAnnotation(method, MappingFilter.class);
+        this.filterMapping = mappingFilter == null ? null : mappingFilter.value();
         
         if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
@@ -93,6 +95,22 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     public Class<Y> getJavaType() {
         return javaType;
     }
+    
+    public boolean isQueryParameter() {
+        return mappingParameter;
+    }
+    
+    public Class<? extends SubqueryProvider> getSubqueryProvider() {
+        return subqueryProvider;
+    }
+    
+    public String getMapping() {
+        return mapping;
+    }
+
+    public PluralAttribute.CollectionType getCollectionType() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public Class<? extends Filter> getFilterMapping() {
@@ -100,35 +118,8 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
     }
 
     @Override
-    public String getMapping() {
-        return mapping;
-    }
-
-    @Override
-    public boolean isMappingParameter() {
-        return mappingParameter;
-    }
-
-    @Override
-    public Class<? extends SubqueryProvider> getSubqueryProvider() {
-        return subqueryProvider;
-    }
-
-    @Override
-    public boolean isSubqueryMapping() {
+    public boolean isSubquery() {
         return subqueryMapping;
-    }
-    
-    public static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method) {
-        Annotation mapping = getMapping(viewType, method);
-        if (mapping == null) {
-            return null;
-        }
-        
-        MappingFilter mappingFilter = AnnotationUtils.findAnnotation(method, MappingFilter.class);
-        Class<? extends Filter> filterMapping = mappingFilter == null ? null : mappingFilter.value();
-        
-        return new MethodAttributeImpl<X, Object>(viewType, method, mapping, filterMapping);
     }
     
     public static String validate(ViewType<?> viewType, Method m) {
@@ -158,7 +149,7 @@ public class MethodAttributeImpl<X, Y> implements MethodAttribute<X, Y> {
         return StringUtils.firstToLower(m.getName().substring(3));
     }
     
-    private static Annotation getMapping(ViewType<?> viewType, Method m) {        
+    public static Annotation getMapping(ViewType<?> viewType, Method m) {        
         Class<?> entityClass = viewType.getEntityClass();
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
         

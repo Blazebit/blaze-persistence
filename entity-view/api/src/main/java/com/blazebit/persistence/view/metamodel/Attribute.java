@@ -16,26 +16,40 @@
 package com.blazebit.persistence.view.metamodel;
 
 /**
- * Represents an attribute of a view type specified by a constructor parameter.
+ * Represents an attribute of a view type.
  *
  * @param <X> The type of the declaring entity view
  * @param <Y> The type of attribute
  * @author Christian Beikov
  * @since 1.0
  */
-public interface ParameterAttribute<X, Y> extends Attribute<X, Y> {
+public interface Attribute<X, Y> {
 
     /**
-     * Returns the index of the parameter within the constructor.
+     * Returns the declaring view type.
      *
-     * @return The index of the parameter within the constructor
+     * @return The declaring view type
      */
-    public int getIndex();
+    public ViewType<X> getDeclaringType();
 
     /**
-     * Returns the declaring constructor.
+     * Returns the java type of the attribute.
      *
-     * @return The declaring constructor
+     * @return The java type of the attribute
      */
-    public MappingConstructor<X> getDeclaringConstructor();
+    public Class<Y> getJavaType();
+    
+    /**
+     * Returns true if this attribute maps to a subquery provider, otherwise false.
+     *
+     * @return True if this attribute maps to a subquery provider, otherwise false
+     */
+    public boolean isSubquery();
+    
+    /**
+     * Returns true if this attribute is a collection, otherwise false.
+     *
+     * @return True if this attribute is a collection, otherwise false
+     */
+    public boolean isCollection();
 }

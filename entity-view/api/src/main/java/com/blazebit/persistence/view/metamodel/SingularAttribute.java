@@ -20,12 +20,14 @@ package com.blazebit.persistence.view.metamodel;
  *
  * @author cpbec
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
     
+
     /**
-     * Returns the mapping of the attribute.
+     * Returns true if this attribute maps to a query parameter, otherwise false.
      *
-     * @return The mapping of the attribute
+     * @return True if this attribute maps to a query parameter, otherwise false
      */
-    public String getMapping();
+    public boolean isQueryParameter();
+
 }

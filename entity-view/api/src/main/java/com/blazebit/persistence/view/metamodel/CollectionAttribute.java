@@ -16,16 +16,15 @@
 
 package com.blazebit.persistence.view.metamodel;
 
+import java.util.Collection;
+
+
 /**
+ * 
+ * TODO: javadoc
  *
- * @author cpbec
+ * @author Christian Beikov
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
+public interface CollectionAttribute<X, E> extends PluralAttribute<X, Collection<E>, E> {
     
-    /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
-     */
-    public String getMapping();
 }

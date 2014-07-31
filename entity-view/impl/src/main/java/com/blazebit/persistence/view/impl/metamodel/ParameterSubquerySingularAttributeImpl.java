@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.metamodel;
+package com.blazebit.persistence.view.impl.metamodel;
+
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import java.lang.annotation.Annotation;
 
 /**
  *
  * @author cpbec
  */
-public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
-    
-    /**
-     * Returns the mapping of the attribute.
-     *
-     * @return The mapping of the attribute
-     */
-    public String getMapping();
+public class ParameterSubquerySingularAttributeImpl<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
+
+    public ParameterSubquerySingularAttributeImpl(MappingConstructor<X> constructor, int index, Annotation mapping) {
+        super(constructor, index, mapping);
+    }
+
 }
