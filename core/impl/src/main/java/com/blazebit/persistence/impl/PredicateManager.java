@@ -42,8 +42,8 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 public abstract class PredicateManager<U> extends AbstractManager {
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
-    private final RightSubqueryBuilderListener rightSubqueryBuilderListener = new RightSubqueryBuilderListener();
-    private final LeftSubqueryBuilderListener leftSubqueryBuilderListener = new LeftSubqueryBuilderListener();
+    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
+    private final LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>>();
     protected final ExpressionFactory expressionFactory;
 
     PredicateManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
@@ -63,31 +63,17 @@ public abstract class PredicateManager<U> extends AbstractManager {
     
     SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
         RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryBuilderListener);
-    }
-    
-    private class LeftSubqueryBuilderListener extends SubqueryBuilderListenerImpl<RestrictionBuilder<U>> {
-
-        @Override
-        public void onBuilderEnded(SubqueryBuilder<RestrictionBuilder<U>> builder) {
-            super.onBuilderEnded(builder);
-            RestrictionBuilderImpl<U> restrictionBuilder = (RestrictionBuilderImpl<U>) builder.getResult();
-            restrictionBuilder.setLeftExpression(new SubqueryExpression(builder));
-        }
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<U> restrictExists(U result) {
-        verifyBuilderEnded();
-        rightSubqueryBuilderListener.setPredicate(new ExistsPredicate());
-        rootPredicate.startBuilder(rightSubqueryBuilderListener);
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryBuilderListener);
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
     
     SubqueryInitiator<U> restrictNotExists(U result) {
-        verifyBuilderEnded();
-        rightSubqueryBuilderListener.setPredicate(new NotPredicate(new ExistsPredicate()));
-        rootPredicate.startBuilder(rightSubqueryBuilderListener);
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryBuilderListener);
+        RightHandsideSubqueryPredicateBuilder subqueryListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
     }
 
     void applyTransformer(ArrayExpressionTransformer transformer) {
@@ -97,8 +83,10 @@ public abstract class PredicateManager<U> extends AbstractManager {
 
     void verifyBuilderEnded() {
         rootPredicate.verifyBuilderEnded();
-        rightSubqueryBuilderListener.verifySubqueryBuilderEnded();
-        leftSubqueryBuilderListener.verifySubqueryBuilderEnded();
+        leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        if(rightSubqueryPredicateBuilderListener != null){
+            rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
     }
 
     void acceptVisitor(Predicate.Visitor v) {
@@ -118,41 +106,6 @@ public abstract class PredicateManager<U> extends AbstractManager {
         }
         sb.append(' ').append(getClauseName()).append(' ');
         rootPredicate.predicate.accept(queryGenerator);
-    }
-    
-    private class RightSubqueryBuilderListener extends SubqueryBuilderListenerImpl implements PredicateBuilder {
-
-        private Predicate predicate;
-
-        public void setPredicate(Predicate predicate) {
-            this.predicate = predicate;
-        }
-        
-        @Override
-        public Predicate getPredicate() {
-            return this.predicate;
-        }
-
-        @Override
-        public void onBuilderEnded(SubqueryBuilder builder) {
-            super.onBuilderEnded(builder);
-            // set the finished subquery builder on the previously created predicate
-            Predicate pred;
-            if (predicate instanceof NotPredicate) {
-                // unwrap not predicate
-                pred = ((NotPredicate) predicate).getPredicate();
-            } else {
-                pred = predicate;
-            }
-
-            if (pred instanceof UnaryExpressionPredicate) {
-                ((UnaryExpressionPredicate) pred).setExpression(new SubqueryExpression(builder));
-            } else {
-                throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
-            }
-            
-            rootPredicate.onBuilderEnded(this);
-        }
     }
 
     class RootPredicate extends PredicateBuilderEndedListenerImpl {

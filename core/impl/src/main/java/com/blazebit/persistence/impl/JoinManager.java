@@ -484,11 +484,15 @@ public class JoinManager {
         }
         currentPath.append(joinRelationName);
         if (node == null) {
-            // a join node for t he join relation does not yet exist
+            // a join node for the join relation does not yet exist
             String currentJoinPath = currentPath.toString();
-            JoinAliasInfo oldAliasInfo = (JoinAliasInfo) aliasManager.getAliasInfoForBottomLevel(alias);
-            if (oldAliasInfo != null) {
-                if (!oldAliasInfo.getAbsolutePath().equals(currentJoinPath)) {
+            AliasInfo oldAliasInfo = aliasManager.getAliasInfoForBottomLevel(alias);
+            if(oldAliasInfo instanceof SelectManager.SelectInfo){
+                throw new IllegalStateException("Alias [" + oldAliasInfo.getAlias() + "] already used as select alias");
+            }
+            JoinAliasInfo oldJoinAliasInfo = (JoinAliasInfo) oldAliasInfo;
+            if (oldJoinAliasInfo != null) {
+                if (!oldJoinAliasInfo.getAbsolutePath().equals(currentJoinPath)) {
                     throw new IllegalArgumentException(errorMessage);
                 } else {
                     throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath + "] is available but the join node is not!");

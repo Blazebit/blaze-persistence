@@ -18,25 +18,32 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
  *
  * @author cpbec
  */
 public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements HavingAndBuilder<T>, PredicateBuilder {
-    
+
     private final T result;
     private final PredicateBuilderEndedListener listener;
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    
+    private final LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>>();
+    private RightHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> rightSubqueryPredicateBuilderListener;
+
     public HavingAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
@@ -44,7 +51,7 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
-    
+
     @Override
     public T endAnd() {
         verifyBuilderEnded();
@@ -56,7 +63,7 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     public Predicate getPredicate() {
         return predicate;
     }
-    
+
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
@@ -75,16 +82,28 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
 
     @Override
     public SubqueryInitiator<HavingAndBuilder<T>> havingExists() {
-        return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, this);
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<HavingAndBuilder<T>> havingNotExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new NotPredicate(new ExistsPredicate())));
+        return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> having() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        RestrictionBuilder<HavingAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingAndBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener);
+    }
+    
+    @Override
+    protected void verifyBuilderEnded() {
+        super.verifyBuilderEnded();
+        leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        if(rightSubqueryPredicateBuilderListener != null){
+            rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
     }
 }

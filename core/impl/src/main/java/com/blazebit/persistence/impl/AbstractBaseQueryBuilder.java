@@ -238,7 +238,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> having() {
         return havingManager.restrict(this);
-
     }
 
     /*

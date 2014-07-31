@@ -178,10 +178,64 @@ public class WhereTest extends AbstractPersistenceTest {
     }
     
     @Test
+    public void testWhereExistsAndBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endAnd().endOr();
+        String expected = "FROM Document d WHERE d.name = :param_0 AND (EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name))";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereNotExistsAndBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endAnd().endOr();
+        String expected = "FROM Document d WHERE d.name = :param_0 AND (NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name))";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereExistsOrBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereOr().where("d.name").eq("test").whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endOr();
+        String expected = "FROM Document d WHERE d.name = :param_0 OR EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereNotExistsOrBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereOr().where("d.name").eq("test").whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endOr();
+        String expected = "FROM Document d WHERE d.name = :param_0 OR NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
     public void testWhereLeftSubquery(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
         String expected = "FROM Document d WHERE (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereLeftSubqueryAndBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("d.name").eq("test").whereOr().whereAnd().where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        String expected = "FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
+        
+        Assert.assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Test
+    public void testWhereLeftSubqueryOrBuilder(){
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereOr().where("d.name").eq("test").where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        String expected = "FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
         
         Assert.assertEquals(expected, crit.getQueryString());
     }

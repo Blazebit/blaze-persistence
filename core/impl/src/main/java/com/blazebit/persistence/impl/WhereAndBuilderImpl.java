@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.HavingAndBuilder;
+import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
@@ -22,6 +24,8 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -37,6 +41,8 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>>();
+    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
     
     public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -77,16 +83,28 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     @Override
     public SubqueryInitiator<WhereAndBuilder<T>> whereExists() {
-        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, this);
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
     
     @Override
     public SubqueryInitiator<WhereAndBuilder<T>> whereNotExists() {
-        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, this);
+        rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new NotPredicate(new ExistsPredicate())));
+        return subqueryInitFactory.createSubqueryInitiator((WhereAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<WhereAndBuilder<T>>> where() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        RestrictionBuilder<WhereAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<WhereAndBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener);
+    }
+    
+    @Override
+    protected void verifyBuilderEnded() {
+        super.verifyBuilderEnded();
+        leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        if(rightSubqueryPredicateBuilderListener != null){
+            rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
     }
 }

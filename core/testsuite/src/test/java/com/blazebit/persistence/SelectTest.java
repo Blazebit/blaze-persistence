@@ -181,4 +181,10 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select((String) null);
     }
+    
+    @Test
+    public void removeMe(){
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.select("contacts");
+    }
 }
