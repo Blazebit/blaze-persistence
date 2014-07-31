@@ -33,6 +33,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -135,7 +136,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     private void checkFetchJoinAllowed(){
-        if(selectManager.getSelectInfoCount() > 0){
+        if(selectManager.getSelectInfos().size() > 0){
             throw new IllegalStateException("Fetch joins are only possible if the root entity is selected");
         }
     }
@@ -246,5 +247,10 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public QueryBuilder<Tuple, ?> select(String expression, String alias) {
         return (QueryBuilder<Tuple, ?>) super.select(expression, alias);
+    }
+
+    @Override
+    public Metamodel getMetamodel() {
+        return em.getMetamodel();
     }
 }

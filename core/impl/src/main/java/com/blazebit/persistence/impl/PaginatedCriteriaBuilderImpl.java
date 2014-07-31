@@ -69,8 +69,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
 
-        List ids = idQuery.setFirstResult((int) firstRow)
-            .setMaxResults((int) pageSize)
+        List ids = idQuery.setFirstResult(firstRow)
+            .setMaxResults(pageSize)
             .getResultList();
         
         if (ids.isEmpty()) {

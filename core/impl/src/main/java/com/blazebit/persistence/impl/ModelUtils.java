@@ -24,45 +24,25 @@ import java.util.Map;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.PluralAttribute;
+import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 /**
  *
  * @author ccbem
  */
 public class ModelUtils {
-    
-    //TODO: what about JPA annotations? @Transient, @Embedded, etc
-    
+
     public static boolean isJoinable(Attribute attr) {
-        Class<?> fieldClass = attr.getJavaType();
-        boolean fieldCollectionType = attr.isCollection();
-        boolean fieldMapType = fieldCollectionType ? false : ReflectionUtils
-                .isSubtype(fieldClass, Map.class);
-        
-        if (!fieldCollectionType && !fieldMapType && (FormatUtils.isParseableType(fieldClass)
-                || Blob.class.equals(fieldClass)
-                || Clob.class.equals(fieldClass)
-                || new byte[0].getClass().equals(fieldClass))) {
-            return false;
-        }
-        return true;
+        return attr.isCollection() 
+                || attr.getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE 
+                || attr.getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static Class<?> resolveFieldClass(Attribute attr) {
-
-        Class<?> fieldClass = attr.getJavaType();
-
-        boolean fieldCollectionType = attr.isCollection();
-
-        // avoid call when not necessary
-        boolean fieldMapType = fieldCollectionType ? false : ReflectionUtils
-                .isSubtype(fieldClass, Map.class);
-
-        // FIXED: add exceptions when type arguments are not sufficient
-        if (fieldCollectionType || fieldMapType) {
-            fieldClass = ((PluralAttribute)attr).getElementType().getJavaType();
+        if (attr.isCollection()) {
+            return ((PluralAttribute) attr).getElementType().getJavaType();
         }
-
-        return fieldClass;
+        
+        return attr.getJavaType();
     }
 }

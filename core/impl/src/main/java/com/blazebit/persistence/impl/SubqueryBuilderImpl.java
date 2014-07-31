@@ -38,7 +38,7 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     
     @Override
     public T end() {
-        if(selectManager.getSelectInfoCount() == 0){
+        if(selectManager.getSelectInfos().isEmpty()){
             throw new IllegalStateException("A subquery without a select clause is not allowed");
         }
         listener.onBuilderEnded(this);

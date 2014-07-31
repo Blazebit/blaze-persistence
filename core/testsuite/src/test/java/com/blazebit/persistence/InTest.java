@@ -57,13 +57,4 @@ public class InTest extends AbstractPersistenceTest {
         criteria.where("d.age").notIn(null);
     }
     
-    
-    //TODO: test with subqueries
-//    @Test
-//    public void testIn(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").in().expression("d.partners.a");
-//        
-//        assertEquals("FROM Document d WHERE d.age BETWEEN 1 and 10", criteria.getQueryString());
-//    }
 }

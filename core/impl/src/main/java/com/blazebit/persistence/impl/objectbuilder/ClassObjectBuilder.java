@@ -32,7 +32,6 @@ public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
         this.clazz = clazz;
     }
 
-    // TODO: implement collection awareness
     @Override
     public T build(Object[] tuple, String[] aliases) {
         Constructor<?>[] constructors = clazz.getConstructors();

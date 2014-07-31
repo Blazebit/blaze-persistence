@@ -27,15 +27,6 @@ import org.junit.Test;
  * @author ccbem
  */
 public class LessTest extends AbstractPersistenceTest {
-    // TODO: subquery
-//    @Test
-//    public void testLtAllExpression(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").lt().
-//        
-//        assertEquals("FROM Document d WHERE d.age < ALL(d.owners.age)", criteria.getQueryString());
-//    }
-    
     
     @Test
     public void testLt(){

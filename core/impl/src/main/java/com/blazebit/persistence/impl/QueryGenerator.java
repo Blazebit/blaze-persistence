@@ -262,12 +262,6 @@ public class QueryGenerator extends VisitorAdapter {
         visitQuantifiableBinaryPredicate(predicate, " <= ");
     }
 
-    /* Expression.Visitor */
-    //TODO: remove
-    @Override
-    public void visit(PropertyExpression expression) {
-    }
-
     @Override
     public void visit(ParameterExpression expression) {
         String paramName;

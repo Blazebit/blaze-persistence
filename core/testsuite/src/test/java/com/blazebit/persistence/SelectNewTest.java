@@ -21,6 +21,7 @@ import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.model.DocumentCount;
 import com.blazebit.persistence.model.DocumentPartnerView;
 import com.blazebit.persistence.model.DocumentViewModel;
+import java.lang.reflect.Constructor;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -114,35 +115,36 @@ public class SelectNewTest extends AbstractPersistenceTest {
     public void testSelectCollection() {
         CriteriaBuilder<DocumentPartnerView> crit = cbf.from(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
-        em.createQuery("SELECT new com.blazebit.persistence.model.DocumentPartnerView(elements(partners), elements(localized)) FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized").getResultList();
-        assertEquals("SELECT d.id, partners FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
-        List<DocumentPartnerView> actual = crit.getResultList();
-        
-        /* expected */
-//        Long expectedCount = (Long) em.createQuery("SELECT COUNT(*) FROM Document d").getSingleResult();
-        
-//        assertEquals((long) expectedCount, actual.size());
-    }
 
-//    
-//    @Test
-//    public void testSelectNewModel(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.selectNew(Document.class).with("d.author.name").end().where("d.title.length").lt(4);
-//        
-//        
-//        assertEquals("SELECT NEW " + Document.class.getName() + "(author.name) FROM Document d LEFT JOIN d.author author LEFT JOIN d.title title WHERE title.legnth < :param_0", criteria.getQueryString());
-//    }
-//    
-//    @Test(expected = NullPointerException.class)
-//    public void testSelectNewNullClass(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.selectNew((Class<Document>)null);        
-//    }
-//    
-//    @Test(expected = NullPointerException.class)
-//    public void testSelectNewNullConstructor(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.selectNew((Constructor<Document>)null);        
-//    }
+        assertEquals("SELECT d.id, partners FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
+    }
+    
+    @Test
+    public void testSelectNewModel(){
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4);
+        
+        
+        assertEquals("SELECT owner.name FROM Document d JOIN d.owner owner WHERE d.age < :param_0", criteria.getQueryString());
+    }
+    
+    @Test
+    public void testSelectNewWithParameters(){
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4);
+        
+        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
+    }
+    
+    @Test(expected = NullPointerException.class)
+    public void testSelectNewNullClass(){
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.selectNew((Class<Document>)null);        
+    }
+    
+    @Test(expected = NullPointerException.class)
+    public void testSelectNewNullConstructor(){
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.selectNew((Constructor<Document>)null);        
+    }
 }

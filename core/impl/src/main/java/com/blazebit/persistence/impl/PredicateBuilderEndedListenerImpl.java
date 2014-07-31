@@ -24,7 +24,6 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  *
  * @author Christian Beikov
  */
-//TODO: restructure this
 public class PredicateBuilderEndedListenerImpl implements PredicateBuilderEndedListener {
 
     private PredicateBuilder currentBuilder;

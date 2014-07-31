@@ -82,19 +82,12 @@ public class SelectManager<T> extends AbstractManager {
     public List<SelectManager.SelectInfo> getSelectInfos(){
         return selectInfos;
     }
-    
-    @Deprecated
-    public int getSelectInfoCount() {
-        return selectInfos.size();
-    }
 
     public Map<String, Integer> getSelectAliasToPositionMap() {
         return selectAliasToPositionMap;
     }
 
     void acceptVisitor(Visitor v) {
-        //TODO: implement test for select new with joins!! - we might also have to do implicit joins for constructor arguments
-        // carry out implicit joins
         for (SelectInfo selectInfo : selectInfos) {
             selectInfo.getExpression().accept(v);
         }
@@ -297,7 +290,6 @@ public class SelectManager<T> extends AbstractManager {
             }
             currentBuilder = null;
             for (Expression e : expressions) {
-                //TODO: create tests for parameter registration at this point
                 registerParameterExpressions(e);
                 SelectManager.this.selectInfos.add(new SelectInfo(e));
             }

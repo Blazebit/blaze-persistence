@@ -24,6 +24,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  * A base interface for builders that support normal query functionality.
@@ -227,4 +228,6 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      */
     @Override
     public QueryBuilder<Tuple, ?> select(String expression, String alias);
+    
+    public Metamodel getMetamodel();
 }

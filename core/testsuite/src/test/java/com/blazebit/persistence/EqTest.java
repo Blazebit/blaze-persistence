@@ -61,23 +61,6 @@ public class EqTest extends AbstractPersistenceTest {
         criteria.where("d.age").eqExpression(null);        
     }
     
-    // TODO: for subqueries
-//    @Test
-//    public void testEqualToAll(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").eq().all().expression("d.partners.age");
-//        
-//        assertEquals("FROM Document d LEFT JOIN d.partners partners WHERE d.age = ALL(partners.age)", criteria.getQueryString());
-//    }
-//    
-//    @Test
-//    public void testEqualToAny(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").eq().any().expression("d.partners.age");
-//        
-//        assertEquals("FROM Document d LEFT JOIN d.partners partners WHERE d.age = ANY(partners.age)", criteria.getQueryString());
-//    }
-    
     @Test
     public void testNotEqualTo(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
@@ -111,24 +94,7 @@ public class EqTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").notEqExpression(null);        
     }
-    
-    // TODO: for subqueries
-//    @Test
-//    public void testNotEqualToAll(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").notEq().all().expression("d.partners.age");
-//        
-//        assertEquals("FROM Document d LEFT JOIN d.partners partners WHERE d.age != ALL(partners.age)", criteria.getQueryString());
-//    }
-//    
-//    @Test
-//    public void testNotEqualToAny(){
-//        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-//        criteria.where("d.age").notEq().any().expression("d.partners.age");
-//        
-//        assertEquals("FROM Document d LEFT JOIN d.partners partners WHERE d.age != ANY(partners.age)", criteria.getQueryString());
-//    }
-    
+   
     @Test
     public void testEqAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");

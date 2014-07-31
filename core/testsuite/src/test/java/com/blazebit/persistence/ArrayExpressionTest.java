@@ -97,4 +97,12 @@ public class ArrayExpressionTest extends AbstractPersistenceTest {
         
         assertEquals("SELECT p AS x FROM Document d JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c WITH KEY(c) = 1 WHERE c >= :param_0", criteria.getQueryString());
     }
+    
+    @Test
+    public void testMore2() {
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.select("d.contacts[1].partnerDocument.name", "x");
+        
+        assertEquals("SELECT partnerDocument.name AS x FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = 1 LEFT JOIN contacts.partnerDocument partnerDocument", criteria.getQueryString());
+    }
 }

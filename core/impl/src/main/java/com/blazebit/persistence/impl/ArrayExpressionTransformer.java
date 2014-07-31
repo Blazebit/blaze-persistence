@@ -19,21 +19,17 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  *
  * @author cpbec
  */
-//TODO: maybe implement contacts[1] = x1 AND contacts[2] = x2?
 public class ArrayExpressionTransformer implements ExpressionTransformer {
 
     private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
@@ -64,10 +60,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
         }
 
         PathExpression path = (PathExpression) original;
-        ArrayExpression arrayExp = null;
-        ArrayExpression farRightArrayExp = null;
-        PathExpression farRightValuePath = null;
-        EqPredicate farRightValueKeyFilter = null;
+        ArrayExpression arrayExp;
 
         String absBasePath;
         int loopEndIndex = 0;
@@ -85,8 +78,6 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
             // this case is for single select and join aliases
             return original;
         }
-
-        //TODO: set baseNodes on created PathExpressions
         
         for (int i = path.getExpressions().size() - 1; i >= loopEndIndex; i--) {
 
@@ -97,8 +88,8 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
 
                 String currentAbsPath = absBasePath;
                 TransformationInfo transInfo = new TransformationInfo(currentAbsPath, arrayExp.getIndex().toString());
-                EqPredicate valueKeyFilterPredicate;
-                if ((valueKeyFilterPredicate = transformedPathFilterMap.get(transInfo)) == null) {
+                
+                if (transformedPathFilterMap.get(transInfo) == null) {
                     CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
                     keyExpression.getExpressions().add(new FooExpression("KEY("));
 
@@ -106,29 +97,14 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                     keyPath.getExpressions().add(arrayExp.getBase());
                     keyExpression.getExpressions().add(keyPath);
                     keyExpression.getExpressions().add(new FooExpression(")"));
-                    valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExp.getIndex());
+                    EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExp.getIndex());
+
+                    keyPath.setBaseNode(joinManager.findNode(keyPath.getPath()));
                     
-                    //TODO: change path.getBaseNode() to be the join node for the first path element
-                    // so for contacts.partnerDocument.versions return contacts and not versions
                     joinManager.findNode(absBasePath).setWithPredicate(valueKeyFilterPredicate);
                     transformedPathFilterMap.put(transInfo, valueKeyFilterPredicate);
 
                 }
-
-                if (farRightArrayExp == null) {
-                    farRightArrayExp = arrayExp;
-                    farRightValueKeyFilter = valueKeyFilterPredicate;
-                    // this is only necessary for correct map dereferencing output (e.g. VALUE(xy).someproperty) )
-                    // however, such dereferencing is not supported by JPQL so we could also remove this
-                    List<PathElementExpression> farRightValuePathElements = new ArrayList<PathElementExpression>();
-                    for (int j = i + 1; j < path.getExpressions().size(); j++) {
-                        farRightValuePathElements.add(path.getExpressions().get(j));
-                    }
-                    if (farRightValuePathElements.isEmpty() == false) {
-                        farRightValuePath = new PathExpression(farRightValuePathElements);
-                    }
-                }
-
             }
 
             if (i == loopEndIndex) {
@@ -136,29 +112,6 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
             } else {
                 absBasePath = absBasePath.substring(0, absBasePath.lastIndexOf('.'));
             }
-        }
-
-        // convert occurrence of a.b.c.d[xy] to d and ab.c.d[xy].z to d.z
-        if (farRightArrayExp != null) {
-            // add value for last array expression
-            CompositeExpression valueExpression = new CompositeExpression(new ArrayList<Expression>());
-            
-            PathExpression valuePath = new PathExpression();
-            valuePath.getExpressions().add(farRightArrayExp.getBase());
-            
-           
-            if (farRightValuePath != null) {
-                valuePath.getExpressions().addAll(farRightValuePath.getExpressions());
-                valueExpression.getExpressions().add(valuePath);
-            } else {
-                valueExpression.getExpressions().add(valuePath);
-            }
-            
-            if(selectClause == true){
-                farRightValueKeyFilter.setRequiredByMapValueSelect(true);
-            }
-
-            return valueExpression;
         }
 
         return original;

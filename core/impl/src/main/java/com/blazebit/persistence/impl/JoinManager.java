@@ -296,9 +296,8 @@ public class JoinManager {
                 // We found an alias for the first part of the path
                 String potentialBasePath = potentialBaseInfo.getAbsolutePath();
                 JoinNode aliasNode = findNode(rootNode, potentialBasePath);
-                // TODO: if aliasNode is null, then probably a subpath is not yet joined
+                // Note: aliasNode may never be null since a join alias info exists and therefore a join node must exist
                 String relativePath = normalizedPath.substring(aliasNode.getAliasInfo().getAlias().length() + 1);
-                normalizedPath = potentialBasePath + '.' + relativePath;
                 String relativeJoinPath;
 
                 if (relativePath.indexOf('.') == -1) {

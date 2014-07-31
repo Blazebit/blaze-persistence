@@ -92,10 +92,7 @@ public class PaginationTest extends AbstractPersistenceTest {
         crit.where("d.owner.name").like("%arl%", true, null);
         crit.where("d.owner.localized[1]").like("a%", false, null);
         crit.orderByAsc("d.id");
-        
-        //TODO: introduce default ordering for pagination: by @id ASC NULLS LAST
-        //TODO: use metamodel for model-aware joining
-        
+                
         // do not include joins that are only needed for the select clause
         String expectedCountQuery = "SELECT COUNT(*) FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized WITH KEY(localized) = 1 "
                 + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(localized) LIKE UPPER(:param_2)";
