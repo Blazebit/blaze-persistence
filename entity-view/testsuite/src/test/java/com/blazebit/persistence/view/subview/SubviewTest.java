@@ -89,27 +89,36 @@ public class SubviewTest extends AbstractPersistenceTest {
         
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
-        List<DocumentMasterView> results = evm.applyObjectBuilder(DocumentMasterView.class, criteria)
-//                .setParameter("contactPersonNumber", 2)
-                .getResultList();
+        CriteriaBuilder<DocumentMasterView> cb = evm.applyObjectBuilder(DocumentMasterView.class, criteria)
+                .setParameter("contactPersonNumber", 2);
+//        String query = cb.getQueryString();
+        List<DocumentMasterView> results = cb.getResultList();
         
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
+        // Subview
         assertEquals("pers1", results.get(0).getOwner().getName());
+        // Filtered subview
 //        assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
 //        assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
+        // Map subview
 //        assertEquals(doc1.getContacts2().get(1).getName(), results.get(0).getContacts().get(1).getName());
 //        assertEquals(doc1.getContacts2().get(2).getName(), results.get(0).getContacts().get(2).getName());
+        // Set subview
 //        assertEquals(doc1.getPartners().size(), results.get(0).getPartners().size());
 //        assertEquals(doc1.getPartners().iterator().next().getName(), results.get(0).getPartners().iterator().next().getName());
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
+        // Subview
         assertEquals("pers2", results.get(1).getOwner().getName());
+        // Filtered subview
 //        assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
 //        assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
+        // Map subview
 //        assertEquals(doc2.getContacts2().get(1).getName(), results.get(1).getContacts().get(1).getName());
 //        assertEquals(doc2.getContacts2().get(2).getName(), results.get(1).getContacts().get(2).getName());
+        // Set subview
 //        assertEquals(doc2.getPartners().size(), results.get(1).getPartners().size());
 //        assertEquals(doc2.getPartners().iterator().next().getName(), results.get(1).getPartners().iterator().next().getName());
     }

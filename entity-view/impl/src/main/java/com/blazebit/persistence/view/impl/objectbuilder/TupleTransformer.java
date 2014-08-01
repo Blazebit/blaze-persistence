@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
-import com.blazebit.persistence.ObjectBuilder;
+package com.blazebit.persistence.view.impl.objectbuilder;
+
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class ObjectBuilderFactoryImpl<X> implements ObjectBuilderFactory<X> {
+public abstract class TupleTransformer {
+    protected final int startIndex;
 
-    private final ViewTypeObjectBuilderTemplate<X> template;
-
-    public ObjectBuilderFactoryImpl(ViewTypeObjectBuilderTemplate<X> template) {
-        this.template = template;
+    public TupleTransformer(int startIndex) {
+        this.startIndex = startIndex;
     }
 
-    @Override
-    public ObjectBuilder<X> createObjectBuilder(QueryBuilder<X, ?> queryBuilder) {
-        return template.createObjectBuilder(queryBuilder);
+    public abstract Object[] transform(Object[] tuple);
+
+    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
+        return this;
     }
 }

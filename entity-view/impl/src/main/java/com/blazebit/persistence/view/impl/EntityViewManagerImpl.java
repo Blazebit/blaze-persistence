@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.view.impl.objectbuilder.ParameterViewTypeObjectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -173,7 +175,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
-        criteriaBuilder.selectNew(new ViewTypeObjectBuilderImpl<T>(getTemplate(viewType, mappingConstructor), criteriaBuilder));
+        criteriaBuilder.selectNew(getTemplate(viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
     }
     
     private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
