@@ -69,7 +69,7 @@ public class EntityViewConfigurationEnricher implements ConfigurationEnricher<Cr
         
         abd.addBean(bean);
         
-        //TODO: this needs the JPA metamodel too, but right now I have no clue how to retrieve thata
+        // TODO: Issue #29
 //        Set<ViewType<?>> viewTypes = entityViewManager.getMetamodel().getViews();
 //        for (ViewType<?> viewType : viewTypes) {
 //            Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
