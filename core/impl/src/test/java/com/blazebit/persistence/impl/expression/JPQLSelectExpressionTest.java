@@ -174,6 +174,17 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
+    public void testKeyMapExpression() {
+        CompositeExpression result = parse("KEY(map)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 3);
+        assertTrue(expressions.get(0).equals(new FooExpression("KEY(")));
+        assertTrue(expressions.get(1).equals(path("map")));
+        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+    }
+
+    @Test
     public void testArrayExpression() {
         CompositeExpression result = parse("versions[test]");
         List<Expression> expressions = result.getExpressions();

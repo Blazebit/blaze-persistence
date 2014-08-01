@@ -41,10 +41,10 @@ simple_subquery_expression : single_valued_path_expression |
                    ;
  
  qualified_identification_variable : composable_qualified_identification_variable |
-                                       'ENTRY('Identification_variable')';
+                                       'ENTRY('collection_valued_path_expression')';
 
- composable_qualified_identification_variable : 'KEY('Identification_variable')' |
-                                                  'VALUE('Identification_variable')';
+ composable_qualified_identification_variable : 'KEY('collection_valued_path_expression')' |
+                                                  'VALUE('collection_valued_path_expression')';
 
  single_valued_path_expression 
      : qualified_identification_variable
@@ -75,7 +75,7 @@ simple_subquery_expression : single_valued_path_expression |
 
  single_valued_object_path_expression : general_subpath'.'general_path_element;
 
- collection_valued_path_expression : general_subpath'.'general_path_element;
+ collection_valued_path_expression : single_element_path_expression | state_field_path_expression;
  
  single_element_path_expression : general_path_start
                               ;
@@ -160,7 +160,7 @@ simple_subquery_expression : single_valued_path_expression |
                                   'SQRT('arithmetic_expression')' |
                                   'MOD('arithmetic_expression',' arithmetic_expression')' |
                                   Size_function '('collection_valued_path_expression')' |
-                                  'INDEX('Identification_variable')';
+                                  'INDEX('collection_valued_path_expression')';
 
  functions_returning_datetime : 'CURRENT_DATE' | 'CURRENT_TIME' | 'CURRENT_TIMESTAMP';
 
