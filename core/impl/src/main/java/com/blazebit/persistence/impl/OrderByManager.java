@@ -83,6 +83,7 @@ public class OrderByManager extends AbstractManager {
         if (orderByInfos.isEmpty()) {
             return ;
         }
+        queryGenerator.setReplaceSelectAliases(true);
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
@@ -91,6 +92,7 @@ public class OrderByManager extends AbstractManager {
             sb.append(", ");
             applyOrderBy(sb, iter.next());
         }
+        queryGenerator.setReplaceSelectAliases(false);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy) {

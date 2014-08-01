@@ -78,7 +78,7 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE p = :param_0", criteria.getQueryString());
+        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -86,7 +86,7 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("partners").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE p = :param_0", criteria.getQueryString());
+        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -94,7 +94,7 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE p = :param_0", criteria.getQueryString());
+        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -118,7 +118,7 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d").select("C.name", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X").eqExpression("B.id");
         
-        assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE X = B.id", criteria.getQueryString());
+        assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.name = B.id", criteria.getQueryString());
     }
     
     @Test
@@ -144,7 +144,7 @@ public class SelectTest extends AbstractPersistenceTest {
         // we have already solved this for join aliases so we should also solve it here
         criteria.select("test.name", "fieldAlias").where("test.name").eq("bla").join("owner", "test", JoinType.LEFT, false);
         
-        assertEquals("SELECT test.name AS fieldAlias FROM Document d LEFT JOIN d.owner test WHERE fieldAlias = :param_0", criteria.getQueryString());
+        assertEquals("SELECT test.name AS fieldAlias FROM Document d LEFT JOIN d.owner test WHERE test.name = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -152,7 +152,7 @@ public class SelectTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "name").where("d.name").eq("abc").getQueryString();
         
-        String expected = "SELECT d.name AS name FROM Document d WHERE name = :param_0";
+        String expected = "SELECT d.name AS name FROM Document d WHERE d.name = :param_0";
         
         assertEquals(expected, crit.getQueryString());
     }

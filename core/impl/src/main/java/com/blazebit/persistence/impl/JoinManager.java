@@ -86,9 +86,7 @@ public class JoinManager {
     }
 
     void buildJoins(boolean includeSelect, StringBuilder sb) {
-        queryGenerator.setReplaceSelectAliases(false);
         applyJoins(sb, rootAliasInfo, rootNode.getNodes(), includeSelect);
-        queryGenerator.setReplaceSelectAliases(true);
     }
 
     private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinNode> nodes, boolean includeSelect) {

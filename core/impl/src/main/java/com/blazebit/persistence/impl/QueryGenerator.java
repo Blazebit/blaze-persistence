@@ -51,13 +51,15 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
 public class QueryGenerator extends VisitorAdapter {
 
     private StringBuilder sb;
-    private boolean replaceSelectAliases = true;
+    private boolean replaceSelectAliases = false;
     // cyclic dependency
     private SelectManager<?> selectManager;
     private final BaseQueryBuilder<?,?> aliasOwner;
+    private final AliasManager aliasManager;
 
-    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner) {
+    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager) {
         this.aliasOwner = aliasOwner;
+        this.aliasManager = aliasManager;
     }
 
     void setSelectManager(SelectManager<?> selectManager) {
@@ -302,6 +304,20 @@ public class QueryGenerator extends VisitorAdapter {
                     return;
                 }
             }// else the expression is a pure alias and does not require to be replaced
+        }else{
+            // if path expression should not be replaced by select aliases we
+            // check for select aliases that have to be replaced with the corresponding
+            // path expressions
+            if(expression.getBaseNode() == null){
+                AliasInfo aliasInfo;
+                if((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null){
+                    if(aliasInfo instanceof SelectInfo){
+                        SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
+                        selectAliasInfo.getExpression().accept(this);
+                        return;
+                    }
+                }
+            }
         }
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());

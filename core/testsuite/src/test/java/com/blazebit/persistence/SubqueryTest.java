@@ -43,7 +43,7 @@ public class SubqueryTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "name").where("id").in().from(Person.class).select("id").where("name").eqExpression("name").end().getQueryString();
         String expected = "SELECT d.name AS name FROM Document d WHERE d.id IN "
-                + "(SELECT person.id FROM Person person WHERE name = name)";
+                + "(SELECT person.id FROM Person person WHERE d.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();

@@ -114,7 +114,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new QueryGenerator(this);
+        this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
         
@@ -133,7 +133,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), new AliasManager(), null, expressionFactory);
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, expressionFactory);
     }
 
 

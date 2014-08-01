@@ -105,14 +105,12 @@ public class SelectManager<T> extends AbstractManager {
         // we must not replace select alias since we would loose the original expressions
         populateSelectAliasAbsolutePaths();
         queryGenerator.setQueryBuffer(sb);
-        queryGenerator.setReplaceSelectAliases(false);
         Iterator<SelectInfo> iter = selectInfos.iterator();
         applySelect(queryGenerator, sb, iter.next());
         while (iter.hasNext()) {
             sb.append(", ");
             applySelect(queryGenerator, sb, iter.next());
         }
-        queryGenerator.setReplaceSelectAliases(true);
         return sb.toString();
 
     }
