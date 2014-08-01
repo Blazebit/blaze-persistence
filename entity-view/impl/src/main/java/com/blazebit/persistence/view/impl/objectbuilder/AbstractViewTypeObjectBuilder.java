@@ -39,6 +39,10 @@ public abstract class AbstractViewTypeObjectBuilder<T> implements ObjectBuilder<
 
     @Override
     public T build(Object[] tuple, String[] aliases) {
+        if (tuple[0] == null) {
+            return null;
+        }
+        
         try {
             return proxyConstructor.newInstance(tuple);
         } catch (Exception ex) {

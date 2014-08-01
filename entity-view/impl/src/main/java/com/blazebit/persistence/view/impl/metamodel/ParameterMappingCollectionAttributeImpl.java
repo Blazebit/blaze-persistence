@@ -30,6 +30,7 @@ public class ParameterMappingCollectionAttributeImpl<X, Y> extends AbstractParam
 
     public ParameterMappingCollectionAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(mappingConstructor, index, mapping, entityViews);
+        throw new IllegalArgumentException("Collection types are not supported. Please use a Set or a List instead.");
     }
 
     @Override

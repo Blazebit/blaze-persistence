@@ -45,7 +45,7 @@ public class ParameterViewTypeObjectBuilder<T> extends AbstractViewTypeObjectBui
 
     @Override
     public T build(Object[] tuple, String[] aliases) {
-        for (int i = 0; i < tuple.length; i++) {
+        for (int i = 0; i < parameterMappings.length; i++) {
             if (parameterMappings[i] != null) {
                 tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
             }

@@ -27,7 +27,6 @@ public class ParameterOffsetViewTypeObjectBuilder<T> extends AbstractOffsetViewT
     private final String[] parameterMappings;
     private final QueryBuilder<?, ?> queryBuilder;
     private final int startIndex;
-    private final int endIndex;
 
     public ParameterOffsetViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, int startIndex) {
         super(template, startIndex);
@@ -39,14 +38,13 @@ public class ParameterOffsetViewTypeObjectBuilder<T> extends AbstractOffsetViewT
         this.parameterMappings = template.getParameterMappings();
         this.queryBuilder = queryBuilder;
         this.startIndex = startIndex;
-        this.endIndex = startIndex + template.getEffectiveTupleSize();
     }
 
     @Override
     public T build(Object[] tuple, String[] aliases) {
-        for (int i = startIndex; i < endIndex; i++) {
+        for (int i = 0; i < parameterMappings.length; i++) {
             if (parameterMappings[i] != null) {
-                tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
+                tuple[i + startIndex] = queryBuilder.getParameterValue(parameterMappings[i]);
             }
         }
         

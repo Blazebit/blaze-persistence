@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.impl.objectbuilder.ParameterViewTypeObjectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
@@ -59,6 +58,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -165,25 +165,25 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(ViewType<T> viewType) {
-        return new ObjectBuilderFactoryImpl<T>(getTemplate(viewType, null));
+    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, ViewType<T> viewType) {
+        return new ObjectBuilderFactoryImpl<T>(getTemplate(metamodel, viewType, null));
     }
 
     @Override
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(MappingConstructor<T> mappingConstructor) {
-        return new ObjectBuilderFactoryImpl<T>(getTemplate(mappingConstructor.getDeclaringType(), mappingConstructor));
+    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, MappingConstructor<T> mappingConstructor) {
+        return new ObjectBuilderFactoryImpl<T>(getTemplate(metamodel, mappingConstructor.getDeclaringType(), mappingConstructor));
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
-        criteriaBuilder.selectNew(getTemplate(viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
+        criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
     }
     
-    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
+    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(Metamodel metamodel, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
         ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(viewType, mappingConstructor);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
         
         if (value == null) {
-            value = key.createValue(this, proxyFactory);
+            value = key.createValue(metamodel, this, proxyFactory);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
             
             if (oldValue != null) {

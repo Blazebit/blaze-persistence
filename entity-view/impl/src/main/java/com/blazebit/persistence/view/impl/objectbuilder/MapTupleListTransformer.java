@@ -16,23 +16,28 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.QueryBuilder;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author Christian
  */
-public abstract class TupleListTransformer {
-    protected final int startIndex;
+public class MapTupleListTransformer extends IndexedTupleListTransformer {
 
-    public TupleListTransformer(int startIndex) {
-        this.startIndex = startIndex;
+    public MapTupleListTransformer(int[] parentIdPositions, int startIndex) {
+        super(parentIdPositions, startIndex);
     }
 
-    public abstract List<Object[]> transform(List<Object[]> tuples);
-
-    public TupleListTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        return this;
+    @Override
+    protected Object createCollection() {
+        return new HashMap<Object, Object>();
     }
+    
+    @Override
+    protected void addToCollection(Object collection, Object key, Object value) {
+        Map<Object, Object> map = (Map<Object, Object>) collection;
+        map.put(key, value);
+    }
+    
 }

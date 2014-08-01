@@ -16,11 +16,13 @@
 
 package com.blazebit.persistence.entity;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.CollectionTable;
@@ -30,6 +32,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
@@ -50,6 +53,7 @@ public class Document {
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Map<Integer, Person> contacts2 = new HashMap<Integer, Person>();
+    private List<Person> personList = new ArrayList<Person>();
     private Calendar creationDate;
     private Date lastModified;
     
@@ -136,6 +140,7 @@ public class Document {
     }
 
     @ElementCollection
+    @CollectionTable(name = "contacts")
     public Map<Integer, Person> getContacts() {
         return contacts;
     }
@@ -152,6 +157,17 @@ public class Document {
 
     public void setContacts2(Map<Integer, Person> localized) {
         this.contacts2 = localized;
+    }
+
+    @OrderColumn(name = "position")
+    @OneToMany
+    @CollectionTable(name = "personlist")
+    public List<Person> getPersonList() {
+        return personList;
+    }
+
+    public void setPersonList(List<Person> personList) {
+        this.personList = personList;
     }
 
     @Temporal(TemporalType.DATE)

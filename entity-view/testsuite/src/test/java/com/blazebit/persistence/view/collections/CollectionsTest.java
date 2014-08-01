@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.subview;
+package com.blazebit.persistence.view.collections;
 
 import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.collections.model.DocumentCollectionsView;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
-import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.subview.model.PersonSubView;
-import com.blazebit.persistence.view.subview.model.PersonSubViewFiltered;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityTransaction;
@@ -38,7 +36,7 @@ import org.junit.Test;
  *
  * @author cpbec
  */
-public class SubviewTest extends AbstractPersistenceTest {
+public class CollectionsTest extends AbstractPersistenceTest {
     
     private Document doc1;
     private Document doc2;
@@ -100,74 +98,35 @@ public class SubviewTest extends AbstractPersistenceTest {
     }
     
     @Test
-    public void testSubview() {
+    public void testCollections() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
-        cfg.addEntityView(DocumentMasterView.class);
-        cfg.addEntityView(PersonSubView.class);
-        cfg.addEntityView(PersonSubViewFiltered.class);
+        cfg.addEntityView(DocumentCollectionsView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
         
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
                 .orderByAsc("id");
-        CriteriaBuilder<DocumentMasterView> cb = evm.applyObjectBuilder(DocumentMasterView.class, criteria)
-                .setParameter("contactPersonNumber", 2);
-        List<DocumentMasterView> results = cb.getResultList();
+        CriteriaBuilder<DocumentCollectionsView> cb = evm.applyObjectBuilder(DocumentCollectionsView.class, criteria);
+        List<DocumentCollectionsView> results = cb.getResultList();
         
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
-        // Subview
-        assertEquals("pers1", results.get(0).getOwner().getName());
-        // Filtered subview
-        assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
-        assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
         // Map subview
         assertEquals(doc1.getContacts2().get(1).getName(), results.get(0).getContacts().get(1).getName());
         assertEquals(doc1.getContacts2().get(2).getName(), results.get(0).getContacts().get(2).getName());
         // Set subview
-        assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
+        assertEquals(doc1.getPartners(), results.get(0).getPartners());
         // List subview
-        assertSubviewEquals(doc1.getPersonList(), results.get(0).getPersonList());
+        assertEquals(doc1.getPersonList(), results.get(0).getPersonList());
         
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
-        // Subview
-        assertEquals("pers2", results.get(1).getOwner().getName());
-        // Filtered subview
-        assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
-        assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
         // Map subview
         assertEquals(doc2.getContacts2().get(1).getName(), results.get(1).getContacts().get(1).getName());
         assertEquals(doc2.getContacts2().get(2).getName(), results.get(1).getContacts().get(2).getName());
         // Set subview
-        assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
+        assertEquals(doc2.getPartners(), results.get(1).getPartners());
         // List subview
-        assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
-    }
-    
-    public static void assertSubviewEquals(List<Person> persons, List<PersonSubView> personSubviews) {
-        assertEquals(persons.size(), personSubviews.size());
-        for (int i = 0; i < persons.size(); i++) {
-            Person p = persons.get(i);
-            PersonSubView pSub = personSubviews.get(i);
-            assertEquals(p.getName(), pSub.getName());
-        }
-    }
-    
-    public static void assertSubviewEquals(Set<Person> persons, Set<PersonSubView> personSubviews) {
-        assertEquals(persons.size(), personSubviews.size());
-        for (Person p : persons) {
-            boolean found = false;
-            for (PersonSubView pSub : personSubviews) {
-                if (p.getName().equals(pSub.getName())) {
-                    found = true;
-                    break;
-                }
-            }
-            
-            if (!found) {
-                Assert.fail("Could not find a PersonSubView with the name: " + p.getName());
-            }
-        }
+        assertEquals(doc2.getPersonList(), results.get(1).getPersonList());
     }
 }

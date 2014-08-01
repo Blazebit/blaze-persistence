@@ -17,11 +17,9 @@
 package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,12 +34,14 @@ public interface DocumentMasterView {
     
     public PersonSubView getOwner();
     
-//    @Mapping("contacts[:contactPersonNumber]")
-//    public PersonSubViewFiltered getMyContactPerson();
+    @Mapping("contacts[:contactPersonNumber]")
+    public PersonSubViewFiltered getMyContactPerson();
     
-//    @Mapping("contacts2")
-//    public Map<Integer, PersonSubView> getContacts();
+    @Mapping("contacts2")
+    public Map<Integer, PersonSubView> getContacts();
     
-//    @Mapping("partners")
-//    public Set<PersonSubView> getPartners();
+    @Mapping("partners")
+    public Set<PersonSubView> getPartners();
+    
+    public List<PersonSubView> getPersonList();
 }

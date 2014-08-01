@@ -56,8 +56,8 @@ public class ProxyFactoryTest {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
         Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
         
-        // The parameter order is contacts, firstContactPerson, id, name
-        Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Map.class, Person.class, Long.class, Person.class, String.class);
+        // The parameter order is _id, contacts, firstContactPerson, id, name
+        Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class);
         
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
@@ -65,7 +65,7 @@ public class ProxyFactoryTest {
         Person expectedMyContactPerson = new Person("my-pers");
         String expectedName = "doc";
         
-        DocumentInterfaceView instance = constructor.newInstance(expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName);
+        DocumentInterfaceView instance = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName);
         
         assertTrue(expectedContacts == instance.getContacts());
         assertTrue(expectedFirstContactPerson == instance.getFirstContactPerson());
@@ -88,8 +88,8 @@ public class ProxyFactoryTest {
         ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
         Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
-        // The parameter order is contacts, firstContactPerson, id, name
-        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
+        // The parameter order is _id, contacts, firstContactPerson, id, name
+        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
         
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
@@ -99,7 +99,7 @@ public class ProxyFactoryTest {
         Person expectedMyContactPerson = new Person("my-pers");
         Integer expectedContactPersonNumber = 2;
         
-        DocumentClassView instance = constructor.newInstance(expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber);
+        DocumentClassView instance = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber);
         
         assertTrue(expectedContacts == instance.getContacts());
         assertTrue(expectedFirstContactPerson == instance.getFirstContactPerson());
@@ -120,16 +120,60 @@ public class ProxyFactoryTest {
     }
     
     @Test
+    public void testInterfaceEqualsHashCode() throws Exception {
+        ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
+        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
+        
+        // The parameter order is _id, contacts, firstContactPerson, id, name
+        Constructor<? extends DocumentInterfaceView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class);
+        
+        Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
+        Person expectedFirstContactPerson = new Person("pers");
+        Long expectedId = 1L;
+        Person expectedMyContactPerson = new Person("my-pers");
+        String expectedName = "doc";
+        
+        DocumentInterfaceView instance1 = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName);
+        DocumentInterfaceView instance2 = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName);
+        assertEquals(instance1, instance2);
+        assertEquals(instance1.hashCode(), instance2.hashCode());
+    }
+    
+    @Test
+    public void testClassEqualsHashCode() throws Exception {
+        ViewType<DocumentClassView> viewType = getViewMetamodel().view(DocumentClassView.class);
+        Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
+        
+        // The parameter order is _id, contacts, firstContactPerson, id, name
+        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
+        
+        Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
+        Person expectedFirstContactPerson = new Person("pers");
+        Long expectedId = 1L;
+        String expectedName = "doc";
+        long expectedAge = 10;
+        Person expectedMyContactPerson = new Person("my-pers");
+        Integer expectedContactPersonNumber = 2;
+        
+        DocumentClassView instance1 = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber);
+        DocumentClassView instance2 = constructor.newInstance(null, expectedContacts, expectedFirstContactPerson, expectedId, expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber);
+        
+        assertEquals(instance1, instance2);
+        assertEquals(instance1.hashCode(), instance2.hashCode());
+    }
+    
+    @Test
     public void testInterfaceProxyStructure() throws Exception {
         ViewType<DocumentInterfaceView> viewType = getViewMetamodel().view(DocumentInterfaceView.class);
         Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
         
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
-        assertNotNull(proxyClass.getDeclaredConstructor(Map.class, Person.class, Long.class, Person.class, String.class));
+        assertNotNull(proxyClass.getDeclaredConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class));
         
-        assertEquals(5, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter
-        assertEquals(9, proxyClass.getDeclaredMethods().length);
+        // 5 Fields, 1 _id Field
+        assertEquals(5 + 1, proxyClass.getDeclaredFields().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode
+        assertEquals(11, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
@@ -143,11 +187,12 @@ public class ProxyFactoryTest {
         Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
-        assertNotNull(proxyClass.getDeclaredConstructor(Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class));
+        assertNotNull(proxyClass.getDeclaredConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class));
         
-        assertEquals(5, proxyClass.getDeclaredFields().length);
-        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter
-        assertEquals(9, proxyClass.getDeclaredMethods().length);
+        // 5 Fields, 1 _id Field
+        assertEquals(5 + 1, proxyClass.getDeclaredFields().length);
+        // 5 Getters, 2 Setter, 1 Bridge-Getter, 1 Bridge-Setter, 1 Equals, 1 HashCode
+        assertEquals(11, proxyClass.getDeclaredMethods().length);
         assertAttribute(proxyClass, "contacts", Modifier.PRIVATE, Map.class, Integer.class, Person.class);
         assertAttribute(proxyClass, "myContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);
         assertAttribute(proxyClass, "firstContactPerson", Modifier.PRIVATE | Modifier.FINAL, Person.class);

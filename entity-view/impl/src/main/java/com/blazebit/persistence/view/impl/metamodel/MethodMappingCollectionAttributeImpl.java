@@ -32,6 +32,7 @@ public class MethodMappingCollectionAttributeImpl<X, Y> extends AbstractMethodMa
 
     public MethodMappingCollectionAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews);
+        throw new IllegalArgumentException("Collection types are not supported. Please use a Set or a List instead.");
     }
 
     @Override

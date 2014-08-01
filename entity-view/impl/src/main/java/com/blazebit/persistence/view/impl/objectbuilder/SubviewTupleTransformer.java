@@ -13,26 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import java.util.List;
 
 /**
  *
  * @author Christian
  */
-public abstract class TupleListTransformer {
-    protected final int startIndex;
+public class SubviewTupleTransformer extends TupleTransformer {
 
-    public TupleListTransformer(int startIndex) {
-        this.startIndex = startIndex;
+    private final ViewTypeObjectBuilderTemplate<Object[]> template;
+    private ObjectBuilder<Object[]> objectBuilder;
+
+    public SubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, int startIndex) {
+        super(startIndex);
+        this.template = template;
     }
 
-    public abstract List<Object[]> transform(List<Object[]> tuples);
-
-    public TupleListTransformer init(QueryBuilder<?, ?> queryBuilder) {
+    @Override
+    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
+        this.objectBuilder = template.createObjectBuilder(queryBuilder, startIndex, true);
         return this;
     }
+
+    @Override
+    public Object[] transform(Object[] tuple) {
+        return objectBuilder.build(tuple, null);
+    }
+
 }

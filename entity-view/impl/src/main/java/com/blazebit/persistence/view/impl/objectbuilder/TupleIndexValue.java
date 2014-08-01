@@ -16,23 +16,30 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.QueryBuilder;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
  * @author Christian
  */
-public abstract class TupleListTransformer {
-    protected final int startIndex;
+public class TupleIndexValue {
+    
+    private final Object[] tuple;
+    private final Set<RestTuple> restTuples = new HashSet<RestTuple>();
 
-    public TupleListTransformer(int startIndex) {
-        this.startIndex = startIndex;
+    public TupleIndexValue(Object[] tuple, int restTupleIndex) {
+        this.tuple = tuple;
+        restTuples.add(new RestTuple(tuple, restTupleIndex));
     }
 
-    public abstract List<Object[]> transform(List<Object[]> tuples);
-
-    public TupleListTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        return this;
+    public Object[] getTuple() {
+        return tuple;
     }
+
+    public boolean addRestTuple(Object[] tuple, int tupleIndex) {
+        return restTuples.add(new RestTuple(tuple, tupleIndex));
+    }
+    
+    
 }

@@ -16,23 +16,28 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.QueryBuilder;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author Christian
  */
-public abstract class TupleListTransformer {
-    protected final int startIndex;
+public class ListTupleListTransformer extends IndexedTupleListTransformer {
 
-    public TupleListTransformer(int startIndex) {
-        this.startIndex = startIndex;
+    public ListTupleListTransformer(int[] parentIdPositions, int startIndex) {
+        super(parentIdPositions, startIndex);
     }
-
-    public abstract List<Object[]> transform(List<Object[]> tuples);
-
-    public TupleListTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        return this;
+    
+    @Override
+    protected Object createCollection() {
+        return new ArrayList<Object>();
     }
+    
+    @Override
+    protected void addToCollection(Object collection, Object key, Object value) {
+        List<Object> list = (List<Object>) collection;
+        list.add((Integer) key, value);
+    }
+    
 }

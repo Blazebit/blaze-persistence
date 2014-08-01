@@ -69,17 +69,18 @@ public class EntityViewConfigurationEnricher implements ConfigurationEnricher<Cr
         
         abd.addBean(bean);
         
-        Set<ViewType<?>> viewTypes = entityViewManager.getMetamodel().getViews();
-        for (ViewType<?> viewType : viewTypes) {
-            Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
-            
-            if (constructors.isEmpty()) {
-                config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(viewType));
-            } else {
-                for (MappingConstructor<?> constructor : constructors) {
-                    config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(constructor));
-                }
-            }
-        }
+        //TODO: this needs the JPA metamodel too, but right now I have no clue how to retrieve thata
+//        Set<ViewType<?>> viewTypes = entityViewManager.getMetamodel().getViews();
+//        for (ViewType<?> viewType : viewTypes) {
+//            Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
+//            
+//            if (constructors.isEmpty()) {
+//                config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(viewType));
+//            } else {
+//                for (MappingConstructor<?> constructor : constructors) {
+//                    config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(constructor));
+//                }
+//            }
+//        }
     }
 }

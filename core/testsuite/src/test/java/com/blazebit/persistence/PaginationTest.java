@@ -74,8 +74,8 @@ public class PaginationTest extends AbstractPersistenceTest {
             em.flush();
             tx.commit();
         } catch (Exception e) {
-            e.printStackTrace(System.err);
             tx.rollback();
+            throw new RuntimeException(e);
         }
     }
     
