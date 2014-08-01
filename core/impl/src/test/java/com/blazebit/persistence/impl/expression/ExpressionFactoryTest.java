@@ -13,26 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
+import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
+import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestRule;
 
 /**
  *
  * @author ccbem
  */
 public class ExpressionFactoryTest {
+
+    @Rule
+    public TestRule benchmarkRun = new BenchmarkRule();
     private ExpressionFactory ef;
-    
+
     @Before
-    public void createFactory(){
+    public void createFactory() {
         ef = new ExpressionFactoryImpl();
     }
-    
+
+    @BenchmarkOptions(benchmarkRounds = 100, warmupRounds = 0)
     @Test
-    public void testPerformance(){
-        ef.createSimpleExpression("Hello.world.criteria.api");
+    public void testCreateSimpleExpressionPerformance() {
+        ef.createSimpleExpression("SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])");
+    }
+    
+    @BenchmarkOptions(benchmarkRounds = 100, warmupRounds = 0)
+    @Test
+    public void testExpressionClone() {
+        //TODO: implement
     }
 }

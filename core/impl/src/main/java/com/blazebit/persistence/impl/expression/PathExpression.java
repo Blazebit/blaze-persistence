@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author Moritz Becker
  */
-public class PathExpression implements Expression {
+public class PathExpression implements Expression, Cloneable {
 
     private final List<PathElementExpression> pathProperties;
     private JoinNode baseNode;
@@ -116,4 +116,9 @@ public class PathExpression implements Expression {
         return getPath();
     }
 
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        //TODO: implement
+        return super.clone();
+    }
 }
