@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -29,8 +30,13 @@ import java.util.List;
  */
 public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
-    public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping) {
-        super(viewType, method, mapping);
+    public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+        super(viewType, method, mapping, entityViews);
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.LIST;
     }
     
 }

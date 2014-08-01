@@ -35,7 +35,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         this.views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
         
         for (Class<?> entityViewClass : entityViews) {
-            views.put(entityViewClass, getViewType(entityViewClass));
+            views.put(entityViewClass, getViewType(entityViewClass, entityViews));
         }
     }
 
@@ -49,8 +49,8 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         return new HashSet<ViewType<?>>(views.values());
     }
 
-    private ViewType<?> getViewType(Class<?> entityViewClass) {
-        return new ViewTypeImpl<Object>(entityViewClass);
+    private ViewType<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews) {
+        return new ViewTypeImpl<Object>(entityViewClass, entityViews);
     }
     
 }

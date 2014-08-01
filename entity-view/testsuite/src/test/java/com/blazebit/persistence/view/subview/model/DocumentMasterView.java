@@ -34,12 +34,14 @@ public interface DocumentMasterView {
     
     public String getName();
     
-    @Mapping("contacts[:contactPersonNumber]")
-    public PersonSubViewFiltered getMyContactPerson();
+    public PersonSubView getOwner();
     
-    @Mapping("contacts2")
-    public Map<Integer, PersonSubView> getContacts();
+//    @Mapping("contacts[:contactPersonNumber]")
+//    public PersonSubViewFiltered getMyContactPerson();
     
-    @Mapping("partners")
-    public Set<PersonSubView> getPartners();
+//    @Mapping("contacts2")
+//    public Map<Integer, PersonSubView> getContacts();
+    
+//    @Mapping("partners")
+//    public Set<PersonSubView> getPartners();
 }

@@ -14,21 +14,19 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.metamodel;
-
-import com.blazebit.persistence.view.metamodel.MappingAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import java.lang.annotation.Annotation;
-import java.util.Set;
+package com.blazebit.persistence.view.impl.objectbuilder;
 
 /**
  *
  * @author cpbec
  */
-public class ParameterMappingSingularAttributeImpl<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
+public class SimpleOffsetViewTypeObjectBuilder<T> extends AbstractOffsetViewTypeObjectBuilder<T> {
 
-    public ParameterMappingSingularAttributeImpl(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor, index, mapping, entityViews);
+    public SimpleOffsetViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, int startIndex) {
+        super(template, startIndex);
+        
+        if (template.hasParameters()) {
+            throw new IllegalArgumentException("No templates with parameters allowed for this object builder!");
+        }
     }
-
 }

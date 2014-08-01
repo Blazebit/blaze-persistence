@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import java.lang.annotation.Annotation;
+import java.util.Set;
 
 /**
  *
@@ -26,8 +27,8 @@ import java.lang.annotation.Annotation;
  */
 public class ParameterSubquerySingularAttributeImpl<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 
-    public ParameterSubquerySingularAttributeImpl(MappingConstructor<X> constructor, int index, Annotation mapping) {
-        super(constructor, index, mapping);
+    public ParameterSubquerySingularAttributeImpl(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(constructor, index, mapping, entityViews);
     }
 
 }

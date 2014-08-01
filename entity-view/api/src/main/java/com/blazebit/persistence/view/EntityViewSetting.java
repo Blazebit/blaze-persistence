@@ -26,6 +26,7 @@ public class EntityViewSetting<T> {
     private final int maxRows;
     private final Map<String, Sorter> sorters = new HashMap<String, Sorter>();
     private final Map<Object, Filter> filters = new HashMap<Object, Filter>();
+    private final Map<String, Sorter> attributeSorters = new HashMap<String, Sorter>();
     private final Map<String, Object> attributeFilters = new HashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
     
@@ -49,6 +50,7 @@ public class EntityViewSetting<T> {
      */
     public PaginatedCriteriaBuilder<T> apply(EntityViewManager evm, CriteriaBuilder<?> cb) {
         ViewType<T> viewType = evm.getMetamodel().view(entityViewClass);
+        resolveAttributeSorters(evm, viewType);
         resolveAttributeFilters(evm, viewType);
         
         // Add filters
@@ -118,8 +120,35 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
+    public void addFilters(String expression, Filter filter) {
+        this.filters.put(expression, filter);
+    }
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
     public void addFilters(Map<String, Filter> filters) {
         this.filters.putAll(filters);
+    }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public void addAttributeSorters(Map<String, Sorter> attributeSorters) {
+        this.attributeSorters.putAll(attributeSorters);
+    }
+    
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public void addAttributeSorter(String attributeName, Sorter sorter) {
+        this.attributeSorters.put(attributeName, sorter);
     }
     
     /**
@@ -191,7 +220,7 @@ public class EntityViewSetting<T> {
      * @return
      */
     public boolean hasSorters() {
-        return !sorters.isEmpty();
+        return !attributeSorters.isEmpty() || !sorters.isEmpty();
     }
 
     /**
@@ -201,6 +230,15 @@ public class EntityViewSetting<T> {
      */
     public Map<String, Sorter> getSorters() {
         return sorters;
+    }
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    public Map<String, Sorter> getAttributeSorters() {
+        return attributeSorters;
     }
     
     /**
@@ -246,6 +284,19 @@ public class EntityViewSetting<T> {
      */
     public Map<String, Object> getOptionalParameters() {
         return optionalParameters;
+    }
+    
+    private void resolveAttributeSorters(EntityViewManager evm, ViewType<?> viewType) {
+        Iterator<Map.Entry<String, Sorter>> iter = attributeSorters.entrySet().iterator();
+        
+        while (iter.hasNext()) {
+            Map.Entry<String, Sorter> attributeSorterEntry = iter.next();
+            String attributeName = attributeSorterEntry.getKey();
+            Sorter sorter = attributeSorterEntry.getValue();
+            
+            sorters.put(viewType.getName() + "_" + attributeName, sorter);
+            iter.remove();
+        }
     }
     
     private void resolveAttributeFilters(EntityViewManager evm, ViewType<?> viewType) {

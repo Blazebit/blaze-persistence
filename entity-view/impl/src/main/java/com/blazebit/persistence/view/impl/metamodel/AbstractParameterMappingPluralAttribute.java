@@ -23,6 +23,7 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.util.Set;
 
 /**
  *
@@ -31,12 +32,14 @@ import java.lang.reflect.Type;
 public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends AbstractParameterAttribute<X, C> implements PluralAttribute<X, C, Y>, ParameterAttribute<X, C> {
 
     private final Class<Y> elementType;
+    private final boolean subview;
     
-    public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping) {
-        super(mappingConstructor, index, mapping);
+    public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(mappingConstructor, index, mapping, entityViews);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
+        this.subview = entityViews.contains(elementType);
     }
 
     @Override

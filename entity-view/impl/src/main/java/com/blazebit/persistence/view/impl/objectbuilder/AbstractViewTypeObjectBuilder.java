@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl;
+package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -25,43 +25,24 @@ import java.util.List;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class ViewTypeObjectBuilderImpl<T> implements ObjectBuilder<T> {
-    
-    public final Constructor<? extends T> proxyConstructor;
-    public final Object[][] mappings;
-    public final String[] parameterMappings;
-    public final boolean hasParameters;
-    private final QueryBuilder<?, ?> queryBuilder;
+public abstract class AbstractViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
 
-    public ViewTypeObjectBuilderImpl(ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder) {
+    protected final Constructor<? extends T> proxyConstructor;
+    protected final Object[][] mappings;
+    
+    public AbstractViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
         this.proxyConstructor = template.getProxyConstructor();
         this.mappings = template.getMappings();
-        this.parameterMappings = template.getParameterMappings();
-        this.hasParameters = template.hasParameters();
-        this.queryBuilder = queryBuilder;
     }
 
     @Override
     public T build(Object[] tuple, String[] aliases) {
-        if (hasParameters) {
-            try {
-                for (int i = 0; i < tuple.length; i++) {
-                    if (parameterMappings[i] != null) {
-                        tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
-                    }
-                }
-                return proxyConstructor.newInstance(tuple);
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
-            }
-        } else {
-            try {
-                return proxyConstructor.newInstance(tuple);
-            } catch (Exception ex) {
-                throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
-            }
+        try {
+            return proxyConstructor.newInstance(tuple);
+        } catch (Exception ex) {
+            throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
         }
     }
 

@@ -60,6 +60,7 @@ public class EntityViewSettingTest extends AbstractPersistenceTest {
             
             Person o1 = new Person("pers1");
             Person o2 = new Person("pers2");
+            Person o3 = new Person("pers3");
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
             o1.setPartnerDocument(doc1);
@@ -71,14 +72,15 @@ public class EntityViewSettingTest extends AbstractPersistenceTest {
             
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
-            doc3.getContacts().put(1, o2);
+            doc3.getContacts().put(1, o3);
             
             doc1.getContacts2().put(2, o1);
             doc2.getContacts2().put(2, o2);
-            doc3.getContacts2().put(2, o2);
+            doc3.getContacts2().put(2, o3);
             
             em.persist(o1);
             em.persist(o2);
+            em.persist(o3);
             
             em.persist(doc1);
             em.persist(doc2);

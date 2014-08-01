@@ -24,6 +24,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  *
@@ -32,11 +33,13 @@ import java.lang.reflect.Method;
 public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends AbstractMethodAttribute<X, C> implements PluralAttribute<X, C, Y>, MappingAttribute<X, C> {
 
     private final Class<Y> elementType;
+    private final boolean subview;
     
-    public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping) {
-        super(viewType, method, mapping);
+    public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+        super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
+        this.subview = entityViews.contains(elementType);
     }
 
     @Override
@@ -52,6 +55,11 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
     @Override
     public boolean isCollection() {
         return true;
+    }
+
+    @Override
+    public boolean isSubview() {
+        return subview;
     }
 
     @Override

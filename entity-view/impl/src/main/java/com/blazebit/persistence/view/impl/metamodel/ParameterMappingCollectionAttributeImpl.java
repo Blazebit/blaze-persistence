@@ -20,6 +20,7 @@ import com.blazebit.persistence.view.metamodel.CollectionAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Set;
 
 /**
  *
@@ -27,8 +28,13 @@ import java.util.Collection;
  */
 public class ParameterMappingCollectionAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public ParameterMappingCollectionAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping) {
-        super(mappingConstructor, index, mapping);
+    public ParameterMappingCollectionAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(mappingConstructor, index, mapping, entityViews);
+    }
+
+    @Override
+    public CollectionType getCollectionType() {
+        return CollectionType.COLLECTION;
     }
     
 }

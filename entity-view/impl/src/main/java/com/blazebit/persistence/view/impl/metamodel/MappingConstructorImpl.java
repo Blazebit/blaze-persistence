@@ -43,7 +43,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final Constructor<X> javaConstructor;
     private final List<ParameterAttribute<? super X, ?>> parameters;
     
-    public MappingConstructorImpl(ViewType<X> viewType, String name, Constructor<X> constructor) {
+    public MappingConstructorImpl(ViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
@@ -51,7 +51,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         int parameterCount = constructor.getParameterTypes().length;
         List<ParameterAttribute<? super X, ?>> parameters = new ArrayList<ParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
-            parameters.add(createParameterAttribute(this, i));
+            parameters.add(createParameterAttribute(this, i, entityViews));
         }
         
         this.parameters = Collections.unmodifiableList(parameters);
@@ -67,7 +67,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return viewConstructor.value();
     }
     
-    private static <X> ParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index) {
+    private static <X> ParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
             return null;
@@ -76,17 +76,17 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         Class<?> attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
         
         if (Collection.class == attributeType) {
-            return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping);
+            return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (List.class == attributeType) {
-            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping);
+            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (Set.class == attributeType) {
-            return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping);
+            return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (Map.class == attributeType) {
-            return new ParameterMappingMapAttributeImpl<X, Object, Object>(constructor, index, mapping);
+            return new ParameterMappingMapAttributeImpl<X, Object, Object>(constructor, index, mapping, entityViews);
         } else if (mapping instanceof MappingSubquery) {
-            return new ParameterSubquerySingularAttributeImpl<X, Object>(constructor, index, mapping);
+            return new ParameterSubquerySingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else {
-            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping);
+            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         }
     }
 

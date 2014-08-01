@@ -26,6 +26,7 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
+import java.util.Set;
 
 /**
  *
@@ -40,11 +41,13 @@ public abstract class AbstractParameterAttribute<X, Y> implements ParameterAttri
     private final Class<? extends SubqueryProvider> subqueryProvider;
     private final boolean mappingParameter;
     private final boolean subqueryMapping;
+    private final boolean subview;
     
-    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping) {
+    public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         this.index = index;
         this.declaringConstructor = constructor;
         this.javaType = (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index];
+        this.subview = entityViews.contains(javaType);
         
         if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
@@ -106,6 +109,11 @@ public abstract class AbstractParameterAttribute<X, Y> implements ParameterAttri
     @Override
     public boolean isSubquery() {
         return subqueryMapping;
+    }
+
+    @Override
+    public boolean isSubview() {
+        return subview;
     }
 
     @Override
