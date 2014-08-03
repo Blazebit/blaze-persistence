@@ -18,16 +18,19 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 /**
  *
  * @author Christian
  */
-public abstract class AbstractIndexedTupleListTransformer extends TupleListTransformer {
+public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleListTransformer {
     
     private final int[] parentIdPositions;
 
@@ -39,46 +42,45 @@ public abstract class AbstractIndexedTupleListTransformer extends TupleListTrans
     @Override
     public List<Object[]> transform(List<Object[]> tuples) {
         Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
-        List<Object[]> resultList = new ArrayList<Object[]>(tuples.size());
+        // Implementation detail: the tuple list is a LinkedList
+        Iterator<Object[]> tupleListIter = tuples.iterator();
         
-        for (Object[] tuple : tuples) {
+        while (tupleListIter.hasNext()) {
+            Object[] tuple = tupleListIter.next();
             TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
             
             if (tupleIndexValue == null) {
-                Object[] newTuple = new Object[tuple.length - 1];
-                System.arraycopy(tuple, 0, newTuple, 0, startIndex);
-                newTuple[startIndex] = createCollection();
-                int nextIndex = startIndex + 2;
-                if (nextIndex < tuple.length) {
-                    System.arraycopy(tuple, nextIndex, newTuple, startIndex + 1, newTuple.length - (nextIndex - 1));
-                }
-                tupleIndexValue = new TupleIndexValue(newTuple, startIndex + 1);
+                Object key = tuple[startIndex];
+                tuple[startIndex] = createCollection();
+                add(tuple[startIndex], key, tuple[startIndex + 1]);
+                tuple[startIndex + 1] = TupleReuse.CONSUMED;
+                tupleIndexValue = new TupleIndexValue(tuple, startIndex + 2);
                 tupleIndex.put(id, tupleIndexValue);
-                resultList.add(newTuple);
             } else if (tupleIndexValue.addRestTuple(tuple, startIndex + 2)) {
-                Object[] newTuple = new Object[tuple.length - 1];
-                System.arraycopy(tuple, 0, newTuple, 0, startIndex);
-                newTuple[startIndex] = tupleIndexValue.getTuple()[startIndex];
-                int nextIndex = startIndex + 2;
-                if (nextIndex < tuple.length) {
-                    System.arraycopy(tuple, nextIndex, newTuple, startIndex + 1, newTuple.length - (nextIndex - 1));
-                }
-                resultList.add(newTuple);
-            }
-            
-            Object key = tuple[startIndex];
-            
-            if (key != null) {
-                addToCollection(tupleIndexValue.getTuple()[startIndex], key, tuple[startIndex + 1]);
+                Object key = tuple[startIndex];
+                tuple[startIndex] = tupleIndexValue.getTuple()[startIndex];
+                add(tuple[startIndex], key, tuple[startIndex + 1]);
+                tuple[startIndex + 1] = TupleReuse.CONSUMED;
+            } else {
+                Object key = tuple[startIndex];
+                add(tupleIndexValue.getTuple()[startIndex], key, tuple[startIndex + 1]);
+                tuple[startIndex + 1] = TupleReuse.CONSUMED;
+                tupleListIter.remove();
             }
         }
         
-        return resultList;
+        return tuples;
     }
     
     protected abstract Object createCollection();
     
-    protected abstract void addToCollection(Object collection, Object key, Object value);
+    protected void add(Object collection, Object key, Object value) {
+        if (key != null) {
+            addToCollection((C) collection, (K) key, value);
+        }
+    }
+    
+    protected abstract void addToCollection(C collection, K key, Object value);
     
 }

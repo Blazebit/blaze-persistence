@@ -27,12 +27,12 @@ import java.util.List;
  *
  * @author Christian
  */
-public abstract class AbstractViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
+public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
 
     protected final Constructor<? extends T> proxyConstructor;
     protected final Object[][] mappings;
     
-    public AbstractViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
         this.proxyConstructor = template.getProxyConstructor();
         this.mappings = template.getMappings();
     }

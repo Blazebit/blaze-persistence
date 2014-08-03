@@ -18,15 +18,9 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class SimpleOffsetViewTypeObjectBuilder<T> extends AbstractOffsetViewTypeObjectBuilder<T> {
-
-    public SimpleOffsetViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, int startIndex) {
-        super(template, startIndex);
-        
-        if (template.hasParameters()) {
-            throw new IllegalArgumentException("No templates with parameters allowed for this object builder!");
-        }
-    }
+public interface TupleReuse {
+    
+    public static final Object CONSUMED = new Object();
 }

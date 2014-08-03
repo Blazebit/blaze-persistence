@@ -20,7 +20,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTra
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.QueryBuilder;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  *
@@ -41,12 +43,24 @@ public class TupleTransformator {
     }
     
     public List<Object[]> transformAll(List<Object[]> tupleList) {
-        List<Object[]> newTupleList = tupleList;
+        List<Object[]> newTupleList;
+        
+        // Performance optimization
+        // LinkedList can remove elements from the list very fast
+        // This is important because transformers avoid copying of tuples and instead remove elements from the tupleList
+        if (tupleList instanceof LinkedList<?>) {
+            newTupleList = tupleList;
+        } else {
+            newTupleList = new LinkedList(tupleList);
+        }
+        
         for (int i = 0; i < transformatorLevels.size(); i++) {
             if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
-                for (int j = 0; j < newTupleList.size(); j++) {
-                    Object[] tuple = newTupleList.get(j);
-                    newTupleList.set(j, transform(i, tuple));
+                ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
+                
+                while (newTupleListIter.hasNext()) {
+                    Object[] tuple = newTupleListIter.next();
+                    newTupleListIter.set(transform(i, tuple));
                 }
             }
             newTupleList = transform(i, newTupleList);

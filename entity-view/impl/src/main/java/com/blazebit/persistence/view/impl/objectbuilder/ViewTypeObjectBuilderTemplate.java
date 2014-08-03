@@ -55,6 +55,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final String[] parameterMappings;
     private final int effectiveTupleSize;
     private final boolean hasParameters;
+    private final boolean hasIndexedCollections;
+    private final boolean hasSubviews;
     
     private final String aliasPrefix;
     private final String mappingPrefix;
@@ -65,8 +67,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final EntityViewManager evm;
     private final ProxyFactory proxyFactory;
     private final TupleTransformator tupleTransformator = new TupleTransformator();
-    private int transformingElementCount = 0;
-    private int transformingElementListCount = 0;
 
     private ViewTypeObjectBuilderTemplate(String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int startIndex, Metamodel metamodel, EntityViewManager evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
@@ -91,7 +91,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
-        boolean[] featuresFound = new boolean[1];
+        boolean[] featuresFound = new boolean[3];
         
         if (mappingConstructor == null) {
             parameterAttributes = new ParameterAttribute<?, ?>[0];
@@ -116,7 +116,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (length != parameterTypes.length) {
                 continue;
             }
-            // parameterTypes[0] is the id
+            // parameterTypes[0] is the id, so no need to check
             for (int i = 0; i < attributes.length; i++) {
                 MethodAttribute<?, ?> attribute = attributes[i];
                 if (attribute.getJavaType() != parameterTypes[i + 1]) {
@@ -144,6 +144,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         
         this.hasParameters = featuresFound[0];
+        this.hasIndexedCollections = featuresFound[1];
+        this.hasSubviews = featuresFound[2];
         this.effectiveTupleSize = length;
         this.proxyConstructor = javaConstructor;        
         this.mappings = mappingList.toArray(new Object[mappingList.size()][]);
@@ -158,22 +160,28 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (attribute.isCollection()) {
                 boolean listKey = attribute instanceof ListAttribute<?, ?>;
                 boolean mapKey = attribute instanceof MapAttribute<?, ?, ?>;
-                int startIndex = (tupleOffset + mappingList.size()) - (transformingElementCount + transformingElementListCount);
+                int startIndex = tupleOffset + mappingList.size();
                 
                 if (listKey) {
+                    featuresFound[1] = true;
                     applyCollectionKeyMapping("INDEX", mappingAttribute, attribute, mappingList);
+                    parameterMappingList.add(null);
                 } else if (mapKey) {
+                    featuresFound[1] = true;
                     applyCollectionKeyMapping("KEY", mappingAttribute, attribute, mappingList);
+                    parameterMappingList.add(null);
                 }
                 
                 if (attribute.isSubview()) {
+                    featuresFound[2] = true;
+                    
                     PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                     int[] newIdPositions;
                     
                     if (listKey || mapKey) {
                         newIdPositions = new int[idPositions.length + 1];
                         System.arraycopy(idPositions, 0, newIdPositions, 0, idPositions.length);
-                        newIdPositions[idPositions.length] = mappingList.size() - transformingElementCount;
+                        newIdPositions[idPositions.length] = mappingList.size();
                     } else {
                         newIdPositions = idPositions;
                     }
@@ -184,12 +192,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
                 
                 if (listKey) {
-//                    transformingElementListCount += 1;
-                    transformingElementCount += 1;
                     tupleTransformator.add(new ListTupleListTransformer(idPositions, startIndex));
                 } else if (mapKey) {
-//                    transformingElementListCount += 1;
-                    transformingElementCount += 1;
                     tupleTransformator.add(new MapTupleListTransformer(idPositions, startIndex));
                 } else {
                     if (attribute instanceof SetAttribute<?, ?>) {
@@ -203,6 +207,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 featuresFound[0] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
             } else if (attribute.isSubview()) {
+                featuresFound[2] = true;
                 applySubviewMapping(attribute, idPositions, attribute.getJavaType(), mappingAttribute, mappingList, parameterMappingList);
             } else {
                 applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
@@ -224,16 +229,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
         int[] subviewIdPositions = new int[idPositions.length + 1];
         System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-        subviewIdPositions[idPositions.length] = mappingList.size() - transformingElementCount;
-        int startIndex = (tupleOffset + mappingList.size()) - transformingElementCount;
+        subviewIdPositions[idPositions.length] = mappingList.size();
+        int startIndex = tupleOffset + mappingList.size();
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions, startIndex, metamodel, evm, subviewType, null, proxyFactory);
         Collections.addAll(mappingList, template.mappings);
-        parameterMappingList.add(null);
-        tupleTransformator.add(template.tupleTransformator);
-        transformingElementCount += template.transformingElementCount;
-        transformingElementCount += (template.effectiveTupleSize - 1);
-        transformingElementListCount += template.transformingElementListCount;
-        
+        // We do not copy because the subview object builder will populate the subview's parameters
+        for (int i = 0; i < template.parameterMappings.length; i++) {
+            parameterMappingList.add(null);
+        }
+        tupleTransformator.add(template.tupleTransformator);        
         tupleTransformator.add(new SubviewTupleTransformer(template));
     }
 
@@ -292,18 +296,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
         
+        result = new ViewTypeObjectBuilder<T>(this);
+        
+        if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
+            result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappings.length);
+        }
+        
         if (hasParameters) {
-            if (hasOffset || isSubview) {
-                result = new ParameterOffsetViewTypeObjectBuilder(this, queryBuilder, tupleOffset);
-            } else {
-                result = new ParameterViewTypeObjectBuilder<T>(this, queryBuilder);
-            }
-        } else {
-            if (hasOffset || isSubview) {
-                result = new SimpleOffsetViewTypeObjectBuilder(this, tupleOffset);
-            } else {
-                result = new SimpleViewTypeObjectBuilder<T>(this);
-            }
+            result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, tupleOffset);
         }
         
         if (tupleTransformator.hasTransformers() && !isSubview) {
@@ -327,6 +327,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     public boolean hasParameters() {
         return hasParameters;
+    }
+
+    public int getTupleOffset() {
+        return tupleOffset;
     }
 
     public int getEffectiveTupleSize() {

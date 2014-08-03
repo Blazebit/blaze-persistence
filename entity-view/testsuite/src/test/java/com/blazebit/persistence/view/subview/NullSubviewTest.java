@@ -87,15 +87,14 @@ public class NullSubviewTest extends AbstractPersistenceTest {
         DocumentMasterView res = results.get(0);
         // Doc1
         assertEquals(doc1.getName(), res.getName());
-        // Subview
         assertEquals("pers1", res.getOwner().getName());
+        assertEquals(Integer.valueOf(2), res.getContactPersonNumber());
+        assertEquals(Integer.valueOf(2), res.getTheContactPersonNumber());
         // Filtered subview
         assertNull(results.get(0).getMyContactPerson());
-        // Map subview
+        
         assertTrue(results.get(0).getContacts().isEmpty());
-        // Set subview
         assertTrue(results.get(0).getPartners().isEmpty());
-        // List subview
         assertTrue(results.get(0).getPersonList().isEmpty());
     }
 }

@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @author Christian
  */
-public class ListTupleListTransformer extends AbstractIndexedTupleListTransformer {
+public class ListTupleListTransformer extends AbstractIndexedTupleListTransformer<List<Object>, Integer> {
 
     public ListTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(parentIdPositions, startIndex);
@@ -35,10 +35,7 @@ public class ListTupleListTransformer extends AbstractIndexedTupleListTransforme
     }
     
     @Override
-    protected void addToCollection(Object collection, Object key, Object value) {
-        List<Object> list = (List<Object>) collection;
-        Integer index = (Integer) key;
-        
+    protected void addToCollection(List<Object> list, Integer index, Object value) {
         if (index < list.size()) {
             list.set(index, value);
         } else {

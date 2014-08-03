@@ -26,10 +26,11 @@ import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.subview.model.PersonSubView;
 import com.blazebit.persistence.view.subview.model.PersonSubViewFiltered;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityTransaction;
 import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,36 +120,53 @@ public class SubviewTest extends AbstractPersistenceTest {
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
-        // Subview
         assertEquals("pers1", results.get(0).getOwner().getName());
+        assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber());
+        assertEquals(Integer.valueOf(2), results.get(0).getTheContactPersonNumber());
         // Filtered subview
         assertEquals(doc1.getContacts().get(2).getName(), results.get(0).getMyContactPerson().getName());
         assertEquals(Integer.valueOf(2), results.get(0).getMyContactPerson().getContactPersonNumber());
-        // Map subview
-        assertEquals(doc1.getContacts2().get(1).getName(), results.get(0).getContacts().get(1).getName());
-        assertEquals(doc1.getContacts2().get(2).getName(), results.get(0).getContacts().get(2).getName());
-        // Set subview
+        
+        assertSubviewEquals(doc1.getContacts2(), results.get(0).getContacts());
         assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
-        // List subview
         assertSubviewEquals(doc1.getPersonList(), results.get(0).getPersonList());
         
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
-        // Subview
         assertEquals("pers2", results.get(1).getOwner().getName());
+        assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber());
+        assertEquals(Integer.valueOf(2), results.get(1).getTheContactPersonNumber());
         // Filtered subview
         assertEquals(doc2.getContacts().get(2).getName(), results.get(1).getMyContactPerson().getName());
         assertEquals(Integer.valueOf(2), results.get(1).getMyContactPerson().getContactPersonNumber());
-        // Map subview
-        assertEquals(doc2.getContacts2().get(1).getName(), results.get(1).getContacts().get(1).getName());
-        assertEquals(doc2.getContacts2().get(2).getName(), results.get(1).getContacts().get(2).getName());
-        // Set subview
+        
+        assertSubviewEquals(doc2.getContacts2(), results.get(1).getContacts());
         assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
-        // List subview
         assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
     }
     
+    public static void assertSubviewEquals(Map<Integer, Person> persons, Map<Integer, PersonSubView> personSubviews) {
+        if (persons == null) {
+            assertNull(personSubviews);
+            return;
+        }
+        
+        assertNotNull(personSubviews);
+        assertEquals(persons.size(), personSubviews.size());
+        for (Map.Entry<Integer, Person> personEntry : persons.entrySet()) {
+            Person p = personEntry.getValue();
+            PersonSubView pSub = personSubviews.get(personEntry.getKey());
+            assertEquals(p.getName(), pSub.getName());
+        }
+    }
+    
     public static void assertSubviewEquals(List<Person> persons, List<PersonSubView> personSubviews) {
+        if (persons == null) {
+            assertNull(personSubviews);
+            return;
+        }
+        
+        assertNotNull(personSubviews);
         assertEquals(persons.size(), personSubviews.size());
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
@@ -158,6 +176,12 @@ public class SubviewTest extends AbstractPersistenceTest {
     }
     
     public static void assertSubviewEquals(Set<Person> persons, Set<PersonSubView> personSubviews) {
+        if (persons == null) {
+            assertNull(personSubviews);
+            return;
+        }
+        
+        assertNotNull(personSubviews);
         assertEquals(persons.size(), personSubviews.size());
         for (Person p : persons) {
             boolean found = false;
@@ -169,7 +193,7 @@ public class SubviewTest extends AbstractPersistenceTest {
             }
             
             if (!found) {
-                Assert.fail("Could not find a PersonSubView with the name: " + p.getName());
+                Assert.fail("Could not find a SubviewPersonForCollectionsView with the name: " + p.getName());
             }
         }
     }

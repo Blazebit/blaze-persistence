@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 
 /**
@@ -40,7 +41,11 @@ public class SubviewTupleTransformer extends TupleTransformer {
 
     @Override
     public Object[] transform(Object[] tuple) {
-        return objectBuilder.build(tuple);
+        tuple[template.getTupleOffset()] = objectBuilder.build(tuple);
+        for (int i = template.getTupleOffset() + 1; i < template.getTupleOffset() + template.getMappings().length; i++) {
+            tuple[i] = TupleReuse.CONSUMED;
+        }
+        return tuple;
     }
 
 }

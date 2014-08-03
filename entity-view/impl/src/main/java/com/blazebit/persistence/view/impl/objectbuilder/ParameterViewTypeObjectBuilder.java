@@ -16,34 +16,51 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author cpbec
  */
-public class ParameterViewTypeObjectBuilder<T> extends AbstractViewTypeObjectBuilder<T> {
+public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
     
     private final String[] parameterMappings;
+    private final int[] parameterIndices;
     private final QueryBuilder<?, ?> queryBuilder;
 
-    public ParameterViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder) {
-        super(template);
+    public ParameterViewTypeObjectBuilder(ObjectBuilder<T> delegate, ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, int startIndex) {
+        super(delegate);
         
         if (!template.hasParameters()) {
             throw new IllegalArgumentException("No templates without parameters allowed for this object builder!");
         }
         
-        this.parameterMappings = template.getParameterMappings();
+        String[] fullParamMappings = template.getParameterMappings();
+        String[] paramMappings = new String[fullParamMappings.length];
+        int[] paramIndices = new int[fullParamMappings.length];
+        int size = 0;
+        
+        for (int i = 0; i < fullParamMappings.length; i++) {
+            if (fullParamMappings[i] != null) {
+                paramMappings[size] = fullParamMappings[i];
+                paramIndices[size] = i + startIndex;
+                size++;
+            }
+        }
+        
+        this.parameterMappings = Arrays.copyOf(paramMappings, size);
+        this.parameterIndices = Arrays.copyOf(paramIndices, size);
         this.queryBuilder = queryBuilder;
     }
 
     @Override
     public T build(Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
-            if (parameterMappings[i] != null) {
-                tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
-            }
+            tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
         }
         
         return super.build(tuple);

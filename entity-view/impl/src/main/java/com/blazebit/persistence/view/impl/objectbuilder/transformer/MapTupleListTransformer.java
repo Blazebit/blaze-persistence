@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * @author Christian
  */
-public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer {
+public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer<Map<Object, Object>, Object> {
 
     public MapTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(parentIdPositions, startIndex);
@@ -35,8 +35,7 @@ public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer
     }
     
     @Override
-    protected void addToCollection(Object collection, Object key, Object value) {
-        Map<Object, Object> map = (Map<Object, Object>) collection;
+    protected void addToCollection(Map<Object, Object> map, Object key, Object value) {
         map.put(key, value);
     }
     

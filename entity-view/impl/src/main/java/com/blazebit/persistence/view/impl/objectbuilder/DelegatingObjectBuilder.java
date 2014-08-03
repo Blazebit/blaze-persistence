@@ -16,20 +16,34 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import java.util.Arrays;
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.QueryBuilder;
 import java.util.List;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-public class SimpleViewTypeObjectBuilder<T> extends AbstractViewTypeObjectBuilder<T> {
+public class DelegatingObjectBuilder<T> implements ObjectBuilder<T> {
     
-    public SimpleViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
-        super(template);
-        
-        if (template.hasParameters()) {
-            throw new IllegalArgumentException("No templates with parameters allowed for this object builder!");
-        }
+    private final ObjectBuilder<T> delegate;
+
+    public DelegatingObjectBuilder(ObjectBuilder<T> delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+        delegate.applySelects(queryBuilder);
+    }
+
+    @Override
+    public T build(Object[] tuple) {
+        return delegate.build(tuple);
+    }
+
+    @Override
+    public List<T> buildList(List<T> list) {
+        return delegate.buildList(list);
     }
 }
