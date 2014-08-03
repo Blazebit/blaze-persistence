@@ -27,10 +27,14 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
 public class SubviewTupleTransformer extends TupleTransformer {
 
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
+    private final int consumeStartIndex;
+    private final int consumeEndIndex;
     private ObjectBuilder<Object[]> objectBuilder;
 
     public SubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template) {
         this.template = template;
+        this.consumeStartIndex = template.getTupleOffset() + 1;
+        this.consumeEndIndex = template.getTupleOffset() + template.getMappers().length;
     }
 
     @Override
@@ -42,7 +46,7 @@ public class SubviewTupleTransformer extends TupleTransformer {
     @Override
     public Object[] transform(Object[] tuple) {
         tuple[template.getTupleOffset()] = objectBuilder.build(tuple);
-        for (int i = template.getTupleOffset() + 1; i < template.getTupleOffset() + template.getMappings().length; i++) {
+        for (int i = consumeStartIndex; i < consumeEndIndex; i++) {
             tuple[i] = TupleReuse.CONSUMED;
         }
         return tuple;

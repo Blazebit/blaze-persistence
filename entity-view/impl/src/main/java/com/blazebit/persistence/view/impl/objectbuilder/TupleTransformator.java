@@ -69,17 +69,19 @@ public class TupleTransformator {
     }
     
     private Object[] transform(int level, Object[] tuple) {
+        List<TupleTransformer> tupleTransformers = transformatorLevels.get(level).tupleTransformers;
         Object[] currentTuple = tuple;
-        for (TupleTransformer t : transformatorLevels.get(level).tupleTransformers) {
-            currentTuple = t.transform(currentTuple);
+        for (int i = 0; i < tupleTransformers.size(); i++) {
+            currentTuple = tupleTransformers.get(i).transform(currentTuple);
         }
         return currentTuple;
     }
     
     private List<Object[]> transform(int level, List<Object[]> tupleList) {
+        List<TupleListTransformer> tupleListTransformers = transformatorLevels.get(level).tupleListTransformers;
         List<Object[]> currentTuples = tupleList;
-        for (TupleListTransformer t : transformatorLevels.get(level).tupleListTransformers) {
-            currentTuples = t.transform(currentTuples);
+        for (int i = 0; i < tupleListTransformers.size(); i++) {
+            currentTuples = tupleListTransformers.get(i).transform(currentTuples);
         }
         return currentTuples;
     }
@@ -89,11 +91,15 @@ public class TupleTransformator {
             return;
         }
         
-        for (int i = 0; i < tupleTransformator.transformatorLevels.size(); i++, incrementLevel()) {
+        for (int i = 0; i < tupleTransformator.transformatorLevels.size(); i++) {
+            if (i != 0) {
+                incrementLevel();
+            }
+            
             TupleTransformatorLevel thisLevel = transformatorLevels.get(currentLevel);
             TupleTransformatorLevel otherLevel = tupleTransformator.transformatorLevels.get(i);
-            thisLevel.tupleListTransformers.addAll(otherLevel.tupleListTransformers);
             thisLevel.tupleTransformers.addAll(otherLevel.tupleTransformers);
+            thisLevel.tupleListTransformers.addAll(otherLevel.tupleListTransformers);
         }
     }
 

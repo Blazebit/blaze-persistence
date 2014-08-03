@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -58,8 +57,7 @@ public class SetTupleListTransformer extends TupleListTransformer {
                 tupleIndex.put(id, tupleIndexValue);
             } else if (tupleIndexValue.addRestTuple(tuple, startIndex + 1)) {
                 Object collection = tupleIndexValue.getTuple()[startIndex];
-                Object old = tuple[startIndex];
-                add(collection, old);
+                add(collection, tuple[startIndex]);
                 tuple[startIndex] = collection;
             } else {
                 add(tupleIndexValue.getTuple()[startIndex], tuple[startIndex]);

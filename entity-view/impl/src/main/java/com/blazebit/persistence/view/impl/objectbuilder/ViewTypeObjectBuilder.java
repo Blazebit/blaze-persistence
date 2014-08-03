@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
@@ -30,11 +30,11 @@ import java.util.List;
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
 
     protected final Constructor<? extends T> proxyConstructor;
-    protected final Object[][] mappings;
+    protected final TupleElementMapper[] mappers;
     
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
         this.proxyConstructor = template.getProxyConstructor();
-        this.mappings = template.getMappings();
+        this.mappers = template.getMappers();
     }
 
     @Override
@@ -57,29 +57,8 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
     
     @Override
     public void applySelects(QueryBuilder<?, ?> queryBuilder) {
-        for (Object[] mapping : mappings) {
-            if (mapping[0] instanceof Class) {
-                Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
-                SubqueryProvider provider;
-                
-                try {
-                    provider = subqueryProviderClass.newInstance();
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
-                }
-
-                if (mapping[1] != null) {
-                    provider.createSubquery(queryBuilder.selectSubquery((String) mapping[1]));
-                } else {
-                    provider.createSubquery(queryBuilder.selectSubquery());
-                }
-            } else {
-                if (mapping[1] != null) {
-                    queryBuilder.select((String) mapping[0], (String) mapping[1]);
-                } else {
-                    queryBuilder.select((String) mapping[0]);
-                }
-            }
+        for (int i = 0; i < mappers.length; i++) {
+            mappers[i].applyMapping(queryBuilder);
         }
     }
 }

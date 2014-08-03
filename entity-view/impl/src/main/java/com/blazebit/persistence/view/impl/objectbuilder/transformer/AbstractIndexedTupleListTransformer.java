@@ -19,11 +19,9 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 /**

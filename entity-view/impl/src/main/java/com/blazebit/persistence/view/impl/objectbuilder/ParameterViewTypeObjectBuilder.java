@@ -18,9 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
 
 /**
  *
@@ -28,8 +26,7 @@ import java.util.Map;
  */
 public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
     
-    private final String[] parameterMappings;
-    private final int[] parameterIndices;
+    private final TupleParameterMapper parameterMapper;
     private final QueryBuilder<?, ?> queryBuilder;
 
     public ParameterViewTypeObjectBuilder(ObjectBuilder<T> delegate, ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, int startIndex) {
@@ -39,30 +36,13 @@ public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T
             throw new IllegalArgumentException("No templates without parameters allowed for this object builder!");
         }
         
-        String[] fullParamMappings = template.getParameterMappings();
-        String[] paramMappings = new String[fullParamMappings.length];
-        int[] paramIndices = new int[fullParamMappings.length];
-        int size = 0;
-        
-        for (int i = 0; i < fullParamMappings.length; i++) {
-            if (fullParamMappings[i] != null) {
-                paramMappings[size] = fullParamMappings[i];
-                paramIndices[size] = i + startIndex;
-                size++;
-            }
-        }
-        
-        this.parameterMappings = Arrays.copyOf(paramMappings, size);
-        this.parameterIndices = Arrays.copyOf(paramIndices, size);
+        this.parameterMapper = template.getParameterMapper();
         this.queryBuilder = queryBuilder;
     }
 
     @Override
     public T build(Object[] tuple) {
-        for (int i = 0; i < parameterMappings.length; i++) {
-            tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
-        }
-        
+        parameterMapper.applyMapping(queryBuilder, tuple);
         return super.build(tuple);
     }
 }

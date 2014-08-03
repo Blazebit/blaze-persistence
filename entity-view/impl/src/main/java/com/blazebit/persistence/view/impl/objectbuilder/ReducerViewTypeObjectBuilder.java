@@ -80,6 +80,10 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
             
             size++;
         }
+        
+        /*
+         * The following is copied from java.util.ArrayList
+         */
 
         /**
          * The maximum size of array to allocate.
