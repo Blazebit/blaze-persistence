@@ -16,20 +16,17 @@
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import java.util.Arrays;
-import static java.util.Arrays.deepEquals;
-import static java.util.Arrays.equals;
-import static java.util.Arrays.hashCode;
 
 /**
  *
  * @author Christian
  */
-public class RestTuple {
+public class TupleRest {
 
     private final Object[] tuple;
     private final int index;
 
-    public RestTuple(Object[] tuple, int index) {
+    public TupleRest(Object[] tuple, int index) {
         this.tuple = tuple;
         this.index = index;
     }
@@ -77,7 +74,7 @@ public class RestTuple {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final RestTuple other = (RestTuple) obj;
+        final TupleRest other = (TupleRest) obj;
         if (!deepEquals(other.tuple, other.index)) {
             return false;
         }

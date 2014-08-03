@@ -22,7 +22,6 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -73,15 +72,13 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         // We use a tree map to get a deterministic attribute order
         this.attributes = new TreeMap<String, MethodAttribute<? super X, ?>>();
         
-        for (Class<?> type : ReflectionUtils.getSuperTypes(clazz)) {
-            for (Method method : type.getDeclaredMethods()) {
-                String attributeName = AbstractMethodAttribute.validate(this, method);
-                
-                if (attributeName != null && !attributes.containsKey(attributeName)) {
-                    MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
-                    if (attribute != null) {
-                        attributes.put(attribute.getName(), attribute);
-                    }
+        for (Method method : clazz.getMethods()) {
+            String attributeName = AbstractMethodAttribute.validate(this, method);
+
+            if (attributeName != null && !attributes.containsKey(attributeName)) {
+                MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
+                if (attribute != null) {
+                    attributes.put(attribute.getName(), attribute);
                 }
             }
         }

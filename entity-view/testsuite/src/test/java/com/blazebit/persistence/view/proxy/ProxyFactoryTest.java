@@ -19,10 +19,10 @@ package com.blazebit.persistence.view.proxy;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.proxy.model.DocumentClassView;
-import com.blazebit.persistence.view.proxy.model.DocumentInterfaceView;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.proxy.model.DocumentClassView;
+import com.blazebit.persistence.view.proxy.model.DocumentInterfaceView;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -89,7 +89,7 @@ public class ProxyFactoryTest {
         Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         // The parameter order is _id, contacts, firstContactPerson, id, name
-        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
+        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, Long.class, Integer.class);
         
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
@@ -145,7 +145,7 @@ public class ProxyFactoryTest {
         Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         // The parameter order is _id, contacts, firstContactPerson, id, name
-        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class);
+        Constructor<? extends DocumentClassView> constructor = proxyClass.getConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, Long.class, Integer.class);
         
         Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
         Person expectedFirstContactPerson = new Person("pers");
@@ -187,7 +187,7 @@ public class ProxyFactoryTest {
         Class<? extends DocumentClassView> proxyClass = proxyFactory.getProxy(viewType);
         
         assertEquals(1, proxyClass.getDeclaredConstructors().length);
-        assertNotNull(proxyClass.getDeclaredConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, long.class, Integer.class));
+        assertNotNull(proxyClass.getDeclaredConstructor(Object.class, Map.class, Person.class, Long.class, Person.class, String.class, Long.class, Integer.class));
         
         // 5 Fields, 1 _id Field
         assertEquals(5 + 1, proxyClass.getDeclaredFields().length);

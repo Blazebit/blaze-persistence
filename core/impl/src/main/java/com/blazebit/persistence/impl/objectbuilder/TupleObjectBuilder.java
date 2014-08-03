@@ -36,8 +36,8 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     }
 
     @Override
-    public Tuple build(Object[] tuple, String[] aliases) {
-        return new TupleImpl(tuple, aliases);
+    public Tuple build(Object[] tuple) {
+        return new TupleImpl(tuple);
     }
 
     @Override
@@ -49,13 +49,13 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     public void applySelects(QueryBuilder<?, ?> queryBuilder) {
     }
 
-    class TupleImpl implements Tuple {
+    private class TupleImpl implements Tuple {
 
         private final Object[] tuple;
         private final String[] aliases;
         private List<TupleElement<?>> tupleElements;
 
-        private TupleImpl(Object[] tuple, String[] aliases) {
+        private TupleImpl(Object[] tuple) {
             if (tuple.length != selectManager.getSelectInfos().size()) {
                 throw new IllegalArgumentException(
                         "Size mismatch between tuple result [" + tuple.length
@@ -63,7 +63,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
                 );
             }
             this.tuple = tuple;
-            this.aliases = aliases;
+            this.aliases = selectManager.getSelectAliases();
         }
 
         @Override
@@ -96,7 +96,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 
         @Override
         public Object get(int i) {
-            if (i >= tuple.length) {
+            if (i >= tuple.length || i < 0) {
                 throw new IllegalArgumentException(
                         "Given index [" + i + "] was outside the range of result tuple size [" + tuple.length + "] "
                 );

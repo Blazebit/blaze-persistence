@@ -31,7 +31,7 @@ public abstract class DocumentViewAbstractClass implements DocumentViewInterface
     private final Integer contactPersonNumber;
     
     public DocumentViewAbstractClass(
-            @Mapping("age + 1") long age,
+            @Mapping("age + 1") Long age,
         @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
         this.age = age;

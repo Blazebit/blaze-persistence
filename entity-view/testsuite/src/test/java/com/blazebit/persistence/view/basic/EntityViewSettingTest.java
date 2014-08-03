@@ -22,25 +22,15 @@ import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.Filter;
-import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.basic.model.FilteredDocument;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import javax.persistence.EntityTransaction;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
-import static org.junit.Assert.*;
 
 /**
  *

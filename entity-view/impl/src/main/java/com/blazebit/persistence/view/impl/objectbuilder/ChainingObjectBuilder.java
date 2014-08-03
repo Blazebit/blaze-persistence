@@ -27,22 +27,13 @@ import java.util.List;
  */
 public class ChainingObjectBuilder<T> implements ObjectBuilder<T>{
     
-    private final TupleTransformer[] tupleTransformers;
-    private final TupleListTransformer[] tupleListTransformers;
+    private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 
-    public ChainingObjectBuilder(List<TupleTransformer> tupleTransformers, List<TupleListTransformer> tupleListTransformers, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, int startIndex) {
-        this.tupleTransformers = new TupleTransformer[tupleTransformers.size()];
-        this.tupleListTransformers = new TupleListTransformer[tupleListTransformers.size()];
+    public ChainingObjectBuilder(TupleTransformator transformator, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, int startIndex) {
+        this.transformator = transformator;
         this.objectBuilder = objectBuilder;
-        
-        for (int i = 0; i < this.tupleTransformers.length; i++) {
-            this.tupleTransformers[i] = tupleTransformers.get(i).init(queryBuilder);
-        }
-        
-        for (int i = 0; i < this.tupleListTransformers.length; i++) {
-            this.tupleListTransformers[i] = tupleListTransformers.get(i).init(queryBuilder);
-        }
+        transformator.init(queryBuilder);
     }
 
     @Override
@@ -51,23 +42,16 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T>{
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
-        Object[] currentTuple = tuple;
-        for (TupleTransformer t : tupleTransformers) {
-            currentTuple = t.transform(currentTuple);
-        }
-        return (T) currentTuple;
+    public T build(Object[] tuple) {
+        return (T) tuple;
     }
 
     @Override
     public List<T> buildList(List<T> list) {
-        List<Object[]> currentTuples = (List<Object[]>) list;
-        for (TupleListTransformer t : tupleListTransformers) {
-            currentTuples = t.transform(currentTuples);
-        }
+        List<Object[]> currentTuples = transformator.transformAll((List<Object[]>) list);
         List<T> resultList = new ArrayList<T>(currentTuples.size());
         for (Object[] tuple : currentTuples) {
-            resultList.add(objectBuilder.build(tuple, null));
+            resultList.add(objectBuilder.build(tuple));
         }
         return objectBuilder.buildList(resultList);
     }

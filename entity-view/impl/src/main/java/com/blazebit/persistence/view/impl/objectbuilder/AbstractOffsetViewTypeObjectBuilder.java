@@ -35,12 +35,12 @@ public class AbstractOffsetViewTypeObjectBuilder<T> extends AbstractViewTypeObje
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         T resultObject;
         
         // TODO: maybe we can do something smarter here
         System.arraycopy(tuple, startIndex, tempTuple, 0, length);
-        resultObject = super.build(tempTuple, aliases);
+        resultObject = super.build(tempTuple);
         
         Object[] resultTuple = new Object[tuple.length - (length - 1)];
         System.arraycopy(tuple, 0, resultTuple, 0, startIndex);

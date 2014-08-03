@@ -52,15 +52,24 @@ public class AbstractPersistenceTest {
 
         Ejb3Configuration cfg = new Ejb3Configuration();
         cfg.addProperties(properties);
-        cfg.addAnnotatedClass(Document.class);
-        cfg.addAnnotatedClass(Version.class);
-        cfg.addAnnotatedClass(Person.class);
+        
+        for (Class<?> c : getEntities()) {
+            cfg.addAnnotatedClass(c);
+        }
 
         EntityManagerFactory factory = cfg.buildEntityManagerFactory();
         em = factory.createEntityManager();
         
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         cbf = config.createCriteriaBuilderFactory();
+    }
+    
+    protected Class<?>[] getEntities() {
+        return new Class<?>[] {
+            Document.class,
+            Version.class,
+            Person.class
+        };
     }
     
     @After

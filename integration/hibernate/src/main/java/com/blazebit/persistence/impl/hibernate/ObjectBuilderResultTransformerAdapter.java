@@ -34,7 +34,7 @@ public class ObjectBuilderResultTransformerAdapter implements ResultTransformer 
 
     @Override
     public Object transformTuple(Object[] tuple, String[] aliases) {
-        return builder.build(tuple, aliases);
+        return builder.build(tuple);
     }
 
     @Override

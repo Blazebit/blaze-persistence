@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,11 +40,11 @@ public class SetTupleListTransformer extends TupleListTransformer {
 
     @Override
     public List<Object[]> transform(List<Object[]> tuples) {
-        Map<ParentId, TupleIndexValue> tupleIndex = new HashMap<ParentId, TupleIndexValue>(tuples.size());
+        Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
         List<Object[]> resultList = new ArrayList<Object[]>(tuples.size());
         
         for (Object[] tuple : tuples) {
-            ParentId id = new ParentId(parentIdPositions, tuple);
+            TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
             
             if (tupleIndexValue == null) {

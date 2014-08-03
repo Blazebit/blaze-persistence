@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.Filterable;
-import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.Sortable;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.Sorters;

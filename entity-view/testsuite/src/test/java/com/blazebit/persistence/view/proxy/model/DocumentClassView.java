@@ -29,7 +29,7 @@ public abstract class DocumentClassView implements DocumentInterfaceView {
     private final Integer contactPersonNumber;
     
     public DocumentClassView(
-            @Mapping("age + 1") long age,
+            @Mapping("age + 1") Long age,
             @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
         this.age = age;

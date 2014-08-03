@@ -131,6 +131,15 @@ public class SelectManager<T> extends AbstractManager {
         subqueryBuilderListener = new SelectSubqueryBuilderListener(selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
     }
+
+    public String[] getSelectAliases() {
+        String[] aliases = new String[selectInfos.size()];
+        for (int i = 0; i < aliases.length; i++) {
+            aliases[i] = selectInfos.get(i).getAlias();
+        }
+        
+        return aliases;
+    }
     
     private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
         

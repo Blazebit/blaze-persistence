@@ -206,6 +206,8 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T in(List<?> values);
+    
+    public T in(Object... values);
 
     /**
      * Like {@link RestrictionBuilder#in(java.util.List) } but the result is wrapped in a NOT predicate.
@@ -214,6 +216,8 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T notIn(List<?> values);
+    
+    public T notIn(Object... values);
 
     /**
      * Finishes the IS NULL predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

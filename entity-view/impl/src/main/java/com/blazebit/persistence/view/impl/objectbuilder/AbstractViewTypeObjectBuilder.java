@@ -38,7 +38,7 @@ public abstract class AbstractViewTypeObjectBuilder<T> implements ObjectBuilder<
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         if (tuple[0] == null) {
             return null;
         }

@@ -37,10 +37,9 @@ public interface ObjectBuilder<T> {
      * Builds an object of the target type {@linkplain T} from the given tuple.
      *
      * @param tuple   The result tuple
-     * @param aliases The aliases for the tuple
      * @return The target object
      */
-    public T build(Object[] tuple, String[] aliases);
+    public T build(Object[] tuple);
 
     /**
      * Transforms the given list and returns the result.

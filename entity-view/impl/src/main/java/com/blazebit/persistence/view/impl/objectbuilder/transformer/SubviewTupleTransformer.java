@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 
 /**
  *
@@ -27,20 +28,19 @@ public class SubviewTupleTransformer extends TupleTransformer {
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
     private ObjectBuilder<Object[]> objectBuilder;
 
-    public SubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, int startIndex) {
-        super(startIndex);
+    public SubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template) {
         this.template = template;
     }
 
     @Override
     public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        this.objectBuilder = template.createObjectBuilder(queryBuilder, startIndex, true);
+        this.objectBuilder = template.createObjectBuilder(queryBuilder, true);
         return this;
     }
 
     @Override
     public Object[] transform(Object[] tuple) {
-        return objectBuilder.build(tuple, null);
+        return objectBuilder.build(tuple);
     }
 
 }

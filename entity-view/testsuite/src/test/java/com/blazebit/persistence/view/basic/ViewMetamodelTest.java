@@ -18,21 +18,27 @@ package com.blazebit.persistence.view.basic;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.basic.model.CircularDocument;
+import com.blazebit.persistence.view.basic.model.CircularPerson;
 import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
+import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.IdHolderView;
 import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import java.util.Set;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 /**
@@ -47,6 +53,14 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView1.class);
         return cfg.createEntityViewManager().getMetamodel();
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testCircularViews() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(CircularDocument.class);
+        cfg.addEntityView(CircularPerson.class);
+        cfg.createEntityViewManager();
     }
     
     @Test
@@ -319,8 +333,8 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
         assertEquals(1, constructors.size());
-        assertNotNull(viewType.getConstructor(long.class, Integer.class));
-        assertTrue(constructors.contains(viewType.getConstructor(long.class, Integer.class)));
+        assertNotNull(viewType.getConstructor(Long.class, Integer.class));
+        assertTrue(constructors.contains(viewType.getConstructor(Long.class, Integer.class)));
     }
     
     @Test
@@ -332,7 +346,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertNotNull(constructor);
         assertEquals(2, constructor.getParameterAttributes().size());
         
-        assertEquals(long.class, constructor.getParameterAttributes().get(0).getJavaType());
+        assertEquals(Long.class, constructor.getParameterAttributes().get(0).getJavaType());
         assertEquals(constructor, constructor.getParameterAttributes().get(0).getDeclaringConstructor());
         assertEquals(viewType, constructor.getParameterAttributes().get(0).getDeclaringType());
         assertEquals(0, constructor.getParameterAttributes().get(0).getIndex());
@@ -350,7 +364,7 @@ public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
         assertFalse(constructor.getParameterAttributes().get(1).isCollection());
         assertTrue(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(1)).isQueryParameter());
         
-        assertEquals(DocumentViewAbstractClass.class.getConstructor(long.class, Integer.class), constructor.getJavaConstructor());
+        assertEquals(DocumentViewAbstractClass.class.getConstructor(Long.class, Integer.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
 }

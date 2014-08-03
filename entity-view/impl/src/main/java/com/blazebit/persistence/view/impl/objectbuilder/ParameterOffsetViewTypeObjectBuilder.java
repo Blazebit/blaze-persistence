@@ -41,13 +41,13 @@ public class ParameterOffsetViewTypeObjectBuilder<T> extends AbstractOffsetViewT
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
             if (parameterMappings[i] != null) {
                 tuple[i + startIndex] = queryBuilder.getParameterValue(parameterMappings[i]);
             }
         }
         
-        return super.build(tuple, aliases);
+        return super.build(tuple);
     }
 }

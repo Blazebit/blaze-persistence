@@ -34,7 +34,7 @@ public class ConstructorObjectBuilder<T> implements ObjectBuilder<T> {
     }
     
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         if(constructor.getParameterTypes().length != tuple.length){
             throw new RuntimeException("Constructor expects " + constructor.getParameterTypes().length + " arguments but " + tuple.length + " arguments were queried");
         }

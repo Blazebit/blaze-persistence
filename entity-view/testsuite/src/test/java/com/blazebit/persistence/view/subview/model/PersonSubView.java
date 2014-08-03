@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.MappingParameter;
 
 /**
  *

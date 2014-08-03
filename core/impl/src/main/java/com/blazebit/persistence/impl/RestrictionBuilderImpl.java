@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -232,11 +233,21 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T in(Object... values) {
+        return in(Arrays.asList(values));
+    }
+
+    @Override
     public T notIn(List<?> values) {
         if (values == null) {
             throw new NullPointerException("values");
         }
         return chain(new NotPredicate(new InPredicate(leftExpression, new ParameterExpression(values))));
+    }
+
+    @Override
+    public T notIn(Object... values) {
+        return notIn(Arrays.asList(values));
     }
 
     @Override

@@ -26,11 +26,11 @@ import java.util.Set;
 public class TupleIndexValue {
     
     private final Object[] tuple;
-    private final Set<RestTuple> restTuples = new HashSet<RestTuple>();
+    private final Set<TupleRest> restTuples = new HashSet<TupleRest>();
 
     public TupleIndexValue(Object[] tuple, int restTupleIndex) {
         this.tuple = tuple;
-        restTuples.add(new RestTuple(tuple, restTupleIndex));
+        restTuples.add(new TupleRest(tuple, restTupleIndex));
     }
 
     public Object[] getTuple() {
@@ -38,7 +38,7 @@ public class TupleIndexValue {
     }
 
     public boolean addRestTuple(Object[] tuple, int tupleIndex) {
-        return restTuples.add(new RestTuple(tuple, tupleIndex));
+        return restTuples.add(new TupleRest(tuple, tupleIndex));
     }
     
     

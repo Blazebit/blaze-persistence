@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,22 +27,22 @@ import java.util.Map;
  *
  * @author Christian
  */
-public abstract class IndexedTupleListTransformer extends TupleListTransformer {
+public abstract class AbstractIndexedTupleListTransformer extends TupleListTransformer {
     
     private final int[] parentIdPositions;
 
-    public IndexedTupleListTransformer(int[] parentIdPositions, int startIndex) {
+    public AbstractIndexedTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(startIndex);
         this.parentIdPositions = parentIdPositions;
     }
 
     @Override
     public List<Object[]> transform(List<Object[]> tuples) {
-        Map<ParentId, TupleIndexValue> tupleIndex = new HashMap<ParentId, TupleIndexValue>(tuples.size());
+        Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
         List<Object[]> resultList = new ArrayList<Object[]>(tuples.size());
         
         for (Object[] tuple : tuples) {
-            ParentId id = new ParentId(parentIdPositions, tuple);
+            TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
             
             if (tupleIndexValue == null) {

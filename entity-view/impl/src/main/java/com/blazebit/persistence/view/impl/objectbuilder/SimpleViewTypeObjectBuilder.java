@@ -32,18 +32,4 @@ public class SimpleViewTypeObjectBuilder<T> extends AbstractViewTypeObjectBuilde
             throw new IllegalArgumentException("No templates with parameters allowed for this object builder!");
         }
     }
-
-    @Override
-    public T build(Object[] tuple, String[] aliases) {
-        try {
-            return proxyConstructor.newInstance(tuple);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
-        }
-    }
-
-    @Override
-    public List<T> buildList(List<T> list) {
-        return list;
-    }
 }

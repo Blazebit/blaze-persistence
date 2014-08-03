@@ -16,12 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.view.SubqueryProvider;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  *
@@ -44,13 +39,13 @@ public class ParameterViewTypeObjectBuilder<T> extends AbstractViewTypeObjectBui
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
             if (parameterMappings[i] != null) {
                 tuple[i] = queryBuilder.getParameterValue(parameterMappings[i]);
             }
         }
         
-        return super.build(tuple, aliases);
+        return super.build(tuple);
     }
 }

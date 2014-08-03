@@ -27,7 +27,9 @@ import com.blazebit.persistence.view.subview.model.PersonSubView;
 import com.blazebit.persistence.view.subview.model.PersonSubViewFiltered;
 import java.util.List;
 import javax.persistence.EntityTransaction;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,6 +59,9 @@ public class NullSubviewTest extends AbstractPersistenceTest {
             
             em.flush();
             tx.commit();
+            em.clear();
+            
+            doc1 = em.find(Document.class, doc1.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);

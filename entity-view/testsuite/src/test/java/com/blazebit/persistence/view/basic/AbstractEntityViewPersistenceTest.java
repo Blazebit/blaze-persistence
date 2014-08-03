@@ -18,10 +18,10 @@ package com.blazebit.persistence.view.basic;
 
 import com.blazebit.persistence.AbstractPersistenceTest;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
-import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
+import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import org.junit.BeforeClass;
 
 /**

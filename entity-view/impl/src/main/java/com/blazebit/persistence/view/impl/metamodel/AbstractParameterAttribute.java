@@ -32,44 +32,26 @@ import java.util.Set;
  *
  * @author cpbec
  */
-public abstract class AbstractParameterAttribute<X, Y> implements ParameterAttribute<X, Y> {
+public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute<X, Y> implements ParameterAttribute<X, Y> {
     
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
-    private final Class<Y> javaType;
-    private final String mapping;
-    private final Class<? extends SubqueryProvider> subqueryProvider;
-    private final boolean mappingParameter;
-    private final boolean subqueryMapping;
-    private final boolean subview;
     
     public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+        super(constructor.getDeclaringType(), (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index], mapping, entityViews);
         this.index = index;
         this.declaringConstructor = constructor;
-        this.javaType = (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index];
-        this.subview = entityViews.contains(javaType);
-        
-        if (mapping instanceof Mapping) {
-            this.mapping = ((Mapping) mapping).value();
-            this.subqueryProvider = null;
-            this.mappingParameter = false;
-            this.subqueryMapping = false;
-        } else if (mapping instanceof MappingParameter) {
-            this.mapping = ((MappingParameter) mapping).value();
-            this.subqueryProvider = null;
-            this.mappingParameter = true;
-            this.subqueryMapping = false;
-        } else if (mapping instanceof MappingSubquery) {
-            this.mapping = null;
-            this.subqueryProvider = ((MappingSubquery) mapping).value();
-            this.mappingParameter = false;
-            this.subqueryMapping = true;
-        } else {
-            throw new IllegalArgumentException("No mapping annotation could be found for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
-        }
         
         if (this.mapping != null && this.mapping.isEmpty()) {
             throw new IllegalArgumentException("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
+        }
+    }
+    
+    public static void validate(MappingConstructor<?> constructor, int index) {
+        Class<?> type = constructor.getJavaConstructor().getParameterTypes()[index];
+        
+        if (type.isPrimitive()) {
+            throw new IllegalArgumentException("Primitive type not allowed for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '" + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
         }
     }
     
@@ -88,51 +70,15 @@ public abstract class AbstractParameterAttribute<X, Y> implements ParameterAttri
         
         return null;
     }
-    
-    public PluralAttribute.CollectionType getCollectionType() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 
     @Override
     public int getIndex() {
         return index;
     }
     
-    public boolean isQueryParameter() {
-        return mappingParameter;
-    }
-
-    public Class<? extends SubqueryProvider> getSubqueryProvider() {
-        return subqueryProvider;
-    }
-
-    @Override
-    public boolean isSubquery() {
-        return subqueryMapping;
-    }
-
-    @Override
-    public boolean isSubview() {
-        return subview;
-    }
-
     @Override
     public MappingConstructor<X> getDeclaringConstructor() {
         return declaringConstructor;
-    }
-
-    @Override
-    public ViewType<X> getDeclaringType() {
-        return declaringConstructor.getDeclaringType();
-    }
-
-    @Override
-    public Class<Y> getJavaType() {
-        return javaType;
-    }
-
-    public String getMapping() {
-        return mapping;
     }
     
 }

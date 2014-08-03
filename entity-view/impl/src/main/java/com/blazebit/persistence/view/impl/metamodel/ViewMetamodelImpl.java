@@ -16,8 +16,11 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -36,6 +39,33 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         
         for (Class<?> entityViewClass : entityViews) {
             views.put(entityViewClass, getViewType(entityViewClass, entityViews));
+        }
+        
+        // Check for circular dependencies
+        for (ViewType<?> viewType : views.values()) {
+            Set<ViewType<?>> dependencies = new HashSet<ViewType<?>>();
+            dependencies.add(viewType);
+            checkCircularDependencies(viewType, dependencies);
+        }
+    }
+    
+    private void checkCircularDependencies(ViewType<?> viewType, Set<ViewType<?>> dependencies) {
+        for (MethodAttribute<?, ?> attr : viewType.getAttributes()) {
+            if (attr.isSubview()) {
+                ViewType<?> subviewType;
+                if (attr instanceof PluralAttribute<?, ?, ?>) {
+                    subviewType = views.get(((PluralAttribute<?, ?, ?>) attr).getElementType());
+                } else {
+                    subviewType = views.get(attr.getJavaType());
+                }
+                if (dependencies.contains(subviewType)) {
+                    throw new IllegalArgumentException("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getName() + "' in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+                }
+                
+                Set<ViewType<?>> subviewDependencies = new HashSet<ViewType<?>>(dependencies);
+                subviewDependencies.add(subviewType);
+                checkCircularDependencies(subviewType, subviewDependencies);
+            }
         }
     }
 

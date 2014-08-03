@@ -48,9 +48,14 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.declaringType = viewType;
         this.javaConstructor = constructor;
         
+        if (constructor.getExceptionTypes().length != 0) {
+            throw new IllegalArgumentException("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName() + "' may not throw an exception!");
+        }
+        
         int parameterCount = constructor.getParameterTypes().length;
         List<ParameterAttribute<? super X, ?>> parameters = new ArrayList<ParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
+            AbstractParameterAttribute.validate(this, i);
             parameters.add(createParameterAttribute(this, i, entityViews));
         }
         

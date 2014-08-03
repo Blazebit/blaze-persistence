@@ -40,7 +40,7 @@ public class InTest extends AbstractPersistenceTest {
     @Test(expected = NullPointerException.class)
     public void testInNull(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").in(null);   
+        criteria.where("d.age").in((List<?>) null);   
     }
     
     @Test
@@ -54,7 +54,7 @@ public class InTest extends AbstractPersistenceTest {
     @Test(expected = NullPointerException.class)
     public void testNotInNull(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notIn(null);
+        criteria.where("d.age").notIn((List<?>) null);
     }
     
 }

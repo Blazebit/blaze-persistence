@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @author Christian
  */
-public class ListTupleListTransformer extends IndexedTupleListTransformer {
+public class ListTupleListTransformer extends AbstractIndexedTupleListTransformer {
 
     public ListTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(parentIdPositions, startIndex);
@@ -37,7 +37,13 @@ public class ListTupleListTransformer extends IndexedTupleListTransformer {
     @Override
     protected void addToCollection(Object collection, Object key, Object value) {
         List<Object> list = (List<Object>) collection;
-        list.add((Integer) key, value);
+        Integer index = (Integer) key;
+        
+        if (index < list.size()) {
+            list.set(index, value);
+        } else {
+            list.add(index, value);
+        }
     }
     
 }

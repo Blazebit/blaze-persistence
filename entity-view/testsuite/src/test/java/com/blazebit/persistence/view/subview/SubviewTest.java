@@ -25,7 +25,6 @@ import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.subview.model.PersonSubView;
 import com.blazebit.persistence.view.subview.model.PersonSubViewFiltered;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityTransaction;
@@ -93,6 +92,10 @@ public class SubviewTest extends AbstractPersistenceTest {
             
             em.flush();
             tx.commit();
+            em.clear();
+            
+            doc1 = em.find(Document.class, doc1.getId());
+            doc2 = em.find(Document.class, doc2.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);

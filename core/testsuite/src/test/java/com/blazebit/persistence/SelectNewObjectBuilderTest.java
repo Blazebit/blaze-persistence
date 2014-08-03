@@ -71,7 +71,7 @@ public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
             }
 
             @Override
-            public String[] build(Object[] tuple, String[] aliases) {
+            public String[] build(Object[] tuple) {
                 return new String[] { (String) tuple[0], (String) tuple[1], (String) tuple[2] };
             }
 

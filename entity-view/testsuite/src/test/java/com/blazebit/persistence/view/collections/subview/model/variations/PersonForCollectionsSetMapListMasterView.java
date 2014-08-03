@@ -14,30 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.collections.model;
+package com.blazebit.persistence.view.collections.subview.model.variations;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.Mapping;
-import java.util.List;
-import java.util.Map;
+import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentSetMapListView;
 import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian
  */
-@EntityView(Document.class)
-public interface DocumentCollectionsView {
+@EntityView(PersonForCollections.class)
+public interface PersonForCollectionsSetMapListMasterView extends PersonForCollectionsMasterView {
     
-    public String getName();
-    
-    @Mapping("contacts2")
-    public Map<Integer, Person> getContacts();
-    
-    @Mapping("partners")
-    public Set<Person> getPartners();
-    
-    public List<Person> getPersonList();
+    @Override
+    public Set<SubviewDocumentSetMapListView> getOwnedDocuments();
 }

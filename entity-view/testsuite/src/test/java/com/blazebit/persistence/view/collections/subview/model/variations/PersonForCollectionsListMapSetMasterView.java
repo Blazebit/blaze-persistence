@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.collections.subview.model.variations;
 
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentListMapSetView;
+import java.util.Set;
 
 /**
  *
  * @author Christian
  */
-public abstract class TupleTransformer {
-    protected final int startIndex;
-
-    public TupleTransformer(int startIndex) {
-        this.startIndex = startIndex;
-    }
-
-    public abstract Object[] transform(Object[] tuple);
-
-    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        return this;
-    }
+@EntityView(PersonForCollections.class)
+public interface PersonForCollectionsListMapSetMasterView extends PersonForCollectionsMasterView {
+    
+    @Override
+    public Set<SubviewDocumentListMapSetView> getOwnedDocuments();
 }

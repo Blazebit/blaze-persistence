@@ -14,30 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.objectbuilder;
+package com.blazebit.persistence.view.collections.subview.model.variations;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentMapSetListView;
+import java.util.Set;
 
 /**
  *
  * @author Christian
  */
-public class MapTupleListTransformer extends IndexedTupleListTransformer {
-
-    public MapTupleListTransformer(int[] parentIdPositions, int startIndex) {
-        super(parentIdPositions, startIndex);
-    }
-
-    @Override
-    protected Object createCollection() {
-        return new HashMap<Object, Object>();
-    }
+@EntityView(PersonForCollections.class)
+public interface PersonForCollectionsMapSetListMasterView extends PersonForCollectionsMasterView {
     
     @Override
-    protected void addToCollection(Object collection, Object key, Object value) {
-        Map<Object, Object> map = (Map<Object, Object>) collection;
-        map.put(key, value);
-    }
-    
+    public Set<SubviewDocumentMapSetListView> getOwnedDocuments();
 }

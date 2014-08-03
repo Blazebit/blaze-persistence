@@ -33,7 +33,7 @@ public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public T build(Object[] tuple, String[] aliases) {
+    public T build(Object[] tuple) {
         Constructor<?>[] constructors = clazz.getConstructors();
         Constructor<T> matchingConstr = null;
         for (Constructor<?> constr : constructors) {

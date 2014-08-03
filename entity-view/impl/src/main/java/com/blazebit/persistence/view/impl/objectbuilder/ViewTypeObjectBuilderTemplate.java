@@ -16,6 +16,10 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.ListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformer;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -51,23 +55,20 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final String[] parameterMappings;
     private final int effectiveTupleSize;
     private final boolean hasParameters;
-    private final boolean hasCollections;
-    private final boolean transformersHaveParameters;
     
     private final String aliasPrefix;
     private final String mappingPrefix;
     private final String idPrefix;
     private final int[] idPositions;
+    private final int tupleOffset;
     private final Metamodel metamodel;
     private final EntityViewManager evm;
-    private final ViewType<T> viewType;
     private final ProxyFactory proxyFactory;
-    private final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>();
-    private final List<TupleListTransformer> tupleListTransformers = new ArrayList<TupleListTransformer>();
+    private final TupleTransformator tupleTransformator = new TupleTransformator();
     private int transformingElementCount = 0;
     private int transformingElementListCount = 0;
 
-    private ViewTypeObjectBuilderTemplate(String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, Metamodel metamodel, EntityViewManager evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    private ViewTypeObjectBuilderTemplate(String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int startIndex, Metamodel metamodel, EntityViewManager evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if(viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -80,9 +81,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.mappingPrefix = mappingPrefix;
         this.idPrefix = idPrefix;
         this.idPositions = idPositions;
+        this.tupleOffset = startIndex;
         this.metamodel = metamodel;
         this.evm = evm;
-        this.viewType = viewType;
         this.proxyFactory = proxyFactory;
         
         Class<?> proxyClass = proxyFactory.getProxy(viewType);
@@ -90,7 +91,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
-        boolean[] featuresFound = new boolean[3];
+        boolean[] featuresFound = new boolean[1];
         
         if (mappingConstructor == null) {
             parameterAttributes = new ParameterAttribute<?, ?>[0];
@@ -142,9 +143,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass.getName());
         }
         
-        this.hasParameters = featuresFound[1];
-        this.transformersHaveParameters = featuresFound[0];
-        this.hasCollections = featuresFound[2];
+        this.hasParameters = featuresFound[0];
         this.effectiveTupleSize = length;
         this.proxyConstructor = javaConstructor;        
         this.mappings = mappingList.toArray(new Object[mappingList.size()][]);
@@ -157,10 +156,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else {
             MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
             if (attribute.isCollection()) {
-                featuresFound[2] = true;
                 boolean listKey = attribute instanceof ListAttribute<?, ?>;
                 boolean mapKey = attribute instanceof MapAttribute<?, ?, ?>;
-                int startIndex = mappingList.size() - (transformingElementCount + transformingElementListCount);
+                int startIndex = (tupleOffset + mappingList.size()) - (transformingElementCount + transformingElementListCount);
                 
                 if (listKey) {
                     applyCollectionKeyMapping("INDEX", mappingAttribute, attribute, mappingList);
@@ -186,21 +184,23 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
                 
                 if (listKey) {
-                    transformingElementListCount += 1;
-                    tupleListTransformers.add(new ListTupleListTransformer(idPositions, startIndex));
+//                    transformingElementListCount += 1;
+                    transformingElementCount += 1;
+                    tupleTransformator.add(new ListTupleListTransformer(idPositions, startIndex));
                 } else if (mapKey) {
-                    transformingElementListCount += 1;
-                    tupleListTransformers.add(new MapTupleListTransformer(idPositions, startIndex));
+//                    transformingElementListCount += 1;
+                    transformingElementCount += 1;
+                    tupleTransformator.add(new MapTupleListTransformer(idPositions, startIndex));
                 } else {
                     if (attribute instanceof SetAttribute<?, ?>) {
-                        tupleListTransformers.add(new SetTupleListTransformer(idPositions, startIndex));
+                        tupleTransformator.add(new SetTupleListTransformer(idPositions, startIndex));
                     } else {
                         // Collection
                         throw new IllegalArgumentException("Collection types are not supported. Please use a Set or a List instead.");
                     }
                 }
             } else if (((SingularAttribute) attribute).isQueryParameter()) {
-                featuresFound[1] = true;
+                featuresFound[0] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
             } else if (attribute.isSubview()) {
                 applySubviewMapping(attribute, idPositions, attribute.getJavaType(), mappingAttribute, mappingList, parameterMappingList);
@@ -224,18 +224,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
         int[] subviewIdPositions = new int[idPositions.length + 1];
         System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-        subviewIdPositions[idPositions.length] = mappingList.size();
-        ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions, metamodel, evm, subviewType, null, proxyFactory);
-        int startIndex = mappingList.size() - transformingElementCount;
+        subviewIdPositions[idPositions.length] = mappingList.size() - transformingElementCount;
+        int startIndex = (tupleOffset + mappingList.size()) - transformingElementCount;
+        ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions, startIndex, metamodel, evm, subviewType, null, proxyFactory);
         Collections.addAll(mappingList, template.mappings);
         parameterMappingList.add(null);
-        tupleTransformers.addAll(template.tupleTransformers);
-        tupleListTransformers.addAll(template.tupleListTransformers);
+        tupleTransformator.add(template.tupleTransformator);
         transformingElementCount += template.transformingElementCount;
         transformingElementCount += (template.effectiveTupleSize - 1);
         transformingElementListCount += template.transformingElementListCount;
         
-        tupleTransformers.add(new SubviewTupleTransformer(template, startIndex));
+        tupleTransformator.add(new SubviewTupleTransformer(template));
     }
 
     private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object[]> mappingList, List<String> parameterMappingList) {
@@ -286,29 +285,29 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
     
     public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder) {
-        return createObjectBuilder(queryBuilder, 0, false);
+        return createObjectBuilder(queryBuilder, false);
     }
     
-    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, int startIndex, boolean isSubview) {
-        boolean hasOffset = startIndex != 0;
+    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, boolean isSubview) {
+        boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
         
         if (hasParameters) {
             if (hasOffset || isSubview) {
-                result = new ParameterOffsetViewTypeObjectBuilder(this, queryBuilder, startIndex);
+                result = new ParameterOffsetViewTypeObjectBuilder(this, queryBuilder, tupleOffset);
             } else {
                 result = new ParameterViewTypeObjectBuilder<T>(this, queryBuilder);
             }
         } else {
             if (hasOffset || isSubview) {
-                result = new SimpleOffsetViewTypeObjectBuilder(this, startIndex);
+                result = new SimpleOffsetViewTypeObjectBuilder(this, tupleOffset);
             } else {
                 result = new SimpleViewTypeObjectBuilder<T>(this);
             }
         }
         
-        if (tupleTransformers.size() > 0 || tupleListTransformers.size() > 0) {
-            result = new ChainingObjectBuilder<T>(tupleTransformers, tupleListTransformers, result, queryBuilder, startIndex);
+        if (tupleTransformator.hasTransformers() && !isSubview) {
+            result = new ChainingObjectBuilder<T>(tupleTransformator, result, queryBuilder, tupleOffset);
         }
         
         return result;
@@ -345,7 +344,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         
         public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManager evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[] { 0 };
-            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, metamodel, evm, viewType, constructor, proxyFactory);
+            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, viewType, constructor, proxyFactory);
         }
 
         @Override

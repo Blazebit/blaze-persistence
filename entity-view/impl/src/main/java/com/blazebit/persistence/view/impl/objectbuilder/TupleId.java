@@ -21,21 +21,21 @@ import java.util.Arrays;
  *
  * @author Christian
  */
-public class ParentId {
+public class TupleId {
 
-    private final Object[] parentId;
+    private final Object[] id;
 
-    public ParentId(int[] parentIdPositions, Object[] tuple) {
-        parentId = new Object[parentIdPositions.length];
-        for (int i = 0; i < parentIdPositions.length; i++) {
-            parentId[i] = tuple[parentIdPositions[i]];
+    public TupleId(int[] idPositions, Object[] tuple) {
+        id = new Object[idPositions.length];
+        for (int i = 0; i < idPositions.length; i++) {
+            id[i] = tuple[idPositions[i]];
         }
     }
 
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 53 * hash + Arrays.deepHashCode(this.parentId);
+        hash = 53 * hash + Arrays.deepHashCode(this.id);
         return hash;
     }
 
@@ -47,8 +47,8 @@ public class ParentId {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final ParentId other = (ParentId) obj;
-        if (!Arrays.deepEquals(this.parentId, other.parentId)) {
+        final TupleId other = (TupleId) obj;
+        if (!Arrays.deepEquals(this.id, other.id)) {
             return false;
         }
         return true;

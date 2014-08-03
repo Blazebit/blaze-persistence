@@ -19,7 +19,6 @@ package com.blazebit.persistence.view.basic;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -70,6 +69,10 @@ public class AbstractClassViewTest extends AbstractEntityViewPersistenceTest {
             
             em.flush();
             tx.commit();
+            em.clear();
+            
+            doc1 = em.find(Document.class, doc1.getId());
+            doc2 = em.find(Document.class, doc2.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);
