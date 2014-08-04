@@ -15,42 +15,20 @@
  */
 package com.blazebit.testsuite.base;
 
-import com.blazebit.persistence.Criteria;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.util.Properties;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import org.junit.After;
-import org.junit.Before;
 
 /**
  * 
  * @author Christian
  */
-public abstract class AbstractPersistenceTest {
+public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 
-    protected EntityManager em;
-    protected CriteriaBuilderFactory cbf;
-
-    @Before
-    public void init() {
-        Properties properties = new Properties();
-        properties.put("eclipselink.metadata-source", "com.blazebit.testsuite.base.EntityClassesMetadataSource");
-        properties.put("eclipselink.metadata-source.entity-classes", getEntityClasses());
-
-        EntityManagerFactory factory = Persistence.createEntityManagerFactory("TestsuiteBase", properties);
-        em = factory.createEntityManager();
-
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        cbf = config.createCriteriaBuilderFactory();
+    @Override
+    protected Properties applyProperties(Properties properties) {
+        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
+        properties.put("eclipselink.logging.level.sql", "FINE");
+        properties.put("eclipselink.logging.parameters", "true");
+        return properties;
     }
 
-    @After
-    public void destruct() {
-        em.getEntityManagerFactory().close();
-    }
-
-    protected abstract Class<?>[] getEntityClasses();
 }

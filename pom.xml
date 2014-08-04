@@ -166,6 +166,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-openjpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-core-cdi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -177,13 +182,22 @@
             
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
                 <version>${project.version}</version>
             </dependency>
                         

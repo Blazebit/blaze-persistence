@@ -18,6 +18,7 @@
     <modules>
         <module>hibernate</module>
         <module>eclipselink</module>
+        <module>openjpa</module>
         <module>core-cdi</module>
         <module>entity-view-cdi</module>
     </modules>

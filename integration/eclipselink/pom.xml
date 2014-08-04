@@ -12,7 +12,7 @@
     <artifactId>blaze-persistence-integration-eclipselink</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence EclipseLink Integration</name>
+    <name>Blazebit Persistence Integration EclipseLink</name>
     
     <repositories>
         <repository>

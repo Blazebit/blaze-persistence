@@ -9,11 +9,11 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>blaze-persistence-integration-hibernate</artifactId>
+    <artifactId>blaze-persistence-integration-openjpa</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Integration Hibernate</name>
-
+    <name>Blazebit Persistence Integration OpenJPA</name>
+    
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -33,11 +33,9 @@
         </dependency>
         
         <dependency>
-            <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-entitymanager</artifactId>
-            <!-- Use the old version for the bug workaround test -->
-            <!-- <version>4.2.4.Final</version>  -->
-            <version>4.2.6.Final</version>
+            <groupId>org.apache.openjpa</groupId>
+            <artifactId>openjpa-all</artifactId>
+            <version>2.4.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
     

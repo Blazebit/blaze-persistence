@@ -14,7 +14,9 @@
 
     <name>Blazebit Persistence Testsuite Base</name>
     <modules>
+        <module>jpa</module>
         <module>hibernate</module>
         <module>eclipselink</module>
+        <module>openjpa</module>
     </modules>
 </project>

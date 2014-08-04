@@ -71,7 +71,7 @@
     
     
     <profiles>
-<!--        <profile>
+        <profile>
             <id>hibernate</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -83,17 +83,23 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>-->
-        
+        </profile>
         <profile>
             <id>eclipselink</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
             <dependencies>
                 <dependency>
                     <groupId>${project.groupId}</groupId>
                     <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>openjpa</id>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
                     <scope>test</scope>
                 </dependency>
             </dependencies>

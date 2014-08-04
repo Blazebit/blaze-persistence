@@ -15,57 +15,24 @@
  */
 package com.blazebit.testsuite.base;
 
-import com.blazebit.persistence.Criteria;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.util.Properties;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import org.hibernate.ejb.Ejb3Configuration;
-import org.junit.After;
-import org.junit.Before;
 
 /**
  * 
  * @author Christian
  */
-public abstract class AbstractPersistenceTest {
+public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 
-    protected EntityManager em;
-    protected CriteriaBuilderFactory cbf;
-
-    @Before
-    public void init() {
-        Properties properties = new Properties();
-        properties.put("javax.persistence.provider", "org.hibernate.ejb.HibernatePersistence");
-        properties.put("javax.persistence.transactionType", "RESOURCE_LOCAL");
-        properties.put("hibernate.connection.url", "jdbc:h2:mem:test");
+    @Override
+    protected Properties applyProperties(Properties properties) {
+        properties.put("hibernate.connection.url", properties.get("javax.persistence.jdbc.url"));
+        properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
+        properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
+        properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
         properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
-        properties.put("hibernate.connection.driver_class", "org.h2.Driver");
-        properties.put("hibernate.connection.password", "admin");
-        properties.put("hibernate.connection.username", "admin");
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
         properties.put("hibernate.show_sql", "true");
         properties.put("hibernate.format_sql", "true");
-
-        Ejb3Configuration cfg = new Ejb3Configuration();
-        cfg.addProperties(properties);
-        
-        for (Class<?> clazz : getEntityClasses()) {
-            cfg.addAnnotatedClass(clazz);
-        }
-
-        EntityManagerFactory factory = cfg.buildEntityManagerFactory();
-        em = factory.createEntityManager();
-
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        cbf = config.createCriteriaBuilderFactory();
+        return properties;
     }
-
-    @After
-    public void destruct() {
-        em.getEntityManagerFactory().close();
-    }
-
-    protected abstract Class<?>[] getEntityClasses();
 }
