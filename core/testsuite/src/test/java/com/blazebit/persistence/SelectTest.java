@@ -46,7 +46,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("partners");
         
-        assertEquals("SELECT partners FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
     }
     
     @Test
@@ -54,7 +54,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners");
         
-        assertEquals("SELECT partners FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
     }
     
     @Test
@@ -62,7 +62,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners + 1");
         
-        assertEquals("SELECT partners+1 FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + "+1 FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
     }
     
     @Test
@@ -70,7 +70,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners").select("d.versions");
         
-        assertEquals("SELECT partners, versions FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + ", " + joinAliasValue("versions") + " FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
     }
     
     @Test
@@ -78,7 +78,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -86,7 +86,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("partners").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -94,7 +94,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
         
-        assertEquals("SELECT partners AS p FROM Document d LEFT JOIN d.partners partners WHERE partners = :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -134,7 +134,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.select("a.versions");
         
-        assertEquals("SELECT versions FROM Document a LEFT JOIN a.versions versions", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("versions") + " FROM Document a LEFT JOIN a.versions versions", criteria.getQueryString());
     }
     
     @Test
@@ -179,11 +179,5 @@ public class SelectTest extends AbstractCoreTest {
     public void testSelectArrayNull(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select((String) null);
-    }
-    
-    @Test
-    public void removeMe(){
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select("contacts");
     }
 }

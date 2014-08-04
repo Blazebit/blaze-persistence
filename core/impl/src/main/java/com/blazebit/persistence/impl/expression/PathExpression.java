@@ -29,14 +29,20 @@ public class PathExpression implements Expression, Cloneable {
     private final List<PathElementExpression> pathProperties;
     private JoinNode baseNode;
     private String field;
-    private boolean collectionValued = false;
+    private boolean usedInCollectionFunction = false;
+    private final boolean isCollectionKeyPath;
 
     public PathExpression() {
-        this.pathProperties = new ArrayList<PathElementExpression>();
+        this(new ArrayList<PathElementExpression>(), false);
     }
 
     public PathExpression(List<PathElementExpression> pathProperties) {
+        this(pathProperties, false);
+    }
+    
+    public PathExpression(List<PathElementExpression> pathProperties, boolean isCollectionKeyPath) {
         this.pathProperties = pathProperties;
+        this.isCollectionKeyPath = isCollectionKeyPath;
     }
 
     @Override
@@ -64,12 +70,12 @@ public class PathExpression implements Expression, Cloneable {
         this.field = field;
     }
 
-    public boolean isCollectionValued() {
-        return collectionValued;
+    public boolean isUsedInCollectionFunction() {
+        return usedInCollectionFunction;
     }
 
-    public void setCollectionValued(boolean collectionValued) {
-        this.collectionValued = collectionValued;
+    public void setUsedInCollectionFunction(boolean collectionValued) {
+        this.usedInCollectionFunction = collectionValued;
     }
 
     public String getPath() {
@@ -88,6 +94,10 @@ public class PathExpression implements Expression, Cloneable {
         return sb.toString();
     }
 
+    public boolean isIsCollectionKeyPath() {
+        return isCollectionKeyPath;
+    }
+    
     @Override
     public int hashCode() {
         int hash = 5;

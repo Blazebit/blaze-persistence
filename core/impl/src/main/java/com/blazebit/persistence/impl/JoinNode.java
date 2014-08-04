@@ -35,14 +35,16 @@ public class JoinNode {
     private Class<?> propertyClass;
     // Use TreeMap so that joins get applied alphabetically for easier testing
     private final Map<String, JoinNode> nodes = new TreeMap<String, JoinNode>();
+    private final boolean collection;
     
     private Predicate withPredicate;
 
-    public JoinNode(JoinAliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass) {
+    public JoinNode(JoinAliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass, boolean collection) {
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.fetch = fetch;
         this.propertyClass = propertyClass;
+        this.collection = collection;
     }
 
     public boolean isSelectOnly() {
@@ -95,6 +97,10 @@ public class JoinNode {
 
     public void setWithPredicate(Predicate withPredicate) {
         this.withPredicate = withPredicate;
+    }
+
+    public boolean isCollection() {
+        return collection;
     }
 }
 

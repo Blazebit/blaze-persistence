@@ -111,7 +111,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         StringBuilder sbSelectFrom = new StringBuilder();
 
         applyImplicitJoins();
-        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
+        applyExpressionTransformers();
 
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
@@ -146,7 +146,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         verifyBuilderEnded();
         StringBuilder sbSelectFrom = new StringBuilder();
         applyImplicitJoins();
-        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
+        applyExpressionTransformers();
 
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
@@ -168,9 +168,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias())
             .append('.')
             .append(idName)
-            .append(" IN (:")
+            .append(" IN :")
             .append(idParamName)
-            .append(")");
+            .append("");
 
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
@@ -193,7 +193,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .getName();
 
         applyImplicitJoins();
-        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
+        applyExpressionTransformers();
         
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')

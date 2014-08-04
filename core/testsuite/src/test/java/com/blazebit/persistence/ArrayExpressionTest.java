@@ -30,7 +30,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[d.age]");
 
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = d.age", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = d.age", criteria.getQueryString());
     }
 
     @Test
@@ -38,7 +38,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[:age]");
 
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age", criteria.getQueryString());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[:age].localized[d.age]");
 
-        assertEquals("SELECT localized FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age LEFT JOIN contacts.localized localized " + ON_CLAUSE + " KEY(localized) = d.age", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("localized") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age LEFT JOIN contacts.localized localized " + ON_CLAUSE + " KEY(localized) = d.age", criteria.getQueryString());
     }
 
     @Test
@@ -54,7 +54,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[:age].partnerDocument.versions[d.age]");
 
-        assertEquals("SELECT versions FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age LEFT JOIN contacts.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions " + ON_CLAUSE + " KEY(versions) = d.age", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("versions") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :age LEFT JOIN contacts.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions " + ON_CLAUSE + " KEY(versions) = d.age", criteria.getQueryString());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[d.versions.date]");
 
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = versions.date LEFT JOIN d.versions versions", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = versions.date LEFT JOIN d.versions versions", criteria.getQueryString());
     }
     
     @Test
@@ -70,7 +70,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[v.date]").leftJoin("d.versions", "v"); 
         
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = v.date LEFT JOIN d.versions v", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = v.date LEFT JOIN d.versions v", criteria.getQueryString());
     }
     
     @Test
@@ -78,7 +78,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("contacts[1]").where("contacts[1]").ge(0);
         
-        assertEquals("SELECT contacts FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = 1 WHERE contacts >= :param_0", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = 1 WHERE " + joinAliasValue("contacts") + " >= :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -95,7 +95,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("owner.partnerDocument", "x").leftJoin("owner.partnerDocument", "p").leftJoin("p.contacts", "c").where("c[1]").ge(0);
         
-        assertEquals("SELECT p AS x FROM Document d JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c " + ON_CLAUSE + " KEY(c) = 1 WHERE c >= :param_0", criteria.getQueryString());
+        assertEquals("SELECT p AS x FROM Document d JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c " + ON_CLAUSE + " KEY(c) = 1 WHERE " + joinAliasValue("c")+ " >= :param_0", criteria.getQueryString());
     }
     
     @Test
@@ -111,6 +111,6 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[1]", "x");
         
-        assertEquals("SELECT contacts AS x FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = 1", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts") + " AS x FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = 1", criteria.getQueryString());
     }
 }

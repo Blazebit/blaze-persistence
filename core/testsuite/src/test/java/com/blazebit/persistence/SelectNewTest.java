@@ -116,7 +116,7 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<DocumentPartnerView> crit = cbf.from(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
 
-        assertEquals("SELECT d.id, partners FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
+        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
     }
     
     @Test

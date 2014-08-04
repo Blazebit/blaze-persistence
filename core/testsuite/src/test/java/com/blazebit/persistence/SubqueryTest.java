@@ -30,7 +30,7 @@ public class SubqueryTest extends AbstractCoreTest {
     public void testRootAliasInSubquery() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
-        String expected = "FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE ownedDocuments = d)";
+        String expected = "FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE " + joinAliasValue("ownedDocuments") + " = d)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();

@@ -38,7 +38,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
     
     public String joinAliasValue(String alias) {
-        return jpaInfo.joinAliasValue(alias);
+        return jpaInfo.getCollectionValueFunction() != null ? jpaInfo.getCollectionValueFunction() + "(" + alias + ")" : alias;
     }
 
     @Override

@@ -395,7 +395,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     private Expression makeCollectionValued(Expression expr){
         if (leftExpression instanceof PathExpression) {
-            ((PathExpression) leftExpression).setCollectionValued(true);
+            ((PathExpression) leftExpression).setUsedInCollectionFunction(true);
         } else {
             throw new SyntaxErrorException("Function expects collection valued path and cannot be applied to expression [" + leftExpression + "]");
         }

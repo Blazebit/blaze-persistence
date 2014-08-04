@@ -104,7 +104,7 @@ public class PaginationTest extends AbstractCoreTest {
         
         String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name,' user'), COALESCE(" + joinAliasValue("localized") + ",'no item'), partnerDocument.name FROM Document d "
                 + "JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE + " KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
-                + "WHERE d.id IN (:ids) "
+                + "WHERE d.id IN :ids "
                 + "ORDER BY d.id ASC NULLS LAST";
         
         PaginatedCriteriaBuilder<DocumentViewModel> pcb = crit.page(0, 2);
@@ -132,7 +132,7 @@ public class PaginationTest extends AbstractCoreTest {
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner WHERE owner.name = :param_0";
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d JOIN d.owner owner WHERE owner.name = :param_0";
-        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr JOIN d.owner owner WHERE d.id IN (:ids)";
+        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr JOIN d.owner owner WHERE d.id IN :ids";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")

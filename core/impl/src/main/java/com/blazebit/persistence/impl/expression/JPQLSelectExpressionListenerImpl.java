@@ -161,13 +161,13 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             }
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
-            path.setCollectionValued(startCollectionValuedPath);
+            path.setUsedInCollectionFunction(startCollectionValuedPath);
             startCollectionValuedPath = false;
         } else if(ctx == ContextType.OUTER){
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
             outerExpression.setPath(path);
-            path.setCollectionValued(startCollectionValuedPath);
+            path.setUsedInCollectionFunction(startCollectionValuedPath);
             startCollectionValuedPath = false;
         } else if (ctx == ContextType.ARRAY) {
             ArrayExpression arrayExpr;

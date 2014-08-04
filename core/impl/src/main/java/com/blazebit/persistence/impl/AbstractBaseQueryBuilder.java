@@ -29,6 +29,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,11 +64,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final QueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    private final JPAInfo jpaInfo;
+    protected final JPAInfo jpaInfo;
 
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
-
+    
+    private final List<ExpressionTransformer> transformers;
+    
+    
     /**
      * Create flat copy of builder
      *
@@ -89,6 +93,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
+        this.transformers = builder.transformers;
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
@@ -114,7 +119,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new QueryGenerator(this, this.aliasManager, jpaInfo);
+        this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
         
@@ -130,6 +135,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
+        
+        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
@@ -379,7 +386,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setJoinWithObjectLeafAllowed(true);
     }
 
-    protected void applyExpressionTransformers(List<ExpressionTransformer> transformers) {
+    protected void applyExpressionTransformers() {
         // run through expressions
         // for each arrayExpression, look up the alias in the joinManager's aliasMap
         // do the transformation using the alias
@@ -423,7 +430,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // join("a.b", "b").where("b.c")
         // in the first case
         applyImplicitJoins();
-        applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
+        applyExpressionTransformers();
 
         sbSelectFrom.append(selectManager.buildSelect());
         if (sbSelectFrom.length() > 0) {

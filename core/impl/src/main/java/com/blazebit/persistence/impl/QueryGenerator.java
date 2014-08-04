@@ -56,12 +56,10 @@ public class QueryGenerator extends VisitorAdapter {
     private SelectManager<?> selectManager;
     private final BaseQueryBuilder<?,?> aliasOwner;
     private final AliasManager aliasManager;
-    private final JPAInfo jpaInfo;
 
-    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager, JPAInfo jpaInfo) {
+    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager) {
         this.aliasOwner = aliasOwner;
         this.aliasManager = aliasManager;
-        this.jpaInfo = jpaInfo;
     }
 
     void setSelectManager(SelectManager<?> selectManager) {

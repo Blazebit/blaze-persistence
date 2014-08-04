@@ -93,7 +93,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                     CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
                     keyExpression.getExpressions().add(new FooExpression("KEY("));
 
-                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>());
+                    PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
                     keyPath.getExpressions().add(arrayExp.getBase());
                     keyExpression.getExpressions().add(keyPath);
                     keyExpression.getExpressions().add(new FooExpression(")"));

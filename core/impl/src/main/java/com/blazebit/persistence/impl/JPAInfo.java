@@ -77,11 +77,10 @@ public class JPAInfo {
         }
     }
     
-    public String joinAliasValue(String alias) {
+    public String getCollectionValueFunction(){
         if (isEclipseLink24) {
-            return "VALUE(" + alias + ")";
+            return "VALUE";
         }
-        
-        return alias;
+        return null;
     }
 }
