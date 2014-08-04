@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.entity;
+package com.blazebit.persistence.view.entity;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,7 +33,7 @@ import javax.persistence.OneToMany;
  * @author ccbem
  */
 @Entity
-public class Person {
+public class Person implements Serializable {
     private Long id;
     private String name;
     private long age;

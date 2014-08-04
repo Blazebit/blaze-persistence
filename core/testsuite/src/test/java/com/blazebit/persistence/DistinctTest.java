@@ -23,7 +23,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class DistinctTest extends AbstractPersistenceTest {
+public class DistinctTest extends AbstractCoreTest {
 
     @Test
     public void testDistinct() {

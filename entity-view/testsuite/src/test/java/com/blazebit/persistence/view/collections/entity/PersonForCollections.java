@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.collections.entity;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;
@@ -29,7 +30,7 @@ import javax.persistence.OneToMany;
  * @author Christian
  */
 @Entity
-public class PersonForCollections {
+public class PersonForCollections implements Serializable  {
     private Long id;
     private String name;
     private DocumentForCollections partnerDocument;

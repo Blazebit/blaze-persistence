@@ -30,7 +30,7 @@ import org.junit.Test;
  *
  * @author Christian
  */
-public class SelectNewObjectBuilderTest extends AbstractPersistenceTest {
+public class SelectNewObjectBuilderTest extends AbstractCoreTest {
     
     @Before
     public void setUp() {

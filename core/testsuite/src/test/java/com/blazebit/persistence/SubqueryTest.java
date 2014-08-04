@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class SubqueryTest extends AbstractPersistenceTest {
+public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testRootAliasInSubquery() {
@@ -173,10 +173,10 @@ public class SubqueryTest extends AbstractPersistenceTest {
 //                + "(SELECT p.id FROM Person p WHERE p.name = n)").getResultList();
         
         em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id > 0 ORDER BY n").getResultList();
-        em.createQuery("SELECT d.name FROM Document d WHERE UPPER(name) = LOWER(name)").getResultList();
-        em.createQuery("SELECT name, UPPER(d.name) FROM Document d").getResultList();
+        em.createQuery("SELECT d.name FROM Document d WHERE UPPER(d.name) = LOWER(d.name)").getResultList();
+        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d").getResultList();
         
-        em.createQuery("SELECT name, UPPER(d.name) FROM Document d WHERE d.name = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
+        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d WHERE d.name = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
         
 //        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
 //                + "(SELECT p.id FROM Person p WHERE p.name = 'test' ORDER BY n)").getResultList();

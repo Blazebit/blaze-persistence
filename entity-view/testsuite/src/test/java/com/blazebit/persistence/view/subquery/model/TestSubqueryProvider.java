@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**

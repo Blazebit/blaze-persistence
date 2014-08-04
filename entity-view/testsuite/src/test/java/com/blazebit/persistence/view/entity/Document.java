@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.entity;
+package com.blazebit.persistence.view.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -42,7 +43,7 @@ import javax.persistence.Transient;
  * @author ccbem
  */
 @Entity
-public class Document {
+public class Document implements Serializable {
     private Long id;
     private String name;
     private Object someTransientField;

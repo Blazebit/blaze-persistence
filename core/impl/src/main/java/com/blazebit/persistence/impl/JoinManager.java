@@ -70,15 +70,7 @@ public class JoinManager {
         this.aliasOwner = aliasOwner;
         this.metamodel = metamodel;
         this.parent = parent;
-
-        if (jpaInfo.isJPA21) {
-            joinRestrictionKeyword = " ON ";
-        } else if (jpaInfo.isHibernate) {
-            joinRestrictionKeyword = " WITH ";
-        } else {
-            throw new UnsupportedOperationException("Unsupported JPA provider");
-        }
-
+        this.joinRestrictionKeyword = " " + jpaInfo.getOnClause() + " ";
     }
 
     String getRootAlias() {

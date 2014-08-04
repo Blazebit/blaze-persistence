@@ -26,7 +26,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class EqTest extends AbstractPersistenceTest {
+public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualTo(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

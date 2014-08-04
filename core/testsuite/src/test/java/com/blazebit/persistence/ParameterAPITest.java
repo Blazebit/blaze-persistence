@@ -31,7 +31,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class ParameterAPITest extends AbstractPersistenceTest{
+public class ParameterAPITest extends AbstractCoreTest{
     
     @Test(expected = IllegalArgumentException.class)
     public void testSetParameter_noSuchParamter(){

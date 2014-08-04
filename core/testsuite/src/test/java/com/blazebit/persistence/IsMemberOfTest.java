@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class IsMemberOfTest extends AbstractPersistenceTest {
+public class IsMemberOfTest extends AbstractCoreTest {
     @Test
     public void testIsMemberOf(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

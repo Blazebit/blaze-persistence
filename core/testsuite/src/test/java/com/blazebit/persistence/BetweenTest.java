@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class BetweenTest extends AbstractPersistenceTest {
+public class BetweenTest extends AbstractCoreTest {
     @Test
     public void testBetween(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class OrderByTest extends AbstractPersistenceTest {
+public class OrderByTest extends AbstractCoreTest {
     @Test
     public void testOrderByAscNullsFirst(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

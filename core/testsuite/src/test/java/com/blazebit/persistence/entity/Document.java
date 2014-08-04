@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.entity;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -38,7 +40,7 @@ import javax.persistence.Transient;
  * @author ccbem
  */
 @Entity
-public class Document {
+public class Document implements Serializable {
     private Long id;
     private String name;
     private Object someTransientField;
@@ -134,6 +136,7 @@ public class Document {
     }
 
     @ElementCollection
+    @CollectionTable(name = "contacts")
     public Map<Integer, Person> getContacts() {
         return contacts;
     }

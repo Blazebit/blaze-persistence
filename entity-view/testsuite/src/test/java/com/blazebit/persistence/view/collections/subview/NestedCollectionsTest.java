@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.collections.subview;
 
-import com.blazebit.persistence.AbstractPersistenceTest;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
@@ -55,7 +55,7 @@ import org.junit.runners.Parameterized;
  * @author cpbec
  */
 @RunWith(Parameterized.class)
-public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U extends SubviewDocumentCollectionsView> extends AbstractPersistenceTest {
+public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {
     
     private final Class<T> viewType;
     private final Class<U> subviewType;
@@ -69,7 +69,7 @@ public class NestedCollectionsTest<T extends PersonForCollectionsMasterView, U e
     }
 
     @Override
-    protected Class<?>[] getEntities() {
+    protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             DocumentForCollections.class,
             PersonForCollections.class

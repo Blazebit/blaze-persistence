@@ -16,21 +16,38 @@
 
 package com.blazebit.persistence.view.basic;
 
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
+import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  *
  * @author cpbec
  */
-public class InterfaceViewTest extends AbstractEntityViewPersistenceTest {
+public class InterfaceViewTest extends AbstractEntityViewTest {
+    
+    protected static EntityViewManager evm;
+    
+    @BeforeClass
+    public static void initEvm() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentViewInterface.class);
+        cfg.addEntityView(DocumentViewAbstractClass.class);
+        cfg.addEntityView(PersonView1.class);
+        evm = cfg.createEntityViewManager();
+    }
     
     private Document doc1;
     private Document doc2;

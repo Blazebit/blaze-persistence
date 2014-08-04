@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class LikeTest extends AbstractPersistenceTest {
+public class LikeTest extends AbstractCoreTest {
     @Test
     public void testLikeCaseInsensitive(){
         final String pattern = "te%t";

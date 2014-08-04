@@ -26,7 +26,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class WhereTest extends AbstractPersistenceTest {
+public class WhereTest extends AbstractCoreTest {
     
     @Test
     public void testWhereProperty(){

@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence;
+package com.blazebit.testsuite.base;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.util.Properties;
 import javax.persistence.EntityManager;
@@ -27,10 +26,10 @@ import org.junit.After;
 import org.junit.Before;
 
 /**
- *
- * @author ccbem
+ * 
+ * @author Christian
  */
-public class AbstractPersistenceTest {
+public abstract class AbstractPersistenceTest {
 
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
@@ -51,9 +50,10 @@ public class AbstractPersistenceTest {
 
         Ejb3Configuration cfg = new Ejb3Configuration();
         cfg.addProperties(properties);
-        cfg.addAnnotatedClass(Document.class);
-        cfg.addAnnotatedClass(Version.class);
-        cfg.addAnnotatedClass(Person.class);
+        
+        for (Class<?> clazz : getEntityClasses()) {
+            cfg.addAnnotatedClass(clazz);
+        }
 
         EntityManagerFactory factory = cfg.buildEntityManagerFactory();
         em = factory.createEntityManager();
@@ -66,4 +66,6 @@ public class AbstractPersistenceTest {
     public void destruct() {
         em.getEntityManagerFactory().close();
     }
+
+    protected abstract Class<?>[] getEntityClasses();
 }

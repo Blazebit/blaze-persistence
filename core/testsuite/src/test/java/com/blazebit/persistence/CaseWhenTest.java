@@ -24,7 +24,7 @@ import org.junit.Test;
  * @author cpbec
  */
 @Ignore
-public class CaseWhenTest extends AbstractPersistenceTest {
+public class CaseWhenTest extends AbstractCoreTest {
     
     @Test
     public void testCaseWhen() {

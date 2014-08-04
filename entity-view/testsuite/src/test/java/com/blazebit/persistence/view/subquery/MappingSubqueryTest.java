@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.subquery;
 
-import com.blazebit.persistence.AbstractPersistenceTest;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
@@ -35,7 +35,7 @@ import org.junit.Test;
  *
  * @author Christian
  */
-public class MappingSubqueryTest extends AbstractPersistenceTest {
+public class MappingSubqueryTest extends AbstractEntityViewTest {
     
     private Document doc1;
     private Document doc2;

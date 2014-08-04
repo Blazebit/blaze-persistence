@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class OuterFunctionTest extends AbstractPersistenceTest{
+public class OuterFunctionTest extends AbstractCoreTest{
 
     @Test
     public void testOuter1() {

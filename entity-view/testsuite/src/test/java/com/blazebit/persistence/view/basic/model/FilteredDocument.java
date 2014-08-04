@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.basic.model;
 
-import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingFilter;

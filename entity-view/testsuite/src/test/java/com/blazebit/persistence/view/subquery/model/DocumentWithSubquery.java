@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.subquery.model;
 
-import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.MappingSubquery;

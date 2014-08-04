@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.view.collections.entity;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,7 +37,7 @@ import javax.persistence.OrderColumn;
  * @author Christian
  */
 @Entity
-public class DocumentForCollections {
+public class DocumentForCollections implements Serializable  {
     private Long id;
     private String name;
     private PersonForCollections owner;

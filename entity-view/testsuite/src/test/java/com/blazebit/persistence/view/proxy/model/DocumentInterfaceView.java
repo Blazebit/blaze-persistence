@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.proxy.model;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 

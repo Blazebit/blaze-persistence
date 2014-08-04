@@ -32,7 +32,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class SelectNewTest extends AbstractPersistenceTest {
+public class SelectNewTest extends AbstractCoreTest {
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
@@ -100,13 +100,13 @@ public class SelectNewTest extends AbstractPersistenceTest {
     @Test
     public void testSelectNewSubquery() {
         CriteriaBuilder<DocumentCount> crit = cbf.from(em, Document.class, "d")
-            .selectNew(DocumentCount.class).with().from(Document.class).select("COUNT(*)").end().end();
+            .selectNew(DocumentCount.class).with().from(Document.class).select("COUNT(document.id)").end().end();
         
-        assertEquals("SELECT (SELECT COUNT(*) FROM Document document) FROM Document d", crit.getQueryString());
+        assertEquals("SELECT (SELECT COUNT(document.id) FROM Document document) FROM Document d", crit.getQueryString());
         List<DocumentCount> actual = crit.getResultList();
         
         /* expected */
-        Long expectedCount = (Long) em.createQuery("SELECT COUNT(*) FROM Document d").getSingleResult();
+        Long expectedCount = (Long) em.createQuery("SELECT COUNT(d.id) FROM Document d").getSingleResult();
         
         assertEquals((long) expectedCount, actual.size());
     }
@@ -133,7 +133,7 @@ public class SelectNewTest extends AbstractPersistenceTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4);
         
-        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts WITH KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
+        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
     }
     
     @Test(expected = NullPointerException.class)

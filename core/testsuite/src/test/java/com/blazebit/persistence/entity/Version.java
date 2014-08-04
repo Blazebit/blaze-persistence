@@ -16,18 +16,21 @@
 
 package com.blazebit.persistence.entity;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  *
  * @author ccbem
  */
 @Entity
-public class Version {
+public class Version implements Serializable {
     private long id;
     private Document document;
     private Calendar date;
@@ -52,6 +55,7 @@ public class Version {
         this.document = document;
     }
 
+    @Temporal(TemporalType.DATE)
     public Calendar getDate() {
         return date;
     }

@@ -26,7 +26,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class HavingTest extends AbstractPersistenceTest {
+public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHaving(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

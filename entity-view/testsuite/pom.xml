@@ -51,12 +51,6 @@
             <scope>test</scope>
         </dependency>
         
-        <!-- If new integrations arrive, we can use profiles -->
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -74,4 +68,35 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+    
+    <profiles>
+        <profile>
+            <id>hibernate</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        
+<!--        <profile>
+            <id>eclipselink</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>-->
+    </profiles>
 </project>

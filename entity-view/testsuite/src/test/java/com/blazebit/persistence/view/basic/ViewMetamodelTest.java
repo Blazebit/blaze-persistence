@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.basic.model.CircularDocument;
 import com.blazebit.persistence.view.basic.model.CircularPerson;
 import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
@@ -45,7 +45,7 @@ import org.junit.Test;
  *
  * @author cpbec
  */
-public class ViewMetamodelTest extends AbstractEntityViewPersistenceTest {
+public class ViewMetamodelTest {
     
     private ViewMetamodel getViewMetamodel() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();

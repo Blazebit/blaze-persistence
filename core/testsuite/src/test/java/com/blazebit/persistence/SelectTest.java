@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class SelectTest extends AbstractPersistenceTest {
+public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectNonJoinable(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");

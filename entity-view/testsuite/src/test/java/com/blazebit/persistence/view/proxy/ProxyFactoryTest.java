@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.proxy;
 
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;

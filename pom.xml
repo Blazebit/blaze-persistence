@@ -21,6 +21,7 @@
         <module>core</module>
         <module>entity-view</module>
         <module>integration</module>
+        <module>testsuite-base</module>
     </modules>
 
     <issueManagement>
@@ -160,12 +161,29 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-core-cdi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
                 <version>${project.version}</version>
             </dependency>
                         

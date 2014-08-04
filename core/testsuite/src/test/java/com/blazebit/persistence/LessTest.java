@@ -26,7 +26,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class LessTest extends AbstractPersistenceTest {
+public class LessTest extends AbstractCoreTest {
     
     @Test
     public void testLt(){

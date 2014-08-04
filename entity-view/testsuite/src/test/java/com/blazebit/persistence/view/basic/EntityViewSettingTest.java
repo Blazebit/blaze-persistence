@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.AbstractPersistenceTest;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
@@ -36,7 +36,7 @@ import org.junit.Test;
  *
  * @author Christian Beikov
  */
-public class EntityViewSettingTest extends AbstractPersistenceTest {
+public class EntityViewSettingTest extends AbstractEntityViewTest {
     
     
     @Before

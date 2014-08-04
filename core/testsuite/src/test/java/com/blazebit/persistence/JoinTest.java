@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ccbem
  */
-public class JoinTest extends AbstractPersistenceTest {
+public class JoinTest extends AbstractCoreTest {
     
     final String defaultDocumentAlias = "document";
     

@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.collections.basic;
 
-import com.blazebit.persistence.AbstractPersistenceTest;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
@@ -44,7 +44,7 @@ import org.junit.runners.Parameterized;
  * @author cpbec
  */
 @RunWith(Parameterized.class)
-public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractPersistenceTest {
+public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {
     
     private final Class<T> viewType;
     
@@ -56,7 +56,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
     }
 
     @Override
-    protected Class<?>[] getEntities() {
+    protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             DocumentForCollections.class,
             PersonForCollections.class

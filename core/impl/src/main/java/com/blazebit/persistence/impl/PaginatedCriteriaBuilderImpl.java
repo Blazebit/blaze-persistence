@@ -113,7 +113,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         applyImplicitJoins();
         applyExpressionTransformers(Arrays.asList(new ExpressionTransformer[]{ new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager) }));
 
-        sbSelectFrom.append("SELECT COUNT(*)");
+        Metamodel m = em.getMetamodel();
+        EntityType<?> entityType = m.entity(fromClazz);
+        String idName = entityType.getId(entityType.getIdType()
+            .getJavaType())
+            .getName();
+        
+        String idClause = new StringBuilder(joinManager.getRootAlias())
+            .append('.')
+            .append(idName)
+            .toString();
+        
+        sbSelectFrom.append("SELECT COUNT(").append(idClause).append(')');
         sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
