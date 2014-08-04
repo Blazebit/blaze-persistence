@@ -65,7 +65,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
             joinManager.getParent().implicitJoin(path, true, selectClause, true);
         }
         
-        return path;
+        return original;
     }
     
 }
