@@ -88,8 +88,7 @@ public class DocumentForCollections implements Serializable  {
         this.partners = partners;
     }
 
-    @ElementCollection
-    @CollectionTable(name = "contacts")
+    @OneToMany
     public Map<Integer, PersonForCollections> getContacts() {
         return contacts;
     }

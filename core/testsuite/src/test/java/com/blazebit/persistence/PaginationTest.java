@@ -95,14 +95,14 @@ public class PaginationTest extends AbstractCoreTest {
                 
         // do not include joins that are only needed for the select clause
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE + " KEY(localized) = 1 "
-                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(VALUE(localized)) LIKE UPPER(:param_2)";
+                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized") + ") LIKE UPPER(:param_2)";
         
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE + " KEY(localized) = 1 "
-                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(VALUE(localized)) LIKE UPPER(:param_2) "
+                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized") + ") LIKE UPPER(:param_2) "
                 + "ORDER BY d.id ASC NULLS LAST";
         
-        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name,' user'), COALESCE(VALUE(localized),'no item'), partnerDocument.name FROM Document d "
+        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name,' user'), COALESCE(" + joinAliasValue("localized") + ",'no item'), partnerDocument.name FROM Document d "
                 + "JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE + " KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
                 + "WHERE d.id IN (:ids) "
                 + "ORDER BY d.id ASC NULLS LAST";

@@ -76,4 +76,12 @@ public class JPAInfo {
             throw new UnsupportedOperationException("Unsupported JPA provider");
         }
     }
+    
+    public String joinAliasValue(String alias) {
+        if (isEclipseLink24) {
+            return "VALUE(" + alias + ")";
+        }
+        
+        return alias;
+    }
 }

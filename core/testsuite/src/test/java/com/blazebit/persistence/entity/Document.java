@@ -29,7 +29,9 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -135,8 +137,9 @@ public class Document implements Serializable {
         this.nonJoinable = nonJoinable;
     }
 
-    @ElementCollection
-    @CollectionTable(name = "contacts")
+    @OneToMany
+    @JoinTable(name = "contacts")
+    @MapKeyColumn(table = "contacts")
     public Map<Integer, Person> getContacts() {
         return contacts;
     }

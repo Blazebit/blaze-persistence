@@ -31,10 +31,11 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testIn(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        List<Integer> ages = new ArrayList<Integer>(Arrays.asList(new Integer[]{1,2,3,4,5}));
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
         criteria.where("d.age").in(ages);
         
-        assertEquals("FROM Document d WHERE d.age IN (:param_0)", criteria.getQueryString());
+        assertEquals("FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -46,9 +47,10 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testNotIn(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        List<Integer> ages = new ArrayList<Integer>(Arrays.asList(new Integer[]{1,2,3,4,5}));
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
         criteria.where("d.age").notIn(ages);
-        assertEquals("FROM Document d WHERE NOT d.age IN (:param_0)", criteria.getQueryString());
+        assertEquals("FROM Document d WHERE NOT d.age IN :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)

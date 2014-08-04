@@ -27,12 +27,18 @@ import com.blazebit.testsuite.base.AbstractPersistenceTest;
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     
+    private JPAInfo jpaInfo;
     protected String ON_CLAUSE;
 
     @Override
     public void init() {
         super.init();
-        ON_CLAUSE = new JPAInfo(em).getOnClause();
+        jpaInfo = new JPAInfo(em);
+        ON_CLAUSE = jpaInfo.getOnClause();
+    }
+    
+    public String joinAliasValue(String alias) {
+        return jpaInfo.joinAliasValue(alias);
     }
 
     @Override

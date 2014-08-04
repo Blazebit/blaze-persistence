@@ -71,7 +71,7 @@
     
     
     <profiles>
-        <profile>
+<!--        <profile>
             <id>hibernate</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -83,9 +83,9 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>
+        </profile>-->
         
-<!--        <profile>
+        <profile>
             <id>eclipselink</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
@@ -97,6 +97,6 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-        </profile>-->
+        </profile>
     </profiles>
 </project>

@@ -29,11 +29,11 @@ import org.eclipse.persistence.sessions.Session;
  * 
  * @author Christian
  */
-public class ObjectBuilderResultTransformerAdapter implements QueryRedirector {
+public class ObjectBuilderQueryRedirectorAdapter implements QueryRedirector {
 
     private final ObjectBuilder<?> builder;
 
-    public ObjectBuilderResultTransformerAdapter(ObjectBuilder<?> builder) {
+    public ObjectBuilderQueryRedirectorAdapter(ObjectBuilder<?> builder) {
         this.builder = builder;
     }
 

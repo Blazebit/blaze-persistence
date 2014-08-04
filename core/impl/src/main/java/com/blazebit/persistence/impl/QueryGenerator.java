@@ -56,10 +56,12 @@ public class QueryGenerator extends VisitorAdapter {
     private SelectManager<?> selectManager;
     private final BaseQueryBuilder<?,?> aliasOwner;
     private final AliasManager aliasManager;
+    private final JPAInfo jpaInfo;
 
-    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager) {
+    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager, JPAInfo jpaInfo) {
         this.aliasOwner = aliasOwner;
         this.aliasManager = aliasManager;
+        this.jpaInfo = jpaInfo;
     }
 
     void setSelectManager(SelectManager<?> selectManager) {
@@ -209,9 +211,14 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(InPredicate predicate) {
         predicate.getLeft().accept(this);
-        sb.append(" IN (");
-        predicate.getRight().accept(this);
-        sb.append(")");
+        if (predicate.getRight() instanceof ParameterExpression) {
+            sb.append(" IN ");
+            predicate.getRight().accept(this);
+        } else {
+            sb.append(" IN (");
+            predicate.getRight().accept(this);
+            sb.append(")");
+        }
     }
 
     @Override

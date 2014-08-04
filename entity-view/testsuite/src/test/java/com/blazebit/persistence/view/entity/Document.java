@@ -31,7 +31,10 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKey;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 import javax.persistence.Temporal;
@@ -140,8 +143,9 @@ public class Document implements Serializable {
         this.nonJoinable = nonJoinable;
     }
 
-    @ElementCollection
-    @CollectionTable(name = "contacts")
+    @OneToMany
+    @JoinTable(name = "contacts")
+    @MapKeyColumn(table = "contacts")
     public Map<Integer, Person> getContacts() {
         return contacts;
     }
@@ -150,8 +154,9 @@ public class Document implements Serializable {
         this.contacts = localized;
     }
 
-    @ElementCollection
-    @CollectionTable(name = "contacts2")
+    @OneToMany
+    @JoinTable(name = "contacts2")
+    @MapKeyColumn(table = "contacts2")
     public Map<Integer, Person> getContacts2() {
         return contacts2;
     }
