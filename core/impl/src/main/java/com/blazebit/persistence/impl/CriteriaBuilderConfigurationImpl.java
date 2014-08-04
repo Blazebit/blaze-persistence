@@ -18,13 +18,10 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -33,7 +30,6 @@ import java.util.ServiceLoader;
  */
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
     
-    private final Map<Class<?>, ObjectBuilderFactory<?>> objectBuilders = new HashMap<Class<?>, ObjectBuilderFactory<?>>();
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
     
     public CriteriaBuilderConfigurationImpl() {
@@ -48,16 +44,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             QueryTransformer transformer = iterator.next();
             queryTransformers.add(transformer);
         }
-    }
-
-    @Override
-    public <T> void registerObjectBuilder(Class<T> clazz, ObjectBuilderFactory<T> factory) {
-        objectBuilders.put(clazz, factory);
-    }
-
-    @Override
-    public Map<Class<?>, ObjectBuilderFactory<?>> getObjectBuilders() {
-        return objectBuilders;
     }
 
     @Override

@@ -20,7 +20,6 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.filter.ContainsFilter;
@@ -162,16 +161,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (CriteriaBuilder<T>) criteriaBuilder;
-    }
-
-    @Override
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, ViewType<T> viewType) {
-        return new ObjectBuilderFactoryImpl<T>(getTemplate(metamodel, viewType, null));
-    }
-
-    @Override
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, MappingConstructor<T> mappingConstructor) {
-        return new ObjectBuilderFactoryImpl<T>(getTemplate(metamodel, mappingConstructor.getDeclaringType(), mappingConstructor));
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {

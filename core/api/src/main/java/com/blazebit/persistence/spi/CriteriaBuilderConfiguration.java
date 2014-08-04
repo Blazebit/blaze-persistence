@@ -18,18 +18,12 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
  * @author Christian Beikov
  */
 public interface CriteriaBuilderConfiguration {
-    
-    public <T> void registerObjectBuilder(Class<T> clazz, ObjectBuilderFactory<T> factory);
-    
-    public Map<Class<?>, ObjectBuilderFactory<?>> getObjectBuilders();
     
     public void registerQueryTransformer(QueryTransformer clazz);
     

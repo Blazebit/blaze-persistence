@@ -39,12 +39,6 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      * @return The query string
      */
     public String getPageIdQueryString();
-
-    /*
-     * Covariant overrides.
-     */
-    @Override
-    public <Y> PaginatedCriteriaBuilder<Y> select(Class<Y> clazz);
     
     @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);

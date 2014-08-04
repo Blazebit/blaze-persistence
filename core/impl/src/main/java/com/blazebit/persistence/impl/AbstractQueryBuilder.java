@@ -21,7 +21,6 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
 import java.util.Date;
@@ -85,23 +84,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public X setParameter(String name, Date value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
         return (X) this;
-    }
-
-    @Override
-    public <Y> QueryBuilder<Y, ?> select(Class<Y> clazz) {
-        if (clazz == null) {
-            throw new NullPointerException("clazz");
-        }
-        
-        verifyBuilderEnded();
-        ObjectBuilderFactory<Y> objectBuilderFactory = cbf.getObjectBuilderFactory(clazz);
-        
-        if (objectBuilderFactory == null) {
-            throw new IllegalArgumentException("No object builder was registered for the class: " + clazz.getName());
-        }
-        
-        ObjectBuilder<Y> objectBuilder = objectBuilderFactory.createObjectBuilder((QueryBuilder<Y, ?>) this);
-        return selectNew(objectBuilder);
     }
 
     @Override

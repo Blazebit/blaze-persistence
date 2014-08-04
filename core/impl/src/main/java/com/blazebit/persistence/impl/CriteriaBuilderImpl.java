@@ -34,11 +34,6 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     }
 
     @Override
-    public <Y> CriteriaBuilder<Y> select(Class<Y> clazz) {
-        return (CriteriaBuilder<Y>) super.select(clazz);
-    }
-
-    @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<CriteriaBuilder<Y>>) super.selectNew(clazz);
     }

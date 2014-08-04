@@ -18,12 +18,8 @@ package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.persistence.spi.ConfigurationEnricher;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
@@ -68,19 +64,5 @@ public class EntityViewConfigurationEnricher implements ConfigurationEnricher<Cr
             .create();
         
         abd.addBean(bean);
-        
-        // TODO: Issue #29
-//        Set<ViewType<?>> viewTypes = entityViewManager.getMetamodel().getViews();
-//        for (ViewType<?> viewType : viewTypes) {
-//            Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
-//            
-//            if (constructors.isEmpty()) {
-//                config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(viewType));
-//            } else {
-//                for (MappingConstructor<?> constructor : constructors) {
-//                    config.registerObjectBuilder((Class<Object>) viewType.getJavaType(), (ObjectBuilderFactory<Object>) entityViewManager.getObjectBuilderFactory(constructor));
-//                }
-//            }
-//        }
     }
 }

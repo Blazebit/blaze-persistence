@@ -19,12 +19,9 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.persistence.EntityManager;
 
 /**
@@ -34,17 +31,11 @@ import javax.persistence.EntityManager;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory{
     
     private final List<QueryTransformer> queryTransformers;
-    private final Map<Class<?>, ObjectBuilderFactory<?>> objectBuilders;
     private final ExpressionFactoryImpl expressionFactory;
     
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
-        this.objectBuilders = new HashMap<Class<?>, ObjectBuilderFactory<?>>(config.getObjectBuilders());
         this.expressionFactory = new ExpressionFactoryImpl();
-    }
-    
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Class<T> clazz) {
-        return (ObjectBuilderFactory<T>) objectBuilders.get(clazz);
     }
     
     public List<QueryTransformer> getQueryTransformers() {

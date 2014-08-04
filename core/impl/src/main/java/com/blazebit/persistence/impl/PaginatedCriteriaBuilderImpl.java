@@ -225,11 +225,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     @Override
-    public <Y> PaginatedCriteriaBuilder<Y> select(Class<Y> clazz) {
-        return (PaginatedCriteriaBuilder<Y>) super.select(clazz);
-    }
-
-    @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<PaginatedCriteriaBuilder<Y>>) super.selectNew(clazz);
     }

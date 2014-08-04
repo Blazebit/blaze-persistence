@@ -17,11 +17,7 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.spi.ObjectBuilderFactory;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  * An interface that gives access to the metamodel and object builders.
@@ -39,20 +35,6 @@ public interface EntityViewManager {
     public ViewMetamodel getMetamodel();
     
     public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument);
-    
-    /**
-     * TODO: javadoc
-     * 
-     * @return 
-     */
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, ViewType<T> viewType);
-    
-    /**
-     * TODO: javadoc
-     * 
-     * @return 
-     */
-    public <T> ObjectBuilderFactory<T> getObjectBuilderFactory(Metamodel metamodel, MappingConstructor<T> mappingConstructor);
 
     /**
      * Applies an object builder for the given entity view class to the given {@link PaginatedCriteriaBuilder}
