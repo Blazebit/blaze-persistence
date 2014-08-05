@@ -149,4 +149,25 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());
     }
+    
+    @Test
+    public void testOrderByExpression() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
+            .orderByAsc("contacts[:contactNr].name")
+            .setParameter("contactNr", 1)
+            .page(0, 1);
+        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr ORDER BY contacts.name ASC NULLS LAST";
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+    }
+    
+    @Test
+    public void testOrderBySelectAlias() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("contacts[:contactNr].name", "contactName")
+            .orderByAsc("contactName")
+            .setParameter("contactNr", 1)
+            .page(0, 1);
+        String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr ORDER BY contacts.name ASC NULLS LAST";
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+    }
 }
