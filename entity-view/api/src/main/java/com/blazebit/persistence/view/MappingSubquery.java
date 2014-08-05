@@ -36,4 +36,8 @@ public @interface MappingSubquery {
      * @return
      */
     Class<? extends SubqueryProvider> value();
+    
+    String sortExpression() default "";
+    
+    String alias() default "";
 }

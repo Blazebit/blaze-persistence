@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.filter.ContainsFilter;
 
 /**
  *
@@ -26,5 +28,6 @@ import com.blazebit.persistence.view.EntityView;
 @EntityView(Person.class)
 public interface PersonSubView {
     
+    @MappingFilter(ContainsFilter.class)
     public String getName();
 }
