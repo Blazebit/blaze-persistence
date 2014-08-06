@@ -16,18 +16,19 @@
 package com.blazebit.persistence;
 
 /**
- * TODO: javadoc
+ * A builder that can terminate the build process for general case when expressions.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CaseWhenThenBuilder<T> {
+public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> {
 
     /**
-     * TODO: javadoc
+     * Adds the constructed when expression with the then expression to the case when builder.
      *
-     * @return
+     * @param expression The then expression
+     * @return This case when builder
      */
     public T then(String expression);
 }

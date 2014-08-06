@@ -16,8 +16,7 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CaseWhenAndThenBuilder;
-import com.blazebit.persistence.CaseWhenBuilder;
+import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -27,30 +26,30 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * 
  * @author Christian Beikov
  */
-public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndThenBuilder<T> {
+public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndBuilder<T> {
     
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
-    public CaseWhenAndThenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public CaseWhenAndBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
 
     @Override
-    public RestrictionBuilder<CaseWhenAndThenBuilder<T>> and(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+    public RestrictionBuilder<CaseWhenAndBuilder<T>> and(String expression) {
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
     
     @Override
-    public CaseWhenOrBuilder<CaseWhenAndThenBuilder<T>> or() {
-        return new CaseWhenOrBuilderImpl<CaseWhenAndThenBuilder<T>>(this, subqueryInitFactory, expressionFactory);
+    public CaseWhenOrBuilder<CaseWhenAndBuilder<T>> or() {
+        return new CaseWhenOrBuilderImpl<CaseWhenAndBuilder<T>>(this, subqueryInitFactory, expressionFactory);
     }
 
     @Override
-    public T then(String expression) {
+    public T endAnd() {
         return result;
     }
     
