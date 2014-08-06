@@ -41,6 +41,12 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
     public String getPageIdQueryString();
     
     @Override
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase(String expression);
+
+    @Override
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase();
+    
+    @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
     @Override

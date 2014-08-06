@@ -28,6 +28,8 @@ import javax.persistence.Tuple;
  */
 public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X> {
 
+    public Class<T> getResultType();
+    
     /**
      * Returns the query string for the built query.
      *
@@ -99,7 +101,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      *
      * @return
      */
-    public CaseWhenBuilder<? extends X> selectCase();
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     /**
@@ -107,7 +109,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      *
      * @return
      */
-    public SimpleCaseWhenBuilder<? extends X> selectCase(String expression);
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String expression);
     
     /**
      * TODO: javadoc

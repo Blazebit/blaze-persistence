@@ -211,6 +211,12 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      */
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder);
 
+    @Override
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String expression);
+
+    @Override
+    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase();
+    
     /**
      * {@inheritDoc}
      */

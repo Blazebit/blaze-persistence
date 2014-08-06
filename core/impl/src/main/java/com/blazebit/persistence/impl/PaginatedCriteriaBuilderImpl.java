@@ -15,11 +15,13 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -242,5 +244,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @Override
     public PaginatedCriteriaBuilder<Tuple> select(String expression, String alias) {
         return (PaginatedCriteriaBuilder<Tuple>) super.select(expression, alias);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase(String expression) {
+        return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectCase(expression);
+    }
+
+    @Override
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase() {
+        return (CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectCase();
     }
 }

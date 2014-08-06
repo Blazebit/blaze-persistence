@@ -71,6 +71,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     
     private final List<ExpressionTransformer> transformers;
     
+    protected Class<T> resultType;
+    
     
     /**
      * Create flat copy of builder
@@ -94,6 +96,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformers = builder.transformers;
+        this.resultType = builder.resultType;
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
@@ -136,7 +139,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
         
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
+        this.resultType = (Class<T>) fromClazz;
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
@@ -155,14 +159,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public CaseWhenBuilder<X> selectCase() {
-        return new CaseWhenBuilderImpl<X>((X) this, subqueryInitFactory, expressionFactory);
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
+        resultType = (Class<T>) Tuple.class;
+        return new CaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, subqueryInitFactory, expressionFactory);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenBuilder<X> selectCase(String expression) {
-        return new SimpleCaseWhenBuilderImpl<X>((X) this, expressionFactory, expression);
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String expression) {
+        resultType = (Class<T>) Tuple.class;
+        return new SimpleCaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, expressionFactory, expression);
     }
 
     @Override
@@ -178,6 +184,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         verifyBuilderEnded();
         selectManager.select(this, expr, selectAlias);
+        resultType = (Class<T>) Tuple.class;
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
 
@@ -414,6 +421,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             groupByManager.applyTransformer(transformer);
             orderByManager.applyTransformer(transformer);
         }
+    }
+
+    @Override
+    public Class<T> getResultType() {
+        return resultType;
     }
 
     @Override

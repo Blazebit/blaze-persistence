@@ -36,6 +36,13 @@ public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuil
     /*
      * Covariant overrides.
      */
+    
+    @Override
+    public SimpleCaseWhenBuilder<SubqueryBuilder<Tuple>> selectCase(String expression);
+
+    @Override
+    public CaseWhenBuilder<SubqueryBuilder<Tuple>> selectCase();
+    
     @Override
     public SubqueryBuilder<T> select(String expression);
 

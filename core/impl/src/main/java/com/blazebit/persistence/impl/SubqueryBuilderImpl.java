@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
@@ -53,6 +55,16 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     @Override
     public SubqueryBuilder<T> select(String expression, String alias) {
         return (SubqueryBuilder<T>) super.select(expression, alias);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<SubqueryBuilder<Tuple>> selectCase(String expression) {
+        return (SimpleCaseWhenBuilder<SubqueryBuilder<Tuple>>) super.selectCase(expression);
+    }
+
+    @Override
+    public CaseWhenBuilder<SubqueryBuilder<Tuple>> selectCase() {
+        return (CaseWhenBuilder<SubqueryBuilder<Tuple>>) super.selectCase();
     }
 
     @Override

@@ -29,6 +29,11 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>> 
     /*
      * Covariant overrides.
      */
+    @Override
+    public SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase(String expression);
+
+    @Override
+    public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase();
     
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);

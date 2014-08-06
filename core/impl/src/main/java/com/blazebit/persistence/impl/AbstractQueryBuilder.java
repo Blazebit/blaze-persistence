@@ -15,11 +15,14 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
@@ -219,6 +222,16 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public Object getParameterValue(String name) {
         return parameterManager.getParameterValue(name);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String expression) {
+        return (SimpleCaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase(expression);
+    }
+
+    @Override
+    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase() {
+        return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase();
     }
 
     @Override
