@@ -123,7 +123,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewSetting<PersonOwnedDocumentsView> setting = new EntityViewSetting<PersonOwnedDocumentsView>(PersonOwnedDocumentsView.class, 0, 1);
         
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Person> cb = cbf.from(em, Person.class);
         setting.addAttributeSorter("ownedDocuments.contactCount", Sorters.descending());
         
         PaginatedCriteriaBuilder<PersonOwnedDocumentsView> paginatedCb = setting.apply(evm, cb);
