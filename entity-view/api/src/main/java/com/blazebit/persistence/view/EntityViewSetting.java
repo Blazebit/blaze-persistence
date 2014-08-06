@@ -13,6 +13,7 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -29,9 +30,9 @@ public class EntityViewSetting<T> {
     private final Class<T> entityViewClass;
     private final int firstRow;
     private final int maxRows;
-    private final Map<String, Sorter> sorters = new HashMap<String, Sorter>();
+    private final Map<String, Sorter> sorters = new LinkedHashMap<String, Sorter>();
     private final Map<Object, Filter> filters = new HashMap<Object, Filter>();
-    private final Map<String, Sorter> attributeSorters = new HashMap<String, Sorter>();
+    private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
     private final Map<String, Object> attributeFilters = new HashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
     
@@ -118,27 +119,10 @@ public class EntityViewSetting<T> {
     public void addAttributeFilter(String attributeName, String filterValue) {
         this.attributeFilters.put(attributeName, filterValue);
     }
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public void addFilters(String expression, Filter filter) {
-        this.filters.put(expression, filter);
-    }
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public void addFilters(Map<String, Filter> filters) {
-        this.filters.putAll(filters);
-    }
     
     /**
      * TODO: javadoc
+     * TODO: state that the order in which sorters are added matters!
      *
      * @return
      */
@@ -148,29 +132,12 @@ public class EntityViewSetting<T> {
     
     /**
      * TODO: javadoc
+     * TODO: state that the order in which sorters are added matters!
      *
      * @return
      */
     public void addAttributeSorter(String attributeName, Sorter sorter) {
         this.attributeSorters.put(attributeName, sorter);
-    }
-    
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public void addSorter(String expression, Sorter sorter) {
-        this.sorters.put(expression, sorter);
-    }
-    
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public void addSorters(Map<String, Sorter> sorters) {
-        this.sorters.putAll(sorters);
     }
 
     /**
@@ -232,15 +199,6 @@ public class EntityViewSetting<T> {
      *
      * @return
      */
-    public Map<String, Sorter> getSorters() {
-        return sorters;
-    }
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
     public Map<String, Sorter> getAttributeSorters() {
         return attributeSorters;
     }
@@ -252,15 +210,6 @@ public class EntityViewSetting<T> {
      */
     public boolean hasFilters() {
         return !attributeFilters.isEmpty() || !filters.isEmpty();
-    }
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public Map<Object, Filter> getFilters() {
-        return filters;
     }
 
     /**

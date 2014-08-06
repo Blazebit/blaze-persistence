@@ -25,10 +25,9 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.basic.model.DocumentAggregatedView;
+import com.blazebit.persistence.view.subquery.model.DocumentAggregatedView;
 import com.blazebit.persistence.view.basic.model.DocumentWithEntityView;
 import com.blazebit.persistence.view.basic.model.FilteredDocument;
-import com.blazebit.persistence.view.basic.model.PersonOwnedDocumentsView;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
@@ -110,25 +109,6 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals(2, result.totalSize());
         assertEquals("YourTest", result.get(0).getName());
         assertEquals("pers2", result.get(0).getContactName());
-    }
-    
-    @Test
-    public void testEntityViewSettingWithSortExpression() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
-        cfg.addEntityView(PersonOwnedDocumentsView.class);
-        cfg.addEntityView(DocumentAggregatedView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
-        
-        // Base setting
-        EntityViewSetting<PersonOwnedDocumentsView> setting = new EntityViewSetting<PersonOwnedDocumentsView>(PersonOwnedDocumentsView.class, 0, 1);
-        
-        // Query
-        CriteriaBuilder<Person> cb = cbf.from(em, Person.class);
-        setting.addAttributeSorter("ownedDocuments.contactCount", Sorters.descending());
-        
-        PaginatedCriteriaBuilder<PersonOwnedDocumentsView> paginatedCb = setting.apply(evm, cb);
-        PagedList<PersonOwnedDocumentsView> result = paginatedCb.getResultList();
-        
     }
     
     @Test(expected = IllegalArgumentException.class)

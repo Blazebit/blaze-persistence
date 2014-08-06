@@ -67,7 +67,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
     
     public PluralAttribute.CollectionType getCollectionType() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     public boolean isQueryParameter() {

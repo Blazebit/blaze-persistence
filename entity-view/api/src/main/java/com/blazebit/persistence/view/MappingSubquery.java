@@ -36,8 +36,18 @@ public @interface MappingSubquery {
      * @return
      */
     Class<? extends SubqueryProvider> value();
-    
-    String sortExpression() default "";
-    
-    String alias() default "";
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    String expression() default "";
+
+    /**
+     * TODO: javadoc
+     *
+     * @return
+     */
+    String subqueryAlias() default "";
 }

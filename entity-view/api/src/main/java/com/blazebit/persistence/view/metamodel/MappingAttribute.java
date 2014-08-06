@@ -17,6 +17,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 /**
+ * TODO: javadoc
  *
  * @author cpbec
  */

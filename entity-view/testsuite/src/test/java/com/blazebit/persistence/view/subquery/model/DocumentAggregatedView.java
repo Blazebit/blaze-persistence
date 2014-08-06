@@ -14,18 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.basic.model;
+package com.blazebit.persistence.view.subquery.model;
 
+import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.entity.Person;
-import java.util.Set;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 
 /**
  *
  * @author cpbec
  */
-@EntityView(Person.class)
-public interface PersonOwnedDocumentsView {
+@EntityView(Document.class)
+public interface DocumentAggregatedView {
     
-    public Set<DocumentAggregatedView> getOwnedDocuments();
+    public String getName();
+    
+    @MappingSubquery(
+            expression = "age + s",
+            subqueryAlias = "s",
+            value = CountSubqueryProvider.class)
+    public Long getContactCount();
 }

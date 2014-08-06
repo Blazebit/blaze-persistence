@@ -19,6 +19,7 @@ package com.blazebit.persistence.view.metamodel;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
+ * TODO: javadoc
  *
  * @author cpbec
  */

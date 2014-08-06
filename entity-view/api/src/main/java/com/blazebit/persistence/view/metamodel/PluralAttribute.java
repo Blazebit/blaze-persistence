@@ -13,33 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
-
 /**
- * 
+ *
  * TODO: javadoc
  *
  * @author Christian Beikov
  */
 public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
-    
+
     /**
-     * TODO: javadoc 
-     * 
-     * @return 
+     * TODO: javadoc
+     *
+     * @return
      */
     public CollectionType getCollectionType();
-    
+
     /**
-     * TODO: javadoc 
-     * 
-     * @return 
+     * TODO: javadoc
+     *
+     * @return
      */
     public Class<E> getElementType();
-    
+
+    /**
+     * TODO: javadoc
+     */
     public static enum CollectionType {
+
         COLLECTION,
         LIST,
         MAP,

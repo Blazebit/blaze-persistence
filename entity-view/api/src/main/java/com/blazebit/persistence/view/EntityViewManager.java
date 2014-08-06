@@ -33,7 +33,16 @@ public interface EntityViewManager {
      * @return The metamodel for this entity view manager
      */
     public ViewMetamodel getMetamodel();
-    
+
+    /**
+     * TODO: javadoc
+     *
+     * @param <T>
+     * @param filterClass
+     * @param expectedType
+     * @param argument
+     * @return
+     */
     public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument);
 
     /**
