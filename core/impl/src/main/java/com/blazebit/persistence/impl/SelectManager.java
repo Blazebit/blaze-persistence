@@ -19,7 +19,6 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
@@ -150,7 +149,7 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         @Override
-        public void onBuilderEnded(SubqueryBuilder<X> builder) {
+        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
             Expression expr = new SubqueryExpression(builder);
             SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);

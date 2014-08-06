@@ -29,7 +29,7 @@ public class CaseWhenTest extends AbstractCoreTest {
     @Test
     public void testCaseWhen() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
-        criteria.selectCase("document.type")
+        criteria.selectSimpleCase("document.type")
             .when("'vertrag'", "2")
             .when("'info'", "1")
             .thenElse("0");

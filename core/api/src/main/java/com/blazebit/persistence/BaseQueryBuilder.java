@@ -26,8 +26,13 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X> {
+public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X>, SelectBuilder<T, X> {
 
+    /**
+     * Returns the result type of this query.
+     * 
+     * @return The result type of this query
+     */
     public Class<T> getResultType();
     
     /**
@@ -40,6 +45,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     /*
      * Join methods
      */
+    
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      *
@@ -69,15 +75,6 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     public X leftJoin(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#OUTER}.
-     *
-     * @param path  The path to join
-     * @param alias The alias for the joined element
-     * @return The query builder for chaining calls
-     */
-    public X outerJoin(String path, String alias);
-
-    /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#RIGHT}.
      *
      * @param path  The path to join
@@ -85,78 +82,32 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X rightJoin(String path, String alias);
-
-    /*
-     * Select methods
-     */
-    /**
-     * Marks the query to do a distinct select.
-     *
-     * @return The query builder for chaining calls
-     */
-    public X distinct();
-
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
-
-    /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
-    /**
-     * TODO: javadoc
-     *
-     * @return
-     */
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String expression);
     
-    /**
-     * TODO: javadoc
-     * 
-     * @return 
+    /*
+     * Covariant overrides
      */
-    public SubqueryInitiator<X> selectSubquery();
-    /**
-     * TODO: javadoc
-     * 
-     * @return 
-     */
-    public SubqueryInitiator<X> selectSubquery(String alias);
 
-    /**
-     * Adds a select clause with the given expression to the query.
-     *
-     * @param expression The expression for the select clause
-     * @return The query builder for chaining calls
-     */
+    @Override
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
+    
+    @Override
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias);
+
+    @Override
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    
+    @Override
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+
+    @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression);
 
-    /**
-     * Adds a select clause with the given expression and alias to the query.
-     *
-     * @param expression The expression for the select clause
-     * @param alias      The alias for the expression
-     * @return The query builder for chaining calls
-     */
+    @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression, String alias);
 
-    /*
-     * Group by methods
-     */
-    /**
-     * Adds a multiple group by clause with the given expressions to the query.
-     *
-     * @param expressions The expressions for the group by clauses
-     * @return The query builder for chaining calls
-     */
-    public X groupBy(String... expressions);
+    @Override
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery();
 
-    /**
-     * Adds a group by clause with the given expression to the query.
-     *
-     * @param expression The expression for the group by clause
-     * @return The query builder for chaining calls
-     */
-    public X groupBy(String expression);
+    @Override
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String alias);
 }

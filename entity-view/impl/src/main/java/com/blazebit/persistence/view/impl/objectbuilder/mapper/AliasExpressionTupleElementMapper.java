@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 
 /**
  *
@@ -32,7 +32,7 @@ public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMap
     }
     
     @Override
-    public void applyMapping(QueryBuilder<?, ?> queryBuilder) {
+    public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
         queryBuilder.select(expression, alias);
     }
     

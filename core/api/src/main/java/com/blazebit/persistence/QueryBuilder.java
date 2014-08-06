@@ -119,9 +119,20 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The list of the results
      */
     public List<T> getResultList();
+    
+    /**
+     * Returns the JPA {@link Metamodel} of the persistence unit which is used by this query builder.
+     * 
+     * @return The JPA metamodel
+     */
+    public Metamodel getMetamodel();
 
     /**
      * Paginates the results of this query.
+     * 
+     * TODO: Clarify that this pagination works on entity and NOT on row basis.
+     * TODO: Clarify that the paginated results are implicitly distinct, therefore calling distinct() is not allowed.
+     * TODO: Clarify that groupBy() can not work with this builder.
      *
      * @param firstRow The position of the first result to retrieve, numbered from 0
      * @param maxRows The maximum number of results to retrieve
@@ -132,6 +143,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /*
      * Join methods
      */
+    
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      * If fetch is set to true, a join fetch will be added.
@@ -161,15 +173,6 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public X leftJoinFetch(String path, String alias);
-
-    /**
-     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#OUTER} and fetch set to true.
-     *
-     * @param path  The path to join
-     * @param alias The alias for the joined element
-     * @return The query builder for chaining calls
-     */
-    public X outerJoinFetch(String path, String alias);
 
     /**
      * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#RIGHT} and fetch set to true.
@@ -210,24 +213,32 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder);
+    
+    /*
+     * Covariant overrides
+     */
 
     @Override
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String expression);
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    
+    @Override
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
     @Override
     public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase();
+
+    @Override
+    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias);
     
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public QueryBuilder<Tuple, ?> select(String expression);
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public QueryBuilder<Tuple, ?> select(String expression, String alias);
-    
-    public Metamodel getMetamodel();
+
+    @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery();
+
+    @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias);
 }

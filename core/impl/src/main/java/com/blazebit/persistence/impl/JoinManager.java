@@ -99,9 +99,6 @@ public class JoinManager {
                 case RIGHT:
                     sb.append(" RIGHT JOIN ");
                     break;
-                case OUTER:
-                    sb.append(" OUTER JOIN ");
-                    break;
             }
             if (node.isFetch()) {
                 sb.append("FETCH ");

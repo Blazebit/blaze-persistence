@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T>{
     }
 
     @Override
-    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
         objectBuilder.applySelects(queryBuilder);
     }
 

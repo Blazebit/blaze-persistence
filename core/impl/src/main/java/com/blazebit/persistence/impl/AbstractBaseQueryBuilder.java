@@ -151,22 +151,33 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /*
      * Select methods
      */
-    @Override
     public X distinct() {
         selectManager.distinct();
         return (X) this;
     }
 
-    /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
     public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
+        return selectCase(null);
+    }
+
+    /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
+    @Override
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias) {
+        // TODO: use alias
         resultType = (Class<T>) Tuple.class;
         return new CaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, subqueryInitFactory, expressionFactory);
     }
 
+    @Override
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
+        return selectSimpleCase(expression, null);
+    }
+
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String expression) {
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias) {
+        // TODO: use alias
         resultType = (Class<T>) Tuple.class;
         return new SimpleCaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, expressionFactory, expression);
     }
@@ -189,17 +200,17 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<X> selectSubquery() {
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery() {
         return selectSubquery(null);
     }
 
     @Override
-    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((X) this, selectAlias);
+        return selectManager.selectSubquery((BaseQueryBuilder<Tuple, ?>) this, selectAlias);
     }
 
     @Override
@@ -236,7 +247,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /*
      * Group by methods
      */
-    @Override
     public X groupBy(String... paths) {
         for (String path : paths) {
             groupBy(path);
@@ -244,7 +254,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return (X) this;
     }
 
-    @Override
     public X groupBy(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
@@ -351,11 +360,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public X rightJoin(String path, String alias) {
         return join(path, alias, JoinType.RIGHT);
-    }
-
-    @Override
-    public X outerJoin(String path, String alias) {
-        return join(path, alias, JoinType.OUTER);
     }
 
     @Override

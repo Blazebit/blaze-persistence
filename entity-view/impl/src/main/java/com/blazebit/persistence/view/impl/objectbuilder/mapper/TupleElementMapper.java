@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 
 /**
  *
@@ -24,5 +24,5 @@ import com.blazebit.persistence.QueryBuilder;
  */
 public interface TupleElementMapper {
     
-    public void applyMapping(QueryBuilder<?, ?> queryBuilder);
+    public void applyMapping(SelectBuilder<?, ?> queryBuilder);
 }

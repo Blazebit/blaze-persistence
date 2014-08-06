@@ -16,14 +16,11 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-
 /**
  *
  * @author ccbem
  */
 public interface SubqueryBuilderListener<T> {
-    public void onBuilderEnded(SubqueryBuilder<T> builder);
-    public void onBuilderStarted(SubqueryBuilder<T> builder);
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder);
+    public void onBuilderStarted(SubqueryBuilderImpl<T> builder);
 }

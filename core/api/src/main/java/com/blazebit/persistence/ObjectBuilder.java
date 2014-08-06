@@ -27,16 +27,16 @@ import java.util.List;
 public interface ObjectBuilder<T> {
 
     /**
-     * TODO: javadoc
-     * 
-     * @return
+     * Applies the select items necessary for this object builder to work.
+     *
+     * @param selectBuilder The selectBuilder on which to apply the selects
      */
-    public void applySelects(QueryBuilder<?, ?> queryBuilder);
+    public void applySelects(SelectBuilder<?, ?> selectBuilder);
 
     /**
      * Builds an object of the target type {@linkplain T} from the given tuple.
      *
-     * @param tuple   The result tuple
+     * @param tuple The result tuple
      * @return The target object
      */
     public T build(Object[] tuple);

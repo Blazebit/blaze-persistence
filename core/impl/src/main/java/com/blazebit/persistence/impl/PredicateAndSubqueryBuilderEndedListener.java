@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 
@@ -34,12 +33,12 @@ public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBui
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<T> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         subqueryBuilderListener.onBuilderEnded(builder);
     }
 
     @Override
-    public void onBuilderStarted(SubqueryBuilder<T> builder) {
+    public void onBuilderStarted(SubqueryBuilderImpl<T> builder) {
         subqueryBuilderListener.onBuilderStarted(builder);
     }
     

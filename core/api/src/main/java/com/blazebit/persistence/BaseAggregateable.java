@@ -26,9 +26,10 @@ package com.blazebit.persistence;
 public interface BaseAggregateable<T extends BaseAggregateable<T>> {
     
     /**
-     * TODO: javadoc
-     * 
-     * @return 
+     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<T>> having();
 

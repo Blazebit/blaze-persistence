@@ -170,4 +170,28 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr ORDER BY contacts.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
     }
+    
+    @Test
+    public void testOrderBySubquery() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .selectSubquery("contactCount")
+                .from(Document.class, "d2")
+                    .select("COUNT(d2.contacts.id)")
+                    .where("d2.id").eqExpression("d.id")
+                .end()
+            .orderByAsc("contactCount")
+            .page(0, 1);
+        String expectedIdQuery = "SELECT DISTINCT d.id, (SELECT COUNT(contacts.id) FROM Document d2 LEFT JOIN d2.contacts contacts WHERE d2.id = d.id) AS contactCount FROM Document d ORDER BY contactCount ASC NULLS LAST";
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+    }
+    
+    @Test
+    public void testOrderBySize() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("SIZE(d.contacts)", "contactCount")
+            .orderByAsc("contactCount")
+            .page(0, 1);
+        String expectedIdQuery = "SELECT DISTINCT d.id, SIZE(d.contacts) AS contactCount FROM Document d ORDER BY contactCount ASC NULLS LAST";
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+    }
 }

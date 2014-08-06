@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -48,6 +47,12 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
 
     @Override
     public SelectObjectBuilder<T> with(String expression) {
+        return with(expression, null);
+    }
+
+    @Override
+    public SelectObjectBuilder<T> with(String expression, String alias) {
+        // TODO: use alias
         if(expressions.containsKey(expressions.size())){
             throw new IllegalStateException("Argument for position " + expressions.size() + " already specified");
         }
@@ -59,6 +64,12 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
 
     @Override
     public SelectObjectBuilder<T> with(int position, String expression) {
+        return with(position, expression, null);
+    }
+    
+    @Override
+    public SelectObjectBuilder<T> with(int position, String expression, String alias) {
+        // TODO: use alias
         if(expressions.containsKey(position)){
             throw new IllegalStateException("Argument for position " + position + " already specified");
         }
@@ -74,12 +85,18 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
     } 
 
     @Override
-    public SubqueryInitiator<SelectObjectBuilder<T>> with(){
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery() {
+        return withSubquery(null);
+    }
+
+    @Override
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String alias) {
+        // TODO: use alias
         return subqueryInitFactory.createSubqueryInitiator((SelectObjectBuilder<T>) this, this);
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<T> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         expressions.put(expressions.size(), new SubqueryExpression(builder));
     }

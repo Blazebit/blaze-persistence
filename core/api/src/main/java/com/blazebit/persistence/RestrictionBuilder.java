@@ -194,8 +194,19 @@ public interface RestrictionBuilder<T> {
      */
     public T leExpression(String expression);
 
+    /**
+     * Starts a {@link SubqueryInitiator} for the right hand side of the IN predicate.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The subquery initiator for building a subquery
+     */
     public SubqueryInitiator<T> in();
 
+    /**
+     * Like {@link RestrictionBuilder#in() } but the result is wrapped in a NOT predicate.
+     *
+     * @return The subquery initiator for building a subquery
+     */
     public SubqueryInitiator<T> notIn();
 
     /**
@@ -207,6 +218,12 @@ public interface RestrictionBuilder<T> {
      */
     public T in(List<?> values);
     
+    /**
+     * Like {@link RestrictionBuilder#in(java.util.List) } but the values will be wrapped in a {@link List}.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     */
     public T in(Object... values);
 
     /**
@@ -217,6 +234,12 @@ public interface RestrictionBuilder<T> {
      */
     public T notIn(List<?> values);
     
+    /**
+     * Like {@link RestrictionBuilder#notIn(java.util.List) } but the values will be wrapped in a {@link List}.
+     *
+     * @param values The values on the right hand side
+     * @return The parent predicate container builder
+     */
     public T notIn(Object... values);
 
     /**
