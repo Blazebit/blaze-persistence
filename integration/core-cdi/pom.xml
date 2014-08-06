@@ -9,7 +9,7 @@
     <artifactId>blaze-persistence-integration-core-cdi</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Core CDI Integration</name>
+    <name>Blazebit Persistence Integration Core CDI</name>
     
     <dependencies>
         <dependency>

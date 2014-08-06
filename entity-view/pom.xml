@@ -13,7 +13,7 @@
     <artifactId>blaze-persistence-entity-view</artifactId>
     <packaging>pom</packaging>
 	
-    <name>Blazebit Persistence Entity-View Extension</name>
+    <name>Blazebit Persistence Entity-View Module</name>
 
     <modules>
         <module>api</module>

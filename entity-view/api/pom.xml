@@ -12,7 +12,7 @@
     <artifactId>blaze-persistence-entity-view-api</artifactId>
     <packaging>jar</packaging>
 
-    <name>Blazebit Persistence Entity-View Extension API</name>
+    <name>Blazebit Persistence Entity-View API</name>
 
     <dependencies>
         <dependency>
