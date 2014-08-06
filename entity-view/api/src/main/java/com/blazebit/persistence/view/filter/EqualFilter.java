@@ -6,11 +6,11 @@ import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
- * A placeholder for a filter implementation that implements a less or equal filter.
+ * A placeholder for a filter implementation that implements an equal filter.
  * This placeholder can be used in a {@link MappingFilter} annotation or you can retrieve an instance of this filter by invoking
  * {@link EntityViewManager#createFilter(java.lang.Class, java.lang.Class, java.lang.Object)}.
  *
- * A less or equal filter accepts a class and an object. The class is interpreted as the expected type. This is used to convert the
+ * An equal filter accepts a class and an object. The class is interpreted as the expected type. This is used to convert the
  * object parameter. The following conversion are done based on the expected type in the right order.
  *
  * <ul>
@@ -24,6 +24,6 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface LessOrEqualFilter extends Filter {
+public interface EqualFilter extends Filter {
 
 }

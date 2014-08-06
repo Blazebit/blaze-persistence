@@ -35,12 +35,15 @@ public interface EntityViewManager {
     public ViewMetamodel getMetamodel();
 
     /**
-     * TODO: javadoc
+     * Creates a new filter instance of the given filter class. If the filter class is a registered placeholder, the real
+     * implementation will be resolved and instantiated.
      *
-     * @param <T>
-     * @param filterClass
-     * @param expectedType
-     * @param argument
+     * This method tries to instantiate an object by invoking one of the allowed constructors as defined in {@link Filter}
+     *
+     * @param <T>          The filter type
+     * @param filterClass  The filter class or a filter placeholder
+     * @param expectedType The expected type of the argument into which it should be converted to
+     * @param argument     The filter argument which is passed to the filter constructor
      * @return
      */
     public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument);

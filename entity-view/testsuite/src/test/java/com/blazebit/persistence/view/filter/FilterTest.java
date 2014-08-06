@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithIgnoreCaseFilterImpl;
-import com.blazebit.persistence.view.impl.filter.ExactFilterImpl;
+import com.blazebit.persistence.view.impl.filter.EqualFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import org.junit.Test;
@@ -75,7 +75,7 @@ public class FilterTest {
     
     @Test
     public void testExact() {
-        Filter filter = new ExactFilterImpl(String.class, value);
+        Filter filter = new EqualFilterImpl(String.class, value);
         verifyFilter(filter, expression).eq(value);
     }
     

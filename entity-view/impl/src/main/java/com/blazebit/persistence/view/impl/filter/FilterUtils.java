@@ -19,26 +19,12 @@ package com.blazebit.persistence.view.impl.filter;
 import com.blazebit.text.FormatUtils;
 import java.io.Serializable;
 import java.text.ParseException;
-import java.util.Calendar;
-import java.util.Date;
 
 /**
  *
  * @author Christian
  */
 public final class FilterUtils {
-    
-    public static boolean isComparableValue(Object value) {
-        if (value instanceof Number) {
-            return true;
-        } else if (value instanceof Date) {
-            return true;
-        } else if (value instanceof Calendar) {
-            return true;
-        }
-        
-        return false;
-    }
 
     public static Object parseValue(Class<?> clazz, Object value) {
         try {
