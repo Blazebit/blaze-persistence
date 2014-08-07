@@ -37,6 +37,7 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -242,7 +243,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (values == null) {
             throw new NullPointerException("values");
         }
-        return chain(new NotPredicate(new InPredicate(leftExpression, new ParameterExpression(values))));
+        return chain(new NotInPredicate(leftExpression, new ParameterExpression(values)));
     }
 
     @Override
@@ -369,7 +370,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
-        this.predicate = new NotPredicate(new InPredicate(leftExpression, null));
+        this.predicate = new NotInPredicate(leftExpression, null);
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
@@ -387,8 +388,10 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
         if(pred instanceof InPredicate){
             ((InPredicate)pred).setRight(new SubqueryExpression(builder));
+        } else if (pred instanceof NotInPredicate){
+            ((NotInPredicate)pred).setRight(new SubqueryExpression(builder));
         } else {
-            throw new IllegalStateException("SubqueryBuilder ended but predicate was not a SubqueryPredicate");
+            throw new IllegalStateException("SubqueryBuilder ended but predicate was not an IN predicate");
         }
         listener.onBuilderEnded(this);
     }

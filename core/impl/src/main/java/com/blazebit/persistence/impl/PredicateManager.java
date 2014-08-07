@@ -25,9 +25,11 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
@@ -154,6 +156,17 @@ public abstract class PredicateManager<U> extends AbstractManager {
             predicate.setLeft(transformer.transform(predicate.getLeft()));
             predicate.setRight(transformer.transform(predicate.getRight()));
         }
-        
+
+        @Override
+        public void visit(InPredicate predicate) {
+            predicate.setLeft(transformer.transform(predicate.getLeft()));
+            predicate.setRight(transformer.transform(predicate.getRight()));
+        }
+
+        @Override
+        public void visit(NotInPredicate predicate) {
+            predicate.setLeft(transformer.transform(predicate.getLeft()));
+            predicate.setRight(transformer.transform(predicate.getRight()));
+        }
     }
 }

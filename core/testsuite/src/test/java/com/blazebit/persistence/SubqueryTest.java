@@ -124,7 +124,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("n")
                 .getQueryString();
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN "
-                + "(SELECT person.id FROM Person person WHERE person.name = d.name) AND NOT d.id IN "
+                + "(SELECT person.id FROM Person person WHERE person.name = d.name) AND d.id NOT IN "
                 + "(SELECT person.id FROM Person person WHERE d.name LIKE person.name) "
                 + "ORDER BY n ASC NULLS LAST";
 
@@ -144,7 +144,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .getQueryString();
         
         String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions v WHERE d.id IN "
-                + "(SELECT p.id FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments WHERE d.age = SIZE(p.ownedDocuments)) AND NOT d.id IN "
+                + "(SELECT p.id FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments WHERE d.age = SIZE(p.ownedDocuments)) AND d.id NOT IN "
                 + "(SELECT person.id FROM Person person LEFT JOIN person.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions WHERE d.age < SIZE(partnerDocument.versions))";
 
         assertEquals(expected, crit.getQueryString());
@@ -204,7 +204,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .notIn().from(Person.class).select("id").where("d.name").like("test").end()
                 .where("SIZE(d.versions)").lt(5)
                 .getQueryString();
-        String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions versions WHERE d.id IN (SELECT person.id FROM Person person WHERE d.name = :param_0) AND NOT d.id IN (SELECT person.id FROM Person person WHERE d.name LIKE :param_1) AND SIZE(d.versions) < :param_2";
+        String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions versions WHERE d.id IN (SELECT person.id FROM Person person WHERE d.name = :param_0) AND d.id NOT IN (SELECT person.id FROM Person person WHERE d.name LIKE :param_1) AND SIZE(d.versions) < :param_2";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();

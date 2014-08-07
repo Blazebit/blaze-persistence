@@ -39,6 +39,7 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -100,6 +101,12 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
         predicate.getLeft().accept(this);
         predicate.getStart().accept(this);
         predicate.getEnd().accept(this);
+    }
+
+    @Override
+    public void visit(NotInPredicate predicate){
+        predicate.getLeft().accept(this);
+        predicate.getRight().accept(this);
     }
 
     @Override

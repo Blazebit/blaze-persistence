@@ -38,6 +38,7 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -219,6 +220,20 @@ public class QueryGenerator extends VisitorAdapter {
         }
     }
 
+    @Override
+    public void visit(NotInPredicate predicate) {
+        predicate.getLeft().accept(this);
+        sb.append(" NOT");
+        if (predicate.getRight() instanceof ParameterExpression) {
+            sb.append(" IN ");
+            predicate.getRight().accept(this);
+        } else {
+            sb.append(" IN (");
+            predicate.getRight().accept(this);
+            sb.append(")");
+        }
+    }
+    
     @Override
     public void visit(ExistsPredicate predicate) {
         sb.append("EXISTS (");
