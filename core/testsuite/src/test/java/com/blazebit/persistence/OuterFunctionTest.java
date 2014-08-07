@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
@@ -30,19 +31,23 @@ public class OuterFunctionTest extends AbstractCoreTest{
     public void testOuter1() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where().from(Person.class, "p").select("id").where("OUTER(owner.name)").eqExpression("OUTER(name)").end().eqExpression("partners.id");
-        String expected = "FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE owner.name = d.name) = partners.id";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE owner.name = d.name) = partners.id";
         String actual = crit.getQueryString();
-        Assert.assertEquals(expected, actual);
-        Assert.assertEquals(actual, crit.getQueryString());
+        
+        assertEquals(expected, actual);
+        assertEquals(actual, crit.getQueryString());
+        crit.getResultList(); 
     }
     
     @Test
     public void testOuter2() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where().from(Person.class, "p").select("id").where("OUTER(id)").eqExpression("id").end().eqExpression("partners.id");
-        String expected = "FROM Document d LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE d.id = p.id) = partners.id";
+        String expected = "SELECT d FROM Document d LEFT JOIN d.partners partners WHERE (SELECT p.id FROM Person p WHERE d.id = p.id) = partners.id";
         String actual = crit.getQueryString();
-        Assert.assertEquals(expected, actual);
-        Assert.assertEquals(actual, crit.getQueryString());
+        
+        assertEquals(expected, actual);
+        assertEquals(actual, crit.getQueryString());
+        crit.getResultList();
     }
 }

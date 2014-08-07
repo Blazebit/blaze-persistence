@@ -23,6 +23,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -148,5 +149,19 @@ public class PaginationTest extends AbstractCoreTest {
             .where("name").isNull()
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());
+    }
+    
+    @Ignore
+    @Test(expected = IllegalStateException.class)
+    public void testPaginatedWithGroupBy() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)").groupBy("id").page(0, 1);
+    }
+    
+    @Ignore
+    @Test(expected = IllegalStateException.class)
+    public void testPaginatedWithDistinct() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)").distinct().page(0, 1);
     }
 }

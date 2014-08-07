@@ -47,6 +47,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X join(String path, String alias, JoinType type);
+    
+    /**
+     * Adds a join with an on-clause to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @param type  The join type
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#INNER}.
@@ -56,6 +66,15 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X innerJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#INNER}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> innerJoinOn(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#LEFT}.
@@ -65,6 +84,15 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X leftJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#LEFT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> leftJoinOn(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#OUTER}.
@@ -74,6 +102,15 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X outerJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#OUTER}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> outerJoinOn(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#RIGHT}.
@@ -83,7 +120,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X rightJoin(String path, String alias);
-
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#RIGHT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> rightJoinOn(String path, String alias);
+    
     /*
      * Select methods
      */

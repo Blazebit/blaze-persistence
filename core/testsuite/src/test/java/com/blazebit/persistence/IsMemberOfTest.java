@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -25,42 +24,45 @@ import org.junit.Test;
  * @author ccbem
  */
 public class IsMemberOfTest extends AbstractCoreTest {
+
     @Test
-    public void testIsMemberOf(){
+    public void testIsMemberOf() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").isMemberOf("d.versions.document.name");
-        
-        assertEquals("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document WHERE d.name MEMBER OF document.name", criteria.getQueryString());
+        criteria.where("d.owner").isMemberOf("d.contacts");
+
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.contacts contacts JOIN d.owner owner WHERE owner MEMBER OF d.contacts", criteria.getQueryString());
+        criteria.getResultList();
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testIsMemberOfNull(){
+    public void testIsMemberOfNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isMemberOf(null);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
-    public void testIsMemberOfEmpty(){
+    public void testIsMemberOfEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isMemberOf("");
     }
-    
+
     @Test
-    public void testIsNotMemberOf(){
+    public void testIsNotMemberOf() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").isNotMemberOf("d.versions.document.name");
-        
-        assertEquals("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document WHERE NOT d.name MEMBER OF document.name", criteria.getQueryString());
+        criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");
+
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.contacts contacts LEFT JOIN contacts.ownedDocuments ownedDocuments WHERE NOT d MEMBER OF contacts.ownedDocuments", criteria.getQueryString());
+        criteria.getResultList();
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testIsNotMemberOfNull(){
+    public void testIsNotMemberOfNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotMemberOf(null);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
-    public void testIsNotMemberOfEmpty(){
+    public void testIsNotMemberOfEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotMemberOf("");
     }

@@ -28,9 +28,10 @@ public class BetweenTest extends AbstractCoreTest {
     @Test
     public void testBetween(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").between(1, 10);
+        criteria.where("d.age").between(1L, 10L);
         
-        assertEquals("FROM Document d WHERE d.age BETWEEN :param_0 AND :param_1", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age BETWEEN :param_0 AND :param_1", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -48,9 +49,10 @@ public class BetweenTest extends AbstractCoreTest {
     @Test
     public void testNotBetween(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notBetween(1, 10);
+        criteria.where("d.age").notBetween(1L, 10L);
         
-        assertEquals("FROM Document d WHERE NOT d.age BETWEEN :param_0 AND :param_1", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE NOT d.age BETWEEN :param_0 AND :param_1", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)

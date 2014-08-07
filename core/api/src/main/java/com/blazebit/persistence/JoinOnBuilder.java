@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+package com.blazebit.persistence;
 
 /**
  *
  * @author ccbem
  */
-public class LeftHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> {
-
-    @Override
-    public void onBuilderEnded(SubqueryBuilder<T> builder) {
-        super.onBuilderEnded(builder);
-        RestrictionBuilderImpl<?> restrictionBuilder = (RestrictionBuilderImpl<?>) builder.getResult();
-        restrictionBuilder.setLeftExpression(new SubqueryExpression(builder));
-    }
+public interface JoinOnBuilder<X> extends BaseJoinOnBuilder<JoinOnBuilder<X>> {
+    //TODO: javadoc
+    public JoinOnOrBuilder<JoinOnBuilder<X>> onOr();
+    //TODO: javadoc
+    public X end();
 }

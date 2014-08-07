@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.Map;
 import java.util.TreeMap;

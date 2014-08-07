@@ -46,7 +46,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
     private CompositeExpression root = new CompositeExpression(new ArrayList<Expression>());
     private PathExpression path;
     private OuterExpression outerExpression;
-    private boolean startCollectionValuedPath = false;
+    private boolean usedInCollectionFunction = false;
 
     private PropertyExpression arrayExprBase;
     private Expression arrayExprIndex;
@@ -161,14 +161,14 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             }
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
-            path.setUsedInCollectionFunction(startCollectionValuedPath);
-            startCollectionValuedPath = false;
+            path.setUsedInCollectionFunction(usedInCollectionFunction);
+            usedInCollectionFunction = false;
         } else if(ctx == ContextType.OUTER){
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
             outerExpression.setPath(path);
-            path.setUsedInCollectionFunction(startCollectionValuedPath);
-            startCollectionValuedPath = false;
+            path.setUsedInCollectionFunction(usedInCollectionFunction);
+            usedInCollectionFunction = false;
         } else if (ctx == ContextType.ARRAY) {
             ArrayExpression arrayExpr;
             if (arrayExprIndex != null) {
@@ -216,23 +216,6 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         pathContext();
     }
 
-    @Override
-    public void enterGeneral_path_start(JPQLSelectExpressionParser.General_path_startContext ctx) {
-    }
-
-    @Override
-    public void exitGeneral_path_start(JPQLSelectExpressionParser.General_path_startContext ctx) {
-    }
-
-    @Override
-    public void enterGeneral_path_element(JPQLSelectExpressionParser.General_path_elementContext ctx) {
-
-    }
-
-    @Override
-    public void exitGeneral_path_element(JPQLSelectExpressionParser.General_path_elementContext ctx) {
-    }
-
     private void applyPathElement(String property) {
         if (ctx == ContextType.ARRAY) {
             arrayExprBase = new PropertyExpression(property);
@@ -248,54 +231,6 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         }
 
         applyPathElement(ctx.getText());
-    }
-
-    @Override
-    public void exitSimple_path_element(JPQLSelectExpressionParser.Simple_path_elementContext ctx) {
-    }
-
-    @Override
-    public void enterGeneral_subpath(JPQLSelectExpressionParser.General_subpathContext ctx) {
-    }
-
-    @Override
-    public void exitGeneral_subpath(JPQLSelectExpressionParser.General_subpathContext ctx) {
-    }
-
-    @Override
-    public void enterArithmetic_factor(JPQLSelectExpressionParser.Arithmetic_factorContext ctx) {
-    }
-
-    @Override
-    public void exitArithmetic_factor(JPQLSelectExpressionParser.Arithmetic_factorContext ctx) {
-    }
-
-    @Override
-    public void enterCase_operand(JPQLSelectExpressionParser.Case_operandContext ctx) {
-    }
-
-    @Override
-    public void exitCase_operand(JPQLSelectExpressionParser.Case_operandContext ctx) {
-    }
-
-    @Override
-    public void enterEnum_expression(JPQLSelectExpressionParser.Enum_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitEnum_expression(JPQLSelectExpressionParser.Enum_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterString_expression(JPQLSelectExpressionParser.String_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitString_expression(JPQLSelectExpressionParser.String_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
     }
     
     private void exitExpressionListener(){
@@ -328,230 +263,6 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
     }
 
     @Override
-    public void enterSimple_entity_expression(JPQLSelectExpressionParser.Simple_entity_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitSimple_entity_expression(JPQLSelectExpressionParser.Simple_entity_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterDatetime_expression(JPQLSelectExpressionParser.Datetime_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitDatetime_expression(JPQLSelectExpressionParser.Datetime_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterParseCaseOperandExpression(JPQLSelectExpressionParser.ParseCaseOperandExpressionContext ctx) {
-    }
-
-    @Override
-    public void exitParseCaseOperandExpression(JPQLSelectExpressionParser.ParseCaseOperandExpressionContext ctx) {
-    }
-
-    @Override
-    public void enterEntity_expression(JPQLSelectExpressionParser.Entity_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitEntity_expression(JPQLSelectExpressionParser.Entity_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterSimple_expression(JPQLSelectExpressionParser.Simple_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitSimple_expression(JPQLSelectExpressionParser.Simple_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterFunctions_returning_strings(JPQLSelectExpressionParser.Functions_returning_stringsContext ctx) {
-    }
-
-    @Override
-    public void exitFunctions_returning_strings(JPQLSelectExpressionParser.Functions_returning_stringsContext ctx) {
-    }
-
-    @Override
-    public void enterFunctions_returning_numerics(JPQLSelectExpressionParser.Functions_returning_numericsContext ctx) {
-    }
-
-    @Override
-    public void exitFunctions_returning_numerics(JPQLSelectExpressionParser.Functions_returning_numericsContext ctx) {
-    }
-
-    @Override
-    public void enterParseScalarExpression(JPQLSelectExpressionParser.ParseScalarExpressionContext ctx) {
-    }
-
-    @Override
-    public void exitParseScalarExpression(JPQLSelectExpressionParser.ParseScalarExpressionContext ctx) {
-    }
-
-    @Override
-    public void enterSingle_valued_path_expression(JPQLSelectExpressionParser.Single_valued_path_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitSingle_valued_path_expression(JPQLSelectExpressionParser.Single_valued_path_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterQualified_identification_variable(JPQLSelectExpressionParser.Qualified_identification_variableContext ctx) {
-    }
-
-    @Override
-    public void exitQualified_identification_variable(JPQLSelectExpressionParser.Qualified_identification_variableContext ctx) {
-    }
-
-    @Override
-    public void enterArithmetic_expression(JPQLSelectExpressionParser.Arithmetic_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitArithmetic_expression(JPQLSelectExpressionParser.Arithmetic_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterEntity_type_expression(JPQLSelectExpressionParser.Entity_type_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitEntity_type_expression(JPQLSelectExpressionParser.Entity_type_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterNullif_expression(JPQLSelectExpressionParser.Nullif_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitNullif_expression(JPQLSelectExpressionParser.Nullif_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterFunction_arg(JPQLSelectExpressionParser.Function_argContext ctx) {
-    }
-
-    @Override
-    public void exitFunction_arg(JPQLSelectExpressionParser.Function_argContext ctx) {
-    }
-
-    @Override
-    public void enterFunctions_returning_datetime(JPQLSelectExpressionParser.Functions_returning_datetimeContext ctx) {
-    }
-
-    @Override
-    public void exitFunctions_returning_datetime(JPQLSelectExpressionParser.Functions_returning_datetimeContext ctx) {
-    }
-
-    @Override
-    public void enterTrim_specification(JPQLSelectExpressionParser.Trim_specificationContext ctx) {
-    }
-
-    @Override
-    public void exitTrim_specification(JPQLSelectExpressionParser.Trim_specificationContext ctx) {
-    }
-
-    @Override
-    public void enterScalar_expression(JPQLSelectExpressionParser.Scalar_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitScalar_expression(JPQLSelectExpressionParser.Scalar_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterArithmetic_term(JPQLSelectExpressionParser.Arithmetic_termContext ctx) {
-    }
-
-    @Override
-    public void exitArithmetic_term(JPQLSelectExpressionParser.Arithmetic_termContext ctx) {
-    }
-
-    @Override
-    public void enterComposable_qualified_identification_variable(JPQLSelectExpressionParser.Composable_qualified_identification_variableContext ctx) {
-    }
-
-    @Override
-    public void exitComposable_qualified_identification_variable(JPQLSelectExpressionParser.Composable_qualified_identification_variableContext ctx) {
-    }
-
-    @Override
-    public void enterBoolean_expression(JPQLSelectExpressionParser.Boolean_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitBoolean_expression(JPQLSelectExpressionParser.Boolean_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterAggregate_expression(JPQLSelectExpressionParser.Aggregate_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitAggregate_expression(JPQLSelectExpressionParser.Aggregate_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterType_discriminator(JPQLSelectExpressionParser.Type_discriminatorContext ctx) {
-    }
-
-    @Override
-    public void exitType_discriminator(JPQLSelectExpressionParser.Type_discriminatorContext ctx) {
-    }
-
-    @Override
-    public void enterFunction_invocation(JPQLSelectExpressionParser.Function_invocationContext ctx) {
-    }
-
-    @Override
-    public void exitFunction_invocation(JPQLSelectExpressionParser.Function_invocationContext ctx) {
-    }
-
-    @Override
-    public void enterCoalesce_expression(JPQLSelectExpressionParser.Coalesce_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitCoalesce_expression(JPQLSelectExpressionParser.Coalesce_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterLiteral_temporal(JPQLSelectExpressionParser.Literal_temporalContext ctx) {
-    }
-
-    @Override
-    public void exitLiteral_temporal(JPQLSelectExpressionParser.Literal_temporalContext ctx) {
-    }
-
-    @Override
-    public void enterArithmetic_primary(JPQLSelectExpressionParser.Arithmetic_primaryContext ctx) {
-    }
-
-    @Override
-    public void exitArithmetic_primary(JPQLSelectExpressionParser.Arithmetic_primaryContext ctx) {
-    }
-
-    @Override
-    public void enterCase_expression(JPQLSelectExpressionParser.Case_expressionContext ctx) {
-    }
-
-    @Override
-    public void exitCase_expression(JPQLSelectExpressionParser.Case_expressionContext ctx) {
-    }
-
-    @Override
-    public void enterLiteral(JPQLSelectExpressionParser.LiteralContext ctx) {
-    }
-
-    @Override
-    public void exitLiteral(JPQLSelectExpressionParser.LiteralContext ctx) {
-    }
-
-    @Override
     public void visitTerminal(TerminalNode node) {
         if (subexpressionDelegate != null) {
             subexpressionDelegate.visitTerminal(node);
@@ -573,7 +284,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                     outerContext();
                 } else{
                     if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function){
-                        startCollectionValuedPath = true;
+                        usedInCollectionFunction = true;
                     }
                     fooBuilder.append(node.getSymbol().getText());
                 }

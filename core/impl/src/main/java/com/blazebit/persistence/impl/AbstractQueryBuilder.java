@@ -19,6 +19,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import java.lang.reflect.Constructor;
@@ -42,7 +43,7 @@ import javax.persistence.metamodel.Metamodel;
  * @author Christian Beikov
  */
 public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
-    QueryBuilder<T, X> {
+        QueryBuilder<T, X> {
 
     /**
      * Create flat copy of builder
@@ -60,7 +61,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public List<T> getResultList() {
         return getQuery()
-            .getResultList();
+                .getResultList();
     }
 
     @Override
@@ -122,7 +123,12 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalStateException("Fetch joins are only possible if the root entity is selected");
         }
     }
-    
+
+    @Override
+    public X fetch(String path) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public X innerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.INNER, true);
@@ -161,7 +167,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if(fetch == true){
             checkFetchJoinAllowed();
         }
-        
+
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch);
         return (X) this;

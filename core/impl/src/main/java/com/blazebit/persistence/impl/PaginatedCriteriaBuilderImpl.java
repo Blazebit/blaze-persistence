@@ -88,8 +88,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(idName)
             .toString();
         
+        //TODO: change to if(hasSubqueryOrderBys)
         if (orderByManager.hasNonIdOrderBys(idClause)) {
-            // If we have order bys, 
+            // If we have non id order bys, 
             List newIds = new ArrayList(ids.size());
             
             for (int i = 0; i < ids.size(); i++) {
@@ -154,10 +155,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .getJavaType())
             .getName();
 
-        sbSelectFrom.append(selectManager.buildSelect());
-        if (sbSelectFrom.length() > 0) {
-            sbSelectFrom.append(' ');
-        }
+        sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
@@ -203,8 +201,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         sbSelectFrom.append("SELECT DISTINCT ")
             .append(idClause);
         
+        //TODO: change to if(hasSubqueryOrderBys)
         if (orderByManager.hasNonIdOrderBys(idClause)) {
             sbSelectFrom.append(", ");
+            // TODO: change to buildSubquerySelectClauses
             orderByManager.buildSelectClauses(sbSelectFrom);
         }
         sbSelectFrom.append(" FROM ")
@@ -214,8 +214,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
-        groupByManager.buildGroupBy(sbRemaining);
-        havingManager.buildClause(sbRemaining);
         orderByManager.buildOrderBy(sbRemaining);
         
         StringBuilder sbJoin = new StringBuilder();

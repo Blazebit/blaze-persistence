@@ -58,7 +58,7 @@ public class SelectManager<T> extends AbstractManager {
     private final BaseQueryBuilder<?, ?> aliasOwner;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    
+
     public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
@@ -79,7 +79,7 @@ public class SelectManager<T> extends AbstractManager {
         return selectAbsolutePathToInfoMap;
     }
 
-    public List<SelectManager.SelectInfo> getSelectInfos(){
+    public List<SelectManager.SelectInfo> getSelectInfos() {
         return selectInfos;
     }
 
@@ -93,26 +93,27 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    String buildSelect() {
-        if (selectInfos.isEmpty()) {
-            return "";
-        }
+    String buildSelect(String rootAlias) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
-        if (distinct) {
-            sb.append("DISTINCT ");
-        }
-        // we must not replace select alias since we would loose the original expressions
-        populateSelectAliasAbsolutePaths();
-        queryGenerator.setQueryBuffer(sb);
-        Iterator<SelectInfo> iter = selectInfos.iterator();
-        applySelect(queryGenerator, sb, iter.next());
-        while (iter.hasNext()) {
-            sb.append(", ");
+        if (selectInfos.isEmpty()) {
+            sb.append(rootAlias);
+        } else {
+            if (distinct) {
+                sb.append("DISTINCT ");
+            }
+            // we must not replace select alias since we would loose the original expressions
+            populateSelectAliasAbsolutePaths();
+            queryGenerator.setQueryBuffer(sb);
+            Iterator<SelectInfo> iter = selectInfos.iterator();
             applySelect(queryGenerator, sb, iter.next());
+            while (iter.hasNext()) {
+                sb.append(", ");
+                applySelect(queryGenerator, sb, iter.next());
+            }
         }
+        sb.append(' ');
         return sb.toString();
-
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
@@ -122,12 +123,12 @@ public class SelectManager<T> extends AbstractManager {
             selectInfo.setExpression(transformed);
         }
     }
-    
+
     <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias) {
         if (subqueryBuilderListener != null) {
             throw new IllegalStateException("A builder was not ended properly.");
         }
-        
+
         subqueryBuilderListener = new SelectSubqueryBuilderListener(selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
     }
@@ -137,12 +138,12 @@ public class SelectManager<T> extends AbstractManager {
         for (int i = 0; i < aliases.length; i++) {
             aliases[i] = selectInfos.get(i).getAlias();
         }
-        
+
         return aliases;
     }
-    
+
     private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
-        
+
         private final String selectAlias;
 
         public SelectSubqueryBuilderListener(String selectAlias) {
@@ -156,7 +157,7 @@ public class SelectManager<T> extends AbstractManager {
             SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
             if (selectAlias != null) {
                 aliasManager.registerAliasInfo(selectInfo);
-    //            selectAliasToInfoMap.put(selectAlias, selectInfo);
+                //            selectAliasToInfoMap.put(selectAlias, selectInfo);
                 selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
             }
             selectInfos.add(selectInfo);
@@ -176,7 +177,7 @@ public class SelectManager<T> extends AbstractManager {
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         selectInfos.add(selectInfo);
-        
+
         if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
             objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(this);
         }
@@ -223,7 +224,7 @@ public class SelectManager<T> extends AbstractManager {
         if (!selectInfos.isEmpty()) {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
-        
+
         objectBuilder.applySelects(builder);
         this.objectBuilder = (ObjectBuilder<T>) objectBuilder;
     }
@@ -236,11 +237,11 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     private void applySelect(QueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
-        if(select.getExpression() instanceof SubqueryExpression){
+        if (select.getExpression() instanceof SubqueryExpression) {
             sb.append("(");
         }
         select.getExpression().accept(queryGenerator);
-        if(select.getExpression() instanceof SubqueryExpression){
+        if (select.getExpression() instanceof SubqueryExpression) {
             sb.append(")");
         }
         if (select.alias != null) {
@@ -261,8 +262,8 @@ public class SelectManager<T> extends AbstractManager {
                         // if the absPath is empty the pathExpr is relative to the root and we
                         // must not insert any select info for this
                         absPath = pathExpr.getField();
-                        
-                    }else{
+
+                    } else {
                         absPath += "." + pathExpr.getField();
                     }
                     selectAbsolutePathToInfoMap.put(absPath, selectInfo);

@@ -16,11 +16,9 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -32,8 +30,6 @@ import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
  *
@@ -42,13 +38,13 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 public abstract class PredicateManager<U> extends AbstractManager {
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
-    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
+    private RightHandsideSubqueryPredicateBuilder<?> rightSubqueryPredicateBuilderListener;
     private final LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>>();
     protected final ExpressionFactory expressionFactory;
 
     PredicateManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
-        this.rootPredicate = new RootPredicate();
+        this.rootPredicate = new RootPredicate(parameterManager);
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
@@ -72,7 +68,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
     
     SubqueryInitiator<U> restrictNotExists(U result) {
-        RightHandsideSubqueryPredicateBuilder subqueryListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        RightHandsideSubqueryPredicateBuilder<?> subqueryListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
     }
 
@@ -108,28 +104,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
         rootPredicate.predicate.accept(queryGenerator);
     }
 
-    class RootPredicate extends PredicateBuilderEndedListenerImpl {
-
-        final AndPredicate predicate;
-
-        public RootPredicate() {
-            this.predicate = new AndPredicate();
-        }
-
-        @Override
-        public void onBuilderEnded(PredicateBuilder builder) {
-            super.onBuilderEnded(builder);
-            Predicate pred = builder.getPredicate();
-
-            // register parameter expressions
-            registerParameterExpressions(pred);
-            
-            predicate.getChildren()
-                    .add(pred);
-        }
-    }
-
-    private static class TransformationVisitor extends VisitorAdapter {
+    static class TransformationVisitor extends VisitorAdapter {
 
         private final ExpressionTransformer transformer;
 

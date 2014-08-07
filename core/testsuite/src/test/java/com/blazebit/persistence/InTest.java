@@ -34,7 +34,7 @@ public class InTest extends AbstractCoreTest {
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
         criteria.where("d.age").in(ages);
         
-        assertEquals("FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
     
@@ -49,7 +49,7 @@ public class InTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
         criteria.where("d.age").notIn(ages);
-        assertEquals("FROM Document d WHERE NOT d.age IN :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE NOT d.age IN :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
     

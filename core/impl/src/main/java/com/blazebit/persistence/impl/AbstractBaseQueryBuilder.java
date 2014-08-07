@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 
 import com.blazebit.persistence.RestrictionBuilder;
@@ -121,9 +122,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
         
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
+        
+        this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
         
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
@@ -317,7 +320,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
-
+        joinManager.verifyBuilderEnded();
     }
 
     @Override
@@ -353,6 +356,39 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X join(String path, String alias, JoinType type) {
+        checkJoinPreconditions(path, alias, type);
+        joinManager.join(path, alias, type, false);
+        return (X) this;
+    }
+    
+    
+    @Override
+    public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
+        checkJoinPreconditions(path, alias, type);
+        return joinManager.joinOn((X) this, path, alias, type);
+    }
+
+    @Override
+    public JoinOnBuilder<X> innerJoinOn(String path, String alias) {
+        return joinOn(path, alias, JoinType.INNER);
+    }
+
+    @Override
+    public JoinOnBuilder<X> leftJoinOn(String path, String alias) {
+        return joinOn(path, alias, JoinType.LEFT);
+    }
+
+    @Override
+    public JoinOnBuilder<X> outerJoinOn(String path, String alias) {
+        return joinOn(path, alias, JoinType.OUTER);
+    }
+
+    @Override
+    public JoinOnBuilder<X> rightJoinOn(String path, String alias) {
+        return joinOn(path, alias, JoinType.RIGHT);
+    }
+  
+    private void checkJoinPreconditions(String path, String alias, JoinType type){
         if (path == null) {
             throw new NullPointerException("path");
         }
@@ -366,12 +402,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new IllegalArgumentException("Empty alias");
         }
         verifyBuilderEnded();
-        joinManager.join(path, alias, type, false);
-        return (X) this;
     }
 
     protected void applyImplicitJoins() {
         final JoinVisitor joinVisitor = new JoinVisitor(joinManager, selectManager);
+        joinManager.acceptVisitor(joinVisitor);
         // carry out implicit joins
         joinVisitor.setFromSelect(true);
         selectManager.acceptVisitor(joinVisitor);
@@ -409,6 +444,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
         // two different indices for the same array we would output the two accesses for the subpath and the access for the current path just once (and not once for each distinct subpath)
         for(ExpressionTransformer transformer : transformers){
+            joinManager.applyTransformer(transformer);
             selectManager.applyTransformer(transformer);
             whereManager.applyTransformer(transformer);
             groupByManager.applyTransformer(transformer);
@@ -432,10 +468,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         applyImplicitJoins();
         applyExpressionTransformers();
 
-        sbSelectFrom.append(selectManager.buildSelect());
-        if (sbSelectFrom.length() > 0) {
-            sbSelectFrom.append(' ');
-        }
+        sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
                 .append(fromClazz.getSimpleName())
                 .append(' ')

@@ -30,9 +30,10 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualTo(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").eq(20);
+        criteria.where("d.age").eq(20L);
         
-        assertEquals("FROM Document d WHERE d.age = :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age = :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -46,7 +47,8 @@ public class EqTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").eqExpression("d.versions.date + 1");
         
-        assertEquals("FROM Document d LEFT JOIN d.versions versions WHERE d.age = versions.date+1", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE d.age = versions.date+1", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -64,9 +66,10 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testNotEqualTo(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notEq(20);
+        criteria.where("d.age").notEq(20L);
         
-        assertEquals("FROM Document d WHERE NOT d.age = :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE NOT d.age = :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
      @Test(expected = NullPointerException.class)
@@ -80,7 +83,8 @@ public class EqTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").notEqExpression("d.versions.date + 1");
         
-        assertEquals("FROM Document d LEFT JOIN d.versions versions WHERE NOT d.age = versions.date+1", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE NOT d.age = versions.date+1", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -99,25 +103,27 @@ public class EqTest extends AbstractCoreTest {
     public void testEqAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").eq().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testEqAny(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").eq().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
         Assert.assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testEqOne(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").eq().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name = (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name = (SELECT p.id FROM Person p WHERE p.name = d.name)";
         
         Assert.assertEquals(expected, crit.getQueryString());
     }

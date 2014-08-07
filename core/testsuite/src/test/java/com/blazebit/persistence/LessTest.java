@@ -31,9 +31,10 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLt(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").lt(20);
+        criteria.where("d.age").lt(20L);
         
-        assertEquals("FROM Document d WHERE d.age < :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age < :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -47,7 +48,8 @@ public class LessTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").ltExpression("d.owner.name");
         
-        assertEquals("FROM Document d JOIN d.owner owner WHERE d.age < owner.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner WHERE d.age < owner.name", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -59,9 +61,10 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLe(){
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").le(20);
+        criteria.where("d.age").le(20L);
         
-        assertEquals("FROM Document d WHERE d.age <= :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age <= :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -75,7 +78,8 @@ public class LessTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").leExpression("d.owner.name");
         
-        assertEquals("FROM Document d JOIN d.owner owner WHERE d.age <= owner.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner WHERE d.age <= owner.name", criteria.getQueryString());
+        criteria.getResultList();
     }
     
     @Test(expected = NullPointerException.class)
@@ -88,53 +92,59 @@ public class LessTest extends AbstractCoreTest {
     public void testLeAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").le().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name <= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name <= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testLeAny(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").le().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name <= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name <= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testLeOne(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").le().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name <= (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name <= (SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testLtAll(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").lt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name < ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name < ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testLtAny(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").lt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
     
     @Test
     public void testLtOne(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("name").lt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "FROM Document d WHERE d.name < (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        String expected = "SELECT d FROM Document d WHERE d.name < (SELECT p.id FROM Person p WHERE p.name = d.name)";
         
-        Assert.assertEquals(expected, crit.getQueryString());
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
     }
 }

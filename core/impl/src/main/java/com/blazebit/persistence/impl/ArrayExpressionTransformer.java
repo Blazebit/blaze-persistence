@@ -21,7 +21,9 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -101,7 +103,25 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
 
                     keyPath.setBaseNode(joinManager.findNode(keyPath.getPath()));
                     
-                    joinManager.findNode(absBasePath).setWithPredicate(valueKeyFilterPredicate);
+                    // set the generated predicate on the join node
+                    JoinNode joinNode = joinManager.findNode(absBasePath);
+                    if(joinNode.getWithPredicate() != null){
+                        Predicate currentPred = joinNode.getWithPredicate();
+                        if(currentPred instanceof AndPredicate){
+                            // we have to create a new predicate due to concurrent modification
+                            AndPredicate withAndPredicate = new AndPredicate();
+                            withAndPredicate.getChildren().addAll(((AndPredicate)currentPred).getChildren());
+                            withAndPredicate.getChildren().add(valueKeyFilterPredicate);
+                            joinNode.setWithPredicate(withAndPredicate);
+                        }else{
+                            AndPredicate withAndPredicate = new AndPredicate();
+                            withAndPredicate.getChildren().add(currentPred);
+                            withAndPredicate.getChildren().add(valueKeyFilterPredicate);
+                            joinNode.setWithPredicate(withAndPredicate);
+                        }
+                    }else{
+                        joinNode.setWithPredicate(valueKeyFilterPredicate);
+                    }
                     transformedPathFilterMap.put(transInfo, valueKeyFilterPredicate);
 
                 }

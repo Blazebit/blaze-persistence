@@ -17,7 +17,9 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -26,11 +28,59 @@ import org.junit.Test;
  */
 public class SubqueryTest extends AbstractCoreTest {
 
+    @Before
+    public void setUp() {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            Document doc1 = new Document("doc1");
+            Document doc2 = new Document("Doc2");
+            Document doc3 = new Document("doC3");
+            Document doc4 = new Document("dOc4");
+            Document doc5 = new Document("DOC5");
+            Document doc6 = new Document("bdoc");
+            Document doc7 = new Document("adoc");
+            
+            Person o1 = new Person("Karl1");
+            Person o2 = new Person("Karl2");
+            o1.getLocalized().put(1, "abra kadabra");
+            o2.getLocalized().put(1, "ass");
+            
+            doc1.setOwner(o1);
+            doc2.setOwner(o1);
+            doc3.setOwner(o1);
+            doc4.setOwner(o2);
+            doc5.setOwner(o2);
+            doc6.setOwner(o2);
+            doc7.setOwner(o2);
+            
+            doc1.getContacts().put(1, o1);
+            doc1.getContacts().put(2, o2);
+            
+            em.persist(o1);
+            em.persist(o2);
+            
+            em.persist(doc1);
+            em.persist(doc2);
+            em.persist(doc3);
+            em.persist(doc4);
+            em.persist(doc5);
+            em.persist(doc6);
+            em.persist(doc7);
+            
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Test
     public void testRootAliasInSubquery() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
-        String expected = "FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE " + joinAliasValue("ownedDocuments") + " = d)";
+        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE " + joinAliasValue("ownedDocuments") + " = d)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -88,14 +138,14 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.select("name", "n")
                 .leftJoin("versions", "v")
                 .where("id")
-                    .in().from(Person.class, "p").select("id").where("SIZE(d.versions)").eqExpression("SIZE(p.ownedDocuments)").end()
+                    .in().from(Person.class, "p").select("id").where("d.age)").eqExpression("SIZE(p.ownedDocuments)").end()
                 .where("id")
-                    .notIn().from(Person.class).select("id").where("SIZE(d.versions)").ltExpression("SIZE(partnerDocument.versions)").end()
+                    .notIn().from(Person.class).select("id").where("d.age").ltExpression("SIZE(partnerDocument.versions)").end()
                 .getQueryString();
         
         String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions v WHERE d.id IN "
-                + "(SELECT p.id FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments WHERE SIZE(d.versions) = SIZE(p.ownedDocuments)) AND NOT d.id IN "
-                + "(SELECT person.id FROM Person person LEFT JOIN person.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions WHERE SIZE(d.versions) < SIZE(partnerDocument.versions))";
+                + "(SELECT p.id FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments WHERE d.age = SIZE(p.ownedDocuments)) AND NOT d.id IN "
+                + "(SELECT person.id FROM Person person LEFT JOIN person.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions WHERE d.age < SIZE(partnerDocument.versions))";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -160,14 +210,34 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
     
+    @Test(expected = UnsupportedOperationException.class)
+    public void testExceptionOnSubqueryCollectionAccess1() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.leftJoinOn("d.partners.localized", "l").end().where()
+                .from(Person.class, "p").select("name").where("LENGTH(partners.l)").gt(1).end()
+                .like("%dld");        
+        crit.getQueryString();
+    }
+    
+    @Test(expected = UnsupportedOperationException.class)
+    public void testExceptionOnSubqueryCollectionAccess2() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.leftJoinOn("d.partners.localized", "l").end().where()
+                .from(Person.class, "p").select("name").where("LENGTH(l[1])").gt(1).end()
+                .like("%dld");     
+        crit.getQueryString();
+    }
+   
     @Test
     public void workingJPQLQueries(){
 //        em.createQuery("SELECT SIZE(owner.ownedDocuments) AS ownedSize FROM Document d LEFT JOIN d.versions versions LEFT JOIN d.owner owner WHERE d.id IN "
 //                + "(SELECT p.id FROM Person p WHERE ownedSize = p.name)").getResultList();
-        em.createQuery("FROM Document d LEFT JOIN d.versions versions LEFT JOIN d.owner owner WHERE d.id IN "
-                + "(SELECT p.id FROM Person p WHERE SIZE(d.versions) = p.name)").getResultList();
+        em.createQuery("FROM Document d LEFT JOIN d.versions versions JOIN d.owner owner WHERE d.id IN "
+                + "(SELECT p.id FROM Person p WHERE SIZE(d.versions) = p.age)").getResultList();
         em.createQuery("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document LEFT JOIN document.partners partners LEFT JOIN d.owner owner WHERE d.id IN "
-                + "(SELECT p.id FROM Person p WHERE SIZE(document.partners) = p.name)").getResultList();
+                + "(SELECT p.id FROM Person p WHERE SIZE(document.partners) = p.age)").getResultList();
+        em.createQuery("FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document LEFT JOIN document.partners partners LEFT JOIN d.owner owner WHERE d.id IN "
+                + "(SELECT p.id FROM Person p WHERE partners.name = p.name)").getResultList();
         em.createQuery("FROM Person p LEFT JOIN p.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions WHERE SIZE(partnerDocument.versions) > 0").getResultList();
 //        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
 //                + "(SELECT p.id FROM Person p WHERE p.name = n)").getResultList();
@@ -176,9 +246,10 @@ public class SubqueryTest extends AbstractCoreTest {
         em.createQuery("SELECT d.name FROM Document d WHERE UPPER(d.name) = LOWER(d.name)").getResultList();
         em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d").getResultList();
         
-        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d WHERE d.name = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
+        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d WHERE d.age = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
         
 //        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
 //                + "(SELECT p.id FROM Person p WHERE p.name = 'test' ORDER BY n)").getResultList();
+//        em.createQuery("SELECT d, owner FROM Document d LEFT JOIN FETCH d.owner owner WITH owner.id < 5").getResultList();
     }
 }

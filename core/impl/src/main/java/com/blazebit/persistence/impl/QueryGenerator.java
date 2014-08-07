@@ -173,7 +173,7 @@ public class QueryGenerator extends VisitorAdapter {
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
-        predicate.getLeft().accept(this);
+        wrapSubquery(predicate.getLeft(), sb);
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }
@@ -227,25 +227,15 @@ public class QueryGenerator extends VisitorAdapter {
     }
     
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
-        if(predicate.getLeft() instanceof SubqueryExpression){
-            sb.append("(");
-        }
-        predicate.getLeft().accept(this);
-        if(predicate.getLeft() instanceof SubqueryExpression){
-            sb.append(")");
-        }
+        wrapSubquery(predicate.getLeft(), sb);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
             sb.append(predicate.getQuantifier().toString());
             sb.append("(");
-        }else if(predicate.getRight() instanceof SubqueryExpression){
-            sb.append("(");
-        }
-        predicate.getRight().accept(this);
-        if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
+            predicate.getRight().accept(this);
             sb.append(")");
-        }else if(predicate.getRight() instanceof SubqueryExpression){
-            sb.append(")");
+        }else{
+            wrapSubquery(predicate.getRight(), sb);
         }
     }
 
@@ -350,6 +340,16 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(ArrayExpression expression) {
+    }
+    
+    private void wrapSubquery(Expression p, StringBuilder sb){
+        if(p instanceof SubqueryExpression){
+            sb.append("(");
+        }
+        p.accept(this);
+        if(p instanceof SubqueryExpression){
+            sb.append(")");
+        }
     }
 
 }
