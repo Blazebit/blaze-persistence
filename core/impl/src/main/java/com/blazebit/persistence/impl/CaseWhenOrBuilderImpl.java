@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
@@ -43,6 +44,30 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
     public RestrictionBuilder<CaseWhenOrBuilder<T>> or(String expression) {
         return startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
                                                                              expressionFactory));
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubquery() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SubqueryInitiator<CaseWhenOrBuilder<T>> orExists() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SubqueryInitiator<CaseWhenOrBuilder<T>> orNotExists() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
