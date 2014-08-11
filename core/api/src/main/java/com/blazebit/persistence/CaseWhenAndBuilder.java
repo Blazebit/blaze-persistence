@@ -32,6 +32,43 @@ public interface CaseWhenAndBuilder<T> {
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<CaseWhenAndBuilder<T>> and(String expression);
+    
+    /**
+     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
+     * When the subquery builder and the restriction builder for the right hand side are finished,
+     * the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery();
+
+    /**
+     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate. All occurrences of
+     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished,
+     * the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery(String subqueryAlias, String expression);
+
+    /**
+     * Starts an exists predicate for the when clause with a subquery on the right hand side.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<CaseWhenAndBuilder<T>> andExists();
+
+    /**
+     * Starts an exists predicate for the when clause with a subquery on the right hand side.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     *
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<CaseWhenAndBuilder<T>> andNotExists();
 
     /**
      * Starts a case when or builder which connects it's predicates with the OR operator.
