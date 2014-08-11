@@ -18,7 +18,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * <li>If the value is an instance of the expected type, the value will be used in the restriction as is.</li>
  * <li>If the parsing of the {@linkplain Object#toString()} representation of the object to the expected type is successful,
  * the parsed value will be used in the restriction.</li>
- * <li>If the parsing of the object fails, the value will be used in the restriction as is.</li>
+ * <li>If the parsing of the object fails, an {@link IllegalArgumentException} is thrown.</li>
  * </ul>
  *
  * @author Christian Beikov
