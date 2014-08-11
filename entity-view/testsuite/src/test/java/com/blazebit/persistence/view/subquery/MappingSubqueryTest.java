@@ -117,7 +117,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         EntityViewSetting<DocumentAggregatedView> setting = new EntityViewSetting<DocumentAggregatedView>(DocumentAggregatedView.class, 0, 2);
         
         // Query
-        CriteriaBuilder<Person> cb = cbf.from(em, Person.class);
+        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeSorter("contactCount", Sorters.descending());
         
         PaginatedCriteriaBuilder<DocumentAggregatedView> paginatedCb = setting.apply(evm, cb);
