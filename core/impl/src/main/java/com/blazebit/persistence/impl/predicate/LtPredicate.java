@@ -83,5 +83,15 @@ public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
             chainSubquery(new LtPredicate(leftExpression, null, PredicateQuantifier.ONE));
             return getSubqueryInitiator().from(clazz, alias);
         }
+
+        @Override
+        public SubqueryInitiator<T> all(String subqueryAlias, String expression) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public SubqueryInitiator<T> any(String subqueryAlias, String expression) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
 }

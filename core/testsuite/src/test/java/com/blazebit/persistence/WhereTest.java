@@ -277,4 +277,23 @@ public class WhereTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    public void testWhereSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end().eq(2L);     
+        
+        assertEquals("SELECT d FROM Document d WHERE 1+(SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+
+    @Test
+    public void testWhereMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereSubquery("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end().eq(2L);     
+        
+        assertEquals("SELECT d FROM Document d WHERE (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
+        crit.getResultList();
+    }
 }

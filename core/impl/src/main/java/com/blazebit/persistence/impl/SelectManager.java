@@ -224,13 +224,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     private void applySelect(QueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
-        if (select.getExpression() instanceof SubqueryExpression) {
-            sb.append("(");
-        }
         select.getExpression().accept(queryGenerator);
-        if (select.getExpression() instanceof SubqueryExpression) {
-            sb.append(")");
-        }
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);
         }

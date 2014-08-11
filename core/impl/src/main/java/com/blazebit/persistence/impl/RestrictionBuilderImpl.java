@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.QuantifiableSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -130,6 +131,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         }
         return chain(new EqPredicate(leftExpression, new ParameterExpression(value)));
     }
+    
+    @Override
+    public QuantifiableSubqueryInitiator<T> eq(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public T eqExpression(String expression) {
@@ -153,6 +159,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public T notEqExpression(String expression) {
         return chain(new NotPredicate(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression))));
     }
+    
+    @Override
+    public QuantifiableSubqueryInitiator<T> notEq(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> gt() {
@@ -173,6 +184,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public QuantifiableSubqueryInitiator<T> gt(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> ge() {
         return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
@@ -188,6 +204,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public T geExpression(String expression) {
         return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+    }
+
+    @Override
+    public QuantifiableSubqueryInitiator<T> ge(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -209,6 +230,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public QuantifiableSubqueryInitiator<T> lt(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> le() {
         return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
@@ -224,6 +250,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public T leExpression(String expression) {
         return chain(new LePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+    }
+
+    @Override
+    public QuantifiableSubqueryInitiator<T> le(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

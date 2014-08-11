@@ -200,27 +200,27 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.selectSubquery("alias", "COUNT(alias)").from(Person.class, "p").select("id").end();     
+        crit.selectSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) FROM Document d", crit.getQueryString());
+        assertEquals("SELECT 1+(SELECT COUNT(p.id) FROM Person p) FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
     
     @Test
     public void testSelectSubqueryWithSurroundingExpressionWithAlias() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.selectSubquery("alias", "COUNT(alias)", "alias").from(Person.class, "p").select("id").end();     
+        crit.selectSubquery("alias", "1 + alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) AS alias FROM Document d", crit.getQueryString());
+        assertEquals("SELECT 1+(SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
     
     @Test
     public void testSelectMultipleSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.selectSubquery("alias", "(COUNT(alias) * AVG(alias))", "alias").from(Person.class, "p").select("id").end();     
+        crit.selectSubquery("alias", "alias * alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT (COUNT(SELECT p.id FROM Person p)*AVG(SELECT p.id FROM Person p)) AS alias FROM Document d", crit.getQueryString());
+        assertEquals("SELECT (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
 }

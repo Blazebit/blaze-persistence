@@ -175,7 +175,7 @@ public class QueryGenerator extends VisitorAdapter {
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
-        wrapSubquery(predicate.getLeft(), sb);
+        predicate.getLeft().accept(this);
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }
@@ -215,9 +215,8 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append(" IN ");
             predicate.getRight().accept(this);
         } else {
-            sb.append(" IN (");
-            predicate.getRight().accept(this);
-            sb.append(")");
+            sb.append(" IN ");
+            wrapNonSubquery(predicate.getRight(), sb);
         }
     }
 
@@ -229,29 +228,25 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append(" IN ");
             predicate.getRight().accept(this);
         } else {
-            sb.append(" IN (");
-            predicate.getRight().accept(this);
-            sb.append(")");
+            sb.append(" IN ");
+            wrapNonSubquery(predicate.getRight(), sb);
         }
     }
 
     @Override
     public void visit(ExistsPredicate predicate) {
-        sb.append("EXISTS (");
+        sb.append("EXISTS ");
         predicate.getExpression().accept(this);
-        sb.append(")");
     }
 
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
-        wrapSubquery(predicate.getLeft(), sb);
+        predicate.getLeft().accept(this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
             sb.append(predicate.getQuantifier().toString());
-            sb.append("(");
-            predicate.getRight().accept(this);
-            sb.append(")");
+            wrapNonSubquery(predicate.getRight(), sb);
         } else {
-            wrapSubquery(predicate.getRight(), sb);
+            predicate.getRight().accept(this);
         }
     }
 
@@ -345,7 +340,9 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(SubqueryExpression expression) {
+        sb.append('(');
         sb.append(expression.getBuilder().getQueryString());
+        sb.append(')');
     }
 
     public boolean isReplaceSelectAliases() {
@@ -360,12 +357,12 @@ public class QueryGenerator extends VisitorAdapter {
     public void visit(ArrayExpression expression) {
     }
 
-    private void wrapSubquery(Expression p, StringBuilder sb) {
-        if (p instanceof SubqueryExpression) {
+    private void wrapNonSubquery(Expression p, StringBuilder sb) {
+        if (!(p instanceof SubqueryExpression)) {
             sb.append("(");
         }
         p.accept(this);
-        if (p instanceof SubqueryExpression) {
+        if (!(p instanceof SubqueryExpression)) {
             sb.append(")");
         }
     }

@@ -88,11 +88,7 @@ public class OrderByManager extends AbstractManager {
         AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
         if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
             SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
-            if (selectInfo.getExpression() instanceof SubqueryExpression) {
-                sb.append("(");
-                selectInfo.getExpression().accept(queryGenerator);
-                sb.append(") AS ").append(potentialSelectAlias);
-            } else if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+            if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                 selectInfo.getExpression().accept(queryGenerator);
                 sb.append(" AS ").append(potentialSelectAlias);
             }
@@ -104,11 +100,7 @@ public class OrderByManager extends AbstractManager {
             aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
                 SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
-                if (selectInfo.getExpression() instanceof SubqueryExpression) {
-                    sb.append("(");
-                    selectInfo.getExpression().accept(queryGenerator);
-                    sb.append(") AS ").append(potentialSelectAlias);
-                } else if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                     selectInfo.getExpression().accept(queryGenerator);
                     sb.append(" AS ").append(potentialSelectAlias);
                 }
@@ -122,7 +114,6 @@ public class OrderByManager extends AbstractManager {
         if (orderByInfos.isEmpty()) {
             return;
         }
-//        queryGenerator.setReplaceSelectAliases(true);
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
@@ -131,7 +122,6 @@ public class OrderByManager extends AbstractManager {
             sb.append(", ");
             applyOrderBy(sb, iter.next());
         }
-//        queryGenerator.setReplaceSelectAliases(false);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy) {
