@@ -16,7 +16,7 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.Sortable;
+import com.blazebit.persistence.OrderByBuilder;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.Sorters;
 import org.junit.Test;
@@ -55,9 +55,9 @@ public class SorterTest {
         verifySorter(sorter).orderBy(expression, false, false);
     }
     
-    public Sortable<?> verifySorter(Sorter sorter) {
-        Sortable<?> sortable = Mockito.mock(Sortable.class);
-        sorter.apply((Sortable) sortable, expression);
+    public OrderByBuilder<?> verifySorter(Sorter sorter) {
+        OrderByBuilder<?> sortable = Mockito.mock(OrderByBuilder.class);
+        sorter.apply((OrderByBuilder) sortable, expression);
         return Mockito.verify(sortable);
     }
 }

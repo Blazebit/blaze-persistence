@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface WhereOrBuilder<T> extends BaseFilterable<WhereOrBuilder<T>> {
+public interface WhereOrBuilder<T> extends BaseWhereBuilder<WhereOrBuilder<T>> {
 
     /**
      * Finishes the OR predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

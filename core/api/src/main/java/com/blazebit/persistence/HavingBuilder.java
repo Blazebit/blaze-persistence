@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.OrderByBuilder;
+package com.blazebit.persistence;
 
 /**
- * A sorter is an object that applies an order by on a {@link OrderByBuilder} for a specific expression.
+ * An interface for builders that support aggregation.
+ * This is related to the fact, that a query builder supports group by and having clauses.
  *
+ * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface Sorter {
-
+public interface HavingBuilder<T extends HavingBuilder<T>> extends BaseHavingBuilder<T> {
+    
     /**
-     * Applies an order by on the given sortable for the given expression.
+     * Starts a {@link HavingOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
      *
-     * @param <T>        The actual type of the sortable
-     * @param sortable   The sortable on which to apply the order by
-     * @param expression The order by expression
-     * @return The sortable
+     * @return The or predicate builder for the having clause
      */
-    public <T extends OrderByBuilder<T>> T apply(T sortable, String expression);
-
+    public HavingOrBuilder<T> havingOr();
 }

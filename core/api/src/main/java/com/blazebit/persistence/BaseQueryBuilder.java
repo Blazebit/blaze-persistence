@@ -26,7 +26,7 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X>, SelectBuilder<T, X> {
+public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends HavingBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, SelectBuilder<T, X> {
 
     /**
      * Returns the result type of this query.
