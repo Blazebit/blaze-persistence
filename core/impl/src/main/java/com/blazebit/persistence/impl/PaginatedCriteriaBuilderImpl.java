@@ -201,7 +201,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(idName)
             .toString();
 
-        sbSelectFrom.append("SELECT DISTINCT ")
+        sbSelectFrom.append("SELECT ")
             .append(idClause);
         
         //TODO: change to if(hasSubqueryOrderBys)
@@ -217,6 +217,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
+        sbRemaining.append(" GROUP BY ").append(idClause);
         orderByManager.buildOrderBy(sbRemaining);
         
         StringBuilder sbJoin = new StringBuilder();
