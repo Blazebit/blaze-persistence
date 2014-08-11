@@ -203,7 +203,7 @@ public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHavingLeftSubquery() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.groupBy("id").having().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
+        crit.groupBy("id").havingSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
 
         assertEquals(expected, crit.getQueryString());
@@ -213,7 +213,7 @@ public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHavingLeftSubqueryAndBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.groupBy("name").having("d.name").eq("test").havingOr().havingAnd().having().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        crit.groupBy("name").having("d.name").eq("test").havingOr().havingAnd().havingSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
 
         assertEquals(expected, crit.getQueryString());
@@ -223,7 +223,7 @@ public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHavingLeftSubqueryOrBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.groupBy("name").havingOr().having("d.name").eq("test").having().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        crit.groupBy("name").havingOr().having("d.name").eq("test").havingSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
 
         assertEquals(expected, crit.getQueryString());

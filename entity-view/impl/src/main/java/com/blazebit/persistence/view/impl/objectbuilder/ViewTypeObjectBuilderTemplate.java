@@ -185,8 +185,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
                 }
                 
-                String subqueryExpression = (String) mapping[2];
-                String subqueryAlias = (String) mapping[3];
+                String subqueryAlias = (String) mapping[2];
+                String subqueryExpression = (String) mapping[3];
 
                 if (subqueryExpression.isEmpty()) {
                     if (mapping[1] != null) {
@@ -321,8 +321,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         Object[] mapping = new Object[4];
         mapping[0] = attribute.getSubqueryProvider();
         mapping[1] = getAlias(aliasPrefix, attribute);
-        mapping[2] = attribute.getSubqueryExpression();
-        mapping[3] = attribute.getSubqueryAlias();
+        mapping[2] = attribute.getSubqueryAlias();
+        mapping[3] = attribute.getSubqueryExpression();
         mappingList.add(mapping);
         parameterMappingList.add(null);
     }

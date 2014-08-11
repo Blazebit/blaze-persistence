@@ -78,10 +78,25 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      */
     public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String alias);
     
-    //TODO: javadoc
-    public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression,  String selectAlias);
+    /**
+     * Starts a {@link SubqueryInitiator} for a new select item with the given select alias. All occurrences of 
+     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the builder finishes, the select item is added to the parent container represented by the type {@linkplain X}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building a subquery
+     */
+    public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
     
-    //TODO: javadoc
+    /**
+     * Like {@link Selectable#selectSubquery(java.lang.String,java.lang.String,java.lang.String)} but without a select alias.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item
+     * @return The subquery initiator for building a subquery
+     */
     public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
 
     /**

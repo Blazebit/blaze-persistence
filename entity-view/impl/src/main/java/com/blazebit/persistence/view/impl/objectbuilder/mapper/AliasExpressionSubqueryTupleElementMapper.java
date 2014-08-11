@@ -35,7 +35,7 @@ public class AliasExpressionSubqueryTupleElementMapper extends ExpressionSubquer
     
     @Override
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
-        provider.createSubquery(queryBuilder.selectSubquery(subqueryExpression, subqueryAlias, alias));
+        provider.createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
     }
     
 }

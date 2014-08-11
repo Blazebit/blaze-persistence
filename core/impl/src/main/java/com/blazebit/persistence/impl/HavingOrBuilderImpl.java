@@ -92,9 +92,15 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> having() {
+    public SubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> havingSubquery() {
         RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> havingSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
