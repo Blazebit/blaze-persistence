@@ -128,7 +128,7 @@ public class SubqueryTest extends AbstractCoreTest {
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN "
                 + "(SELECT person.id FROM Person person WHERE person.name = d.name) AND d.id NOT IN "
                 + "(SELECT person.id FROM Person person WHERE d.name LIKE person.name) "
-                + "ORDER BY n ASC NULLS LAST";
+                + "ORDER BY d.name ASC NULLS LAST";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();

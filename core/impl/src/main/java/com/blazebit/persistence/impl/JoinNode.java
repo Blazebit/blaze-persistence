@@ -16,9 +16,10 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -35,13 +36,14 @@ public class JoinNode {
     // This flag indicates if this join node is required from a select expression only
     // We need this for count and id queries where we do not need all the joins
     private boolean selectOnly = true;
+    private boolean requiredByOrderBy = false;
     private Class<?> propertyClass;
     // Use TreeMap so that joins get applied alphabetically for easier testing
     private final Map<String, JoinNode> nodes = new TreeMap<String, JoinNode>();
     private final boolean collection;
     
     private Predicate withPredicate;
-
+    
     public JoinNode(JoinAliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass, boolean collection) {
         this.aliasInfo = aliasInfo;
         this.type = type;
@@ -104,6 +106,10 @@ public class JoinNode {
 
     public boolean isCollection() {
         return collection;
+    }
+
+    public void setRequiredByOrderBy(boolean requiredByOrderBy) {
+        this.requiredByOrderBy = requiredByOrderBy;
     }
 }
 

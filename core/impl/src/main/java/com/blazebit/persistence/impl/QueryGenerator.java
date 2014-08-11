@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionUtils;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -56,10 +57,10 @@ public class QueryGenerator extends VisitorAdapter {
     private boolean replaceSelectAliases = false;
     // cyclic dependency
     private SelectManager<?> selectManager;
-    private final BaseQueryBuilder<?,?> aliasOwner;
+    private final BaseQueryBuilder<?, ?> aliasOwner;
     private final AliasManager aliasManager;
 
-    public QueryGenerator(BaseQueryBuilder<?,?> aliasOwner, AliasManager aliasManager) {
+    public QueryGenerator(BaseQueryBuilder<?, ?> aliasOwner, AliasManager aliasManager) {
         this.aliasOwner = aliasOwner;
         this.aliasManager = aliasManager;
     }
@@ -234,14 +235,14 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append(")");
         }
     }
-    
+
     @Override
     public void visit(ExistsPredicate predicate) {
         sb.append("EXISTS (");
         predicate.getExpression().accept(this);
         sb.append(")");
     }
-    
+
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
         wrapSubquery(predicate.getLeft(), sb);
         sb.append(operator);
@@ -250,7 +251,7 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append("(");
             predicate.getRight().accept(this);
             sb.append(")");
-        }else{
+        } else {
             wrapSubquery(predicate.getRight(), sb);
         }
     }
@@ -304,9 +305,9 @@ public class QueryGenerator extends VisitorAdapter {
         if (replaceSelectAliases) {
             if (expression.getBaseNode() != null) {
                 String absPath = expression.getBaseNode().getAliasInfo().getAbsolutePath();
-                if(absPath.isEmpty()){
+                if (absPath.isEmpty()) {
                     absPath = expression.getField();
-                }else{
+                } else {
                     absPath += "." + expression.getField();
                 }
                 SelectInfo selectInfo = selectManager.getSelectAbsolutePathToInfoMap().get(absPath);
@@ -315,17 +316,19 @@ public class QueryGenerator extends VisitorAdapter {
                     return;
                 }
             }// else the expression is a pure alias and does not require to be replaced
-        }else{
+        } else {
             // if path expression should not be replaced by select aliases we
             // check for select aliases that have to be replaced with the corresponding
             // path expressions
-            if(expression.getBaseNode() == null){
+            if (expression.getBaseNode() == null) {
                 AliasInfo aliasInfo;
-                if((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null){
-                    if(aliasInfo instanceof SelectInfo){
+                if ((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null) {
+                    if (aliasInfo instanceof SelectInfo) {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
-                        wrapSubquery(selectAliasInfo.getExpression(), sb);
-                        return;
+                        if (!ExpressionUtils.containsSubqueryExpression(selectAliasInfo.getExpression())) {
+                            selectAliasInfo.getExpression().accept(this);
+                            return;
+                        }
                     }
                 }
             }
@@ -345,7 +348,7 @@ public class QueryGenerator extends VisitorAdapter {
     public void visit(SubqueryExpression expression) {
         sb.append(expression.getBuilder().getQueryString());
     }
-    
+
     public boolean isReplaceSelectAliases() {
         return replaceSelectAliases;
     }
@@ -357,13 +360,13 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(ArrayExpression expression) {
     }
-    
-    private void wrapSubquery(Expression p, StringBuilder sb){
-        if(p instanceof SubqueryExpression){
+
+    private void wrapSubquery(Expression p, StringBuilder sb) {
+        if (p instanceof SubqueryExpression) {
             sb.append("(");
         }
         p.accept(this);
-        if(p instanceof SubqueryExpression){
+        if (p instanceof SubqueryExpression) {
             sb.append(")");
         }
     }

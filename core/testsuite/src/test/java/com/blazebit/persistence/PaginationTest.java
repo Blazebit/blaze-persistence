@@ -230,7 +230,8 @@ public class PaginationTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)", "contactCount")
                 .orderByAsc("contactCount")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, SIZE(d.contacts) AS contactCount FROM Document d GROUP BY d.id ORDER BY contactCount ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST";
+        em.createQuery(expectedIdQuery).getResultList();
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
     }

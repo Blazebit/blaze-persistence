@@ -66,6 +66,11 @@ public class JoinManager extends AbstractManager {
     private SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
+    public static enum JoinClauseBuildMode {
+
+        NORMAL, COUNT, ID
+    };
+
     public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
         if (rootAlias == null) {
@@ -177,14 +182,14 @@ public class JoinManager extends AbstractManager {
 
             // check for unsupported collection accesses in the path
             JoinAliasInfo joinAliasInfo = (JoinAliasInfo) aliasInfo;
-            
+
             JoinNode aliasJoinNode;
-            if(joinAliasInfo.getAbsolutePath().isEmpty()){
+            if (joinAliasInfo.getAbsolutePath().isEmpty()) {
                 aliasJoinNode = parent.rootNode;
-            }else{
+            } else {
                 aliasJoinNode = parent.findNode(joinAliasInfo.getAbsolutePath());
             }
-            
+
             if (aliasJoinNode.isCollection()) {
                 throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
             }
@@ -349,6 +354,13 @@ public class JoinManager extends AbstractManager {
             String normalizedPath = normalizePath(path);
 
             if (isSkipableSelectAlias(path, fromSelect, fromSubquery)) {
+                Expression expr = ((SelectManager.SelectInfo) aliasManager.getAliasInfo(path)).getExpression();
+
+                // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
+                if (!expr.toString().equals(path)) {
+                    // we have to do this implicit join because we might have to adjust the selectOnly flag in the referenced join nodes
+                    implicitJoin(expr, true, fromSelect, fromSubquery);
+                }
                 return;
             } else if (isExternal(pathExpression)) {
                 // try to set base node and field for the external expression based

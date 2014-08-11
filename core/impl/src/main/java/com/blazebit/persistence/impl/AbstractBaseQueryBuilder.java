@@ -136,7 +136,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory, expressionFactory);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
 
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);

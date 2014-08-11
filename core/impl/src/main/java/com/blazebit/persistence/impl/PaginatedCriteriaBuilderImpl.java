@@ -92,7 +92,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .toString();
         
         //TODO: change to if(hasSubqueryOrderBys)
-        if (orderByManager.hasNonIdOrderBys(idClause)) {
+        if (orderByManager.hasSubqueryOrderBys(idClause)) {
             // If we have non id order bys, 
             List newIds = new ArrayList(ids.size());
             
@@ -204,11 +204,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         sbSelectFrom.append("SELECT ")
             .append(idClause);
         
-        //TODO: change to if(hasSubqueryOrderBys)
-        if (orderByManager.hasNonIdOrderBys(idClause)) {
+        if (orderByManager.hasSubqueryOrderBys(idClause)) {
             sbSelectFrom.append(", ");
-            // TODO: change to buildSubquerySelectClauses
-            orderByManager.buildSelectClauses(sbSelectFrom);
+            orderByManager.buildSubquerySelectClauses(sbSelectFrom);
         }
         sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())

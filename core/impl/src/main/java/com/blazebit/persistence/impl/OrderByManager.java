@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionUtils;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,64 +28,101 @@ import java.util.List;
  * @since 1.0
  */
 public class OrderByManager extends AbstractManager {
+
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
-    
-    OrderByManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
+    private final AliasManager aliasManager;
+
+    OrderByManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager) {
         super(queryGenerator, parameterManager);
+        this.aliasManager = aliasManager;
     }
-    
-    boolean hasNonIdOrderBys(String idName) {
-        if (orderByInfos.size() < 1) {
+
+    boolean hasSubqueryOrderBys(String idName) {
+        if (orderByInfos.isEmpty()) {
             return false;
         }
-        
-        for (OrderByInfo orderBy : orderByInfos) {
-            if (!idName.equals(orderBy.getExpression().toString())) {
-                return true;
+
+        for (OrderByInfo orderByInfo : orderByInfos) {
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
+            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
+                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+                if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                    return true;
+                }
             }
         }
-        
+
         return false;
     }
-    
-    void orderBy(Expression expr, boolean ascending, boolean nullFirst){
+
+    void orderBy(Expression expr, boolean ascending, boolean nullFirst
+    ) {
         orderByInfos.add(new OrderByInfo(expr, ascending, nullFirst));
         registerParameterExpressions(expr);
     }
-    
-    void acceptVisitor(Expression.Visitor v){
+
+    void acceptVisitor(Expression.Visitor v
+    ) {
         for (OrderByInfo orderBy : orderByInfos) {
             orderBy.getExpression().accept(v);
         }
     }
-    
-    void applyTransformer(ExpressionTransformer transformer){
+
+    void applyTransformer(ExpressionTransformer transformer
+    ) {
         for (OrderByInfo orderBy : orderByInfos) {
             orderBy.setExpression(transformer.transform(orderBy.getExpression()));
         }
     }
-    
-    void buildSelectClauses(StringBuilder sb) {
+
+    void buildSubquerySelectClauses(StringBuilder sb
+    ) {
         if (orderByInfos.isEmpty()) {
-            return ;
+            return;
         }
-        
+
         queryGenerator.setQueryBuffer(sb);
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         OrderByInfo orderByInfo = iter.next();
-        orderByInfo.getExpression().accept(queryGenerator);
+        String potentialSelectAlias = orderByInfo.getExpression().toString();
+        AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+        if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
+            SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+            if (selectInfo.getExpression() instanceof SubqueryExpression) {
+                sb.append("(");
+                selectInfo.getExpression().accept(queryGenerator);
+                sb.append(") AS ").append(potentialSelectAlias);
+            } else if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                selectInfo.getExpression().accept(queryGenerator);
+                sb.append(" AS ").append(potentialSelectAlias);
+            }
+        }
         while (iter.hasNext()) {
             sb.append(", ");
             orderByInfo = iter.next();
-            orderByInfo.getExpression().accept(queryGenerator);
+            potentialSelectAlias = orderByInfo.getExpression().toString();
+            aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
+                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+                if (selectInfo.getExpression() instanceof SubqueryExpression) {
+                    sb.append("(");
+                    selectInfo.getExpression().accept(queryGenerator);
+                    sb.append(") AS ").append(potentialSelectAlias);
+                } else if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                    selectInfo.getExpression().accept(queryGenerator);
+                    sb.append(" AS ").append(potentialSelectAlias);
+                }
+
+            }
         }
     }
-    
-    void buildOrderBy(StringBuilder sb) {
+
+    void buildOrderBy(StringBuilder sb
+    ) {
         if (orderByInfos.isEmpty()) {
-            return ;
+            return;
         }
-        queryGenerator.setReplaceSelectAliases(true);
+//        queryGenerator.setReplaceSelectAliases(true);
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
@@ -93,7 +131,7 @@ public class OrderByManager extends AbstractManager {
             sb.append(", ");
             applyOrderBy(sb, iter.next());
         }
-        queryGenerator.setReplaceSelectAliases(false);
+//        queryGenerator.setReplaceSelectAliases(false);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy) {
@@ -109,7 +147,7 @@ public class OrderByManager extends AbstractManager {
             sb.append(" NULLS LAST");
         }
     }
-    
+
     private static class OrderByInfo extends NodeInfo {
 
         private boolean ascending;
