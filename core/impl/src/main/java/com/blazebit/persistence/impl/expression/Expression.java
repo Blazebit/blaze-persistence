@@ -41,7 +41,7 @@ public interface Expression {
         
         public void visit(OuterExpression expression);
     }
-
+    
     /**
      * The expression tree is traversed in pre-order.
      *

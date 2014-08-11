@@ -20,6 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -48,7 +49,7 @@ public class SelectManager<T> extends AbstractManager {
     private boolean distinct = false;
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
-    private SelectSubqueryBuilderListener subqueryBuilderListener;
+    private SubqueryBuilderListenerImpl subqueryBuilderListener;
     // Maps alias to SelectInfo
 //    private final Map<String, SelectInfo> selectAliasToInfoMap = new HashMap<String, SelectInfo>();
     // needed for tuple/alias matching
@@ -69,6 +70,9 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void verifyBuilderEnded() {
+        if(subqueryBuilderListener != null){
+            subqueryBuilderListener.verifySubqueryBuilderEnded();
+        }
         selectObjectBuilderEndedListener.verifyBuilderEnded();
     }
 
@@ -128,11 +132,16 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias) {
-        if (subqueryBuilderListener != null) {
-            throw new IllegalStateException("A builder was not ended properly.");
-        }
+        verifyBuilderEnded();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener(selectAlias);
+        return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
+    }
+    
+    <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, String subqueryAlias, Expression expression, String selectAlias) {
+        verifyBuilderEnded();
+
+        subqueryBuilderListener = new SuperExpressionAwareSelectSubqueryBuilderListener(subqueryAlias, expression, selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
     }
 
@@ -145,38 +154,10 @@ public class SelectManager<T> extends AbstractManager {
         return aliases;
     }
 
-    private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
-
-        private final String selectAlias;
-
-        public SelectSubqueryBuilderListener(String selectAlias) {
-            this.selectAlias = selectAlias;
-        }
-
-        @Override
-        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
-            super.onBuilderEnded(builder);
-            Expression expr = new SubqueryExpression(builder);
-            SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
-            if (selectAlias != null) {
-                aliasManager.registerAliasInfo(selectInfo);
-                //            selectAliasToInfoMap.put(selectAlias, selectInfo);
-                selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
-            }
-            selectInfos.add(selectInfo);
-
-            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
-                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(SelectManager.this);
-            }
-            registerParameterExpressions(expr);
-        }
-    }
-
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
         if (selectAlias != null) {
             aliasManager.registerAliasInfo(selectInfo);
-//            selectAliasToInfoMap.put(selectAlias, selectInfo);
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
         }
         selectInfos.add(selectInfo);
@@ -274,6 +255,80 @@ public class SelectManager<T> extends AbstractManager {
                 }
             }
         }
+    }
+    
+    private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
+
+        private final String selectAlias;
+
+        public SelectSubqueryBuilderListener(String selectAlias) {
+            this.selectAlias = selectAlias;
+        }
+
+        @Override
+        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
+            super.onBuilderEnded(builder);
+            Expression expr = new SubqueryExpression(builder);
+            SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
+            if (selectAlias != null) {
+                aliasManager.registerAliasInfo(selectInfo);
+                selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
+            }
+            selectInfos.add(selectInfo);
+
+            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
+                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(SelectManager.this);
+            }
+            registerParameterExpressions(expr);
+        }
+    }
+    
+    private class SuperExpressionAwareSelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
+
+        private final String selectAlias;
+        private final String subqueryAlias;
+        private final Expression superExpression;
+
+        public SuperExpressionAwareSelectSubqueryBuilderListener(String subqueryAlias, Expression superExpression, String selectAlias) {
+            this.selectAlias = selectAlias;
+            this.subqueryAlias = subqueryAlias;
+            this.superExpression = superExpression;
+        }
+
+        @Override
+        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
+            super.onBuilderEnded(builder);
+            final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(new SubqueryExpression(builder), subqueryAlias);
+            VisitorAdapter transformationVisitor = new VisitorAdapter(){
+
+                @Override
+                public void visit(CompositeExpression expression) {
+                    List<Expression> transformed = new ArrayList<Expression>();
+                    for(Expression expr : expression.getExpressions()){
+                        transformed.add(replacementTransformer.transform(expr));
+                    }
+                    expression.getExpressions().clear();
+                    expression.getExpressions().addAll(transformed);
+                }
+                
+            };
+            superExpression.accept(transformationVisitor);
+            
+            //TODO: maybe unify with SelectSubqueryBuilderListener
+            SelectInfo selectInfo = new SelectInfo(superExpression, selectAlias, aliasOwner);
+            if (selectAlias != null) {
+                aliasManager.registerAliasInfo(selectInfo);
+                selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
+            }
+            selectInfos.add(selectInfo);
+
+            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
+                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(SelectManager.this);
+            }
+            registerParameterExpressions(superExpression);
+        }
+        
+        
     }
 
     private class SelectObjectBuilderEndedListenerImpl implements SelectObjectBuilderEndedListener {

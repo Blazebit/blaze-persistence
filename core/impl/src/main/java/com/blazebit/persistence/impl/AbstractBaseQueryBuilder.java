@@ -142,7 +142,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
+        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo));
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -218,14 +218,28 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        return selectSubquery(subqueryAlias, expression, null);
     }
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        if (subqueryAlias == null) {
+            throw new NullPointerException("subqueryAlias");
+        }
+        if(subqueryAlias.isEmpty()){
+            throw new IllegalArgumentException("subqueryAlias");
+        }
+        if (expression == null) {
+            throw new NullPointerException("expression");
+        }
+        if(!expression.contains(subqueryAlias)){
+            throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
+        }
+        verifyBuilderEnded();
+        return selectManager.selectSubquery((BaseQueryBuilder<Tuple, ?>) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
     }
 
     /*
@@ -259,8 +273,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        return whereManager.restrict(this, subqueryAlias, expression);
     }
 
     /*
