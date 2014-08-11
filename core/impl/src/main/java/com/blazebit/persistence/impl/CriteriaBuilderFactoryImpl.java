@@ -21,7 +21,9 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 
@@ -34,12 +36,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final List<QueryTransformer> queryTransformers;
     private final ExpressionFactory expressionFactory;
-    private final Properties properties;
+    private final Map<String, Object> properties;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.expressionFactory = new ExpressionFactoryImpl();
-        this.properties = new Properties(config.getProperties());
+        this.properties = copyProperties(config.getProperties());
     }
 
     public List<QueryTransformer> getQueryTransformers() {
@@ -50,7 +52,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return expressionFactory;
     }
 
-    public Properties getProperties() {
+    public Map<String, Object> getProperties() {
         return properties;
     }
 
@@ -62,6 +64,18 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     @Override
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
         return new CriteriaBuilderImpl<T>(this, em, clazz, alias);
+    }
+
+    private Map<String, Object> copyProperties(Properties properties) {
+        Map<String, Object> newProperties = new HashMap<String, Object>();
+        
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            String key = (String) entry.getKey();
+            Object value = entry.getValue();
+            newProperties.put(key, value);
+        }
+        
+        return newProperties;
     }
 
 }
