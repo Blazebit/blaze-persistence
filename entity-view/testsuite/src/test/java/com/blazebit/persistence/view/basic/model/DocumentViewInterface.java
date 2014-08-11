@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -30,18 +29,18 @@ import com.blazebit.persistence.view.entity.Person;
  */
 @EntityView(Document.class)
 public interface DocumentViewInterface extends IdHolderView<Long> {
-    
+
     public String getName();
-    
+
     @MappingSubquery(CountSubqueryProvider.class)
     public Long getContactCount();
-    
+
     @Mapping("contacts2[:contactPersonNumber]")
     public Person getMyContactPerson();
-    
+
     @Mapping("contacts[1]")
     public Person getFirstContactPerson();
-    
+
     @MappingParameter("contactPersonNumber")
     public Integer getContactPersonNumber2();
 }

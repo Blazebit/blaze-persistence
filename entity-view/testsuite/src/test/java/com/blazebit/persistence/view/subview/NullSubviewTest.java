@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -39,36 +38,36 @@ import org.junit.Test;
  * @since 1.0
  */
 public class NullSubviewTest extends AbstractEntityViewTest {
-    
+
     private Document doc1;
-    
+
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
             doc1 = new Document("doc1");
-            
+
             Person o1 = new Person("pers1");
             o1.getLocalized().put(1, "localized1");
-            
+
             doc1.setOwner(o1);
-            
+
             em.persist(o1);
-            
+
             em.persist(doc1);
-            
+
             em.flush();
             tx.commit();
             em.clear();
-            
+
             doc1 = em.find(Document.class, doc1.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);
         }
     }
-    
+
     @Test
     public void testSubview() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
@@ -76,14 +75,14 @@ public class NullSubviewTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager();
-        
+
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
-                .orderByAsc("id");
+            .orderByAsc("id");
         CriteriaBuilder<DocumentMasterView> cb = evm.applyObjectBuilder(DocumentMasterView.class, criteria)
-                .setParameter("contactPersonNumber", 2);
+            .setParameter("contactPersonNumber", 2);
         System.out.println(cb.getQueryString());
         List<DocumentMasterView> results = cb.getResultList();
-        
+
         assertEquals(1, results.size());
         DocumentMasterView res = results.get(0);
         // Doc1
@@ -93,7 +92,7 @@ public class NullSubviewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), res.getTheContactPersonNumber());
         // Filtered subview
         assertNull(results.get(0).getMyContactPerson());
-        
+
         assertTrue(results.get(0).getContacts().isEmpty());
         assertTrue(results.get(0).getPartners().isEmpty());
         assertTrue(results.get(0).getPersonList().isEmpty());

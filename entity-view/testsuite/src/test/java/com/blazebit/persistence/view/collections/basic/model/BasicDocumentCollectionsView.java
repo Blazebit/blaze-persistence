@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -31,14 +30,14 @@ import java.util.Set;
  */
 @EntityView(DocumentForCollections.class)
 public interface BasicDocumentCollectionsView {
-    
+
     public String getName();
-    
+
     @Mapping("contacts")
     public Map<Integer, PersonForCollections> getContacts();
-    
+
     @Mapping("partners")
     public Set<PersonForCollections> getPartners();
-    
+
     public List<PersonForCollections> getPersonList();
 }

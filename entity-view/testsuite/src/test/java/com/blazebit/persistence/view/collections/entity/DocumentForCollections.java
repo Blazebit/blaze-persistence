@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.entity;
 
 import java.io.Serializable;
@@ -37,7 +36,8 @@ import javax.persistence.OrderColumn;
  * @since 1.0
  */
 @Entity
-public class DocumentForCollections implements Serializable  {
+public class DocumentForCollections implements Serializable {
+
     private Long id;
     private String name;
     private PersonForCollections owner;
@@ -51,7 +51,7 @@ public class DocumentForCollections implements Serializable  {
     public DocumentForCollections(String name) {
         this.name = name;
     }
-    
+
     @Id
     @GeneratedValue
     public Long getId() {
@@ -106,6 +106,6 @@ public class DocumentForCollections implements Serializable  {
 
     public void setPersonList(List<PersonForCollections> personList) {
         this.personList = personList;
-    }    
-    
+    }
+
 }

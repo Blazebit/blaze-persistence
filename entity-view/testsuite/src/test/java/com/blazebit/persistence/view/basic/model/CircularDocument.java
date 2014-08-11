@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -27,6 +26,6 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public interface CircularDocument {
-    
+
     public Set<CircularPerson> getPartners();
 }

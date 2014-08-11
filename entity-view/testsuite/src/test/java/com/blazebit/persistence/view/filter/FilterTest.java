@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.filter;
 
 import com.blazebit.persistence.RestrictionBuilder;
@@ -34,52 +33,52 @@ import org.mockito.Mockito;
  * @since 1.0
  */
 public class FilterTest {
-    
+
     private final String expression = "name";
     private final String value = "test";
-    
+
     @Test
     public void testContains() {
         Filter filter = new ContainsFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value + "%");
     }
-    
+
     @Test
     public void testContainsIgnoreCase() {
         Filter filter = new ContainsIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value + "%", false);
     }
-    
+
     @Test
     public void testEndsWith() {
         Filter filter = new EndsWithFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value);
     }
-    
+
     @Test
     public void testEndsWithIgnoreCase() {
         Filter filter = new EndsWithIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value, false);
     }
-    
+
     @Test
     public void testStartsWith() {
         Filter filter = new StartsWithFilterImpl(value);
         verifyFilter(filter, expression).like(value + "%");
     }
-    
+
     @Test
     public void testStartsWithIgnoreCase() {
         Filter filter = new StartsWithIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like(value + "%", false);
     }
-    
+
     @Test
     public void testExact() {
         Filter filter = new EqualFilterImpl(String.class, value);
         verifyFilter(filter, expression).eq(value);
     }
-    
+
     public RestrictionBuilder<?> verifyFilter(Filter filter, String expression) {
         RestrictionBuilder<?> restrictionBuilder = Mockito.mock(RestrictionBuilder.class);
         filter.apply(restrictionBuilder);

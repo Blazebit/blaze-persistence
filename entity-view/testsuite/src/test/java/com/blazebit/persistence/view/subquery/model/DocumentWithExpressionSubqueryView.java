@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.subview.model;
+package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.MappingFilter;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.filter.ContainsFilter;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
+import com.blazebit.persistence.view.entity.Document;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(Person.class)
-public interface PersonSubViewFiltered {
+@EntityView(Document.class)
+public interface DocumentWithExpressionSubqueryView {
 
-    @MappingFilter(ContainsFilter.class)
     public String getName();
 
-    @MappingParameter("contactPersonNumber")
-    public Integer getContactPersonNumber();
+    @MappingSubquery(
+        expression = "age + s",
+        subqueryAlias = "s",
+        value = CountSubqueryProvider.class)
+    public Long getContactCount();
 }

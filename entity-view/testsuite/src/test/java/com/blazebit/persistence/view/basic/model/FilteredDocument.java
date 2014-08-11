@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -31,14 +30,14 @@ import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
  */
 @EntityView(Document.class)
 public interface FilteredDocument {
-    
+
     @MappingFilter(ContainsFilter.class)
     public String getName();
-    
+
     @MappingFilter(GreaterOrEqualFilter.class)
     @MappingSubquery(CountSubqueryProvider.class)
     public Long getContactCount();
-    
+
     @Mapping("contacts[:index].name")
     public String getContactName();
 }

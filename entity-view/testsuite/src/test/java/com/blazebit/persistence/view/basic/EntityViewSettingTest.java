@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -39,8 +38,7 @@ import org.junit.Test;
  * @since 1.0
  */
 public class EntityViewSettingTest extends AbstractEntityViewTest {
-    
-    
+
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
@@ -49,7 +47,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             Document doc1 = new Document("MyTest");
             Document doc2 = new Document("YourTest");
             Document doc3 = new Document("NoContacts");
-            
+
             Person o1 = new Person("pers1");
             Person o2 = new Person("pers2");
             Person o3 = new Person("pers3");
@@ -57,27 +55,27 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             o2.getLocalized().put(1, "localized2");
             o1.setPartnerDocument(doc1);
             o2.setPartnerDocument(doc2);
-            
+
             doc1.setOwner(o1);
             doc2.setOwner(o2);
             doc3.setOwner(o2);
-            
+
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
             doc3.getContacts().put(1, o3);
-            
+
             doc1.getContacts2().put(2, o1);
             doc2.getContacts2().put(2, o2);
             doc3.getContacts2().put(2, o3);
-            
+
             em.persist(o1);
             em.persist(o2);
             em.persist(o3);
-            
+
             em.persist(doc1);
             em.persist(doc2);
             em.persist(doc3);
-            
+
             em.flush();
             tx.commit();
         } catch (Exception e) {
@@ -85,45 +83,47 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Test
     public void testEntityViewSetting() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(FilteredDocument.class);
         EntityViewManager evm = cfg.createEntityViewManager();
-        
+
         // Base setting
-        EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(FilteredDocument.class, 0, 1);
-        
+        EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(
+            FilteredDocument.class, 0, 1);
+
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("name", "Test");
         setting.addAttributeFilter("contactCount", "1");
         setting.addAttributeSorter("name", Sorters.descending());
         setting.addOptionalParameter("index", 1);
-        
+
         PaginatedCriteriaBuilder<FilteredDocument> paginatedCb = setting.apply(evm, cb);
         PagedList<FilteredDocument> result = paginatedCb.getResultList();
-        
+
         assertEquals(1, result.size());
         assertEquals(2, result.totalSize());
         assertEquals("YourTest", result.get(0).getName());
         assertEquals("pers2", result.get(0).getContactName());
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testEntityViewSettingWithEntityAttribute() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(DocumentWithEntityView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
-        
+
         // Base setting
-        EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting.create(DocumentWithEntityView.class, 0, 1);
-        
+        EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
+            .create(DocumentWithEntityView.class, 0, 1);
+
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("owner.name", "pers2");
-        
+
         // Currently we have no way to express what filter should be used when using entity attributes
         setting.apply(evm, cb);
 //        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);

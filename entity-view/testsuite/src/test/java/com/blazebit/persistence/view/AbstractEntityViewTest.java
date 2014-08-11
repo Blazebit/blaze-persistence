@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.view.entity.Document;
@@ -27,14 +26,14 @@ import com.blazebit.testsuite.base.AbstractPersistenceTest;
  * @since 1.0
  */
 public class AbstractEntityViewTest extends AbstractPersistenceTest {
-    
+
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] {
+        return new Class<?>[]{
             Document.class,
             Version.class,
             Person.class
         };
     }
-    
+
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.entity;
 
 import java.io.Serializable;
@@ -35,6 +34,7 @@ import javax.persistence.OneToMany;
  */
 @Entity
 public class Person implements Serializable {
+
     private Long id;
     private String name;
     private long age;
@@ -42,13 +42,13 @@ public class Person implements Serializable {
     private Set<Document> ownedDocuments = new HashSet<Document>();
     private Map<Integer, String> localized = new HashMap<Integer, String>();
 
-    public Person(){
+    public Person() {
     }
-    
+
     public Person(String name) {
         this.name = name;
     }
-    
+
     @Id
     @GeneratedValue
     public Long getId() {

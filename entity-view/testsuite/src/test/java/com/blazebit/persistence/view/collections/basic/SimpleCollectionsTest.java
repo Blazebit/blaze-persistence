@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.basic;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -46,9 +45,9 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {
-    
+
     private final Class<T> viewType;
-    
+
     private DocumentForCollections doc1;
     private DocumentForCollections doc2;
 
@@ -58,12 +57,12 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] {
+        return new Class<?>[]{
             DocumentForCollections.class,
             PersonForCollections.class
         };
     }
-    
+
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
@@ -71,7 +70,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             tx.begin();
             doc1 = new DocumentForCollections("doc1");
             doc2 = new DocumentForCollections("doc2");
-            
+
             PersonForCollections o1 = new PersonForCollections("pers1");
             PersonForCollections o2 = new PersonForCollections("pers2");
             PersonForCollections o3 = new PersonForCollections("pers3");
@@ -80,37 +79,37 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             o2.setPartnerDocument(doc2);
             o3.setPartnerDocument(doc1);
             o4.setPartnerDocument(doc2);
-            
+
             doc1.setOwner(o1);
             doc2.setOwner(o2);
-            
+
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
             doc1.getContacts().put(2, o3);
             doc2.getContacts().put(2, o4);
-            
+
             em.persist(o1);
             em.persist(o2);
             em.persist(o3);
             em.persist(o4);
-            
+
             doc1.getPartners().add(o1);
             doc1.getPartners().add(o3);
             doc2.getPartners().add(o2);
             doc2.getPartners().add(o4);
-            
+
             doc1.getPersonList().add(o1);
             doc1.getPersonList().add(o2);
             doc2.getPersonList().add(o3);
             doc2.getPersonList().add(o4);
-            
+
             em.persist(doc1);
             em.persist(doc2);
-            
+
             em.flush();
             tx.commit();
             em.clear();
-            
+
             doc1 = em.find(DocumentForCollections.class, doc1.getId());
             doc2 = em.find(DocumentForCollections.class, doc2.getId());
         } catch (Exception e) {
@@ -118,37 +117,37 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             throw new RuntimeException(e);
         }
     }
-    
-   @Parameterized.Parameters
-   public static Collection entityViewCombinations() {
-      return Arrays.asList(new Object[][] {
-         { BasicDocumentListMapSetView.class },
-         { BasicDocumentListSetMapView.class },
-         { BasicDocumentMapListSetView.class },
-         { BasicDocumentMapSetListView.class },
-         { BasicDocumentSetListMapView.class },
-         { BasicDocumentSetMapListView.class }
-      });
-   }
-    
+
+    @Parameterized.Parameters
+    public static Collection entityViewCombinations() {
+        return Arrays.asList(new Object[][]{
+            { BasicDocumentListMapSetView.class },
+            { BasicDocumentListSetMapView.class },
+            { BasicDocumentMapListSetView.class },
+            { BasicDocumentMapSetListView.class },
+            { BasicDocumentSetListMapView.class },
+            { BasicDocumentSetMapListView.class }
+        });
+    }
+
     @Test
     public void testCollections() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(viewType);
         EntityViewManager evm = cfg.createEntityViewManager();
-        
+
         CriteriaBuilder<DocumentForCollections> criteria = cbf.from(em, DocumentForCollections.class, "d")
-                .orderByAsc("id");
+            .orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applyObjectBuilder(viewType, criteria);
         List<T> results = cb.getResultList();
-        
+
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
         assertEquals(doc1.getContacts(), results.get(0).getContacts());
         assertEquals(doc1.getPartners(), results.get(0).getPartners());
         assertEquals(doc1.getPersonList(), results.get(0).getPersonList());
-        
+
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
         assertEquals(doc2.getContacts(), results.get(1).getContacts());

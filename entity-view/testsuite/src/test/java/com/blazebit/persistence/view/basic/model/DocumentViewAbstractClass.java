@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.view.Mapping;
@@ -27,18 +26,18 @@ import com.blazebit.persistence.view.MappingParameter;
 // Not necessary because DocumentView1 already provides this information
 //@EntityView(Document.class)
 public abstract class DocumentViewAbstractClass implements DocumentViewInterface {
-    
+
     private final long age;
     private final Integer contactPersonNumber;
-    
+
     public DocumentViewAbstractClass(
-            @Mapping("age + 1") Long age,
+        @Mapping("age + 1") Long age,
         @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
         this.age = age;
         this.contactPersonNumber = contactPersonNumber;
     }
-    
+
     public long getAge() {
         return age;
     }

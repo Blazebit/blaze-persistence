@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.proxy.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -28,12 +27,12 @@ import com.blazebit.persistence.view.entity.Person;
  */
 @EntityView(Document.class)
 public interface DocumentInterfaceView extends IdHolderView<Long>, ContactHolderView<Integer> {
-    
+
     public String getName();
-    
+
     @Mapping("contacts[:contactPersonNumber]")
     public Person getMyContactPerson();
-    
+
     @Mapping("contacts[1]")
     public Person getFirstContactPerson();
 }

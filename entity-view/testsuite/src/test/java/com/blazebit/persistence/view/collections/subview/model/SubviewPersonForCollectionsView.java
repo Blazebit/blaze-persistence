@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -26,7 +25,7 @@ import com.blazebit.persistence.view.collections.entity.PersonForCollections;
  */
 @EntityView(PersonForCollections.class)
 public interface SubviewPersonForCollectionsView {
-    
+
     public String getName();
-    
+
 }
