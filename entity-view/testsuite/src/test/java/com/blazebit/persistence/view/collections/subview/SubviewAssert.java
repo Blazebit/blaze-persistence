@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.subview;
 
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
@@ -32,13 +31,13 @@ import static org.junit.Assert.assertNull;
  * @since 1.0
  */
 public class SubviewAssert {
-    
+
     public static void assertSubviewEquals(Map<Integer, PersonForCollections> persons, Map<Integer, SubviewPersonForCollectionsView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
             return;
         }
-        
+
         assertNotNull(personSubviews);
         assertEquals(persons.size(), personSubviews.size());
         for (Map.Entry<Integer, PersonForCollections> personEntry : persons.entrySet()) {
@@ -47,13 +46,13 @@ public class SubviewAssert {
             assertEquals(p.getName(), pSub.getName());
         }
     }
-    
+
     public static void assertSubviewEquals(List<PersonForCollections> persons, List<SubviewPersonForCollectionsView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
             return;
         }
-        
+
         assertNotNull(personSubviews);
         assertEquals(persons.size(), personSubviews.size());
         for (int i = 0; i < persons.size(); i++) {
@@ -62,13 +61,13 @@ public class SubviewAssert {
             assertEquals(p.getName(), pSub.getName());
         }
     }
-    
+
     public static void assertSubviewEquals(Set<PersonForCollections> persons, Set<SubviewPersonForCollectionsView> personSubviews) {
         if (persons == null) {
             assertNull(personSubviews);
             return;
         }
-        
+
         assertNotNull(personSubviews);
         assertEquals(persons.size(), personSubviews.size());
         for (PersonForCollections p : persons) {
@@ -79,7 +78,7 @@ public class SubviewAssert {
                     break;
                 }
             }
-            
+
             if (!found) {
                 Assert.fail("Could not find a SubviewPersonForCollectionsView with the name: " + p.getName());
             }

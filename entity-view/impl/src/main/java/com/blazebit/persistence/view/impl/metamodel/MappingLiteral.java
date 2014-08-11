@@ -24,13 +24,13 @@ import java.lang.annotation.Annotation;
  * @since 1.0
  */
 public class MappingLiteral implements Mapping {
-    
+
     private final String value;
 
     public MappingLiteral(String value) {
         this.value = value;
     }
-    
+
     @Override
     public String value() {
         return value;

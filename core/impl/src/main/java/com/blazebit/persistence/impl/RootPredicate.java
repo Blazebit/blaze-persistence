@@ -62,7 +62,7 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
         registerParameterExpressions(pred);
 
         predicate.getChildren()
-                .add(pred);
+            .add(pred);
     }
 
     private void registerParameterExpressions(Predicate predicate) {

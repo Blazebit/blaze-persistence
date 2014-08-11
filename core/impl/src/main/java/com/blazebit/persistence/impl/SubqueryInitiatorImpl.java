@@ -49,14 +49,16 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, null, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, null, result, parameterManager, aliasManager, parentJoinManager, listener,
+                                                                            expressionFactory);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, alias, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, alias, result, parameterManager, aliasManager, parentJoinManager, listener,
+                                                                            expressionFactory);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

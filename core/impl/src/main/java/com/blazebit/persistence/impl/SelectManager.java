@@ -101,11 +101,11 @@ public class SelectManager<T> extends AbstractManager {
     String buildSelect(String rootAlias) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
-        
+
         if (distinct) {
             sb.append("DISTINCT ");
         }
-        
+
         if (selectInfos.isEmpty()) {
             sb.append(rootAlias);
         } else {
@@ -183,7 +183,8 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
+            new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -196,7 +197,8 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
+            new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -216,8 +218,8 @@ public class SelectManager<T> extends AbstractManager {
     void distinct() {
         this.distinct = true;
     }
-    
-    boolean isDistinct(){
+
+    boolean isDistinct() {
         return this.distinct;
     }
 

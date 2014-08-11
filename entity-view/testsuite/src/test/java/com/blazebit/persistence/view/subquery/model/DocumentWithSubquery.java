@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.subquery.model;
 
-import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingFilter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.filter.GreaterThanFilter;
 
 /**
@@ -29,9 +28,9 @@ import com.blazebit.persistence.view.filter.GreaterThanFilter;
  */
 @EntityView(Document.class)
 public interface DocumentWithSubquery {
-    
+
     public String getName();
-    
+
     @MappingFilter(GreaterThanFilter.class)
     @MappingSubquery(TestSubqueryProvider.class)
     public Long getContactCount();

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -27,158 +26,172 @@ import org.junit.Test;
  * @since 1.0
  */
 public class SelectTest extends AbstractCoreTest {
+
     @Test
-    public void testSelectNonJoinable(){
+    public void testSelectNonJoinable() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("nonJoinable");
-        
+
         assertEquals("SELECT d.nonJoinable FROM Document d", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectNonJoinablePrefixed(){
+    public void testSelectNonJoinablePrefixed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.nonJoinable");
-        
+
         assertEquals("SELECT d.nonJoinable FROM Document d", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectJoinable(){
+    public void testSelectJoinable() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("partners");
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectJoinablePrefixed(){
+    public void testSelectJoinablePrefixed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners");
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectScalarExpression(){
+    public void testSelectScalarExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners + 1");
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + "+1 FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + "+1 FROM Document d LEFT JOIN d.partners partners", criteria
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectMultiple(){
+    public void testSelectMultiple() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners").select("d.versions");
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + ", " + joinAliasValue("versions") + " FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + ", " + joinAliasValue("versions")
+            + " FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAlias(){
+    public void testSelectAlias() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
+            + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasReplacement(){
+    public void testSelectAliasReplacement() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("partners").eq(2);
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
+            + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin(){
+    public void testSelectAliasJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").eq(2);
-        
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE " + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
+            + joinAliasValue("partners") + " = :param_0", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin2(){
+    public void testSelectAliasJoin2() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.versions.date", "x").where("SIZE(d.partners)").eq(2);
-        
-        assertEquals("SELECT versions.date AS x FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE SIZE(d.partners) = :param_0", criteria.getQueryString());
+
+        assertEquals(
+            "SELECT versions.date AS x FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE SIZE(d.partners) = :param_0",
+            criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin3(){
+    public void testSelectAliasJoin3() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d").select("C.name").innerJoin("d.versions", "B").innerJoin("B.document", "C");
-        
+
         assertEquals("SELECT d, C.name FROM Document d JOIN d.versions B JOIN B.document C", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin4(){
+    public void testSelectAliasJoin4() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select("d").select("C.name", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X").eqExpression("B.id");
-        
-        assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.name = B.id", criteria.getQueryString());
+        criteria.select("d").select("C.name", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X")
+            .eqExpression("B.id");
+
+        assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.name = B.id", criteria
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin5(){
+    public void testSelectAliasJoin5() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners.name");
-        
+
         assertEquals("SELECT partners.name FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin6(){
+    public void testSelectAliasJoin6() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.select("a.versions");
-        
-        assertEquals("SELECT " + joinAliasValue("versions") + " FROM Document a LEFT JOIN a.versions versions", criteria.getQueryString());
+
+        assertEquals("SELECT " + joinAliasValue("versions") + " FROM Document a LEFT JOIN a.versions versions", criteria
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectAliasJoin7(){
+    public void testSelectAliasJoin7() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        
+
         // we have already solved this for join aliases so we should also solve it here
         criteria.select("test.name", "fieldAlias").where("test.name").eq("bla").join("owner", "test", JoinType.LEFT, false);
-        
-        assertEquals("SELECT test.name AS fieldAlias FROM Document d LEFT JOIN d.owner test WHERE test.name = :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT test.name AS fieldAlias FROM Document d LEFT JOIN d.owner test WHERE test.name = :param_0",
+                     criteria.getQueryString());
     }
-    
+
     @Test
-    public void testAmbiguousAliasReplacement(){
+    public void testAmbiguousAliasReplacement() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.select("name", "name").where("d.name").eq("abc").getQueryString();
-        
+
         String expected = "SELECT d.name AS name FROM Document d WHERE d.name = :param_0";
-        
+
         assertEquals(expected, crit.getQueryString());
     }
-        
+
     @Test(expected = IllegalArgumentException.class)
-    public void testSelectSingleEmpty(){
+    public void testSelectSingleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("");
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
-    public void testSelectMultipleEmpty(){
+    public void testSelectMultipleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("", "");
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testSelectNull(){
+    public void testSelectNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select((String) null);
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testSelectArrayNull(){
+    public void testSelectArrayNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select((String) null);
     }

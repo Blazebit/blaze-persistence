@@ -15,16 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.reflection.ReflectionUtils;
-import com.blazebit.text.FormatUtils;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Collection;
-import java.util.Map;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.PluralAttribute;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 /**
  *
@@ -34,16 +27,16 @@ import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
 public class ModelUtils {
 
     public static boolean isJoinable(Attribute attr) {
-        return attr.isCollection() 
-                || attr.getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE 
-                || attr.getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+        return attr.isCollection()
+            || attr.getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static Class<?> resolveFieldClass(Attribute attr) {
         if (attr.isCollection()) {
             return ((PluralAttribute) attr).getElementType().getJavaType();
         }
-        
+
         return attr.getJavaType();
     }
 }

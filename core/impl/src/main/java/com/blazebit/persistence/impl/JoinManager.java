@@ -17,21 +17,15 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.JoinOnOrBuilder;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.Predicate.Visitor;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.persistence.metamodel.Attribute;
@@ -68,7 +62,9 @@ public class JoinManager extends AbstractManager {
 
     public static enum JoinClauseBuildMode {
 
-        NORMAL, COUNT, ID
+        NORMAL,
+        COUNT,
+        ID
     };
 
     public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
@@ -526,8 +522,8 @@ public class JoinManager extends AbstractManager {
                 Attribute attr = metamodel.entity(clazz).getAttribute(normalizedPath);
                 if (attr == null) {
                     throw new IllegalArgumentException("Field with name "
-                            + normalizedPath + " was not found within class "
-                            + clazz.getName());
+                        + normalizedPath + " was not found within class "
+                        + clazz.getName());
                 }
                 if (ModelUtils.isJoinable(attr)) {
                     throw new IllegalArgumentException("No object leaf allowed but " + normalizedPath + " is an object leaf");
@@ -571,8 +567,8 @@ public class JoinManager extends AbstractManager {
             Attribute attr = type.getAttribute(propertyName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
-                        + propertyName + " was not found within class "
-                        + currentClass.getName());
+                    + propertyName + " was not found within class "
+                    + currentClass.getName());
             }
             boolean collectionValued = attr.isCollection();
             Class<?> resolvedFieldClass = ModelUtils.resolveFieldClass(attr);
@@ -581,15 +577,17 @@ public class JoinManager extends AbstractManager {
             // Christian Beikov 14.09.13:
             // Added check for collection and map types since fieldClass evaluates to V if the field is of type Map<K, V>
             if (!ModelUtils.isJoinable(attr)) {
-                LOG.fine(new StringBuilder("Field with name ").append(propertyName).append(" of class ").append(currentClass.getName()).append(" is parseable and therefore it has not to be fetched explicitly.").toString());
+                LOG.fine(new StringBuilder("Field with name ").append(propertyName).append(" of class ").append(currentClass.getName()).append(
+                    " is parseable and therefore it has not to be fetched explicitly.").toString());
                 break;
             }
 
             currentClass = resolvedFieldClass;
 
             JoinType modelAwareType;
-            if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
-                    && ((SingularAttribute) attr).isOptional() == false) {
+            if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE || attr.getPersistentAttributeType()
+                == Attribute.PersistentAttributeType.ONE_TO_ONE)
+                && ((SingularAttribute) attr).isOptional() == false) {
                 modelAwareType = JoinType.INNER;
             } else {
 
@@ -605,9 +603,11 @@ public class JoinManager extends AbstractManager {
                 if (joinType == null) {
                     joinType = modelAwareType;
                 }
-                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, alias, joinType, fetch, "Ambiguous implicit join", implicit, attr.isCollection());
+                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, alias, joinType, fetch, "Ambiguous implicit join", implicit, attr
+                                          .isCollection());
             } else {
-                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, propertyName, modelAwareType, fetch, "Ambiguous implicit join", true, attr.isCollection());
+                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, propertyName, modelAwareType, fetch, "Ambiguous implicit join", true, attr
+                                          .isCollection());
             }
             if (fetch) {
                 currentNode.setFetch(true);
@@ -637,7 +637,8 @@ public class JoinManager extends AbstractManager {
                 if (!oldJoinAliasInfo.getAbsolutePath().equals(currentJoinPath)) {
                     throw new IllegalArgumentException(errorMessage);
                 } else {
-                    throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath + "] is available but the join node is not!");
+                    throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath
+                        + "] is available but the join node is not!");
                 }
             }
 
@@ -665,7 +666,8 @@ public class JoinManager extends AbstractManager {
 
                     aliasManager.registerAliasInfo(nodeAliasInfo);
                 } else if (!nodeAliasInfo.isImplicit() && !implicit) {
-                    throw new IllegalArgumentException("Alias conflict[" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentPath.toString() + "]");
+                    throw new IllegalArgumentException("Alias conflict[" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentPath
+                        .toString() + "]");
                 }
             }
         }

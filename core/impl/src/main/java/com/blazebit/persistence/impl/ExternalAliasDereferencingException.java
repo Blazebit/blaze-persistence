@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 /**
@@ -25,16 +24,16 @@ public class ExternalAliasDereferencingException extends RuntimeException {
 
     public ExternalAliasDereferencingException() {
     }
-    
-    public ExternalAliasDereferencingException(String msg){
+
+    public ExternalAliasDereferencingException(String msg) {
         super(msg);
     }
-    
-    public ExternalAliasDereferencingException(Throwable t){
+
+    public ExternalAliasDereferencingException(Throwable t) {
         super(t);
     }
-    
-    public ExternalAliasDereferencingException(String msg, Throwable t){
+
+    public ExternalAliasDereferencingException(String msg, Throwable t) {
         super(msg, t);
     }
 }

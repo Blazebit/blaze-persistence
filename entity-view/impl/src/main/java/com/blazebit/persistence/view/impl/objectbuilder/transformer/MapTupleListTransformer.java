@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.HashMap;
@@ -34,10 +33,10 @@ public class MapTupleListTransformer extends AbstractIndexedTupleListTransformer
     protected Object createCollection() {
         return new HashMap<Object, Object>();
     }
-    
+
     @Override
     protected void addToCollection(Map<Object, Object> map, Object key, Object value) {
         map.put(key, value);
     }
-    
+
 }

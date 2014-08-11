@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -24,13 +23,14 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public class NodeInfo {
+
     private Expression expression;
-    
-    public NodeInfo(Expression expression){
+
+    public NodeInfo(Expression expression) {
         this.expression = expression;
     }
-    
-    public Expression getExpression(){
+
+    public Expression getExpression() {
         return expression;
     }
 

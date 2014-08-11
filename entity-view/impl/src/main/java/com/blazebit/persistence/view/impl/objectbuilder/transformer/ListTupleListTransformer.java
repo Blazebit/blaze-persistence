@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import java.util.ArrayList;
@@ -29,12 +28,12 @@ public class ListTupleListTransformer extends AbstractIndexedTupleListTransforme
     public ListTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(parentIdPositions, startIndex);
     }
-    
+
     @Override
     protected Object createCollection() {
         return new ArrayList<Object>();
     }
-    
+
     @Override
     protected void addToCollection(List<Object> list, Integer index, Object value) {
         if (index < list.size()) {
@@ -43,5 +42,5 @@ public class ListTupleListTransformer extends AbstractIndexedTupleListTransforme
             list.add(index, value);
         }
     }
-    
+
 }

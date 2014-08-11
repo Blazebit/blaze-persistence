@@ -31,7 +31,7 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByAscNullsFirst() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.age", true, true);
-        
+
         assertEquals("SELECT d FROM Document d ORDER BY d.age ASC NULLS FIRST", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -40,7 +40,7 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByAscNullsLast() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.age", true, false);
-        
+
         assertEquals("SELECT d FROM Document d ORDER BY d.age ASC NULLS LAST", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -49,7 +49,7 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByDescNullsFirst() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.age", false, true);
-        
+
         assertEquals("SELECT d FROM Document d ORDER BY d.age DESC NULLS FIRST", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -58,7 +58,7 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByDescNullsLast() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.age", false, false);
-        
+
         assertEquals("SELECT d FROM Document d ORDER BY d.age DESC NULLS LAST", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -67,8 +67,10 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByNested() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.versions.document.age", false, false);
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document ORDER BY document.age DESC NULLS LAST", criteria.getQueryString());
+
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document ORDER BY document.age DESC NULLS LAST",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -77,7 +79,9 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.orderBy("d.partners.ownedDocuments.age", false, false).orderBy("d.partners.partnerDocument.age", true, true);
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.ownedDocuments ownedDocuments LEFT JOIN partners.partnerDocument partnerDocument ORDER BY ownedDocuments.age DESC NULLS LAST, partnerDocument.age ASC NULLS FIRST", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.ownedDocuments ownedDocuments LEFT JOIN partners.partnerDocument partnerDocument ORDER BY ownedDocuments.age DESC NULLS LAST, partnerDocument.age ASC NULLS FIRST",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 

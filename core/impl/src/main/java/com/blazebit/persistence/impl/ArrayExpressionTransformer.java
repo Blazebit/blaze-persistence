@@ -165,7 +165,8 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                 return false;
             }
             final TransformationInfo other = (TransformationInfo) obj;
-            if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(other.absoluteFieldPath)) {
+            if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(
+                other.absoluteFieldPath)) {
                 return false;
             }
             if ((this.indexedField == null) ? (other.indexedField != null) : !this.indexedField.equals(other.indexedField)) {

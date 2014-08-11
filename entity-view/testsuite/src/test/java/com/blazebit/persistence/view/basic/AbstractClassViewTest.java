@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.view.entity.Document;
-import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import java.util.List;
 import javax.persistence.EntityTransaction;
@@ -38,9 +37,9 @@ import org.junit.Test;
  * @since 1.0
  */
 public class AbstractClassViewTest extends AbstractEntityViewTest {
-    
+
     protected static EntityViewManager evm;
-    
+
     @BeforeClass
     public static void initEvm() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
@@ -49,10 +48,10 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonView1.class);
         evm = cfg.createEntityViewManager();
     }
-    
+
     private Document doc1;
     private Document doc2;
-    
+
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
@@ -60,35 +59,35 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
             tx.begin();
             doc1 = new Document("doc1");
             doc2 = new Document("doc2");
-            
+
             Person o1 = new Person("pers1");
             Person o2 = new Person("pers2");
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
             o1.setPartnerDocument(doc1);
             o2.setPartnerDocument(doc2);
-            
+
             doc1.setAge(10);
             doc1.setOwner(o1);
             doc2.setAge(20);
             doc2.setOwner(o2);
-            
+
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
-            
+
             doc1.getContacts2().put(2, o1);
             doc2.getContacts2().put(2, o2);
-            
+
             em.persist(o1);
             em.persist(o2);
-            
+
             em.persist(doc1);
             em.persist(doc2);
-            
+
             em.flush();
             tx.commit();
             em.clear();
-            
+
             doc1 = em.find(Document.class, doc1.getId());
             doc2 = em.find(Document.class, doc2.getId());
         } catch (Exception e) {
@@ -96,13 +95,14 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Test
     public void testAbstractClass() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
-                .orderByAsc("id");
-        List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria).setParameter("contactPersonNumber", 2).getResultList();
-        
+            .orderByAsc("id");
+        List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria)
+            .setParameter("contactPersonNumber", 2).getResultList();
+
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getId(), results.get(0).getId());

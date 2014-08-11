@@ -27,7 +27,7 @@ public class DocumentViewModel {
     private String ownerName;
     private String firstLocalizedItem;
     private String partnerDocumentName;
-    
+
     public DocumentViewModel(String name) {
         this.name = name;
     }
@@ -38,7 +38,6 @@ public class DocumentViewModel {
         this.firstLocalizedItem = firstLocalizedItem;
         this.partnerDocumentName = secondLocalizedItem;
     }
-
 
     public String getName() {
         return name;

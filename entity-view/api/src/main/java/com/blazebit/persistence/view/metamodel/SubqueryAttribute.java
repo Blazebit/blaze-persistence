@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.SubqueryProvider;
@@ -34,17 +33,17 @@ public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
      * @return The subquery provider of the attribute
      */
     public Class<? extends SubqueryProvider> getSubqueryProvider();
-    
+
     /**
      * Returns the subquery expression of the attribute.
-     * 
+     *
      * @return The subquery expression of the attribute
      */
     public String getSubqueryExpression();
-    
+
     /**
      * Returns the subquery alias of the attribute.
-     * 
+     *
      * @return The subquery alias of the attribute
      */
     public String getSubqueryAlias();

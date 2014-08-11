@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.subview.model;
 
-import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.entity.Document;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -31,25 +30,25 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public interface DocumentMasterView {
-    
+
     public String getName();
-    
+
     public PersonSubView getOwner();
-    
+
     @MappingParameter("contactPersonNumber")
     public Integer getContactPersonNumber();
-    
+
     @Mapping("contacts[:contactPersonNumber]")
     public PersonSubViewFiltered getMyContactPerson();
-    
+
     @MappingParameter("contactPersonNumber")
     public Integer getTheContactPersonNumber();
-    
+
     @Mapping("contacts2")
     public Map<Integer, PersonSubView> getContacts();
-    
+
     @Mapping("partners")
     public Set<PersonSubView> getPartners();
-    
+
     public List<PersonSubView> getPersonList();
 }

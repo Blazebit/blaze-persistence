@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenAndBuilder;
@@ -29,7 +28,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * @since 1.0
  */
 public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndBuilder<T> {
-    
+
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
@@ -42,9 +41,10 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
 
     @Override
     public RestrictionBuilder<CaseWhenAndBuilder<T>> and(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
+                                                                              expressionFactory));
     }
-    
+
     @Override
     public CaseWhenOrBuilder<CaseWhenAndBuilder<T>> or() {
         return new CaseWhenOrBuilderImpl<CaseWhenAndBuilder<T>>(this, subqueryInitFactory, expressionFactory);
@@ -54,5 +54,5 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
     public T endAnd() {
         return result;
     }
-    
+
 }

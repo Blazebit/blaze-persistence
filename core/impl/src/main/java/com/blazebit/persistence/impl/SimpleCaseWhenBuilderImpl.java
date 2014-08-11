@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
@@ -30,13 +29,13 @@ import java.util.List;
  * @since 1.0
  */
 public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T> {
-    
+
     private final T result;
     private final Expression caseOperandExpression;
     private final List<Expression[]> whenExpressions;
     private Expression elseExpression;
     private final ExpressionFactory expressionFactory;
-    
+
     public SimpleCaseWhenBuilderImpl(T result, ExpressionFactory expressionFactory, String caseOperandExpression) {
         this.result = result;
         this.caseOperandExpression = expressionFactory.createCaseOperandExpression(caseOperandExpression);
@@ -58,5 +57,5 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T> {
         this.elseExpression = expressionFactory.createScalarExpression(elseExpression);
         return result;
     }
-    
+
 }

@@ -24,7 +24,6 @@ import com.blazebit.persistence.impl.expression.ExpressionUtils;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
@@ -339,8 +338,8 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append(expression.getBaseNode().getAliasInfo().getAlias());
         } else {
             sb.append(expression.getBaseNode().getAliasInfo().getAlias())
-                    .append(".")
-                    .append(expression.getField());
+                .append(".")
+                .append(expression.getField());
         }
     }
 

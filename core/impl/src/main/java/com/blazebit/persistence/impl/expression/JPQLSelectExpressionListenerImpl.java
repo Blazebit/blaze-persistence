@@ -31,8 +31,9 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * @since 1.0
  */
 class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
+
     private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
-    
+
     public JPQLSelectExpressionListenerImpl() {
     }
 
@@ -42,7 +43,10 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
     enum ContextType {
 
-        FOO, PATH, ARRAY, OUTER
+        FOO,
+        PATH,
+        ARRAY,
+        OUTER
     }
 
     private CompositeExpression root = new CompositeExpression(new ArrayList<Expression>());
@@ -80,9 +84,9 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        if(outerExpression == null){
+        if (outerExpression == null) {
             fooContext();
-        }else{
+        } else {
             outerContext();
         }
     }
@@ -103,9 +107,9 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        if(outerExpression == null){
+        if (outerExpression == null) {
             fooContext();
-        }else{
+        } else {
             outerContext();
         }
     }
@@ -125,9 +129,9 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        if(outerExpression == null){
+        if (outerExpression == null) {
             fooContext();
-        }else{
+        } else {
             outerContext();
         }
     }
@@ -147,9 +151,9 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         if (subexpressionDelegate != null) {
             return;
         }
-        if(outerExpression == null){
+        if (outerExpression == null) {
             fooContext();
-        }else{
+        } else {
             outerContext();
         }
     }
@@ -165,7 +169,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             path = new PathExpression(new ArrayList<PathElementExpression>());
             path.setUsedInCollectionFunction(usedInCollectionFunction);
             usedInCollectionFunction = false;
-        } else if(ctx == ContextType.OUTER){
+        } else if (ctx == ContextType.OUTER) {
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
             outerExpression.setPath(path);
@@ -188,27 +192,27 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             ctx = ContextType.PATH;
         }
     }
-    
+
     private void fooContext() {
         if (this.ctx == ContextType.PATH) {
             ctx = ContextType.FOO;
             root.getExpressions().add(path);
-        }else if(this.ctx == ContextType.OUTER){
+        } else if (this.ctx == ContextType.OUTER) {
             ctx = ContextType.FOO;
             root.getExpressions().add(outerExpression);
             outerExpression = null;
         }
     }
-    
-    private void outerContext(){
-        if(this.ctx == ContextType.FOO){
+
+    private void outerContext() {
+        if (this.ctx == ContextType.FOO) {
             if (fooBuilder.length() > 0) {
                 root.getExpressions().add(new FooExpression(fooBuilder.toString()));
                 fooBuilder.setLength(0);
             }
             outerExpression = new OuterExpression();
             this.ctx = ContextType.OUTER;
-        }else if(this.ctx == ContextType.PATH){
+        } else if (this.ctx == ContextType.PATH) {
             this.ctx = ContextType.OUTER;
         }
     }
@@ -234,8 +238,8 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
 
         applyPathElement(ctx.getText());
     }
-    
-    private void exitExpressionListener(){
+
+    private void exitExpressionListener() {
         if (subexpressionDelegate != null) {
             return;
         }
@@ -279,13 +283,13 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             }
 
             if (ctx == ContextType.FOO) {
-                if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Input_parameter){
+                if (node.getSymbol().getType() == JPQLSelectExpressionLexer.Input_parameter) {
                     // cut of ':' at the start
                     root.getExpressions().add(new ParameterExpression(node.getText().substring(1)));
-                } else if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Outer_function){
+                } else if (node.getSymbol().getType() == JPQLSelectExpressionLexer.Outer_function) {
                     outerContext();
-                } else{
-                    if(node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function){
+                } else {
+                    if (node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function) {
                         usedInCollectionFunction = true;
                     }
                     fooBuilder.append(node.getSymbol().getText());
@@ -294,8 +298,8 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                 if (node.getSymbol().getText().equals("[")) {
                     subexpressionDelegate = new JPQLSelectExpressionListenerImpl(this);
                 }
-            } else if (ctx == ContextType.OUTER){
-                if(node.getSymbol().getText().equals(")")){
+            } else if (ctx == ContextType.OUTER) {
+                if (node.getSymbol().getText().equals(")")) {
                     fooContext();
                 }
             }

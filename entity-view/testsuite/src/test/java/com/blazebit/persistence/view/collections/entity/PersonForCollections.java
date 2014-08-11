@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.entity;
 
 import java.io.Serializable;
@@ -31,7 +30,8 @@ import javax.persistence.OneToMany;
  * @since 1.0
  */
 @Entity
-public class PersonForCollections implements Serializable  {
+public class PersonForCollections implements Serializable {
+
     private Long id;
     private String name;
     private DocumentForCollections partnerDocument;
@@ -43,7 +43,7 @@ public class PersonForCollections implements Serializable  {
     public PersonForCollections(String name) {
         this.name = name;
     }
-    
+
     @Id
     @GeneratedValue
     public Long getId() {

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.SubqueryBuilder;
@@ -25,6 +24,7 @@ import com.blazebit.persistence.SubqueryBuilder;
  * @since 1.0
  */
 public class SubqueryExpression implements Expression {
+
     private final SubqueryBuilder<?> builder;
 
     public SubqueryExpression(SubqueryBuilder<?> builder) {

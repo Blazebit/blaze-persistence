@@ -119,43 +119,42 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The list of the results
      */
     public List<T> getResultList();
-    
+
     /**
      * Returns the JPA {@link Metamodel} of the persistence unit which is used by this query builder.
-     * 
+     *
      * @return The JPA metamodel
      */
     public Metamodel getMetamodel();
 
     /**
      * Paginates the results of this query.
-     * 
+     *
      * Please note:
      * The pagination only works on entity level and NOT on row level. This means
      * that for queries which yield multiple result set rows per entity (i.e. rows with
      * the same entity id), the multiple rows are treated as 1 page entry during
      * the pagination process. Hence, the result size of such paginated queries
      * might be greater than the specified page size.
-     * 
+     *
      * An example for such queries would be a query that joins a collection:
      * SELECT d.id, contacts.name FROM Document d LEFT JOIN d.contacts contacts
      * If one Document has associated multiple contacts, the above query will produce
      * multiple result set rows for this document.
-     * 
+     *
      * Since the pagination works on entity id level, the results are implicitely
      * grouped by id and distinct. Therefore calling distinct() or groupBy() on a
      * PaginatedCriteriaBuilder is not allowed.
      *
-     * @param firstRow The position of the first result to retrieve, numbered from 0
-     * @param maxRows The maximum number of results to retrieve
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults  The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      */
-    public PaginatedCriteriaBuilder<T> page(int firstRow, int maxRows);
+    public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
 
     /*
      * Join methods
      */
-    
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      * If fetch is set to true, a join fetch will be added.
@@ -167,8 +166,15 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public X join(String path, String alias, JoinType type, boolean fetch);
-    
+
+    /**
+     * Adds an implicit join fetch to the query.
+     *
+     * @param path The path to join fetch
+     * @return The query builder for chaining calls
+     */
     public X fetch(String path);
+
     /**
      * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#INNER} and fetch set to true.
      *
@@ -199,7 +205,6 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /*
      * Select methods
      */
-    
     /**
      * Starts a {@link SelectObjectBuilder} for the given class. The types of the parameter arguments used in the {@link SelectObjectBuilder} must match a constructor of the given class.
      *
@@ -226,14 +231,13 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder);
-    
+
     /*
      * Covariant overrides
      */
-
     @Override
     public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
-    
+
     @Override
     public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
@@ -242,7 +246,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
 
     @Override
     public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias);
-    
+
     @Override
     public QueryBuilder<Tuple, ?> select(String expression);
 
@@ -254,10 +258,10 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
 
     @Override
     public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias);
-    
+
     @Override
     public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-    
+
     @Override
     public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
 }

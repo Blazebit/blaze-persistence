@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.cdi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -21,8 +20,8 @@ import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
-import static  org.junit.Assert.*;
 
 /**
  *
@@ -30,19 +29,20 @@ import static  org.junit.Assert.*;
  * @since 1.0
  */
 public class CriteriaBuilderExtensionTest {
-    
+
     @Inject
     private CriteriaBuilderFactory cbf;
-    
+
     @Test
     public void testInjection() throws Exception {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
         container.boot();
-        container.getContextControl().startContexts();
+        container.getContextControl()
+            .startContexts();
         BeanProvider.injectFields(this);
-        
+
         assertNotNull(cbf);
-        
+
         container.shutdown();
     }
 }

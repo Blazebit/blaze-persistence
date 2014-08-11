@@ -15,10 +15,10 @@
  */
 package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.Sortable;
+import com.blazebit.persistence.OrderByBuilder;
 
 /**
- * A sorter is an object that applies an order by on a {@link Sortable} for a specific expression.
+ * A sorter is an object that applies an order by on a {@link OrderByBuilder} for a specific expression.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -33,6 +33,6 @@ public interface Sorter {
      * @param expression The order by expression
      * @return The sortable
      */
-    public <T extends Sortable<T>> T apply(T sortable, String expression);
+    public <T extends OrderByBuilder<T>> T apply(T sortable, String expression);
 
 }

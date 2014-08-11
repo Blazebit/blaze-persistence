@@ -13,10 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
-
-import com.blazebit.persistence.SubqueryBuilder;
 
 /**
  *
@@ -25,14 +22,15 @@ import com.blazebit.persistence.SubqueryBuilder;
  * @since 1.0
  */
 public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T> {
+
     private SubqueryBuilderImpl<?> currentSubqueryBuilder;
-    
+
     protected void verifySubqueryBuilderEnded() {
         if (currentSubqueryBuilder != null) {
             throw new IllegalStateException("A builder was not ended properly.");
         }
     }
-    
+
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         if (currentSubqueryBuilder == null) {

@@ -31,7 +31,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @since 1.0
  */
 public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements
-        QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
+    QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
@@ -56,7 +56,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
         listener.onBuilderEnded(this);
         return result;
     }
-    
+
     protected void chainSubquery(Predicate predicate) {
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
     }
@@ -98,9 +98,9 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
     public Predicate getPredicate() {
         return predicate;
     }
-    
-    protected SubqueryInitiator<T> getSubqueryInitiator(){
-        if(subqueryInitiator == null){
+
+    protected SubqueryInitiator<T> getSubqueryInitiator() {
+        if (subqueryInitiator == null) {
             subqueryInitiator = subqueryInitFactory.createSubqueryInitiator(result, this);
         }
         return subqueryInitiator;

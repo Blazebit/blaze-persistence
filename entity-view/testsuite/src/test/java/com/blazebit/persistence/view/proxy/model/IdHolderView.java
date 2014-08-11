@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.proxy.model;
 
 import java.io.Serializable;
@@ -24,8 +23,8 @@ import java.io.Serializable;
  * @since 1.0
  */
 interface IdHolderView<T> extends Serializable {
-    
+
     public T getId();
-    
+
     public void setId(T id);
 }

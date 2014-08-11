@@ -29,7 +29,7 @@ public interface SubqueryProvider {
      * Applies a subquery to the given {@link SubqueryInitiator}.
      *
      * @param subqueryInitiator The subquery initiator on which the subquery should be applied
-     * @param <T> The type of the parent builder
+     * @param <T>               The type of the parent builder
      * @return The parent builder
      */
     public <T> T createSubquery(SubqueryInitiator<T> subqueryInitiator);

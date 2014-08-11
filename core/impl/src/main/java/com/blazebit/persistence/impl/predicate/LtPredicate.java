@@ -56,7 +56,8 @@ public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
 
         @Override
         public T expression(String expression) {
-            return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
+            return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
+                                         PredicateQuantifier.ONE));
         }
 
         @Override
@@ -70,7 +71,7 @@ public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
             chainSubquery(new LtPredicate(leftExpression, null, PredicateQuantifier.ANY));
             return super.any();
         }
-        
+
         @Override
         public SubqueryBuilder<T> from(Class<?> clazz) {
             chainSubquery(new LtPredicate(leftExpression, null, PredicateQuantifier.ONE));

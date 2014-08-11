@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.QueryBuilder;
@@ -25,6 +24,7 @@ import java.util.List;
  * @since 1.0
  */
 public abstract class TupleListTransformer {
+
     protected final int startIndex;
 
     public TupleListTransformer(int startIndex) {

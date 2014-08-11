@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.cdi;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -36,9 +35,9 @@ import org.apache.deltaspike.core.util.bean.BeanBuilder;
  */
 @ServiceProvider(Extension.class)
 public class CriteriaBuilderExtension implements Extension {
-    
+
     private final CriteriaBuilderConfiguration configuration = Criteria.getDefault();
-    
+
     void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         CriteriaBuilderFactory criteriaBuilderFactory = configuration.createCriteriaBuilderFactory();
         Bean<CriteriaBuilderFactory> bean = new BeanBuilder<CriteriaBuilderFactory>(bm)
@@ -49,7 +48,7 @@ public class CriteriaBuilderExtension implements Extension {
             .scope(ApplicationScoped.class)
             .beanLifecycle(new CriteriaBuilderFactoryLifecycle(criteriaBuilderFactory))
             .create();
-        
+
         abd.addBean(bean);
     }
 }

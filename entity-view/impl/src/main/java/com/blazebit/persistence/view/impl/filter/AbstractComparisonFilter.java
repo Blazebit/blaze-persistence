@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.filter;
 
-import com.blazebit.persistence.Filterable;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.Filter;
@@ -28,7 +26,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @since 1.0
  */
 public abstract class AbstractComparisonFilter implements Filter {
-    
+
     protected final Object value;
     protected final SubqueryProvider subqueryProvider;
 
@@ -57,8 +55,8 @@ public abstract class AbstractComparisonFilter implements Filter {
             return subqueryProvider.createSubquery(applySubquery(rb));
         }
     }
-    
+
     protected abstract <T> T applyRestriction(RestrictionBuilder<T> rb);
-    
+
     protected abstract <T> SubqueryInitiator<T> applySubquery(RestrictionBuilder<T> rb);
 }

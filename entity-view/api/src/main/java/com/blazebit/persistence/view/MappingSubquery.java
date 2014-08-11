@@ -40,7 +40,7 @@ public @interface MappingSubquery {
     /**
      * The expression around the subquery.
      *
-     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String) 
+     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String)
      * @return The expression
      */
     String expression() default "";
@@ -48,7 +48,7 @@ public @interface MappingSubquery {
     /**
      * The subquery alias.
      *
-     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String) 
+     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String)
      * @return The subquery alias
      */
     String subqueryAlias() default "";

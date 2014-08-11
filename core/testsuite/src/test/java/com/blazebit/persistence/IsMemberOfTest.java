@@ -32,7 +32,9 @@ public class IsMemberOfTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.owner").isMemberOf("d.contacts");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.contacts contacts JOIN d.owner owner WHERE owner MEMBER OF d.contacts", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.contacts contacts JOIN d.owner owner WHERE owner MEMBER OF d.contacts",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -53,7 +55,9 @@ public class IsMemberOfTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.contacts contacts LEFT JOIN contacts.ownedDocuments ownedDocuments WHERE NOT d MEMBER OF contacts.ownedDocuments", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.contacts contacts LEFT JOIN contacts.ownedDocuments ownedDocuments WHERE NOT d MEMBER OF contacts.ownedDocuments",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 

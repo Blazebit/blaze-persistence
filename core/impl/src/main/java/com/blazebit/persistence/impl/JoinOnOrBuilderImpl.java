@@ -16,10 +16,8 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinOnAndBuilder;
-import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
@@ -32,7 +30,8 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedListener<X> implements JoinOnOrBuilder<X>, PredicateBuilder {
+public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedListener<X> implements JoinOnOrBuilder<X>,
+    PredicateBuilder {
 
     private final X result;
     private final PredicateBuilderEndedListener listener;

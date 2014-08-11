@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.MappingFilter;
  * This placeholder can be used in a {@link MappingFilter} annotation or you can retrieve an instance of this filter by invoking
  * {@link EntityViewManager#createFilter(java.lang.Class, java.lang.Class, java.lang.Object)}.
  *
- * A contains filter accepts an object. The {@linkplain Object#toString()} representation of that object will be used as value 
+ * A contains filter accepts an object. The {@linkplain Object#toString()} representation of that object will be used as value
  * for the contains restriction.
  *
  * @author Christian Beikov

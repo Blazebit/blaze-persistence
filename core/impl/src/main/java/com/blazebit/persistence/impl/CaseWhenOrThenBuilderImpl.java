@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenAndBuilder;
@@ -29,12 +28,13 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * @author Moritz Becker
  * @since 1.0
  */
-public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements CaseWhenOrThenBuilder<T> {
-    
+public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements
+    CaseWhenOrThenBuilder<T> {
+
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    
+
     public CaseWhenOrThenBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
@@ -43,9 +43,10 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
 
     @Override
     public RestrictionBuilder<CaseWhenOrThenBuilder<T>> or(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
+                                                                                 expressionFactory));
     }
-    
+
     @Override
     public CaseWhenAndBuilder<CaseWhenOrThenBuilder<T>> and() {
         return new CaseWhenAndBuilderImpl<CaseWhenOrThenBuilder<T>>(this, subqueryInitFactory, expressionFactory);
@@ -55,5 +56,5 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
     public T then(String expression) {
         return result;
     }
-    
+
 }

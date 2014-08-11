@@ -43,17 +43,17 @@ public class ObjectBuilderQueryRedirectorAdapter implements QueryRedirector {
     public Object invokeQuery(DatabaseQuery query, Record arguments, Session session) {
         List<Object> tupleList = (List<Object>) query.execute((AbstractSession) session, (AbstractRecord) arguments);
         List<Object> results = new ArrayList<Object>(tupleList.size());
-        
+
         for (int i = 0; i < tupleList.size(); i++) {
             Object tuple = tupleList.get(i);
-            
+
             if (tuple instanceof Object[]) {
                 results.add(builder.build((Object[]) tuple));
             } else {
                 results.add(builder.build(new Object[]{ tuple }));
             }
         }
-        
+
         return builder.buildList((List) results);
     }
 }

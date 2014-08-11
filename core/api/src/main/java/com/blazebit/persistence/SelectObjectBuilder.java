@@ -23,10 +23,10 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
-    
+
     /**
      * Like {@link SelectObjectBuilder#withSubquery(java.lang.String)} but without an alias.
-     * 
+     *
      * @return A starting point for the subquery specification
      */
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery();
@@ -39,20 +39,20 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
      * @return A starting point for the subquery specification
      */
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String alias);
-    
+
     /**
      * Like {@link SelectObjectBuilder#with(java.lang.String, java.lang.String)} but without an alias.
-     * 
+     *
      * @param expression The expression to add
      * @return A starting point for the subquery specification
      */
     public SelectObjectBuilder<T> with(String expression);
-    
+
     /**
      * Adds the given expression to the arguments for the select new select clause.
      *
      * @param expression The expression to add
-     * @param alias The alias for the expression
+     * @param alias      The alias for the expression
      * @return This select object builder
      * @throws IllegalStateException Is thrown when the argument position is already taken
      */
@@ -60,19 +60,19 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
 
     /**
      * Like {@link SelectObjectBuilder#with(int, java.lang.String, java.lang.String)} but without an alias.
-     * 
+     *
      * @param position   The position at which the expression should be added
      * @param expression The expression to add
      * @return A starting point for the subquery specification
      */
     public SelectObjectBuilder<T> with(int position, String expression);
-    
+
     /**
      * Adds the given expression at the given position to the arguments for the select new select clause.
      *
      * @param position   The position at which the expression should be added
      * @param expression The expression to add
-     * @param alias The alias for the expression
+     * @param alias      The alias for the expression
      * @return This select object builder
      * @throws IllegalStateException Is thrown when the argument position is already taken
      */

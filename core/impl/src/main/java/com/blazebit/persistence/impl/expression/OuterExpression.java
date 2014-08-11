@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 /**
@@ -23,19 +22,20 @@ package com.blazebit.persistence.impl.expression;
  * @since 1.0
  */
 public class OuterExpression implements Expression {
+
     private PathExpression path;
 
     public void setPath(PathExpression path) {
         this.path = path;
     }
-    
+
     public PathExpression getPath() {
         return path;
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.proxy.model;
 
 import com.blazebit.persistence.view.Mapping;
@@ -25,18 +24,18 @@ import com.blazebit.persistence.view.MappingParameter;
  * @since 1.0
  */
 public abstract class DocumentClassView implements DocumentInterfaceView {
-    
+
     private final long age;
     private final Integer contactPersonNumber;
-    
+
     public DocumentClassView(
-            @Mapping("age + 1") Long age,
-            @MappingParameter("contactPersonNumber") Integer contactPersonNumber
+        @Mapping("age + 1") Long age,
+        @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
         this.age = age;
         this.contactPersonNumber = contactPersonNumber;
     }
-    
+
     public long getAge() {
         return age;
     }

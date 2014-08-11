@@ -28,7 +28,7 @@ import com.blazebit.testsuite.base.AbstractPersistenceTest;
  * @since 1.0
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
-    
+
     private JPAInfo jpaInfo;
     protected String ON_CLAUSE;
 
@@ -38,18 +38,18 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         jpaInfo = new JPAInfo(em);
         ON_CLAUSE = jpaInfo.getOnClause();
     }
-    
+
     public String joinAliasValue(String alias) {
         return jpaInfo.getCollectionValueFunction() != null ? jpaInfo.getCollectionValueFunction() + "(" + alias + ")" : alias;
     }
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] {
+        return new Class<?>[]{
             Document.class,
             Version.class,
             Person.class
         };
     }
-    
+
 }

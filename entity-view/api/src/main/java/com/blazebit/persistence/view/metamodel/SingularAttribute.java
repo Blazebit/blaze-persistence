@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 /**
@@ -25,7 +24,6 @@ package com.blazebit.persistence.view.metamodel;
  * @since 1.0
  */
 public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
-    
 
     /**
      * Returns true if this attribute maps to a query parameter, otherwise false.

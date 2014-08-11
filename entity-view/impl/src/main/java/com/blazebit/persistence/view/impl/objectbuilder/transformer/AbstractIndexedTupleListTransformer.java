@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
@@ -30,7 +29,7 @@ import java.util.Map;
  * @since 1.0
  */
 public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleListTransformer {
-    
+
     private final int[] parentIdPositions;
 
     public AbstractIndexedTupleListTransformer(int[] parentIdPositions, int startIndex) {
@@ -43,12 +42,12 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
         Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
         // Implementation detail: the tuple list is a LinkedList
         Iterator<Object[]> tupleListIter = tuples.iterator();
-        
+
         while (tupleListIter.hasNext()) {
             Object[] tuple = tupleListIter.next();
             TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
-            
+
             if (tupleIndexValue == null) {
                 Object key = tuple[startIndex];
                 tuple[startIndex] = createCollection();
@@ -68,18 +67,18 @@ public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleLis
                 tupleListIter.remove();
             }
         }
-        
+
         return tuples;
     }
-    
+
     protected abstract Object createCollection();
-    
+
     protected void add(Object collection, Object key, Object value) {
         if (key != null) {
             addToCollection((C) collection, (K) key, value);
         }
     }
-    
+
     protected abstract void addToCollection(C collection, K key, Object value);
-    
+
 }

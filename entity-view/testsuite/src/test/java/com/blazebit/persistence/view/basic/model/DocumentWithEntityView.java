@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.basic.model;
 
-import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 
 /**
@@ -27,8 +26,8 @@ import com.blazebit.persistence.view.entity.Person;
  */
 @EntityView(Document.class)
 public interface DocumentWithEntityView {
-    
+
     public String getName();
-    
+
     public Person getOwner();
 }

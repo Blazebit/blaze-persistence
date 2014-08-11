@@ -36,15 +36,16 @@ import org.junit.Test;
  * @since 1.0
  */
 public class JPQLSelectExpressionTest {
-    
+
     private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
-    
+
     @BeforeClass
-    public static void initLogging() {        
-        try { 
-            LogManager.getLogManager().readConfiguration(JPQLSelectExpressionTest.class.getResourceAsStream("/logging.properties")); 
-        } catch ( Exception e ) { 
-            e.printStackTrace(System.err); 
+    public static void initLogging() {
+        try {
+            LogManager.getLogManager().readConfiguration(JPQLSelectExpressionTest.class.getResourceAsStream(
+                "/logging.properties"));
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
         }
     }
 
@@ -82,9 +83,9 @@ public class JPQLSelectExpressionTest {
         String base = expr.substring(0, firstIndex);
         String index = expr.substring(firstIndex + 1, lastIndex);
         Expression indexExpr;
-        if(index.startsWith(":")){
+        if (index.startsWith(":")) {
             indexExpr = new ParameterExpression(index.substring(1));
-        }else{
+        } else {
             indexExpr = path(index.split("\\."));
         }
         return new ArrayExpression(new PropertyExpression(base), indexExpr);
@@ -195,7 +196,7 @@ public class JPQLSelectExpressionTest {
 
         assertTrue(expressions.get(0).equals(path("versions[test]")));
     }
-    
+
     @Test
     public void testArrayIndexPath() {
         CompositeExpression result = parse("versions[test.x.y]");
@@ -205,7 +206,7 @@ public class JPQLSelectExpressionTest {
 
         assertTrue(expressions.get(0).equals(path("versions[test.x.y]")));
     }
-    
+
     @Test
     public void testArrayIndexArithmetic() {
         CompositeExpression result = parse("versions[test.x.y + test.b]");
@@ -222,7 +223,7 @@ public class JPQLSelectExpressionTest {
         expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), expectedIndex));
         assertTrue(expressions.get(0).equals(expected));
     }
-    
+
     @Test
     public void testArrayIndexArithmeticMixed() {
         CompositeExpression result = parse("versions[test.x.y + 1]");
@@ -236,10 +237,10 @@ public class JPQLSelectExpressionTest {
         compositeExpressions.add(new FooExpression("+1"));
         CompositeExpression expectedIndex = new CompositeExpression(compositeExpressions);
         expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), expectedIndex));
-        
+
         assertTrue(expressions.get(0).equals(expected));
     }
-    
+
     @Test
     public void testArrayIndexArithmeticLiteral() {
         CompositeExpression result = parse("versions[2 + 1]");
@@ -249,10 +250,10 @@ public class JPQLSelectExpressionTest {
 
         PathExpression expected = new PathExpression();
         expected.getExpressions().add(new ArrayExpression(new PropertyExpression("versions"), new FooExpression("2+1")));
-        
+
         assertTrue(expressions.get(0).equals(expected));
     }
-    
+
     @Test
     public void testMultipleArrayExpressions() {
         CompositeExpression result = parse("versions[test.x.y].owner[a.b.c]");
@@ -262,7 +263,7 @@ public class JPQLSelectExpressionTest {
 
         assertTrue(expressions.get(0).equals(path("versions[test.x.y]", "owner[a.b.c]")));
     }
-    
+
     @Test
     public void testArrayInTheMiddle() {
         CompositeExpression result = parse("owner.versions[test.x.y].test");
@@ -272,153 +273,153 @@ public class JPQLSelectExpressionTest {
 
         assertTrue(expressions.get(0).equals(path("owner", "versions[test.x.y]", "test")));
     }
-    
+
     @Test
     public void testArrayWithParameterIndex() {
         CompositeExpression result = parse("versions[:index]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("versions[:index]")));
     }
-    
+
     @Test(expected = SyntaxErrorException.class)
     public void testArrayWithInvalidParameterIndex() {
         parse("versions[:index.b]");
     }
-    
+
     @Test
-    public void testSingleElementArrayIndexPath1(){
+    public void testSingleElementArrayIndexPath1() {
         CompositeExpression result = parse("d[a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d[a]")));
     }
-    
+
     @Test
-    public void testSingleElementArrayIndexPath2(){
+    public void testSingleElementArrayIndexPath2() {
         CompositeExpression result = parse("d.b[a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a]")));
     }
-    
+
     @Test
-    public void testSingleElementArrayIndexPath3(){
+    public void testSingleElementArrayIndexPath3() {
         CompositeExpression result = parse("d.b[a].c");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a]", "c")));
     }
-    
+
     @Test
-    public void testSingleElementArrayIndexPath4(){
+    public void testSingleElementArrayIndexPath4() {
         CompositeExpression result = parse("d.b[a].c[e]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a]", "c[e]")));
     }
-    
+
     @Test
-    public void testSingleElementArrayIndexPath5(){
+    public void testSingleElementArrayIndexPath5() {
         CompositeExpression result = parse("d.b[a].c[e].f");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
-        assertTrue(expressions.get(0).equals(path("d","b[a]","c[e]","f")));
+        assertTrue(expressions.get(0).equals(path("d", "b[a]", "c[e]", "f")));
     }
-    
+
     @Test
-    public void testMultiElementArrayIndexPath1(){
+    public void testMultiElementArrayIndexPath1() {
         CompositeExpression result = parse("d[a.a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d[a.a]")));
     }
-    
+
     @Test
-    public void testMultiElementArrayIndexPath2(){
+    public void testMultiElementArrayIndexPath2() {
         CompositeExpression result = parse("d.b[a.a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a.a]")));
     }
-    
+
     @Test
-    public void testMultiElementArrayIndexPath3(){
+    public void testMultiElementArrayIndexPath3() {
         CompositeExpression result = parse("d.b[a.a].c");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a.a]", "c")));
     }
-    
+
     @Test
-    public void testMultiElementArrayIndexPath4(){
+    public void testMultiElementArrayIndexPath4() {
         CompositeExpression result = parse("d.b[a.a].c[e.a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[a.a]", "c[e.a]")));
     }
-    
+
     @Test
-    public void testMultiElementArrayIndexPath5(){
+    public void testMultiElementArrayIndexPath5() {
         CompositeExpression result = parse("d.b[a.a].c[e.a].f");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
-        assertTrue(expressions.get(0).equals(path("d","b[a.a]","c[e.a]","f")));
+        assertTrue(expressions.get(0).equals(path("d", "b[a.a]", "c[e.a]", "f")));
     }
-    
+
     @Test
-    public void testParameterArrayIndex1(){
+    public void testParameterArrayIndex1() {
         CompositeExpression result = parse("d[:a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d[:a]")));
     }
-    
+
     @Test
-    public void testParameterArrayIndex2(){
+    public void testParameterArrayIndex2() {
         CompositeExpression result = parse("d.b[:a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[:a]")));
     }
-    
+
     @Test
-    public void testParameterArrayIndex3(){
+    public void testParameterArrayIndex3() {
         CompositeExpression result = parse("d.b[:a].c");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[:a]", "c")));
     }
-    
+
     @Test
-    public void testParameterArrayIndex4(){
+    public void testParameterArrayIndex4() {
         CompositeExpression result = parse("d.b[:a].c[:a]");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[:a]", "c[:a]")));
     }
-    
+
     @Test
-    public void testParameterArrayIndex5(){
+    public void testParameterArrayIndex5() {
         CompositeExpression result = parse("d.b[:a].c[:a].f");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 1);
-        assertTrue(expressions.get(0).equals(path("d","b[:a]","c[:a]","f")));
+        assertTrue(expressions.get(0).equals(path("d", "b[:a]", "c[:a]", "f")));
     }
 }

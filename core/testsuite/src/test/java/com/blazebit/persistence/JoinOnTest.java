@@ -16,7 +16,6 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -33,7 +32,9 @@ public class JoinOnTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.leftJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WITH l LIKE :param_0", crit.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WITH l LIKE :param_0", crit
+            .getQueryString());
         crit.getResultList();
     }
 
@@ -42,7 +43,9 @@ public class JoinOnTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.rightJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners RIGHT JOIN partners.localized l WITH l LIKE :param_0", crit.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners RIGHT JOIN partners.localized l WITH l LIKE :param_0", crit
+            .getQueryString());
         crit.getResultList();
     }
 
@@ -51,7 +54,8 @@ public class JoinOnTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.innerJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners JOIN partners.localized l WITH l LIKE :param_0", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners JOIN partners.localized l WITH l LIKE :param_0",
+                     crit.getQueryString());
         crit.getResultList();
     }
 
@@ -59,18 +63,20 @@ public class JoinOnTest extends AbstractCoreTest {
     public void testLeftJoinOnComplex() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.leftJoinOn("d.partners.localized", "l").on("l").like("%dld")
-                .on("l").gt("1")
-                .onOr()
+            .on("l").gt("1")
+            .onOr()
                 .on("l").eq("2")
                 .onAnd()
-                .on("l").eq("3")
-                .onOr()
-                .on("l").eq("4")
-                .endOr()
+                    .on("l").eq("3")
+                    .onOr()
+                        .on("l").eq("4")
+                    .endOr()
                 .endAnd()
-                .endOr().end();
+            .endOr().end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WITH l LIKE :param_0 AND l > :param_1 AND (l = :param_2 OR (l = :param_3 AND (l = :param_4)))", crit.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WITH l LIKE :param_0 AND l > :param_1 AND (l = :param_2 OR (l = :param_3 AND (l = :param_4)))",
+            crit.getQueryString());
         crit.getResultList();
     }
 }

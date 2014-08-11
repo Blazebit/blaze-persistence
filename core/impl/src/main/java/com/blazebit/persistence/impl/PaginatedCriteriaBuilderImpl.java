@@ -24,7 +24,6 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -63,11 +62,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         parameterizeQuery(countQuery);
 
         long totalSize = countQuery.getSingleResult();
-        
+
         if (totalSize == 0L) {
             return new PagedListImpl<T>(totalSize);
         }
-        
+
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString);
         parameterizeQuery(idQuery);
@@ -75,34 +74,34 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         List ids = idQuery.setFirstResult(firstRow)
             .setMaxResults(pageSize)
             .getResultList();
-        
+
         if (ids.isEmpty()) {
             return new PagedListImpl<T>(totalSize);
         }
-        
+
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
         String idName = entityType.getId(entityType.getIdType()
             .getJavaType())
             .getName();
-        
+
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
             .toString();
-        
+
         //TODO: change to if(hasSubqueryOrderBys)
         if (orderByManager.hasSubqueryOrderBys(idClause)) {
             // If we have non id order bys, 
             List newIds = new ArrayList(ids.size());
-            
+
             for (int i = 0; i < ids.size(); i++) {
                 newIds.add(((Object[]) ids.get(i))[0]);
             }
-            
+
             ids = newIds;
         }
-        
+
         parameterManager.addParameterMapping(idParamName, ids);
 
         PagedList<T> pagedResultList = new PagedListImpl<T>(super.getResultList(), totalSize);
@@ -122,26 +121,26 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         String idName = entityType.getId(entityType.getIdType()
             .getJavaType())
             .getName();
-        
+
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
             .toString();
-        
+
         sbSelectFrom.append("SELECT COUNT(").append(idClause).append(')');
         sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        
+
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
-        
+
         StringBuilder sbJoin = new StringBuilder();
         joinManager.buildJoins(false, sbJoin);
-        
+
         return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 
@@ -176,7 +175,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
         orderByManager.buildOrderBy(sbRemaining);
-        
+
         StringBuilder sbJoin = new StringBuilder();
         joinManager.buildJoins(true, sbJoin);
 
@@ -195,7 +194,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         applyImplicitJoins();
         applyExpressionTransformers();
-        
+
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
@@ -203,7 +202,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         sbSelectFrom.append("SELECT ")
             .append(idClause);
-        
+
         if (orderByManager.hasSubqueryOrderBys(idClause)) {
             sbSelectFrom.append(", ");
             orderByManager.buildSubquerySelectClauses(sbSelectFrom);
@@ -212,23 +211,23 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-        
+
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
         sbRemaining.append(" GROUP BY ").append(idClause);
         orderByManager.buildOrderBy(sbRemaining);
-        
+
         StringBuilder sbJoin = new StringBuilder();
         joinManager.buildJoins(false, sbJoin);
 
         return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
-    
+
     @Override
     public PaginatedCriteriaBuilder<T> distinct() {
         throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
     }
-    
+
     @Override
     public PaginatedCriteriaBuilder<T> groupBy(String... paths) {
         throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");

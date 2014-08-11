@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.subview.model;
 
-import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 
 /**
@@ -28,7 +27,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
  */
 @EntityView(Person.class)
 public interface PersonSubView {
-    
+
     @MappingFilter(ContainsFilter.class)
     public String getName();
 }

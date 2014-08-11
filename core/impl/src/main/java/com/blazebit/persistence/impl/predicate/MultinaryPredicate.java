@@ -25,7 +25,7 @@ import java.util.List;
  * @since 1.0
  */
 public abstract class MultinaryPredicate implements Predicate {
-    
+
     protected final List<Predicate> children = new ArrayList<Predicate>();
 
     public List<Predicate> getChildren() {

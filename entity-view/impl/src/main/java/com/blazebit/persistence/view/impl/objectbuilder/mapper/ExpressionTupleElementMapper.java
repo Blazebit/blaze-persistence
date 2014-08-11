@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.SelectBuilder;
@@ -24,7 +23,7 @@ import com.blazebit.persistence.SelectBuilder;
  * @since 1.0
  */
 public class ExpressionTupleElementMapper implements TupleElementMapper {
-    
+
     protected final String expression;
 
     public ExpressionTupleElementMapper(String expression) {
@@ -35,5 +34,5 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
         queryBuilder.select(expression);
     }
-    
+
 }

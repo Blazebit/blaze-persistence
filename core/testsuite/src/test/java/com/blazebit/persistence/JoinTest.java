@@ -43,7 +43,8 @@ public class JoinTest extends AbstractCoreTest {
         criteria.rightJoinFetch("versions", "v");
         criteria.where("o.age").eq(0L);
 
-        assertEquals("SELECT d FROM Document d RIGHT JOIN FETCH d.owner o RIGHT JOIN FETCH d.versions v WHERE o.age = :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d RIGHT JOIN FETCH d.owner o RIGHT JOIN FETCH d.versions v WHERE o.age = :param_0",
+                     criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -63,7 +64,8 @@ public class JoinTest extends AbstractCoreTest {
         criteria.leftJoinFetch("owner", "o");
         criteria.leftJoinFetch("versions", "v");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.owner o LEFT JOIN FETCH d.versions v", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.owner o LEFT JOIN FETCH d.versions v", criteria
+                     .getQueryString());
         criteria.getResultList();
     }
 
@@ -98,26 +100,28 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testJoinMethodEquivalences(){
+    public void testJoinMethodEquivalences() {
         final String qInnerJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, false).getQueryString();
-        final String qInnerJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, true).getQueryString();
+        final String qInnerJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, true)
+            .getQueryString();
         final String qLeftJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, false).getQueryString();
         final String qLeftJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, true).getQueryString();
         final String qRightJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, false).getQueryString();
-        final String qRightJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, true).getQueryString();
-        
+        final String qRightJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, true)
+            .getQueryString();
+
         assertEquals(cbf.from(em, Document.class, "d").innerJoin("owner", "o").getQueryString(),
-                qInnerJoin);
+                     qInnerJoin);
         assertEquals(cbf.from(em, Document.class, "d").innerJoinFetch("owner", "o").getQueryString(),
-                qInnerJoinFetch);
+                     qInnerJoinFetch);
         assertEquals(cbf.from(em, Document.class, "d").rightJoin("owner", "o").getQueryString(),
-                qRightJoin);
+                     qRightJoin);
         assertEquals(cbf.from(em, Document.class, "d").rightJoinFetch("owner", "o").getQueryString(),
-                qRightJoinFetch);
+                     qRightJoinFetch);
         assertEquals(cbf.from(em, Document.class, "d").leftJoin("owner", "o").getQueryString(),
-                qLeftJoin);
+                     qLeftJoin);
         assertEquals(cbf.from(em, Document.class, "d").leftJoinFetch("owner", "o").getQueryString(),
-                qLeftJoinFetch);
+                     qLeftJoinFetch);
     }
 
     @Test
@@ -127,7 +131,9 @@ public class JoinTest extends AbstractCoreTest {
         criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
         criteria.join("owner", "o", JoinType.INNER, true);
 
-        assertEquals("SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -138,7 +144,9 @@ public class JoinTest extends AbstractCoreTest {
         criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
         criteria.join("owner", "o", JoinType.INNER, true);
 
-        assertEquals("SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -149,7 +157,9 @@ public class JoinTest extends AbstractCoreTest {
         criteria.join("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
         criteria.join("owner", "o", JoinType.INNER, true);
 
-        assertEquals("SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -160,7 +170,9 @@ public class JoinTest extends AbstractCoreTest {
         criteria.join("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
         criteria.join("owner", "o", JoinType.INNER, true);
 
-        assertEquals("SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -227,7 +239,9 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.where("versions.document.age").eq(0L).leftJoin("a.partners", "p");
 
-        assertEquals("SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN a.versions versions LEFT JOIN versions.document document WHERE document.age = :param_0", criteria.getQueryString());
+        assertEquals(
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN a.versions versions LEFT JOIN versions.document document WHERE document.age = :param_0",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -239,8 +253,12 @@ public class JoinTest extends AbstractCoreTest {
         criteria1.where("p.ownedDocuments.age").eq(0L).leftJoin("a.partners", "p");
         criteria2.leftJoin("a.partners", "p").where("p.ownedDocuments.age").eq(0L);
 
-        assertEquals("SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0", criteria1.getQueryString());
-        assertEquals("SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0", criteria2.getQueryString());
+        assertEquals(
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0",
+            criteria1.getQueryString());
+        assertEquals(
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0",
+            criteria2.getQueryString());
         criteria1.getResultList();
         criteria2.getResultList();
     }

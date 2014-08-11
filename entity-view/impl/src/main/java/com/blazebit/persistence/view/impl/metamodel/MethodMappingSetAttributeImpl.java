@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
@@ -38,5 +36,5 @@ public class MethodMappingSetAttributeImpl<X, Y> extends AbstractMethodMappingPl
     public CollectionType getCollectionType() {
         return CollectionType.SET;
     }
-    
+
 }

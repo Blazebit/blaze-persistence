@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.PagedList;
@@ -28,20 +27,21 @@ import java.util.Collection;
  * @since 1.0
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
+
     private final long totalSize;
 
     public PagedListImpl(long totalSize) {
         this.totalSize = totalSize;
     }
-    
+
     PagedListImpl(Collection<? extends T> collection, long totalSize) {
         super(collection);
         this.totalSize = totalSize;
     }
-    
+
     @Override
     public long totalSize() {
         return totalSize;
     }
-    
+
 }

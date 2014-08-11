@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.QueryBuilder;
@@ -26,7 +25,7 @@ import java.util.List;
  * @since 1.0
  */
 public class TupleParameterMapper {
- 
+
     private final String[] parameterMappings;
     private final int[] parameterIndices;
 
@@ -34,7 +33,7 @@ public class TupleParameterMapper {
         String[] paramMappings = new String[fullParamMappings.size()];
         int[] paramIndices = new int[fullParamMappings.size()];
         int size = 0;
-        
+
         for (int i = 0; i < fullParamMappings.size(); i++) {
             if (fullParamMappings.get(i) != null) {
                 paramMappings[size] = fullParamMappings.get(i);
@@ -42,11 +41,11 @@ public class TupleParameterMapper {
                 size++;
             }
         }
-        
+
         this.parameterMappings = Arrays.copyOf(paramMappings, size);
         this.parameterIndices = Arrays.copyOf(paramIndices, size);
     }
-    
+
     public void applyMapping(QueryBuilder<?, ?> queryBuilder, Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
             tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);

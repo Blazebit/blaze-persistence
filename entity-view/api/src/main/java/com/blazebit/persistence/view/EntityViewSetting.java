@@ -15,9 +15,6 @@
  */
 package com.blazebit.persistence.view;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -27,8 +24,10 @@ import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -41,8 +40,7 @@ import javax.persistence.metamodel.Metamodel;
  * are needed but not satisfied.
  *
  * @param <T> The type of the entity view
- * @param <Q> {@linkplain PaginatedCriteriaBuilder} if paginated,
- * {@linkplain CriteriaBuilder} otherwise
+ * @param <Q> {@linkplain PaginatedCriteriaBuilder} if paginated, {@linkplain CriteriaBuilder} otherwise
  * @author Christian Beikov
  * @since 1.0
  */
@@ -71,9 +69,8 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
      *
-     * @param entityViewClass The entity view class that should be used for the
-     * object builder
-     * @param <T> The type of the entity view
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param <T>             The type of the entity view
      * @return A new entity view setting
      */
     public static <T> EntityViewSetting<T, CriteriaBuilder<T>> create(Class<T> entityViewClass) {
@@ -84,12 +81,10 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
      *
-     * @param entityViewClass The entity view class that should be used for the
-     * object builder
-     * @param firstRow The position of the first result to retrieve, numbered
-     * from 0
-     * @param maxRows The maximum number of results to retrieve
-     * @param <T> The type of the entity view
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param firstRow        The position of the first result to retrieve, numbered from 0
+     * @param maxRows         The maximum number of results to retrieve
+     * @param <T>             The type of the entity view
      * @return A new entity view setting
      */
     public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows) {
@@ -99,12 +94,10 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     /**
      * Applies this entity view setting to the given criteria builder.
      *
-     * @param entityViewManager The entity view manager that manages the entity
-     * view of this setting
-     * @param criteriaBuilder The criteria builder on which the setting should
-     * be applied
+     * @param entityViewManager The entity view manager that manages the entity view of this setting
+     * @param criteriaBuilder   The criteria builder on which the setting should be applied
      * @return {@linkplain PaginatedCriteriaBuilder} if paginated,
-     * {@linkplain CriteriaBuilder} otherwise
+     *         {@linkplain CriteriaBuilder} otherwise
      */
     public Q apply(EntityViewManager entityViewManager, CriteriaBuilder<?> criteriaBuilder) {
         resolveAttributeSorters(entityViewManager, criteriaBuilder.getMetamodel());
@@ -121,28 +114,28 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
 
                     try {
                         provider = subqueryAttribute.getSubqueryProvider()
-                                .newInstance();
+                            .newInstance();
                     } catch (Exception ex) {
                         throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryAttribute
-                                .getSubqueryProvider()
-                                .getName(), ex);
+                            .getSubqueryProvider()
+                            .getName(), ex);
                     }
 
                     if (subqueryAttribute.getSubqueryExpression()
-                            .isEmpty()) {
+                        .isEmpty()) {
                         filterEntry.getValue()
-                                .apply(provider.createSubquery(criteriaBuilder.whereSubquery()));
+                            .apply(provider.createSubquery(criteriaBuilder.whereSubquery()));
                     } else {
                         filterEntry.getValue()
-                                .apply(provider.createSubquery(
-                                                criteriaBuilder.whereSubquery(
-                                                        subqueryAttribute.getSubqueryAlias(),
-                                                        subqueryAttribute.getSubqueryExpression()
-                                                )));
+                            .apply(provider.createSubquery(
+                                    criteriaBuilder.whereSubquery(
+                                        subqueryAttribute.getSubqueryAlias(),
+                                        subqueryAttribute.getSubqueryExpression()
+                                    )));
                     }
                 } else {
                     filterEntry.getValue()
-                            .apply(criteriaBuilder.where((String) key));
+                        .apply(criteriaBuilder.where((String) key));
                 }
             }
         }
@@ -151,7 +144,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         if (!sorters.isEmpty()) {
             for (Map.Entry<String, Sorter> sorterEntry : sorters.entrySet()) {
                 sorterEntry.getValue()
-                        .apply(criteriaBuilder, sorterEntry.getKey());
+                    .apply(criteriaBuilder, sorterEntry.getKey());
             }
         }
 
@@ -192,7 +185,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * Adds the given attribute filter to the attribute filters of this setting.
      *
      * @param attributeName The name of the attribute filter
-     * @param filterValue The filter value for the attribute filter
+     * @param filterValue   The filter value for the attribute filter
      */
     public void addAttributeFilter(String attributeName, String filterValue) {
         this.attributeFilters.put(attributeName, filterValue);
@@ -213,7 +206,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * Note that the attribute sorter order is retained.
      *
      * @param attributeName The name of the attribute sorter
-     * @param sorter The sorter for the attribute sorter
+     * @param sorter        The sorter for the attribute sorter
      */
     public void addAttributeSorter(String attributeName, Sorter sorter) {
         this.attributeSorters.put(attributeName, sorter);
@@ -234,7 +227,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * setting.
      *
      * @param parameterName The name of the optional parameter
-     * @param value The value of the optional parameter
+     * @param value         The value of the optional parameter
      */
     public void addOptionalParameter(String parameterName, Object value) {
         this.optionalParameters.put(parameterName, value);
@@ -334,7 +327,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         ViewMetamodel metamodel = evm.getMetamodel();
         ViewType<T> viewType = metamodel.view(entityViewClass);
         Iterator<Map.Entry<String, Sorter>> iter = attributeSorters.entrySet()
-                .iterator();
+            .iterator();
 
         while (iter.hasNext()) {
             Map.Entry<String, Sorter> attributeSorterEntry = iter.next();
@@ -359,7 +352,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         ViewMetamodel metamodel = evm.getMetamodel();
         ViewType<T> viewType = metamodel.view(entityViewClass);
         Iterator<Map.Entry<String, Object>> iter = attributeFilters.entrySet()
-                .iterator();
+            .iterator();
 
         while (iter.hasNext()) {
             Map.Entry<String, Object> attributeFilterEntry = iter.next();
@@ -382,8 +375,8 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
 
             if (filterClass == null) {
                 throw new IllegalArgumentException("No filter mapping given for the attribute '" + attributeName
-                        + "' in the entity view type '" + viewType.getJavaType()
-                        .getName() + "'");
+                    + "' in the entity view type '" + viewType.getJavaType()
+                    .getName() + "'");
             }
 
             Filter filter = evm.createFilter(filterClass, expectedType, filterValue);
@@ -397,7 +390,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         String viewTypeName = viewType.getName();
         StringBuilder sb = new StringBuilder(viewTypeName.length() + attributeName.length() + 1);
         sb.append(viewTypeName)
-                .append('_');
+            .append('_');
 
         for (int i = 0; i < attributeName.length(); i++) {
             char c = attributeName.charAt(i);
@@ -444,9 +437,9 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                 if (i + 1 != parts.length) {
                     // Since subqueries can't return objects, it makes no sense to further navigate
                     throw new IllegalArgumentException("The given attribute path '" + attributePath
-                            + "' is accessing the property '" + parts[i + 1] + "' of a subquery attribute in the type '"
-                            + currentAttribute.getJavaType()
-                            .getName() + "' which is illegal!");
+                        + "' is accessing the property '" + parts[i + 1] + "' of a subquery attribute in the type '"
+                        + currentAttribute.getJavaType()
+                        .getName() + "' which is illegal!");
                 }
             } else if (currentAttribute.isSubview()) {
                 if (i != 0) {
@@ -481,8 +474,8 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                     break;
                 } catch (IllegalArgumentException ex) {
                     throw new IllegalArgumentException("The given attribute path '" + attributePath
-                            + "' is accessing the possibly unknown property '" + parts[i] + "' of the type '" + maybeUnmanagedType
-                            .getName() + "' which is illegal!", ex);
+                        + "' is accessing the possibly unknown property '" + parts[i] + "' of the type '" + maybeUnmanagedType
+                        .getName() + "' which is illegal!", ex);
                 }
             } else {
                 if (i != 0) {

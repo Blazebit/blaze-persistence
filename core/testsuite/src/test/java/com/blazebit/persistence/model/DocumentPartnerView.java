@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.model;
 
 /**
@@ -23,6 +22,7 @@ package com.blazebit.persistence.model;
  * @since 1.0
  */
 public class DocumentPartnerView {
+
     private final Object partners;
 
     public DocumentPartnerView(Object partners, Object localized) {
@@ -31,5 +31,5 @@ public class DocumentPartnerView {
 
     public Object getPartners() {
         return partners;
-    }    
+    }
 }

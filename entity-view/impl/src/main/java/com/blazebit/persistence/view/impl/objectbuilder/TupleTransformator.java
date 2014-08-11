@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
-import com.blazebit.persistence.QueryBuilder;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,22 +29,22 @@ import java.util.ListIterator;
  * @since 1.0
  */
 public class TupleTransformator {
-    
+
     private final List<TupleTransformatorLevel> transformatorLevels = new ArrayList<TupleTransformatorLevel>();
     private int currentLevel = 0;
 
     public TupleTransformator() {
         transformatorLevels.add(new TupleTransformatorLevel());
     }
-    
+
     public boolean hasTransformers() {
         return transformatorLevels.get(0).tupleListTransformers.size() > 0
             || transformatorLevels.get(0).tupleTransformers.size() > 0;
     }
-    
+
     public List<Object[]> transformAll(List<Object[]> tupleList) {
         List<Object[]> newTupleList;
-        
+
         // Performance optimization
         // LinkedList can remove elements from the list very fast
         // This is important because transformers avoid copying of tuples and instead remove elements from the tupleList
@@ -54,11 +53,11 @@ public class TupleTransformator {
         } else {
             newTupleList = new LinkedList(tupleList);
         }
-        
+
         for (int i = 0; i < transformatorLevels.size(); i++) {
             if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
                 ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
-                
+
                 while (newTupleListIter.hasNext()) {
                     Object[] tuple = newTupleListIter.next();
                     newTupleListIter.set(transform(i, tuple));
@@ -68,7 +67,7 @@ public class TupleTransformator {
         }
         return newTupleList;
     }
-    
+
     private Object[] transform(int level, Object[] tuple) {
         List<TupleTransformer> tupleTransformers = transformatorLevels.get(level).tupleTransformers;
         Object[] currentTuple = tuple;
@@ -77,7 +76,7 @@ public class TupleTransformator {
         }
         return currentTuple;
     }
-    
+
     private List<Object[]> transform(int level, List<Object[]> tupleList) {
         List<TupleListTransformer> tupleListTransformers = transformatorLevels.get(level).tupleListTransformers;
         List<Object[]> currentTuples = tupleList;
@@ -91,12 +90,12 @@ public class TupleTransformator {
         if (!tupleTransformator.hasTransformers()) {
             return;
         }
-        
+
         for (int i = 0; i < tupleTransformator.transformatorLevels.size(); i++) {
             if (i != 0) {
                 incrementLevel();
             }
-            
+
             TupleTransformatorLevel thisLevel = transformatorLevels.get(currentLevel);
             TupleTransformatorLevel otherLevel = tupleTransformator.transformatorLevels.get(i);
             thisLevel.tupleTransformers.addAll(otherLevel.tupleTransformers);
@@ -125,9 +124,9 @@ public class TupleTransformator {
             }
         }
     }
-    
+
     private static class TupleTransformatorLevel {
-        
+
         private final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>();
         private final List<TupleListTransformer> tupleListTransformers = new ArrayList<TupleListTransformer>();
     }

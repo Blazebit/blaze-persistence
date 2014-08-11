@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.Set;
-
 
 /**
  * Instances of the type {@linkplain SetAttribute} represent {@linkplain java.util.Set}-valued attributes.
@@ -28,5 +26,5 @@ import java.util.Set;
  * @since 1.0
  */
 public interface SetAttribute<X, E> extends PluralAttribute<X, Set<E>, E> {
-    
+
 }

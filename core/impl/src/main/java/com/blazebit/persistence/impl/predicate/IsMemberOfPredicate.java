@@ -33,5 +33,5 @@ public class IsMemberOfPredicate extends BinaryExpressionPredicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
 }

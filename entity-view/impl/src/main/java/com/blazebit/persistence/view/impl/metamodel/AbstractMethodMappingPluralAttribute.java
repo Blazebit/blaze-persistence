@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -35,7 +33,7 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
 
     private final Class<Y> elementType;
     private final boolean subview;
-    
+
     public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
@@ -72,5 +70,5 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
     public boolean isQueryParameter() {
         return false;
     }
-    
+
 }

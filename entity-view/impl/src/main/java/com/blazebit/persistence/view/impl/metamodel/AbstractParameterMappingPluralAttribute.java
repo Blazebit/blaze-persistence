@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.SubqueryProvider;
@@ -34,7 +33,7 @@ public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends A
 
     private final Class<Y> elementType;
     private final boolean subview;
-    
+
     public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(mappingConstructor, index, mapping, entityViews);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
@@ -67,5 +66,5 @@ public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends A
     public boolean isQueryParameter() {
         return false;
     }
-    
+
 }

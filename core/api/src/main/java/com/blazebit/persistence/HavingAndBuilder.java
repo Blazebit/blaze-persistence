@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface HavingAndBuilder<T> extends BaseAggregateable<HavingAndBuilder<T>> {
+public interface HavingAndBuilder<T> extends BaseHavingBuilder<HavingAndBuilder<T>> {
 
     /**
      * Finishes the AND predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

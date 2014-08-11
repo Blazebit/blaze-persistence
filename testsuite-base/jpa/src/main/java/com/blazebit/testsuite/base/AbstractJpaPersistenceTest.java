@@ -79,18 +79,19 @@ public abstract class AbstractJpaPersistenceTest {
         persistenceUnitInfo.setPersistenceUnitName(persistenceUnitName);
         persistenceUnitInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);
         persistenceUnitInfo.setExcludeUnlistedClasses(true);
-        
+
         try {
-            URL url = AbstractJpaPersistenceTest.class.getClassLoader().getResource("");
+            URL url = AbstractJpaPersistenceTest.class.getClassLoader()
+                .getResource("");
             persistenceUnitInfo.setPersistenceUnitRootUrl(url);
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-        
+
         for (Class<?> clazz : getEntityClasses()) {
             persistenceUnitInfo.addManagedClassName(clazz.getName());
         }
-        
+
         return createEntityManagerFactory(persistenceUnitInfo, properties);
     }
 
@@ -108,7 +109,8 @@ public abstract class AbstractJpaPersistenceTest {
         StringBuffer foundProviders = null;
 
         for (PersistenceProvider provider : providers) {
-            String providerName = provider.getClass().getName();
+            String providerName = provider.getClass()
+                .getName();
             try {
                 factory = provider.createContainerEntityManagerFactory(persistenceUnitInfo, props);
             } catch (Exception e) {
@@ -136,17 +138,17 @@ public abstract class AbstractJpaPersistenceTest {
 
         if (exceptions.isEmpty()) {
             // throw an exception with the PU name and providers we tried
-            throw new PersistenceException("No persistence providers available for \"" + persistenceUnitInfo.getPersistenceUnitName() +
-                "\" after trying the following discovered implementations: " + foundProviders);
+            throw new PersistenceException("No persistence providers available for \"" + persistenceUnitInfo
+                .getPersistenceUnitName() + "\" after trying the following discovered implementations: " + foundProviders);
         } else {
             // we encountered one or more exceptions, so format and throw as a single exception
             throw createPersistenceException(
-                "Explicit persistence provider error(s) occurred for \"" + persistenceUnitInfo.getPersistenceUnitName() +
-                "\" after trying the following discovered implementations: " + foundProviders,
+                "Explicit persistence provider error(s) occurred for \"" + persistenceUnitInfo.getPersistenceUnitName()
+                + "\" after trying the following discovered implementations: " + foundProviders,
                 exceptions);
         }
     }
-    
+
     private static PersistenceException createPersistenceException(String msg, Map<String, Throwable> failures) {
         String newline = System.getProperty("line.separator");
         StringWriter strWriter = new StringWriter();
@@ -168,7 +170,8 @@ public abstract class AbstractJpaPersistenceTest {
             for (String providerName : failures.keySet()) {
                 strWriter.append(providerName);
                 strWriter.append(" returned: ");
-                failures.get(providerName).printStackTrace(new PrintWriter(strWriter));
+                failures.get(providerName)
+                    .printStackTrace(new PrintWriter(strWriter));
             }
             strWriter.append(newline);
             return new PersistenceException(strWriter.toString());

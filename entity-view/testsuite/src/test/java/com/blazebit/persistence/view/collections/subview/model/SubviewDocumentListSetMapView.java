@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.collections.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
@@ -30,13 +29,13 @@ import java.util.Set;
  */
 @EntityView(DocumentForCollections.class)
 public abstract class SubviewDocumentListSetMapView implements SubviewDocumentCollectionsView {
-    
+
     @Mapping("personList")
     public abstract List<SubviewPersonForCollectionsView> getA();
-    
+
     @Mapping("partners")
     public abstract Set<SubviewPersonForCollectionsView> getB();
-    
+
     @Mapping("contacts")
     public abstract Map<Integer, SubviewPersonForCollectionsView> getC();
 

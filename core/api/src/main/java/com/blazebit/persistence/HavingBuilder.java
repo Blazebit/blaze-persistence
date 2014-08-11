@@ -16,22 +16,20 @@
 package com.blazebit.persistence;
 
 /**
- * An interface for builders that support filtering. This is related to the
- * fact, that a query builder supports where clauses.
+ * An interface for builders that support aggregation.
+ * This is related to the fact, that a query builder supports group by and having clauses.
  *
  * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface Filterable<T extends Filterable<T>> extends BaseFilterable<T> {
+public interface HavingBuilder<T extends HavingBuilder<T>> extends BaseHavingBuilder<T> {
 
     /**
-     * Starts a {@link WhereOrBuilder} which is a predicate consisting only of
-     * disjunctiv connected predicates. When the builder finishes, the predicate
-     * is added to the parent predicate container represented by the type
-     * {@linkplain T}.
+     * Starts a {@link HavingOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
      *
-     * @return The or predicate builder for the where clause
+     * @return The or predicate builder for the having clause
      */
-    public WhereOrBuilder<T> whereOr();
+    public HavingOrBuilder<T> havingOr();
 }

@@ -25,7 +25,6 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
@@ -40,6 +39,7 @@ import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,7 +57,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     private final ExpressionFactory expressionFactory;
-    
+
     public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.leftExpression = leftExpression;
         this.listener = listener;
@@ -65,7 +65,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
-    
+
     public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.listener = listener;
         this.result = result;
@@ -261,10 +261,10 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public T isNotNull() {
         return chain(new NotPredicate(new IsNullPredicate(leftExpression)));
     }
-    
+
     @Override
     public T isEmpty() {
-        
+
         return chain(new IsEmptyPredicate(makeCollectionValued(leftExpression)));
     }
 
@@ -387,17 +387,17 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             pred = predicate;
         }
 
-        if(pred instanceof InPredicate){
-            ((InPredicate)pred).setRight(new SubqueryExpression(builder));
-        } else if (pred instanceof NotInPredicate){
-            ((NotInPredicate)pred).setRight(new SubqueryExpression(builder));
+        if (pred instanceof InPredicate) {
+            ((InPredicate) pred).setRight(new SubqueryExpression(builder));
+        } else if (pred instanceof NotInPredicate) {
+            ((NotInPredicate) pred).setRight(new SubqueryExpression(builder));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate was not an IN predicate");
         }
         listener.onBuilderEnded(this);
     }
 
-    private Expression makeCollectionValued(Expression expr){
+    private Expression makeCollectionValued(Expression expr) {
         if (expr instanceof PathExpression) {
             ((PathExpression) expr).setUsedInCollectionFunction(true);
         } else {

@@ -39,17 +39,16 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      * @return The query string
      */
     public String getPageIdQueryString();
-    
+
     /*
      * Covariant overrides
      */
-
     @Override
     public PagedList<T> getResultList();
-    
+
     @Override
     public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression);
-    
+
     @Override
     public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias);
 
@@ -58,7 +57,7 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
 
     @Override
     public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase(String alias);
-    
+
     @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
@@ -76,10 +75,10 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
 
     @Override
     public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String alias);
-    
+
     @Override
     public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-    
+
     @Override
     public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression);
 

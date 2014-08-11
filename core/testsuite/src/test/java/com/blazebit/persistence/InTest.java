@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -30,35 +29,36 @@ import org.junit.Test;
  * @since 1.0
  */
 public class InTest extends AbstractCoreTest {
+
     @Test
-    public void testIn(){
+    public void testIn() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").in(ages);
-        
+
         assertEquals("SELECT d FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testInNull(){
+    public void testInNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").in((List<?>) null);   
+        criteria.where("d.age").in((List<?>) null);
     }
-    
+
     @Test
-    public void testNotIn(){
+    public void testNotIn() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{1L,2L,3L,4L,5L}));
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").notIn(ages);
         assertEquals("SELECT d FROM Document d WHERE d.age NOT IN :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testNotInNull(){
+    public void testNotInNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").notIn((List<?>) null);
     }
-    
+
 }

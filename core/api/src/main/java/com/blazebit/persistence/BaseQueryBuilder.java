@@ -26,15 +26,16 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends Aggregateable<X>, Filterable<X>, Sortable<X>, SelectBuilder<T, X> {
+public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends HavingBuilder<X>, WhereBuilder<X>,
+    OrderByBuilder<X>, SelectBuilder<T, X> {
 
     /**
      * Returns the result type of this query.
-     * 
+     *
      * @return The result type of this query
      */
     public Class<T> getResultType();
-    
+
     /**
      * Returns the query string for the built query.
      *
@@ -45,7 +46,6 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     /*
      * Join methods
      */
-    
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      *
@@ -55,7 +55,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
      * @return The query builder for chaining calls
      */
     public X join(String path, String alias, JoinType type);
-    
+
     /**
      * Adds a join with an on-clause to the query, possibly specializing implicit joins, and giving the joined element an alias.
      *
@@ -67,16 +67,18 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#INNER}.
+     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X innerJoin(String path, String alias);
-    
+
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#INNER}.
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
@@ -85,16 +87,18 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     public JoinOnBuilder<X> innerJoinOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#LEFT}.
+     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X leftJoin(String path, String alias);
-    
+
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#LEFT}.
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
@@ -103,16 +107,18 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     public JoinOnBuilder<X> leftJoinOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#RIGHT}.
+     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X rightJoin(String path, String alias);
-    
+
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with {@link JoinType#RIGHT}.
+     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
@@ -123,16 +129,15 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
     /*
      * Covariant overrides
      */
-
     @Override
     public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
-    
+
     @Override
     public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias);
 
     @Override
     public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
-    
+
     @Override
     public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
@@ -147,10 +152,10 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String alias);
-    
+
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-    
+
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
 }

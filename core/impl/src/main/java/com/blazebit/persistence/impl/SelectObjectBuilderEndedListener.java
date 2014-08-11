@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -27,5 +26,5 @@ import java.util.Collection;
 public interface SelectObjectBuilderEndedListener {
 
     void onBuilderEnded(Collection<Expression> expressions);
-    
+
 }

@@ -43,11 +43,11 @@ public class CompositeExpression implements Expression {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        
+
         for (Expression exp : expressions) {
             sb.append(exp);
         }
-        
+
         return sb.toString();
     }
 

@@ -24,15 +24,15 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<T, CriteriaBuilder<T>>, DistinctBuilder<T, CriteriaBuilder<T>> {
+public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<T, CriteriaBuilder<T>>,
+    DistinctBuilder<T, CriteriaBuilder<T>> {
 
     /*
      * Covariant overrides.
      */
-    
     @Override
     public SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression);
-    
+
     @Override
     public SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias);
 
@@ -41,7 +41,7 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
 
     @Override
     public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase(String alias);
-    
+
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
@@ -59,10 +59,10 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
 
     @Override
     public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String alias);
-    
+
     @Override
     public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-    
+
     @Override
     public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression);
 }

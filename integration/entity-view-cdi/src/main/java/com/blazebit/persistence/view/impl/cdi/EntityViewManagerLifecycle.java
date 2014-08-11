@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.persistence.view.EntityViewManager;
@@ -27,7 +26,7 @@ import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
  * @since 1.0
  */
 public class EntityViewManagerLifecycle implements ContextualLifecycle<EntityViewManager> {
-    
+
     private final EntityViewManager entityViewManagerFactory;
 
     public EntityViewManagerLifecycle(EntityViewManager entityViewManagerFactory) {
@@ -43,5 +42,5 @@ public class EntityViewManagerLifecycle implements ContextualLifecycle<EntityVie
     public void destroy(Bean<EntityViewManager> bean, EntityViewManager instance, CreationalContext<EntityViewManager> creationalContext) {
         // No op
     }
-    
+
 }

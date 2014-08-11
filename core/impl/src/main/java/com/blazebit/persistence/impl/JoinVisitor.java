@@ -53,7 +53,7 @@ public class JoinVisitor extends VisitorAdapter {
     public void visit(OuterExpression expression) {
         // do not join outer expressions
     }
-    
+
     public boolean isJoinWithObjectLeafAllowed() {
         return joinWithObjectLeafAllowed;
     }

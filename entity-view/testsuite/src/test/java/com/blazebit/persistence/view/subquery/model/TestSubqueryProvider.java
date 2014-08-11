@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.entity.Person;
 
 /**
  *
@@ -34,5 +33,5 @@ public class TestSubqueryProvider implements SubqueryProvider {
             .select("COUNT(id)")
             .end();
     }
-    
+
 }

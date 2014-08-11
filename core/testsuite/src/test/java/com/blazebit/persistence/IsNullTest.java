@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -27,20 +26,21 @@ import org.junit.Test;
  * @since 1.0
  */
 public class IsNullTest extends AbstractCoreTest {
+
     @Test
-    public void testIsNull(){
+    public void testIsNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNull();
-        
+
         assertEquals("SELECT d FROM Document d WHERE d.name IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testIsNotNull(){
+    public void testIsNotNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotNull();
-        
+
         assertEquals("SELECT d FROM Document d WHERE NOT d.name IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }

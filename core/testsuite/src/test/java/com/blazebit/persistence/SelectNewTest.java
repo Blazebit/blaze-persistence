@@ -35,6 +35,7 @@ import org.junit.Test;
  * @since 1.0
  */
 public class SelectNewTest extends AbstractCoreTest {
+
     @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
@@ -44,14 +45,14 @@ public class SelectNewTest extends AbstractCoreTest {
             p.getLocalized().put(1, "msg1");
             p.getLocalized().put(2, "msg2");
             em.persist(p);
-            
+
             Version v1 = new Version();
             Version v2 = new Version();
             Version v3 = new Version();
             em.persist(v1);
             em.persist(v2);
             em.persist(v3);
-            
+
             Document doc1 = new Document("Doc1", p, v1, v3);
             doc1.getPartners().add(p);
             em.persist(doc1);
@@ -69,9 +70,10 @@ public class SelectNewTest extends AbstractCoreTest {
     @Test
     public void testSelectNewDocumentViewModel() {
         CriteriaBuilder<DocumentViewModel> criteria = cbf.from(em, Document.class)
-                .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
+            .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
 
-        assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC NULLS LAST", criteria.getQueryString());
+        assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC NULLS LAST", criteria
+                     .getQueryString());
         List<DocumentViewModel> actual = criteria.getQuery().getResultList();
 
         /* expected */
@@ -87,7 +89,8 @@ public class SelectNewTest extends AbstractCoreTest {
     public void testSelectNewDocument() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.name").end().where("LENGTH(d.name)").le(4).orderByAsc("d.name");
-        assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC NULLS LAST", criteria.getQueryString());
+        assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC NULLS LAST", criteria
+                     .getQueryString());
         List<Document> actual = criteria.getQuery().getResultList();
 
         /* expected */
@@ -98,55 +101,57 @@ public class SelectNewTest extends AbstractCoreTest {
             assertEquals(actual.get(i).getName(), expected.get(i).getName());
         }
     }
-    
+
     @Test
     public void testSelectNewSubquery() {
         CriteriaBuilder<DocumentCount> crit = cbf.from(em, Document.class, "d")
             .selectNew(DocumentCount.class).withSubquery().from(Document.class).select("COUNT(document.id)").end().end();
-        
+
         assertEquals("SELECT (SELECT COUNT(document.id) FROM Document document) FROM Document d", crit.getQueryString());
         List<DocumentCount> actual = crit.getResultList();
-        
+
         /* expected */
         Long expectedCount = (Long) em.createQuery("SELECT COUNT(d.id) FROM Document d").getSingleResult();
-        
+
         assertEquals((long) expectedCount, actual.size());
     }
-    
+
     @Test
     public void testSelectCollection() {
         CriteriaBuilder<DocumentPartnerView> crit = cbf.from(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
 
-        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", crit.getQueryString());
+        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", crit
+                     .getQueryString());
     }
-    
+
     @Test
-    public void testSelectNewModel(){
+    public void testSelectNewModel() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4);
-        
-        
+
         assertEquals("SELECT owner.name FROM Document d JOIN d.owner owner WHERE d.age < :param_0", criteria.getQueryString());
     }
-    
+
     @Test
-    public void testSelectNewWithParameters(){
+    public void testSelectNewWithParameters() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4);
-        
-        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE
+            + " KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria
+                     .getQueryString());
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testSelectNewNullClass(){
+    public void testSelectNewNullClass() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew((Class<Document>)null);        
+        criteria.selectNew((Class<Document>) null);
     }
-    
+
     @Test(expected = NullPointerException.class)
-    public void testSelectNewNullConstructor(){
+    public void testSelectNewNullConstructor() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew((Constructor<Document>)null);        
+        criteria.selectNew((Constructor<Document>) null);
     }
 }

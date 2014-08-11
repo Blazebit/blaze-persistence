@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.cdi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -27,7 +26,7 @@ import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
  * @since 1.0
  */
 public class CriteriaBuilderFactoryLifecycle implements ContextualLifecycle<CriteriaBuilderFactory> {
-    
+
     private final CriteriaBuilderFactory criteriaBuilderFactory;
 
     public CriteriaBuilderFactoryLifecycle(CriteriaBuilderFactory criteriaBuilderFactory) {
@@ -43,5 +42,5 @@ public class CriteriaBuilderFactoryLifecycle implements ContextualLifecycle<Crit
     public void destroy(Bean<CriteriaBuilderFactory> bean, CriteriaBuilderFactory instance, CreationalContext<CriteriaBuilderFactory> creationalContext) {
         // No op
     }
-    
+
 }

@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -33,7 +31,7 @@ import java.util.Set;
 public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappingPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
     private final Class<K> keyType;
-    
+
     public MethodMappingMapAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
@@ -49,5 +47,5 @@ public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappin
     public CollectionType getCollectionType() {
         return CollectionType.MAP;
     }
-    
+
 }

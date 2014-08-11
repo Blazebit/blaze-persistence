@@ -27,13 +27,13 @@ public class LikePredicate extends BinaryExpressionPredicate {
 
     private final boolean caseSensitive;
     private final Character escapeCharacter;
-    
+
     public LikePredicate(Expression left, Expression right, boolean caseSensitive, Character escapeCharacter) {
         super(left, right);
         this.caseSensitive = caseSensitive;
         this.escapeCharacter = escapeCharacter;
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
@@ -46,5 +46,5 @@ public class LikePredicate extends BinaryExpressionPredicate {
     public Character getEscapeCharacter() {
         return escapeCharacter;
     }
-    
+
 }

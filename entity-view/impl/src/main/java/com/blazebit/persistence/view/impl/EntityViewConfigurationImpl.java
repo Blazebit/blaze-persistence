@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.view.EntityViewManager;
@@ -27,14 +26,14 @@ import java.util.Set;
  * @since 1.0
  */
 public class EntityViewConfigurationImpl implements EntityViewConfiguration {
-    
+
     private final Set<Class<?>> entityViewClasses = new HashSet<Class<?>>();
 
     @Override
     public void addEntityView(Class<?> clazz) {
         entityViewClasses.add(clazz);
     }
-    
+
     @Override
     public Set<Class<?>> getEntityViews() {
         return entityViewClasses;

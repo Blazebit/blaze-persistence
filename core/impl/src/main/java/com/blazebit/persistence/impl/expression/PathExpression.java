@@ -41,7 +41,7 @@ public class PathExpression implements Expression, Cloneable {
     public PathExpression(List<PathElementExpression> pathProperties) {
         this(pathProperties, false);
     }
-    
+
     public PathExpression(List<PathElementExpression> pathProperties, boolean isCollectionKeyPath) {
         this.pathProperties = pathProperties;
         this.isCollectionKeyPath = isCollectionKeyPath;
@@ -99,7 +99,7 @@ public class PathExpression implements Expression, Cloneable {
     public boolean isIsCollectionKeyPath() {
         return isCollectionKeyPath;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 5;

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -50,6 +49,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
  * @since 1.0
  */
 public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Visitor {
+
     @Override
     public void visit(AndPredicate predicate) {
         for (Predicate p : predicate.getChildren()) {
@@ -105,7 +105,7 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     }
 
     @Override
-    public void visit(NotInPredicate predicate){
+    public void visit(NotInPredicate predicate) {
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
     }
@@ -142,7 +142,7 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
 
     @Override
     public void visit(PathExpression expression) {
-        for(PathElementExpression pathElementExpression : expression.getExpressions()){
+        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
             pathElementExpression.accept(this);
         }
     }
@@ -184,5 +184,5 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     public void visit(OuterExpression expression) {
         expression.getPath().accept(this);
     }
-    
+
 }

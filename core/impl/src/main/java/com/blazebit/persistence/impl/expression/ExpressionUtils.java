@@ -13,22 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.VisitorAdapter;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ExpressionUtils {
-    public static boolean containsSubqueryExpression(Expression e){
+
+    public static boolean containsSubqueryExpression(Expression e) {
         SubqueryExpressionDetector detector = new SubqueryExpressionDetector();
         e.accept(detector);
         return detector.hasSubquery;
     }
-    
+
     private static class SubqueryExpressionDetector extends VisitorAdapter {
 
         private boolean hasSubquery = false;

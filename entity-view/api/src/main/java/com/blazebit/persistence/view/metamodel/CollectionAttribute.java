@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.Collection;
-
 
 /**
  * Instances of the type {@linkplain CollectionAttribute} represent {@linkplain java.util.Collection}-valued attributes.
@@ -28,5 +26,5 @@ import java.util.Collection;
  * @since 1.0
  */
 public interface CollectionAttribute<X, E> extends PluralAttribute<X, Collection<E>, E> {
-    
+
 }

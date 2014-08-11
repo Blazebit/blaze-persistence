@@ -15,17 +15,14 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
 import java.util.Date;
@@ -48,7 +45,7 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
-        QueryBuilder<T, X> {
+    QueryBuilder<T, X> {
 
     /**
      * Create flat copy of builder
@@ -59,22 +56,22 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         super(builder);
     }
 
-    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
-        super(cbf, em, clazz, alias, expressionFactory);
+    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
+        super(cbf, em, clazz, alias);
     }
 
     @Override
     public List<T> getResultList() {
         return getQuery()
-                .getResultList();
+            .getResultList();
     }
 
     @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
-        if(selectManager.isDistinct()){
+        if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
-        if(!groupByManager.getGroupByInfos().isEmpty()){
+        if (!groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
         return new PaginatedCriteriaBuilderImpl<T>(this, firstRow, pageSize);
@@ -129,8 +126,8 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         return (QueryBuilder<Y, ?>) this;
     }
 
-    private void checkFetchJoinAllowed(){
-        if(selectManager.getSelectInfos().size() > 0){
+    private void checkFetchJoinAllowed() {
+        if (selectManager.getSelectInfos().size() > 0) {
             throw new IllegalStateException("Fetch joins are only possible if the root entity is selected");
         }
     }
@@ -170,7 +167,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalArgumentException("Empty alias");
         }
 
-        if(fetch == true){
+        if (fetch == true) {
             checkFetchJoinAllowed();
         }
 
