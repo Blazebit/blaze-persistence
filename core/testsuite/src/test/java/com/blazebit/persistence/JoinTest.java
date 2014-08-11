@@ -96,16 +96,14 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testJoinMethodEquivalences() {
+    public void testJoinMethodEquivalences(){
         final String qInnerJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, false).getQueryString();
         final String qInnerJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, true).getQueryString();
         final String qLeftJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, false).getQueryString();
         final String qLeftJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, true).getQueryString();
         final String qRightJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, false).getQueryString();
         final String qRightJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, true).getQueryString();
-        final String qOuterJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.OUTER, false).getQueryString();
-        final String qOuterJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.OUTER, true).getQueryString();
-
+        
         assertEquals(cbf.from(em, Document.class, "d").innerJoin("owner", "o").getQueryString(),
                 qInnerJoin);
         assertEquals(cbf.from(em, Document.class, "d").innerJoinFetch("owner", "o").getQueryString(),
@@ -118,10 +116,6 @@ public class JoinTest extends AbstractCoreTest {
                 qLeftJoin);
         assertEquals(cbf.from(em, Document.class, "d").leftJoinFetch("owner", "o").getQueryString(),
                 qLeftJoinFetch);
-        assertEquals(cbf.from(em, Document.class, "d").outerJoin("owner", "o").getQueryString(),
-                qOuterJoin);
-        assertEquals(cbf.from(em, Document.class, "d").outerJoinFetch("owner", "o").getQueryString(),
-                qOuterJoinFetch);
     }
 
     @Test

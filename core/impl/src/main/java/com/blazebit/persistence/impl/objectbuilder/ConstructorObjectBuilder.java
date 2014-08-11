@@ -17,7 +17,7 @@
 package com.blazebit.persistence.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import java.lang.reflect.Constructor;
 import java.util.List;
 
@@ -51,7 +51,7 @@ public class ConstructorObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
     }
     
 }

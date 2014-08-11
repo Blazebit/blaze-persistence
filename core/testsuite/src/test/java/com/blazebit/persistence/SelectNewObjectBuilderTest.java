@@ -64,7 +64,7 @@ public class SelectNewObjectBuilderTest extends AbstractCoreTest {
             .selectNew(new ObjectBuilder<String[]>() {
 
             @Override
-            public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+            public void applySelects(SelectBuilder<?, ?> queryBuilder) {
                 queryBuilder.select("name", "name")
                     .select("UPPER(name)", "upperName")
                     .select("LOWER(name)", "lowerName");

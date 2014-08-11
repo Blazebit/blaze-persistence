@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import java.util.List;
 
 /**
@@ -33,7 +33,7 @@ public class DelegatingObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
         delegate.applySelects(queryBuilder);
     }
 

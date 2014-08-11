@@ -100,7 +100,7 @@ public class SelectNewTest extends AbstractCoreTest {
     @Test
     public void testSelectNewSubquery() {
         CriteriaBuilder<DocumentCount> crit = cbf.from(em, Document.class, "d")
-            .selectNew(DocumentCount.class).with().from(Document.class).select("COUNT(document.id)").end().end();
+            .selectNew(DocumentCount.class).withSubquery().from(Document.class).select("COUNT(document.id)").end().end();
         
         assertEquals("SELECT (SELECT COUNT(document.id) FROM Document document) FROM Document d", crit.getQueryString());
         List<DocumentCount> actual = crit.getResultList();

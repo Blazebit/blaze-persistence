@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.basic;
+package com.blazebit.persistence.view.subview;
 
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
@@ -25,10 +25,10 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.subquery.model.DocumentAggregatedView;
-import com.blazebit.persistence.view.basic.model.DocumentWithEntityView;
-import com.blazebit.persistence.view.basic.model.FilteredDocument;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.subview.model.DocumentMasterView;
+import com.blazebit.persistence.view.subview.model.PersonSubView;
+import com.blazebit.persistence.view.subview.model.PersonSubViewFiltered;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
@@ -38,7 +38,7 @@ import org.junit.Test;
  *
  * @author Christian Beikov
  */
-public class EntityViewSettingTest extends AbstractEntityViewTest {
+public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
     
     
     @Before
@@ -48,11 +48,11 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             tx.begin();
             Document doc1 = new Document("MyTest");
             Document doc2 = new Document("YourTest");
-            Document doc3 = new Document("NoContacts");
+            Document doc3 = new Document("HisTest");
             
-            Person o1 = new Person("pers1");
-            Person o2 = new Person("pers2");
-            Person o3 = new Person("pers3");
+            Person o1 = new Person("DocumentViewer");
+            Person o2 = new Person("DocumentOwnerMaster");
+            Person o3 = new Person("DocumentOwnerSlave");
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
             o1.setPartnerDocument(doc1);
@@ -60,7 +60,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             
             doc1.setOwner(o1);
             doc2.setOwner(o2);
-            doc3.setOwner(o2);
+            doc3.setOwner(o3);
             
             doc1.getContacts().put(1, o1);
             doc2.getContacts().put(1, o2);
@@ -87,51 +87,56 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     }
     
     @Test
-    public void testEntityViewSetting() {
+    public void testEntityViewSettingFilterSubview() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
-        cfg.addEntityView(FilteredDocument.class);
+        cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(PersonSubView.class);
+        cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<FilteredDocument> setting = new EntityViewSetting<FilteredDocument>(FilteredDocument.class, 0, 1);
+        EntityViewSetting<DocumentMasterView> setting = new EntityViewSetting<DocumentMasterView>(DocumentMasterView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
-        setting.addAttributeFilter("name", "Test");
-        setting.addAttributeFilter("contactCount", "1");
-        setting.addAttributeSorter("name", Sorters.descending());
-        setting.addOptionalParameter("index", 1);
+        setting.addAttributeFilter("owner.name", "Owner");
+        setting.addAttributeSorter("owner.name", Sorters.descending());
+        setting.addOptionalParameter("contactPersonNumber", 1);
         
-        PaginatedCriteriaBuilder<FilteredDocument> paginatedCb = setting.apply(evm, cb);
-        PagedList<FilteredDocument> result = paginatedCb.getResultList();
+        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = setting.apply(evm, cb);
+        PagedList<DocumentMasterView> result = paginatedCb.getResultList();
         
         assertEquals(1, result.size());
         assertEquals(2, result.totalSize());
-        assertEquals("YourTest", result.get(0).getName());
-        assertEquals("pers2", result.get(0).getContactName());
+        
+        assertEquals("HisTest", result.get(0).getName());
+        assertEquals("DocumentOwnerSlave", result.get(0).getOwner().getName());
     }
     
-    @Test(expected = IllegalArgumentException.class)
-    public void testEntityViewSettingWithEntityAttribute() {
+    @Test
+    public void testEntityViewSettingFilterFilteredSubview() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
-        cfg.addEntityView(DocumentWithEntityView.class);
+        cfg.addEntityView(DocumentMasterView.class);
+        cfg.addEntityView(PersonSubView.class);
+        cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<DocumentWithEntityView> setting = new EntityViewSetting<DocumentWithEntityView>(DocumentWithEntityView.class, 0, 1);
+        EntityViewSetting<DocumentMasterView> setting = new EntityViewSetting<DocumentMasterView>(DocumentMasterView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
-        setting.addAttributeFilter("owner.name", "pers2");
+        setting.addAttributeFilter("myContactPerson.name", "Owner");
+        setting.addAttributeSorter("myContactPerson.name", Sorters.descending());
+        setting.addOptionalParameter("contactPersonNumber", 1);
         
-        // Currently we have no way to express what filter should be used when using entity attributes
-        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
+        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = setting.apply(evm, cb);
+        PagedList<DocumentMasterView> result = paginatedCb.getResultList();
         
-//        PagedList<DocumentWithEntityView> result = paginatedCb.getResultList();
-//        
-//        assertEquals(1, result.size());
-//        assertEquals(1, result.totalSize());
-//        assertEquals("YourTest", result.get(0).getName());
-//        assertEquals("pers2", result.get(0).getOwner().getName());
+        assertEquals(1, result.size());
+        assertEquals(2, result.totalSize());
+        
+        assertEquals("HisTest", result.get(0).getName());
+        assertEquals("DocumentOwnerSlave", result.get(0).getOwner().getName());
     }
 }

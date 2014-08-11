@@ -18,23 +18,32 @@ package com.blazebit.persistence;
 import javax.persistence.EntityManager;
 
 /**
- * TODO: javadoc
+ * An interface used to create criteria builders.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface CriteriaBuilderFactory {
 
     /**
-     * TODO: javadoc
+     * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the
+     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      * 
-     * @return 
+     * @param entityManager The entity manager to use for the criteria builder
+     * @param entityClass The entity class which should be the root entity
+     * @param <T> The type of the entity class
+     * @return A new criteria builder
      */
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz);
+    public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass);
 
     /**
-     * TODO: javadoc
+     * Creates a new criteria builder with the given entity class as root entity in the FROM clause with the given alias.
      * 
-     * @return 
+     * @param entityManager The entity manager to use for the criteria builder
+     * @param entityClass The entity class which should be the root entity
+     * @param alias The alias for the root entity
+     * @param <T> The type of the entity class
+     * @return A new criteria builder
      */
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias);
+    public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass, String alias);
 }

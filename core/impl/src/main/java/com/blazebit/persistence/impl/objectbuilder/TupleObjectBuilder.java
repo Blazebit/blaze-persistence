@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.SelectManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     }
 
     @Override
-    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
     }
 
     private class TupleImpl implements Tuple {

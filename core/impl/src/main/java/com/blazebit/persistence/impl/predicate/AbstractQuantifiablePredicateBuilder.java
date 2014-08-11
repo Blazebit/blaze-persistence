@@ -16,9 +16,8 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
-import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.PredicateBuilderEndedListenerImpl;
+import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -74,7 +73,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<T> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
         Predicate pred;

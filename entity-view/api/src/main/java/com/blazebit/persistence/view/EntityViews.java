@@ -50,7 +50,7 @@ public class EntityViews {
      *
      * @return A new entity view configuration
      */
-    public static EntityViewConfiguration getDefault() {
+    public static EntityViewConfiguration createDefaultConfiguration() {
         return getDefaultProvider()
             .createConfiguration();
     }

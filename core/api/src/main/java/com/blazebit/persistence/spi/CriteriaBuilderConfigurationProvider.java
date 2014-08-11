@@ -16,12 +16,19 @@
 package com.blazebit.persistence.spi;
 
 /**
- * TODO: javadoc
+ * Interface implemented by the criteria provider.
+ * 
+ * Implementations are instantiated via {@link java.util.ServiceLoader}.
  * 
  * @author Christian Beikov
  * @since 1.0
  */
 public interface CriteriaBuilderConfigurationProvider {
 
+    /**
+     * Creates and returns a new criteria builder configuration.
+     * 
+     * @return A new criteria builder configuration
+     */
     public CriteriaBuilderConfiguration createConfiguration();
 }

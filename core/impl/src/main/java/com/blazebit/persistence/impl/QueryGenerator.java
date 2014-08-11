@@ -323,7 +323,7 @@ public class QueryGenerator extends VisitorAdapter {
                 if((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null){
                     if(aliasInfo instanceof SelectInfo){
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
-                        selectAliasInfo.getExpression().accept(this);
+                        wrapSubquery(selectAliasInfo.getExpression(), sb);
                         return;
                     }
                 }

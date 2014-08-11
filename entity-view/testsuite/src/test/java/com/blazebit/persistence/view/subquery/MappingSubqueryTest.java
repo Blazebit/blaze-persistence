@@ -19,10 +19,13 @@ package com.blazebit.persistence.view.subquery;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.Sorters;
+import com.blazebit.persistence.view.subquery.model.DocumentAggregatedView;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subquery.model.DocumentWithSubquery;
 import java.util.List;
@@ -102,6 +105,32 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         assertEquals(Long.valueOf(1), list.get(0).getContactCount());
         assertEquals("doc2", list.get(1).getName());
         assertEquals(Long.valueOf(2), list.get(1).getContactCount());
+    }
+    
+    @Test
+    public void testSubqueryWithExpression() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentAggregatedView.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
+        
+        // Base setting
+        EntityViewSetting<DocumentAggregatedView> setting = new EntityViewSetting<DocumentAggregatedView>(DocumentAggregatedView.class, 0, 2);
+        
+        // Query
+        CriteriaBuilder<Person> cb = cbf.from(em, Person.class);
+        setting.addAttributeSorter("contactCount", Sorters.descending());
+        
+        PaginatedCriteriaBuilder<DocumentAggregatedView> paginatedCb = setting.apply(evm, cb);
+        PagedList<DocumentAggregatedView> result = paginatedCb.getResultList();
+        
+        assertEquals(2, result.size());
+        assertEquals(2, result.totalSize());
+        
+        assertEquals(doc2.getName(), result.get(0).getName());
+        assertEquals(Long.valueOf(22), result.get(0).getContactCount());
+        
+        assertEquals(doc1.getName(), result.get(1).getName());
+        assertEquals(Long.valueOf(11), result.get(1).getContactCount());
     }
     
     @Test

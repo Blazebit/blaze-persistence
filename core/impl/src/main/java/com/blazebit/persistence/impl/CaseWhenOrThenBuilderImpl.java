@@ -17,16 +17,17 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenAndBuilder;
-import com.blazebit.persistence.CaseWhenOrBuilder;
+import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
- *
- * @author cpbec
+ * TODO: implement
+ * 
+ * @author Christian Beikov
  */
-public class CaseWhenOrThenBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenOrThenBuilder<T>, CaseWhenOrBuilder<T> {
+public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements CaseWhenOrThenBuilder<T> {
     
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -39,22 +40,17 @@ public class CaseWhenOrThenBuilderImpl<T> extends PredicateBuilderEndedListenerI
     }
 
     @Override
-    public RestrictionBuilder<CaseWhenOrThenBuilderImpl<T>> or(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+    public RestrictionBuilder<CaseWhenOrThenBuilder<T>> or(String expression) {
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrThenBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
     }
     
     @Override
-    public CaseWhenAndBuilder<CaseWhenOrThenBuilderImpl<T>> and() {
-        return new CaseWhenAndThenBuilderImpl<CaseWhenOrThenBuilderImpl<T>>(this, subqueryInitFactory, expressionFactory);
+    public CaseWhenAndBuilder<CaseWhenOrThenBuilder<T>> and() {
+        return new CaseWhenAndBuilderImpl<CaseWhenOrThenBuilder<T>>(this, subqueryInitFactory, expressionFactory);
     }
 
     @Override
     public T then(String expression) {
-        return result;
-    }
-
-    @Override
-    public T endOr() {
         return result;
     }
     

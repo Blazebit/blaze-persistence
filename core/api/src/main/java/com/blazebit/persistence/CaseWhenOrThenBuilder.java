@@ -16,25 +16,28 @@
 package com.blazebit.persistence;
 
 /**
- * TODO: javadoc
+ * The builder interface for a when predicate container that connects predicates with the OR operator.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CaseWhenOrThenBuilder<T> extends CaseWhenThenBuilder<T> {
+public interface CaseWhenOrThenBuilder<T extends CaseWhenBuilder<?>> extends CaseWhenThenBuilder<T> {
 
     /**
-     * TODO: javadoc
+     * Starts a {@link RestrictionBuilder} for a case when predicate with the given expression as left hand expression.
+     * When the builder finishes, the predicate is added this predicate container.
      *
-     * @return
+     * @param expression The left hand expression for a case when predicate
+     * @return The restriction builder for the given expression
      */
-    public RestrictionBuilder<? extends CaseWhenOrThenBuilder<T>> or(String expression);
+    public RestrictionBuilder<CaseWhenOrThenBuilder<T>> or(String expression);
 
     /**
-     * TODO: javadoc
+     * Starts a case when and builder which connects it's predicates with the AND operator.
+     * When the builder finishes, the predicate is added to this predicate container as disjunct.
      *
-     * @return
+     * @return The case when and builder
      */
-    public CaseWhenAndBuilder<? extends CaseWhenOrThenBuilder<T>> and();
+    public CaseWhenAndBuilder<CaseWhenOrThenBuilder<T>> and();
 }

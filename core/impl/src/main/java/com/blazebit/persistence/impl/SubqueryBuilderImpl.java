@@ -16,7 +16,10 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -45,6 +48,10 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
         return result;
     }
 
+    public T getResult() {
+        return result;
+    }
+
     @Override
     public SubqueryBuilder<T> select(String expression) {
         return (SubqueryBuilder<T>) super.select(expression);
@@ -56,7 +63,32 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     }
 
     @Override
-    public T getResult() {
-        return result;
+    public CaseWhenBuilder<SubqueryBuilder<T>> selectCase() {
+        return (CaseWhenBuilder<SubqueryBuilder<T>>) super.selectCase();
+    }
+
+    @Override
+    public CaseWhenBuilder<SubqueryBuilder<T>> selectCase(String alias) {
+        return (CaseWhenBuilder<SubqueryBuilder<T>>) super.selectCase(alias);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression) {
+        return (SimpleCaseWhenBuilder<SubqueryBuilder<T>>) super.selectSimpleCase(expression);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression, String alias) {
+        return (SimpleCaseWhenBuilder<SubqueryBuilder<T>>) super.selectSimpleCase(expression, alias);
+    }
+
+    @Override
+    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery() {
+        return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery();
+    }
+
+    @Override
+    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String alias) {
+        return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(alias);
     }
 }

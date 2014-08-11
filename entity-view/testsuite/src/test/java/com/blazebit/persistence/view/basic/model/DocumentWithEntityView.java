@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.view.impl.cdi;
+package com.blazebit.persistence.view.basic.model;
 
-import com.blazebit.persistence.spi.ConfigurationEnricher;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AnnotatedType;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.entity.Person;
 
 /**
  *
- * @author Christian Beikov
+ * @author cpbec
  */
-public class TestEnricher implements ConfigurationEnricher<EntityViewConfiguration>{
-
-    public static EntityViewConfiguration config;
+@EntityView(Document.class)
+public interface DocumentWithEntityView {
     
-    @Override
-    public void beforeBuild(EntityViewConfiguration config, AfterBeanDiscovery abd) {
-        TestEnricher.config = config;
-    }
+    public String getName();
     
+    public Person getOwner();
 }

@@ -17,9 +17,6 @@
 package com.blazebit.persistence.impl.cdi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import java.util.Set;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
@@ -44,7 +41,6 @@ public class CriteriaBuilderExtensionTest {
         BeanProvider.injectFields(this);
         
         assertNotNull(cbf);
-        assertNotNull(TestEnricher.config);
         
         container.shutdown();
     }

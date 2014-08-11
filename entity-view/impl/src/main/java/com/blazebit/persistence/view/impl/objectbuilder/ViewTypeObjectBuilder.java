@@ -17,7 +17,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -56,7 +56,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
     }
     
     @Override
-    public void applySelects(QueryBuilder<?, ?> queryBuilder) {
+    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
         for (int i = 0; i < mappers.length; i++) {
             mappers[i].applyMapping(queryBuilder);
         }

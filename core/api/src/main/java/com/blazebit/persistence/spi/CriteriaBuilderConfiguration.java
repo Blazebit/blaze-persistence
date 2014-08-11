@@ -13,21 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import java.util.List;
 
 /**
+ * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface CriteriaBuilderConfiguration {
-    
-    public void registerQueryTransformer(QueryTransformer clazz);
-    
+
+    /**
+     * Registers the given query transformer in the configuration.
+     * 
+     * @param queryTransformer The transformer that should be addded
+     */
+    public void registerQueryTransformer(QueryTransformer queryTransformer);
+
+    /**
+     * Returns a list of registered query transformers.
+     * 
+     * @return A list of registered query transformers
+     */
     public List<QueryTransformer> getQueryTransformers();
-    
+
+    /**
+     * Creates a new {@linkplain CriteriaBuilderFactory} based on this configuration.
+     * 
+     * @return A new {@linkplain CriteriaBuilderFactory}
+     */
     public CriteriaBuilderFactory createCriteriaBuilderFactory();
 }

@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.spi;
-
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AnnotatedType;
+package com.blazebit.persistence;
 
 /**
- * TODO: javadoc
+ * An interface for builders that support distinct.
+ * This is related to the fact, that a query builder supports distinct selects.
  *
+ * @param <T> The result type
+ * @param <X> The concrete builder type
  * @author Christian Beikov
+ * @since 1.0
  */
-public interface ConfigurationEnricher<T> {
+public interface DistinctBuilder<T, X extends DistinctBuilder<T, X>> {
     
     /**
-     * TODO: javadoc
-     * 
-     * @return
+     * Marks the query to do a distinct select.
+     *
+     * @return The query builder for chaining calls
      */
-    public void beforeBuild(T config, AfterBeanDiscovery abd);
+    public X distinct();
 }

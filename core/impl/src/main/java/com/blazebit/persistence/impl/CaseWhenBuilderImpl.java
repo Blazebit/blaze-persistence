@@ -29,8 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author cpbec
+ * TODO: implement
+ * 
+ * @author Christian Beikov
  */
 public class CaseWhenBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenBuilder<T>, CaseWhenThenBuilder<CaseWhenBuilder<T>> {
     

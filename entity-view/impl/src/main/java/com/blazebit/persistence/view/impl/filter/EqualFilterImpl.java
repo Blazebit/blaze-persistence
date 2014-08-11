@@ -3,11 +3,11 @@ package com.blazebit.persistence.view.impl.filter;
 import com.blazebit.persistence.Filterable;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.view.filter.ExactFilter;
+import com.blazebit.persistence.view.filter.EqualFilter;
 
-public class ExactFilterImpl extends AbstractComparisonFilter implements ExactFilter {
+public class EqualFilterImpl extends AbstractComparisonFilter implements EqualFilter {
 
-    public ExactFilterImpl(Class<?> expectedType, Object value) {
+    public EqualFilterImpl(Class<?> expectedType, Object value) {
         super(expectedType, value);
     }
 

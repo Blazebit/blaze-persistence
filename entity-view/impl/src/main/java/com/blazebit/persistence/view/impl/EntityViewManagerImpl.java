@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
 import com.blazebit.persistence.view.filter.EndsWithIgnoreCaseFilter;
-import com.blazebit.persistence.view.filter.ExactFilter;
+import com.blazebit.persistence.view.filter.EqualFilter;
 import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
 import com.blazebit.persistence.view.filter.GreaterThanFilter;
 import com.blazebit.persistence.view.filter.LessOrEqualFilter;
@@ -38,7 +38,7 @@ import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithIgnoreCaseFilterImpl;
-import com.blazebit.persistence.view.impl.filter.ExactFilterImpl;
+import com.blazebit.persistence.view.impl.filter.EqualFilterImpl;
 import com.blazebit.persistence.view.impl.filter.GreaterOrEqualFilterImpl;
 import com.blazebit.persistence.view.impl.filter.GreaterThanFilterImpl;
 import com.blazebit.persistence.view.impl.filter.LessOrEqualFilterImpl;
@@ -164,6 +164,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
+        if (criteriaBuilder.getResultType() != viewType.getEntityClass()) {
+            throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName() + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
+        }
+        
         criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
     }
     
@@ -190,7 +194,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(StartsWithIgnoreCaseFilter.class.getName(), StartsWithIgnoreCaseFilterImpl.class);
         filterMappings.put(EndsWithFilter.class.getName(), EndsWithFilterImpl.class);
         filterMappings.put(EndsWithIgnoreCaseFilter.class.getName(), EndsWithIgnoreCaseFilterImpl.class);
-        filterMappings.put(ExactFilter.class.getName(), ExactFilterImpl.class);
+        filterMappings.put(EqualFilter.class.getName(), EqualFilterImpl.class);
         filterMappings.put(NullFilter.class.getName(), NullFilterImpl.class);
         filterMappings.put(GreaterThanFilter.class.getName(), GreaterThanFilterImpl.class);
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);

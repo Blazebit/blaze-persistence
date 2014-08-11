@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl.cdi;
+package com.blazebit.persistence.view.subquery.model;
 
-import com.blazebit.persistence.spi.ConfigurationEnricher;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.AnnotatedType;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 
 /**
  *
- * @author Christian Beikov
+ * @author cpbec
  */
-public class TestEnricher implements ConfigurationEnricher<CriteriaBuilderConfiguration>{
-
-    public static CriteriaBuilderConfiguration config;
-
-    @Override
-    public void beforeBuild(CriteriaBuilderConfiguration config, AfterBeanDiscovery abd) {
-        TestEnricher.config = config;
-    }
+@EntityView(Document.class)
+public interface DocumentAggregatedView {
     
+    public String getName();
+    
+    @MappingSubquery(
+            expression = "age + s",
+            subqueryAlias = "s",
+            value = CountSubqueryProvider.class)
+    public Long getContactCount();
 }

@@ -15,11 +15,14 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -221,6 +224,24 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
+    
+    @Override
+    public PaginatedCriteriaBuilder<T> distinct() {
+        // TODO: need to throw an exception according to #35
+        return this;
+    }
+    
+    @Override
+    public PaginatedCriteriaBuilder<T> groupBy(String... paths) {
+        // TODO: need to throw an exception according to #35
+        return this;
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> groupBy(String expression) {
+        // TODO: need to throw an exception according to #35
+        return this;
+    }
 
     @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
@@ -240,5 +261,35 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @Override
     public PaginatedCriteriaBuilder<Tuple> select(String expression, String alias) {
         return (PaginatedCriteriaBuilder<Tuple>) super.select(expression, alias);
+    }
+
+    @Override
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase() {
+        return (CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectCase();
+    }
+
+    @Override
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase(String alias) {
+        return (CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectCase(alias);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression) {
+        return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectSimpleCase(expression);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias) {
+        return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>>) super.selectSimpleCase(expression, alias);
+    }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery() {
+        return (SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>>) super.selectSubquery();
+    }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String alias) {
+        return (SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>>) super.selectSubquery(alias);
     }
 }

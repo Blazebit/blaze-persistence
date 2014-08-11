@@ -25,9 +25,9 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 public class LeftHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> {
 
     @Override
-    public void onBuilderEnded(SubqueryBuilder<T> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         RestrictionBuilderImpl<?> restrictionBuilder = (RestrictionBuilderImpl<?>) builder.getResult();
-        restrictionBuilder.setLeftExpression(new SubqueryExpression(builder));
+        restrictionBuilder.setLeftExpression(new SubqueryExpression((SubqueryBuilder<?>)builder));
     }
 }

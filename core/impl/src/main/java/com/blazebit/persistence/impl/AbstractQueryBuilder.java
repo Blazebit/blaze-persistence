@@ -15,12 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import java.lang.reflect.Constructor;
 import java.util.Calendar;
@@ -145,11 +149,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
-    public X outerJoinFetch(String path, String alias) {
-        return join(path, alias, JoinType.OUTER, true);
-    }
-
-    @Override
     public X join(String path, String alias, JoinType type, boolean fetch) {
         if (path == null) {
             throw new NullPointerException("path");
@@ -228,6 +227,26 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase() {
+        return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase();
+    }
+
+    @Override
+    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias) {
+        return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase(alias);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
+        return (SimpleCaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectSimpleCase(expression);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias) {
+        return (SimpleCaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectSimpleCase(expression, alias);
+    }
+
+    @Override
     public QueryBuilder<Tuple, ?> select(String expression) {
         return (QueryBuilder<Tuple, ?>) super.select(expression);
     }
@@ -235,6 +254,16 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public QueryBuilder<Tuple, ?> select(String expression, String alias) {
         return (QueryBuilder<Tuple, ?>) super.select(expression, alias);
+    }
+
+    @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery() {
+        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery();
+    }
+
+    @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias) {
+        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(alias);
     }
 
     @Override

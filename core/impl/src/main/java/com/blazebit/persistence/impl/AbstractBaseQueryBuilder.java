@@ -69,10 +69,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
-    
+
     private final List<ExpressionTransformer> transformers;
-    
-    
+
+    protected Class<T> resultType;
+
     /**
      * Create flat copy of builder
      *
@@ -95,6 +96,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformers = builder.transformers;
+        this.resultType = builder.resultType;
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
@@ -123,11 +125,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
-        
+
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
-        
+
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
-        
+
         this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
@@ -138,8 +140,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
-        
+
         transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
+        this.resultType = (Class<T>) fromClazz;
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
@@ -150,22 +153,35 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /*
      * Select methods
      */
-    @Override
     public X distinct() {
         selectManager.distinct();
         return (X) this;
     }
 
+    @Override
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
+        return selectCase(null);
+    }
+
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public CaseWhenBuilder<X> selectCase() {
-        return new CaseWhenBuilderImpl<X>((X) this, subqueryInitFactory, expressionFactory);
+    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias) {
+        // TODO: use alias
+        resultType = (Class<T>) Tuple.class;
+        return new CaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, subqueryInitFactory, expressionFactory);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
+        return selectSimpleCase(expression, null);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenBuilder<X> selectCase(String expression) {
-        return new SimpleCaseWhenBuilderImpl<X>((X) this, expressionFactory, expression);
+    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias) {
+        // TODO: use alias
+        resultType = (Class<T>) Tuple.class;
+        return new SimpleCaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, expressionFactory, expression);
     }
 
     @Override
@@ -181,21 +197,22 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         verifyBuilderEnded();
         selectManager.select(this, expr, selectAlias);
+        resultType = (Class<T>) Tuple.class;
         return (BaseQueryBuilder<Tuple, ?>) this;
     }
 
     @Override
-    public SubqueryInitiator<X> selectSubquery() {
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery() {
         return selectSubquery(null);
     }
 
     @Override
-    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((X) this, selectAlias);
+        return selectManager.selectSubquery((BaseQueryBuilder<Tuple, ?>) this, selectAlias);
     }
 
     @Override
@@ -232,7 +249,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /*
      * Group by methods
      */
-    @Override
     public X groupBy(String... paths) {
         for (String path : paths) {
             groupBy(path);
@@ -240,7 +256,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return (X) this;
     }
 
-    @Override
     public X groupBy(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
@@ -350,18 +365,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public X outerJoin(String path, String alias) {
-        return join(path, alias, JoinType.OUTER);
-    }
-
-    @Override
     public X join(String path, String alias, JoinType type) {
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false);
         return (X) this;
     }
-    
-    
+
     @Override
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
         checkJoinPreconditions(path, alias, type);
@@ -379,16 +388,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public JoinOnBuilder<X> outerJoinOn(String path, String alias) {
-        return joinOn(path, alias, JoinType.OUTER);
-    }
-
-    @Override
     public JoinOnBuilder<X> rightJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.RIGHT);
     }
-  
-    private void checkJoinPreconditions(String path, String alias, JoinType type){
+
+    private void checkJoinPreconditions(String path, String alias, JoinType type) {
         if (path == null) {
             throw new NullPointerException("path");
         }
@@ -443,13 +447,18 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // or we remember the already transfomred path in a Set<(BaseNode, RelativePath)> - maybe this would be sufficient
         // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
         // two different indices for the same array we would output the two accesses for the subpath and the access for the current path just once (and not once for each distinct subpath)
-        for(ExpressionTransformer transformer : transformers){
+        for (ExpressionTransformer transformer : transformers) {
             joinManager.applyTransformer(transformer);
             selectManager.applyTransformer(transformer);
             whereManager.applyTransformer(transformer);
             groupByManager.applyTransformer(transformer);
             orderByManager.applyTransformer(transformer);
         }
+    }
+
+    @Override
+    public Class<T> getResultType() {
+        return resultType;
     }
 
     @Override
@@ -473,23 +482,21 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .append(fromClazz.getSimpleName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
-        
-        
-        
+
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
         orderByManager.buildOrderBy(sbRemaining);
-        
+
         /**
-         * We must build the joins at the end
-         * This way, subqueries will be generated before the joins of the parent query are printed
-         * which is necessary for the OUTER() functions in subqueries to take effect.
+         * We must build the joins at the end This way, subqueries will be
+         * generated before the joins of the parent query are printed which is
+         * necessary for the OUTER() functions in subqueries to take effect.
          */
         StringBuilder sbJoin = new StringBuilder();
         joinManager.buildJoins(true, sbJoin);
-        
+
         return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 

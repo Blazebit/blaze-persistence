@@ -18,11 +18,18 @@ package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import org.apache.deltaspike.core.api.literal.DefaultLiteral;
+import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
  *
@@ -31,7 +38,7 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 @ServiceProvider(Extension.class)
 public class EntityViewExtension implements Extension {
     
-    private final EntityViewConfiguration configuration = EntityViews.getDefault();
+    private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
     
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
         if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class)) {
@@ -39,7 +46,17 @@ public class EntityViewExtension implements Extension {
         }
     }
     
-    EntityViewConfiguration getConfiguration() {
-        return configuration;
+    void beforeBuild(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        final EntityViewManager entityViewManager = configuration.createEntityViewManager();
+        Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
+            .beanClass(EntityViewManager.class)
+            .types(EntityViewManager.class, Object.class)
+            .passivationCapable(false)
+            .qualifiers(new DefaultLiteral())
+            .scope(ApplicationScoped.class)
+            .beanLifecycle(new EntityViewManagerLifecycle(entityViewManager))
+            .create();
+        
+        abd.addBean(bean);
     }
 }

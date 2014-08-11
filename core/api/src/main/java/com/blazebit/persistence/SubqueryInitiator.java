@@ -16,7 +16,7 @@
 package com.blazebit.persistence;
 
 /**
- * TODO: javadoc
+ * An interface used to create subquery builders.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
@@ -25,16 +25,20 @@ package com.blazebit.persistence;
 public interface SubqueryInitiator<T> {
 
     /**
-     * TODO: javadoc
-     *
-     * @return
+     * Like {@link SubqueryInitiator#from(java.lang.Class, java.lang.String)} with the
+     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
+     * 
+     * @param entityClass The entity class which should be the root entity
+     * @return A new subquery builder
      */
-    public SubqueryBuilder<T> from(Class<?> clazz);
+    public SubqueryBuilder<T> from(Class<?> entityClass);
 
     /**
-     * TODO: javadoc
-     *
-     * @return
+     * Creates a new subquery builder with the given entity class as root entity in the FROM clause with the given alias.
+     * 
+     * @param entityClass The entity class which should be the root entity
+     * @param alias The alias for the root entity
+     * @return A new subquery builder
      */
-    public SubqueryBuilder<T> from(Class<?> clazz, String alias);
+    public SubqueryBuilder<T> from(Class<?> entityClass, String alias);
 }

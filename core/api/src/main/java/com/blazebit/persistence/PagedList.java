@@ -18,7 +18,7 @@ package com.blazebit.persistence;
 import java.util.List;
 
 /**
- * An extended version of a list which also provides access to the total size of the list.
+ * An extended version of a {@linkplain List} which also provides access to the total size of the list.
  *
  * @param <T> the type of elements in this list
  * @author Christian Beikov

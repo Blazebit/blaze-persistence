@@ -16,7 +16,7 @@
 package com.blazebit.persistence;
 
 /**
- * TODO: javadoc
+ * A builder for general case when expressions.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
@@ -25,30 +25,36 @@ package com.blazebit.persistence;
 public interface CaseWhenBuilder<T> {
 
     /**
-     * TODO: javadoc
+     * Starts a {@link RestrictionBuilder} to create a when predicate where expression will be on the left hand side of the predicate.
      *
-     * @return
+     * @param expression The left hand expression for a when predicate
+     * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression);
 
     /**
-     * TODO: javadoc
+     * Starts a {@link CaseWhenAndThenBuilder} which is a predicate consisting only of
+     * conjunctive connected predicates. When the builder finishes, the when predicate
+     * in conjunction with it's then expression are added to the case when builder.
      *
-     * @return
+     * @return The and predicate builder for the when expression
      */
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd();
 
     /**
-     * TODO: javadoc
+     * Starts a {@link CaseWhenOrThenBuilder} which is a predicate consisting only of
+     * disjunctiv connected predicates. When the builder finishes, the when predicate
+     * in conjunction with it's then expression are added to the case when builder.
      *
-     * @return
+     * @return The or predicate builder for the when expression
      */
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> whenOr();
 
     /**
-     * TODO: javadoc
+     * Adds the given else expression to the case when builder.
      *
-     * @return
+     * @param elseExpression The else expression
+     * @return The parent builder
      */
     public T thenElse(String elseExpression);
 }
