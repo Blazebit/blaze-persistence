@@ -227,20 +227,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     
     @Override
     public PaginatedCriteriaBuilder<T> distinct() {
-        // TODO: need to throw an exception according to #35
-        return this;
+        throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
     }
     
     @Override
     public PaginatedCriteriaBuilder<T> groupBy(String... paths) {
-        // TODO: need to throw an exception according to #35
-        return this;
+        throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
     }
 
     @Override
     public PaginatedCriteriaBuilder<T> groupBy(String expression) {
-        // TODO: need to throw an exception according to #35
-        return this;
+        throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
     }
 
     @Override

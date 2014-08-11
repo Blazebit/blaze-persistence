@@ -234,6 +234,10 @@ public class SelectManager<T> extends AbstractManager {
         }
         this.distinct = true;
     }
+    
+    boolean isDistinct(){
+        return this.distinct;
+    }
 
     private void applySelect(QueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
         if (select.getExpression() instanceof SubqueryExpression) {

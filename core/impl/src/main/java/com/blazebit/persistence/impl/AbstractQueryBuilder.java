@@ -70,6 +70,12 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
+        if(selectManager.isDistinct()){
+            throw new IllegalStateException("Cannot paginate a DISTINCT query");
+        }
+        if(!groupByManager.getGroupByInfos().isEmpty()){
+            throw new IllegalStateException("Cannot paginate a GROUP BY query");
+        }
         return new PaginatedCriteriaBuilderImpl<T>(this, firstRow, pageSize);
     }
 

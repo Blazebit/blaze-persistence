@@ -17,12 +17,12 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.impl.PaginatedCriteriaBuilderImpl;
 import com.blazebit.persistence.model.DocumentViewModel;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -150,18 +150,37 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(0, cb.getResultList().size());
     }
 
-    @Ignore
     @Test(expected = IllegalStateException.class)
-    public void testPaginatedWithGroupBy() {
+    public void testPaginatedWithGroupBy1() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)").groupBy("id").page(0, 1);
     }
-
-    @Ignore
+    
     @Test(expected = IllegalStateException.class)
-    public void testPaginatedWithDistinct() {
+    public void testPaginatedWithGroupBy2() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("d.id").select("COUNT(contacts.id)").page(0, 1);
+        ((PaginatedCriteriaBuilderImpl<Tuple>)cb).groupBy("id");
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testPaginatedWithGroupBy3() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("d.id").select("COUNT(contacts.id)").page(0, 1);
+        ((PaginatedCriteriaBuilderImpl<Tuple>)cb).groupBy("id", "name");
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testPaginatedWithDistinct1() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)").distinct().page(0, 1);
+    }
+    
+    @Test(expected = IllegalStateException.class)
+    public void testPaginatedWithDistinct2() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("d.id").select("COUNT(contacts.id)").page(0, 1);
+        ((PaginatedCriteriaBuilderImpl<Tuple>)cb).distinct();
     }
 
     @Test
@@ -172,6 +191,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr ORDER BY contacts.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        cb.getResultList();
     }
 
     @Test
@@ -183,6 +203,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT DISTINCT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE + " KEY(contacts) = :contactNr ORDER BY contacts.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        cb.getResultList();
     }
 
     @Test
@@ -197,6 +218,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT DISTINCT d.id, (SELECT COUNT(contacts.id) FROM Document d2 LEFT JOIN d2.contacts contacts WHERE d2.id = d.id) AS contactCount FROM Document d ORDER BY contactCount ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        cb.getResultList();
     }
 
     @Test
@@ -207,5 +229,6 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT DISTINCT d.id, SIZE(d.contacts) AS contactCount FROM Document d ORDER BY contactCount ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        cb.getResultList();
     }
 }

@@ -130,9 +130,21 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /**
      * Paginates the results of this query.
      * 
-     * TODO: Clarify that this pagination works on entity and NOT on row basis.
-     * TODO: Clarify that the paginated results are implicitly distinct, therefore calling distinct() is not allowed.
-     * TODO: Clarify that groupBy() can not work with this builder.
+     * Please note:
+     * The pagination only works on entity level and NOT on row level. This means
+     * that for queries which yield multiple result set rows per entity (i.e. rows with
+     * the same entity id), the multiple rows are treated as 1 page entry during
+     * the pagination process. Hence, the result size of such paginated queries
+     * might be greater than the specified page size.
+     * 
+     * An example for such queries would be a query that joins a collection:
+     * SELECT d.id, contacts.name FROM Document d LEFT JOIN d.contacts contacts
+     * If one Document has associated multiple contacts, the above query will produce
+     * multiple result set rows for this document.
+     * 
+     * Since the pagination works on entity id level, the results are implicitely
+     * grouped by id and distinct. Therefore calling distinct() or groupBy() on a
+     * PaginatedCriteriaBuilder is not allowed.
      *
      * @param firstRow The position of the first result to retrieve, numbered from 0
      * @param maxRows The maximum number of results to retrieve

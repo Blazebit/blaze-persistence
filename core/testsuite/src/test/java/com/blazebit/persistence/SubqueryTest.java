@@ -248,6 +248,9 @@ public class SubqueryTest extends AbstractCoreTest {
         
         em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d WHERE d.age = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
         
+        
+        em.createQuery("SELECT d.id, d.name, contacts.name FROM Document d LEFT JOIN d.contacts contacts ORDER BY d.name").getResultList();
+        em.createQuery("SELECT DISTINCT d.id, d.name FROM Document d ORDER BY d.name").getResultList();
 //        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
 //                + "(SELECT p.id FROM Person p WHERE p.name = 'test' ORDER BY n)").getResultList();
 //        em.createQuery("SELECT d, owner FROM Document d LEFT JOIN FETCH d.owner owner WITH owner.id < 5").getResultList();
