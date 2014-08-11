@@ -21,6 +21,8 @@ import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.ServiceLoader;
 
 /**
@@ -31,6 +33,7 @@ import java.util.ServiceLoader;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
+    private Properties properties = new Properties();
 
     public CriteriaBuilderConfigurationImpl() {
         loadQueryTransformers();
@@ -47,8 +50,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     @Override
-    public void registerQueryTransformer(QueryTransformer transformer) {
+    public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer transformer) {
         queryTransformers.add(transformer);
+        return this;
     }
 
     @Override
@@ -61,4 +65,42 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return new CriteriaBuilderFactoryImpl(this);
     }
 
+    @Override
+    public Properties getProperties() {
+        return properties;
+    }
+
+    @Override
+    public String getProperty(String propertyName) {
+        return properties.getProperty(propertyName);
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration setProperties(Properties properties) {
+        this.properties = properties;
+        return this;
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration addProperties(Properties extraProperties) {
+        this.properties.putAll(extraProperties);
+        return this;
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration mergeProperties(Properties properties) {
+        for (Map.Entry entry : properties.entrySet()) {
+            if (this.properties.containsKey(entry.getKey())) {
+                continue;
+            }
+            this.properties.setProperty((String) entry.getKey(), (String) entry.getValue());
+        }
+        return this;
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration setProperty(String propertyName, String value) {
+        properties.setProperty(propertyName, value);
+        return this;
+    }
 }

@@ -17,6 +17,7 @@ package com.blazebit.persistence.spi;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.
@@ -30,8 +31,9 @@ public interface CriteriaBuilderConfiguration {
      * Registers the given query transformer in the configuration.
      *
      * @param queryTransformer The transformer that should be addded
+     * @return this for method chaining
      */
-    public void registerQueryTransformer(QueryTransformer queryTransformer);
+    public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer queryTransformer);
 
     /**
      * Returns a list of registered query transformers.
@@ -46,4 +48,54 @@ public interface CriteriaBuilderConfiguration {
      * @return A new {@linkplain CriteriaBuilderFactory}
      */
     public CriteriaBuilderFactory createCriteriaBuilderFactory();
+    
+
+	/**
+	 * Returns all properties.
+	 *
+	 * @return All properties
+	 */
+	public Properties getProperties();
+
+	/**
+	 * Returns a property value by name.
+	 *
+	 * @param propertyName The name of the property
+	 * @return The value currently associated with that property name; may be null.
+	 */
+	public String getProperty(String propertyName);
+
+	/**
+	 * Replace the properties of the configuration with the given properties.
+	 *
+	 * @param properties The new set of properties
+	 * @return this for method chaining
+	 */
+	public CriteriaBuilderConfiguration setProperties(Properties properties);
+
+	/**
+	 * Add the given properties to the properties of the configuration.
+	 *
+	 * @param extraProperties The properties to add.
+	 * @return this for method chaining
+	 *
+	 */
+	public CriteriaBuilderConfiguration addProperties(Properties extraProperties);
+
+	/**
+	 * Adds the given properties to the properties of the configuration, without overriding existing values.
+	 *
+	 * @param properties The properties to merge
+	 * @return this for method chaining
+	 */
+	public CriteriaBuilderConfiguration mergeProperties(Properties properties);
+
+	/**
+	 * Set a property value by name.
+	 *
+	 * @param propertyName The name of the property to set
+	 * @param value The new property value
+	 * @return this for method chaining
+	 */
+	public CriteriaBuilderConfiguration setProperty(String propertyName, String value);
 }

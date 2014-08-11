@@ -21,7 +21,6 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
@@ -34,8 +33,8 @@ import javax.persistence.Tuple;
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 
-    public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
-        super(cbf, em, clazz, alias, expressionFactory);
+    public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
+        super(cbf, em, clazz, alias);
     }
 
     @Override

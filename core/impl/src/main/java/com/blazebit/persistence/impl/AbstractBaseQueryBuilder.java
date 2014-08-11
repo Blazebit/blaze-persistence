@@ -26,7 +26,6 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
@@ -98,12 +97,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
-
         if (cbf == null) {
-            throw new NullPointerException("cbf");
+            throw new NullPointerException("criteriaBuilderFactory");
         }
         if (em == null) {
-            throw new NullPointerException("em");
+            throw new NullPointerException("entityManager");
         }
         if (fromClazz == null) {
             throw new NullPointerException("fromClazz");
@@ -140,13 +138,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo,
-                                                                                                                                                            this.aliasManager));
+        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), 
+                                     new ArrayExpressionTransformer(joinManager), 
+                                     new ValueExpressionTransformer(jpaInfo, this.aliasManager));
         this.resultType = (Class<T>) fromClazz;
     }
 
-    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, ExpressionFactoryImpl expressionFactory) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, expressionFactory);
+    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
     }
 
 
@@ -284,8 +283,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public RestrictionBuilder<X> having(String expression) {
-        if (groupByManager.getGroupByInfos()
-            .isEmpty()) {
+        if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         Expression expr = expressionFactory.createSimpleExpression(expression);
@@ -294,8 +292,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public HavingOrBuilder<X> havingOr() {
-        if (groupByManager.getGroupByInfos()
-            .isEmpty()) {
+        if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.havingOr(this);
@@ -303,8 +300,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<X> havingExists() {
-        if (groupByManager.getGroupByInfos()
-            .isEmpty()) {
+        if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictExists((X) this);
@@ -312,8 +308,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<X> havingNotExists() {
-        if (groupByManager.getGroupByInfos()
-            .isEmpty()) {
+        if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictNotExists((X) this);
