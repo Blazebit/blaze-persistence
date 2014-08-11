@@ -23,7 +23,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ParameterMappingSingularAttributeImpl<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 

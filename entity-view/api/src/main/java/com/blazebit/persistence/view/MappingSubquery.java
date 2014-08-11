@@ -21,7 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TODO: javadoce
+ * Maps the annotated attribute as subquery.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -31,23 +31,25 @@ import java.lang.annotation.Target;
 public @interface MappingSubquery {
 
     /**
-     * TODO: javadoce
+     * The class which provides the subquery.
      *
-     * @return
+     * @return The subquery provider
      */
     Class<? extends SubqueryProvider> value();
 
     /**
-     * TODO: javadoc
+     * The expression around the subquery.
      *
-     * @return
+     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String) 
+     * @return The expression
      */
     String expression() default "";
 
     /**
-     * TODO: javadoc
+     * The subquery alias.
      *
-     * @return
+     * @see com.blazebit.persistence.BaseQueryBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String) 
+     * @return The subquery alias
      */
     String subqueryAlias() default "";
 }

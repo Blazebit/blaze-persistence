@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TODO: javadoc
+ * Specifies the filter class that should be used if the view is filtered by the annotated attribute.
  *
  * @author Christian Beikov
  * @since 1.0
@@ -32,9 +32,9 @@ import java.lang.annotation.Target;
 public @interface MappingFilter {
     
     /**
-     * TODO: javadoc
+     * The filter class that should be used for filtering.
      *
-     * @return
+     * @return The filter class
      */
     Class<? extends Filter> value();
 }

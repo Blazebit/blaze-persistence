@@ -5,7 +5,11 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
 
-
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class EndsWithFilterImpl implements EndsWithFilter {
 
     private final String value;

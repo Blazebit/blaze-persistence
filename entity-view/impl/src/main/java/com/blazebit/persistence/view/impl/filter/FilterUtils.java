@@ -22,7 +22,8 @@ import java.text.ParseException;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public final class FilterUtils {
 

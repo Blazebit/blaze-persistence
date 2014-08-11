@@ -18,7 +18,8 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface TupleReuse {
     

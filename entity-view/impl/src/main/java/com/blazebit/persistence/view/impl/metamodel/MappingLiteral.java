@@ -20,7 +20,8 @@ import java.lang.annotation.Annotation;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MappingLiteral implements Mapping {
     

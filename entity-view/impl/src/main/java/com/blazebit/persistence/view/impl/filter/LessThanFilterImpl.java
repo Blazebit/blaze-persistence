@@ -6,7 +6,6 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.filter.LessThanFilter;
 
 /**
- * TODO: javadoc
  *
  * @author Christian Beikov
  * @since 1.0

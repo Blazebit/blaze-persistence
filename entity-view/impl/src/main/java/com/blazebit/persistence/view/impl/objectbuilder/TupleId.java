@@ -19,7 +19,8 @@ import java.util.Arrays;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class TupleId {
 

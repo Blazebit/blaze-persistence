@@ -4,7 +4,11 @@ import com.blazebit.persistence.Filterable;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.filter.StartsWithIgnoreCaseFilter;
 
-
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class StartsWithIgnoreCaseFilterImpl implements StartsWithIgnoreCaseFilter {
 
     private final String value;

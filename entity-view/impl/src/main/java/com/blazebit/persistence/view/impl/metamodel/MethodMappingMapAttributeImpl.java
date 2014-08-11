@@ -27,7 +27,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappingPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 

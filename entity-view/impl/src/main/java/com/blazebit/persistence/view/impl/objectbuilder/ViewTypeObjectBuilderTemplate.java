@@ -53,7 +53,8 @@ import javax.persistence.metamodel.Metamodel;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ViewTypeObjectBuilderTemplate<T> {
     

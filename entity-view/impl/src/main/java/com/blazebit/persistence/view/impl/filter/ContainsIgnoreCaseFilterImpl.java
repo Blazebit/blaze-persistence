@@ -5,6 +5,11 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class ContainsIgnoreCaseFilterImpl implements ContainsIgnoreCaseFilter {
 
     private final String value;

@@ -59,4 +59,6 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
 
     @Override
     public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String alias);
+    
+    // TODO: add SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String expression, String subqueryAlias, String selectAlias)
 }

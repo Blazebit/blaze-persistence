@@ -76,5 +76,7 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
 
     @Override
     public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String alias);
+    
+    // TODO: add SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String expression, String subqueryAlias, String selectAlias)
 
 }

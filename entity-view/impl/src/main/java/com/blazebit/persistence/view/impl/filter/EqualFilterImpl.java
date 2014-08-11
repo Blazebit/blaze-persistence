@@ -5,6 +5,11 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.filter.EqualFilter;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class EqualFilterImpl extends AbstractComparisonFilter implements EqualFilter {
 
     public EqualFilterImpl(Class<?> expectedType, Object value) {

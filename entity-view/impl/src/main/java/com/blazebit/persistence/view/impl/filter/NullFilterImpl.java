@@ -6,7 +6,6 @@ import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.filter.NullFilter;
 
 /**
- * TODO: javadoc
  *
  * @author Christian Beikov
  * @since 1.0

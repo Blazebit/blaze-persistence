@@ -26,7 +26,8 @@ import java.util.Map;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class AbstractIndexedTupleListTransformer<C, K> extends TupleListTransformer {
     

@@ -242,4 +242,6 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
 
     @Override
     public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias);
+    
+    // TODO: add SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String expression, String subqueryAlias, String selectAlias)
 }

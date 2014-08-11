@@ -4,7 +4,11 @@ import com.blazebit.persistence.Filterable;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.view.filter.StartsWithFilter;
 
-
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class StartsWithFilterImpl implements StartsWithFilter {
 
     private final String value;

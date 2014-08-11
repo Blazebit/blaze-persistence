@@ -26,7 +26,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 

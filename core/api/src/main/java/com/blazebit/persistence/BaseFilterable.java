@@ -31,7 +31,10 @@ public interface BaseFilterable<T extends BaseFilterable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
+    // TODO: rename to whereSubquery
     public SubqueryInitiator<RestrictionBuilder<T>> where();
+    
+    // TODO: add SubqueryInitiator<RestrictionBuilder<T>> whereSubquery(String expression, String subqueryAlias)
 
     /**
      * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.

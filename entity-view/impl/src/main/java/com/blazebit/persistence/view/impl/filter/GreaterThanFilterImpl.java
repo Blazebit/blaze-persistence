@@ -5,6 +5,11 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.view.filter.GreaterThanFilter;
 
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0
+ */
 public class GreaterThanFilterImpl extends AbstractComparisonFilter implements GreaterThanFilter {
 
     public GreaterThanFilterImpl(Class<?> expectedType, Object value) {

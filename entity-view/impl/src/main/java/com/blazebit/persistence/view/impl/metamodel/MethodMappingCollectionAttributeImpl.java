@@ -26,7 +26,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MethodMappingCollectionAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 

@@ -29,7 +29,8 @@ import java.util.Set;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     
