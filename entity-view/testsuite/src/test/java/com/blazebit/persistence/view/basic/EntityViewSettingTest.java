@@ -93,7 +93,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<FilteredDocument> setting = new EntityViewSetting<FilteredDocument>(FilteredDocument.class, 0, 1);
+        EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(FilteredDocument.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
@@ -118,7 +118,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<DocumentWithEntityView> setting = new EntityViewSetting<DocumentWithEntityView>(DocumentWithEntityView.class, 0, 1);
+        EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting.create(DocumentWithEntityView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);

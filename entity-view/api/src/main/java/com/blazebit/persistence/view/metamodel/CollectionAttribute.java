@@ -20,10 +20,12 @@ import java.util.Collection;
 
 
 /**
- * 
- * TODO: javadoc
+ * Instances of the type {@linkplain CollectionAttribute} represent {@linkplain java.util.Collection}-valued attributes.
  *
+ * @param <X> The type of the declaring entity view
+ * @param <E> The element type of the represented Collection
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface CollectionAttribute<X, E> extends PluralAttribute<X, Collection<E>, E> {
     

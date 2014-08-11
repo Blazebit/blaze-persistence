@@ -20,10 +20,12 @@ import java.util.List;
 
 
 /**
- * 
- * TODO: javadoc
+ * Instances of the type {@linkplain ListAttribute} represent {@linkplain java.util.List}-valued attributes.
  *
+ * @param <X> The type of the declaring entity view
+ * @param <E> The element type of the represented List
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface ListAttribute<X, E> extends PluralAttribute<X, List<E>, E> {
     

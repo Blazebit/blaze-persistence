@@ -95,7 +95,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<DocumentMasterView> setting = new EntityViewSetting<DocumentMasterView>(DocumentMasterView.class, 0, 1);
+        EntityViewSetting<DocumentMasterView, PaginatedCriteriaBuilder<DocumentMasterView>> setting = EntityViewSetting.create(DocumentMasterView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
@@ -122,7 +122,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<DocumentMasterView> setting = new EntityViewSetting<DocumentMasterView>(DocumentMasterView.class, 0, 1);
+        EntityViewSetting<DocumentMasterView, PaginatedCriteriaBuilder<DocumentMasterView>> setting = EntityViewSetting.create(DocumentMasterView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);

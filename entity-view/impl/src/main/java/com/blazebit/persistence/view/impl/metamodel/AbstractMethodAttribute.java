@@ -43,7 +43,11 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Class<? extends Filter> filterMapping;
 
     protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {        
-        super(viewType, (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method), mapping, entityViews);
+        super(viewType, 
+              (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method), 
+              mapping, 
+              entityViews, 
+              "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) +  "' of the class '" + viewType.getJavaType().getName() + "'!");
         this.name = StringUtils.firstToLower(method.getName().substring(3));
         this.javaMethod = method;
         MappingFilter mappingFilter = AnnotationUtils.findAnnotation(method, MappingFilter.class);

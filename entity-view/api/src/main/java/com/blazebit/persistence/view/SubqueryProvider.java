@@ -18,16 +18,19 @@ package com.blazebit.persistence.view;
 import com.blazebit.persistence.SubqueryInitiator;
 
 /**
- * TODO: javadoc
+ * Provides a subquery to a {@link SubqueryInitiator}.
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface SubqueryProvider {
 
     /**
-     * TODO: javadoce
+     * Applies a subquery to the given {@link SubqueryInitiator}.
      *
-     * @return
+     * @param subqueryInitiator The subquery initiator on which the subquery should be applied
+     * @param <T> The type of the parent builder
+     * @return The parent builder
      */
-    public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder);
+    public <T> T createSubquery(SubqueryInitiator<T> subqueryInitiator);
 }

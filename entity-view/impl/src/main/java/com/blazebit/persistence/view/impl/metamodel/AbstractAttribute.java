@@ -21,7 +21,6 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.Attribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
@@ -38,11 +37,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Class<Y> javaType;
     protected final String mapping;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
+    protected final String subqueryExpression;
+    protected final String subqueryAlias;
     protected final boolean mappingParameter;
     protected final boolean subqueryMapping;
     protected final boolean subview;
     
-    public AbstractAttribute(ViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews) {
+    public AbstractAttribute(ViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
         this.declaringType = declaringType;
         this.javaType = javaType;
         this.subview = entityViews.contains(javaType);
@@ -52,23 +53,34 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryProvider = null;
             this.mappingParameter = false;
             this.subqueryMapping = false;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
             this.subqueryProvider = null;
             this.mappingParameter = true;
             this.subqueryMapping = false;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
         } else if (mapping instanceof MappingSubquery) {
+            MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             this.mapping = null;
-            this.subqueryProvider = ((MappingSubquery) mapping).value();
+            this.subqueryProvider = mappingSubquery.value();
             this.mappingParameter = false;
             this.subqueryMapping = true;
+            this.subqueryExpression = mappingSubquery.expression();
+            this.subqueryAlias = mappingSubquery.subqueryAlias();
+            
+            if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
+                throw new IllegalArgumentException("The subquery alias is empty although the subquery expression is not " + errorLocation);
+            }
         } else {
-            throw new IllegalArgumentException("No mapping annotation could be found!");
+            throw new IllegalArgumentException("No mapping annotation could be found " + errorLocation);
         }
     }
     
     public PluralAttribute.CollectionType getCollectionType() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        throw new UnsupportedOperationException("This method should be overridden or not be publicly exposed.");
     }
     
     public boolean isQueryParameter() {
@@ -77,6 +89,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public Class<? extends SubqueryProvider> getSubqueryProvider() {
         return subqueryProvider;
+    }
+
+    public String getSubqueryExpression() {
+        return subqueryExpression;
+    }
+
+    public String getSubqueryAlias() {
+        return subqueryAlias;
     }
 
     @Override

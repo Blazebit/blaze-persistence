@@ -20,17 +20,20 @@ import java.util.Map;
 
 
 /**
- * 
- * TODO: javadoc
+ * Instances of the type {@linkplain MapAttribute} represent persistent {@linkplain java.util.Map}-valued attributes.
  *
+ * @param <X> The type of the declaring entity view
+ * @param <K> The type of the key of the represented Map
+ * @param <V> The type of the value of the represented Map
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> {
     
     /**
-     * TODO: javadoc
+     * Returns the java type of the key.
      * 
-     * @return 
+     * @return The java type of the key
      */
     public Class<K> getKeyType();
 }

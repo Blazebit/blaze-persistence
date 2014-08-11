@@ -17,9 +17,12 @@
 package com.blazebit.persistence.view.metamodel;
 
 /**
- * TODO: javadoc
+ * Instances of the type {@linkplain SingularAttribute} represents single-valued properties or fields.
  *
- * @author cpbec
+ * @param <X> The type of the declaring entity view
+ * @param <Y> The type of attribute
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
     
