@@ -32,7 +32,9 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements HavingAndBuilder<T>, PredicateBuilder {
 

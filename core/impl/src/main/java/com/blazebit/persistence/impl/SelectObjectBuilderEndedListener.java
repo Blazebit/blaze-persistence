@@ -21,7 +21,8 @@ import java.util.Collection;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public interface SelectObjectBuilderEndedListener {
 

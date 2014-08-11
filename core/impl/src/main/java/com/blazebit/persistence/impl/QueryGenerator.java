@@ -47,7 +47,8 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class QueryGenerator extends VisitorAdapter {
 

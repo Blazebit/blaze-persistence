@@ -23,7 +23,8 @@ import java.util.Set;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(PersonForCollections.class)
 public interface PersonForCollectionsSetListMapMasterView extends PersonForCollectionsMasterView {

@@ -18,11 +18,13 @@ package com.blazebit.persistence.impl.expression;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public interface ExpressionFactory {
 
-    Expression createSimpleExpression(String expression);
+    public Expression createSimpleExpression(String expression);
     public Expression createCaseOperandExpression(String caseOperandExpression);
     public Expression createScalarExpression(String expression);
 }

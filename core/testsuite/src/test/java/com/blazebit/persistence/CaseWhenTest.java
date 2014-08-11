@@ -21,7 +21,9 @@ import org.junit.Test;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 @Ignore
 public class CaseWhenTest extends AbstractCoreTest {

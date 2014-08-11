@@ -20,7 +20,8 @@ import com.blazebit.persistence.view.EntityView;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(TestEntity.class)
 public interface TestView {

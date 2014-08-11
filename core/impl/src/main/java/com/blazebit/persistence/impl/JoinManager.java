@@ -41,7 +41,8 @@ import javax.persistence.metamodel.SingularAttribute;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class JoinManager extends AbstractManager {
 

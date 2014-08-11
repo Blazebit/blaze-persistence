@@ -31,7 +31,9 @@ import java.util.ArrayList;
  * We need a join manager hierarchy to do this.
  * We have decided to limit the outer statement to the join manager of the directly surrounding query so that the
  * user can specify the absolute path in a normalized form.
- * @author ccbem
+ *
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class OuterFunctionTransformer implements ExpressionTransformer {
     private final JoinManager joinManager;

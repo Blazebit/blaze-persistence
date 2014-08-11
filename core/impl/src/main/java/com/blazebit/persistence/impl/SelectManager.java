@@ -38,7 +38,9 @@ import java.util.Map;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SelectManager<T> extends AbstractManager {
 

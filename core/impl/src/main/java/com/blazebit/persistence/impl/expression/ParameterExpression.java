@@ -17,7 +17,9 @@ package com.blazebit.persistence.impl.expression;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public class ParameterExpression implements Expression {
 

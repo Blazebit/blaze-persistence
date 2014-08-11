@@ -28,7 +28,8 @@ import javax.persistence.TemporalType;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ParameterManager {
     private static final String prefix = "param_";

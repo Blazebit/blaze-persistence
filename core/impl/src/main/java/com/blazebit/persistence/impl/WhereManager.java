@@ -20,7 +20,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class WhereManager<U> extends PredicateManager<U> {
 

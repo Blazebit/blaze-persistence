@@ -19,7 +19,9 @@ import javax.persistence.EntityManager;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class JPAInfo {
 

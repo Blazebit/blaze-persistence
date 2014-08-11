@@ -23,7 +23,9 @@ import java.util.TreeMap;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class JoinNode {
 

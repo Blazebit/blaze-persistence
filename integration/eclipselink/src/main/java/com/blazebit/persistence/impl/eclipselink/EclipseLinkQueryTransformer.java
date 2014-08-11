@@ -25,7 +25,8 @@ import org.eclipse.persistence.queries.DatabaseQuery;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @ServiceProvider(QueryTransformer.class)
 public class EclipseLinkQueryTransformer implements QueryTransformer {

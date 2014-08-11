@@ -23,7 +23,8 @@ import com.blazebit.testsuite.base.AbstractPersistenceTest;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class AbstractEntityViewTest extends AbstractPersistenceTest {
     

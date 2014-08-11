@@ -21,7 +21,9 @@ import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ExistsPredicate extends UnaryExpressionPredicate {
 

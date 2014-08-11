@@ -22,7 +22,8 @@ import java.util.Map;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 interface ContactHolderView<T> extends Serializable {
     

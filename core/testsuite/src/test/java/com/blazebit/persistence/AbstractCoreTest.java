@@ -23,7 +23,9 @@ import com.blazebit.testsuite.base.AbstractPersistenceTest;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     

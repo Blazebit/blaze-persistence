@@ -23,6 +23,8 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * A base class that provides functionality to start and stop builders in a manner, such that only one builder can be started at a time.
  *
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class PredicateBuilderEndedListenerImpl implements PredicateBuilderEndedListener {
 

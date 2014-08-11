@@ -21,7 +21,8 @@ import com.blazebit.persistence.view.MappingParameter;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class DocumentClassView implements DocumentInterfaceView {
     

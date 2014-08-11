@@ -20,7 +20,9 @@ import com.blazebit.persistence.SubqueryBuilder;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T> {
     private SubqueryBuilderImpl<?> currentSubqueryBuilder;

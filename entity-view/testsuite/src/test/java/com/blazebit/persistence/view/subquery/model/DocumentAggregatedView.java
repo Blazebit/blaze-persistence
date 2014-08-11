@@ -23,7 +23,8 @@ import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Document.class)
 public interface DocumentAggregatedView {

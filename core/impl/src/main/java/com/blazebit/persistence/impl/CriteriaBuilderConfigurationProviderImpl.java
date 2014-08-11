@@ -21,7 +21,8 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class CriteriaBuilderConfigurationProviderImpl implements CriteriaBuilderConfigurationProvider {
 

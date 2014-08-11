@@ -25,7 +25,8 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class RightHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements PredicateBuilder {
         private final Predicate predicate;

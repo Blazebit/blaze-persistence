@@ -26,7 +26,8 @@ import static  org.junit.Assert.*;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class CriteriaBuilderExtensionTest {
     

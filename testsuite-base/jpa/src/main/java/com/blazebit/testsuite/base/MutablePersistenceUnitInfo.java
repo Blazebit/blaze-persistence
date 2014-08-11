@@ -29,7 +29,8 @@ import javax.sql.DataSource;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MutablePersistenceUnitInfo implements PersistenceUnitInfo {
     

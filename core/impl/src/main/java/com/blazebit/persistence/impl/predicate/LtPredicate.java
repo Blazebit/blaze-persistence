@@ -26,6 +26,7 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
  *
  * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
 

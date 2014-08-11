@@ -26,7 +26,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Document.class)
 public interface DocumentMasterView {

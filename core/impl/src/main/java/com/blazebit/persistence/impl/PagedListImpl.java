@@ -23,8 +23,9 @@ import java.util.Collection;
 /**
  *
  * @param <T> the type of elements in this list
- * @author Moritz Becker
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     private final long totalSize;

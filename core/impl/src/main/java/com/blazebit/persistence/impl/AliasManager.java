@@ -21,7 +21,8 @@ import java.util.Map;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class AliasManager {
     private final AliasManager parent;

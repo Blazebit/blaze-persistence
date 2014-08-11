@@ -24,7 +24,8 @@ import org.apache.openjpa.persistence.OpenJPAQuerySPI;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @ServiceProvider(QueryTransformer.class)
 public class OpenJPAQueryTransformer implements QueryTransformer {

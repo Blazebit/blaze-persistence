@@ -24,7 +24,8 @@ import org.junit.rules.TestRule;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ExpressionFactoryTest {
 

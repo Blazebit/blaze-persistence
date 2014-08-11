@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.MappingParameter;
 /**
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 // Not necessary because DocumentView1 already provides this information
 //@EntityView(Document.class)

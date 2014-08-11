@@ -26,13 +26,14 @@ import javax.persistence.Tuple;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T> {
     private final T result;
     private final SubqueryBuilderListener listener;
     
-
     public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
         super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
         this.result = result;

@@ -19,7 +19,9 @@ import com.blazebit.persistence.BaseQueryBuilder;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class JoinAliasInfo implements AliasInfo {
 

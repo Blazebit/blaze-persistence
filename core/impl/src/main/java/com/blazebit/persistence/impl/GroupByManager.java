@@ -24,7 +24,8 @@ import java.util.List;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class GroupByManager extends AbstractManager{
     private final List<NodeInfo> groupByInfos;

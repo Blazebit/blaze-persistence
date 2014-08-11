@@ -25,6 +25,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * TODO: implement
  * 
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenOrBuilder<T> {
     

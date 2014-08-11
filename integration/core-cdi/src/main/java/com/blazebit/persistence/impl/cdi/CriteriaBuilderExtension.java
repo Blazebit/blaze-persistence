@@ -31,7 +31,8 @@ import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @ServiceProvider(Extension.class)
 public class CriteriaBuilderExtension implements Extension {

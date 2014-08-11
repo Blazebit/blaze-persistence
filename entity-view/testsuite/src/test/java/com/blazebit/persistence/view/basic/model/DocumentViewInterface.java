@@ -25,7 +25,8 @@ import com.blazebit.persistence.view.MappingSubquery;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Document.class)
 public interface DocumentViewInterface extends IdHolderView<Long> {

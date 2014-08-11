@@ -28,6 +28,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  *
  * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements
         QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {

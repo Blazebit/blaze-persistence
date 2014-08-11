@@ -30,7 +30,8 @@ import java.util.Map;
 
 /**
  *
- * @author cpbec
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ArrayExpressionTransformer implements ExpressionTransformer {
 

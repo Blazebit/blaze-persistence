@@ -24,8 +24,10 @@ import java.util.List;
 
 /**
  * TODO: implement
- * 
+ *
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T> {
     
