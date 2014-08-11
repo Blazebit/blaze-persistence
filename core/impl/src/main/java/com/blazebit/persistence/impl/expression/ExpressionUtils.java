@@ -20,7 +20,8 @@ import com.blazebit.persistence.impl.VisitorAdapter;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ExpressionUtils {
     public static boolean containsSubqueryExpression(Expression e){
