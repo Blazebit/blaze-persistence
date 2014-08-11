@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -194,5 +195,32 @@ public class SelectTest extends AbstractCoreTest {
     public void testSelectArrayNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select((String) null);
+    }
+    
+    @Test
+    public void testSelectSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.selectSubquery("alias", "COUNT(alias)").from(Person.class, "p").select("id").end();     
+        
+        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) FROM Document d", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testSelectSubqueryWithSurroundingExpressionWithAlias() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.selectSubquery("alias", "COUNT(alias)", "alias").from(Person.class, "p").select("id").end();     
+        
+        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) AS alias FROM Document d", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testSelectMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.selectSubquery("alias", "(COUNT(alias) * AVG(alias))", "alias").from(Person.class, "p").select("id").end();     
+        
+        assertEquals("SELECT (COUNT(SELECT p.id FROM Person p)*AVG(SELECT p.id FROM Person p)) AS alias FROM Document d", crit.getQueryString());
+        crit.getResultList();
     }
 }

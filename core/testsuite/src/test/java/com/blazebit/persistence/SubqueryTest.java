@@ -232,22 +232,6 @@ public class SubqueryTest extends AbstractCoreTest {
             .like("%dld");
         crit.getQueryString();
     }
-    
-    @Test
-    public void testSelectSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.selectSubquery("alias", "COUNT(alias)").from(Person.class, "p").select("id").end();     
-        
-        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) FROM Document d", crit.getQueryString());
-    }
-    
-    @Test
-    public void testSelectSubqueryWithSurroundingExpressionWithAlias() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.selectSubquery("alias", "COUNT(alias)", "alias").from(Person.class, "p").select("id").end();     
-        
-        assertEquals("SELECT COUNT(SELECT p.id FROM Person p) AS alias FROM Document d", crit.getQueryString());
-    }
    
     @Test
     public void workingJPQLQueries() {

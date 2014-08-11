@@ -42,7 +42,8 @@ public abstract class PredicateManager<U> extends AbstractManager {
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
     private RightHandsideSubqueryPredicateBuilder<?> rightSubqueryPredicateBuilderListener;
-    private final LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>>();
+    private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
+    private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprleftSubqueryPredicateBuilderListener;
     protected final ExpressionFactory expressionFactory;
 
     PredicateManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
@@ -67,8 +68,9 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
     
     SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
+        superExprleftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
-        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprleftSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<U> restrictExists(U result) {
@@ -93,6 +95,9 @@ public abstract class PredicateManager<U> extends AbstractManager {
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
+        if(superExprleftSubqueryPredicateBuilderListener != null){
+            superExprleftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
 

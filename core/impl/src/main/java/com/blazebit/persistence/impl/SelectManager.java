@@ -141,7 +141,7 @@ public class SelectManager<T> extends AbstractManager {
     <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, String subqueryAlias, Expression expression, String selectAlias) {
         verifyBuilderEnded();
 
-        subqueryBuilderListener = new SuperExpressionAwareSelectSubqueryBuilderListener(subqueryAlias, expression, selectAlias);
+        subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener(subqueryAlias, expression, selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, subqueryBuilderListener);
     }
 
@@ -285,37 +285,18 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
     
-    private class SuperExpressionAwareSelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
-
+    private class SuperExpressionSelectSubqueryBuilderListener<X> extends AbstractSuperExpressionSubqueryBuilderListener<X> {
         private final String selectAlias;
-        private final String subqueryAlias;
-        private final Expression superExpression;
-
-        public SuperExpressionAwareSelectSubqueryBuilderListener(String subqueryAlias, Expression superExpression, String selectAlias) {
+        
+        public SuperExpressionSelectSubqueryBuilderListener(String subqueryAlias, Expression superExpression, String selectAlias) {
+            super(subqueryAlias, superExpression);
             this.selectAlias = selectAlias;
-            this.subqueryAlias = subqueryAlias;
-            this.superExpression = superExpression;
         }
 
         @Override
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
-            final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(new SubqueryExpression(builder), subqueryAlias);
-            VisitorAdapter transformationVisitor = new VisitorAdapter(){
 
-                @Override
-                public void visit(CompositeExpression expression) {
-                    List<Expression> transformed = new ArrayList<Expression>();
-                    for(Expression expr : expression.getExpressions()){
-                        transformed.add(replacementTransformer.transform(expr));
-                    }
-                    expression.getExpressions().clear();
-                    expression.getExpressions().addAll(transformed);
-                }
-                
-            };
-            superExpression.accept(transformationVisitor);
-            
             //TODO: maybe unify with SelectSubqueryBuilderListener
             SelectInfo selectInfo = new SelectInfo(superExpression, selectAlias, aliasOwner);
             if (selectAlias != null) {
@@ -329,8 +310,6 @@ public class SelectManager<T> extends AbstractManager {
             }
             registerParameterExpressions(superExpression);
         }
-        
-        
     }
 
     private class SelectObjectBuilderEndedListenerImpl implements SelectObjectBuilderEndedListener {
