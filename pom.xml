@@ -218,6 +218,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.googlecode.catch-exception</groupId>
+                <artifactId>catch-exception</artifactId>
+                <version>1.2.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.deltaspike.cdictrl</groupId>
                 <artifactId>deltaspike-cdictrl-api</artifactId>
                 <version>${version.deltaspike}</version>

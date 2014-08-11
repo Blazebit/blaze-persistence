@@ -19,6 +19,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -38,10 +39,10 @@ public class EqTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").eq(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).eq(null);
     }
 
     @Test
@@ -54,16 +55,16 @@ public class EqTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testEqualToEmptyExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").eqExpression("");
+        verifyException(criteria.where("d.age"), IllegalArgumentException.class).eqExpression("");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testEqualToNullExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").eqExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).eqExpression(null);
     }
 
     @Test
@@ -75,10 +76,10 @@ public class EqTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotEqualToNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notEq(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notEq(null);
     }
 
     @Test
@@ -91,16 +92,16 @@ public class EqTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testNotEqualToEmptyExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notEqExpression("");
+        verifyException(criteria.where("d.age"), IllegalArgumentException.class).notEqExpression("");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotEqualToNullExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notEqExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notEqExpression(null);
     }
 
     @Test

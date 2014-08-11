@@ -19,6 +19,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import java.util.Calendar;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -172,16 +173,16 @@ public class HavingTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testHavingWithoutGroupBy() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.having("d.partners.name");
+        verifyException(criteria, IllegalStateException.class).having("d.partners.name");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testHavingNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.groupBy("d.owner").having(null);
+        verifyException(criteria.groupBy("d.owner"), NullPointerException.class).having(null);
     }
 
     @Test

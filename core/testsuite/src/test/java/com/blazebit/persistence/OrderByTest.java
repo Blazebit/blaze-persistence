@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -85,15 +86,15 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testOrderByNullAlias() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.orderBy(null, false, false);
+        verifyException(criteria, NullPointerException.class).orderBy(null, false, false);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testOrderByEmptyAlias() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.orderBy("", false, false);
+        verifyException(criteria, IllegalArgumentException.class).orderBy("", false, false);
     }
 }

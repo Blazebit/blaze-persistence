@@ -24,6 +24,7 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -34,22 +35,22 @@ import org.junit.Test;
  */
 public class ParameterAPITest extends AbstractCoreTest {
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
-        crit.setParameter("index", 0);
+        verifyException(crit, IllegalArgumentException.class).setParameter("index", 0);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetDateParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
-        crit.setParameter("index", new Date(), TemporalType.DATE);
+        verifyException(crit, IllegalArgumentException.class).setParameter("index", new Date(), TemporalType.DATE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSetCalendarParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
-        crit.setParameter("index", Calendar.getInstance(), TemporalType.DATE);
+        verifyException(crit, IllegalArgumentException.class).setParameter("index", Calendar.getInstance(), TemporalType.DATE);
     }
 
     @Test
@@ -89,9 +90,10 @@ public class ParameterAPITest extends AbstractCoreTest {
         assertTrue(crit.isParameterSet("lastModifiedFilter"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testReservedParameterName1() {
-        cbf.from(em, Document.class).select("contacts[:ids]");
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        verifyException(criteria, IllegalArgumentException.class).select("contacts[:ids]");
     }
 
     @Test

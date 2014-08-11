@@ -29,6 +29,8 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -110,7 +112,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals("pers2", result.get(0).getContactName());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testEntityViewSettingWithEntityAttribute() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(DocumentWithEntityView.class);
@@ -125,14 +127,11 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeFilter("owner.name", "pers2");
 
         // Currently we have no way to express what filter should be used when using entity attributes
-        setting.apply(evm, cb);
-//        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
-//        
-//        PagedList<DocumentWithEntityView> result = paginatedCb.getResultList();
-//        
-//        assertEquals(1, result.size());
-//        assertEquals(1, result.totalSize());
-//        assertEquals("YourTest", result.get(0).getName());
-//        assertEquals("pers2", result.get(0).getOwner().getName());
+        try {
+            setting.apply(evm, cb);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ex) {
+            // Ok
+        }
     }
 }

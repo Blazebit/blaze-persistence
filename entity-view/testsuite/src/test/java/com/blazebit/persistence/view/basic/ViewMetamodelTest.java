@@ -38,6 +38,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -55,12 +56,12 @@ public class ViewMetamodelTest {
         return cfg.createEntityViewManager().getMetamodel();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCircularViews() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
         cfg.addEntityView(CircularDocument.class);
         cfg.addEntityView(CircularPerson.class);
-        cfg.createEntityViewManager();
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager();
     }
 
     @Test

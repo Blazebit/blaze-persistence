@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -40,10 +41,10 @@ public class InTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testInNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").in((List<?>) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).in((List<?>) null);
     }
 
     @Test
@@ -55,10 +56,10 @@ public class InTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotInNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notIn((List<?>) null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notIn((List<?>) null);
     }
 
 }

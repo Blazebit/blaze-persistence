@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import static com.googlecode.catchexception.CatchException.*;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -36,16 +37,16 @@ public class BetweenTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testBetweenValueAndNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").between(1, null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).between(1, null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testBetweenNullAndValue() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").between(null, 10);
+        verifyException(criteria.where("d.age"), NullPointerException.class).between(null, 10);
     }
 
     @Test
@@ -57,15 +58,15 @@ public class BetweenTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotBetweenValueAndNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notBetween(1, null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notBetween(1, null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotBetweenNullAndValue() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").notBetween(null, 10);
+        verifyException(criteria.where("d.age"), NullPointerException.class).notBetween(null, 10);
     }
 }

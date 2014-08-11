@@ -17,7 +17,9 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import static com.googlecode.catchexception.CatchException.*;
 import javax.persistence.EntityTransaction;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
@@ -189,13 +191,15 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testSubqueryWithoutSelect() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where("id").in().from(Person.class).where("ownedDocuments").eqExpression("d").end().getQueryString();
-        String expected = "FROM Document d WHERE d.id IN (SELECT * FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE ownedDocuments = d)";
-
-        assertEquals(expected, crit.getQueryString());
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d")
+            .where("owner").in()
+                .from(Person.class)
+                .where("partnerDocument").eqExpression("d")
+            .end();
+        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner WHERE owner IN (SELECT person FROM Person person LEFT JOIN person.partnerDocument partnerDocument WHERE partnerDocument = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
 
@@ -215,22 +219,98 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testExceptionOnSubqueryCollectionAccess1() {
+    @Test
+    public void testSubqueryCollectionAccessUsesJoin() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.leftJoinOn("d.partners.localized", "l").end().whereSubquery()
-            .from(Person.class, "p").select("name").where("LENGTH(partners.l)").gt(1).end()
+        crit.leftJoin("d.partners.localized", "l").whereSubquery()
+            .from(Person.class, "p").select("name").where("LENGTH(l)").gt(1).end()
             .like("%dld");
-        crit.getQueryString();
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WHERE (SELECT p.name FORM Person p WHERE LENGTH(l) > 1) LIKE :param_0";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void testExceptionOnSubqueryCollectionAccess2() {
+    @Test
+    public void testSubqueryCollectionAccessAddsJoin() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereSubquery()
+            .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
+            .like("%dld");
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized " + ON_CLAUSE + " KEY(localized) = 1 WHERE (SELECT p.name FORM Person p WHERE LENGTH(l) > 1) LIKE :param_0";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testSubqueryUsesOuterJoin() {
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .leftJoin("d.contacts", "c")
+            .select("id")
+            .selectSubquery("localizedCount")
+                .from(Person.class, "p")
+                .select("COUNT(p.localized)")
+                .where("p.id").eqExpression("c.id")
+            .end()
+            .groupBy("id")
+            .orderByAsc("localizedCount");
+        String expectedQuery = "SELECT d.id, (SELECT COUNT(p.localized) FROM Person p WHERE p.id = contacts.id) AS localizedCount FROM Document d LEFT JOIN d.contacts contacts GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSubqueryAddsJoin() {
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("id")
+            .selectSubquery("localizedCount")
+                .from(Person.class, "p")
+                .select("COUNT(p.localized)")
+                .where("p.id").eqExpression("d.contacts.id")
+            .end()
+            .groupBy("id")
+            .orderByAsc("localizedCount");
+        String expectedQuery = "SELECT d.id, (SELECT COUNT(p.localized) FROM Person p WHERE p.id = contacts.id) AS localizedCount FROM Document d LEFT JOIN d.contacts contacts GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testMultipleJoinPathSubqueryCollectionAccess() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.leftJoinOn("d.partners.localized", "l").end().whereSubquery()
-            .from(Person.class, "p").select("name").where("LENGTH(l[1])").gt(1).end()
+            .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like("%dld");
-        crit.getQueryString();
+        verifyException(crit, UnsupportedOperationException.class).getQueryString();
+//        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l LEFT JOIN partners.localized localized " + ON_CLAUSE + " KEY(localized) = 1 WHERE (SELECT p.name FORM Person p WHERE LENGTH(l) > 1) LIKE :param_0";
+//        assertEquals(expectedQuery, crit.getQueryString());
+//        crit.getResultList();
+    }
+
+    @Test
+    public void testInvalidSubqueryUsesOuterJoin() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .leftJoin("d.contacts", "c")
+            .selectSubquery("localizedCount")
+                .from(Person.class, "p")
+                .select("COUNT(p.localized)")
+                .where("p.id").eqExpression("c.id")
+            .end()
+            .page(0, 1);
+        // In a paginated query access to outer collections is disallowed
+        verifyException(cb, IllegalArgumentException.class).getQueryString();
+    }
+
+    @Test
+    public void testInvalidSubqueryAddsJoin() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .selectSubquery("localizedCount")
+                .from(Person.class, "p")
+                .select("COUNT(p.localized)")
+                .where("p.id").eqExpression("d.contacts.id")
+            .end()
+            .page(0, 1);
+        // In a paginated query access to outer collections is disallowed
+        verifyException(cb, IllegalArgumentException.class).getQueryString();
     }
    
     @Test

@@ -19,6 +19,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import java.util.Calendar;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -149,37 +150,37 @@ public class WhereTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testWhereNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where(null);
+        verifyException(criteria, NullPointerException.class).where(null);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testWhereEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("").gt(0);
+        verifyException(criteria, IllegalArgumentException.class).where("");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWhereNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age");
-        criteria.where("d.owner");
+        verifyException(criteria, IllegalStateException.class).where("d.owner");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWhereOrNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().where("d.partners.age").gt(0L);
-        criteria.where("d.partners.name");
+        verifyException(criteria, IllegalStateException.class).where("d.partners.name");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testWhereAndNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.partners.age").gt(0L);
-        criteria.where("d.partners.name");
+        verifyException(criteria, IllegalStateException.class).where("d.partners.name");
     }
 
     @Test

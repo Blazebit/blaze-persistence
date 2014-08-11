@@ -22,6 +22,7 @@ import com.blazebit.persistence.model.DocumentViewModel;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -160,37 +161,42 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(0, cb.getResultList().size());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPaginatedWithGroupBy1() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").groupBy("id").page(0, 1);
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)").groupBy("id");
+        verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPaginatedWithGroupBy2() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").page(0, 1);
-        ((PaginatedCriteriaBuilderImpl<Tuple>) cb).groupBy("id");
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        verifyException(cb, IllegalStateException.class).groupBy("id");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPaginatedWithGroupBy3() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").page(0, 1);
-        ((PaginatedCriteriaBuilderImpl<Tuple>) cb).groupBy("id", "name");
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        verifyException(cb, IllegalStateException.class).groupBy("id", "name");
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPaginatedWithDistinct1() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").distinct().page(0, 1);
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)").distinct();
+        verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testPaginatedWithDistinct2() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").page(0, 1);
-        ((PaginatedCriteriaBuilderImpl<Tuple>) cb).distinct();
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+            .select("d.id").select("COUNT(contacts.id)");
+        cb.page(0, 1);
+        verifyException(cb, IllegalStateException.class).distinct();
     }
 
     @Test

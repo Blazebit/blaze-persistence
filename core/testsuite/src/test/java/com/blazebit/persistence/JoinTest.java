@@ -17,6 +17,8 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
+import javax.persistence.Tuple;
 import org.junit.Test;
 
 /**
@@ -176,62 +178,62 @@ public class JoinTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testConstructorClassNull() {
-        cbf.from(em, null, "d");
+        verifyException(cbf, NullPointerException.class).from(em, null, "d");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testConstructorEntityManagerNull() {
-        cbf.from(null, Document.class, "d");
+        verifyException(cbf, NullPointerException.class).from(null, Document.class, "d");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testJoinNullPath() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
-        criteria.join(null, "o", JoinType.LEFT, true);
+        verifyException(criteria, NullPointerException.class).join(null, "o", JoinType.LEFT, true);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testJoinNullAlias() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
-        criteria.join("owner", null, JoinType.LEFT, true);
+        verifyException(criteria, NullPointerException.class).join("owner", null, JoinType.LEFT, true);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testJoinNullJoinType() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
-        criteria.join("owner", "o", null, true);
+        verifyException(criteria, NullPointerException.class).join("owner", "o", null, true);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testJoinEmptyAlias() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
-        criteria.join("owner", "", JoinType.LEFT, true);
+        verifyException(criteria, IllegalArgumentException.class).join("owner", "", JoinType.LEFT, true);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUnresolvedAlias1() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("z.c.x").eq(0).leftJoin("d.partners", "p");
 
-        criteria.getQueryString();
+        verifyException(criteria, IllegalArgumentException.class).getQueryString();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUnresolvedAlias2() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.where("z").eq(0);
 
-        criteria.getQueryString();
+        verifyException(criteria, IllegalArgumentException.class).getQueryString();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testUnresolvedAliasInOrderBy() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.orderByAsc("z");
 
-        criteria.getQueryString();
+        verifyException(criteria, IllegalArgumentException.class).getQueryString();
     }
 
     @Test
@@ -263,10 +265,11 @@ public class JoinTest extends AbstractCoreTest {
         criteria2.getResultList();
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testFetchJoinCheck() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
-        crit.select("name").join("d.versions", "versions", JoinType.LEFT, true);
+        CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "a")
+            .select("name");
+        verifyException(crit, IllegalStateException.class).join("d.versions", "versions", JoinType.LEFT, true);
     }
 
     @Test

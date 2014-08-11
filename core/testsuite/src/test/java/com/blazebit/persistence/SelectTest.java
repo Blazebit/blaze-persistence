@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -173,28 +174,28 @@ public class SelectTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSelectSingleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select("");
+        verifyException(criteria, IllegalArgumentException.class).select("");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testSelectMultipleEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select("", "");
+        verifyException(criteria, IllegalArgumentException.class).select("", "");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testSelectNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select((String) null);
+        verifyException(criteria, NullPointerException.class).select((String) null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testSelectArrayNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select((String) null);
+        verifyException(criteria, NullPointerException.class).select((String) null);
     }
     
     @Test

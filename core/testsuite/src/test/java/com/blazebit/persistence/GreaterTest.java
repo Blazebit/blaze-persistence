@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -37,10 +38,10 @@ public class GreaterTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testGtNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").gt(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).gt(null);
     }
 
     @Test
@@ -52,10 +53,10 @@ public class GreaterTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testGtExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").gtExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).gtExpression(null);
     }
 
     @Test
@@ -67,10 +68,10 @@ public class GreaterTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testGeNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").ge(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).ge(null);
     }
 
     @Test
@@ -82,10 +83,10 @@ public class GreaterTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testGeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").geExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).geExpression(null);
     }
 
     @Test

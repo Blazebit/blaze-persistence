@@ -25,6 +25,7 @@ import java.lang.reflect.Constructor;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -146,12 +147,12 @@ public class SelectNewTest extends AbstractCoreTest {
     @Test(expected = NullPointerException.class)
     public void testSelectNewNullClass() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew((Class<Document>) null);
+        verifyException(criteria, NullPointerException.class).selectNew((Class<Document>) null);
     }
 
     @Test(expected = NullPointerException.class)
     public void testSelectNewNullConstructor() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew((Constructor<Document>) null);
+        verifyException(criteria, NullPointerException.class).selectNew((Constructor<Document>) null);
     }
 }

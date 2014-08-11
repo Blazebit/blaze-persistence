@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -58,10 +59,10 @@ public class LikeTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLikeNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").like(null, true, null);
+        verifyException(criteria.where("d.name"), NullPointerException.class).like(null, true, null);
     }
 
     @Test
@@ -93,10 +94,10 @@ public class LikeTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLikeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").likeExpression(null, true, null);
+        verifyException(criteria.where("d.name"), NullPointerException.class).likeExpression(null, true, null);
     }
 
     /** *** NOT LIKE **** */
@@ -131,10 +132,10 @@ public class LikeTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotLikeNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").notLike(null, true, null);
+        verifyException(criteria.where("d.name"), NullPointerException.class).notLike(null, true, null);
     }
 
     @Test
@@ -188,10 +189,10 @@ public class LikeTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testNotLikeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.name").notLikeExpression(null, true, null);
+        verifyException(criteria.where("d.name"), NullPointerException.class).notLikeExpression(null, true, null);
     }
 
     private String getCaseInsensitiveLike(String property, String likeParam, Character escape) {

@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
+import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -37,10 +38,10 @@ public class LessTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLtNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").lt(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).lt(null);
     }
 
     @Test
@@ -52,10 +53,10 @@ public class LessTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLtExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").ltExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).ltExpression(null);
     }
 
     @Test
@@ -67,10 +68,10 @@ public class LessTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLeNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").le(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).le(null);
     }
 
     @Test
@@ -82,10 +83,10 @@ public class LessTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testLeExpressionNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.age").leExpression(null);
+        verifyException(criteria.where("d.age"), NullPointerException.class).leExpression(null);
     }
 
     @Test
