@@ -95,12 +95,14 @@ public class SelectManager<T> extends AbstractManager {
     String buildSelect(String rootAlias) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
+        
+        if (distinct) {
+            sb.append("DISTINCT ");
+        }
+        
         if (selectInfos.isEmpty()) {
             sb.append(rootAlias);
         } else {
-            if (distinct) {
-                sb.append("DISTINCT ");
-            }
             // we must not replace select alias since we would loose the original expressions
             populateSelectAliasAbsolutePaths();
             queryGenerator.setQueryBuffer(sb);
@@ -229,9 +231,6 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void distinct() {
-        if (selectInfos.isEmpty()) {
-            throw new IllegalStateException("Distinct requires select");
-        }
         this.distinct = true;
     }
 
