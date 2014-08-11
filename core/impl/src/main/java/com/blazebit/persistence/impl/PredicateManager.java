@@ -19,7 +19,6 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;

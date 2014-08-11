@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
-import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;

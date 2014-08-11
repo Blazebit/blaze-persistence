@@ -16,9 +16,9 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
-import com.blazebit.persistence.QueryBuilder;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;

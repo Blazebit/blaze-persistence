@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.MappingFilter;
  *
  * A starts with ignore case filter accepts an object. The {@linkplain Object#toString()} representation of that object will be
  * used as value for the starts with restriction.
- * 
+ *
  * @author Christian Beikov
  * @since 1.0
  */

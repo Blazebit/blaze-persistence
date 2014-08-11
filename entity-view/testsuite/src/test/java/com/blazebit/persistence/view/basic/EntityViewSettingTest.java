@@ -16,18 +16,17 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.view.entity.Document;
-import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorters;
-import com.blazebit.persistence.view.subquery.model.DocumentAggregatedView;
 import com.blazebit.persistence.view.basic.model.DocumentWithEntityView;
 import com.blazebit.persistence.view.basic.model.FilteredDocument;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;

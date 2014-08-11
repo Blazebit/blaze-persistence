@@ -18,7 +18,7 @@ package com.blazebit.persistence;
 /**
  * A builder for simple case when expressions.
  *
- * The left hand expression also referred to as case operand, will be compared to the when expressions defined via 
+ * The left hand expression also referred to as case operand, will be compared to the when expressions defined via
  * {@link SimpleCaseWhenBuilder#when(java.lang.String, java.lang.String)}.
  *
  * @param <T> The builder type that is returned on terminal operations
@@ -30,7 +30,7 @@ public interface SimpleCaseWhenBuilder<T> {
     /**
      * Adds the given when expression with the then expression to the case when builder.
      *
-     * @param expression The when expression
+     * @param expression     The when expression
      * @param thenExpression The then expression
      * @return This simple case when builder
      */

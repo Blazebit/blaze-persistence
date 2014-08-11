@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -47,6 +46,7 @@ import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
+import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;

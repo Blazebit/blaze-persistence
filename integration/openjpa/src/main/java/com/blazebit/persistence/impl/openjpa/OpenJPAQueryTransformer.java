@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.openjpa;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -36,5 +35,5 @@ public class OpenJPAQueryTransformer implements QueryTransformer {
         nativeQuery.addAggregateListener(new ObjectBuilderAggregateListenerAdapter(objectBuilder));
         return query;
     }
-    
+
 }

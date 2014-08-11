@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
@@ -25,7 +24,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
-    
+
     /**
      * Starts a {@link JoinOnOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
@@ -33,7 +32,7 @@ public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
      * @return The or predicate builder for the having clause
      */
     public JoinOnOrBuilder<JoinOnBuilder<T>> onOr();
-    
+
     /**
      * Finishes the ON clause and adds it to the parent predicate container represented by the type {@linkplain T}.
      *

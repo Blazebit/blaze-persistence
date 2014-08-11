@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.subview;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.subview.model.PersonSubView;

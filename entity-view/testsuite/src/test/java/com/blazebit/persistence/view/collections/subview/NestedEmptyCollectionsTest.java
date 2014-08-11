@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.collections.subview;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;

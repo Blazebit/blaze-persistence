@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.SubqueryBuilder;
-
 /**
  *
  * @author Christian Beikov

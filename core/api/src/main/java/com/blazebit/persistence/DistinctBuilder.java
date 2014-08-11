@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
@@ -26,7 +25,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface DistinctBuilder<T, X extends DistinctBuilder<T, X>> {
-    
+
     /**
      * Marks the query to do a distinct select.
      *

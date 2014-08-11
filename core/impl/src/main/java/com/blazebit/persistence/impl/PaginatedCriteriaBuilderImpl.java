@@ -24,7 +24,6 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;

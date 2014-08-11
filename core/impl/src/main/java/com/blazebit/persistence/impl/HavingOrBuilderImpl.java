@@ -22,10 +22,10 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 
 /**
  *

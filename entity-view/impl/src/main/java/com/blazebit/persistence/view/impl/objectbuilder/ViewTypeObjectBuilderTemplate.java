@@ -16,10 +16,6 @@
 
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.ListTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformer;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -32,6 +28,10 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleEl
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.ListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformer;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;

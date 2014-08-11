@@ -20,7 +20,6 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
-
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -30,10 +29,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;

@@ -16,11 +16,11 @@
 
 package com.blazebit.persistence.view.subview;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.subview.model.DocumentMasterView;
 import com.blazebit.persistence.view.subview.model.PersonSubView;
@@ -30,7 +30,9 @@ import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityTransaction;
 import org.junit.Assert;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import org.junit.Before;
 import org.junit.Test;
 

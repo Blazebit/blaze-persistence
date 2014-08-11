@@ -16,8 +16,8 @@
 
 package com.blazebit.persistence.view.collections.basic;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;

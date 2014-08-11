@@ -35,7 +35,7 @@ public final class Sorters {
      * <li>sorts nulls first is the flag <code>nullsFirst</code> is ture, nulls last otherwise</li>
      * </ul>
      *
-     * @param ascending If true sorts ascending, otherwise descending
+     * @param ascending  If true sorts ascending, otherwise descending
      * @param nullsFirst If true sorts nulls first, otherwise nulls last
      * @return A new sorter
      */
@@ -65,7 +65,7 @@ public final class Sorters {
 
     /**
      * Like {@link Sorters#ascending(boolean, boolean)} but with <code>nullsFirst</code> set to false.
-     * 
+     *
      * @return A new sorter
      */
     public static Sorter ascending() {
@@ -74,7 +74,7 @@ public final class Sorters {
 
     /**
      * Like {@link Sorters#descending(boolean, boolean)} but with <code>nullsFirst</code> set to false.
-     * 
+     *
      * @return A new sorter
      */
     public static Sorter descending() {

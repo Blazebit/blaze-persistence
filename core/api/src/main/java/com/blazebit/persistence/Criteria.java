@@ -34,7 +34,8 @@ public class Criteria {
      * @return The first {@linkplain CriteriaBuilderConfigurationProvider} that is found
      */
     public static CriteriaBuilderConfigurationProvider getDefaultProvider() {
-        ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(CriteriaBuilderConfigurationProvider.class);
+        ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(
+            CriteriaBuilderConfigurationProvider.class);
         Iterator<CriteriaBuilderConfigurationProvider> iterator = serviceLoader.iterator();
 
         if (iterator.hasNext()) {

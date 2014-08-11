@@ -15,9 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.filter;
 
-import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 
 /**

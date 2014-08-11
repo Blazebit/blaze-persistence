@@ -38,21 +38,21 @@ public interface Attribute<X, Y> {
      * @return The java type of the attribute
      */
     public Class<Y> getJavaType();
-    
+
     /**
      * Returns true if this attribute maps to a subquery provider, otherwise false.
      *
      * @return True if this attribute maps to a subquery provider, otherwise false
      */
     public boolean isSubquery();
-    
+
     /**
      * Returns true if this attribute is a collection, otherwise false.
      *
      * @return True if this attribute is a collection, otherwise false
      */
     public boolean isCollection();
-    
+
     /**
      * Returns true if this attribute is a subview, otherwise false.
      *

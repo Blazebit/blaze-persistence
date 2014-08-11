@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.eclipselink;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -33,9 +32,9 @@ public class EclipseLinkQueryTransformer implements QueryTransformer {
 
     @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {
-        DatabaseQuery databaseQuery = JpaHelper.getDatabaseQuery(query);  
+        DatabaseQuery databaseQuery = JpaHelper.getDatabaseQuery(query);
         databaseQuery.setRedirector(new ObjectBuilderQueryRedirectorAdapter(objectBuilder));
         return query;
     }
-    
+
 }

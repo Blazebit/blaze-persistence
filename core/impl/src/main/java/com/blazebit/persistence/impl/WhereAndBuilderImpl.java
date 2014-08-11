@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.HavingAndBuilder;
-import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
@@ -26,9 +24,9 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 
 /**
  *

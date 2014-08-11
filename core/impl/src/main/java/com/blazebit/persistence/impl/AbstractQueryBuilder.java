@@ -15,13 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;

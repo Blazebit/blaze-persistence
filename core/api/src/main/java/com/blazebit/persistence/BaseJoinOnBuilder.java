@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
@@ -25,7 +24,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> {
-    
+
     /**
      * Starts a {@link RestrictionBuilder} for an on predicate with the given expression as left hand expression.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.

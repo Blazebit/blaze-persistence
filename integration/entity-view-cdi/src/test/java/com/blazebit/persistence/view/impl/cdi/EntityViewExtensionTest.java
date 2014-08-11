@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.persistence.view.EntityViewManager;
@@ -21,8 +20,9 @@ import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
-import static  org.junit.Assert.*;
 
 /**
  *
@@ -30,20 +30,25 @@ import static  org.junit.Assert.*;
  * @since 1.0
  */
 public class EntityViewExtensionTest {
+
     @Inject
     private EntityViewManager evm;
-    
+
     @Test
     public void testInjection() throws Exception {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
         container.boot();
-        container.getContextControl().startContexts();
+        container.getContextControl()
+            .startContexts();
         BeanProvider.injectFields(this);
-            
+
         assertNotNull(evm);
-        assertFalse(evm.getMetamodel().getViews().isEmpty());
-        assertNotNull(evm.getMetamodel().view(TestView.class));
-        
+        assertFalse(evm.getMetamodel()
+            .getViews()
+            .isEmpty());
+        assertNotNull(evm.getMetamodel()
+            .view(TestView.class));
+
         container.shutdown();
     }
 }

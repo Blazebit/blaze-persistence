@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
@@ -24,14 +23,14 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface JoinOnAndBuilder<T> extends BaseJoinOnBuilder<JoinOnAndBuilder<T>> {
-    
+
     /**
      * Finishes the AND predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
      *
      * @return The parent predicate container builder
      */
     public T endAnd();
-    
+
     /**
      * Starts a on or builder which connects it's predicates with the OR operator.
      * When the builder finishes, the predicate is added to this predicate container as conjunct.

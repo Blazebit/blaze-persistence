@@ -217,7 +217,7 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T in(List<?> values);
-    
+
     /**
      * Like {@link RestrictionBuilder#in(java.util.List) } but the values will be wrapped in a {@link List}.
      *
@@ -233,7 +233,7 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T notIn(List<?> values);
-    
+
     /**
      * Like {@link RestrictionBuilder#notIn(java.util.List) } but the values will be wrapped in a {@link List}.
      *

@@ -15,16 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.reflection.ReflectionUtils;
-import com.blazebit.text.FormatUtils;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.util.Collection;
-import java.util.Map;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.PluralAttribute;
-import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 /**
  *

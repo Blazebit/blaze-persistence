@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;

@@ -25,7 +25,6 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
@@ -40,6 +39,7 @@ import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 import java.util.Arrays;
 import java.util.List;
 

@@ -24,23 +24,24 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
-    
+
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a predicate.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
      *
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<T>> whereSubquery();
-    
+
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of 
+     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<T>> whereSubquery(String subqueryAlias, String expression);
@@ -61,7 +62,7 @@ public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> whereExists();
-    
+
     /**
      * Starts an not exists predicate for the where clause with a subquery on the right hand side.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.

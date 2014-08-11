@@ -28,21 +28,21 @@ public interface CriteriaBuilderFactory {
     /**
      * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
-     * 
+     *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param entityClass The entity class which should be the root entity
-     * @param <T> The type of the entity class
+     * @param entityClass   The entity class which should be the root entity
+     * @param <T>           The type of the entity class
      * @return A new criteria builder
      */
     public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass);
 
     /**
      * Creates a new criteria builder with the given entity class as root entity in the FROM clause with the given alias.
-     * 
+     *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param entityClass The entity class which should be the root entity
-     * @param alias The alias for the root entity
-     * @param <T> The type of the entity class
+     * @param entityClass   The entity class which should be the root entity
+     * @param alias         The alias for the root entity
+     * @param <T>           The type of the entity class
      * @return A new criteria builder
      */
     public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass, String alias);

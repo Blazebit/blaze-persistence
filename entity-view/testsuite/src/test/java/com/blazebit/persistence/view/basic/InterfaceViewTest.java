@@ -16,14 +16,14 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.view.entity.Document;
-import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import java.util.List;
 import javax.persistence.EntityTransaction;

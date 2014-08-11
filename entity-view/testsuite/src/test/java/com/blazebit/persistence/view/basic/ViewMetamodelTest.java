@@ -16,8 +16,6 @@
 
 package com.blazebit.persistence.view.basic;
 
-import com.blazebit.persistence.view.entity.Document;
-import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.basic.model.CircularDocument;
 import com.blazebit.persistence.view.basic.model.CircularPerson;
 import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
@@ -25,6 +23,8 @@ import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.IdHolderView;
 import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.entity.Document;
+import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;

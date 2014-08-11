@@ -18,7 +18,6 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 

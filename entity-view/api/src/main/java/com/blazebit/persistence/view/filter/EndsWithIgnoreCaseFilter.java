@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.MappingFilter;
  *
  * An ends with ignore case filter accepts an object. The {@linkplain Object#toString()} representation of that object will be
  * used as value for the ends with restriction.
- * 
+ *
  * @author Christian Beikov
  * @since 1.0
  */

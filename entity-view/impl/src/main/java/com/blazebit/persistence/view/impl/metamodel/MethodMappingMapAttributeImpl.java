@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;

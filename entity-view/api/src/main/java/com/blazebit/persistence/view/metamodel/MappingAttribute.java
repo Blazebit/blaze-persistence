@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 /**
@@ -25,7 +24,7 @@ package com.blazebit.persistence.view.metamodel;
  * @since 1.0
  */
 public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
-    
+
     /**
      * Returns the mapping of the attribute.
      *

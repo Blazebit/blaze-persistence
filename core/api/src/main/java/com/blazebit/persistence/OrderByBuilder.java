@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 /**
@@ -25,7 +24,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface OrderByBuilder<T extends OrderByBuilder<T>> {
-    
+
     /**
      * Adds an order by clause with the given expression to the query.
      *

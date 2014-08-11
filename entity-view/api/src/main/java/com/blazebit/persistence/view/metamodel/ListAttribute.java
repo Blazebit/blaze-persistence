@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.List;
-
 
 /**
  * Instances of the type {@linkplain ListAttribute} represent {@linkplain java.util.List}-valued attributes.
@@ -28,5 +26,5 @@ import java.util.List;
  * @since 1.0
  */
 public interface ListAttribute<X, E> extends PluralAttribute<X, List<E>, E> {
-    
+
 }

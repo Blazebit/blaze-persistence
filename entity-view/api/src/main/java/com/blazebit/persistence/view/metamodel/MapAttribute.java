@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.metamodel;
 
 import java.util.Map;
-
 
 /**
  * Instances of the type {@linkplain MapAttribute} represent persistent {@linkplain java.util.Map}-valued attributes.
@@ -29,10 +27,10 @@ import java.util.Map;
  * @since 1.0
  */
 public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> {
-    
+
     /**
      * Returns the java type of the key.
-     * 
+     *
      * @return The java type of the key
      */
     public Class<K> getKeyType();
