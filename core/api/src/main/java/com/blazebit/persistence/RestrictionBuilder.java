@@ -52,6 +52,18 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> eq();
+    
+    /**
+     * Starts a {@link QuantifiableSubqueryInitiator} for the EQ predicate that can be used to apply quantors.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable subquery initiator
+     */
+    public QuantifiableSubqueryInitiator<T> eq(String subqueryAlias, String expression);
 
     /**
      * Finishes the EQ predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -77,6 +89,15 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> notEq();
+    
+    /**
+     * Like {@link RestrictionBuilder#eq(java.lang.String,java.lang.String) } but the result is wrapped in a NOT predicate.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable binary predicate builder
+     */
+    public QuantifiableSubqueryInitiator<T> notEq(String subqueryAlias, String expression);
 
     /**
      * Like {@link RestrictionBuilder#eq(java.lang.Object) } but the result is wrapped in a NOT predicate.
@@ -100,6 +121,18 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> gt();
+    
+    /**
+     * Starts a {@link QuantifiableSubqueryInitiator} for the GT predicate that can be used to apply quantors.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable subquery initiator
+     */
+    public QuantifiableSubqueryInitiator<T> gt(String subqueryAlias, String expression);
 
     /**
      * Finishes the GT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -125,6 +158,18 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> ge();
+    
+    /**
+     * Starts a {@link QuantifiableSubqueryInitiator} for the GE predicate that can be used to apply quantors.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable subquery initiator
+     */
+    public QuantifiableSubqueryInitiator<T> ge(String subqueryAlias, String expression);
 
     /**
      * Finishes the GE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -150,6 +195,18 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> lt();
+    
+    /**
+     * Starts a {@link QuantifiableSubqueryInitiator} for the LT predicate that can be used to apply quantors.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable subquery initiator
+     */
+    public QuantifiableSubqueryInitiator<T> lt(String subqueryAlias, String expression);
 
     /**
      * Finishes the LT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -175,6 +232,18 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> le();
+    
+    /**
+     * Starts a {@link QuantifiableSubqueryInitiator} for the LE predicate that can be used to apply quantors.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The quantifiable subquery initiator
+     */
+    public QuantifiableSubqueryInitiator<T> le(String subqueryAlias, String expression);
 
     /**
      * Finishes the LE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
