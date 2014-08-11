@@ -20,7 +20,8 @@ import com.blazebit.persistence.SelectBuilder;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface TupleElementMapper {
     

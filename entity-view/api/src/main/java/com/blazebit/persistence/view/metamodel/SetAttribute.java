@@ -20,10 +20,12 @@ import java.util.Set;
 
 
 /**
- * 
- * TODO: javadoc
+ * Instances of the type {@linkplain SetAttribute} represent {@linkplain java.util.Set}-valued attributes.
  *
+ * @param <X> The type of the declaring entity view
+ * @param <E> The element type of the represented Set
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface SetAttribute<X, E> extends PluralAttribute<X, Set<E>, E> {
     

@@ -22,7 +22,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class SubviewTupleTransformer extends TupleTransformer {
 

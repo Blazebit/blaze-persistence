@@ -21,7 +21,8 @@ import java.util.List;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ListTupleListTransformer extends AbstractIndexedTupleListTransformer<List<Object>, Integer> {
 

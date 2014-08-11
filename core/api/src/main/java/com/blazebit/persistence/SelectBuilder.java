@@ -77,6 +77,12 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String alias);
+    
+    //TODO: javadoc
+    public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression,  String selectAlias);
+    
+    //TODO: javadoc
+    public SubqueryInitiator<? extends SelectBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
 
     /**
      * Adds a select clause with the given expression to the query.

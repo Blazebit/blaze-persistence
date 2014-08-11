@@ -30,7 +30,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute<X, Y> implements ParameterAttribute<X, Y> {
     
@@ -38,7 +39,11 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final MappingConstructor<X> declaringConstructor;
     
     public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(constructor.getDeclaringType(), (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index], mapping, entityViews);
+        super(constructor.getDeclaringType(), 
+              (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index], 
+              mapping, 
+              entityViews, 
+              "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() +  "' at the index '" + index + "'!");
         this.index = index;
         this.declaringConstructor = constructor;
         

@@ -93,7 +93,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<FilteredDocument> setting = new EntityViewSetting<FilteredDocument>(FilteredDocument.class, 0, 1);
+        EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(FilteredDocument.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
@@ -118,15 +118,16 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
         
         // Base setting
-        EntityViewSetting<DocumentWithEntityView> setting = new EntityViewSetting<DocumentWithEntityView>(DocumentWithEntityView.class, 0, 1);
+        EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting.create(DocumentWithEntityView.class, 0, 1);
         
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("owner.name", "pers2");
         
         // Currently we have no way to express what filter should be used when using entity attributes
-        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
-        
+        setting.apply(evm, cb);
+//        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
+//        
 //        PagedList<DocumentWithEntityView> result = paginatedCb.getResultList();
 //        
 //        assertEquals(1, result.size());

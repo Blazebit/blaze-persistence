@@ -16,11 +16,8 @@
 
 package com.blazebit.persistence.view.impl.cdi;
 
-import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import javax.inject.Inject;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceUnit;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
@@ -32,13 +29,8 @@ import static  org.junit.Assert.*;
  * @author Christian
  */
 public class EntityViewExtensionTest {
-    
-    @PersistenceUnit
-    private EntityManagerFactory emf;
     @Inject
     private EntityViewManager evm;
-    @Inject
-    private CriteriaBuilderFactory cbf;
     
     @Test
     public void testInjection() throws Exception {

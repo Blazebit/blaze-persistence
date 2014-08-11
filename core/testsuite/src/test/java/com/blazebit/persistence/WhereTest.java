@@ -229,7 +229,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereLeftSubquery(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
+        crit.whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
         String expected = "SELECT d FROM Document d WHERE (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
         
         assertEquals(expected, crit.getQueryString());
@@ -239,7 +239,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereLeftSubqueryAndBuilder(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where("d.name").eq("test").whereOr().whereAnd().where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
         
         assertEquals(expected, crit.getQueryString());
@@ -249,7 +249,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereLeftSubqueryOrBuilder(){
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.whereOr().where("d.name").eq("test").where().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
         
         assertEquals(expected, crit.getQueryString());

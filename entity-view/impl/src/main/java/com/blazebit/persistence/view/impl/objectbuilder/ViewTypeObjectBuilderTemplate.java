@@ -24,8 +24,10 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
@@ -53,7 +55,8 @@ import javax.persistence.metamodel.Metamodel;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ViewTypeObjectBuilderTemplate<T> {
     
@@ -181,11 +184,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 } catch (Exception ex) {
                     throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
                 }
+                
+                String subqueryExpression = (String) mapping[2];
+                String subqueryAlias = (String) mapping[3];
 
-                if (mapping[1] != null) {
-                    mappers[i] = new AliasSubqueryTupleElementMapper(provider, (String) mapping[1]);
+                if (subqueryExpression.isEmpty()) {
+                    if (mapping[1] != null) {
+                        mappers[i] = new AliasSubqueryTupleElementMapper(provider, (String) mapping[1]);
+                    } else {
+                        mappers[i] = new SubqueryTupleElementMapper(provider);
+                    }
                 } else {
-                    mappers[i] = new SubqueryTupleElementMapper(provider);
+                    if (mapping[1] != null) {
+                        mappers[i] = new AliasExpressionSubqueryTupleElementMapper(provider, subqueryExpression, subqueryAlias, (String) mapping[1]);
+                    } else {
+                        mappers[i] = new ExpressionSubqueryTupleElementMapper(provider, subqueryExpression, subqueryAlias);
+                    }
                 }
             } else {
                 if (mapping[1] != null) {
@@ -304,9 +318,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     private void applySubqueryMapping(SubqueryAttribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {
-        Object[] mapping = new Object[2];
+        Object[] mapping = new Object[4];
         mapping[0] = attribute.getSubqueryProvider();
         mapping[1] = getAlias(aliasPrefix, attribute);
+        mapping[2] = attribute.getSubqueryExpression();
+        mapping[3] = attribute.getSubqueryAlias();
         mappingList.add(mapping);
         parameterMappingList.add(null);
     }

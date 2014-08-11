@@ -46,7 +46,8 @@ import javassist.bytecode.MethodInfo;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ProxyFactory {
     

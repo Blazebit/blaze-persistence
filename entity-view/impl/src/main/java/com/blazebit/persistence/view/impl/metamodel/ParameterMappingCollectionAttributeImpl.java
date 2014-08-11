@@ -24,7 +24,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ParameterMappingCollectionAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 

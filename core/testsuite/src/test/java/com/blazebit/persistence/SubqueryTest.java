@@ -213,7 +213,7 @@ public class SubqueryTest extends AbstractCoreTest {
     @Test(expected = UnsupportedOperationException.class)
     public void testExceptionOnSubqueryCollectionAccess1() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.leftJoinOn("d.partners.localized", "l").end().where()
+        crit.leftJoinOn("d.partners.localized", "l").end().whereSubquery()
                 .from(Person.class, "p").select("name").where("LENGTH(partners.l)").gt(1).end()
                 .like("%dld");        
         crit.getQueryString();
@@ -222,7 +222,7 @@ public class SubqueryTest extends AbstractCoreTest {
     @Test(expected = UnsupportedOperationException.class)
     public void testExceptionOnSubqueryCollectionAccess2() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.leftJoinOn("d.partners.localized", "l").end().where()
+        crit.leftJoinOn("d.partners.localized", "l").end().whereSubquery()
                 .from(Person.class, "p").select("name").where("LENGTH(l[1])").gt(1).end()
                 .like("%dld");     
         crit.getQueryString();

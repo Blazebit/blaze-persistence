@@ -216,9 +216,23 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilder<X>> where() {
-        return whereManager.restrict(this);
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
+    @Override
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery() {
+        return whereManager.restrict(this);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /*

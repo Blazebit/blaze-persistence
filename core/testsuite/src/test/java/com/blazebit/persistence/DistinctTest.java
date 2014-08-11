@@ -33,10 +33,11 @@ public class DistinctTest extends AbstractCoreTest {
         assertEquals("SELECT DISTINCT partners.name FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
     }
     
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testDistinctWithoutSelect() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.distinct();     
+        assertEquals("SELECT DISTINCT d FROM Document d", criteria.getQueryString());
     }
     
     

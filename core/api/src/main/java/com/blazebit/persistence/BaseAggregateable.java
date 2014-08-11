@@ -31,7 +31,10 @@ public interface BaseAggregateable<T extends BaseAggregateable<T>> {
      *
      * @return The subquery initiator for building a subquery
      */
+    // TODO: rename to havingSubquery
     public SubqueryInitiator<RestrictionBuilder<T>> having();
+    
+    // TODO: add SubqueryInitiator<RestrictionBuilder<T>> havingSubquery(String expression, String subqueryAlias)
 
     /**
      * Starts a {@link RestrictionBuilder} for a having predicate with the given expression as left hand expression.

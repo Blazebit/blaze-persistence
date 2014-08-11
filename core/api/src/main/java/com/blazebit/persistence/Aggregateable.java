@@ -28,7 +28,7 @@ public interface Aggregateable<T extends Aggregateable<T>> extends BaseAggregate
     
     /**
      * Starts a {@link HavingOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain X}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
      *
      * @return The or predicate builder for the having clause
      */

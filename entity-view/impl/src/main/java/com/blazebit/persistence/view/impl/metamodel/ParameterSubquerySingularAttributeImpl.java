@@ -23,7 +23,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ParameterSubquerySingularAttributeImpl<X, Y> extends AbstractParameterSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
 

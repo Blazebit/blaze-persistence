@@ -17,10 +17,21 @@
 package com.blazebit.persistence;
 
 /**
+ * A base interface for builders that support join on.
+ * This is related to the fact, that a query builder supports join on clauses.
  *
- * @author ccbem
+ * @param <T> The concrete builder type
+ * @author Christian Beikov
+ * @since 1.0
  */
-public interface BaseJoinOnBuilder<X extends BaseJoinOnBuilder<X>> {
-    //TODO: javadoc
-    public RestrictionBuilder<X> on(String expression);
+public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> {
+    
+    /**
+     * Starts a {@link RestrictionBuilder} for an on predicate with the given expression as left hand expression.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param expression The left hand expression for a having predicate
+     * @return The restriction builder for the given expression
+     */
+    public RestrictionBuilder<T> on(String expression);
 }

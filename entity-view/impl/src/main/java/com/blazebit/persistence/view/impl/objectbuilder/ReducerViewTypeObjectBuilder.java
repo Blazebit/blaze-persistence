@@ -20,7 +20,8 @@ import java.util.Arrays;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
 

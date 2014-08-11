@@ -19,9 +19,12 @@ package com.blazebit.persistence.view.metamodel;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
- * TODO: javadoc
+ * Instances of the type {@linkplain SubqueryAttribute} represents single-valued properties or fields.
  *
- * @author cpbec
+ * @param <X> The type of the declaring entity view
+ * @param <Y> The type of attribute
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
 
@@ -31,4 +34,18 @@ public interface SubqueryAttribute<X, Y> extends SingularAttribute<X, Y> {
      * @return The subquery provider of the attribute
      */
     public Class<? extends SubqueryProvider> getSubqueryProvider();
+    
+    /**
+     * Returns the subquery expression of the attribute.
+     * 
+     * @return The subquery expression of the attribute
+     */
+    public String getSubqueryExpression();
+    
+    /**
+     * Returns the subquery alias of the attribute.
+     * 
+     * @return The subquery alias of the attribute
+     */
+    public String getSubqueryAlias();
 }

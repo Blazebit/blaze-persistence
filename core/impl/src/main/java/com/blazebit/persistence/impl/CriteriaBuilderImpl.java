@@ -88,4 +88,16 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
         return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(alias);
     }
 
+    @Override
+    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    }
+    
+    
+
 }

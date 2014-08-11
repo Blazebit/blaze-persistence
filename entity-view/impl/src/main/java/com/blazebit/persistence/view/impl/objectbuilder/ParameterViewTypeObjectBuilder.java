@@ -22,7 +22,8 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMap
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
     

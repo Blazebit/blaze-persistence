@@ -16,35 +16,50 @@
 package com.blazebit.persistence.view.metamodel;
 
 /**
+ * Instances of the type {@linkplain PluralAttribute} represent collection-valued attributes.
  *
- * TODO: javadoc
- *
+ * @param <X> The type of the declaring entity view
+ * @param <C> The type of the represented collection
+ * @param <E> The element type of the represented collection
  * @author Christian Beikov
+ * @since 1.0
  */
 public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
 
     /**
-     * TODO: javadoc
+     * Returns the collection type.
      *
-     * @return
+     * @return The collection type
      */
     public CollectionType getCollectionType();
 
     /**
-     * TODO: javadoc
+     * Returns the type representing the element type of the collection.
      *
-     * @return
+     * @return The element type
      */
     public Class<E> getElementType();
 
     /**
-     * TODO: javadoc
+     * The different collection types.
      */
     public static enum CollectionType {
 
+        /**
+         * Collection-valued attribute.
+         */
         COLLECTION,
+        /**
+         * List-valued attribute.
+         */
         LIST,
+        /**
+         * Map-valued attribute.
+         */
         MAP,
+        /**
+         * Set-valued attribute.
+         */
         SET;
     }
 }

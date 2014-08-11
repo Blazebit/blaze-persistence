@@ -22,7 +22,8 @@ import java.text.ParseException;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public final class FilterUtils {
 
@@ -30,9 +31,7 @@ public final class FilterUtils {
         try {
             return FormatUtils.getParsedValue((Class<? extends Serializable>) clazz, value.toString());
         } catch (ParseException ex) {
-            // Ignore
+            throw new IllegalArgumentException("The given value '" + value + "' could not be parsed into an object of type '" + clazz.getName() + "'", ex);
         }
-        
-        return value;
     }
 }

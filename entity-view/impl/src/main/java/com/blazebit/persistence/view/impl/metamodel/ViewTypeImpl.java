@@ -38,7 +38,8 @@ import java.util.TreeMap;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ViewTypeImpl<X> implements ViewType<X> {
 

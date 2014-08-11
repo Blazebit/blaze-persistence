@@ -24,18 +24,21 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public class AliasSubqueryTupleElementMapper extends SubqueryTupleElementMapper {
+public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper {
     
-    private final String alias;
+    protected final SubqueryProvider provider;
+    protected final String subqueryExpression;
+    protected final String subqueryAlias;
 
-    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String alias) {
-        super(provider);
-        this.alias = alias;
+    public ExpressionSubqueryTupleElementMapper(SubqueryProvider provider, String subqueryExpression, String subqueryAlias) {
+        this.provider = provider;
+        this.subqueryExpression = subqueryExpression;
+        this.subqueryAlias = subqueryAlias;
     }
-    
+
     @Override
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
-        provider.createSubquery(queryBuilder.selectSubquery(alias));
+        provider.createSubquery(queryBuilder.selectSubquery(subqueryExpression, subqueryAlias));
     }
     
 }

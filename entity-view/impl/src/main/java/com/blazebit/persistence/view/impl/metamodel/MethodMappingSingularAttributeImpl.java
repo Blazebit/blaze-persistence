@@ -25,7 +25,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class MethodMappingSingularAttributeImpl<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements MappingAttribute<X, Y> {
 

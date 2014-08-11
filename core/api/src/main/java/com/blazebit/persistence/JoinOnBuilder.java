@@ -17,12 +17,27 @@
 package com.blazebit.persistence;
 
 /**
+ * An interface for builders that support join on.
+ * This is related to the fact, that a query builder supports join on clauses.
  *
- * @author ccbem
+ * @param <T> The result type
+ * @author Christian Beikov
+ * @since 1.0
  */
-public interface JoinOnBuilder<X> extends BaseJoinOnBuilder<JoinOnBuilder<X>> {
-    //TODO: javadoc
-    public JoinOnOrBuilder<JoinOnBuilder<X>> onOr();
-    //TODO: javadoc
-    public X end();
+public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
+    
+    /**
+     * Starts a {@link JoinOnOrBuilder} which is a predicate consisting only of disjunctiv connected predicates.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The or predicate builder for the having clause
+     */
+    public JoinOnOrBuilder<JoinOnBuilder<T>> onOr();
+    
+    /**
+     * Finishes the ON clause and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The parent predicate container builder
+     */
+    public T end();
 }

@@ -20,7 +20,8 @@ import com.blazebit.persistence.QueryBuilder;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class TupleTransformer {
 

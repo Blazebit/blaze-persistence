@@ -90,9 +90,14 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> where() {
+    public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery() {
         RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<WhereOrBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery(String subqueryAlias, String expression) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     @Override

@@ -273,6 +273,16 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    }
+
+    @Override
     public Metamodel getMetamodel() {
         return em.getMetamodel();
     }

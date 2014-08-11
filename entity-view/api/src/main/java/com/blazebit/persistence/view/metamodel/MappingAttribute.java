@@ -17,9 +17,12 @@
 package com.blazebit.persistence.view.metamodel;
 
 /**
- * TODO: javadoc
+ * Represents an attribute that has a mapping expression.
  *
- * @author cpbec
+ * @param <X> The type of the declaring entity view
+ * @param <Y> The type of attribute
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface MappingAttribute<X, Y> extends Attribute<X, Y> {
     

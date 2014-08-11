@@ -147,4 +147,10 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends A
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String alias);
+    
+    @Override
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
+    
+    @Override
+    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
 }
