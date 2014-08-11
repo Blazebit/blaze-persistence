@@ -22,6 +22,7 @@ package com.blazebit.persistence.impl.predicate;
  * @since 1.0
  */
 public enum PredicateQuantifier {
+
     ONE,
     ALL,
     ANY;

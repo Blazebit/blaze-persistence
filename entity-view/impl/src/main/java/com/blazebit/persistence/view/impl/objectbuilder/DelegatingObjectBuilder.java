@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -26,7 +25,7 @@ import java.util.List;
  * @since 1.0
  */
 public class DelegatingObjectBuilder<T> implements ObjectBuilder<T> {
-    
+
     private final ObjectBuilder<T> delegate;
 
     public DelegatingObjectBuilder(ObjectBuilder<T> delegate) {

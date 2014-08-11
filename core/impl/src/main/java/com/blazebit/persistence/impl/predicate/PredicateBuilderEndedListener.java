@@ -22,6 +22,6 @@ package com.blazebit.persistence.impl.predicate;
  * @since 1.0
  */
 public interface PredicateBuilderEndedListener {
-    
+
     public void onBuilderEnded(PredicateBuilder o);
 }

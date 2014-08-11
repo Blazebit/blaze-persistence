@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -23,7 +22,8 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * @author Moritz Becker
  * @since 1.0
  */
-public class HavingManager<U> extends PredicateManager<U>{
+public class HavingManager<U> extends PredicateManager<U> {
+
     HavingManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
     }
@@ -32,7 +32,7 @@ public class HavingManager<U> extends PredicateManager<U>{
     protected String getClauseName() {
         return "HAVING";
     }
-    
+
     HavingOrBuilderImpl<U> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }

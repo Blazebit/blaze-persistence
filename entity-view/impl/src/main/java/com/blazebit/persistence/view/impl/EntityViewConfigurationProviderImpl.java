@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -32,5 +31,5 @@ public class EntityViewConfigurationProviderImpl implements EntityViewConfigurat
     public EntityViewConfiguration createConfiguration() {
         return new EntityViewConfigurationImpl();
     }
-    
+
 }

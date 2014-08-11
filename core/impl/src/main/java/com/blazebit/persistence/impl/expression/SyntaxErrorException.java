@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 /**
@@ -26,11 +25,11 @@ public class SyntaxErrorException extends RuntimeException {
 
     public SyntaxErrorException() {
     }
-    
+
     public SyntaxErrorException(Throwable t) {
         super(t);
     }
-    
+
     public SyntaxErrorException(String msg) {
         super(msg);
     }

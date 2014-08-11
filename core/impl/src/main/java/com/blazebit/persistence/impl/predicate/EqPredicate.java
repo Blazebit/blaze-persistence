@@ -28,31 +28,32 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
+public class EqPredicate extends QuantifiableBinaryExpressionPredicate {
+
     // This field indicates whether it is necessary to include this KEY(x) = y clause in the
     // where clause. E.g. this is not necessary for id and count query if the corresponding map access
     // only occurs in the select clause.
     private boolean requiredByMapValueSelect = false;
-    
+
     public EqPredicate(Expression left, Expression right) {
         super(left, right, PredicateQuantifier.ONE);
     }
-    
+
     public EqPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
         super(left, right, quantifier);
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
     public static class EqPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
-        
+
         public EqPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
             super(result, listener, leftExpression, wrapNot, subqueryInitFactory, expressionFactory);
         }
-       
+
         @Override
         public T value(Object value) {
             return chain(new EqPredicate(leftExpression, new ParameterExpression(value), PredicateQuantifier.ONE));
@@ -60,7 +61,8 @@ public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
 
         @Override
         public T expression(String expression) {
-            return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
+            return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
+                                         PredicateQuantifier.ONE));
         }
 
         @Override

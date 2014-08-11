@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import java.util.Calendar;
@@ -32,6 +31,7 @@ import javax.persistence.TemporalType;
  * @since 1.0
  */
 public class ParameterManager {
+
     private static final String prefix = "param_";
     private int counter;
     private final Map<Object, String> nameCache = new IdentityHashMap<Object, String>();
@@ -45,12 +45,12 @@ public class ParameterManager {
         if (!containsParameter(parameterName)) {
             return null;
         }
-        
+
         Object value = getParameterValue(parameterName);
-        
+
         return new ParameterImpl(value == null ? null : value.getClass(), parameterName);
     }
-    
+
     public Set<? extends Parameter<?>> getParameters() {
         Set<Parameter<?>> result = new HashSet<Parameter<?>>();
 
@@ -60,7 +60,7 @@ public class ParameterManager {
         }
         return result;
     }
-    
+
     public boolean containsParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
@@ -74,7 +74,7 @@ public class ParameterManager {
         }
         return parameters.containsKey(parameterName) && parameters.get(parameterName) != REGISTERED_PLACEHOLDER;
     }
-    
+
     public Object getParameterValue(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
@@ -82,46 +82,48 @@ public class ParameterManager {
         Object o = parameters.get(parameterName);
         return o == REGISTERED_PLACEHOLDER ? null : o;
     }
-    
+
     public String getParamNameForObject(Object o) {
-        if(o == null)
+        if (o == null) {
             throw new NullPointerException();
+        }
         String existingName = nameCache.get(o);
-        if(existingName == null){
+        if (existingName == null) {
             existingName = prefix + counter++;
             nameCache.put(o, existingName);
             parameters.put(existingName, o);
         }
         return existingName;
     }
-    
-    void addParameterMapping(String parameterName, Object o){
+
+    void addParameterMapping(String parameterName, Object o) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
         parameters.put(parameterName, o);
     }
-    
-    public void registerParameterName(String parameterName){
+
+    public void registerParameterName(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        if(!parameters.containsKey(parameterName)){
+        if (!parameters.containsKey(parameterName)) {
             parameters.put(parameterName, REGISTERED_PLACEHOLDER);
         }
     }
-    
-    public void satisfyParameter(String parameterName, Object parameterValue){
+
+    public void satisfyParameter(String parameterName, Object parameterValue) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        if(!parameters.containsKey(parameterName)){
+        if (!parameters.containsKey(parameterName)) {
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
         parameters.put(parameterName, parameterValue);
     }
-    
-    private class ParameterImpl<T> implements Parameter<T>{
+
+    private class ParameterImpl<T> implements Parameter<T> {
+
         private final Class<T> paramClass;
         private final String paramName;
 
@@ -129,7 +131,7 @@ public class ParameterManager {
             this.paramClass = paramClass;
             this.paramName = paramName;
         }
-        
+
         @Override
         public String getName() {
             return paramName;
@@ -144,10 +146,11 @@ public class ParameterManager {
         public Class<T> getParameterType() {
             return paramClass;
         }
-        
+
     }
-    
+
     static class TemporalCalendarParameterWrapper {
+
         private final Calendar value;
         private final TemporalType type;
 
@@ -164,8 +167,9 @@ public class ParameterManager {
             return type;
         }
     }
-    
+
     static class TemporalDateParameterWrapper {
+
         private final Date value;
         private final TemporalType type;
 

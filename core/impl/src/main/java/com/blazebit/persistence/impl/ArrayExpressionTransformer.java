@@ -46,7 +46,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
     public Expression transform(Expression original) {
         return transform(original, false);
     }
-    
+
     @Override
     public Expression transform(Expression original, boolean selectClause) {
         if (original instanceof CompositeExpression) {
@@ -69,19 +69,19 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
         int loopEndIndex = 0;
         if (path.getBaseNode() != null) {
             absBasePath = path.getBaseNode().getAliasInfo().getAbsolutePath();
-            
+
             if (path.getField() != null) {
                 absBasePath += "." + path.getField();
             }
-            
-            if(path.getExpressions().get(0).toString().equals(joinManager.getRootAlias())){
+
+            if (path.getExpressions().get(0).toString().equals(joinManager.getRootAlias())) {
                 loopEndIndex = 1;
             }
         } else {
             // this case is for single select and join aliases
             return original;
         }
-        
+
         for (int i = path.getExpressions().size() - 1; i >= loopEndIndex; i--) {
 
             PathElementExpression expr = path.getExpressions().get(i);
@@ -91,7 +91,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
 
                 String currentAbsPath = absBasePath;
                 TransformationInfo transInfo = new TransformationInfo(currentAbsPath, arrayExp.getIndex().toString());
-                
+
                 if (transformedPathFilterMap.get(transInfo) == null) {
                     CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
                     keyExpression.getExpressions().add(new FooExpression("KEY("));
@@ -103,24 +103,24 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                     EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExp.getIndex());
 
                     keyPath.setBaseNode(joinManager.findNode(keyPath.getPath()));
-                    
+
                     // set the generated predicate on the join node
                     JoinNode joinNode = joinManager.findNode(absBasePath);
-                    if(joinNode.getWithPredicate() != null){
+                    if (joinNode.getWithPredicate() != null) {
                         Predicate currentPred = joinNode.getWithPredicate();
-                        if(currentPred instanceof AndPredicate){
+                        if (currentPred instanceof AndPredicate) {
                             // we have to create a new predicate due to concurrent modification
                             AndPredicate withAndPredicate = new AndPredicate();
-                            withAndPredicate.getChildren().addAll(((AndPredicate)currentPred).getChildren());
+                            withAndPredicate.getChildren().addAll(((AndPredicate) currentPred).getChildren());
                             withAndPredicate.getChildren().add(valueKeyFilterPredicate);
                             joinNode.setWithPredicate(withAndPredicate);
-                        }else{
+                        } else {
                             AndPredicate withAndPredicate = new AndPredicate();
                             withAndPredicate.getChildren().add(currentPred);
                             withAndPredicate.getChildren().add(valueKeyFilterPredicate);
                             joinNode.setWithPredicate(withAndPredicate);
                         }
-                    }else{
+                    } else {
                         joinNode.setWithPredicate(valueKeyFilterPredicate);
                     }
                     transformedPathFilterMap.put(transInfo, valueKeyFilterPredicate);
@@ -137,7 +137,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
 
         return original;
     }
-    
+
     private static class TransformationInfo {
 
         public TransformationInfo(String absoluteFieldPath, String indexedField) {
@@ -165,7 +165,8 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                 return false;
             }
             final TransformationInfo other = (TransformationInfo) obj;
-            if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(other.absoluteFieldPath)) {
+            if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(
+                other.absoluteFieldPath)) {
                 return false;
             }
             if ((this.indexedField == null) ? (other.indexedField != null) : !this.indexedField.equals(other.indexedField)) {

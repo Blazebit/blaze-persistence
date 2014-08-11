@@ -43,7 +43,6 @@ public class PredicateBuilderEndedListenerImpl implements PredicateBuilderEndedL
         currentBuilder = builder;
         return builder;
     }
-    
 
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {

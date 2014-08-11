@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -29,16 +28,16 @@ import javax.persistence.EntityManager;
  * @author Christian Beikov
  * @since 1.0
  */
-public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory{
-    
+public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
+
     private final List<QueryTransformer> queryTransformers;
     private final ExpressionFactoryImpl expressionFactory;
-    
+
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.expressionFactory = new ExpressionFactoryImpl();
     }
-    
+
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
     }
@@ -52,5 +51,5 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory{
     public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
         return new CriteriaBuilderImpl<T>(this, em, clazz, alias, expressionFactory);
     }
-    
+
 }

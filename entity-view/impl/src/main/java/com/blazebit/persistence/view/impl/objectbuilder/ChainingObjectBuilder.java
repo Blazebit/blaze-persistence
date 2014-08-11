@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -27,8 +26,8 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ChainingObjectBuilder<T> implements ObjectBuilder<T>{
-    
+public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
+
     private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 

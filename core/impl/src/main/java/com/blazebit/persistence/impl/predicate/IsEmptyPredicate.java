@@ -33,5 +33,5 @@ public class IsEmptyPredicate extends UnaryExpressionPredicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
 }

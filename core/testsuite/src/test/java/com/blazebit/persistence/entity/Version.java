@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
@@ -33,11 +32,12 @@ import javax.persistence.TemporalType;
  */
 @Entity
 public class Version implements Serializable {
+
     private long id;
     private Document document;
     private Calendar date;
     private String url;
-    
+
     @Id
     @GeneratedValue
     public long getId() {

@@ -22,43 +22,46 @@ package com.blazebit.persistence.impl.predicate;
  * @since 1.0
  */
 public interface Predicate {
-    
+
     public static interface Visitor {
-        
+
         public void visit(AndPredicate predicate);
-        
+
         public void visit(OrPredicate predicate);
-        
+
         public void visit(NotPredicate predicate);
-        
+
         public void visit(EqPredicate predicate);
-        
+
         public void visit(IsNullPredicate predicate);
-        
+
         public void visit(IsEmptyPredicate predicate);
-        
+
         public void visit(IsMemberOfPredicate predicate);
-        
+
         public void visit(LikePredicate predicate);
-        
+
         public void visit(BetweenPredicate predicate);
-        
+
         public void visit(InPredicate predicate);
-        
+
         public void visit(NotInPredicate predicate);
-                
+
         public void visit(GtPredicate predicate);
+
         public void visit(GePredicate predicate);
+
         public void visit(LtPredicate predicate);
+
         public void visit(LePredicate predicate);
-        
+
         public void visit(ExistsPredicate predicate);
     }
-    
+
     /**
      * The predicate tree is traversed in pre-order.
-     * 
-     * @param visitor 
+     *
+     * @param visitor
      */
     public void accept(Visitor visitor);
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -65,12 +64,12 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public class EntityViewManagerImpl implements EntityViewManager {
-    
+
     private final ViewMetamodel metamodel;
     private final ProxyFactory proxyFactory;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final Map<String, Class<? extends Filter>> filterMappings;
-    
+
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
@@ -87,30 +86,30 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
         Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
-        
+
         if (filterClassImpl == null) {
             return createFilterInstance(filterClass, expectedType, argument);
         } else {
             return createFilterInstance(filterClassImpl, expectedType, argument);
         }
     }
-    
+
     private <T extends Filter> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
         try {
             Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
             Constructor<T> filterConstructor = findConstructor(constructors, Class.class, Object.class);
 
-            if  (filterConstructor != null) {
+            if (filterConstructor != null) {
                 return filterConstructor.newInstance(expectedType, argument);
             } else {
                 filterConstructor = findConstructor(constructors, Class.class);
 
-                if  (filterConstructor != null) {
+                if (filterConstructor != null) {
                     return filterConstructor.newInstance(expectedType);
                 } else {
                     filterConstructor = findConstructor(constructors, Object.class);
-                
-                    if  (filterConstructor != null) {
+
+                    if (filterConstructor != null) {
                         return filterConstructor.newInstance(argument);
                     } else {
                         filterConstructor = findConstructor(constructors);
@@ -134,20 +133,20 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 return (Constructor<T>) constructors[i];
             }
         }
-        
+
         return null;
     }
-    
+
     @Override
     public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, PaginatedCriteriaBuilder<?> criteriaBuilder) {
         return applyObjectBuilder(clazz, null, criteriaBuilder);
     }
-    
+
     @Override
     public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, CriteriaBuilder<?> criteriaBuilder) {
         return applyObjectBuilder(clazz, null, criteriaBuilder);
     }
-    
+
     @Override
     public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder) {
         ViewType<T> viewType = getMetamodel().view(clazz);
@@ -155,7 +154,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
-    
+
     @Override
     public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder) {
         ViewType<T> viewType = getMetamodel().view(clazz);
@@ -163,28 +162,29 @@ public class EntityViewManagerImpl implements EntityViewManager {
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
-    
+
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
         if (criteriaBuilder.getResultType() != viewType.getEntityClass()) {
-            throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName() + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
+            throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
+                + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
-        
+
         criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
     }
-    
+
     private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(Metamodel metamodel, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
         ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(viewType, mappingConstructor);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
-        
+
         if (value == null) {
             value = key.createValue(metamodel, this, proxyFactory);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
-            
+
             if (oldValue != null) {
                 value = oldValue;
             }
         }
-        
+
         return (ViewTypeObjectBuilderTemplate<T>) value;
     }
 
@@ -202,5 +202,5 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
     }
-    
+
 }

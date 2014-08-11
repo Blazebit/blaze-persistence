@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -27,24 +26,25 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class GroupByManager extends AbstractManager{
+public class GroupByManager extends AbstractManager {
+
     private final List<NodeInfo> groupByInfos;
-    
+
     GroupByManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
         super(queryGenerator, parameterManager);
         groupByInfos = new ArrayList<NodeInfo>();
     }
-    
-    void groupBy(Expression expr){
+
+    void groupBy(Expression expr) {
         groupByInfos.add(new NodeInfo(expr));
         registerParameterExpressions(expr);
     }
-    
+
     void buildGroupBy(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
         applyGroupBys(queryGenerator, sb, groupByInfos);
     }
-    
+
     void applyGroupBys(QueryGenerator queryGenerator, StringBuilder sb, List<NodeInfo> groupBys) {
         if (groupBys.isEmpty()) {
             return;
@@ -57,14 +57,14 @@ public class GroupByManager extends AbstractManager{
             iter.next().getExpression().accept(queryGenerator);
         }
     }
-    
-    void applyTransformer(ExpressionTransformer transformer){
+
+    void applyTransformer(ExpressionTransformer transformer) {
         for (NodeInfo groupBy : groupByInfos) {
             groupBy.setExpression(transformer.transform(groupBy.getExpression()));
         }
     }
-    
-    void acceptVisitor(Visitor v){
+
+    void acceptVisitor(Visitor v) {
         for (NodeInfo groupBy : groupByInfos) {
             groupBy.getExpression().accept(v);
         }
@@ -73,6 +73,5 @@ public class GroupByManager extends AbstractManager{
     List<NodeInfo> getGroupByInfos() {
         return groupByInfos;
     }
-    
-    
+
 }

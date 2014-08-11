@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import java.util.HashMap;
@@ -25,86 +24,88 @@ import java.util.Map;
  * @since 1.0
  */
 public class AliasManager {
+
     private final AliasManager parent;
     // maps alias to absolute path and join manager of the declaring query
-    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); 
+    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>();
     // maps non postfixed aliases to alias counter
     private final Map<String, Integer> aliasCounterMap = new HashMap<String, Integer>();
 
     public AliasManager() {
         this.parent = null;
     }
-    
+
     public AliasManager(AliasManager parent) {
         this.parent = parent;
     }
-    
-    public AliasInfo getAliasInfo(String alias){
+
+    public AliasInfo getAliasInfo(String alias) {
         return getHierarchical(alias);
     }
-    
-    public AliasInfo getAliasInfoForBottomLevel(String alias){
+
+    public AliasInfo getAliasInfoForBottomLevel(String alias) {
         return aliasMap.get(alias);
     }
 
     /**
      * Register the given alias info if possible
      * If the given alias already exists an exception is thrown.
+     *
      * @param aliasInfo
      * @return The registered alias
      */
-    public String registerAliasInfo(AliasInfo aliasInfo){
+    public String registerAliasInfo(AliasInfo aliasInfo) {
         String alias = aliasInfo.getAlias();
-        if(getHierarchical(alias) != null){
+        if (getHierarchical(alias) != null) {
             throw new IllegalArgumentException("Alias '" + alias + "' already exsits");
         }
         aliasMap.put(alias, aliasInfo);
         aliasCounterMap.put(alias, 0);
         return alias;
     }
-    
-    public String generatePostfixedAlias(String alias){
+
+    public String generatePostfixedAlias(String alias) {
         Integer counter;
         String nonPostfixed = alias;
-        if((counter = getCounterHierarchical(alias)) != null){
+        if ((counter = getCounterHierarchical(alias)) != null) {
             // non postfixed version of the alias already exists
             counter++;
             alias = alias + "_" + counter;
-        }else{
+        } else {
             // alias does not exist so just register it
             counter = 0;
         }
         aliasCounterMap.put(nonPostfixed, counter);
         return alias;
     }
-    
-    private AliasInfo getHierarchical(String alias){
+
+    private AliasInfo getHierarchical(String alias) {
         AliasInfo info = null;
-        if(parent != null){
+        if (parent != null) {
             info = parent.getHierarchical(alias);
         }
-        if(info == null){
+        if (info == null) {
             info = aliasMap.get(alias);
         }
         return info;
     }
-    
-    private Integer getCounterHierarchical(String alias){
+
+    private Integer getCounterHierarchical(String alias) {
         Integer counter = null;
-        if(parent != null){
+        if (parent != null) {
             counter = parent.getCounterHierarchical(alias);
         }
-        if(counter == null){
+        if (counter == null) {
             counter = aliasCounterMap.get(alias);
         }
         return counter;
     }
-    
-    public void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo){
+
+    public void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo) {
         aliasMap.remove(aliasInfo.getAlias());
     }
 
-    public Map<String, AliasInfo> getAliasMapForBottomLevel(){
+    public Map<String, AliasInfo> getAliasMapForBottomLevel() {
         return aliasMap;
     }
 }

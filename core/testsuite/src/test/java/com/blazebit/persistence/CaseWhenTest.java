@@ -27,7 +27,7 @@ import org.junit.Test;
  */
 @Ignore
 public class CaseWhenTest extends AbstractCoreTest {
-    
+
     @Test
     public void testCaseWhen() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
@@ -35,32 +35,31 @@ public class CaseWhenTest extends AbstractCoreTest {
             .when("'vertrag'", "2")
             .when("'info'", "1")
             .thenElse("0");
-        
+
         criteria.selectCase()
-                .when("document.type").eq("vertrag").then("2")
-                
-                .whenAnd()
+            .when("document.type").eq("vertrag").then("2")
+            .whenAnd()
+                .and("document.type").eq("vertrag")
+                .and("document.type").eq("info")
+            .then("1")
+            .whenAnd()
+                .and("document.type").eq("vertrag")
+                .and("document.type").eq("info")
+            .then("1")
+            .whenOr()
+                .or("document.type").eq("vertrag")
+                .or("document.type").eq("info")
+            .then("1")
+            .whenOr()
+                .and()
                     .and("document.type").eq("vertrag")
                     .and("document.type").eq("info")
-                .then("1")
-                .whenAnd()
+                .endAnd()
+                .and()
                     .and("document.type").eq("vertrag")
                     .and("document.type").eq("info")
-                .then("1")
-                .whenOr()
-                    .or("document.type").eq("vertrag")
-                    .or("document.type").eq("info")
-                .then("1")
-                .whenOr()
-                    .and()
-                        .and("document.type").eq("vertrag")
-                        .and("document.type").eq("info")
-                    .endAnd()
-                    .and()
-                        .and("document.type").eq("vertrag")
-                        .and("document.type").eq("info")
-                    .endAnd()
-                .then("2")
-                .thenElse("0");
+                .endAnd()
+            .then("2")
+            .thenElse("0");
     }
 }

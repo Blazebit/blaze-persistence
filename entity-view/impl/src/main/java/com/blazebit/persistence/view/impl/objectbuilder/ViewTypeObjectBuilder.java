@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -28,11 +27,11 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
+public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     protected final Constructor<? extends T> proxyConstructor;
     protected final TupleElementMapper[] mappers;
-    
+
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
         this.proxyConstructor = template.getProxyConstructor();
         this.mappers = template.getMappers();
@@ -43,7 +42,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
         if (tuple[0] == null) {
             return null;
         }
-        
+
         try {
             return proxyConstructor.newInstance(tuple);
         } catch (Exception ex) {
@@ -55,7 +54,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T>{
     public List<T> buildList(List<T> list) {
         return list;
     }
-    
+
     @Override
     public void applySelects(SelectBuilder<?, ?> queryBuilder) {
         for (int i = 0; i < mappers.length; i++) {

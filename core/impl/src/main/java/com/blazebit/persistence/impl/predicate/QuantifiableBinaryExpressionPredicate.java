@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -25,12 +24,13 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpressionPredicate {
+
     private final PredicateQuantifier quantifier;
 
     public QuantifiableBinaryExpressionPredicate(Expression left, Expression right) {
         this(left, right, PredicateQuantifier.ONE);
     }
-    
+
     public QuantifiableBinaryExpressionPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
         super(left, right);
         this.quantifier = quantifier;

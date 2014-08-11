@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.SelectBuilder;
@@ -24,17 +23,17 @@ import com.blazebit.persistence.SelectBuilder;
  * @since 1.0
  */
 public class AliasExpressionTupleElementMapper extends ExpressionTupleElementMapper {
-    
+
     private final String alias;
 
     public AliasExpressionTupleElementMapper(String expression, String alias) {
         super(expression);
         this.alias = alias;
     }
-    
+
     @Override
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
         queryBuilder.select(expression, alias);
     }
-    
+
 }

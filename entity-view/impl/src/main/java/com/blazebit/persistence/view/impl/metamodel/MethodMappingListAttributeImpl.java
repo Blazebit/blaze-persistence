@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.ListAttribute;
@@ -38,5 +37,5 @@ public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingP
     public CollectionType getCollectionType() {
         return CollectionType.LIST;
     }
-    
+
 }

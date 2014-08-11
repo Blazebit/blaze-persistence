@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenAndBuilder;
@@ -23,17 +22,17 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
  * TODO: implement
- * 
+ *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
 public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenOrBuilder<T> {
-    
+
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    
+
     public CaseWhenOrBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
@@ -42,9 +41,10 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
 
     @Override
     public RestrictionBuilder<CaseWhenOrBuilder<T>> or(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
+                                                                             expressionFactory));
     }
-    
+
     @Override
     public CaseWhenAndBuilder<CaseWhenOrBuilder<T>> and() {
         return new CaseWhenAndBuilderImpl<CaseWhenOrBuilder<T>>(this, subqueryInitFactory, expressionFactory);
@@ -54,5 +54,5 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
     public T endOr() {
         return result;
     }
-    
+
 }

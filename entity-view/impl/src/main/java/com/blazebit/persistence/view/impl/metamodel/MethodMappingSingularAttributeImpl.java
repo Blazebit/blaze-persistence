@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
@@ -32,5 +31,5 @@ public class MethodMappingSingularAttributeImpl<X, Y> extends AbstractMethodSing
     public MethodMappingSingularAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews);
     }
-    
+
 }

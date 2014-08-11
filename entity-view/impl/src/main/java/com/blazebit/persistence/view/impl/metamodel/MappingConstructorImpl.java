@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.MappingSubquery;
@@ -36,49 +35,50 @@ import java.util.Set;
  * @since 1.0
  */
 public class MappingConstructorImpl<X> implements MappingConstructor<X> {
-    
+
     private final String name;
     private final ViewType<X> declaringType;
     private final Constructor<X> javaConstructor;
     private final List<ParameterAttribute<? super X, ?>> parameters;
-    
+
     public MappingConstructorImpl(ViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
-        
+
         if (constructor.getExceptionTypes().length != 0) {
-            throw new IllegalArgumentException("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName() + "' may not throw an exception!");
+            throw new IllegalArgumentException("The constructor '" + constructor.toString() + "' of the class '" + constructor.getDeclaringClass().getName()
+                + "' may not throw an exception!");
         }
-        
+
         int parameterCount = constructor.getParameterTypes().length;
         List<ParameterAttribute<? super X, ?>> parameters = new ArrayList<ParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
             AbstractParameterAttribute.validate(this, i);
             parameters.add(createParameterAttribute(this, i, entityViews));
         }
-        
+
         this.parameters = Collections.unmodifiableList(parameters);
     }
-    
+
     public static String validate(ViewType<?> viewType, Constructor<?> c) {
         ViewConstructor viewConstructor = c.getAnnotation(ViewConstructor.class);
-        
+
         if (viewConstructor == null) {
             return "init";
         }
-        
+
         return viewConstructor.value();
     }
-    
+
     private static <X> ParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
             return null;
         }
-        
+
         Class<?> attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
-        
+
         if (Collection.class == attributeType) {
             return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (List.class == attributeType) {

@@ -29,6 +29,6 @@ public class LeftHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderList
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         RestrictionBuilderImpl<?> restrictionBuilder = (RestrictionBuilderImpl<?>) builder.getResult();
-        restrictionBuilder.setLeftExpression(new SubqueryExpression((SubqueryBuilder<?>)builder));
+        restrictionBuilder.setLeftExpression(new SubqueryExpression((SubqueryBuilder<?>) builder));
     }
 }

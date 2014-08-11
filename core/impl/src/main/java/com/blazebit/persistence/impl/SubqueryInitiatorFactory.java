@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
@@ -26,7 +25,8 @@ import javax.persistence.EntityManager;
  * @since 1.0
  */
 public class SubqueryInitiatorFactory {
-	private final CriteriaBuilderFactoryImpl cbf;
+
+    private final CriteriaBuilderFactoryImpl cbf;
     private final EntityManager em;
     private final ParameterManager parameterManager;
     private final AliasManager aliasManager;
@@ -34,15 +34,15 @@ public class SubqueryInitiatorFactory {
     private final JoinManager parentJoinManager;
 
     public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
-		this.cbf = cbf;
+        this.cbf = cbf;
         this.em = em;
         this.parameterManager = parameterManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
     }
-    
-    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener){
+
+    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener) {
         return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
     }
 }

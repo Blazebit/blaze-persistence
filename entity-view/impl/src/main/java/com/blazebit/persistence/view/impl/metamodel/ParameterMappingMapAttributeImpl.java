@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -32,7 +31,7 @@ import java.util.Set;
 public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameterMappingPluralAttribute<X, Map<K, V>, V> implements MapAttribute<X, K, V> {
 
     private final Class<K> keyType;
-    
+
     public ParameterMappingMapAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(mappingConstructor, index, mapping, entityViews);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
@@ -49,5 +48,5 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
     public CollectionType getCollectionType() {
         return CollectionType.MAP;
     }
-    
+
 }

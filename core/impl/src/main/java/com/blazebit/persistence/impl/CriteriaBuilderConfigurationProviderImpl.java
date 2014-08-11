@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
@@ -30,5 +29,5 @@ public class CriteriaBuilderConfigurationProviderImpl implements CriteriaBuilder
     public CriteriaBuilderConfiguration createConfiguration() {
         return new CriteriaBuilderConfigurationImpl();
     }
-    
+
 }

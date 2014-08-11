@@ -41,9 +41,10 @@ public class ExpressionFactoryTest {
     @BenchmarkOptions(benchmarkRounds = 100, warmupRounds = 0)
     @Test
     public void testCreateSimpleExpressionPerformance() {
-        ef.createSimpleExpression("SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])");
+        ef.createSimpleExpression(
+            "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])");
     }
-    
+
     @BenchmarkOptions(benchmarkRounds = 100, warmupRounds = 0)
     @Test
     public void testExpressionClone() {

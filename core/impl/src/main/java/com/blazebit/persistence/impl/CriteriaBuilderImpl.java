@@ -42,7 +42,7 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase() {
         return (CaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectCase();
     }
-    
+
     @Override
     public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase(String alias) {
         return (CaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectCase(alias);
@@ -62,7 +62,7 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<CriteriaBuilder<Y>>) super.selectNew(clazz);
     }
-    
+
     @Override
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
@@ -97,5 +97,5 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
-    
+
 }

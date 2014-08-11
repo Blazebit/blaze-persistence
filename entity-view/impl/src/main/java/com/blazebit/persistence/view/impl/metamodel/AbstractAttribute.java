@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.Mapping;
@@ -32,7 +31,7 @@ import java.util.Set;
  * @since 1.0
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
-    
+
     protected final ViewType<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
@@ -42,12 +41,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final boolean mappingParameter;
     protected final boolean subqueryMapping;
     protected final boolean subview;
-    
+
     public AbstractAttribute(ViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
         this.declaringType = declaringType;
         this.javaType = javaType;
         this.subview = entityViews.contains(javaType);
-        
+
         if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
             this.subqueryProvider = null;
@@ -70,7 +69,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = true;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
-            
+
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 throw new IllegalArgumentException("The subquery alias is empty although the subquery expression is not " + errorLocation);
             }
@@ -78,11 +77,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             throw new IllegalArgumentException("No mapping annotation could be found " + errorLocation);
         }
     }
-    
+
     public PluralAttribute.CollectionType getCollectionType() {
         throw new UnsupportedOperationException("This method should be overridden or not be publicly exposed.");
     }
-    
+
     public boolean isQueryParameter() {
         return mappingParameter;
     }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 /**
@@ -25,6 +24,8 @@ package com.blazebit.persistence.impl.expression;
 public interface ExpressionFactory {
 
     public Expression createSimpleExpression(String expression);
+
     public Expression createCaseOperandExpression(String caseOperandExpression);
+
     public Expression createScalarExpression(String expression);
 }

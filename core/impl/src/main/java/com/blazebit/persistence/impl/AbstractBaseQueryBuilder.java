@@ -122,7 +122,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(), parentJoinManager);
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(),
+                                           parentJoinManager);
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
 
@@ -139,7 +140,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo, this.aliasManager));
+        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo,
+                                                                                                                                                            this.aliasManager));
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -283,7 +285,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public RestrictionBuilder<X> having(String expression) {
         if (groupByManager.getGroupByInfos()
-                .isEmpty()) {
+            .isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         Expression expr = expressionFactory.createSimpleExpression(expression);
@@ -293,7 +295,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public HavingOrBuilder<X> havingOr() {
         if (groupByManager.getGroupByInfos()
-                .isEmpty()) {
+            .isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.havingOr(this);
@@ -302,7 +304,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public SubqueryInitiator<X> havingExists() {
         if (groupByManager.getGroupByInfos()
-                .isEmpty()) {
+            .isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictExists((X) this);
@@ -311,7 +313,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public SubqueryInitiator<X> havingNotExists() {
         if (groupByManager.getGroupByInfos()
-                .isEmpty()) {
+            .isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictNotExists((X) this);
@@ -499,9 +501,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
-                .append(fromClazz.getSimpleName())
-                .append(' ')
-                .append(joinManager.getRootAlias());
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
 
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -30,9 +29,9 @@ import java.util.ServiceLoader;
  * @since 1.0
  */
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
-    
+
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
-    
+
     public CriteriaBuilderConfigurationImpl() {
         loadQueryTransformers();
     }
@@ -61,5 +60,5 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     public CriteriaBuilderFactory createCriteriaBuilderFactory() {
         return new CriteriaBuilderFactoryImpl(this);
     }
-    
+
 }

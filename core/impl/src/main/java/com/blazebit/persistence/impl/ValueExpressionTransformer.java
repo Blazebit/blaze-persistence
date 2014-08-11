@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.CompositeExpression;
@@ -32,15 +31,16 @@ import java.util.Set;
  * @since 1.0
  */
 public class ValueExpressionTransformer implements ExpressionTransformer {
+
     private final JPAInfo jpaInfo;
     private final Set<PathExpression> transformedExpressions = Collections.newSetFromMap(new IdentityHashMap<PathExpression, Boolean>());
     private final AliasManager aliasManager;
-    
+
     public ValueExpressionTransformer(JPAInfo jpaInfo, AliasManager aliasManager) {
         this.jpaInfo = jpaInfo;
         this.aliasManager = aliasManager;
     }
-    
+
     @Override
     public Expression transform(Expression original) {
         return transform(original, false);
@@ -63,13 +63,12 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
 
         PathExpression deepPath; // deepPath != path in case path is an alias
         PathExpression path = deepPath = (PathExpression) original;
-        
-        if(path.isIsCollectionKeyPath() || path.isUsedInCollectionFunction()){
+
+        if (path.isIsCollectionKeyPath() || path.isUsedInCollectionFunction()) {
             return path;
         }
-        
-        
-        if(path.getBaseNode() == null){
+
+        if (path.getBaseNode() == null) {
             /**
              * Path might be a select alias.
              * However, the alias points to the select expression which will be
@@ -78,8 +77,8 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
             return original;
         }
         String collectionValueFunction;
-        if(deepPath.getBaseNode().isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null){
-            if(!transformedExpressions.contains(path)){
+        if (deepPath.getBaseNode().isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null) {
+            if (!transformedExpressions.contains(path)) {
                 List<Expression> transformedExpr = new ArrayList<Expression>();
                 transformedExpr.add(new FooExpression(collectionValueFunction + "("));
                 transformedExpr.add(path);
@@ -90,5 +89,5 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
         }
         return original;
     }
-    
+
 }

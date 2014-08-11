@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -26,17 +25,17 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMap
  * @since 1.0
  */
 public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> {
-    
+
     private final TupleParameterMapper parameterMapper;
     private final QueryBuilder<?, ?> queryBuilder;
 
     public ParameterViewTypeObjectBuilder(ObjectBuilder<T> delegate, ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, int startIndex) {
         super(delegate);
-        
+
         if (!template.hasParameters()) {
             throw new IllegalArgumentException("No templates without parameters allowed for this object builder!");
         }
-        
+
         this.parameterMapper = template.getParameterMapper();
         this.queryBuilder = queryBuilder;
     }

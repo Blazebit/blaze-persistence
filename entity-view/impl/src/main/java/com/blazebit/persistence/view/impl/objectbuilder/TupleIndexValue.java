@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import java.util.HashSet;
@@ -25,7 +24,7 @@ import java.util.Set;
  * @since 1.0
  */
 public class TupleIndexValue {
-    
+
     private final Object[] tuple;
     private final Set<TupleRest> restTuples = new HashSet<TupleRest>();
 
@@ -41,6 +40,5 @@ public class TupleIndexValue {
     public boolean addRestTuple(Object[] tuple, int tupleIndex) {
         return restTuples.add(new TupleRest(tuple, tupleIndex));
     }
-    
-    
+
 }

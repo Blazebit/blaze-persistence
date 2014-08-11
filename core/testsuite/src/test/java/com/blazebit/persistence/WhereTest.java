@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -29,231 +28,252 @@ import org.junit.Test;
  * @since 1.0
  */
 public class WhereTest extends AbstractCoreTest {
-    
+
     @Test
-    public void testWhereProperty(){
+    public void testWhereProperty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").ge(25L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age >= :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWherePropertyExpression(){
+    public void testWherePropertyExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age + 1").ge(25L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age+1 >= :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWherePath(){
+    public void testWherePath() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.partners.age").gt(0L);
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria.getQueryString());
+
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria
+                     .getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWherePathExpression(){
+    public void testWherePathExpression() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.owner.ownedDocuments.age + 1").ge(25L);
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age+1 >= :param_0", criteria.getQueryString());
+        assertEquals(
+            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age+1 >= :param_0",
+            criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
-    public void testWhereAnd(){
+    public void testWhereAnd() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.where("d.partners.age").gt(0L).where("d.versions.url").like("http://%");     
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 AND versions.url LIKE :param_1", criteria.getQueryString());
+        criteria.where("d.partners.age").gt(0L).where("d.versions.url").like("http://%");
+
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 AND versions.url LIKE :param_1",
+            criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWhereOr(){
+    public void testWhereOr() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr().where("d.partners.age").gt(0L).where("d.versions.url").like("http://%").endOr();   
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 OR versions.url LIKE :param_1", criteria.getQueryString());
+        criteria.whereOr().where("d.partners.age").gt(0L).where("d.versions.url").like("http://%").endOr();
+
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 OR versions.url LIKE :param_1",
+            criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWhereOrAnd(){
+    public void testWhereOrAnd() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr()
-                    .whereAnd()
-                        .where("d.partners.age").gt(0L)
-                        .where("d.versions.url").like("http://%")
-                    .endAnd()
-                    .whereAnd()
-                        .where("d.versions.date").lt(Calendar.getInstance())
-                        .where("d.versions.url").like("ftp://%")
-                    .endAnd()
-                .endOr();   
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)", criteria.getQueryString());
-        criteria.getResultList();
-    }
-    
-    @Test
-    public void testWhereAndOr(){
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr()
+        criteria
+            .whereOr()
+                .whereAnd()
                     .where("d.partners.age").gt(0L)
                     .where("d.versions.url").like("http://%")
-                .endOr()
-                .whereOr()
+                .endAnd()
+                .whereAnd()
                     .where("d.versions.date").lt(Calendar.getInstance())
                     .where("d.versions.url").like("ftp://%")
-                .endOr();   
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)", criteria.getQueryString());
+                .endAnd()
+            .endOr();
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)",
+            criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWhereOrSingleClause(){
+    public void testWhereAndOr() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr().where("d.partners.age").gt(0L).endOr();   
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria.getQueryString());
+        criteria
+            .whereOr()
+                .where("d.partners.age").gt(0L)
+                .where("d.versions.url").like("http://%")
+            .endOr()
+            .whereOr()
+                .where("d.versions.date").lt(Calendar.getInstance())
+                .where("d.versions.url").like("ftp://%")
+            .endOr();
+
+        assertEquals(
+            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)",
+            criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testWhereOrWhereAndSingleClause(){
+    public void testWhereOrSingleClause() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr().whereAnd().where("d.versions.date").gt(Calendar.getInstance()).endAnd().endOr();   
-        
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE versions.date > :param_0", criteria.getQueryString());
+        criteria.whereOr().where("d.partners.age").gt(0L).endOr();
+
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria
+                     .getQueryString());
         criteria.getResultList();
     }
-    
+
+    @Test
+    public void testWhereOrWhereAndSingleClause() {
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        criteria.whereOr().whereAnd().where("d.versions.date").gt(Calendar.getInstance()).endAnd().endOr();
+
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE versions.date > :param_0", criteria
+                     .getQueryString());
+        criteria.getResultList();
+    }
+
     @Test(expected = NullPointerException.class)
-    public void testWhereNull(){
+    public void testWhereNull() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where(null);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
-    public void testWhereEmpty(){
+    public void testWhereEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("").gt(0);
     }
-    
+
     @Test(expected = IllegalStateException.class)
-    public void testWhereNotClosed(){
+    public void testWhereNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age");
         criteria.where("d.owner");
     }
-    
+
     @Test(expected = IllegalStateException.class)
-    public void testWhereOrNotClosed(){
+    public void testWhereOrNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.whereOr().where("d.partners.age").gt(0L);        
+        criteria.whereOr().where("d.partners.age").gt(0L);
         criteria.where("d.partners.name");
     }
-    
+
     @Test(expected = IllegalStateException.class)
-    public void testWhereAndNotClosed(){
+    public void testWhereAndNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.partners.age").gt(0L);
         criteria.where("d.partners.name");
     }
-    
+
     @Test
-    public void testWhereExists(){
+    public void testWhereExists() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereNotExists(){
+    public void testWhereNotExists() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereExistsAndBuilder(){
+    public void testWhereExistsAndBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where("d.name").eq("test").whereOr().whereAnd().whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endAnd().endOr();
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereExists().from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().endAnd().endOr();
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name))";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereNotExistsAndBuilder(){
+    public void testWhereNotExistsAndBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where("d.name").eq("test").whereOr().whereAnd().whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endAnd().endOr();
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereNotExists().from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().endAnd().endOr();
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name))";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereExistsOrBuilder(){
+    public void testWhereExistsOrBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.whereOr().where("d.name").eq("test").whereExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endOr();
+        crit.whereOr().where("d.name").eq("test").whereExists().from(Person.class, "p").select("id").where("name").eqExpression(
+            "d.name").end().endOr();
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereNotExistsOrBuilder(){
+    public void testWhereNotExistsOrBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.whereOr().where("d.name").eq("test").whereNotExists().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().endOr();
+        crit.whereOr().where("d.name").eq("test").whereNotExists().from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().endOr();
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR NOT EXISTS (SELECT p.id FROM Person p WHERE p.name = d.name)";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereLeftSubquery(){
+    public void testWhereLeftSubquery() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("id");
         String expected = "SELECT d FROM Document d WHERE (SELECT p.id FROM Person p WHERE p.name = d.name) = d.id";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereLeftSubqueryAndBuilder(){
+    public void testWhereLeftSubqueryAndBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
-    
+
     @Test
-    public void testWhereLeftSubqueryOrBuilder(){
+    public void testWhereLeftSubqueryOrBuilder() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
         String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
-        
+
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }

@@ -90,7 +90,7 @@ public class TupleRest {
             return false;
         }
         int length = tuple.length - index;
-        if (other.length - otherIndex != length ) {
+        if (other.length - otherIndex != length) {
             return false;
         }
 

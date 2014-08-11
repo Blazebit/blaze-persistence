@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
@@ -49,30 +48,30 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Map<String, MethodAttribute<? super X, ?>> attributes;
     private final Map<ParametersKey, MappingConstructor<X>> constructors;
     private final Map<String, MappingConstructor<X>> constructorIndex;
-    
+
     public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
         this.javaType = (Class<X>) clazz;
-        
+
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
             throw new IllegalArgumentException("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
         }
-        
+
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
-        
+
         if (entityViewAnnot == null) {
             throw new IllegalArgumentException("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
         }
-        
+
         if (entityViewAnnot.name().isEmpty()) {
             this.name = clazz.getSimpleName();
         } else {
             this.name = entityViewAnnot.name();
         }
-        
+
         this.entityClass = entityViewAnnot.value();
         // We use a tree map to get a deterministic attribute order
         this.attributes = new TreeMap<String, MethodAttribute<? super X, ?>>();
-        
+
         for (Method method : clazz.getMethods()) {
             String attributeName = AbstractMethodAttribute.validate(this, method);
 
@@ -83,10 +82,10 @@ public class ViewTypeImpl<X> implements ViewType<X> {
                 }
             }
         }
-        
+
         this.constructors = new HashMap<ParametersKey, MappingConstructor<X>>();
         this.constructorIndex = new HashMap<String, MappingConstructor<X>>();
-        
+
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             String constructorName = MappingConstructorImpl.validate(this, constructor);
             if (constructorIndex.containsKey(constructorName)) {
@@ -97,15 +96,15 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             constructorIndex.put(constructorName, mappingConstructor);
         }
     }
-    
+
     private static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
         }
-        
+
         Class<?> attributeType = method.getReturnType();
-        
+
         if (Collection.class == attributeType) {
             return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (List.class == attributeType) {
@@ -135,7 +134,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     public Class<?> getEntityClass() {
         return entityClass;
     }
-    
+
     @Override
     public Set<MethodAttribute<? super X, ?>> getAttributes() {
         return new LinkedHashSet<MethodAttribute<? super X, ?>>(attributes.values());
@@ -150,24 +149,24 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     public Set<MappingConstructor<X>> getConstructors() {
         return new HashSet<MappingConstructor<X>>(constructors.values());
     }
-    
+
     @Override
     public MappingConstructor<X> getConstructor(Class<?>... parameterTypes) {
         return constructors.get(new ParametersKey(parameterTypes));
     }
-    
+
     @Override
     public Set<String> getConstructorNames() {
         return constructorIndex.keySet();
     }
-    
-    
+
     @Override
     public MappingConstructor<X> getConstructor(String name) {
         return constructorIndex.get(name);
     }
-    
+
     private static class ParametersKey {
+
         private final Class<?>[] parameterTypes;
 
         public ParametersKey(Class<?>[] parameterTypes) {
@@ -196,5 +195,5 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             return true;
         }
     }
-    
+
 }

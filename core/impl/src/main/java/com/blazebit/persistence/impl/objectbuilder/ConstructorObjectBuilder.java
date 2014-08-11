@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -27,21 +26,22 @@ import java.util.List;
  * @since 1.0
  */
 public class ConstructorObjectBuilder<T> implements ObjectBuilder<T> {
-    
+
     private final Constructor<T> constructor;
 
     public ConstructorObjectBuilder(Constructor<T> constructor) {
         this.constructor = constructor;
     }
-    
+
     @Override
     public T build(Object[] tuple) {
-        if(constructor.getParameterTypes().length != tuple.length){
-            throw new RuntimeException("Constructor expects " + constructor.getParameterTypes().length + " arguments but " + tuple.length + " arguments were queried");
+        if (constructor.getParameterTypes().length != tuple.length) {
+            throw new RuntimeException("Constructor expects " + constructor.getParameterTypes().length + " arguments but "
+                + tuple.length + " arguments were queried");
         }
         try {
             return constructor.newInstance(tuple);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -54,5 +54,5 @@ public class ConstructorObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public void applySelects(SelectBuilder<?, ?> queryBuilder) {
     }
-    
+
 }

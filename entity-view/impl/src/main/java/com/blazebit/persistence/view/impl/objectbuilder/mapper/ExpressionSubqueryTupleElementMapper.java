@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.SelectBuilder;
@@ -25,7 +24,7 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @since 1.0
  */
 public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper {
-    
+
     protected final SubqueryProvider provider;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
@@ -40,5 +39,5 @@ public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper 
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
         provider.createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
     }
-    
+
 }

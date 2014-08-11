@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
@@ -59,7 +58,7 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public class ViewTypeObjectBuilderTemplate<T> {
-    
+
     private final Constructor<? extends T> proxyConstructor;
     private final TupleElementMapper[] mappers;
     private final TupleParameterMapper parameterMapper;
@@ -67,7 +66,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final boolean hasParameters;
     private final boolean hasIndexedCollections;
     private final boolean hasSubviews;
-    
+
     private final String aliasPrefix;
     private final String mappingPrefix;
     private final String idPrefix;
@@ -80,13 +79,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private ViewTypeObjectBuilderTemplate(String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManager evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
-            if(viewType.getConstructors().size() > 1) {
+            if (viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
             } else if (viewType.getConstructors().size() == 1) {
                 mappingConstructor = (MappingConstructor<T>) viewType.getConstructors().toArray()[0];
             }
         }
-        
+
         this.aliasPrefix = aliasPrefix;
         this.mappingPrefix = mappingPrefix;
         this.idPrefix = idPrefix;
@@ -95,33 +94,34 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.metamodel = metamodel;
         this.evm = evm;
         this.proxyFactory = proxyFactory;
-        
+
         Class<?> proxyClass = proxyFactory.getProxy(viewType);
         Constructor<?>[] constructors = proxyClass.getDeclaredConstructors();
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
         boolean[] featuresFound = new boolean[3];
-        
+
         if (mappingConstructor == null) {
             parameterAttributes = new ParameterAttribute<?, ?>[0];
         } else {
             List<ParameterAttribute<? super T, ?>> parameterAttributeList = mappingConstructor.getParameterAttributes();
             parameterAttributes = parameterAttributeList.toArray(new ParameterAttribute<?, ?>[parameterAttributeList.size()]);
         }
-        
+
         int length = 1 + attributes.length + parameterAttributes.length;
         Constructor<? extends T> javaConstructor = null;
         List<Object> mappingList = new ArrayList<Object>(length);
         List<String> parameterMappingList = new ArrayList<String>(length);
-        
+
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
         String idAttributeName = entityType.getId(entityType.getIdType().getJavaType()).getName();
-        mappingList.add(0, new Object[] { getMapping(idPrefix, idAttributeName), getAlias("_" + aliasPrefix, idAttributeName) });
+        mappingList.add(0, new Object[]{ getMapping(idPrefix, idAttributeName), getAlias("_" + aliasPrefix, idAttributeName) });
         parameterMappingList.add(0, null);
-        
-        OUTER: for (Constructor<?> constructor : constructors) {
+
+        OUTER:
+        for (Constructor<?> constructor : constructors) {
             Class<?>[] parameterTypes = constructor.getParameterTypes();
             if (length != parameterTypes.length) {
                 continue;
@@ -131,60 +131,61 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 MethodAttribute<?, ?> attribute = attributes[i];
                 if (attribute.getJavaType() != parameterTypes[i + 1]) {
                     continue OUTER;
-                } else {                    
+                } else {
                     applyMapping(attribute, mappingList, parameterMappingList, featuresFound);
                 }
             }
             for (int i = 0; i < parameterAttributes.length; i++) {
                 ParameterAttribute<?, ?> attribute = parameterAttributes[i];
-                
+
                 if (attribute.getJavaType() != parameterTypes[i + attributes.length + 1]) {
                     continue OUTER;
                 } else {
                     applyMapping(attribute, mappingList, parameterMappingList, featuresFound);
                 }
             }
-            
+
             javaConstructor = (Constructor<? extends T>) constructor;
             break;
         }
-        
+
         if (javaConstructor == null) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass.getName());
+            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
+                .getName());
         }
-        
+
         this.hasParameters = featuresFound[0];
         this.hasIndexedCollections = featuresFound[1];
         this.hasSubviews = featuresFound[2];
         this.effectiveTupleSize = length;
-        this.proxyConstructor = javaConstructor;        
+        this.proxyConstructor = javaConstructor;
         this.mappers = getMappers(mappingList);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
     }
-    
+
     private static TupleElementMapper[] getMappers(List<Object> mappingList) {
         TupleElementMapper[] mappers = new TupleElementMapper[mappingList.size()];
-        
+
         for (int i = 0; i < mappers.length; i++) {
             Object mappingElement = mappingList.get(i);
-            
+
             if (mappingElement instanceof TupleElementMapper) {
                 mappers[i] = (TupleElementMapper) mappingElement;
                 continue;
             }
-            
+
             Object[] mapping = (Object[]) mappingElement;
-            
+
             if (mapping[0] instanceof Class) {
                 Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
                 SubqueryProvider provider;
-                
+
                 try {
                     provider = subqueryProviderClass.newInstance();
                 } catch (Exception ex) {
                     throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
                 }
-                
+
                 String subqueryAlias = (String) mapping[2];
                 String subqueryExpression = (String) mapping[3];
 
@@ -209,7 +210,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
             }
         }
-        
+
         return mappers;
     }
 
@@ -222,7 +223,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 boolean listKey = attribute instanceof ListAttribute<?, ?>;
                 boolean mapKey = attribute instanceof MapAttribute<?, ?, ?>;
                 int startIndex = tupleOffset + mappingList.size();
-                
+
                 if (listKey) {
                     featuresFound[1] = true;
                     applyCollectionKeyMapping("INDEX", mappingAttribute, attribute, mappingList);
@@ -232,13 +233,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     applyCollectionKeyMapping("KEY", mappingAttribute, attribute, mappingList);
                     parameterMappingList.add(null);
                 }
-                
+
                 if (attribute.isSubview()) {
                     featuresFound[2] = true;
-                    
+
                     PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                     int[] newIdPositions;
-                    
+
                     if (listKey || mapKey) {
                         newIdPositions = new int[idPositions.length + 1];
                         System.arraycopy(idPositions, 0, newIdPositions, 0, idPositions.length);
@@ -246,12 +247,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     } else {
                         newIdPositions = idPositions;
                     }
-                    
+
                     applySubviewMapping(attribute, newIdPositions, pluralAttribute.getElementType(), mappingAttribute, mappingList, parameterMappingList);
                 } else {
                     applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
                 }
-                
+
                 if (listKey) {
                     tupleTransformator.add(new ListTupleListTransformer(idPositions, startIndex));
                 } else if (mapKey) {
@@ -292,13 +293,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
         System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
         subviewIdPositions[idPositions.length] = mappingList.size();
         int startIndex = tupleOffset + mappingList.size();
-        ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions, startIndex, metamodel, evm, subviewType, null, proxyFactory);
+        ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
+                                                                                                       startIndex, metamodel, evm, subviewType, null, proxyFactory);
         Collections.addAll(mappingList, template.mappers);
         // We do not copy because the subview object builder will populate the subview's parameters
         for (int i = 0; i < template.mappers.length; i++) {
             parameterMappingList.add(null);
         }
-        tupleTransformator.add(template.tupleTransformator);        
+        tupleTransformator.add(template.tupleTransformator);
         tupleTransformator.add(new SubviewTupleTransformer(template));
     }
 
@@ -326,19 +328,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
         mappingList.add(mapping);
         parameterMappingList.add(null);
     }
-    
+
     private static String getMapping(String prefix, String mapping) {
         if (prefix != null) {
             return prefix + "." + mapping;
         }
-        
+
         return mapping;
     }
 
     private static <T> String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefix, mappingAttribute.getMapping());
     }
-    
+
     private static String getAlias(String prefix, String attributeName) {
         return prefix + "_" + attributeName;
     }
@@ -347,32 +349,32 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (attribute instanceof MethodAttribute<?, ?>) {
             return getAlias(prefix, ((MethodAttribute<?, ?>) attribute).getName());
         }
-        
+
         return null;
     }
-    
+
     public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder) {
         return createObjectBuilder(queryBuilder, false);
     }
-    
+
     public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, boolean isSubview) {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
-        
+
         result = new ViewTypeObjectBuilder<T>(this);
-        
+
         if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
             result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappers.length);
         }
-        
+
         if (hasParameters) {
             result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, tupleOffset);
         }
-        
+
         if (tupleTransformator.hasTransformers() && !isSubview) {
             result = new ChainingObjectBuilder<T>(tupleTransformator, result, queryBuilder, tupleOffset);
         }
-        
+
         return result;
     }
 
@@ -399,8 +401,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
     public int getEffectiveTupleSize() {
         return effectiveTupleSize;
     }
-    
+
     public static class Key<T> {
+
         private final ViewType<T> viewType;
         private final MappingConstructor<T> constructor;
 
@@ -408,9 +411,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
             this.viewType = viewType;
             this.constructor = constructor;
         }
-        
+
         public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManager evm, ProxyFactory proxyFactory) {
-            int[] idPositions = new int[] { 0 };
+            int[] idPositions = new int[]{ 0 };
             return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, viewType, constructor, proxyFactory);
         }
 

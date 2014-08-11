@@ -31,5 +31,5 @@ public class NotPredicate extends UnaryPredicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
 }

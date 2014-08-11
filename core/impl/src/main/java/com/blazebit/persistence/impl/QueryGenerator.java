@@ -338,8 +338,8 @@ public class QueryGenerator extends VisitorAdapter {
             sb.append(expression.getBaseNode().getAliasInfo().getAlias());
         } else {
             sb.append(expression.getBaseNode().getAliasInfo().getAlias())
-                    .append(".")
-                    .append(expression.getField());
+                .append(".")
+                .append(expression.getField());
         }
     }
 

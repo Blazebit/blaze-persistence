@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
 import com.blazebit.persistence.SelectBuilder;
@@ -25,17 +24,17 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @since 1.0
  */
 public class AliasSubqueryTupleElementMapper extends SubqueryTupleElementMapper {
-    
+
     private final String alias;
 
     public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String alias) {
         super(provider);
         this.alias = alias;
     }
-    
+
     @Override
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
         provider.createSubquery(queryBuilder.selectSubquery(alias));
     }
-    
+
 }

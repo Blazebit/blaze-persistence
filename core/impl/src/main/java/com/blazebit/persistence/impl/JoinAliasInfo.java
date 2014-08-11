@@ -42,7 +42,7 @@ public class JoinAliasInfo implements AliasInfo {
     public String getAlias() {
         return alias;
     }
-    
+
     public void setAlias(String alias) {
         this.alias = alias;
     }
@@ -54,7 +54,7 @@ public class JoinAliasInfo implements AliasInfo {
     public boolean isImplicit() {
         return implicit;
     }
-    
+
     public void setImplicit(boolean implicit) {
         this.implicit = implicit;
     }

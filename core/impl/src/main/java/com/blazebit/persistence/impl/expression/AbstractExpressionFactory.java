@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
@@ -37,7 +36,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  * @since 1.0
  */
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
-    
+
     @Override
     public Expression createSimpleExpression(String expression) {
         if (expression == null) {
@@ -63,13 +62,13 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
         // unwrap composite expression with single child
         if (expr.getExpressions()
-                .size() == 1) {
+            .size() == 1) {
             return expr.getExpressions()
-                    .get(0);
+                .get(0);
         }
         return expr;
     }
-    
+
     public Expression createCaseOperandExpression(String caseOperandExpression) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -77,9 +76,9 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     public Expression createScalarExpression(String expression) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
+
     protected abstract ParserRuleContext callStartRule(JPQLSelectExpressionParser parser);
-    
+
     protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
 
         @Override

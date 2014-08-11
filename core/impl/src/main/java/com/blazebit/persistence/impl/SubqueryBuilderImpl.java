@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenBuilder;
@@ -31,18 +30,19 @@ import javax.persistence.Tuple;
  * @since 1.0
  */
 public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T> {
+
     private final T result;
     private final SubqueryBuilderListener listener;
-    
+
     public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
         super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
         this.result = result;
         this.listener = listener;
     }
-    
+
     @Override
     public T end() {
-        if(selectManager.getSelectInfos().isEmpty()){
+        if (selectManager.getSelectInfos().isEmpty()) {
             throw new IllegalStateException("A subquery without a select clause is not allowed");
         }
         listener.onBuilderEnded(this);

@@ -22,7 +22,7 @@ package com.blazebit.persistence.impl.predicate;
  * @since 1.0
  */
 public final class AndPredicate extends MultinaryPredicate {
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

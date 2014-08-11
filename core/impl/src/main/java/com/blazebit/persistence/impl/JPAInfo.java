@@ -78,8 +78,8 @@ public class JPAInfo {
             throw new UnsupportedOperationException("Unsupported JPA provider");
         }
     }
-    
-    public String getCollectionValueFunction(){
+
+    public String getCollectionValueFunction() {
         if (isEclipseLink24) {
             return "VALUE";
         }

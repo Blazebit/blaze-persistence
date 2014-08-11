@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
@@ -43,6 +42,7 @@ import javax.persistence.Transient;
  */
 @Entity
 public class Document implements Serializable {
+
     private Long id;
     private String name;
     private Object someTransientField;
@@ -54,14 +54,15 @@ public class Document implements Serializable {
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Calendar creationDate;
     private Date lastModified;
-    
-    public Document(){}
-    
-    public Document(String name){
+
+    public Document() {
+    }
+
+    public Document(String name) {
         this.name = name;
     }
-    
-    public Document(String name, Person owner, Version ... versions){
+
+    public Document(String name, Person owner, Version... versions) {
         this.name = name;
         this.owner = owner;
         this.versions.addAll(Arrays.asList(versions));
@@ -165,6 +166,5 @@ public class Document implements Serializable {
     public void setLastModified(Date lastModified) {
         this.lastModified = lastModified;
     }
-    
-    
+
 }

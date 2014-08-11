@@ -36,9 +36,9 @@ public interface Expression {
         public void visit(CompositeExpression expression);
 
         public void visit(FooExpression expression);
-        
+
         public void visit(SubqueryExpression expression);
-        
+
         public void visit(OuterExpression expression);
     }
 
@@ -48,10 +48,10 @@ public interface Expression {
      * @param visitor
      */
     public void accept(Visitor visitor);
-    
+
     /**
      * Returns the trimmed original string representation of the expression.
-     * 
+     *
      * @return The string representation of the expression
      */
     @Override

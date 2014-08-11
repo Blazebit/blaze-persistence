@@ -27,16 +27,16 @@ import javax.persistence.metamodel.PluralAttribute;
 public class ModelUtils {
 
     public static boolean isJoinable(Attribute attr) {
-        return attr.isCollection() 
-                || attr.getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE 
-                || attr.getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
+        return attr.isCollection()
+            || attr.getPersistentAttributeType() == PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static Class<?> resolveFieldClass(Attribute attr) {
         if (attr.isCollection()) {
             return ((PluralAttribute) attr).getElementType().getJavaType();
         }
-        
+
         return attr.getJavaType();
     }
 }

@@ -22,7 +22,7 @@ package com.blazebit.persistence.impl.predicate;
  * @since 1.0
  */
 public abstract class UnaryPredicate implements Predicate {
-    
+
     protected final Predicate predicate;
 
     public UnaryPredicate(Predicate predicate) {

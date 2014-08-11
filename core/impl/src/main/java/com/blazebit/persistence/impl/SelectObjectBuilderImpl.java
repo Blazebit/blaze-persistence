@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QueryBuilder;
@@ -30,7 +29,8 @@ import java.util.TreeMap;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<T> implements SelectObjectBuilder<T>{
+public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<T> implements
+    SelectObjectBuilder<T> {
 
     private final T result;
     // maps positions to expressions
@@ -38,7 +38,7 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
     private final SelectObjectBuilderEndedListener listener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    
+
     public SelectObjectBuilderImpl(T result, SelectObjectBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.listener = listener;
@@ -54,10 +54,10 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
     @Override
     public SelectObjectBuilder<T> with(String expression, String alias) {
         // TODO: use alias
-        if(expressions.containsKey(expressions.size())){
+        if (expressions.containsKey(expressions.size())) {
             throw new IllegalStateException("Argument for position " + expressions.size() + " already specified");
         }
-        
+
         Expression exp = expressionFactory.createSimpleExpression(expression);
         expressions.put(expressions.size(), exp);
         return this;
@@ -67,23 +67,23 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
     public SelectObjectBuilder<T> with(int position, String expression) {
         return with(position, expression, null);
     }
-    
+
     @Override
     public SelectObjectBuilder<T> with(int position, String expression, String alias) {
         // TODO: use alias
-        if(expressions.containsKey(position)){
+        if (expressions.containsKey(position)) {
             throw new IllegalStateException("Argument for position " + position + " already specified");
         }
         Expression exp = expressionFactory.createSimpleExpression(expression);
         expressions.put(position, exp);
         return this;
     }
-    
+
     @Override
     public T end() {
         listener.onBuilderEnded(expressions.values());
         return result;
-    } 
+    }
 
     @Override
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery() {
@@ -101,6 +101,5 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
         super.onBuilderEnded(builder);
         expressions.put(expressions.size(), new SubqueryExpression(builder));
     }
-    
-    
+
 }

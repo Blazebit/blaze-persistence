@@ -38,6 +38,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
  * @since 1.0
  */
 public abstract class PredicateManager<U> extends AbstractManager {
+
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
     private RightHandsideSubqueryPredicateBuilder<?> rightSubqueryPredicateBuilderListener;
@@ -58,19 +59,22 @@ public abstract class PredicateManager<U> extends AbstractManager {
     RestrictionBuilder<U> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory));
     }
-    
+
     SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
-        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder(
+            new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<U> restrictExists(U result) {
-        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new ExistsPredicate()));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(
+            rootPredicate, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
-    
+
     SubqueryInitiator<U> restrictNotExists(U result) {
-        RightHandsideSubqueryPredicateBuilder<?> subqueryListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        RightHandsideSubqueryPredicateBuilder<?> subqueryListener = rootPredicate.startBuilder(
+            new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
     }
 
@@ -82,7 +86,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
     void verifyBuilderEnded() {
         rootPredicate.verifyBuilderEnded();
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
-        if(rightSubqueryPredicateBuilderListener != null){
+        if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
@@ -132,7 +136,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
             predicate.setLeft(transformer.transform(predicate.getLeft()));
             predicate.setRight(transformer.transform(predicate.getRight()));
         }
-        
+
         @Override
         public void visit(LikePredicate predicate) {
             predicate.setLeft(transformer.transform(predicate.getLeft()));

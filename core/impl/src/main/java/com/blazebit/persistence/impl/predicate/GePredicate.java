@@ -30,7 +30,6 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
  */
 public class GePredicate extends QuantifiableBinaryExpressionPredicate {
 
-
     public GePredicate(Expression left, Expression right) {
         super(left, right, PredicateQuantifier.ONE);
     }
@@ -57,7 +56,8 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
 
         @Override
         public T expression(String expression) {
-            return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
+            return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
+                                         PredicateQuantifier.ONE));
         }
 
         @Override
@@ -71,7 +71,7 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
             chainSubquery(new GePredicate(leftExpression, null, PredicateQuantifier.ANY));
             return super.any();
         }
-        
+
         @Override
         public SubqueryBuilder<T> from(Class<?> clazz) {
             chainSubquery(new GePredicate(leftExpression, null, PredicateQuantifier.ONE));

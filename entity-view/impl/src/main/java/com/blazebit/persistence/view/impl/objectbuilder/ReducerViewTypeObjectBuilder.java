@@ -57,7 +57,7 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
             this.size = 0;
             this.array = new Object[initialSize];
         }
-        
+
         public void clear() {
             size = 0;
         }
@@ -66,7 +66,7 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
             if (array.length == size) {
                 return array;
             }
-            
+
             array = Arrays.copyOf(array, size);
             return array;
         }
@@ -78,14 +78,13 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
                 grow(size + 1);
                 array[size] = value;
             }
-            
+
             size++;
         }
-        
+
         /*
          * The following is copied from java.util.ArrayList
          */
-
         /**
          * The maximum size of array to allocate.
          * Some VMs reserve some header words in an array.

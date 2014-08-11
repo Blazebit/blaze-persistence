@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -32,16 +31,16 @@ import java.util.Set;
  * @since 1.0
  */
 public class ViewMetamodelImpl implements ViewMetamodel {
-    
+
     private final Map<Class<?>, ViewType<?>> views;
 
     public ViewMetamodelImpl(Set<Class<?>> entityViews) {
         this.views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
-        
+
         for (Class<?> entityViewClass : entityViews) {
             views.put(entityViewClass, getViewType(entityViewClass, entityViews));
         }
-        
+
         // Check for circular dependencies
         for (ViewType<?> viewType : views.values()) {
             Set<ViewType<?>> dependencies = new HashSet<ViewType<?>>();
@@ -49,7 +48,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
             checkCircularDependencies(viewType, dependencies);
         }
     }
-    
+
     private void checkCircularDependencies(ViewType<?> viewType, Set<ViewType<?>> dependencies) {
         for (MethodAttribute<?, ?> attr : viewType.getAttributes()) {
             if (attr.isSubview()) {
@@ -60,9 +59,10 @@ public class ViewMetamodelImpl implements ViewMetamodel {
                     subviewType = views.get(attr.getJavaType());
                 }
                 if (dependencies.contains(subviewType)) {
-                    throw new IllegalArgumentException("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getName() + "' in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
+                    throw new IllegalArgumentException("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getName()
+                        + "' in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
                 }
-                
+
                 Set<ViewType<?>> subviewDependencies = new HashSet<ViewType<?>>(dependencies);
                 subviewDependencies.add(subviewType);
                 checkCircularDependencies(subviewType, subviewDependencies);
@@ -83,5 +83,5 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private ViewType<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews) {
         return new ViewTypeImpl<Object>(entityViewClass, entityViews);
     }
-    
+
 }

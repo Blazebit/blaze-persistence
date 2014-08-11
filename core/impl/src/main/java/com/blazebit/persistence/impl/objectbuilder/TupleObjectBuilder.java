@@ -60,8 +60,8 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         private TupleImpl(Object[] tuple) {
             if (tuple.length != selectManager.getSelectInfos().size()) {
                 throw new IllegalArgumentException(
-                        "Size mismatch between tuple result [" + tuple.length
-                        + "] and expected tuple elements [" + selectManager.getSelectAbsolutePathToInfoMap().size() + "]"
+                    "Size mismatch between tuple result [" + tuple.length
+                    + "] and expected tuple elements [" + selectManager.getSelectAbsolutePathToInfoMap().size() + "]"
                 );
             }
             this.tuple = tuple;
@@ -84,7 +84,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
             }
             if (index == null) {
                 throw new IllegalArgumentException(
-                        "Given alias [" + alias + "] did not correspond to an element in the result tuple"
+                    "Given alias [" + alias + "] did not correspond to an element in the result tuple"
                 );
             }
             // index should be "in range" by nature of size check in ctor
@@ -100,7 +100,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         public Object get(int i) {
             if (i >= tuple.length || i < 0) {
                 throw new IllegalArgumentException(
-                        "Given index [" + i + "] was outside the range of result tuple size [" + tuple.length + "] "
+                    "Given index [" + i + "] was outside the range of result tuple size [" + tuple.length + "] "
                 );
             }
             return tuple[i];
@@ -124,12 +124,12 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
                     tupleElements.add(new TupleElementImpl<Object>(i));
                 }
             }
-            
+
             return tupleElements;
         }
-        
+
         private class TupleElementImpl<X> implements TupleElement<X> {
-            
+
             private final int index;
 
             public TupleElementImpl(int index) {
@@ -148,5 +148,5 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         }
 
     }
-    
+
 }

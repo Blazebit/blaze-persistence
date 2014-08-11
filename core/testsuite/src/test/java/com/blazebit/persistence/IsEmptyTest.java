@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
@@ -27,20 +26,21 @@ import org.junit.Test;
  * @since 1.0
  */
 public class IsEmptyTest extends AbstractCoreTest {
+
     @Test
-    public void testIsEmpty(){
+    public void testIsEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isEmpty();
-        
+
         assertEquals("SELECT d FROM Document d WHERE d.name IS EMPTY", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
-    public void testIsNotEmpty(){
+    public void testIsNotEmpty() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotEmpty();
-        
+
         assertEquals("SELECT d FROM Document d WHERE NOT d.name IS EMPTY", criteria.getQueryString());
         criteria.getResultList();
     }

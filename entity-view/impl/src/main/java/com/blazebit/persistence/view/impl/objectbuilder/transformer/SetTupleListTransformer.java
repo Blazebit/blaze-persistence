@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
@@ -31,7 +30,7 @@ import java.util.Set;
  * @since 1.0
  */
 public class SetTupleListTransformer extends TupleListTransformer {
-    
+
     private final int[] parentIdPositions;
 
     public SetTupleListTransformer(int[] parentIdPositions, int startIndex) {
@@ -44,12 +43,12 @@ public class SetTupleListTransformer extends TupleListTransformer {
         Map<TupleId, TupleIndexValue> tupleIndex = new HashMap<TupleId, TupleIndexValue>(tuples.size());
         // Implementation detail: the tuple list is a LinkedList
         Iterator<Object[]> tupleListIter = tuples.iterator();
-        
+
         while (tupleListIter.hasNext()) {
             Object[] tuple = tupleListIter.next();
             TupleId id = new TupleId(parentIdPositions, tuple);
             TupleIndexValue tupleIndexValue = tupleIndex.get(id);
-            
+
             if (tupleIndexValue == null) {
                 tupleIndexValue = new TupleIndexValue(tuple, startIndex + 1);
                 Object collection = createCollection();
@@ -65,22 +64,22 @@ public class SetTupleListTransformer extends TupleListTransformer {
                 tupleListIter.remove();
             }
         }
-        
+
         return tuples;
     }
-    
+
     private Object createCollection() {
         return new HashSet<Object>();
     }
-    
+
     private void add(Object collection, Object value) {
         if (value != null) {
             addToCollection((Set<Object>) collection, value);
         }
     }
-    
+
     private void addToCollection(Set<Object> set, Object value) {
         set.add(value);
     }
-    
+
 }

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
@@ -32,5 +31,5 @@ public class MethodSubquerySingularAttributeImpl<X, Y> extends AbstractMethodSin
     public MethodSubquerySingularAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews);
     }
- 
+
 }
