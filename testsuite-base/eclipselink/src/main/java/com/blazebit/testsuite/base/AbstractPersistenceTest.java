@@ -18,8 +18,9 @@ package com.blazebit.testsuite.base;
 import java.util.Properties;
 
 /**
- * 
- * @author Christian
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 

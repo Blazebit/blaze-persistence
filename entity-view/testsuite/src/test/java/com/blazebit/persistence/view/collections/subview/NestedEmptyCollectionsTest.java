@@ -52,7 +52,8 @@ import org.junit.runners.Parameterized;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @RunWith(Parameterized.class)
 public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView, U extends SubviewDocumentCollectionsView> extends AbstractEntityViewTest {

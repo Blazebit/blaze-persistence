@@ -27,7 +27,9 @@ import javax.persistence.TemporalType;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 @Entity
 public class Version implements Serializable {

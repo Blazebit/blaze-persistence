@@ -22,7 +22,8 @@ import org.hibernate.transform.ResultTransformer;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ObjectBuilderResultTransformerAdapter implements ResultTransformer {
     

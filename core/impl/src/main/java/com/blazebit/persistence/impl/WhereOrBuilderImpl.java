@@ -29,7 +29,9 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements WhereOrBuilder<T>, PredicateBuilder {
 

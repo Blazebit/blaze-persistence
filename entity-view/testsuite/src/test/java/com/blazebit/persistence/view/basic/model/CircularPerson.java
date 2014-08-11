@@ -22,7 +22,8 @@ import java.util.Set;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Person.class)
 public interface CircularPerson {

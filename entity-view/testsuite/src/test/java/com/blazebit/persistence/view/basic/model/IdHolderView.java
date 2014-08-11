@@ -20,7 +20,8 @@ import java.io.Serializable;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface IdHolderView<T> extends Serializable {
     

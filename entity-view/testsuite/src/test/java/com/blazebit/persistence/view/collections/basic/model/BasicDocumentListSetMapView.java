@@ -26,7 +26,8 @@ import java.util.Set;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(DocumentForCollections.class)
 public abstract class BasicDocumentListSetMapView implements BasicDocumentCollectionsView {

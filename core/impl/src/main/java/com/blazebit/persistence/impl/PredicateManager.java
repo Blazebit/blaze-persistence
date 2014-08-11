@@ -35,7 +35,8 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class PredicateManager<U> extends AbstractManager {
     protected final SubqueryInitiatorFactory subqueryInitFactory;

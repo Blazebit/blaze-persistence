@@ -18,7 +18,8 @@ package com.blazebit.persistence.impl;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ExternalAliasDereferencingException extends RuntimeException {
 

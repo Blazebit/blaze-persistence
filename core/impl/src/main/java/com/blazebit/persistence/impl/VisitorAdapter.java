@@ -46,7 +46,8 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Visitor {
     @Override

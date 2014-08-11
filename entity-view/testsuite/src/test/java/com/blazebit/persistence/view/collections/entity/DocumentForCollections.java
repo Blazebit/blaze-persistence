@@ -33,8 +33,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 /**
- * 
- * @author Christian
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 @Entity
 public class DocumentForCollections implements Serializable  {

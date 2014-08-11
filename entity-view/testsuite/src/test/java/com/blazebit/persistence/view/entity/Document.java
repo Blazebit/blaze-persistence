@@ -43,7 +43,8 @@ import javax.persistence.Transient;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @since 1.0
  */
 @Entity
 public class Document implements Serializable {

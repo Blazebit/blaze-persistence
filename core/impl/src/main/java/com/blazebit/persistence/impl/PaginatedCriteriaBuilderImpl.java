@@ -34,9 +34,9 @@ import javax.persistence.metamodel.Metamodel;
 
 /**
  *
- * @param <T> The query result type
- * @author Moritz Becker
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements
     PaginatedCriteriaBuilder<T> {

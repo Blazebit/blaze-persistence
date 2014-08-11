@@ -22,6 +22,7 @@ import java.util.List;
  *
  * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class MultinaryPredicate implements Predicate {
     

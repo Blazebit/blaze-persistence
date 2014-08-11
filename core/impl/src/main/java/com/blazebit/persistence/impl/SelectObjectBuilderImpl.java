@@ -27,7 +27,8 @@ import java.util.TreeMap;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<T> implements SelectObjectBuilder<T>{
 

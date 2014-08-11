@@ -27,7 +27,8 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class JoinOnBuilderImpl<X> implements JoinOnBuilder<X>, PredicateBuilder {
 

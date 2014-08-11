@@ -26,8 +26,9 @@ import org.eclipse.persistence.sessions.Record;
 import org.eclipse.persistence.sessions.Session;
 
 /**
- * 
- * @author Christian
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ObjectBuilderQueryRedirectorAdapter implements QueryRedirector {
 

@@ -21,7 +21,8 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBuilderEndedListener, SubqueryBuilderListener<T> {
     private final PredicateBuilderEndedListenerImpl predicateBuilderListener = new PredicateBuilderEndedListenerImpl();

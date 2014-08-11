@@ -23,6 +23,7 @@ import java.util.List;
 /**
  *
  * @author Moritz Becker
+ * @since 1.0
  */
 public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
 

@@ -21,7 +21,8 @@ import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(PersonForCollections.class)
 public interface SubviewPersonForCollectionsView {

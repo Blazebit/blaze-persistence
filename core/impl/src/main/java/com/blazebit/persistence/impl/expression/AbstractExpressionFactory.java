@@ -32,7 +32,9 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
     

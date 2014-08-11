@@ -30,7 +30,8 @@ import javax.persistence.OneToMany;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @since 1.0
  */
 @Entity
 public class Person implements Serializable {

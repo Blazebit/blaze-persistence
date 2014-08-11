@@ -23,7 +23,8 @@ import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class CriteriaBuilderFactoryLifecycle implements ContextualLifecycle<CriteriaBuilderFactory> {
     

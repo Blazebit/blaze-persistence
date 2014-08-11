@@ -28,7 +28,8 @@ import static javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ModelUtils {
 

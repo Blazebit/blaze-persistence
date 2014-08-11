@@ -26,8 +26,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 /**
- * 
- * @author Christian
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 @Entity
 public class PersonForCollections implements Serializable  {

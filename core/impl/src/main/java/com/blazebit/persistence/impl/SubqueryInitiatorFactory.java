@@ -22,7 +22,8 @@ import javax.persistence.EntityManager;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SubqueryInitiatorFactory {
 	private final CriteriaBuilderFactoryImpl cbf;

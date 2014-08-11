@@ -19,6 +19,7 @@ package com.blazebit.persistence.impl.predicate;
  *
  * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public final class AndPredicate extends MultinaryPredicate {
     

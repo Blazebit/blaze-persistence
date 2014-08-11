@@ -34,7 +34,8 @@ import org.junit.Test;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class InterfaceViewTest extends AbstractEntityViewTest {
     

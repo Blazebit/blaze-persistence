@@ -23,7 +23,8 @@ import java.util.List;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class OrderByManager extends AbstractManager {
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();

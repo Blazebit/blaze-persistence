@@ -27,7 +27,9 @@ import org.junit.Test;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class PaginationTest extends AbstractCoreTest {
 

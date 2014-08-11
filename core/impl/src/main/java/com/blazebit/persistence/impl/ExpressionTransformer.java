@@ -20,12 +20,13 @@ import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public interface ExpressionTransformer {
 
-    Expression transform(Expression original);
+    public Expression transform(Expression original);
 
-    Expression transform(Expression original, boolean selectClause);
+    public Expression transform(Expression original, boolean selectClause);
     
 }

@@ -26,6 +26,7 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
  *
  * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public class EqPredicate  extends QuantifiableBinaryExpressionPredicate {
     // This field indicates whether it is necessary to include this KEY(x) = y clause in the

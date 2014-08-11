@@ -43,8 +43,9 @@ import javax.persistence.metamodel.Metamodel;
  *
  * @param <T> The query result type
  * @param <X> The concrete builder type
- * @author Moritz Becker
  * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
         QueryBuilder<T, X> {

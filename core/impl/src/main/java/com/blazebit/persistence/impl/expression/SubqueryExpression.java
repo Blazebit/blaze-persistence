@@ -20,7 +20,9 @@ import com.blazebit.persistence.SubqueryBuilder;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SubqueryExpression implements Expression {
     private final SubqueryBuilder<?> builder;

@@ -22,7 +22,9 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 

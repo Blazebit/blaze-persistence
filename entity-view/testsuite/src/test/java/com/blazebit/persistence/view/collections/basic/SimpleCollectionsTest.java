@@ -41,7 +41,8 @@ import org.junit.runners.Parameterized;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.0
  */
 @RunWith(Parameterized.class)
 public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {

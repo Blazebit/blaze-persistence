@@ -19,7 +19,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class AbstractManager {
 

@@ -25,6 +25,7 @@ import org.mockito.Mockito;
 /**
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 public class SorterTest {
     

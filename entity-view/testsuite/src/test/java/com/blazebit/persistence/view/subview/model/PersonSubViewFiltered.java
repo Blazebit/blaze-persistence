@@ -25,6 +25,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
 /**
  *
  * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Person.class)
 public interface PersonSubViewFiltered {

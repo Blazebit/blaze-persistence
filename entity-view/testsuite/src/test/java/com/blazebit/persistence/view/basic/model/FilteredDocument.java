@@ -26,7 +26,8 @@ import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 @EntityView(Document.class)
 public interface FilteredDocument {

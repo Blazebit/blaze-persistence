@@ -18,7 +18,9 @@ package com.blazebit.persistence.model;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class DocumentPartnerView {
     private final Object partners;

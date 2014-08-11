@@ -19,7 +19,8 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ParameterRegistrationVisitor extends VisitorAdapter {
 

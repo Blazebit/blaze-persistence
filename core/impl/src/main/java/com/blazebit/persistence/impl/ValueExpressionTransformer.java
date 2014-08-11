@@ -29,7 +29,8 @@ import java.util.Set;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class ValueExpressionTransformer implements ExpressionTransformer {
     private final JPAInfo jpaInfo;

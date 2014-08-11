@@ -22,7 +22,8 @@ import javax.persistence.EntityManager;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 

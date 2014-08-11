@@ -21,8 +21,9 @@ import org.apache.openjpa.kernel.StoreContext;
 import org.apache.openjpa.kernel.exps.AggregateListener;
 
 /**
- * 
- * @author Christian
+ *
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class ObjectBuilderAggregateListenerAdapter implements AggregateListener {
 

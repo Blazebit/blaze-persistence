@@ -18,7 +18,9 @@ package com.blazebit.persistence.impl;
 
 /**
  *
- * @author ccbem
+ * @author Christian Beikov
+ * @author Moritz Becker
+ * @since 1.0
  */
 public interface SubqueryBuilderListener<T> {
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder);

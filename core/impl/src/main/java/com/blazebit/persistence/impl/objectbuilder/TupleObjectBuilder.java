@@ -25,7 +25,9 @@ import javax.persistence.TupleElement;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 

@@ -20,9 +20,10 @@ import com.blazebit.persistence.BaseQueryBuilder;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public interface AliasInfo {
-    String getAlias();
-    BaseQueryBuilder<?, ?> getAliasOwner();
+    public String getAlias();
+    public BaseQueryBuilder<?, ?> getAliasOwner();
 }
