@@ -17,12 +17,26 @@
 package com.blazebit.persistence;
 
 /**
+ * The builder interface for a on predicate container that connects predicates with the OR operator.
  *
- * @author ccbem
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
+ * @since 1.0
  */
-public interface JoinOnOrBuilder<X> extends BaseJoinOnBuilder<JoinOnOrBuilder<X>> {
-    //TODO: javadoc
-    public X endOr();
-    //TODO: javadoc
-    public JoinOnAndBuilder<JoinOnOrBuilder<X>> onAnd();
+public interface JoinOnOrBuilder<T> extends BaseJoinOnBuilder<JoinOnOrBuilder<T>> {
+    
+    /**
+     * Finishes the OR predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return The parent predicate container builder
+     */
+    public T endOr();
+    
+    /**
+     * Starts a on and builder which connects it's predicates with the AND operator.
+     * When the builder finishes, the predicate is added to this predicate container as disjunct.
+     *
+     * @return The on and builder
+     */
+    public JoinOnAndBuilder<JoinOnOrBuilder<T>> onAnd();
 }

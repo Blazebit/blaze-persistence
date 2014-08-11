@@ -120,10 +120,13 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                     if (subqueryAttribute.getSubqueryExpression()
                         .isEmpty()) {
                         filterEntry.getValue()
-                            .apply(provider.createSubquery(criteriaBuilder.where()));
+                            .apply(provider.createSubquery(criteriaBuilder.whereSubquery()));
                     } else {
-                        // TODO: apply expression and alias
-                        throw new UnsupportedOperationException("Not yet implemented.");
+                        filterEntry.getValue()
+                            .apply(provider.createSubquery(
+                                criteriaBuilder.whereSubquery(
+                                    subqueryAttribute.getSubqueryExpression(), 
+                                    subqueryAttribute.getSubqueryAlias())));
                     }
                 } else {
                     filterEntry.getValue()

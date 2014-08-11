@@ -125,8 +125,9 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeFilter("owner.name", "pers2");
         
         // Currently we have no way to express what filter should be used when using entity attributes
-        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
-        
+        setting.apply(evm, cb);
+//        PaginatedCriteriaBuilder<DocumentWithEntityView> paginatedCb = setting.apply(evm, cb);
+//        
 //        PagedList<DocumentWithEntityView> result = paginatedCb.getResultList();
 //        
 //        assertEquals(1, result.size());
