@@ -92,4 +92,14 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String alias) {
         return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(alias);
     }
+
+    @Override
+    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    }
 }

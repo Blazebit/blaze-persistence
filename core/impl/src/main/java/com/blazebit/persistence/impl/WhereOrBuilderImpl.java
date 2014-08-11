@@ -99,6 +99,7 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

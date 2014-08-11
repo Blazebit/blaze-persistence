@@ -290,4 +290,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String alias) {
         return (SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>>) super.selectSubquery(alias);
     }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    }
 }

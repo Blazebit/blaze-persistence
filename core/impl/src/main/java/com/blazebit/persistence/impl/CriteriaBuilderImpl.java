@@ -100,6 +100,4 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
         return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
     
-    
-
 }

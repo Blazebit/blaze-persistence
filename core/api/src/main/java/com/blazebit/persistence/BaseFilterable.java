@@ -34,9 +34,13 @@ public interface BaseFilterable<T extends BaseFilterable<T>> {
     public SubqueryInitiator<RestrictionBuilder<T>> whereSubquery();
     
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate.
-     * TODO: javadoc
+     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of 
+     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
+     * parent predicate container represented by the type {@linkplain T}.
      *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be used as left hand side of a predicate
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<T>> whereSubquery(String subqueryAlias, String expression);

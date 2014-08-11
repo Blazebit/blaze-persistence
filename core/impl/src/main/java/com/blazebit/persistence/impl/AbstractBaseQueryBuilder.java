@@ -218,21 +218,13 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
     public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery() {
-        return whereManager.restrict(this);
-    }
-
-    @Override
-    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
@@ -258,7 +250,17 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public SubqueryInitiator<X> whereNotExists() {
         return whereManager.restrictNotExists((X) this);
+    }
 
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery() {
+        return whereManager.restrict(this);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /*
@@ -276,11 +278,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
         return (X) this;
-    }
-
-    @Override
-    public SubqueryInitiator<RestrictionBuilder<X>> having() {
-        return havingManager.restrict(this);
     }
 
     /*
@@ -321,6 +318,17 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictNotExists((X) this);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery() {
+        return havingManager.restrict(this);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /*

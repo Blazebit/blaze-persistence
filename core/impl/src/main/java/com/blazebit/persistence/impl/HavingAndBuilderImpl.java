@@ -95,9 +95,15 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     }
 
     @Override
-    public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> having() {
+    public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> havingSubquery() {
         RestrictionBuilder<HavingAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingAndBuilder<T>>) restrictionBuilder, leftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> havingSubquery(String subqueryAlias, String expression) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
     
     @Override

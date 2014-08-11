@@ -38,7 +38,7 @@ public class ExpressionSubqueryTupleElementMapper implements TupleElementMapper 
 
     @Override
     public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
-        provider.createSubquery(queryBuilder.selectSubquery(subqueryExpression, subqueryAlias));
+        provider.createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
     }
     
 }
