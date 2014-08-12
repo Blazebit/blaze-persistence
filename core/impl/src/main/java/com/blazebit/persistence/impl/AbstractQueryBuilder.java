@@ -45,7 +45,16 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
-    QueryBuilder<T, X> {
+        QueryBuilder<T, X> {
+
+    /**
+     * This flag indicates whether the current builder has been used to create a
+     * PaginatedCriteriaBuilder. In this case we must not allow any calls to
+     * group by and distinct since the corresponding managers are shared with
+     * the PaginatedCriteriaBuilder and any changes would affect the
+     * PaginatedCriteriaBuilder as well.
+     */
+    private boolean createdPaginatedBuilder = false;
 
     /**
      * Create flat copy of builder
@@ -63,7 +72,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public List<T> getResultList() {
         return getQuery()
-            .getResultList();
+                .getResultList();
     }
 
     @Override
@@ -74,6 +83,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (!groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
+        createdPaginatedBuilder = true;
         return new PaginatedCriteriaBuilderImpl<T>(this, firstRow, pageSize);
     }
 
@@ -284,4 +294,29 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public Metamodel getMetamodel() {
         return em.getMetamodel();
     }
+
+    @Override
+    public X groupBy(String expression) {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.groupBy(expression);
+    }
+
+    @Override
+    public X groupBy(String... paths) {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.groupBy(paths);
+    }
+
+    @Override
+    public X distinct() {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.distinct(); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

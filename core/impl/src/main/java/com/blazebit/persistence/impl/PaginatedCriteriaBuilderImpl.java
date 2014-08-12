@@ -42,6 +42,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     private final int firstRow;
     private final int pageSize;
+    private final AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder;
 
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, int firstRow, int pageSize) {
         super(baseBuilder);
@@ -53,6 +54,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
         this.firstRow = firstRow;
         this.pageSize = pageSize;
+        this.baseBuilder = baseBuilder;
     }
 
     @Override
@@ -220,6 +222,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         StringBuilder sbJoin = new StringBuilder();
         joinManager.buildJoins(false, sbJoin);
 
+        // execute illegal collection access check
+        orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager, baseBuilder));
+        
         return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
     }
 

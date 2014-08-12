@@ -226,7 +226,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.leftJoin("d.partners.localized", "l").whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(l)").gt(1).end()
             .like("%dld");
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WHERE (SELECT p.name FORM Person p WHERE LENGTH(l) > 1) LIKE :param_0";
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WHERE (SELECT p.name FROM Person p WHERE LENGTH(l) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -237,7 +237,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like("%dld");
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized " + ON_CLAUSE + " KEY(localized) = 1 WHERE (SELECT p.name FORM Person p WHERE LENGTH(l) > 1) LIKE :param_0";
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized " + ON_CLAUSE + " KEY(localized) = 1 WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -271,7 +271,7 @@ public class SubqueryTest extends AbstractCoreTest {
             .end()
             .groupBy("id")
             .orderByAsc("localizedCount");
-        em.createQuery("SELECT d.id, SUM((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = contacts.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts contacts GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST").getResultList();
+
         String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = contacts.id)) AS localizedCount FROM Document d LEFT JOIN d.contacts contacts GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -305,7 +305,7 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testInvalidSubqueryUsesOuterJoin() {
+    public void testInvalidSubqueryOrderByCollectionAccess() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .leftJoin("d.contacts", "c")
             .selectSubquery("localizedCount")
@@ -313,22 +313,26 @@ public class SubqueryTest extends AbstractCoreTest {
                 .select("COUNT(p.localized)")
                 .where("p.id").eqExpression("c.id")
             .end()
+            .orderByAsc("localizedCount")
             .page(0, 1);
-        // In a paginated query access to outer collections is disallowed
-        verifyException(cb, IllegalArgumentException.class).getQueryString();
+        
+        // In a paginated query access to outer collections is disallowed in the order by clause
+        verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }
 
     @Test
-    public void testInvalidSubqueryAddsJoin() {
+    public void testInvalidSubqueryOrderByCollectionAccessNewJoin() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .selectSubquery("localizedCount")
                 .from(Person.class, "p")
                 .select("COUNT(p.localized)")
                 .where("p.id").eqExpression("d.contacts.id")
             .end()
+            .orderByAsc("localizedCount")
             .page(0, 1);
-        // In a paginated query access to outer collections is disallowed
-        verifyException(cb, IllegalArgumentException.class).getQueryString();
+        
+        // In a paginated query access to outer collections is disallowed in the order by clause
+        verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }
    
     @Test

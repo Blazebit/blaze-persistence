@@ -64,7 +64,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     protected final JPAInfo jpaInfo;
 
-    private final AliasManager aliasManager;
+    protected final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
 
     private final List<ExpressionTransformer> transformers;
@@ -96,7 +96,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.resultType = builder.resultType;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, ArrayExpressionTransformer parentArrayExpressionTransformer) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -121,9 +121,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(),
-                                           parentJoinManager);
+                parentJoinManager);
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
+        ArrayExpressionTransformer arrayExpressionTransformer = new ArrayExpressionTransformer(joinManager, this, parentArrayExpressionTransformer);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(), arrayExpressionTransformer);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -138,12 +139,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ArrayExpressionTransformer(joinManager, this), new ValueExpressionTransformer(jpaInfo));
+        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), arrayExpressionTransformer, new ValueExpressionTransformer(jpaInfo));
         this.resultType = (Class<T>) fromClazz;
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), null);
     }
 
 
@@ -225,13 +226,13 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         if (subqueryAlias == null) {
             throw new NullPointerException("subqueryAlias");
         }
-        if(subqueryAlias.isEmpty()){
+        if (subqueryAlias.isEmpty()) {
             throw new IllegalArgumentException("subqueryAlias");
         }
         if (expression == null) {
             throw new NullPointerException("expression");
         }
-        if(!expression.contains(subqueryAlias)){
+        if (!expression.contains(subqueryAlias)) {
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
@@ -452,6 +453,15 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setJoinWithObjectLeafAllowed(true);
     }
 
+    protected void applyVisitor(VisitorAdapter expressionVisitor) {
+        selectManager.acceptVisitor(expressionVisitor);
+        joinManager.acceptVisitor(expressionVisitor);
+        whereManager.acceptVisitor(expressionVisitor);
+        groupByManager.acceptVisitor(expressionVisitor);
+        havingManager.acceptVisitor(expressionVisitor);
+        orderByManager.acceptVisitor(expressionVisitor);
+    }
+
     protected void applyExpressionTransformers() {
         // run through expressions
         // for each arrayExpression, look up the alias in the joinManager's aliasMap
@@ -506,9 +516,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
-            .append(fromClazz.getSimpleName())
-            .append(' ')
-            .append(joinManager.getRootAlias());
+                .append(fromClazz.getSimpleName())
+                .append(' ')
+                .append(joinManager.getRootAlias());
 
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);

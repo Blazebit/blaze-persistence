@@ -35,8 +35,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final SubqueryBuilderListener listener;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
+    private final ArrayExpressionTransformer parentArrayExpressionTransformer;
 
-    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory, ArrayExpressionTransformer parentArrayExpressionTransformer) {
         this.cbf = cbf;
         this.em = em;
         this.result = result;
@@ -45,12 +46,13 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         this.listener = listener;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
+        this.parentArrayExpressionTransformer = parentArrayExpressionTransformer;
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, null, result, parameterManager, aliasManager, parentJoinManager, listener,
-                                                                            expressionFactory);
+                                                                            expressionFactory, parentArrayExpressionTransformer);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }
@@ -58,7 +60,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, alias, result, parameterManager, aliasManager, parentJoinManager, listener,
-                                                                            expressionFactory);
+                                                                            expressionFactory, parentArrayExpressionTransformer);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

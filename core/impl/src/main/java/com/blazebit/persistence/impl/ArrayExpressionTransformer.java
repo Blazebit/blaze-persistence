@@ -39,10 +39,12 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
     private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
     private final JoinManager joinManager;
     private final BaseQueryBuilder<?, ?> aliasOwner;
+    private final ArrayExpressionTransformer parentTransformer;
 
-    public ArrayExpressionTransformer(JoinManager joinManager, BaseQueryBuilder<?, ?> aliasOwner) {
+    public ArrayExpressionTransformer(JoinManager joinManager, BaseQueryBuilder<?, ?> aliasOwner, ArrayExpressionTransformer parentArrayExpressionTransformer) {
         this.joinManager = joinManager;
         this.aliasOwner = aliasOwner;
+        this.parentTransformer = parentArrayExpressionTransformer;
     }
 
     @Override
@@ -68,7 +70,11 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
         if (path.getBaseNode() != null) {
             // do not transform external paths
             if (path.getBaseNode().getAliasInfo().getAliasOwner() != aliasOwner) {
-                return original;
+                if(parentTransformer == null){
+                    throw new IllegalStateException("Could not transform array expression [" + path.toString() + "] with unknown alias owner");
+                }else{
+                    return parentTransformer.transform(original);
+                }
             }
 
             absBasePath = path.getBaseNode().getAliasInfo().getAbsolutePath();

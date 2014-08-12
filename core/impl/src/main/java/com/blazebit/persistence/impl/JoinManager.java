@@ -167,7 +167,7 @@ public class JoinManager extends AbstractManager {
         if (aliasInfo == null) {
             return false;
         }
-        
+
         if (parent != null && aliasInfo.getAliasOwner() == parent.aliasOwner) {
             // the alias exists but originates from the parent query builder
 
@@ -176,30 +176,32 @@ public class JoinManager extends AbstractManager {
                 throw new ExternalAliasDereferencingException("Start alias [" + startAlias + "] of path [" + path.toString() + "] is external and must not be dereferenced");
             }
 
-            // check for unsupported collection accesses in the path
-            JoinAliasInfo joinAliasInfo = (JoinAliasInfo) aliasInfo;
-
-            JoinNode aliasJoinNode;
-            if (joinAliasInfo.getAbsolutePath().isEmpty()) {
-                aliasJoinNode = parent.rootNode;
-            } else {
-                aliasJoinNode = parent.findNode(joinAliasInfo.getAbsolutePath());
-            }
-
-//            if (aliasJoinNode.isCollection()) {
-//                throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
-//            }
-//            for (int i = 1; i < path.getExpressions().size(); i++) {
-//                PathElementExpression pathElem = path.getExpressions().get(i);
-//                String pathElemStr;
-//                if (pathElem instanceof ArrayExpression) {
-//                    pathElemStr = ((ArrayExpression) pathElem).getBase().toString();
+//            if (fromOrderBy) {
+//                // check for unsupported collection accesses in the path
+//                JoinAliasInfo joinAliasInfo = (JoinAliasInfo) aliasInfo;
+//
+//                JoinNode aliasJoinNode;
+//                if (joinAliasInfo.getAbsolutePath().isEmpty()) {
+//                    aliasJoinNode = parent.rootNode;
 //                } else {
-//                    pathElemStr = pathElem.toString();
+//                    aliasJoinNode = parent.findNode(joinAliasInfo.getAbsolutePath());
 //                }
-//                aliasJoinNode = parent.findNode(aliasJoinNode, pathElemStr);
-//                if (aliasJoinNode != null && aliasJoinNode.isCollection()) {
+//
+//                if (aliasJoinNode.isCollection()) {
 //                    throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
+//                }
+//                for (int i = 1; i < path.getExpressions().size(); i++) {
+//                    PathElementExpression pathElem = path.getExpressions().get(i);
+//                    String pathElemStr;
+//                    if (pathElem instanceof ArrayExpression) {
+//                        pathElemStr = ((ArrayExpression) pathElem).getBase().toString();
+//                    } else {
+//                        pathElemStr = pathElem.toString();
+//                    }
+//                    aliasJoinNode = parent.findNode(aliasJoinNode, pathElemStr);
+//                    if (aliasJoinNode != null && aliasJoinNode.isCollection()) {
+//                        throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
+//                    }
 //                }
 //            }
 
@@ -359,7 +361,7 @@ public class JoinManager extends AbstractManager {
                 }
                 return;
             } else if (isExternal(pathExpression)) {
-                
+
                 // try to set base node and field for the external expression based
                 // on existing joins in the super query
                 //TODO: the usage of fromSelect might not be correct here    
@@ -524,8 +526,8 @@ public class JoinManager extends AbstractManager {
                 Attribute attr = metamodel.entity(clazz).getAttribute(normalizedPath);
                 if (attr == null) {
                     throw new IllegalArgumentException("Field with name "
-                        + normalizedPath + " was not found within class "
-                        + clazz.getName());
+                            + normalizedPath + " was not found within class "
+                            + clazz.getName());
                 }
                 if (ModelUtils.isJoinable(attr)) {
                     throw new IllegalArgumentException("No object leaf allowed but " + normalizedPath + " is an object leaf");
@@ -569,10 +571,9 @@ public class JoinManager extends AbstractManager {
             Attribute attr = type.getAttribute(propertyName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
-                    + propertyName + " was not found within class "
-                    + currentClass.getName());
+                        + propertyName + " was not found within class "
+                        + currentClass.getName());
             }
-            boolean collectionValued = attr.isCollection();
             Class<?> resolvedFieldClass = ModelUtils.resolveFieldClass(attr);
             // Parseable types do not need to be fetched, so also sub
             // properties would not have to be fetched
@@ -580,7 +581,7 @@ public class JoinManager extends AbstractManager {
             // Added check for collection and map types since fieldClass evaluates to V if the field is of type Map<K, V>
             if (!ModelUtils.isJoinable(attr)) {
                 LOG.fine(new StringBuilder("Field with name ").append(propertyName).append(" of class ").append(currentClass.getName()).append(
-                    " is parseable and therefore it has not to be fetched explicitly.").toString());
+                        " is parseable and therefore it has not to be fetched explicitly.").toString());
                 break;
             }
 
@@ -588,8 +589,8 @@ public class JoinManager extends AbstractManager {
 
             JoinType modelAwareType;
             if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE || attr.getPersistentAttributeType()
-                == Attribute.PersistentAttributeType.ONE_TO_ONE)
-                && ((SingularAttribute) attr).isOptional() == false) {
+                    == Attribute.PersistentAttributeType.ONE_TO_ONE)
+                    && ((SingularAttribute) attr).isOptional() == false) {
                 modelAwareType = JoinType.INNER;
             } else {
 
@@ -606,10 +607,10 @@ public class JoinManager extends AbstractManager {
                     joinType = modelAwareType;
                 }
                 currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, alias, joinType, fetch, "Ambiguous implicit join", implicit, attr
-                                          .isCollection());
+                        .isCollection());
             } else {
                 currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, propertyName, modelAwareType, fetch, "Ambiguous implicit join", true, attr
-                                          .isCollection());
+                        .isCollection());
             }
             if (fetch) {
                 currentNode.setFetch(true);
@@ -640,7 +641,7 @@ public class JoinManager extends AbstractManager {
                     throw new IllegalArgumentException(errorMessage);
                 } else {
                     throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath
-                        + "] is available but the join node is not!");
+                            + "] is available but the join node is not!");
                 }
             }
 
@@ -669,7 +670,7 @@ public class JoinManager extends AbstractManager {
                     aliasManager.registerAliasInfo(nodeAliasInfo);
                 } else if (!nodeAliasInfo.isImplicit() && !implicit) {
                     throw new IllegalArgumentException("Alias conflict[" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentPath
-                        .toString() + "]");
+                            .toString() + "]");
                 }
             }
         }

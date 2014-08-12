@@ -17,7 +17,6 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.impl.PaginatedCriteriaBuilderImpl;
 import com.blazebit.persistence.model.DocumentViewModel;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;

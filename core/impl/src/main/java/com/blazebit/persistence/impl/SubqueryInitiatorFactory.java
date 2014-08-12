@@ -32,17 +32,19 @@ public class SubqueryInitiatorFactory {
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
+    private final ArrayExpressionTransformer parentArrayExpressionTransformer;
 
-    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, ArrayExpressionTransformer parentArrayExpressionTransformer) {
         this.cbf = cbf;
         this.em = em;
         this.parameterManager = parameterManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
+        this.parentArrayExpressionTransformer = parentArrayExpressionTransformer;
     }
 
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener) {
-        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
+        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, parentArrayExpressionTransformer);
     }
 }
