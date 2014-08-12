@@ -35,9 +35,8 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <!-- Use the old version for the bug workaround test -->
-            <!-- <version>4.2.4.Final</version>  -->
-            <version>4.2.6.Final</version>
+            <!-- Minimum version is 4.2.8.Final -->
+            <version>4.2.15.Final</version>
         </dependency>
     </dependencies>
     

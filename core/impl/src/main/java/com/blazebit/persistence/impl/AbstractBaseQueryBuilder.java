@@ -383,8 +383,18 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
+    public X innerJoinDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.INNER);
+    }
+
+    @Override
     public X leftJoin(String path, String alias) {
         return join(path, alias, JoinType.LEFT);
+    }
+
+    @Override
+    public X leftJoinDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.LEFT);
     }
 
     @Override
@@ -393,10 +403,21 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
+    public X rightJoinDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.RIGHT);
+    }
+
+    @Override
     public X join(String path, String alias, JoinType type) {
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false);
         return (X) this;
+    }
+
+    @Override
+    public X joinDefault(String path, String alias, JoinType type) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override

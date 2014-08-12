@@ -17,8 +17,11 @@ package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import javax.persistence.Basic;
 import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -36,6 +39,8 @@ import javax.persistence.MapKeyColumn;
 public class Workflow implements Serializable {
 
     private Long id;
+    private Locale defaultLanguage;
+    private Set<Locale> supportedLocales = new HashSet<Locale>();
     private Map<Locale, LocalizedEntity> localized = new HashMap<Locale, LocalizedEntity>();
 
     public Workflow() {
@@ -49,6 +54,32 @@ public class Workflow implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Basic(optional = false)
+    public Locale getDefaultLanguage() {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(Locale defaultLanguage) {
+        this.defaultLanguage = defaultLanguage;
+    }
+
+    @ElementCollection
+    @CollectionTable(
+            joinColumns = {
+                @JoinColumn(
+                        name = "ID",
+                        referencedColumnName = "ID",
+                        nullable = false,
+                        insertable = false,
+                        updatable = false)})
+    public Set<Locale> getSupportedLocales() {
+        return supportedLocales;
+    }
+
+    public void setSupportedLocales(Set<Locale> supportedLocales) {
+        this.supportedLocales = supportedLocales;
     }
 
     @ElementCollection

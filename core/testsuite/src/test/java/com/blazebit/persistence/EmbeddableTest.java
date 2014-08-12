@@ -17,6 +17,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Workflow;
+import java.util.Locale;
 import javax.persistence.Tuple;
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -41,6 +42,8 @@ public class EmbeddableTest extends AbstractCoreTest {
             .select("localized[:locale].name");
         String expectedQuery = "SELECT localized.name FROM Workflow workflow LEFT JOIN workflow.localized localized " + ON_CLAUSE + " KEY(localized) = :locale";
         assertEquals(expectedQuery, cb.getQueryString());
+        cb.setParameter("locale", Locale.GERMAN)
+            .getResultList();
     }
     
     @Test
@@ -49,6 +52,8 @@ public class EmbeddableTest extends AbstractCoreTest {
             .where("localized[:locale].name").eq("bla");
         String expectedQuery = "SELECT workflow FROM Workflow workflow LEFT JOIN workflow.localized localized " + ON_CLAUSE + " KEY(localized) = :locale WHERE localized.name = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());
+        cb.setParameter("locale", Locale.GERMAN)
+            .getResultList();
     }
     
     @Test
@@ -57,5 +62,7 @@ public class EmbeddableTest extends AbstractCoreTest {
             .orderByAsc("localized[:locale].name");
         String expectedQuery = "SELECT workflow FROM Workflow workflow LEFT JOIN workflow.localized localized " + ON_CLAUSE + " KEY(localized) = :locale ORDER BY localized.name ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
+        cb.setParameter("locale", Locale.GERMAN)
+            .getResultList();
     }
 }

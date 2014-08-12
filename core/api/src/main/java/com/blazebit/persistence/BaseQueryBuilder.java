@@ -48,6 +48,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends H
      */
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * The resulting join is different from a default join because it can only be referred to via it's alias.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
@@ -55,9 +56,22 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends H
      * @return The query builder for chaining calls
      */
     public X join(String path, String alias, JoinType type);
+    
+    /**
+     * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * The resulting join will be the default join meaning that expressions which use the absolute path will refer to this join.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @param type  The join type
+     * @return The query builder for chaining calls
+     */
+    public X joinDefault(String path, String alias, JoinType type);
 
     /**
      * Adds a join with an on-clause to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * The resulting join is different from a default join because it can only be referred to via it's alias.
+     * The absolute path can only be used if the joined path is a map and the on-clause contains a EQ predicate with the KEY on the left hand side.
      *
      * @param path  The path to join
      * @param alias The alias for the joined element
@@ -75,6 +89,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends H
      * @return The query builder for chaining calls
      */
     public X innerJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X innerJoinDefault(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -95,6 +119,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends H
      * @return The query builder for chaining calls
      */
     public X leftJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X leftJoinDefault(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -115,6 +149,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends H
      * @return The query builder for chaining calls
      */
     public X rightJoin(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X rightJoinDefault(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
