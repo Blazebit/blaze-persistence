@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
@@ -563,7 +564,7 @@ public class JoinManager extends AbstractManager {
         for (int j = 0; j < pathElements.length; j++) {
             String propertyName = pathElements[j];
 
-            EntityType type = metamodel.entity(currentClass);
+            ManagedType type = metamodel.managedType(currentClass);
             Attribute attr = type.getAttribute(propertyName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
