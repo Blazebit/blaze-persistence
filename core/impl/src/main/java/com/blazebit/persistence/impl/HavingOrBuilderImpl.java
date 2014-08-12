@@ -42,6 +42,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     private final ExpressionFactory expressionFactory;
     private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
     private RightHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> rightSubqueryPredicateBuilderListener;
+    private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
 
     public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -99,8 +100,11 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<HavingOrBuilder<T>>> havingSubquery(String subqueryAlias, String expression) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        RestrictionBuilder<HavingOrBuilder<T>> restrictionBuilder = startBuilder(
+            new RestrictionBuilderImpl<HavingOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingOrBuilder<T>>) restrictionBuilder,
+                                                           superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
@@ -109,6 +113,9 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
+        if (superExprLeftSubqueryPredicateBuilderListener != null){
+            superExprLeftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
 }

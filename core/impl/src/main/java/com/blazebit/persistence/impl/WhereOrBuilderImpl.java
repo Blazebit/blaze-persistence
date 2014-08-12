@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
@@ -44,6 +45,7 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
     private final ExpressionFactory expressionFactory;
     private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
     private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
+    private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
 
     public WhereOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -102,8 +104,11 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery(String subqueryAlias, String expression) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(
+            new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<WhereOrBuilder<T>>) restrictionBuilder,
+                                                           superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
@@ -112,6 +117,9 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
+        }
+        if (superExprLeftSubqueryPredicateBuilderListener != null){
+            superExprLeftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
 }

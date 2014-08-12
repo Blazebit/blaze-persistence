@@ -177,35 +177,6 @@ public class JoinManager extends AbstractManager {
                 throw new ExternalAliasDereferencingException("Start alias [" + startAlias + "] of path [" + path.toString() + "] is external and must not be dereferenced");
             }
 
-//            if (fromOrderBy) {
-//                // check for unsupported collection accesses in the path
-//                JoinAliasInfo joinAliasInfo = (JoinAliasInfo) aliasInfo;
-//
-//                JoinNode aliasJoinNode;
-//                if (joinAliasInfo.getAbsolutePath().isEmpty()) {
-//                    aliasJoinNode = parent.rootNode;
-//                } else {
-//                    aliasJoinNode = parent.findNode(joinAliasInfo.getAbsolutePath());
-//                }
-//
-//                if (aliasJoinNode.isCollection()) {
-//                    throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
-//                }
-//                for (int i = 1; i < path.getExpressions().size(); i++) {
-//                    PathElementExpression pathElem = path.getExpressions().get(i);
-//                    String pathElemStr;
-//                    if (pathElem instanceof ArrayExpression) {
-//                        pathElemStr = ((ArrayExpression) pathElem).getBase().toString();
-//                    } else {
-//                        pathElemStr = pathElem.toString();
-//                    }
-//                    aliasJoinNode = parent.findNode(aliasJoinNode, pathElemStr);
-//                    if (aliasJoinNode != null && aliasJoinNode.isCollection()) {
-//                        throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
-//                    }
-//                }
-//            }
-
             // the alias is external so we do not have to treat it
             return true;
 
@@ -315,36 +286,6 @@ public class JoinManager extends AbstractManager {
         return null;
     }
 
-    private boolean resolve(PathExpression pathExpr) {
-        String path = pathExpr.toString();
-        String[] pathField = path.split("\\.");
-        if (startsAtRootAlias(path) && (pathField.length == 2)) {
-            pathExpr.setBaseNode(rootNode);
-            pathExpr.setField(pathField[1]);
-            return true;
-        } else if (path.equals(rootAliasInfo.getAlias())) {
-            pathExpr.setBaseNode(rootNode);
-            return true;
-        }
-        String normalized = normalizePath(path);
-        JoinNode node = findNode(normalized);
-        if (node != null) {
-            pathExpr.setBaseNode(node);
-            return true;
-        }
-        // last path element might be a field
-        pathField = separateLastPathElement(normalized);
-        if (pathField != null) {
-            node = findNode(pathField[0]);
-            if (node != null) {
-                pathExpr.setBaseNode(node);
-                pathExpr.setField(pathField[1]);
-                return true;
-            }
-        }
-        return false;
-    }
-
     void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
@@ -368,10 +309,6 @@ public class JoinManager extends AbstractManager {
                 //TODO: the usage of fromSelect might not be correct here    
                 parent.implicitJoin(pathExpression, true, fromSelect, true);
                 return;
-//                    if (parent.resolve(pathExpression)) {
-//                        return;
-//                    }
-//                throw new IllegalStateException("Cannot resolve external path [" + path.toString() + "]");
             }
 
             JoinResult result = implicitJoin(normalizedPath, objectLeafAllowed, fromSelect);

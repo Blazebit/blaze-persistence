@@ -333,7 +333,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery(String subqueryAlias, String expression) {
-        return whereManager.restrict(this, subqueryAlias, expression);
+        return havingManager.restrict(this, subqueryAlias, expression);
     }
 
     /*

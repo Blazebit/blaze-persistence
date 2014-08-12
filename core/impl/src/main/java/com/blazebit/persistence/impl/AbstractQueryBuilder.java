@@ -144,7 +144,10 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public X fetch(String path) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkFetchJoinAllowed();
+        verifyBuilderEnded();
+        joinManager.join(path, null, null, true);
+        return (X) this;
     }
 
     @Override
