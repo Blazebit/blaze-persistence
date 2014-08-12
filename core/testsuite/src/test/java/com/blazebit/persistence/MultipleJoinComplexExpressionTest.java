@@ -54,7 +54,9 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
                 + " FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
                 + " LEFT JOIN workflow.localized localized_defaultLanguage " + ON_CLAUSE + " KEY(localized_defaultLanguage) = workflow.defaultLanguage";
-        em.createQuery(q).getResultList();
+        em.createQuery(q)
+                .setParameter("locale", Locale.GERMAN)
+                .getResultList();
         CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
                 .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END,' - '),0,20)");
         String expectedQuery = 
