@@ -36,7 +36,8 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <!-- Minimum version is 4.2.8.Final -->
-            <version>4.2.15.Final</version>
+            <!-- 4.2.15.Final has a bug regarding naming strategies -->
+            <version>4.2.14.Final</version>
         </dependency>
     </dependencies>
     
