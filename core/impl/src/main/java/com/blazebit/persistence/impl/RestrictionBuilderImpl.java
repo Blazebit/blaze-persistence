@@ -16,16 +16,17 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
-import com.blazebit.persistence.QuantifiableSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionUtils;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
@@ -58,6 +59,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     private final ExpressionFactory expressionFactory;
+    private SuperExpressionRightHandsideSubqueryPredicateBuilder superExprRightSubqueryPredicateBuilderListener;
 
     public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.leftExpression = leftExpression;
@@ -121,6 +123,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> eq() {
+        verifyBuilderEnded();
         return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory, expressionFactory));
     }
 
@@ -131,10 +134,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         }
         return chain(new EqPredicate(leftExpression, new ParameterExpression(value)));
     }
-    
+
     @Override
-    public QuantifiableSubqueryInitiator<T> eq(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> eq(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, false, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -144,6 +149,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> notEq() {
+        verifyBuilderEnded();
         return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, this, leftExpression, true, subqueryInitFactory, expressionFactory));
     }
 
@@ -159,14 +165,17 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     public T notEqExpression(String expression) {
         return chain(new NotPredicate(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression))));
     }
-    
+
     @Override
-    public QuantifiableSubqueryInitiator<T> notEq(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> notEq(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new EqPredicate.EqPredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, true, subqueryInitFactory, expressionFactory));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> gt() {
+        verifyBuilderEnded();
         return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
@@ -184,12 +193,15 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public QuantifiableSubqueryInitiator<T> gt(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> gt(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new GtPredicate.GtPredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory));
     }
-    
+ 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> ge() {
+        verifyBuilderEnded();
         return startBuilder(new GePredicate.GePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
@@ -207,12 +219,15 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public QuantifiableSubqueryInitiator<T> ge(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> ge(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new GePredicate.GePredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> lt() {
+        verifyBuilderEnded();
         return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
@@ -230,12 +245,15 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public QuantifiableSubqueryInitiator<T> lt(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> lt(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new LtPredicate.LtPredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
     public QuantifiableBinaryPredicateBuilder<T> le() {
+        verifyBuilderEnded();
         return startBuilder(new LePredicate.LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
@@ -253,8 +271,10 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public QuantifiableSubqueryInitiator<T> le(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public SubqueryInitiator<T> le(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        superExprRightSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression), this);
+        return startBuilder(new LePredicate.LePredicateBuilder<T>(result, superExprRightSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory));
     }
 
     @Override
@@ -428,6 +448,15 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         listener.onBuilderEnded(this);
     }
 
+    @Override
+    protected void verifyBuilderEnded() {
+        super.verifyBuilderEnded();
+        if(superExprRightSubqueryPredicateBuilderListener != null){
+            superExprRightSubqueryPredicateBuilderListener.verifyBuilderEnded();
+        }
+    }
+
+    
     private Expression makeCollectionValued(Expression expr) {
         if (expr instanceof PathExpression) {
             ((PathExpression) expr).setUsedInCollectionFunction(true);
@@ -435,5 +464,33 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             throw new SyntaxErrorException("Function expects collection valued path and cannot be applied to expression [" + expr + "]");
         }
         return expr;
+    }
+    
+    private class SuperExpressionRightHandsideSubqueryPredicateBuilder extends PredicateBuilderEndedListenerImpl {
+        private final PredicateBuilderEndedListener listener;
+        private final String subqueryAlias;
+        private final Expression superExpression;
+        
+        public SuperExpressionRightHandsideSubqueryPredicateBuilder(String subqueryAlias, Expression superExpression, PredicateBuilderEndedListener listener) {
+            this.listener = listener;
+            this.subqueryAlias = subqueryAlias;
+            this.superExpression = superExpression;
+        }
+            
+        @Override
+        public void onBuilderEnded(PredicateBuilder builder) {
+            Predicate pred = builder.getPredicate();
+            BinaryExpressionPredicate binaryPred;
+            if(pred instanceof NotPredicate){
+                binaryPred = (BinaryExpressionPredicate) ((NotPredicate)pred).getPredicate();
+            }else{
+                binaryPred = (BinaryExpressionPredicate) builder.getPredicate();
+            }
+            SubqueryExpression subqueryExpr = (SubqueryExpression) binaryPred.getRight();
+            ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, subqueryExpr);
+            binaryPred.setRight(superExpression);
+            listener.onBuilderEnded(builder);
+        }
+        
     }
 }

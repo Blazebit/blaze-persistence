@@ -55,48 +55,8 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate {
         }
 
         @Override
-        public T value(Object value) {
-            return chain(new EqPredicate(leftExpression, new ParameterExpression(value), PredicateQuantifier.ONE));
-        }
-
-        @Override
-        public T expression(String expression) {
-            return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
-                                         PredicateQuantifier.ONE));
-        }
-
-        @Override
-        public SubqueryInitiator<T> all() {
-            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ALL));
-            return super.all();
-        }
-
-        @Override
-        public SubqueryInitiator<T> any() {
-            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ANY));
-            return super.any();
-        }
-
-        @Override
-        public SubqueryBuilder<T> from(Class<?> clazz) {
-            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ONE));
-            return getSubqueryInitiator().from(clazz);
-        }
-
-        @Override
-        public SubqueryBuilder<T> from(Class<?> clazz, String alias) {
-            chainSubquery(new EqPredicate(leftExpression, null, PredicateQuantifier.ONE));
-            return getSubqueryInitiator().from(clazz, alias);
-        }
-
-        @Override
-        public SubqueryInitiator<T> all(String subqueryAlias, String expression) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        @Override
-        public SubqueryInitiator<T> any(String subqueryAlias, String expression) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        protected QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier){
+            return new EqPredicate(left, right, quantifier);
         }
     }
 

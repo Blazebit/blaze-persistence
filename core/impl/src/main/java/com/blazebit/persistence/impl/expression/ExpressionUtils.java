@@ -15,7 +15,10 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.AliasReplacementTransformer;
 import com.blazebit.persistence.impl.VisitorAdapter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -28,6 +31,24 @@ public class ExpressionUtils {
         SubqueryExpressionDetector detector = new SubqueryExpressionDetector();
         e.accept(detector);
         return detector.hasSubquery;
+    }
+    
+    public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
+        final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
+        VisitorAdapter transformationVisitor = new VisitorAdapter() {
+
+            @Override
+            public void visit(CompositeExpression expression) {
+                List<Expression> transformed = new ArrayList<Expression>();
+                for (Expression expr : expression.getExpressions()) {
+                    transformed.add(replacementTransformer.transform(expr));
+                }
+                expression.getExpressions().clear();
+                expression.getExpressions().addAll(transformed);
+            }
+
+        };
+        superExpression.accept(transformationVisitor);
     }
 
     private static class SubqueryExpressionDetector extends VisitorAdapter {

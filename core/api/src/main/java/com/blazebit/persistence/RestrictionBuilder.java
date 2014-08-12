@@ -63,7 +63,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable subquery initiator
      */
-    public QuantifiableSubqueryInitiator<T> eq(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> eq(String subqueryAlias, String expression);
 
     /**
      * Finishes the EQ predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -97,7 +97,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable binary predicate builder
      */
-    public QuantifiableSubqueryInitiator<T> notEq(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> notEq(String subqueryAlias, String expression);
 
     /**
      * Like {@link RestrictionBuilder#eq(java.lang.Object) } but the result is wrapped in a NOT predicate.
@@ -132,7 +132,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable subquery initiator
      */
-    public QuantifiableSubqueryInitiator<T> gt(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> gt(String subqueryAlias, String expression);
 
     /**
      * Finishes the GT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -169,7 +169,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable subquery initiator
      */
-    public QuantifiableSubqueryInitiator<T> ge(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> ge(String subqueryAlias, String expression);
 
     /**
      * Finishes the GE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -206,7 +206,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable subquery initiator
      */
-    public QuantifiableSubqueryInitiator<T> lt(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> lt(String subqueryAlias, String expression);
 
     /**
      * Finishes the LT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
@@ -243,7 +243,7 @@ public interface RestrictionBuilder<T> {
      * @param expression    The expression which will be used as left hand side of a predicate
      * @return The quantifiable subquery initiator
      */
-    public QuantifiableSubqueryInitiator<T> le(String subqueryAlias, String expression);
+    public SubqueryInitiator<T> le(String subqueryAlias, String expression);
 
     /**
      * Finishes the LE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.

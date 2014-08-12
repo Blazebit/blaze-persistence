@@ -24,7 +24,7 @@ import java.util.ArrayList;
 /**
  * This Transformer runs through the expressions of the query
  * For each OUTER(pp) expression it performs an implicitJoin for the join manager
- * of the surrounding query and repalces the OUTER(pp) expression with the base node alias '.' the field.
+ * of the surrounding query and replaces the OUTER(pp) expression with the base node alias '.' the field.
  *
  * We need a join manager hierarchy to do this.
  * We have decided to limit the outer statement to the join manager of the directly surrounding query so that the

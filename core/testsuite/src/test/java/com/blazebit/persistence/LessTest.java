@@ -148,4 +148,41 @@ public class LessTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    public void testLtSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").lt("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age < 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testLtMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").lt("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age < (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testLeSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").le("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age <= 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testLeMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").le("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age <= (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+ 
 }

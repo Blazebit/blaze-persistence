@@ -23,6 +23,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import static com.googlecode.catchexception.CatchException.*;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -173,7 +174,12 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
-        verifyException(cb, IllegalStateException.class).groupBy("id");
+        try {
+            cb.groupBy("id");
+            Assert.fail("Expected IllegalStateException");
+        } catch(IllegalStateException ex) {
+            // OK, we expected that
+        }
     }
 
     @Test
@@ -181,7 +187,12 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
-        verifyException(cb, IllegalStateException.class).groupBy("id", "name");
+        try {
+            cb.groupBy("id", "name");
+            Assert.fail("Expected IllegalStateException");
+        } catch(IllegalStateException ex) {
+            // OK, we expected that
+        }
     }
 
     @Test
@@ -196,7 +207,12 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
-        verifyException(cb, IllegalStateException.class).distinct();
+        try {
+            cb.distinct();
+            Assert.fail("Expected IllegalStateException");
+        } catch(IllegalStateException ex) {
+            // OK, we expected that
+        }
     }
 
     @Test

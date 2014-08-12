@@ -144,13 +144,13 @@ public class SelectNewTest extends AbstractCoreTest {
                      .getQueryString());
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testSelectNewNullClass() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         verifyException(criteria, NullPointerException.class).selectNew((Class<Document>) null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testSelectNewNullConstructor() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         verifyException(criteria, NullPointerException.class).selectNew((Constructor<Document>) null);

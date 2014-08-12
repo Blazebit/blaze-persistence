@@ -16,22 +16,27 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionUtils;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
  *
- * @author Moritz Becker
- * @since 1.0
+ * @author ccbem
  */
-public class SuperExpressionLeftHandsideSubqueryPredicateBuilder extends SuperExpressionSubqueryBuilderListener<RestrictionBuilderImpl<?>> {
+public class SuperExpressionSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
 
-    public SuperExpressionLeftHandsideSubqueryPredicateBuilder(String subqueryAlias, Expression superExpression) {
-        super(subqueryAlias, superExpression);
+    private final String subqueryAlias;
+    protected final Expression superExpression;
+
+    public SuperExpressionSubqueryBuilderListener(String subqueryAlias, Expression superExpression) {
+        this.subqueryAlias = subqueryAlias;
+        this.superExpression = superExpression;
     }
-    
+
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<RestrictionBuilderImpl<?>> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
         super.onBuilderEnded(builder);
-        RestrictionBuilderImpl<?> restrictionBuilder = builder.getResult();
-        restrictionBuilder.setLeftExpression(superExpression);
+        ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, new SubqueryExpression(builder));
     }
+
 }

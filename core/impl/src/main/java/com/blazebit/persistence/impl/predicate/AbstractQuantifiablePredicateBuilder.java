@@ -16,12 +16,15 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
@@ -50,26 +53,53 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
         this.expressionFactory = expressionFactory;
     }
 
+    protected abstract QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier);
+
     protected T chain(Predicate predicate) {
+        verifySubqueryBuilderEnded();
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
         listener.onBuilderEnded(this);
         return result;
     }
 
     protected void chainSubquery(Predicate predicate) {
+        verifySubqueryBuilderEnded();
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
     }
 
     @Override
+    public T value(Object value) {
+        return chain(createPredicate(leftExpression, new ParameterExpression(value), PredicateQuantifier.ONE));
+    }
+
+    @Override
+    public T expression(String expression) {
+        return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
+                PredicateQuantifier.ONE));
+    }
+
+    @Override
     public SubqueryInitiator<T> all() {
-        verifySubqueryBuilderEnded();
+        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ALL));
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
     public SubqueryInitiator<T> any() {
-        verifySubqueryBuilderEnded();
+        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ANY));
         return subqueryInitFactory.createSubqueryInitiator(result, this);
+    }
+
+    @Override
+    public SubqueryBuilder<T> from(Class<?> clazz) {
+        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(clazz);
+    }
+
+    @Override
+    public SubqueryBuilder<T> from(Class<?> clazz, String alias) {
+        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(clazz, alias);
     }
 
     @Override

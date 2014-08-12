@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -37,9 +38,11 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
 
     private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
     private final JoinManager joinManager;
+    private final BaseQueryBuilder<?, ?> aliasOwner;
 
-    public ArrayExpressionTransformer(JoinManager joinManager) {
+    public ArrayExpressionTransformer(JoinManager joinManager, BaseQueryBuilder<?, ?> aliasOwner) {
         this.joinManager = joinManager;
+        this.aliasOwner = aliasOwner;
     }
 
     @Override
@@ -63,6 +66,11 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
         String absBasePath;
         int loopEndIndex = 0;
         if (path.getBaseNode() != null) {
+            // do not transform external paths
+            if (path.getBaseNode().getAliasInfo().getAliasOwner() != aliasOwner) {
+                return original;
+            }
+
             absBasePath = path.getBaseNode().getAliasInfo().getAbsolutePath();
 
             if (path.getField() != null) {
@@ -166,7 +174,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
             }
             final TransformationInfo other = (TransformationInfo) obj;
             if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(
-                other.absoluteFieldPath)) {
+                    other.absoluteFieldPath)) {
                 return false;
             }
             if ((this.indexedField == null) ? (other.indexedField != null) : !this.indexedField.equals(other.indexedField)) {

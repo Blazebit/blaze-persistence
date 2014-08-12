@@ -167,7 +167,7 @@ public class JoinManager extends AbstractManager {
         if (aliasInfo == null) {
             return false;
         }
-
+        
         if (parent != null && aliasInfo.getAliasOwner() == parent.aliasOwner) {
             // the alias exists but originates from the parent query builder
 
@@ -186,22 +186,22 @@ public class JoinManager extends AbstractManager {
                 aliasJoinNode = parent.findNode(joinAliasInfo.getAbsolutePath());
             }
 
-            if (aliasJoinNode.isCollection()) {
-                throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
-            }
-            for (int i = 1; i < path.getExpressions().size(); i++) {
-                PathElementExpression pathElem = path.getExpressions().get(i);
-                String pathElemStr;
-                if (pathElem instanceof ArrayExpression) {
-                    pathElemStr = ((ArrayExpression) pathElem).getBase().toString();
-                } else {
-                    pathElemStr = pathElem.toString();
-                }
-                aliasJoinNode = parent.findNode(aliasJoinNode, pathElemStr);
-                if (aliasJoinNode != null && aliasJoinNode.isCollection()) {
-                    throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
-                }
-            }
+//            if (aliasJoinNode.isCollection()) {
+//                throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
+//            }
+//            for (int i = 1; i < path.getExpressions().size(); i++) {
+//                PathElementExpression pathElem = path.getExpressions().get(i);
+//                String pathElemStr;
+//                if (pathElem instanceof ArrayExpression) {
+//                    pathElemStr = ((ArrayExpression) pathElem).getBase().toString();
+//                } else {
+//                    pathElemStr = pathElem.toString();
+//                }
+//                aliasJoinNode = parent.findNode(aliasJoinNode, pathElemStr);
+//                if (aliasJoinNode != null && aliasJoinNode.isCollection()) {
+//                    throw new UnsupportedOperationException("Unsupported external collection access [" + aliasJoinNode.getAliasInfo().getAbsolutePath() + "]");
+//                }
+//            }
 
             // the alias is external so we do not have to treat it
             return true;
@@ -359,14 +359,16 @@ public class JoinManager extends AbstractManager {
                 }
                 return;
             } else if (isExternal(pathExpression)) {
+                
                 // try to set base node and field for the external expression based
                 // on existing joins in the super query
-                if (parent != null) {
-                    if (parent.resolve(pathExpression)) {
-                        return;
-                    }
-                }
-                throw new IllegalStateException("Cannot resolve external path [" + path.toString() + "]");
+                //TODO: the usage of fromSelect might not be correct here    
+                parent.implicitJoin(pathExpression, true, fromSelect, true);
+                return;
+//                    if (parent.resolve(pathExpression)) {
+//                        return;
+//                    }
+//                throw new IllegalStateException("Cannot resolve external path [" + path.toString() + "]");
             }
 
             JoinResult result = implicitJoin(normalizedPath, objectLeafAllowed, fromSelect);

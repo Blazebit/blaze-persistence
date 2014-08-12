@@ -132,4 +132,40 @@ public class EqTest extends AbstractCoreTest {
 
         Assert.assertEquals(expected, crit.getQueryString());
     }
+    
+    @Test
+    public void testEqSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").eq("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age = 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testEqMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").eq("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE d.age = (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testNotEqSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").notEq("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE NOT d.age = 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testNotEqMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("age").notEq("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
+        
+        assertEquals("SELECT d FROM Document d WHERE NOT d.age = (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        crit.getResultList();
+    }
 }

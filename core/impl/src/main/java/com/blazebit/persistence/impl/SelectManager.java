@@ -50,8 +50,6 @@ public class SelectManager<T> extends AbstractManager {
     private SelectObjectBuilderImpl<?> selectObjectBuilder;
     private ObjectBuilder<T> objectBuilder;
     private SubqueryBuilderListenerImpl subqueryBuilderListener;
-    // Maps alias to SelectInfo
-//    private final Map<String, SelectInfo> selectAliasToInfoMap = new HashMap<String, SelectInfo>();
     // needed for tuple/alias matching
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
     private final Map<String, SelectInfo> selectAbsolutePathToInfoMap = new HashMap<String, SelectInfo>();
@@ -279,7 +277,7 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
     
-    private class SuperExpressionSelectSubqueryBuilderListener<X> extends AbstractSuperExpressionSubqueryBuilderListener<X> {
+    private class SuperExpressionSelectSubqueryBuilderListener<X> extends SuperExpressionSubqueryBuilderListener<X> {
         private final String selectAlias;
         
         public SuperExpressionSelectSubqueryBuilderListener(String subqueryAlias, Expression superExpression, String selectAlias) {
