@@ -64,7 +64,6 @@ public class ParameterizedComplexExpressionTest extends AbstractCoreTest {
             { "localized[:locale].name IN ('a', 'b')", "localized.name IN ('a', 'b')" },
             { "NOT(localized[:locale].name = localized[:locale].description)", "NOT(localized.name = localized.description)" },
             { "localized[:locale].name <> localized[:locale].description", "localized.name <> localized.description" },
-            { "localized[:locale].name != localized[:locale].description", "localized.name != localized.description" },
             { "localized[:locale].name = localized[:locale].description", "localized.name = localized.description" },
             { "LENGTH(localized[:locale].name) NOT BETWEEN 1 AND 5", "LENGTH(localized.name) NOT BETWEEN 1 AND 5" },
             { "LENGTH(localized[:locale].name) BETWEEN 1 AND 5", "LENGTH(localized.name) BETWEEN 1 AND 5" },
