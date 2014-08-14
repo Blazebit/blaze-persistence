@@ -189,7 +189,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression, String selectAlias) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, true);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -244,7 +244,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public RestrictionBuilder<X> where(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, true);
         return whereManager.restrict(this, expr);
     }
 

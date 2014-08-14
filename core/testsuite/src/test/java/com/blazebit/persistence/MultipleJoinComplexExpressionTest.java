@@ -19,6 +19,7 @@ import com.blazebit.persistence.entity.Workflow;
 import java.util.Locale;
 import javax.persistence.Tuple;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -26,6 +27,7 @@ import org.junit.Test;
  * @author Christian Beikov
  * @since 1.0
  */
+@Ignore
 public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
 
     @Override

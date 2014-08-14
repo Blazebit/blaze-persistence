@@ -45,7 +45,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     @Override
     public RestrictionBuilder<CaseWhenAndThenBuilder<T>> and(String expression) {
         return startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
-                                                                                  expressionFactory));
+                                                                                  expressionFactory, false));
     }
 
     @Override

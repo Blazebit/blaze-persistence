@@ -68,7 +68,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners + 1");
 
-        assertEquals("SELECT " + joinAliasValue("partners") + "+1 FROM Document d LEFT JOIN d.partners partners", criteria
+        assertEquals("SELECT " + joinAliasValue("partners") + " + 1 FROM Document d LEFT JOIN d.partners partners", criteria
                      .getQueryString());
     }
 
@@ -203,7 +203,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.selectSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT 1+(SELECT COUNT(p.id) FROM Person p) FROM Document d", crit.getQueryString());
+        assertEquals("SELECT 1 + (SELECT COUNT(p.id) FROM Person p) FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -212,7 +212,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.selectSubquery("alias", "1 + alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT 1+(SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
+        assertEquals("SELECT 1 + (SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -221,7 +221,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.selectSubquery("alias", "alias * alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
+        assertEquals("SELECT (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", crit.getQueryString());
         crit.getResultList();
     }
 }

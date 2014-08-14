@@ -48,7 +48,7 @@ public class JoinOnBuilderImpl<X> implements JoinOnBuilder<X>, PredicateBuilder 
     @Override
     public RestrictionBuilder<JoinOnBuilder<X>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<X>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory));
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<X>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override

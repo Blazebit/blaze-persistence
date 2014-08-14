@@ -44,7 +44,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age + 1").ge(25L);
 
-        assertEquals("SELECT d FROM Document d WHERE d.age+1 >= :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age + 1 >= :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -64,7 +64,7 @@ public class WhereTest extends AbstractCoreTest {
         criteria.where("d.owner.ownedDocuments.age + 1").ge(25L);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age+1 >= :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age + 1 >= :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -284,7 +284,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end().eq(2L);     
         
-        assertEquals("SELECT d FROM Document d WHERE 1+(SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE 1 + (SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -294,7 +294,53 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereSubquery("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end().eq(2L);     
         
-        assertEquals("SELECT d FROM Document d WHERE (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p) = :param_0", crit.getQueryString());
         crit.getResultList();
+    }
+    
+    @Test
+    public void testWhereAndSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id)";
+
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testWhereAndMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
+        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
+
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testWhereOrSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id";
+
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testWhereOrMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
+            .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
+        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
+
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
     }
 }

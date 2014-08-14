@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -110,7 +111,7 @@ public class PaginationTest extends AbstractCoreTest {
             + "GROUP BY d.id "
             + "ORDER BY d.id ASC NULLS LAST";
 
-        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name,' user'), COALESCE(" + joinAliasValue("localized")
+        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name, ' user'), COALESCE(" + joinAliasValue("localized")
             + ",'no item'), partnerDocument.name FROM Document d "
             + "JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE
             + " KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
@@ -214,6 +215,8 @@ public class PaginationTest extends AbstractCoreTest {
         }
     }
 
+    //#45
+    @Ignore 
     @Test
     public void testOrderByExpression() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
@@ -226,6 +229,8 @@ public class PaginationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
+    //#45
+    @Ignore
     @Test
     public void testOrderBySelectAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")

@@ -151,7 +151,7 @@ public class GreaterTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("age").gt("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE d.age > 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age > 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
 
@@ -160,7 +160,7 @@ public class GreaterTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("age").gt("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE d.age > (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age > (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -169,7 +169,7 @@ public class GreaterTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("age").ge("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE d.age >= 1+(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age >= 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
 
@@ -178,7 +178,7 @@ public class GreaterTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("age").ge("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE d.age >= (SELECT COUNT(p.id) FROM Person p)*(SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age >= (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
 }

@@ -23,6 +23,8 @@ package com.blazebit.persistence.impl.expression;
  */
 public interface ExpressionFactory {
 
+    public Expression createSimpleExpression(String expression, boolean allowCaseWhen);
+    
     public Expression createSimpleExpression(String expression);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);

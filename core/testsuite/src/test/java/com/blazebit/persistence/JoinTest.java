@@ -266,10 +266,17 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testFetchJoinCheck() {
+    public void testFetchJoinCheck1() {
         CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "a")
             .select("name");
         verifyException(crit, IllegalStateException.class).join("d.versions", "versions", JoinType.LEFT, true);
+    }
+    
+    @Test
+    public void testFetchJoinCheck2() {
+        CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "a")
+            .select("name");
+        verifyException(crit, IllegalStateException.class).fetch("d.versions");
     }
 
     @Test
@@ -278,6 +285,15 @@ public class JoinTest extends AbstractCoreTest {
         crit.select("owner.name");
 
         assertEquals("SELECT owner.name FROM Document a JOIN a.owner owner", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testFetch() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        crit.fetch("owner.name");
+
+        assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner", crit.getQueryString());
         crit.getResultList();
     }
 }

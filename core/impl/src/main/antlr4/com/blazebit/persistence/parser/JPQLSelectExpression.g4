@@ -18,10 +18,20 @@ grammar JPQLSelectExpression;
 //TODO: add antlr issue to illustrate that import of grammar containing left-recursive rules leads to error in antlr 4.3 (arithmetic_term)
 import JPQL_lexer;
 
-parseSimpleExpression : simple_expression 
+@parser::members {
+private boolean allowCaseWhen = false;
+public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
+       this(input);
+       this.allowCaseWhen = allowCaseWhen;
+}                                                                            
+}
+
+parseSimpleExpression
+    : simple_expression   
     ;
 
-parseSimpleSubqueryExpression : simple_subquery_expression 
+parseSimpleSubqueryExpression
+    : simple_subquery_expression 
     ;
 
 parseScalarExpression
@@ -57,9 +67,7 @@ simple_subquery_expression : single_valued_path_expression |
                     ;
 
  simple_path_element : Identifier
-                        | Single_valued_object_field
-                        | Collection_valued_field
-                        ;
+                     ;
   
  general_path_element : simple_path_element
                       | array_expression
@@ -83,11 +91,6 @@ simple_subquery_expression : single_valued_path_expression |
  aggregate_expression : ( 'AVG' | 'MAX' | 'MIN' | 'SUM' ) '('('DISTINCT')? (single_element_path_expression | state_field_path_expression)')' 
                         | 'COUNT' '('(('DISTINCT')? (single_element_path_expression | state_field_path_expression) | Star_operator)')' ;
 
- /*derived_path_expression : simple_derived_path'.'Single_valued_object_field |
-                             simple_derived_path'.'Collection_valued_field;
-
- simple_derived_path : Superquery_identification_variable('.'Single_valued_object_field)*;*/
-
  scalar_expression : arithmetic_expression |
                        string_expression |
                        enum_expression |
@@ -95,7 +98,9 @@ simple_subquery_expression : single_valued_path_expression |
                        boolean_expression |
                        coalesce_expression |
                        nullif_expression |
-                       entity_type_expression;
+                       entity_type_expression |
+                       case_expression
+                   ;
 
  arithmetic_expression : arithmetic_term 
                        | arithmetic_expression ( '+' | '-' ) arithmetic_term
@@ -141,18 +146,19 @@ simple_subquery_expression : single_valued_path_expression |
  enum_expression : state_field_path_expression |
                      Enum_literal |
                      Input_parameter |
-                     case_expression ;
+                     case_expression 
+                 ;
 
  entity_expression : single_valued_object_path_expression | simple_entity_expression;
 
- simple_entity_expression : Identification_variable |
+ simple_entity_expression : Identifier |
                               Input_parameter;
 
  entity_type_expression : type_discriminator |
-                            Entity_type_literal |
+                            Identifier |
                             Input_parameter;
 
- type_discriminator : 'TYPE('Identification_variable | single_valued_object_path_expression | Input_parameter ')';
+ type_discriminator : 'TYPE('Identifier | single_valued_object_path_expression | Input_parameter ')';
 
  functions_returning_numerics : 'LENGTH('string_expression')' |
                                   'LOCATE('string_expression',' string_expression (',' arithmetic_expression)? ')' |
@@ -179,7 +185,11 @@ simple_subquery_expression : single_valued_path_expression |
                   Input_parameter |
                   scalar_expression;
 
- case_expression : coalesce_expression | nullif_expression;
+ case_expression : {allowCaseWhen == true}? general_case_expression |    //for entity view extension only
+                    {allowCaseWhen == true}? simple_case_expression |   //for entity view extension only
+                     coalesce_expression |
+                     nullif_expression
+                 ;
  
  case_operand : state_field_path_expression | type_discriminator;
 
@@ -202,4 +212,90 @@ simple_subquery_expression : single_valued_path_expression |
 
  trim_character : String_literal
                 | Input_parameter
-                ;
+                ; 
+ /* conditional expression stuff for case when in entity view extension */
+ conditional_expression : conditional_term | conditional_expression 'OR' conditional_term
+                        ;
+
+ conditional_term : conditional_factor | conditional_term 'AND' conditional_factor
+                  ;
+
+ conditional_factor : ('NOT')? conditional_primary
+                    ;
+
+ conditional_primary : simple_cond_expression | '('conditional_expression')'
+                     ;
+
+ simple_cond_expression : comparison_expression |
+                            between_expression |
+                            like_expression |
+                            in_expression |
+                            null_comparison_expression |
+                            empty_collection_comparison_expression |
+                            collection_member_expression |
+                        ;
+
+ between_expression : arithmetic_expression ('NOT')? 'BETWEEN' arithmetic_expression 'AND' arithmetic_expression |
+                        string_expression ('NOT')? 'BETWEEN' string_expression 'AND' string_expression |
+                        datetime_expression ('NOT')? 'BETWEEN' datetime_expression 'AND' datetime_expression
+                    ;
+
+ in_expression : (state_field_path_expression | type_discriminator) ('NOT')? 'IN' ( '(' in_item (',' in_item)* ')' | Input_parameter )
+               ;
+
+ in_item : literal | Input_parameter
+         ;
+
+ like_expression : string_expression ('NOT')? 'LIKE' pattern_value ('ESCAPE' escape_character)?
+                 ;
+ 
+ pattern_value : String_literal
+               | Input_parameter
+               ;
+ 
+ escape_character : Character_literal
+                  | Input_parameter
+                  ;
+
+ null_comparison_expression : (single_valued_path_expression | Input_parameter) 'IS' ('NOT')? 'NULL'
+                            ;
+
+ empty_collection_comparison_expression : collection_valued_path_expression 'IS' ('NOT')? 'EMPTY'
+                                        ;
+
+ collection_member_expression : entity_or_value_expression ('NOT')? 'MEMBER' ('OF')? collection_valued_path_expression
+                              ;
+
+ entity_or_value_expression : state_field_path_expression |
+                              simple_entity_or_value_expression |
+                              single_element_path_expression
+                            ;
+
+ simple_entity_or_value_expression : Identifier |
+                                       Input_parameter |
+                                       literal
+                                   ;
+ 
+ comparison_expression : string_expression comparison_operator string_expression |
+                           boolean_expression ( '=' | Not_equal_operator ) boolean_expression |
+                           enum_expression ( '=' | Not_equal_operator ) enum_expression |
+                           datetime_expression comparison_operator datetime_expression |
+                           entity_expression ( '=' | Not_equal_operator ) entity_expression |
+                           arithmetic_expression comparison_operator arithmetic_expression |
+                           entity_type_expression ( '=' | Not_equal_operator ) entity_type_expression
+                       ;
+ 
+ comparison_operator : '=' | '>' | '>=' | '<' | '<=' | Not_equal_operator
+                     ;
+ 
+ general_case_expression : 'CASE' when_clause (when_clause)* 'ELSE' scalar_expression 'END'
+                         ;
+
+ when_clause : 'WHEN' conditional_expression 'THEN' scalar_expression
+             ;
+
+ simple_case_expression : 'CASE' case_operand simple_when_clause (simple_when_clause)* 'ELSE' scalar_expression 'END'
+                        ;
+
+ simple_when_clause : 'WHEN' scalar_expression 'THEN' scalar_expression
+                    ;

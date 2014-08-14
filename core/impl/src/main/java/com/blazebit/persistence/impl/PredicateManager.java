@@ -58,18 +58,18 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
 
     RestrictionBuilder<U> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory));
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
     }
 
     SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
         RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder(
-            new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+            new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
     
     SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
-        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
@@ -111,6 +111,8 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
 
     protected abstract String getClauseName();
+    
+    protected abstract boolean isAllowCaseWhenExpressions();
 
     void applyPredicate(QueryGenerator queryGenerator, StringBuilder sb) {
         if (rootPredicate.predicate.getChildren().isEmpty()) {

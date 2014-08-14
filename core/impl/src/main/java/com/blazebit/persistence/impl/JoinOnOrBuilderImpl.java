@@ -67,7 +67,7 @@ public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedList
     @Override
     public RestrictionBuilder<JoinOnOrBuilder<X>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<X>>(this, this, leftExpression, subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<X>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override

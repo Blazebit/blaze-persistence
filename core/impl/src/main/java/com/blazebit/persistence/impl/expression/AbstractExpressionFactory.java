@@ -38,7 +38,7 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     @Override
-    public Expression createSimpleExpression(String expression) {
+    public Expression createSimpleExpression(String expression, boolean allowCaseWhen) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -48,13 +48,13 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
         l.addErrorListener(ERR_LISTENER);
         CommonTokenStream tokens = new CommonTokenStream(l);
-        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens);
+        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
         p.addErrorListener(ERR_LISTENER);
         ParserRuleContext ctx = callStartRule(p);
 
         ParseTreeWalker w = new ParseTreeWalker();
 
-        JPQLSelectExpressionListenerImpl antlrToExpressionTransformer = new JPQLSelectExpressionListenerImpl();
+        JPQLSelectExpressionListenerImpl antlrToExpressionTransformer = new JPQLSelectExpressionListenerImpl(tokens);
 
         w.walk(antlrToExpressionTransformer, ctx);
 
@@ -67,6 +67,11 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
                 .get(0);
         }
         return expr;
+    }
+    
+    @Override
+    public Expression createSimpleExpression(String expression) {
+        return createSimpleExpression(expression, false);
     }
 
     public Expression createCaseOperandExpression(String caseOperandExpression) {

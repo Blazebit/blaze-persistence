@@ -38,58 +38,17 @@ String_literal : '\'' ~[\']* '\'';
  Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
  Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT '.' DIGIT*;
- 
- Identifier
-     : JavaLetter JavaLetterOrDigit*
-     ;
- 
- Identification_variable
-     : Identifier
-     ;
- 
- Superquery_identification_variable
-     : Identifier
-     ;
- 
- Entity_name
-     : Identifier
-     ;
- 
- Result_variable
-     : Identifier
-     ;
- 
- Constructor_name
-     : Identifier
-     ;
- 
- Entity_type_literal
-     : Identifier
-     ;
- 
- Subtype
-     : Identifier
-     ;
- 
- Collection_valued_field
-     : Identifier
-     ;
- 
- Single_valued_object_field
-     : Identifier
-     ;
- 
- Single_valued_embeddable_object_field
-     : Identifier
-     ;
- 
- State_field
-     : Identifier
-     ;
-                
+     
  Boolean_literal
      : 'TRUE'
+     | 'true'
      | 'FALSE'
+     | 'false'
+     ;
+ 
+ Not_equal_operator
+     : '<>'
+     | '!='
      ;
  
  Numeric_literal
@@ -100,7 +59,11 @@ String_literal : '\'' ~[\']* '\'';
      : '.'
      ;
  
- WS: [ \n\t\r]+ -> skip;
+ Identifier
+     : JavaLetter JavaLetterOrDigit*
+     ;
+
+ WS: [ \n\t\r]+ -> channel(HIDDEN);
  
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';

@@ -19,8 +19,11 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionBaseListener;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
@@ -33,12 +36,15 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener {
 
     private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+    private final CommonTokenStream tokens;
 
-    public JPQLSelectExpressionListenerImpl() {
+    public JPQLSelectExpressionListenerImpl(CommonTokenStream tokens) {
+        this.tokens = tokens;
     }
 
-    public JPQLSelectExpressionListenerImpl(JPQLSelectExpressionListenerImpl parent) {
+    public JPQLSelectExpressionListenerImpl(JPQLSelectExpressionListenerImpl parent, CommonTokenStream tokens) {
         this.parent = parent;
+        this.tokens = tokens;
     }
 
     enum ContextType {
@@ -85,7 +91,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             return;
         }
         if (outerExpression == null) {
-            fooContext();
+            fooContext(ctx.getStop());
         } else {
             outerContext();
         }
@@ -108,16 +114,36 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             return;
         }
         if (outerExpression == null) {
-            fooContext();
+            fooContext(ctx.getStop());
         } else {
             outerContext();
         }
     }
 
+    private Token getNextDefaultTokenToLeft(int tokenIndex){
+        for(int i = tokenIndex-1; i >= 0; i--){
+            Token t = tokens.get(i);
+            if(t.getChannel() == Token.DEFAULT_CHANNEL){
+                return t;
+            }
+        }
+        return null;
+    }
     @Override
     public void enterCollection_valued_path_expression(JPQLSelectExpressionParser.Collection_valued_path_expressionContext ctx) {
         if (subexpressionDelegate != null) {
             return;
+        }
+        if(this.ctx != ContextType.FOO){
+            // create foo expression for left side ('KEY(','VALUE(')
+            ctx.getStart();
+            StringBuilder sb = new StringBuilder();
+            Token leftDefaultToken = getNextDefaultTokenToLeft(ctx.getStart().getTokenIndex());
+            if(leftDefaultToken != null){
+                sb.append(leftDefaultToken.getText());
+            }
+            appendTokens(tokens.getHiddenTokensToLeft(ctx.getStart().getTokenIndex()), sb);
+            root.getExpressions().add(new FooExpression(sb.toString()));
         }
         if (this.ctx != ContextType.ARRAY) {
             pathContext();
@@ -130,7 +156,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             return;
         }
         if (outerExpression == null) {
-            fooContext();
+            fooContext(ctx.getStop());
         } else {
             outerContext();
         }
@@ -152,7 +178,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             return;
         }
         if (outerExpression == null) {
-            fooContext();
+            fooContext(ctx.getStop());
         } else {
             outerContext();
         }
@@ -164,6 +190,7 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
             if (fooBuilder.length() > 0) {
                 root.getExpressions().add(new FooExpression(fooBuilder.toString()));
                 fooBuilder.setLength(0);
+//                appendTokens(tokens.getHiddenTokensToRight(t.getTokenIndex()), fooBuilder);
             }
             ctx = ContextType.PATH;
             path = new PathExpression(new ArrayList<PathElementExpression>());
@@ -193,14 +220,35 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         }
     }
 
-    private void fooContext() {
+    private void appendRightSideHiddenTokens(Token start, StringBuilder sb) {
+        int curTokenIndex = start.getTokenIndex() + 1;
+
+        if (curTokenIndex < tokens.size()) {
+            Token potentialHidden = tokens.get(curTokenIndex);
+            while (potentialHidden.getChannel() == Token.HIDDEN_CHANNEL) {
+                sb.append(potentialHidden.getText());
+                curTokenIndex++;
+                if (curTokenIndex < tokens.size()) {
+                    potentialHidden = tokens.get(curTokenIndex);
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void fooContext(Token t) {
         if (this.ctx == ContextType.PATH) {
             ctx = ContextType.FOO;
             root.getExpressions().add(path);
+            appendTokens(tokens.getHiddenTokensToRight(t.getTokenIndex()), fooBuilder);
+//            appendRightSideHiddenTokens(t, fooBuilder);
         } else if (this.ctx == ContextType.OUTER) {
             ctx = ContextType.FOO;
             root.getExpressions().add(outerExpression);
             outerExpression = null;
+            appendTokens(tokens.getHiddenTokensToRight(t.getTokenIndex()), fooBuilder);
+//            appendRightSideHiddenTokens(t, fooBuilder);
         }
     }
 
@@ -268,6 +316,14 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
         arrayContext();
     }
 
+    private void appendTokens(List<Token> tokens, StringBuilder sb) {
+        if (tokens != null) {
+            for (Token t : tokens) {
+                sb.append(t.getText());
+            }
+        }
+    }
+
     @Override
     public void visitTerminal(TerminalNode node) {
         if (subexpressionDelegate != null) {
@@ -294,13 +350,14 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                     }
                     fooBuilder.append(node.getSymbol().getText());
                 }
+                appendTokens(tokens.getHiddenTokensToRight(node.getSymbol().getTokenIndex()), fooBuilder);
             } else if (ctx == ContextType.ARRAY) {
                 if (node.getSymbol().getText().equals("[")) {
-                    subexpressionDelegate = new JPQLSelectExpressionListenerImpl(this);
+                    subexpressionDelegate = new JPQLSelectExpressionListenerImpl(this, tokens);
                 }
             } else if (ctx == ContextType.OUTER) {
                 if (node.getSymbol().getText().equals(")")) {
-                    fooContext();
+                    fooContext(node.getSymbol());
                 }
             }
         }

@@ -56,7 +56,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression) {
         return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, expressionFactory.createSimpleExpression(expression),
-                                                                                                subqueryInitFactory, expressionFactory));
+                                                                                                subqueryInitFactory, expressionFactory, false));
     }
 
     @Override

@@ -46,7 +46,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.owner")
             .having("d.age + 1").gt(0L);
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age+1 > :param_0", criteria
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age + 1 > :param_0", criteria
                      .getQueryString());
         criteria.getResultList();
     }
@@ -70,7 +70,7 @@ public class HavingTest extends AbstractCoreTest {
             .having("LENGTH(d.partners.name) + 1").gt(0);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING LENGTH(partners.name)+1 > :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN d.partners partners GROUP BY owner HAVING LENGTH(partners.name) + 1 > :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -357,5 +357,117 @@ public class HavingTest extends AbstractCoreTest {
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
+    }
+    
+    @Test
+    public void testHavingSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .havingSubquery("alias", "SUM(alias)")
+                .from(Person.class, "p")
+                .select("id")
+                .where("name").eqExpression("d.name")
+            .end().eqExpression("d.owner.id");
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id";
+        
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+
+    @Test
+    public void testWhereMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .havingSubquery("alias", "alias * alias")
+                .from(Person.class, "p")
+                .select("COUNT(id)")
+                .where("name").eqExpression("d.name")
+            .end().eqExpression("d.owner.id");
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) * (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) = owner.id";
+        
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testHavingAndSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .having("d.name").eq("test")
+            .havingOr()
+                .havingAnd()
+                    .havingSubquery("alias", "SUM(alias)")
+                        .from(Person.class, "p")
+                        .select("id")
+                        .where("name").eqExpression("d.name")
+                    .end().eqExpression("d.owner.id")
+                .endAnd()
+            .endOr();        
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id)";
+        
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingAndMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .having("d.name").eq("test")
+            .havingOr()
+                .havingAnd()
+                    .havingSubquery("alias", "alias * alias")
+                        .from(Person.class, "p")
+                        .select("id")
+                        .where("name").eqExpression("d.name")
+                    .end().eqExpression("d.owner.id")
+                .endAnd()
+            .endOr();        
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
+        
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingOrSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .havingOr()
+                .having("d.name").eq("test")
+                .havingSubquery("alias", "SUM(alias)")
+                    .from(Person.class, "p")
+                    .select("id")
+                    .where("name").eqExpression("d.name")
+                .end().eqExpression("d.owner.id")
+            .endOr();        
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id";
+        
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingOrMultipleSubqueryWithSurroundingExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("name")
+            .havingOr()
+                .having("d.name").eq("test")
+                .havingSubquery("alias", "alias * alias")
+                    .from(Person.class, "p")
+                    .select("id")
+                    .where("name").eqExpression("d.name")
+                .end().eqExpression("d.owner.id")
+            .endOr();        
+        String expected = "SELECT d FROM Document d JOIN d.owner owner GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
+        
+        assertEquals(expected, crit.getQueryString());
+//        TODO: restore as soon as hibernate supports this
+//        cb.getResultList(); 
     }
 }

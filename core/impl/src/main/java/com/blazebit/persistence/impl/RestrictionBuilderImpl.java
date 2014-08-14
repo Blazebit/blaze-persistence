@@ -60,20 +60,23 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private Predicate predicate;
     private final ExpressionFactory expressionFactory;
     private SuperExpressionRightHandsideSubqueryPredicateBuilder superExprRightSubqueryPredicateBuilderListener;
+    private final boolean allowCaseWhenExpressions;
 
-    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, boolean allowCaseWhenExpressions) {
         this.leftExpression = leftExpression;
         this.listener = listener;
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.allowCaseWhenExpressions = allowCaseWhenExpressions;
     }
 
-    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, boolean allowCaseWhenExpressions) {
         this.listener = listener;
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.allowCaseWhenExpressions = allowCaseWhenExpressions;
     }
 
     public void setLeftExpression(Expression leftExpression) {
@@ -144,7 +147,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T eqExpression(String expression) {
-        return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+        return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions)));
     }
 
     @Override
@@ -163,7 +166,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T notEqExpression(String expression) {
-        return chain(new NotPredicate(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression))));
+        return chain(new NotPredicate(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions))));
     }
 
     @Override
@@ -189,7 +192,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T gtExpression(String expression) {
-        return chain(new GtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+        return chain(new GtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions)));
     }
 
     @Override
@@ -215,7 +218,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T geExpression(String expression) {
-        return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+        return chain(new GePredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions)));
     }
 
     @Override
@@ -241,7 +244,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T ltExpression(String expression) {
-        return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+        return chain(new LtPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions)));
     }
 
     @Override
@@ -267,7 +270,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     @Override
     public T leExpression(String expression) {
-        return chain(new LePredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+        return chain(new LePredicate(leftExpression, expressionFactory.createSimpleExpression(expression, allowCaseWhenExpressions)));
     }
 
     @Override
@@ -359,6 +362,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    //TODO: actually LIKE only supports string literals and parameters as pattern value...
     public T likeExpression(String expression) {
         return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), true, null));
     }
