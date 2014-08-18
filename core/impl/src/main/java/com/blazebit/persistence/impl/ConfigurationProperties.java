@@ -22,19 +22,4 @@ package com.blazebit.persistence.impl;
  */
 public interface ConfigurationProperties {
 
-    /**
-     * Sets the generator for ON clauses of joins.
-     * The default value <code>auto</code> will use the <code>where</code>-generator if the <code>on</code>-generator is not supported by the JPA provider.
-     *
-     * Allowed values are:
-     * <ul>
-     * <li><code>auto</code> (default)</li>
-     * <li><code>on</code></li>
-     * <li><code>where</code></li>
-     * </ul>
-     */
-    public static final String ON_CLAUSE_GENERATOR = "com.blazebit.persistence.on_clause_generator";
-    public static final String ON_CLAUSE_GENERATOR_AUTO = "auto";
-    public static final String ON_CLAUSE_GENERATOR_ON = "on";
-    public static final String ON_CLAUSE_GENERATOR_WHERE = "where";
 }

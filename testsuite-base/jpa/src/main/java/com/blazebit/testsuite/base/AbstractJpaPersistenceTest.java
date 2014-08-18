@@ -59,6 +59,7 @@ public abstract class AbstractJpaPersistenceTest {
         em = factory.createEntityManager();
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config = configure(config);
         cbf = config.createCriteriaBuilderFactory();
     }
 
@@ -69,6 +70,10 @@ public abstract class AbstractJpaPersistenceTest {
     }
 
     protected abstract Class<?>[] getEntityClasses();
+    
+    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
+        return config;
+    }
 
     protected Properties applyProperties(Properties properties) {
         return properties;

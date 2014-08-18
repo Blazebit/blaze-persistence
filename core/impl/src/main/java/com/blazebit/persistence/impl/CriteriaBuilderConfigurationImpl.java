@@ -41,7 +41,6 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     private void loadDefaultProperties() {
-        properties.put(ConfigurationProperties.ON_CLAUSE_GENERATOR, "auto");
     }
 
     private void loadQueryTransformers() {
