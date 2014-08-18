@@ -24,7 +24,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface GroupByBuilder<T, X extends GroupByBuilder<T, X>> {
+public interface GroupByBuilder<T, X extends GroupByBuilder<T, X>> extends HavingBuilder<X> {
 
     /**
      * Adds a multiple group by clause with the given expressions to the query.
