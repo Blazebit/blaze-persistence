@@ -18,16 +18,21 @@ package com.blazebit.persistence.view;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -51,11 +56,16 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     private final int maxResults;
     private final boolean paginate;
     private final Map<String, Sorter> sorters = new LinkedHashMap<String, Sorter>();
-    private final Map<Object, Filter> filters = new HashMap<Object, Filter>();
+    private final Map<Object, AttributeFilterProvider> filters = new LinkedHashMap<Object, AttributeFilterProvider>();
+    private final Set<ViewFilterProvider> viewFilters = new LinkedHashSet<ViewFilterProvider>();
+    private final Set<String> viewNamedFilters = new LinkedHashSet<String>();
+    private final Set<String> attributeNamedFilters = new LinkedHashSet<String>();
     private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
-    private final Map<String, Object> attributeFilters = new HashMap<String, Object>();
+    private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
     private final Map<String, Sorter> processedAttributeSorters = new LinkedHashMap<String, Sorter>();
     private final Map<String, Object> processedAttributeFilters = new HashMap<String, Object>();
+    private final Set<String> processedAttributeNamedFilters = new HashSet<String>();
+    private final Set<String> processedViewNamedFilters = new HashSet<String>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
 
     private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate) {
@@ -105,7 +115,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
 
         // Add filters
         if (!filters.isEmpty()) {
-            for (Map.Entry<Object, Filter> filterEntry : filters.entrySet()) {
+            for (Map.Entry<Object, AttributeFilterProvider> filterEntry : filters.entrySet()) {
                 Object key = filterEntry.getKey();
 
                 if (key instanceof SubqueryAttribute<?, ?>) {
@@ -121,22 +131,25 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                             .getName(), ex);
                     }
 
-                    if (subqueryAttribute.getSubqueryExpression()
-                        .isEmpty()) {
+                    if (subqueryAttribute.getSubqueryExpression().isEmpty()) {
                         filterEntry.getValue()
-                            .apply(provider.createSubquery(criteriaBuilder.whereSubquery()));
+                            .apply(criteriaBuilder, null, null, provider);
                     } else {
                         filterEntry.getValue()
-                            .apply(provider.createSubquery(
-                                    criteriaBuilder.whereSubquery(
-                                        subqueryAttribute.getSubqueryAlias(),
-                                        subqueryAttribute.getSubqueryExpression()
-                                    )));
+                            .apply(criteriaBuilder, subqueryAttribute.getSubqueryAlias(),
+                                        subqueryAttribute.getSubqueryExpression(), provider
+                                    );
                     }
                 } else {
                     filterEntry.getValue()
-                        .apply(criteriaBuilder.where((String) key));
+                        .apply(criteriaBuilder, (String) key);
                 }
+            }
+        }
+        
+        if (!viewFilters.isEmpty()) {
+            for (ViewFilterProvider viewFilterProvider : viewFilters) {
+                viewFilterProvider.apply(criteriaBuilder);
             }
         }
 
@@ -169,6 +182,24 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         } else {
             return (Q) criteriaBuilder;
         }
+    }
+    
+    /**
+     * Enables and adds the view filter with the given name in this setting.
+     *
+     * @param filterName The name of the view filter
+     */
+    public void addViewFilter(String filterName) {
+        this.viewNamedFilters.add(filterName);
+    }
+    
+    /**
+     * Enables and adds the attribute filter with the given name in this setting.
+     *
+     * @param filterName The name of the attribute filter
+     */
+    public void addAttributeNamedFilter(String filterName) {
+        this.attributeNamedFilters.add(filterName);
     }
 
     /**
@@ -306,6 +337,46 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     }
 
     /**
+     * Returns true if named filters for attributes have been added, otherwise false.
+     *
+     * @return true if named filters for attributes have been added, otherwise false
+     */
+    public boolean hasAttributeNamedFilters() {
+        return !attributeNamedFilters.isEmpty() || !processedAttributeNamedFilters.isEmpty();
+    }
+
+    /**
+     * Returns a copy of the named filters for attributes that have been added.
+     *
+     * @return The named filters for attributes
+     */
+    public Set<String> getAttributeNamedFilters() {
+        Set<String> newAttributeNamedFilters = new HashSet<String>(attributeNamedFilters);
+        newAttributeNamedFilters.addAll(processedAttributeNamedFilters);
+        return newAttributeNamedFilters;
+    }
+
+    /**
+     * Returns true if named filters for the view have been added, otherwise false.
+     *
+     * @return true if named filters for the view have been added, otherwise false
+     */
+    public boolean hasViewFilters() {
+        return !viewNamedFilters.isEmpty() || !processedViewNamedFilters.isEmpty();
+    }
+
+    /**
+     * Returns a copy of the named filters for the view that have been added.
+     *
+     * @return The named filters for the view
+     */
+    public Set<String> getViewFilters() {
+        Set<String> newViewFilters = new HashSet<String>(viewNamedFilters);
+        newViewFilters.addAll(processedViewNamedFilters);
+        return newViewFilters;
+    }
+
+    /**
      * Returns true if optional parameters have been added, otherwise false.
      *
      * @return true if optional parameters have been added, otherwise false
@@ -337,7 +408,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
             String mapping;
 
             if (attributeInfo.entityAttribute) {
-                mapping = attributeInfo.mapping.toString();
+                mapping = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
             } else {
                 mapping = resolveAttributeAlias(viewType, attributeSorterEntry.getKey());
             }
@@ -360,7 +431,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
             Object filterValue = attributeFilterEntry.getValue();
             AttributeInfo attributeInfo = resolveAttributeInfo(metamodel, jpaMetamodel, viewType, attributeName);
 
-            Class<? extends Filter> filterClass;
+            Class<? extends AttributeFilterProvider> filterClass;
             Class<?> expectedType;
 
             if (attributeInfo.entityAttribute) {
@@ -369,7 +440,15 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                 expectedType = null;
             } else {
                 MethodAttribute<?, ?> attribute = attributeInfo.attribute;
-                filterClass = attribute.getFilterMapping();
+                AttributeFilterMapping filterMapping = attribute.getFilter(attribute.getName());
+
+                if (filterMapping == null) {
+                    throw new IllegalArgumentException("Could not find view filter mapping with the name '" + attribute.getName()
+                        + "' in the entity view type '" + attribute.getDeclaringType().getJavaType()
+                        .getName() + "'");
+                }
+                
+                filterClass = filterMapping.getFilterClass();
                 expectedType = attribute.getJavaType();
             }
 
@@ -378,11 +457,75 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                     + "' in the entity view type '" + viewType.getJavaType()
                     .getName() + "'");
             }
+            
+            Object expression;
+            
+            if (attributeInfo.mapping instanceof SubqueryAttribute) {
+                expression = attributeInfo.mapping;
+            } else {
+                expression = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
+            }
 
-            Filter filter = evm.createFilter(filterClass, expectedType, filterValue);
-            filters.put(attributeInfo.mapping, filter);
+            AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterValue);
+            filters.put(expression, filter);
             processedAttributeFilters.put(attributeName, filterValue);
             iter.remove();
+        }
+        
+        Iterator<String> namedViewFilterIter = viewNamedFilters.iterator();
+        
+        // Add named view filter
+        while (namedViewFilterIter.hasNext()) {
+            String filterName = namedViewFilterIter.next();
+            ViewFilterMapping filterMapping = viewType.getViewFilter(filterName);
+
+            if (filterMapping == null) {
+                throw new IllegalArgumentException("Could not find view filter mapping with the name '" + filterName
+                    + "' in the entity view type '" + viewType.getJavaType()
+                    .getName() + "'");
+            }
+            
+            ViewFilterProvider provider = evm.createViewFilter(filterMapping.getFilterClass());
+            
+            viewFilters.add(provider);
+            processedViewNamedFilters.add(filterName);
+            namedViewFilterIter.remove();
+        }
+        
+        Iterator<String> namedFilterIter = attributeNamedFilters.iterator();
+        
+        // Add named attribute filters
+        while (namedFilterIter.hasNext()) {
+            String filterName = namedViewFilterIter.next();
+            AttributeFilterMapping filterMapping = viewType.getAttributeFilter(filterName);
+
+            if (filterMapping == null) {
+                throw new IllegalArgumentException("Could not find attribute filter mapping with the name '" + filterName
+                    + "' in the entity view type '" + viewType.getJavaType()
+                    .getName() + "'");
+            }
+            
+            MethodAttribute<?, ?> attribute = filterMapping.getDeclaringAttribute();
+            AttributeInfo attributeInfo = resolveAttributeInfo(metamodel, jpaMetamodel, viewType, attribute.getName());
+            AttributeFilterProvider provider;
+            
+            if (attributeInfo.entityAttribute) {
+                throw new IllegalArgumentException("Attribute filter on entity attributes are not allowed!");
+            } else {
+                provider = evm.createAttributeFilter(filterMapping.getFilterClass(), attributeInfo.attribute.getJavaType(), null);
+            }
+            
+            Object expression;
+            
+            if (attributeInfo.mapping instanceof SubqueryAttribute) {
+                expression = attributeInfo.mapping;
+            } else {
+                expression = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
+            }
+            
+            filters.put(expression, provider);
+            processedAttributeNamedFilters.add(filterName);
+            namedFilterIter.remove();
         }
     }
 
@@ -416,7 +559,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                 mapping = ((MappingAttribute<?, ?>) attribute).getMapping();
             }
 
-            return new AttributeInfo(attribute, null, mapping, false);
+            return new AttributeInfo(attribute, null, mapping, null, false);
         }
 
         String[] parts = attributePath.split("\\.");
@@ -462,15 +605,18 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                     ManagedType<?> type;
                     currentAttribute = null;
                     foundEntityAttribute = true;
+                    StringBuilder newSb = new StringBuilder();
                     // If we get here, the attribute type is a managed type and we can copy the rest of the parts
                     for (; i < parts.length; i++) {
                         type = jpaMetamodel.managedType(maybeUnmanagedType);
-                        sb.append('.');
-                        sb.append(parts[i]);
+                        newSb.append('.');
+                        newSb.append(parts[i]);
                         jpaAttribute = type.getAttribute(parts[i]);
                         maybeUnmanagedType = jpaAttribute.getJavaType();
                     }
 
+                    mapping = newSb.toString();
+                    // At this point we consumed all parts
                     break;
                 } catch (IllegalArgumentException ex) {
                     throw new IllegalArgumentException("The given attribute path '" + attributePath
@@ -482,15 +628,29 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
                     sb.append('.');
                 }
 
-                sb.append(((MappingAttribute<?, ?>) currentAttribute).getMapping());
+                // This is the last mapping
+                mapping = ((MappingAttribute<?, ?>) currentAttribute).getMapping();
+                // Make it explicit, that if this branch is entered, the loop will be exited
+                break;
             }
         }
 
         if (mapping == null) {
-            mapping = sb.toString();
+            throw new IllegalStateException("The mapping should never be null! This must be a bug.");
         }
 
-        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, foundEntityAttribute);
+        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, sb.toString(), foundEntityAttribute);
+    }
+
+    private String getPrefixedExpression(String subviewPrefix, String mappingExpression) {
+        if (subviewPrefix != null && subviewPrefix.length() > 0) {
+            StringBuilder sb = new StringBuilder(subviewPrefix.length() + mappingExpression.length());
+            sb.append(subviewPrefix);
+            sb.append(mappingExpression);
+            return sb.toString();
+        }
+        
+        return mappingExpression;
     }
 
     private static class AttributeInfo {
@@ -498,12 +658,14 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
         private final MethodAttribute<?, ?> attribute;
         private final Attribute<?, ?> jpaAttribute;
         private final Object mapping;
+        private final String subviewPrefix;
         private final boolean entityAttribute;
 
-        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, boolean entityAttribute) {
+        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, String subviewPrefix, boolean entityAttribute) {
             this.attribute = attribute;
             this.jpaAttribute = jpaAttribute;
             this.mapping = mapping;
+            this.subviewPrefix = subviewPrefix;
             this.entityAttribute = entityAttribute;
         }
 

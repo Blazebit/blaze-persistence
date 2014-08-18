@@ -16,8 +16,6 @@
 package com.blazebit.persistence.view.impl.filter;
 
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.view.Filter;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
@@ -25,15 +23,21 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public abstract class AbstractComparisonFilter implements Filter {
+public class ComparisonFilterHelper {
 
-    protected final Object value;
-    protected final SubqueryProvider subqueryProvider;
+    private final ComparisonFilter filter;
+    private final Object value;
+    private final SubqueryProvider subqueryProvider;
 
-    public AbstractComparisonFilter(Class<?> expectedType, Object value) {
+    public ComparisonFilterHelper(ComparisonFilter filter, Class<?> expectedType, Object value) {
+        if (filter == null) {
+            throw new NullPointerException("filter");
+        }
         if (value == null) {
             throw new NullPointerException("value");
         }
+        
+        this.filter = filter;
 
         if (value instanceof SubqueryProvider) {
             this.value = null;
@@ -47,16 +51,11 @@ public abstract class AbstractComparisonFilter implements Filter {
         }
     }
 
-    @Override
     public <T> T apply(RestrictionBuilder<T> rb) {
         if (subqueryProvider == null) {
-            return applyRestriction(rb);
+            return filter.applyRestriction(rb, value);
         } else {
-            return subqueryProvider.createSubquery(applySubquery(rb));
+            return subqueryProvider.createSubquery(filter.applySubquery(rb));
         }
     }
-
-    protected abstract <T> T applyRestriction(RestrictionBuilder<T> rb);
-
-    protected abstract <T> SubqueryInitiator<T> applySubquery(RestrictionBuilder<T> rb);
 }

@@ -17,9 +17,15 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.ViewFilter;
+import com.blazebit.persistence.view.ViewFilters;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -48,6 +54,8 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Map<String, MethodAttribute<? super X, ?>> attributes;
     private final Map<ParametersKey, MappingConstructor<X>> constructors;
     private final Map<String, MappingConstructor<X>> constructorIndex;
+    private final Map<String, AttributeFilterMapping> attributeFilters;
+    private final Map<String, ViewFilterMapping> viewFilters;
 
     public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
         this.javaType = (Class<X>) clazz;
@@ -69,16 +77,36 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         }
 
         this.entityClass = entityViewAnnot.value();
+        
+        this.viewFilters = new HashMap<String, ViewFilterMapping>();
+        
+        ViewFilter filterMapping = AnnotationUtils.findAnnotation(javaType, ViewFilter.class);
+        ViewFilters filtersMapping = AnnotationUtils.findAnnotation(javaType, ViewFilters.class);
+        
+        if (filterMapping != null) {
+            if (filtersMapping != null) {
+                throw new IllegalArgumentException("Illegal occurrences of @ViewFilter and @ViewFilters on the class '" + javaType.getName() + "'!");
+            }
+            
+            addFilterMapping(filterMapping);
+        } else if (filtersMapping != null) {
+            for (ViewFilter f : filtersMapping.value()) {
+                addFilterMapping(f);
+            }
+        }
+        
         // We use a tree map to get a deterministic attribute order
         this.attributes = new TreeMap<String, MethodAttribute<? super X, ?>>();
+        this.attributeFilters = new HashMap<String, AttributeFilterMapping>();
 
         for (Method method : clazz.getMethods()) {
             String attributeName = AbstractMethodAttribute.validate(this, method);
 
             if (attributeName != null && !attributes.containsKey(attributeName)) {
-                MethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
+                AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
                 if (attribute != null) {
                     attributes.put(attribute.getName(), attribute);
+                    addAttributeFilters(attribute);
                 }
             }
         }
@@ -97,7 +125,40 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         }
     }
 
-    private static <X> MethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
+    private void addFilterMapping(ViewFilter filterMapping) {
+        String filterName = filterMapping.name();
+        
+        if (filterName.isEmpty()) {
+            filterName = name;
+            
+            if (viewFilters.containsKey(filterName)) {
+                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
+            }
+        }
+        
+        ViewFilterMapping viewFilterMapping = new ViewFilterMappingImpl(this, filterName, filterMapping.value());
+        viewFilters.put(viewFilterMapping.getName(), viewFilterMapping);
+    }
+
+    private void addAttributeFilters(AbstractMethodAttribute<? super X, ?> attribute) {
+        for (Map.Entry<String, AttributeFilterMapping> entry : attribute.getFilterMappings().entrySet()) {
+            String filterName = entry.getKey();
+            AttributeFilterMapping filterMapping = entry.getValue();
+            
+            if (viewFilters.containsKey(filterName)) {
+                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName() 
+                    + "' of the class '" + javaType.getName() + "'! Already defined on class '" + javaType.getName() + "'!");
+            } else if (attributeFilters.containsKey(filterName)) {
+                attributeFilters.get(filterName);
+                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName() 
+                    + "' of the class '" + javaType.getName() + "'! Already defined on attribute class '" + javaType.getName() + "'!");
+            }
+            
+            attributeFilters.put(filterName, filterMapping);
+        }
+    }
+
+    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
@@ -143,6 +204,40 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     @Override
     public MethodAttribute<? super X, ?> getAttribute(String name) {
         return attributes.get(name);
+    }
+
+    @Override
+    public FilterMapping<?> getFilter(String filterName) {
+        FilterMapping<?> filterMapping = attributeFilters.get(filterName);
+        return filterMapping != null ? filterMapping : viewFilters.get(filterName);
+    }
+
+    @Override
+    public Set<FilterMapping<?>> getFilters() {
+        Set<FilterMapping<?>> filters = new HashSet<FilterMapping<?>>(attributeFilters.size() + viewFilters.size());
+        filters.addAll(viewFilters.values());
+        filters.addAll(attributeFilters.values());
+        return filters;
+    }
+
+    @Override
+    public AttributeFilterMapping getAttributeFilter(String filterName) {
+        return attributeFilters.get(filterName);
+    }
+
+    @Override
+    public Set<AttributeFilterMapping> getAttributeFilters() {
+        return new HashSet<AttributeFilterMapping>(attributeFilters.values());
+    }
+
+    @Override
+    public ViewFilterMapping getViewFilter(String filterName) {
+        return viewFilters.get(filterName);
+    }
+
+    @Override
+    public Set<ViewFilterMapping> getViewFilters() {
+        return new HashSet<ViewFilterMapping>(viewFilters.values());
     }
 
     @Override

@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.filter.ContainsFilter;
@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
 @EntityView(Person.class)
 public interface PersonSubViewFiltered {
 
-    @MappingFilter(ContainsFilter.class)
+    @AttributeFilter(ContainsFilter.class)
     public String getName();
 
     @MappingParameter("contactPersonNumber")

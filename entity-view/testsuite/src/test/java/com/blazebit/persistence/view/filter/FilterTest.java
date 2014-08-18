@@ -16,7 +16,8 @@
 package com.blazebit.persistence.view.filter;
 
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.view.Filter;
+import com.blazebit.persistence.WhereBuilder;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.impl.filter.ContainsFilterImpl;
 import com.blazebit.persistence.view.impl.filter.ContainsIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EndsWithFilterImpl;
@@ -39,49 +40,51 @@ public class FilterTest {
 
     @Test
     public void testContains() {
-        Filter filter = new ContainsFilterImpl(value);
+        AttributeFilterProvider filter = new ContainsFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value + "%");
     }
 
     @Test
     public void testContainsIgnoreCase() {
-        Filter filter = new ContainsIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider filter = new ContainsIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value + "%", false);
     }
 
     @Test
     public void testEndsWith() {
-        Filter filter = new EndsWithFilterImpl(value);
+        AttributeFilterProvider filter = new EndsWithFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value);
     }
 
     @Test
     public void testEndsWithIgnoreCase() {
-        Filter filter = new EndsWithIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider filter = new EndsWithIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like("%" + value, false);
     }
 
     @Test
     public void testStartsWith() {
-        Filter filter = new StartsWithFilterImpl(value);
+        AttributeFilterProvider filter = new StartsWithFilterImpl(value);
         verifyFilter(filter, expression).like(value + "%");
     }
 
     @Test
     public void testStartsWithIgnoreCase() {
-        Filter filter = new StartsWithIgnoreCaseFilterImpl(value);
+        AttributeFilterProvider filter = new StartsWithIgnoreCaseFilterImpl(value);
         verifyFilter(filter, expression).like(value + "%", false);
     }
 
     @Test
     public void testExact() {
-        Filter filter = new EqualFilterImpl(String.class, value);
+        AttributeFilterProvider filter = new EqualFilterImpl(String.class, value);
         verifyFilter(filter, expression).eq(value);
     }
 
-    public RestrictionBuilder<?> verifyFilter(Filter filter, String expression) {
-        RestrictionBuilder<?> restrictionBuilder = Mockito.mock(RestrictionBuilder.class);
-        filter.apply(restrictionBuilder);
-        return Mockito.verify(restrictionBuilder);
+    public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
+        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+        RestrictionBuilder<?> rb = Mockito.mock(RestrictionBuilder.class);
+        Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
+        filter.apply(whereBuilder, expression);
+        return Mockito.verify(rb);
     }
 }

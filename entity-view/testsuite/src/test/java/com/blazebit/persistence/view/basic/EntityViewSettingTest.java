@@ -134,4 +134,6 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             // Ok
         }
     }
+    
+    // TODO: needs more tests
 }

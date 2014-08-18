@@ -370,4 +370,6 @@ public class ViewMetamodelTest {
         assertEquals(DocumentViewAbstractClass.class.getConstructor(Long.class, Integer.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
+    
+    // TODO: Test filter mapping
 }

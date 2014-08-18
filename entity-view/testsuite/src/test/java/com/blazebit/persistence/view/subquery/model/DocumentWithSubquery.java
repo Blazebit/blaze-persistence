@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.filter.GreaterThanFilter;
@@ -31,7 +31,7 @@ public interface DocumentWithSubquery {
 
     public String getName();
 
-    @MappingFilter(GreaterThanFilter.class)
+    @AttributeFilter(GreaterThanFilter.class)
     @MappingSubquery(TestSubqueryProvider.class)
     public Long getContactCount();
 }

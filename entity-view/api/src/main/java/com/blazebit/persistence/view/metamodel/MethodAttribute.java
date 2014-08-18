@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
-import com.blazebit.persistence.view.Filter;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 /**
  * Represents an attribute of a view type specified by a getter.
@@ -41,11 +42,19 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
      * @return The getter java method of this attribute
      */
     public Method getJavaMethod();
-
+    
     /**
-     * Returns the filter mapping of the attribute.
-     *
-     * @return The filter mapping of the attribtue
+     * Returns the attribute filter mapping of this attribute with the given name.
+     * 
+     * @param filterName The name of the attribute filter mapping which should be returned
+     * @return The attribute filter mapping of this attribute with the given name
      */
-    public Class<? extends Filter> getFilterMapping();
+    public AttributeFilterMapping getFilter(String filterName);
+    
+    /**
+     * Returns the attribute filter mappings of this attribute.
+     * 
+     * @return The attribute filter mappings of this attribute
+     */
+    public Set<AttributeFilterMapping> getFilters();
 }

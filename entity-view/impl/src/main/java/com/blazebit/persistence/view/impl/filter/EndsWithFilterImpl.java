@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.filter.EndsWithFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public class EndsWithFilterImpl implements EndsWithFilter {
+public class EndsWithFilterImpl extends EndsWithFilter {
 
     private final String value;
 

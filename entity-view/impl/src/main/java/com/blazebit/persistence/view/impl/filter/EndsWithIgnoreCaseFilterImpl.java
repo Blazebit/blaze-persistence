@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.filter.EndsWithIgnoreCaseFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public class EndsWithIgnoreCaseFilterImpl implements EndsWithIgnoreCaseFilter {
+public class EndsWithIgnoreCaseFilterImpl extends EndsWithIgnoreCaseFilter {
 
     private final String value;
 

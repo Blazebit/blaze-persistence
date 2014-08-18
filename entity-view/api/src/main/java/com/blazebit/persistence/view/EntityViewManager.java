@@ -35,18 +35,27 @@ public interface EntityViewManager {
     public ViewMetamodel getMetamodel();
 
     /**
+     * Creates a new filter instance of the given filter class.
+     *
+     * @param <T>         The filter type
+     * @param filterClass The filter class
+     * @return An instance of the given filter class
+     */
+    public <T extends ViewFilterProvider> T createViewFilter(Class<T> filterClass);
+
+    /**
      * Creates a new filter instance of the given filter class. If the filter class is a registered placeholder, the real
      * implementation will be resolved and instantiated.
      *
-     * This method tries to instantiate an object by invoking one of the allowed constructors as defined in {@link Filter}
+     * This method tries to instantiate an object by invoking one of the allowed constructors as defined in {@link AttributeFilterProvider}
      *
      * @param <T>          The filter type
      * @param filterClass  The filter class or a filter placeholder
      * @param expectedType The expected type of the argument into which it should be converted to
      * @param argument     The filter argument which is passed to the filter constructor
-     * @return
+     * @return An instance of the given filter class
      */
-    public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument);
+    public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument);
 
     /**
      * Applies an object builder for the given entity view class to the given {@link PaginatedCriteriaBuilder}

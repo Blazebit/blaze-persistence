@@ -23,7 +23,7 @@ import com.blazebit.persistence.view.filter.ContainsFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ContainsFilterImpl implements ContainsFilter {
+public class ContainsFilterImpl extends ContainsFilter {
 
     private final String value;
 

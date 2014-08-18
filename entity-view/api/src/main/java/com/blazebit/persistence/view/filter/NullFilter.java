@@ -16,12 +16,12 @@
 package com.blazebit.persistence.view.filter;
 
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.Filter;
-import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 
 /**
  * A placeholder for a filter implementation that implements a is null and is not null filter.
- * This placeholder can be used in a {@link MappingFilter} annotation or you can retrieve an instance of this filter by invoking
+ * This placeholder can be used in a {@link AttributeFilter} annotation or you can retrieve an instance of this filter by invoking
  * {@link EntityViewManager#createFilter(java.lang.Class, java.lang.Class, java.lang.Object)}.
  *
  * A null filter accepts an object. The {@linkplain Object#toString()} representation of that object will be parsed to a boolean
@@ -31,6 +31,6 @@ import com.blazebit.persistence.view.MappingFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface NullFilter extends Filter {
+public abstract class NullFilter extends AttributeFilterProvider {
 
 }

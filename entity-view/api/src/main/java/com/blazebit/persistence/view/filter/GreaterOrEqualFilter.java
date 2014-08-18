@@ -16,13 +16,13 @@
 package com.blazebit.persistence.view.filter;
 
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.Filter;
-import com.blazebit.persistence.view.MappingFilter;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
  * A placeholder for a filter implementation that implements a greater or equal filter.
- * This placeholder can be used in a {@link MappingFilter} annotation or you can retrieve an instance of this filter by invoking
+ * This placeholder can be used in a {@link AttributeFilter} annotation or you can retrieve an instance of this filter by invoking
  * {@link EntityViewManager#createFilter(java.lang.Class, java.lang.Class, java.lang.Object)}.
  *
  * A greater or equal filter accepts a class and an object. The class is interpreted as the expected type. This is used to convert the
@@ -39,6 +39,6 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface GreaterOrEqualFilter extends Filter {
+public abstract class GreaterOrEqualFilter extends AttributeFilterProvider {
 
 }

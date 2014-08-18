@@ -19,7 +19,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.Filter;
+import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
 import com.blazebit.persistence.view.filter.EndsWithFilter;
@@ -68,13 +69,13 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ViewMetamodel metamodel;
     private final ProxyFactory proxyFactory;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
-    private final Map<String, Class<? extends Filter>> filterMappings;
+    private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
-        this.filterMappings = new HashMap<String, Class<? extends Filter>>();
+        this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
     }
 
@@ -84,7 +85,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <T extends Filter> T createFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
+    public <T extends ViewFilterProvider> T createViewFilter(Class<T> filterClass) {
+        try {
+            return filterClass.newInstance();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Could not instantiate the view filter class: " + filterClass.getName(), ex);
+        }
+    }
+
+    @Override
+    public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
         Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
 
         if (filterClassImpl == null) {
@@ -94,7 +104,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
-    private <T extends Filter> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
+    private <T extends AttributeFilterProvider> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
         try {
             Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
             Constructor<T> filterConstructor = findConstructor(constructors, Class.class, Object.class);

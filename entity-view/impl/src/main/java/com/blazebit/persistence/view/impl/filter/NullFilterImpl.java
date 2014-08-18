@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.filter.NullFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public class NullFilterImpl implements NullFilter {
+public class NullFilterImpl extends NullFilter {
 
     private final boolean value;
 

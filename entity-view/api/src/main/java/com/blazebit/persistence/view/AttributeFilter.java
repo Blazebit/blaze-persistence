@@ -21,19 +21,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specifies the filter class that should be used if the view is filtered by the annotated attribute.
+ * Adds a named filter to an entity view attribute.
  *
  * @author Christian Beikov
  * @since 1.0
  */
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MappingFilter {
+public @interface AttributeFilter {
+    
+    /**
+     * Returns the name of the filter. There may be one default element which defaults to the attribute name.
+     * 
+     * @return The name of the filter
+     */
+    String name() default "";
 
     /**
      * The filter class that should be used for filtering.
      *
      * @return The filter class
      */
-    Class<? extends Filter> value();
+    Class<? extends AttributeFilterProvider> value();
 }

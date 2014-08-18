@@ -24,19 +24,26 @@ import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
  * @author Christian Beikov
  * @since 1.0
  */
-public class GreaterOrEqualFilterImpl extends AbstractComparisonFilter implements GreaterOrEqualFilter {
+public class GreaterOrEqualFilterImpl extends GreaterOrEqualFilter implements ComparisonFilter {
+
+    private final ComparisonFilterHelper helper;
 
     public GreaterOrEqualFilterImpl(Class<?> expectedType, Object value) {
-        super(expectedType, value);
+        this.helper = new ComparisonFilterHelper(this, expectedType, value);
     }
 
     @Override
-    protected <T> T applyRestriction(RestrictionBuilder<T> rb) {
+    protected <T> T apply(RestrictionBuilder<T> restrictionBuilder) {
+        return helper.apply(restrictionBuilder);
+    }
+
+    @Override
+    public <T> T applyRestriction(RestrictionBuilder<T> rb, Object value) {
         return rb.ge(value);
     }
 
     @Override
-    protected <T> SubqueryInitiator<T> applySubquery(RestrictionBuilder<T> rb) {
+    public <T> SubqueryInitiator<T> applySubquery(RestrictionBuilder<T> rb) {
         return rb.ge();
     }
 }

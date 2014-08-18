@@ -13,21 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.subview.model;
+package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.AttributeFilter;
-import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.filter.ContainsFilter;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
+ * Adds a named filter to an entity view.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(Person.class)
-public interface PersonSubView {
+@Target({ ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ViewFilter {
+    
+    /**
+     * Returns the name of the filter.
+     * 
+     * @return The name of the filter
+     */
+    String name();
 
-    @AttributeFilter(ContainsFilter.class)
-    public String getName();
+    /**
+     * The filter class that should be used for filtering.
+     *
+     * @return The filter class
+     */
+    Class<? extends ViewFilterProvider> value();
 }
