@@ -293,7 +293,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     /*
      * Having methods
      */
-    @Override
     public RestrictionBuilder<X> having(String expression) {
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -302,7 +301,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return havingManager.restrict(this, expr);
     }
 
-    @Override
     public HavingOrBuilder<X> havingOr() {
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -310,7 +308,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return havingManager.havingOr(this);
     }
 
-    @Override
     public SubqueryInitiator<X> havingExists() {
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -318,7 +315,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return havingManager.restrictExists((X) this);
     }
 
-    @Override
     public SubqueryInitiator<X> havingNotExists() {
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -326,12 +322,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return havingManager.restrictNotExists((X) this);
     }
 
-    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery() {
         return havingManager.restrict(this);
     }
 
-    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery(String subqueryAlias, String expression) {
         return havingManager.restrict(this, subqueryAlias, expression);
     }
