@@ -13,42 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.OuterExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotInPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.expression.ExpressionVisitorAdapter;
 
 /**
  *
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Visitor {
+public abstract class VisitorAdapter extends ExpressionVisitorAdapter implements Predicate.Visitor {
 
     @Override
     public void visit(AndPredicate predicate) {
@@ -141,48 +115,7 @@ public abstract class VisitorAdapter implements Predicate.Visitor, Expression.Vi
     }
 
     @Override
-    public void visit(PathExpression expression) {
-        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            pathElementExpression.accept(this);
-        }
-    }
-
-    @Override
-    public void visit(ArrayExpression expression) {
-        expression.getBase().accept(this);
-        expression.getIndex().accept(this);
-    }
-
-    @Override
-    public void visit(PropertyExpression expression) {
-    }
-
-    @Override
-    public void visit(ParameterExpression expression) {
-    }
-
-    @Override
-    public void visit(CompositeExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            expr.accept(this);
-        }
-    }
-
-    @Override
-    public void visit(FooExpression expression) {
-    }
-
-    @Override
-    public void visit(SubqueryExpression expression) {
-    }
-
-    @Override
     public void visit(ExistsPredicate predicate) {
-    }
-
-    @Override
-    public void visit(OuterExpression expression) {
-        expression.getPath().accept(this);
     }
 
 }

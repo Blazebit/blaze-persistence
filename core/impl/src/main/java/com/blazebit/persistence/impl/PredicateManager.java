@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;

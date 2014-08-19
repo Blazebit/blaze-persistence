@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
