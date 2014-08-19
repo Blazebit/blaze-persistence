@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.KeySet;
 import com.blazebit.persistence.PagedList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,20 +29,28 @@ import java.util.Collection;
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
 
+    private final KeySet keySet;
     private final long totalSize;
 
     public PagedListImpl(long totalSize) {
+        this.keySet = null;
         this.totalSize = totalSize;
     }
 
-    PagedListImpl(Collection<? extends T> collection, long totalSize) {
+    PagedListImpl(Collection<? extends T> collection, KeySet keySet, long totalSize) {
         super(collection);
+        this.keySet = keySet;
         this.totalSize = totalSize;
     }
 
     @Override
     public long totalSize() {
         return totalSize;
+    }
+
+    @Override
+    public KeySet getKeySet() {
+        return keySet;
     }
 
 }

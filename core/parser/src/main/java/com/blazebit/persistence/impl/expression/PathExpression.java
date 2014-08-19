@@ -81,16 +81,18 @@ public class PathExpression implements Expression, Cloneable {
     }
 
     public String getPath() {
-        StringBuilder sb = new StringBuilder();
-        Iterator<PathElementExpression> iter = pathProperties.iterator();
-
-        if (iter.hasNext()) {
-            sb.append(iter.next());
+        int size = pathProperties.size();
+        if (size == 0) {
+            return "";
+        } else if (size == 1) {
+            return pathProperties.get(0).toString();
         }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append(pathProperties.get(0));
 
-        while (iter.hasNext()) {
-            sb.append(".")
-                .append(iter.next());
+        for (int i = 1; i < size; i++) {
+            sb.append(".").append(pathProperties.get(i));
         }
 
         return sb.toString();

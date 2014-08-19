@@ -60,7 +60,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
-    private final QueryGenerator queryGenerator;
+    protected final QueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
     protected final JPAInfo jpaInfo;
@@ -134,7 +134,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory, expressionFactory);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, fromClazz.getName());
 
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);

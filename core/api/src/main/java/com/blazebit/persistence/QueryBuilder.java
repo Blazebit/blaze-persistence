@@ -151,6 +151,19 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return This query builder as paginated query builder
      */
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
+    
+    /**
+     * Like {@link QueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
+     * Key set pagination is under the following circumstances possible
+     * <ul>
+     * <li>this query builder and the one with which the key set was obtained are equal</li>
+     * <li>{@link KeySet#getMaxResults()} and <code>maxResults</code> evaluate to the same value</li>
+     * <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is 0</li>
+     * <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
+     * </ul>
+     *
+     */
+    public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstResult, int maxResults);
 
     /*
      * Join methods

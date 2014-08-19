@@ -105,8 +105,21 @@ public abstract class PredicateManager<U> extends AbstractManager {
     void acceptVisitor(Predicate.Visitor v) {
         rootPredicate.predicate.accept(v);
     }
+    
+    boolean hasPredicates() {
+        return rootPredicate.predicate.getChildren().size() > 0;
+    }
 
     void buildClause(StringBuilder sb) {
+        queryGenerator.setQueryBuffer(sb);
+        if (!hasPredicates()) {
+            return;
+        }
+        sb.append(' ').append(getClauseName()).append(' ');
+        applyPredicate(queryGenerator, sb);
+    }
+
+    void buildClausePredicate(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
         applyPredicate(queryGenerator, sb);
     }
@@ -116,10 +129,6 @@ public abstract class PredicateManager<U> extends AbstractManager {
     protected abstract boolean isAllowCaseWhenExpressions();
 
     void applyPredicate(QueryGenerator queryGenerator, StringBuilder sb) {
-        if (rootPredicate.predicate.getChildren().isEmpty()) {
-            return;
-        }
-        sb.append(' ').append(getClauseName()).append(' ');
         rootPredicate.predicate.accept(queryGenerator);
     }
 

@@ -13,32 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence;
 
-import java.util.List;
+import java.io.Serializable;
 
 /**
- * An extended version of a {@linkplain List} which also provides access to the total size of the list.
+ * TODO: javadoc
  *
- * @param <T> the type of elements in this list
  * @author Christian Beikov
  * @since 1.0
  */
-public interface PagedList<T> extends List<T> {
-
-    /**
-     * The total size of the list.
-     *
-     * @return The total size
-     */
-    public long totalSize();
+public interface KeySet extends Serializable {
     
-    /**
-     * Returns the key set for this paged list which can be used for key set pagination.
-     * The key set may be null if key set pagination wasn't used.
-     * 
-     * @see QueryBuilder#page(com.blazebit.persistence.KeySet, int, int) 
-     * @return 
-     */
-    public KeySet getKeySet();
+    public int getFirstResult();
+
+    public int getMaxResults();
+
+    public Serializable[] getLowest();
+
+    public Serializable[] getHighest();
 }

@@ -158,6 +158,7 @@ public class PaginationTest extends AbstractCoreTest {
     public void testSelectEmptyResultList() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
             .where("name").isNull()
+            .orderByAsc("name")
             .page(0, 1);
         assertEquals(0, cb.getResultList().size());
     }

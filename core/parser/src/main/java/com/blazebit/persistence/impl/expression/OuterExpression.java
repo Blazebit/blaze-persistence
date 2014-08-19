@@ -38,4 +38,13 @@ public class OuterExpression implements Expression {
         visitor.visit(this);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("OUTER(");
+        sb.append(path);
+        sb.append(')');
+        return sb.toString();
+    }
+
 }
