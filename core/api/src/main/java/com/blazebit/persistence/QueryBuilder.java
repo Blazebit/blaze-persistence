@@ -151,7 +151,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return This query builder as paginated query builder
      */
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
-    
+
     /**
      * Like {@link QueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
      * Key set pagination is under the following circumstances possible
@@ -162,6 +162,11 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
      * </ul>
      *
+     * @param keySet      The key set from a previous result
+     * @param firstResult The position of the first result to retrieve, numbered from 0
+     * @param maxResults  The maximum number of results to retrieve
+     * @return This query builder as paginated query builder
+     * @see PagedList#getKeySet()
      */
     public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstResult, int maxResults);
 
