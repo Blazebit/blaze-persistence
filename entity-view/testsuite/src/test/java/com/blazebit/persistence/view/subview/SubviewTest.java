@@ -122,7 +122,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
-        assertEquals("pers1", results.get(0).getOwner().getName());
+        assertEquals("PERS1", results.get(0).getOwner().getName());
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber());
         assertEquals(Integer.valueOf(2), results.get(0).getTheContactPersonNumber());
         // Filtered subview
@@ -135,7 +135,7 @@ public class SubviewTest extends AbstractEntityViewTest {
 
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
-        assertEquals("pers2", results.get(1).getOwner().getName());
+        assertEquals("PERS2", results.get(1).getOwner().getName());
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber());
         assertEquals(Integer.valueOf(2), results.get(1).getTheContactPersonNumber());
         // Filtered subview
@@ -158,7 +158,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         for (Map.Entry<Integer, Person> personEntry : persons.entrySet()) {
             Person p = personEntry.getValue();
             PersonSubView pSub = personSubviews.get(personEntry.getKey());
-            assertEquals(p.getName(), pSub.getName());
+            assertEquals(p.getName().toUpperCase(), pSub.getName());
         }
     }
 
@@ -173,7 +173,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         for (int i = 0; i < persons.size(); i++) {
             Person p = persons.get(i);
             PersonSubView pSub = personSubviews.get(i);
-            assertEquals(p.getName(), pSub.getName());
+            assertEquals(p.getName().toUpperCase(), pSub.getName());
         }
     }
 
@@ -188,7 +188,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         for (Person p : persons) {
             boolean found = false;
             for (PersonSubView pSub : personSubviews) {
-                if (p.getName().equals(pSub.getName())) {
+                if (p.getName().toUpperCase().equals(pSub.getName())) {
                     found = true;
                     break;
                 }

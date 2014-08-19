@@ -99,7 +99,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
 
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
-        setting.addAttributeFilter("owner.name", "Owner");
+        setting.addAttributeFilter("owner.name", "OWNER");
         setting.addAttributeSorter("owner.name", Sorters.descending());
         setting.addOptionalParameter("contactPersonNumber", 1);
 
@@ -110,7 +110,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals(2, result.totalSize());
 
         assertEquals("HisTest", result.get(0).getName());
-        assertEquals("DocumentOwnerSlave", result.get(0).getOwner().getName());
+        assertEquals("DocumentOwnerSlave".toUpperCase(), result.get(0).getOwner().getName());
     }
 
     @Test
@@ -138,6 +138,6 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         assertEquals(2, result.totalSize());
 
         assertEquals("HisTest", result.get(0).getName());
-        assertEquals("DocumentOwnerSlave", result.get(0).getOwner().getName());
+        assertEquals("DocumentOwnerSlave".toUpperCase(), result.get(0).getOwner().getName());
     }
 }

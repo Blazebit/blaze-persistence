@@ -18,6 +18,8 @@ package com.blazebit.persistence.view.impl;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -69,12 +71,14 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private final ViewMetamodel metamodel;
     private final ProxyFactory proxyFactory;
+    private final ExpressionFactory expressionFactory;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
+        this.expressionFactory = new ExpressionFactoryImpl();
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
@@ -88,6 +92,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public <T, Q extends QueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
         return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
+    }
+
+    public ExpressionFactory getExpressionFactory() {
+        return expressionFactory;
     }
     
     /**

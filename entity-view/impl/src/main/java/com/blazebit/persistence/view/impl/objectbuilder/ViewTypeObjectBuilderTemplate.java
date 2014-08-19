@@ -17,8 +17,11 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.SubviewPrefixExpressionVisitor;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
@@ -68,16 +71,16 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final boolean hasSubviews;
 
     private final String aliasPrefix;
-    private final String mappingPrefix;
+    private final List<String> mappingPrefix;
     private final String idPrefix;
     private final int[] idPositions;
     private final int tupleOffset;
     private final Metamodel metamodel;
-    private final EntityViewManager evm;
+    private final EntityViewManagerImpl evm;
     private final ProxyFactory proxyFactory;
     private final TupleTransformator tupleTransformator = new TupleTransformator();
 
-    private ViewTypeObjectBuilderTemplate(String aliasPrefix, String mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManager evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if (viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -117,7 +120,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
         String idAttributeName = entityType.getId(entityType.getIdType().getJavaType()).getName();
-        mappingList.add(0, new Object[]{ getMapping(idPrefix, idAttributeName), getAlias("_" + aliasPrefix, idAttributeName) });
+        String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
+        mappingList.add(0, new Object[]{ idMapping, getAlias("_" + aliasPrefix, idAttributeName) });
         parameterMappingList.add(0, null);
 
         OUTER:
@@ -287,7 +291,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         ViewType<Object[]> subviewType = (ViewType<Object[]>) evm.getMetamodel().view(subviewClass);
         String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
-        String subviewMappingPrefix = getMapping(mappingPrefix, mappingAttribute);
+        List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
         String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
         int[] subviewIdPositions = new int[idPositions.length + 1];
         System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
@@ -329,15 +333,44 @@ public class ViewTypeObjectBuilderTemplate<T> {
         parameterMappingList.add(null);
     }
 
-    private static String getMapping(String prefix, String mapping) {
+    private List<String> createSubviewMappingPrefix(List<String> prefixParts, String mapping) {
+        if (prefixParts == null || prefixParts.isEmpty()) {
+            return Collections.singletonList(mapping);
+        }
+        
+        List<String> subviewMappingPrefix = new ArrayList<String>(prefixParts.size() + 1);
+        subviewMappingPrefix.addAll(prefixParts);
+        subviewMappingPrefix.add(mapping);
+        return subviewMappingPrefix;
+    }
+
+    private <T> List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+        return createSubviewMappingPrefix(prefixParts, mappingAttribute.getMapping());
+    }
+
+    private String getMapping(List<String> prefixParts, String mapping) {
+        if (prefixParts != null && prefixParts.size() > 0) {
+            Expression expr = evm.getExpressionFactory().createSimpleExpression(mapping);
+            expr.accept(new SubviewPrefixExpressionVisitor(prefixParts));
+            return expr.toString();
+        }
+
+        return mapping;
+    }
+
+    private <T> String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+        return getMapping(prefixParts, mappingAttribute.getMapping());
+    }
+
+    private String getMapping(String prefix, String mapping) {
         if (prefix != null) {
             return prefix + "." + mapping;
         }
 
         return mapping;
     }
-
-    private static <T> String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
+    
+    private <T> String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefix, mappingAttribute.getMapping());
     }
 
@@ -412,7 +445,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             this.constructor = constructor;
         }
 
-        public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManager evm, ProxyFactory proxyFactory) {
+        public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[]{ 0 };
             return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, viewType, constructor, proxyFactory);
         }

@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.Sorter;
@@ -30,6 +31,8 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
@@ -153,7 +156,7 @@ public final class EntityViewSettingHelper {
             if (attributeInfo.mapping instanceof SubqueryAttribute) {
                 expression = attributeInfo.mapping;
             } else {
-                expression = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
+                expression = getPrefixedExpression(evm, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             }
 
             AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterValue);
@@ -186,7 +189,7 @@ public final class EntityViewSettingHelper {
             if (attributeInfo.mapping instanceof SubqueryAttribute) {
                 expression = attributeInfo.mapping;
             } else {
-                expression = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
+                expression = getPrefixedExpression(evm, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             }
             
             applyFilter(expression, provider, cb);
@@ -205,7 +208,7 @@ public final class EntityViewSettingHelper {
             String mapping;
 
             if (attributeInfo.entityAttribute) {
-                mapping = getPrefixedExpression(attributeInfo.subviewPrefix, attributeInfo.mapping.toString());
+                mapping = getPrefixedExpression(evm, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             } else {
                 mapping = resolveAttributeAlias(viewType, attributeSorterEntry.getKey());
             }
@@ -250,7 +253,7 @@ public final class EntityViewSettingHelper {
         String[] parts = attributePath.split("\\.");
         ViewType<?> currentViewType = viewType;
         MethodAttribute<?, ?> currentAttribute = null;
-        StringBuilder sb = new StringBuilder();
+        List<String> subviewPrefixParts = new ArrayList<String>();
         Object mapping = null;
         Attribute<?, ?> jpaAttribute = null;
         boolean foundEntityAttribute = false;
@@ -270,11 +273,7 @@ public final class EntityViewSettingHelper {
                         .getName() + "' which is illegal!");
                 }
             } else if (currentAttribute.isSubview()) {
-                if (i != 0) {
-                    sb.append('.');
-                }
-
-                sb.append(((MappingAttribute<?, ?>) currentAttribute).getMapping());
+                subviewPrefixParts.add(((MappingAttribute<?, ?>) currentAttribute).getMapping());
 
                 if (currentAttribute.isCollection()) {
                     PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
@@ -309,10 +308,6 @@ public final class EntityViewSettingHelper {
                         .getName() + "' which is illegal!", ex);
                 }
             } else {
-                if (i != 0) {
-                    sb.append('.');
-                }
-
                 // This is the last mapping
                 mapping = ((MappingAttribute<?, ?>) currentAttribute).getMapping();
                 // Make it explicit, that if this branch is entered, the loop will be exited
@@ -324,15 +319,14 @@ public final class EntityViewSettingHelper {
             throw new IllegalStateException("The mapping should never be null! This must be a bug.");
         }
 
-        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, sb.toString(), foundEntityAttribute);
+        return new AttributeInfo(currentAttribute, jpaAttribute, mapping, subviewPrefixParts, foundEntityAttribute);
     }
 
-    private static String getPrefixedExpression(String subviewPrefix, String mappingExpression) {
-        if (subviewPrefix != null && subviewPrefix.length() > 0) {
-            StringBuilder sb = new StringBuilder(subviewPrefix.length() + mappingExpression.length());
-            sb.append(subviewPrefix);
-            sb.append(mappingExpression);
-            return sb.toString();
+    private static String getPrefixedExpression(EntityViewManagerImpl evm, List<String> subviewPrefixParts, String mappingExpression) {
+        if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
+            Expression expr = evm.getExpressionFactory().createSimpleExpression(mappingExpression);
+            expr.accept(new SubviewPrefixExpressionVisitor(subviewPrefixParts));
+            return expr.toString();
         }
         
         return mappingExpression;
@@ -343,14 +337,14 @@ public final class EntityViewSettingHelper {
         private final MethodAttribute<?, ?> attribute;
         private final Attribute<?, ?> jpaAttribute;
         private final Object mapping;
-        private final String subviewPrefix;
+        private final List<String> subviewPrefixParts;
         private final boolean entityAttribute;
 
-        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, String subviewPrefix, boolean entityAttribute) {
+        public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, List<String> subviewPrefixParts, boolean entityAttribute) {
             this.attribute = attribute;
             this.jpaAttribute = jpaAttribute;
             this.mapping = mapping;
-            this.subviewPrefix = subviewPrefix;
+            this.subviewPrefixParts = subviewPrefixParts;
             this.entityAttribute = entityAttribute;
         }
 

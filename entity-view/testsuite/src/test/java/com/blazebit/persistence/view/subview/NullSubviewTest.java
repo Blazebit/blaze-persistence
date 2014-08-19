@@ -87,7 +87,7 @@ public class NullSubviewTest extends AbstractEntityViewTest {
         DocumentMasterView res = results.get(0);
         // Doc1
         assertEquals(doc1.getName(), res.getName());
-        assertEquals("pers1", res.getOwner().getName());
+        assertEquals("PERS1", res.getOwner().getName());
         assertEquals(Integer.valueOf(2), res.getContactPersonNumber());
         assertEquals(Integer.valueOf(2), res.getTheContactPersonNumber());
         // Filtered subview
