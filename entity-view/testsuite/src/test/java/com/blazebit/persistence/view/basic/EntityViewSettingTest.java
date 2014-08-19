@@ -103,7 +103,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeSorter("name", Sorters.descending());
         setting.addOptionalParameter("index", 1);
 
-        PaginatedCriteriaBuilder<FilteredDocument> paginatedCb = setting.apply(evm, cb);
+        PaginatedCriteriaBuilder<FilteredDocument> paginatedCb = evm.applySetting(setting, cb);
         PagedList<FilteredDocument> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
@@ -128,7 +128,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
         // Currently we have no way to express what filter should be used when using entity attributes
         try {
-            setting.apply(evm, cb);
+            evm.applySetting(setting, cb);
             Assert.fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException ex) {
             // Ok

@@ -20,6 +20,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.filter.ContainsFilter;
 import com.blazebit.persistence.view.filter.ContainsIgnoreCaseFilter;
@@ -85,6 +86,17 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
+    public <T, Q extends QueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
+        return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
+    }
+    
+    /**
+     * Creates a new filter instance of the given filter class.
+     *
+     * @param <T>         The filter type
+     * @param filterClass The filter class
+     * @return An instance of the given filter class
+     */
     public <T extends ViewFilterProvider> T createViewFilter(Class<T> filterClass) {
         try {
             return filterClass.newInstance();
@@ -93,7 +105,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
     }
 
-    @Override
+    /**
+     * Creates a new filter instance of the given filter class. If the filter class is a registered placeholder, the real
+     * implementation will be resolved and instantiated.
+     *
+     * This method tries to instantiate an object by invoking one of the allowed constructors as defined in {@link AttributeFilterProvider}
+     *
+     * @param <T>          The filter type
+     * @param filterClass  The filter class or a filter placeholder
+     * @param expectedType The expected type of the argument into which it should be converted to
+     * @param argument     The filter argument which is passed to the filter constructor
+     * @return An instance of the given filter class
+     */
     public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
         Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
 

@@ -103,7 +103,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeSorter("owner.name", Sorters.descending());
         setting.addOptionalParameter("contactPersonNumber", 1);
 
-        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = setting.apply(evm, cb);
+        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = evm.applySetting(setting, cb);
         PagedList<DocumentMasterView> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
@@ -131,7 +131,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeSorter("myContactPerson.name", Sorters.descending());
         setting.addOptionalParameter("contactPersonNumber", 1);
 
-        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = setting.apply(evm, cb);
+        PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = evm.applySetting(setting, cb);
         PagedList<DocumentMasterView> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
