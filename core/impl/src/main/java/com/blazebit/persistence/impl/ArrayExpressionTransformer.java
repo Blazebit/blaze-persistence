@@ -69,7 +69,8 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
         int loopEndIndex = 0;
         if (path.getBaseNode() != null) {
             // do not transform external paths
-            if (path.getBaseNode().getAliasInfo().getAliasOwner() != aliasOwner) {
+            JoinNode baseNode = (JoinNode) path.getBaseNode();
+            if (baseNode.getAliasInfo().getAliasOwner() != aliasOwner) {
                 if(parentTransformer == null){
                     throw new IllegalStateException("Could not transform array expression [" + path.toString() + "] with unknown alias owner");
                 }else{
@@ -77,7 +78,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                 }
             }
 
-            absBasePath = path.getBaseNode().getAliasInfo().getAbsolutePath();
+            absBasePath = baseNode.getAliasInfo().getAbsolutePath();
 
             if (path.getField() != null) {
                 absBasePath += "." + path.getField();

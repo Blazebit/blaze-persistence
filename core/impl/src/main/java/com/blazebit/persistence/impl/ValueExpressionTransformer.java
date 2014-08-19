@@ -62,7 +62,7 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
         PathExpression deepPath; // deepPath != path in case path is an alias
         PathExpression path = deepPath = (PathExpression) original;
 
-        if (path.isIsCollectionKeyPath() || path.isUsedInCollectionFunction()) {
+        if (path.isCollectionKeyPath() || path.isUsedInCollectionFunction()) {
             return path;
         }
 
@@ -75,7 +75,8 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
             return original;
         }
         String collectionValueFunction;
-        if (deepPath.getBaseNode().isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null) {
+        JoinNode baseNode = (JoinNode) deepPath.getBaseNode();
+        if (baseNode.isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null) {
             if (!transformedExpressions.contains(path)) {
                 List<Expression> transformedExpr = new ArrayList<Expression>();
                 transformedExpr.add(new FooExpression(collectionValueFunction + "("));

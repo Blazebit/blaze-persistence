@@ -16,7 +16,6 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;

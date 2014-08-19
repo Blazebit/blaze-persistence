@@ -44,7 +44,7 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
         } else {
             // check if this path is invalid
             if (inSubquery) {
-                JoinNode joinNode = expression.getBaseNode();
+                JoinNode joinNode = (JoinNode) expression.getBaseNode();
                 if (joinNode != null) {
                     if (joinNode.getAliasInfo().getAliasOwner() == aliasOwner) {
                         int pathElemStart = 0;

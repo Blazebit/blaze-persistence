@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.JoinNode;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,10 +28,11 @@ import java.util.List;
 public class PathExpression implements Expression, Cloneable {
 
     private final List<PathElementExpression> pathProperties;
-    private JoinNode baseNode;
+    // Although this node will always be a JoinNode we will use casting at use site to be able to reuse the parser
+    private Object baseNode;
     private String field;
     private boolean usedInCollectionFunction = false;
-    private final boolean isCollectionKeyPath;
+    private final boolean collectionKeyPath;
 
     public PathExpression() {
         this(new ArrayList<PathElementExpression>(), false);
@@ -44,7 +44,7 @@ public class PathExpression implements Expression, Cloneable {
 
     public PathExpression(List<PathElementExpression> pathProperties, boolean isCollectionKeyPath) {
         this.pathProperties = pathProperties;
-        this.isCollectionKeyPath = isCollectionKeyPath;
+        this.collectionKeyPath = isCollectionKeyPath;
     }
 
     @Override
@@ -56,11 +56,11 @@ public class PathExpression implements Expression, Cloneable {
         return pathProperties;
     }
 
-    public JoinNode getBaseNode() {
+    public Object getBaseNode() {
         return baseNode;
     }
 
-    public void setBaseNode(JoinNode baseNode) {
+    public void setBaseNode(Object baseNode) {
         this.baseNode = baseNode;
     }
 
@@ -96,8 +96,8 @@ public class PathExpression implements Expression, Cloneable {
         return sb.toString();
     }
 
-    public boolean isIsCollectionKeyPath() {
-        return isCollectionKeyPath;
+    public boolean isCollectionKeyPath() {
+        return collectionKeyPath;
     }
 
     @Override

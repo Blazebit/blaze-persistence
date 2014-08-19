@@ -17,6 +17,7 @@
 
     <modules>
         <module>api</module>
+        <module>parser</module>
         <module>impl</module>
         <module>testsuite</module>
     </modules>

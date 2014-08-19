@@ -20,7 +20,6 @@ import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionUtils;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -298,7 +297,8 @@ public class QueryGenerator extends VisitorAdapter {
     public void visit(PathExpression expression) {
         if (replaceSelectAliases) {
             if (expression.getBaseNode() != null) {
-                String absPath = expression.getBaseNode().getAliasInfo().getAbsolutePath();
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+                String absPath = baseNode.getAliasInfo().getAbsolutePath();
                 if (absPath.isEmpty()) {
                     absPath = expression.getField();
                 } else {
@@ -330,9 +330,11 @@ public class QueryGenerator extends VisitorAdapter {
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());
         } else if (expression.getField() == null) {
-            sb.append(expression.getBaseNode().getAliasInfo().getAlias());
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+            sb.append(baseNode.getAliasInfo().getAlias());
         } else {
-            sb.append(expression.getBaseNode().getAliasInfo().getAlias())
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+            sb.append(baseNode.getAliasInfo().getAlias())
                 .append(".")
                 .append(expression.getField());
         }
@@ -358,11 +360,12 @@ public class QueryGenerator extends VisitorAdapter {
     }
 
     private void wrapNonSubquery(Expression p, StringBuilder sb) {
-        if (!(p instanceof SubqueryExpression)) {
+        boolean isNotSubquery = !(p instanceof SubqueryExpression);
+        if (isNotSubquery) {
             sb.append("(");
         }
         p.accept(this);
-        if (!(p instanceof SubqueryExpression)) {
+        if (isNotSubquery) {
             sb.append(")");
         }
     }

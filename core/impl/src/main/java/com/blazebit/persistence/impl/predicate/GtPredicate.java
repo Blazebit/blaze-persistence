@@ -15,12 +15,9 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.SubqueryBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 
 /**
  *

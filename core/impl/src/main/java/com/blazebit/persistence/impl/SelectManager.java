@@ -236,7 +236,8 @@ public class SelectManager<T> extends AbstractManager {
                 Expression selectExpr = selectInfo.getExpression();
                 if (selectExpr instanceof PathExpression) {
                     PathExpression pathExpr = (PathExpression) selectExpr;
-                    String absPath = pathExpr.getBaseNode().getAliasInfo().getAbsolutePath();
+                    JoinNode baseNode = (JoinNode) pathExpr.getBaseNode();
+                    String absPath = baseNode.getAliasInfo().getAbsolutePath();
                     if (absPath.isEmpty()) {
                         // if the absPath is empty the pathExpr is relative to the root and we
                         // must not insert any select info for this
