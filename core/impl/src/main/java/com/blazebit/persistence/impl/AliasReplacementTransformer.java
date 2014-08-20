@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -21,9 +20,11 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
 public class AliasReplacementTransformer implements ExpressionTransformer {
+
     private final Expression substitute;
     private final String alias;
 
@@ -31,12 +32,12 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
         this.substitute = substitute;
         this.alias = alias;
     }
-    
+
     @Override
     public Expression transform(Expression original) {
-        if(original instanceof PathExpression){
+        if (original instanceof PathExpression) {
             PathExpression originalPathExpr = (PathExpression) original;
-            if(originalPathExpr.toString().equals(alias)){
+            if (originalPathExpr.toString().equals(alias)) {
                 return substitute;
             }
         }
@@ -47,5 +48,5 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
     public Expression transform(Expression original, boolean selectClause) {
         return transform(original);
     }
-    
+
 }

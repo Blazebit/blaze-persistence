@@ -16,11 +16,11 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**

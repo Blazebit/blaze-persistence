@@ -52,7 +52,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> eq();
-    
+
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the EQ predicate that can be used to apply quantors.
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
@@ -89,7 +89,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> notEq();
-    
+
     /**
      * Like {@link RestrictionBuilder#eq(java.lang.String,java.lang.String) } but the result is wrapped in a NOT predicate.
      *
@@ -121,7 +121,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> gt();
-    
+
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the GT predicate that can be used to apply quantors.
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
@@ -158,7 +158,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> ge();
-    
+
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the GE predicate that can be used to apply quantors.
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
@@ -195,7 +195,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> lt();
-    
+
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the LT predicate that can be used to apply quantors.
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
@@ -232,7 +232,7 @@ public interface RestrictionBuilder<T> {
      * @return The quantifiable binary predicate builder
      */
     public QuantifiableBinaryPredicateBuilder<T> le();
-    
+
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the LE predicate that can be used to apply quantors.
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.

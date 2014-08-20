@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence;
 
 import java.io.Serializable;
@@ -26,11 +25,11 @@ import java.io.Serializable;
  * @since 1.0
  */
 public interface KeySet extends Serializable {
-    
+
     /**
      * Returns the position of the first result, numbered from 0.
      * This is the position which was passed into {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)}.
-     * 
+     *
      * @return The position of the first result
      */
     public int getFirstResult();
@@ -38,21 +37,21 @@ public interface KeySet extends Serializable {
     /**
      * Returns the maximum number of results.
      * This is the maximum number which was passed into {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)}.
-     * 
+     *
      * @return The maximum number of results
      */
     public int getMaxResults();
 
     /**
      * Returns the key set tuple for the lowest entry of the corresponding {@link PagedList}.
-     * 
+     *
      * @return The key set tuple for the lowest entry
      */
     public Serializable[] getLowest();
 
     /**
      * Returns the key set tuple for the highest entry of the corresponding {@link PagedList}.
-     * 
+     *
      * @return The key set tuple for the highest entry
      */
     public Serializable[] getHighest();

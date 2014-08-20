@@ -32,13 +32,13 @@ public interface PagedList<T> extends List<T> {
      * @return The total size
      */
     public long totalSize();
-    
+
     /**
      * Returns the key set for this paged list which can be used for key set pagination.
      * The key set may be null if key set pagination wasn't used.
-     * 
-     * @see QueryBuilder#page(com.blazebit.persistence.KeySet, int, int) 
-     * @return 
+     *
+     * @see QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)
+     * @return
      */
     public KeySet getKeySet();
 }

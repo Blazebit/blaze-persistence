@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
@@ -24,7 +25,6 @@ import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**

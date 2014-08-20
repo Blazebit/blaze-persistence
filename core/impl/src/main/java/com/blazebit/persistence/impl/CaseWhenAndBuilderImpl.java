@@ -19,6 +19,7 @@ import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
@@ -42,8 +43,8 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
 
     @Override
     public RestrictionBuilder<CaseWhenAndBuilder<T>> and(String expression) {
-        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expressionFactory.createSimpleExpression(expression), subqueryInitFactory,
-                                                                              expressionFactory, false));
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expr, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override

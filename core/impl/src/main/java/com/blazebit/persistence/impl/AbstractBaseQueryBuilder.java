@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -28,6 +27,7 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
 import java.util.List;
@@ -122,10 +122,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(),
-                parentJoinManager);
+                                           parentJoinManager);
 
         ArrayExpressionTransformer arrayExpressionTransformer = new ArrayExpressionTransformer(joinManager, this, parentArrayExpressionTransformer);
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(), arrayExpressionTransformer);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(),
+                                                                arrayExpressionTransformer);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -140,7 +141,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), arrayExpressionTransformer, new ValueExpressionTransformer(jpaInfo));
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager)/* , arrayExpressionTransformer */,
+                                          new ValueExpressionTransformer(jpaInfo));
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -405,14 +407,15 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public X join(String path, String alias, JoinType type) {
         checkJoinPreconditions(path, alias, type);
-        joinManager.join(path, alias, type, false);
+        joinManager.join(path, alias, type, false, false);
         return (X) this;
     }
 
     @Override
     public X joinDefault(String path, String alias, JoinType type) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        checkJoinPreconditions(path, alias, type);
+        joinManager.join(path, alias, type, false, true);
+        return (X) this;
     }
 
     @Override
@@ -453,7 +456,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     protected void applyImplicitJoins() {
-        final JoinVisitor joinVisitor = new JoinVisitor(joinManager, selectManager);
+        final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
         joinManager.acceptVisitor(joinVisitor);
         // carry out implicit joins
         joinVisitor.setFromSelect(true);
@@ -532,9 +535,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
-                .append(fromClazz.getSimpleName())
-                .append(' ')
-                .append(joinManager.getRootAlias());
+            .append(fromClazz.getSimpleName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
 
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
@@ -547,10 +550,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
          * generated before the joins of the parent query are printed which is
          * necessary for the OUTER() functions in subqueries to take effect.
          */
-        StringBuilder sbJoin = new StringBuilder();
-        joinManager.buildJoins(true, sbJoin);
-
-        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
+        joinManager.buildJoins(sbSelectFrom, true);
+        return sbSelectFrom.append(sbRemaining).toString();
     }
 
     protected void transformQuery(TypedQuery<T> query) {

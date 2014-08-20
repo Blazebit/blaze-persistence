@@ -31,4 +31,26 @@ public abstract class MultinaryPredicate implements Predicate {
     public List<Predicate> getChildren() {
         return children;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 17 * hash + (this.children != null ? this.children.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final MultinaryPredicate other = (MultinaryPredicate) obj;
+        if (this.children != other.children && (this.children == null || !this.children.equals(other.children))) {
+            return false;
+        }
+        return true;
+    }
 }

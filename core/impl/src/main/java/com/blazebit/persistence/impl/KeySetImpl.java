@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.KeySet;
 import java.io.Serializable;
 
 /**
- * TODO: javadoc
  *
  * @author Christian Beikov
  * @since 1.0
  */
 public class KeySetImpl implements KeySet {
-    
+
     private final int firstResult;
     private final int maxResults;
     private final String[] orderByExpressions;

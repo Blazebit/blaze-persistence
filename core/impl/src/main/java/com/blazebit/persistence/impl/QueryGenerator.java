@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.SelectManager.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -44,6 +43,7 @@ import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *
@@ -331,10 +331,10 @@ public class QueryGenerator extends VisitorAdapter {
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());
         } else if (expression.getField() == null) {
-                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+            JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias());
         } else {
-                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+            JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias())
                 .append(".")
                 .append(expression.getField());

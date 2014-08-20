@@ -18,8 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Workflow;
 import java.util.Locale;
 import javax.persistence.Tuple;
-import static org.junit.Assert.*;
-import org.junit.Ignore;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
@@ -27,7 +26,6 @@ import org.junit.Test;
  * @author Christian Beikov
  * @since 1.0
  */
-@Ignore
 public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
 
     @Override
@@ -41,9 +39,9 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     public void testCaseWhenBooleanExpressionSelect() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
                 .select("CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END");
-        String expectedQuery = "SELECT CASE WHEN localized_locale.name IS NULL THEN localized_defaultLanguage ELSE localized_locale END FROM Workflow workflow"
+        String expectedQuery = "SELECT CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + " LEFT JOIN workflow.localized localized_defaultLanguage " + ON_CLAUSE + " KEY(localized_defaultLanguage) = workflow.defaultLanguage";
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage) = workflow.defaultLanguage";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -51,21 +49,13 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     
     @Test
     public void testCaseWhenWithFunctionsInSelectAndLiterals() {
-        String q = 
-                "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale.name IS NULL THEN localized_defaultLanguage ELSE localized_locale END,' - '),0,20)"
-                + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + " LEFT JOIN workflow.localized localized_defaultLanguage " + ON_CLAUSE + " KEY(localized_defaultLanguage) = workflow.defaultLanguage";
-        em.createQuery(q)
-                .setParameter("locale", Locale.GERMAN)
-                .getResultList();
         CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
                 .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END,' - '),0,20)");
         String expectedQuery = 
-                "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale.name IS NULL THEN localized_defaultLanguage ELSE localized_locale END,' - '),0,20)"
+                "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END,' - '),0,20)"
                 + " FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + " LEFT JOIN workflow.localized localized_defaultLanguage " + ON_CLAUSE + " KEY(localized_defaultLanguage) = workflow.defaultLanguage";
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage) = workflow.defaultLanguage";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();

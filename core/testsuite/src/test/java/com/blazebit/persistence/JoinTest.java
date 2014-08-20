@@ -16,9 +16,9 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import javax.persistence.Tuple;
+import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
 /**
@@ -66,8 +66,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.leftJoinFetch("owner", "o");
         criteria.leftJoinFetch("versions", "v");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.owner o LEFT JOIN FETCH d.versions v", criteria
-                     .getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.owner o LEFT JOIN FETCH d.versions v", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -129,9 +128,9 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testNestedLeftJoinBeforeRightJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.join("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
-        criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
-        criteria.join("owner", "o", JoinType.INNER, true);
+        criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
+        criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
+        criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
             "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
@@ -142,9 +141,9 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testNestedRightJoinBeforeLeftJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.join("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
-        criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
-        criteria.join("owner", "o", JoinType.INNER, true);
+        criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
+        criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
+        criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
             "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
@@ -155,9 +154,9 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testNestedLeftJoinAfterRightJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
-        criteria.join("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
-        criteria.join("owner", "o", JoinType.INNER, true);
+        criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
+        criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
+        criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
             "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
@@ -168,9 +167,9 @@ public class JoinTest extends AbstractCoreTest {
     @Test
     public void testNestedRightJoinAfterLeftJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.join("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
-        criteria.join("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
-        criteria.join("owner", "o", JoinType.INNER, true);
+        criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
+        criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
+        criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
             "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",

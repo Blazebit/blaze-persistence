@@ -48,4 +48,30 @@ public abstract class BinaryExpressionPredicate implements Predicate {
     public void setRight(Expression right) {
         this.right = right;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 17 * hash + (this.left != null ? this.left.hashCode() : 0);
+        hash = 17 * hash + (this.right != null ? this.right.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BinaryExpressionPredicate other = (BinaryExpressionPredicate) obj;
+        if (this.left != other.left && (this.left == null || !this.left.equals(other.left))) {
+            return false;
+        }
+        if (this.right != other.right && (this.right == null || !this.right.equals(other.right))) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -15,8 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *

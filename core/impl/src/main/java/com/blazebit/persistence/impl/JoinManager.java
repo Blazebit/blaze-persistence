@@ -22,16 +22,24 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.Predicate.Visitor;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 /**
@@ -61,23 +69,24 @@ public class JoinManager extends AbstractManager {
     private SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
-    public static enum JoinClauseBuildMode {
+    private static enum JoinClauseBuildMode {
 
         NORMAL,
         COUNT,
         ID
     };
 
-    public JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
+    JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
         if (rootAlias == null) {
             rootAlias = aliasManager.generatePostfixedAlias(clazz.getSimpleName().toLowerCase());
         }
-        this.rootAliasInfo = new JoinAliasInfo(rootAlias, "", true, aliasOwner);
+        this.rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasOwner);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(this.rootAliasInfo);
 
-        this.rootNode = new JoinNode(rootAliasInfo, null, false, null, false);
+        this.rootNode = new JoinNode(null, rootAliasInfo, null, clazz, false);
+        this.rootAliasInfo.setJoinNode(rootNode);
         this.clazz = clazz;
         this.aliasManager = aliasManager;
         this.aliasOwner = aliasOwner;
@@ -93,7 +102,15 @@ public class JoinManager extends AbstractManager {
         return rootAliasInfo.getAlias();
     }
 
-    void buildJoins(boolean includeSelect, StringBuilder sb) {
+    JoinManager getParent() {
+        return parent;
+    }
+
+    void setSubqueryInitFactory(SubqueryInitiatorFactory subqueryInitFactory) {
+        this.subqueryInitFactory = subqueryInitFactory;
+    }
+
+    void buildJoins(StringBuilder sb, boolean includeSelect) {
         applyJoins(sb, rootAliasInfo, rootNode.getNodes(), includeSelect);
     }
 
@@ -102,55 +119,47 @@ public class JoinManager extends AbstractManager {
     }
 
     void acceptVisitor(Visitor v) {
-        acceptVisitorRecursive(v, rootNode);
+        rootNode.accept(v);
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
-        Visitor transformationVisitor = new PredicateManager.TransformationVisitor(transformer);
-        acceptVisitorRecursive(transformationVisitor, rootNode);
+        rootNode.accept(new PredicateManager.TransformationVisitor(transformer));
     }
 
-    private void acceptVisitorRecursive(Visitor visitor, JoinNode node) {
-        if (node.getWithPredicate() != null) {
-
-            node.getWithPredicate().accept(visitor);
-        }
-        for (JoinNode child : node.getNodes().values()) {
-            acceptVisitorRecursive(visitor, child);
-        }
-    }
-
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinNode> nodes, boolean includeSelect) {
-        for (Map.Entry<String, JoinNode> nodeEntry : nodes.entrySet()) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, boolean includeSelect) {
+        for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             String relation = nodeEntry.getKey();
-            JoinNode node = nodeEntry.getValue();
-            if (includeSelect == false && node.isSelectOnly() == true) {
-                continue;
-            }
+            JoinTreeNode treeNode = nodeEntry.getValue();
 
-            switch (node.getType()) {
-                case INNER:
-                    sb.append(" JOIN ");
-                    break;
-                case LEFT:
-                    sb.append(" LEFT JOIN ");
-                    break;
-                case RIGHT:
-                    sb.append(" RIGHT JOIN ");
-                    break;
-            }
-            if (node.isFetch()) {
-                sb.append("FETCH ");
-            }
-            sb.append(joinBase.getAlias()).append('.').append(relation).append(' ').append(node.getAliasInfo().getAlias());
+            for (JoinNode node : treeNode.getJoinNodes().values()) {
+                if (includeSelect == false && node.isSelectOnly() == true) {
+                    continue;
+                }
 
-            if (node.getWithPredicate() != null) {
-                sb.append(joinRestrictionKeyword);
-                queryGenerator.setQueryBuffer(sb);
-                node.getWithPredicate().accept(queryGenerator);
-            }
-            if (!node.getNodes().isEmpty()) {
-                applyJoins(sb, node.getAliasInfo(), node.getNodes(), includeSelect);
+                switch (node.getType()) {
+                    case INNER:
+                        sb.append(" JOIN ");
+                        break;
+                    case LEFT:
+                        sb.append(" LEFT JOIN ");
+                        break;
+                    case RIGHT:
+                        sb.append(" RIGHT JOIN ");
+                        break;
+                }
+                if (node.isFetch()) {
+                    sb.append("FETCH ");
+                }
+                sb.append(joinBase.getAlias()).append('.').append(relation).append(' ').append(node.getAliasInfo().getAlias());
+
+                if (node.getWithPredicate() != null && !node.getWithPredicate().getChildren().isEmpty()) {
+                    sb.append(joinRestrictionKeyword);
+                    queryGenerator.setQueryBuffer(sb);
+                    node.getWithPredicate().accept(queryGenerator);
+                }
+                if (!node.getNodes().isEmpty()) {
+                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), includeSelect);
+                }
             }
         }
     }
@@ -179,7 +188,6 @@ public class JoinManager extends AbstractManager {
 
             // the alias is external so we do not have to treat it
             return true;
-
         } else if (aliasInfo.getAliasOwner() == aliasOwner) {
             // the alias originates from the current query builder an is therefore not external
             return false;
@@ -217,89 +225,62 @@ public class JoinManager extends AbstractManager {
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type) {
-        joinOnBuilderListener.joinNode = join(path, alias, type, false);
+        joinOnBuilderListener.joinNode = join(path, alias, type, false, false);
         return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
-    JoinNode join(String path, String alias, JoinType type, boolean fetch) {
+    JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
         Expression expr = expressionFactory.createSimpleExpression(path);
-        PathExpression pathExpr;
+        PathExpression pathExpression;
         if (expr instanceof PathExpression) {
-            pathExpr = (PathExpression) expr;
+            pathExpression = (PathExpression) expr;
         } else {
             throw new IllegalArgumentException("Join path [" + path + "] is not a path");
         }
 
-        if (isExternal(pathExpr) || isSkipableSelectAlias(path, false, false)) {
+        if (isExternal(pathExpression) || isSkipableSelectAlias(path, false, false)) {
             throw new IllegalArgumentException("No external path or select alias allowed in join path");
         }
-        String normalizedPath = normalizePath(path);
+
+        JoinNode current;
+
         if (startsAtRootAlias(path)) {
-            // The given path is relative to the root
-            return createOrUpdateNode(rootNode, "", normalizedPath, alias, null, type, fetch, false, true);
+            current = implicitJoin(rootNode, pathExpression, false, 1);
         } else {
-            // The path is either already normalized or uses a specific alias as base
-            int dotIndex;
-            if ((dotIndex = normalizedPath.indexOf('.')) != -1) {
-                // We found a dot in the path, so it either uses an alias or does chained joining
-                String potentialBase = normalizedPath.substring(0, dotIndex);
-                AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialBase);
-                if (aliasInfo instanceof SelectManager.SelectInfo) {
-                    throw new RuntimeException("Cannot dereference select alias");
-                }
-                JoinAliasInfo potentialBaseInfo = (JoinAliasInfo) aliasInfo;
-                if (potentialBaseInfo != null) {
-                    // We found an alias for the first part of the path
-                    String potentialBasePath = potentialBaseInfo.getAbsolutePath();
-                    JoinNode aliasNode = findNode(rootNode, potentialBasePath);
-                    String relativePath = normalizedPath.substring(dotIndex + 1);
-                    //                    normalizedPath = potentialBasePath + '.' + relativePath;
-                    JoinNode result = createOrUpdateNode(aliasNode, potentialBasePath, relativePath, alias, null, type, fetch, false, true);
-                    //if fetch is true we have to fetch the whole path from aliasNode back to the root
-                    if (fetch) {
-                        fetchPath(rootNode, potentialBasePath);
-                    }
-                    return result;
-                } else {
-                    // The given path is relative to the root
-                    return createOrUpdateNode(rootNode, "", normalizedPath, alias, null, type, fetch, false, true);
-                }
-            } else {
-                // The given path is relative to the root
-                return createOrUpdateNode(rootNode, "", normalizedPath, alias, null, type, fetch, false, true);
-            }
+            current = implicitJoin(null, pathExpression, false, 0);
         }
-    }
 
-    public JoinManager getParent() {
-        return parent;
-    }
+        List<PathElementExpression> pathElements = pathExpression.getExpressions();
+        PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
 
-    private String[] separateLastPathElement(String path) {
-        int lastDotIndex;
-        String[] result = new String[2];
-        if ((lastDotIndex = path.lastIndexOf('.')) != -1) {
-            result[0] = path.substring(0, lastDotIndex);
-            result[1] = path.substring(lastDotIndex + 1);
-            return result;
+        if (elementExpr instanceof ArrayExpression) {
+            throw new IllegalArgumentException("Array expressions are not allowed!");
+        } else {
+            current = current == null ? rootNode : current;
+            current = createOrUpdateNode(current, elementExpr.toString(), alias, type, false, true, defaultJoin);
         }
-        return null;
+
+        if (fetch) {
+            fetchPath(current);
+        }
+
+        return current;
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery) {
+    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery, boolean fromSelectAlias) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
             String path = pathExpression.getPath();
-            String normalizedPath = normalizePath(path);
 
+            // TODO: no clue about the purpose of this section
             if (isSkipableSelectAlias(path, fromSelect, fromSubquery)) {
                 Expression expr = ((SelectManager.SelectInfo) aliasManager.getAliasInfo(path)).getExpression();
 
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
-                if (!expr.toString().equals(path)) {
+                if (!fromSelectAlias) {
                     // we have to do this implicit join because we might have to adjust the selectOnly flag in the referenced join nodes
-                    implicitJoin(expr, true, fromSelect, fromSubquery);
+                    implicitJoin(expr, true, fromSelect, fromSubquery, true);
                 }
                 return;
             } else if (isExternal(pathExpression)) {
@@ -307,299 +288,372 @@ public class JoinManager extends AbstractManager {
                 // try to set base node and field for the external expression based
                 // on existing joins in the super query
                 //TODO: the usage of fromSelect might not be correct here    
-                parent.implicitJoin(pathExpression, true, fromSelect, true);
+                parent.implicitJoin(pathExpression, true, fromSelect, true, fromSelectAlias);
                 return;
             }
 
-            JoinResult result = implicitJoin(normalizedPath, objectLeafAllowed, fromSelect);
-
-            if (pathExpression.isUsedInCollectionFunction() && result.field == null) {
-                // we have to reset the field and the base node
-                String absPath = result.baseNode.getAliasInfo().getAbsolutePath();
-
-                String[] pathField;
-                if ((pathField = separateLastPathElement(absPath)) == null) {
-                    result = new JoinResult(rootNode, absPath);
-                } else {
-                    JoinNode newBaseNode = findNode(pathField[0]);
-                    result = new JoinResult(newBaseNode, pathField[1]);
-                }
-            }
-            pathExpression.setBaseNode(result.baseNode);
-            pathExpression.setField(result.field);
-            //also do implicit joins for array indices
+            // First try to implicit join indices of array expressions since we will need their base nodes
             for (PathElementExpression pathElem : pathExpression.getExpressions()) {
                 if (pathElem instanceof ArrayExpression) {
-                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromSelect, fromSubquery);
+                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromSelect, fromSubquery, fromSelectAlias);
                 }
             }
+
+            JoinNode current = implicitJoin(null, pathExpression, fromSelect, 0);
+            // current might be null if pathExpression.size() == 1
+            current = current == null ? rootNode : current;
+
+            JoinResult result;
+            AliasInfo aliasInfo;
+            List<PathElementExpression> pathElements = pathExpression.getExpressions();
+            PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
+
+            if (elementExpr instanceof ArrayExpression) {
+                ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
+                String joinRelationName = arrayExpr.getBase().toString();
+
+                // Find a node by a predicate match
+                JoinNode matchingNode;
+
+                if (pathElements.size() == 1 && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(joinRelationName)) != null) {
+                    // The first node is allowed to be a join alias
+                    if (aliasInfo instanceof SelectManager.SelectInfo) {
+                        throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
+                    }
+                    current = ((JoinAliasInfo) aliasInfo).getJoinNode();
+                    applyWithPredicate(current, arrayExpr);
+
+                    // Don't forget to update the fromSelect!!
+                    if (!fromSelect) {
+                        setSelectOnlyFalse(current);
+                        current.setSelectOnly(false);
+                    }
+                } else if ((matchingNode = findNode(current, joinRelationName, arrayExpr)) != null) {
+                    // We found a join node for the same join relation with the same array expression predicate
+                    current = matchingNode;
+
+                    // Don't forget to update the fromSelect!!
+                    if (!fromSelect) {
+                        setSelectOnlyFalse(current);
+                        current.setSelectOnly(false);
+                    }
+                } else {
+                    String joinAlias = getJoinAlias(arrayExpr);
+                    current = createOrUpdateNode(current, joinRelationName, joinAlias, null, true, fromSelect, false);
+                    applyWithPredicate(current, arrayExpr);
+                }
+
+                result = new JoinResult(current, null);
+            } else if (pathElements.size() == 1 && !fromSelectAlias && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(elementExpr.toString())) != null) {
+                if (aliasInfo instanceof SelectManager.SelectInfo) {
+                    // We actually allow usage of select aliases in expressions, but JPA doesn't, so we have to resolve them here
+                    Expression selectExpr = ((SelectManager.SelectInfo) aliasInfo).getExpression();
+
+                    if (!(selectExpr instanceof PathExpression)) {
+                        throw new RuntimeException("The select expression '" + selectExpr.toString() + "' is not a simple path expression! No idea how to implicit join that.");
+                    }
+
+                    implicitJoin(selectExpr, objectLeafAllowed, fromSelect, fromSubquery, true);
+                    PathExpression selectPathExpr = (PathExpression) selectExpr;
+                    result = new JoinResult((JoinNode) selectPathExpr.getBaseNode(), selectPathExpr.getField());
+                } else {
+                    // Naked join alias usage like in "KEY(joinAlias)"
+                    current = ((JoinAliasInfo) aliasInfo).getJoinNode();
+                    result = new JoinResult(current, null);
+                }
+            } else {
+                result = implicitJoinSingle(current, elementExpr.toString(), objectLeafAllowed, fromSelect);
+            }
+
+            if (pathExpression.isUsedInCollectionFunction() && result.field == null) {
+                // when having collection functions, we need field, using just a join alias is wrong
+                if (elementExpr instanceof ArrayExpression) {
+                    throw new IllegalArgumentException("Array expression in collection function?? Are you crazy?");
+                } else {
+                    result = new JoinResult(result.baseNode.getParent(), elementExpr.toString());
+                }
+            }
+
+            pathExpression.setBaseNode(result.baseNode);
+            pathExpression.setField(result.field);
         } else if (expression instanceof CompositeExpression) {
             for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromSelect, fromSubquery);
+                implicitJoin(exp, objectLeafAllowed, fromSelect, fromSubquery, fromSelectAlias);
             }
         }
     }
 
-    private String normalizePath(String path) {
-        String normalizedPath;
-        if (startsAtRootAlias(path)) {
-            // The given path is relative to the root
-            normalizedPath = path.substring(rootAliasInfo.getAlias().length() + 1);
+    private String getJoinAlias(ArrayExpression expr) {
+        StringBuilder sb = new StringBuilder(expr.getBase().toString());
+        Expression indexExpr = expr.getIndex();
+
+        if (indexExpr instanceof ParameterExpression) {
+            ParameterExpression indexParamExpr = (ParameterExpression) indexExpr;
+            sb.append('_');
+            sb.append(indexParamExpr.getName());
+        } else if (indexExpr instanceof PathExpression) {
+            PathExpression indexPathExpr = (PathExpression) indexExpr;
+            sb.append('_');
+            sb.append(((JoinNode) indexPathExpr.getBaseNode()).getAliasInfo().getAlias());
+
+            if (indexPathExpr.getField() != null) {
+                sb.append('_');
+                sb.append(indexPathExpr.getField());
+            }
         } else {
-            // The path is either already normalized or uses a specific alias as base
-            normalizedPath = path;
+            sb.append('_');
+            sb.append(indexExpr.toString().replaceAll("\\.", "_"));
         }
-        // remove array indices
-        return normalizedPath.replaceAll("\\[[^\\]]+\\]", "");
+
+        return sb.toString();
     }
 
-    JoinResult implicitJoin(String normalizedPath, boolean objectLeafAllowed, boolean fromSelect) {
-        JoinNode baseNode;
-        String field;
-        int dotIndex;
-        String[] pathField = separateLastPathElement(normalizedPath);
-        if (pathField != null) {
-            // First we extract the field by which should be ordered
-            field = pathField[1];
-            String joinPath = pathField[0];
-            JoinAliasInfo potentialBaseInfo;
-            if ((dotIndex = joinPath.indexOf('.')) != -1) {
-                // We found a dot in the path, so it either uses an alias or does chained joining
-                String potentialBase = normalizedPath.substring(0, dotIndex);
-                AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialBase);
-                if (aliasInfo instanceof SelectManager.SelectInfo) {
-                    throw new RuntimeException("Cannot dereference select alias");
-                }
-                potentialBaseInfo = (JoinAliasInfo) aliasInfo;
-            } else {
-                AliasInfo aliasInfo = aliasManager.getAliasInfo(joinPath);
-                if (aliasInfo instanceof SelectManager.SelectInfo) {
-                    throw new RuntimeException("Cannot join select alias");
-                }
-                potentialBaseInfo = (JoinAliasInfo) aliasInfo;
-            }
-            if (potentialBaseInfo != null) {
-                // We found an alias for the first part of the path
-                String potentialBasePath = potentialBaseInfo.getAbsolutePath();
-                JoinNode aliasNode = findNode(rootNode, potentialBasePath);
-                // Note: aliasNode may never be null since a join alias info exists and therefore a join node must exist
-                String relativePath = normalizedPath.substring(aliasNode.getAliasInfo().getAlias().length() + 1);
-                String relativeJoinPath;
+    private Predicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
+        CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
+        keyExpression.getExpressions().add(new FooExpression("KEY("));
 
-                if (relativePath.indexOf('.') == -1) {
-                    // relativePath contains the field only                    
-                    if (objectLeafAllowed) {
-                        // Note: field cannot be null
-                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, field, null, null, null, false, true, fromSelect);
-                        if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
-                            field = null;
-                        }
-                    } else {
-                        // although the join path is empty we need to do the call since we might have to reset the selectOnly flag in the potentialBasePath nodes
-                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, "", null, field, null, false, true, fromSelect);
-                    }
-                } else {
-                    relativeJoinPath = relativePath.substring(0, relativePath.length() - field.length() - 1);
-                    if (objectLeafAllowed) {
-                        // Note: field cannot be null
-                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath + "." + field, null, null, null, false, true, fromSelect);
-                        // if the field is not joinable we must not set the field to null
-                        if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
-                            field = null;
-                        }
-                    } else {
-                        baseNode = createOrUpdateNode(aliasNode, potentialBasePath, relativeJoinPath, null, field, null, false, true, fromSelect);
-                    }
-                }
-            } else {
-                // check if field is joinable
-                // The given path is relative to the root
-                if (objectLeafAllowed) {
-                    // Note: field cannot be null
-                    baseNode = createOrUpdateNode(rootNode, "", joinPath + (!joinPath.isEmpty() ? "." : "") + field, null, null, null, false, true, fromSelect);
-                    // if the field is not joinable we must not set the field to null
-                    if (baseNode.getAliasInfo().getAbsolutePath().endsWith(field)) {
-                        field = null;
-                    }
-                } else {
-                    baseNode = createOrUpdateNode(rootNode, "", joinPath, null, field, null, false, true, fromSelect);
-                }
+        PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
+        keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
+        keyPath.setBaseNode(joinNode);
+        keyExpression.getExpressions().add(keyPath);
+        keyExpression.getExpressions().add(new FooExpression(")"));
+        EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExpr.getIndex());
+        return valueKeyFilterPredicate;
+    }
+
+    private void applyWithPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
+        CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
+        keyExpression.getExpressions().add(new FooExpression("KEY("));
+
+        PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
+        keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
+        keyPath.setBaseNode(joinNode);
+        keyExpression.getExpressions().add(keyPath);
+        keyExpression.getExpressions().add(new FooExpression(")"));
+        EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExpr.getIndex());
+
+        if (joinNode.getWithPredicate() != null) {
+            AndPredicate currentPred = joinNode.getWithPredicate();
+
+            // Only add the predicate if it isn't contained yet
+            if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
+                currentPred.getChildren().add(valueKeyFilterPredicate);
             }
         } else {
-            // The given path may be relative to the root or it might be an alias
-            if (objectLeafAllowed) {
-                AliasInfo aliasInfo = aliasManager.getAliasInfoForBottomLevel(normalizedPath);
-                if (aliasInfo != null) {
+            AndPredicate withAndPredicate = new AndPredicate();
+            withAndPredicate.getChildren().add(valueKeyFilterPredicate);
+            joinNode.setWithPredicate(withAndPredicate);
+        }
+    }
+
+    private JoinNode implicitJoin(JoinNode current, PathExpression pathExpression, boolean fromSelect, int start) {
+        List<PathElementExpression> pathElements = pathExpression.getExpressions();
+        PathElementExpression elementExpr;
+
+        for (int i = start; i < pathElements.size() - 1; i++) {
+            AliasInfo aliasInfo;
+            elementExpr = pathElements.get(i);
+            if (elementExpr instanceof ArrayExpression) {
+                ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
+                String joinRelationName = arrayExpr.getBase().toString();
+
+                current = current == null ? rootNode : current;
+                // Find a node by a predicate match
+                JoinNode matchingNode = findNode(current, joinRelationName, arrayExpr);
+
+                if (matchingNode != null) {
+                    current = matchingNode;
+                } else if (i == start && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(joinRelationName)) != null) {
+                    // The first node is allowed to be a join alias
                     if (aliasInfo instanceof SelectManager.SelectInfo) {
-                        /**
-                         * We have a normalized path consisting of a single
-                         * element that corresponds to a select alias. The
-                         * original path must have started with the root alias,
-                         * otherwise the path would have been filtered by
-                         * isSkipable. Hence, to facilitate the replacement of
-                         * this path with the selectAlias later on we have to
-                         * set the base node.
-                         */
-                        aliasInfo = null;
+                        throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
                     }
-                }
-                JoinAliasInfo alias = (JoinAliasInfo) aliasInfo;
-                if (alias == rootAliasInfo) {
-                    baseNode = rootNode;
-                    field = null;
-                } else if (alias != null) {
-                    baseNode = findNode(rootNode, alias.getAbsolutePath());
-                    field = null;
+                    current = ((JoinAliasInfo) aliasInfo).getJoinNode();
+                    applyWithPredicate(current, arrayExpr);
                 } else {
-                    // check if the path is joinable, assuming it is relative to the root (implicit root prefix)
-                    baseNode = createOrUpdateNode(rootNode, "", normalizedPath, null, null, null, false, true, fromSelect);
-                    // check if the last path element was also joined
-                    if (baseNode.getAliasInfo().getAbsolutePath().endsWith(normalizedPath)) {
-                        field = null;
-                    } else {
-                        field = normalizedPath;
-                    }
+                    String joinAlias = getJoinAlias(arrayExpr);
+                    current = createOrUpdateNode(current, joinRelationName, joinAlias, null, true, fromSelect, false);
+                    applyWithPredicate(current, arrayExpr);
+                }
+            } else if (pathElements.size() == 1 && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(elementExpr.toString())) != null) {
+                if (aliasInfo instanceof SelectManager.SelectInfo) {
+                    throw new IllegalArgumentException("Can't dereference a select alias");
+                } else {
+                    // Join alias usage like in "joinAlias.relationName"
+                    current = ((JoinAliasInfo) aliasInfo).getJoinNode();
                 }
             } else {
-                Attribute attr = metamodel.entity(clazz).getAttribute(normalizedPath);
-                if (attr == null) {
-                    throw new IllegalArgumentException("Field with name "
-                            + normalizedPath + " was not found within class "
-                            + clazz.getName());
-                }
-                if (ModelUtils.isJoinable(attr)) {
-                    throw new IllegalArgumentException("No object leaf allowed but " + normalizedPath + " is an object leaf");
-                }
-                baseNode = rootNode;
-                field = normalizedPath;
+                current = implicitJoinSingle(current, elementExpr.toString(), fromSelect);
             }
         }
-        return new JoinResult(baseNode, field);
+
+        return current;
     }
 
-    protected JoinNode createOrUpdateNode(JoinNode baseNode, String basePath, String joinPath, String alias, String field, JoinType joinType, boolean fetch, boolean implicit, boolean fromSelect) {
-        JoinNode currentNode = baseNode;
-        StringBuilder currentPath = new StringBuilder(basePath);
-        String[] pathElements = (joinPath + (!joinPath.isEmpty() && field != null ? "." : "") + (field == null ? "" : field)).split("\\.");
-
-        if (!fromSelect && !basePath.isEmpty()) {
-            // updated base path nodes
-            baseNode.setSelectOnly(false);
-            if (basePath.contains(".")) {
-                for (String pathElem : basePath.split(".")) {
-                    currentNode = currentNode.getNodes().get(pathElem);
-                    currentNode.setSelectOnly(false);
-                }
-                currentNode = baseNode;
+    private JoinNode implicitJoinSingle(JoinNode baseNode, String attributeName, boolean fromSelect) {
+        if (baseNode == null) {
+            // When no base is given, check if the attribute name is an alias
+            AliasInfo aliasInfo = aliasManager.getAliasInfoForBottomLevel(attributeName);
+            if (aliasInfo != null && aliasInfo instanceof JoinAliasInfo) {
+                // if it is, we can just return the join node
+                return ((JoinAliasInfo) aliasInfo).getJoinNode();
             }
         }
 
-        Class<?> currentClass;
-        if (baseNode.getPropertyClass() == null) {
-            currentClass = clazz;
-        } else {
-            currentClass = baseNode.getPropertyClass();
+        // If we have no base node, root is assumed
+        if (baseNode == null) {
+            baseNode = rootNode;
         }
 
-        // Iterate through all property names
-        for (int j = 0; j < pathElements.length; j++) {
-            String propertyName = pathElements[j];
+        // check if the path is joinable, assuming it is relative to the root (implicit root prefix)
+        return createOrUpdateNode(baseNode, attributeName, null, null, true, fromSelect, true);
+    }
 
-            ManagedType type = metamodel.managedType(currentClass);
-            Attribute attr = type.getAttribute(propertyName);
+    private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName, boolean objectLeafAllowed, boolean fromSelect) {
+        JoinNode newBaseNode;
+        String field;
+        // The given path may be relative to the root or it might be an alias
+        if (objectLeafAllowed) {
+            newBaseNode = implicitJoinSingle(baseNode, attributeName, fromSelect);
+            // check if the last path element was also joined
+            if (newBaseNode != baseNode) {
+                field = null;
+            } else {
+                field = attributeName;
+            }
+        } else {
+            Class baseNodeType = baseNode.getPropertyClass();
+            Attribute attr = metamodel.managedType(baseNodeType).getAttribute(attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
-                        + propertyName + " was not found within class "
-                        + currentClass.getName());
+                    + attributeName + " was not found within class "
+                    + baseNodeType.getName());
             }
-            Class<?> resolvedFieldClass = ModelUtils.resolveFieldClass(attr);
-            // Parseable types do not need to be fetched, so also sub
-            // properties would not have to be fetched
-            // Christian Beikov 14.09.13:
-            // Added check for collection and map types since fieldClass evaluates to V if the field is of type Map<K, V>
-            if (!ModelUtils.isJoinable(attr)) {
-                LOG.fine(new StringBuilder("Field with name ").append(propertyName).append(" of class ").append(currentClass.getName()).append(
-                        " is parseable and therefore it has not to be fetched explicitly.").toString());
-                break;
+            if (isJoinable(attr)) {
+                throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
             }
-
-            currentClass = resolvedFieldClass;
-
-            JoinType modelAwareType;
-            if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE || attr.getPersistentAttributeType()
-                    == Attribute.PersistentAttributeType.ONE_TO_ONE)
-                    && ((SingularAttribute) attr).isOptional() == false) {
-                modelAwareType = JoinType.INNER;
-            } else {
-
-                modelAwareType = JoinType.LEFT;
-            }
-
-            if (j == pathElements.length - 1) {
-                // use parameters for joining the last path property
-                if (alias == null) {
-                    // default alias
-                    alias = propertyName;
-                }
-                if (joinType == null) {
-                    joinType = modelAwareType;
-                }
-                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, alias, joinType, fetch, "Ambiguous implicit join", implicit, attr
-                        .isCollection());
-            } else {
-                currentNode = getOrCreate(currentPath, currentNode, propertyName, resolvedFieldClass, propertyName, modelAwareType, fetch, "Ambiguous implicit join", true, attr
-                        .isCollection());
-            }
-            if (fetch) {
-                currentNode.setFetch(true);
-            }
-            if (!fromSelect) {
-                currentNode.setSelectOnly(false);
-            }
+            newBaseNode = baseNode;
+            field = attributeName;
         }
-        return currentNode;
+        return new JoinResult(newBaseNode, field);
     }
 
-    protected JoinNode getOrCreate(StringBuilder currentPath, JoinNode currentNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, boolean fetch, String errorMessage, boolean implicit, boolean collection) {
-        JoinNode node = currentNode.getNodes().get(joinRelationName);
-        if (currentPath.length() > 0) {
-            currentPath.append('.');
+    private void setSelectOnlyFalse(JoinNode baseNode) {
+        JoinNode current = baseNode;
+        while (current != null) {
+            current.setSelectOnly(false);
+            current = current.getParent();
         }
-        currentPath.append(joinRelationName);
+    }
+
+    private boolean isJoinable(Attribute attr) {
+        return attr.isCollection()
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+    }
+
+    private Class<?> resolveFieldClass(Attribute attr) {
+        if (attr.isCollection()) {
+            return ((PluralAttribute) attr).getElementType().getJavaType();
+        }
+
+        return attr.getJavaType();
+    }
+
+    private JoinType getModelAwareType(Attribute attr) {
+        if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
+            && ((SingularAttribute) attr).isOptional() == false) {
+            return JoinType.INNER;
+        } else {
+            return JoinType.LEFT;
+        }
+    }
+
+    private JoinNode createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean fromSelect, boolean defaultJoin) {
+        if (!fromSelect) {
+            // updated base path nodes
+            setSelectOnlyFalse(baseNode);
+        }
+
+        Class<?> baseNodeType = baseNode.getPropertyClass();
+        ManagedType type = metamodel.managedType(baseNodeType);
+        Attribute attr = type.getAttribute(joinRelationName);
+        if (attr == null) {
+            throw new IllegalArgumentException("Field with name "
+                + joinRelationName + " was not found within class "
+                + baseNodeType.getName());
+        }
+        Class<?> resolvedFieldClass = resolveFieldClass(attr);
+
+        if (!isJoinable(attr)) {
+            LOG.fine(new StringBuilder("Field with name ").append(joinRelationName).append(" of class ").append(baseNodeType.getName()).append(
+                " is parseable and therefore it has not to be fetched explicitly.").toString());
+            return baseNode;
+        }
+
+        if (alias == null) {
+            // default alias
+            alias = joinRelationName;
+        }
+        if (joinType == null) {
+            joinType = getModelAwareType(attr);
+        }
+
+        JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, attr.isCollection(), defaultJoin);
+
+        if (!fromSelect) {
+            newNode.setSelectOnly(false);
+        }
+
+        return newNode;
+    }
+
+    private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
+        AliasInfo oldAliasInfo = aliasManager.getAliasInfoForBottomLevel(alias);
+        if (oldAliasInfo instanceof SelectManager.SelectInfo) {
+            throw new IllegalStateException("Alias [" + oldAliasInfo.getAlias() + "] already used as select alias");
+        }
+        JoinAliasInfo oldJoinAliasInfo = (JoinAliasInfo) oldAliasInfo;
+        if (oldJoinAliasInfo != null) {
+            if (!oldJoinAliasInfo.getAbsolutePath().equals(currentJoinPath)) {
+                throw new IllegalArgumentException(errorMessage);
+            } else {
+                throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath
+                    + "] is available but the join node is not!");
+            }
+        }
+    }
+
+    private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean collection, boolean defaultJoin) {
+        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName);
+        JoinNode node = treeNode.getJoinNode(alias, defaultJoin);
+        String currentJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
         if (node == null) {
             // a join node for the join relation does not yet exist
-            String currentJoinPath = currentPath.toString();
-            AliasInfo oldAliasInfo = aliasManager.getAliasInfoForBottomLevel(alias);
-            if (oldAliasInfo instanceof SelectManager.SelectInfo) {
-                throw new IllegalStateException("Alias [" + oldAliasInfo.getAlias() + "] already used as select alias");
-            }
-            JoinAliasInfo oldJoinAliasInfo = (JoinAliasInfo) oldAliasInfo;
-            if (oldJoinAliasInfo != null) {
-                if (!oldJoinAliasInfo.getAbsolutePath().equals(currentJoinPath)) {
-                    throw new IllegalArgumentException(errorMessage);
-                } else {
-                    throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath
-                            + "] is available but the join node is not!");
-                }
-            }
+            checkAliasIsAvailable(alias, currentJoinPath, errorMessage);
 
-            // we alias might have to be postfixed since it might already exist in parent queries
+            // the alias might have to be postfixed since it might already exist in parent queries
             if (implicit) {
                 alias = aliasManager.generatePostfixedAlias(alias);
             }
+
             JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, aliasOwner);
             aliasManager.registerAliasInfo(newAliasInfo);
-            node = new JoinNode(newAliasInfo, type, fetch, joinRelationClass, collection);
-            currentNode.getNodes().put(joinRelationName, node);
+            node = new JoinNode(baseNode, newAliasInfo, type, joinRelationClass, collection);
+            newAliasInfo.setJoinNode(node);
+            treeNode.addJoinNode(node, defaultJoin);
         } else {
             JoinAliasInfo nodeAliasInfo = node.getAliasInfo();
+
             if (!alias.equals(nodeAliasInfo.getAlias())) {
                 // Aliases for the same join paths don't match
                 if (nodeAliasInfo.isImplicit() && !implicit) {
                     // Overwrite implicit aliases
                     aliasManager.unregisterAliasInfoForBottomLevel(nodeAliasInfo);
-                    // we must alter the nodeAliasInfo instance since this instance
-                    // is also set on the join node
+                    // we must alter the nodeAliasInfo instance since this instance is also set on the join node
+
+                    // TODO: we must update the key for the JoinNode in the respective JoinTreeNode
                     nodeAliasInfo.setAlias(alias);
                     nodeAliasInfo.setImplicit(false);
                     // We can only change the join type if the existing node is implicit and the update on the node is not implicit
@@ -607,25 +661,43 @@ public class JoinManager extends AbstractManager {
 
                     aliasManager.registerAliasInfo(nodeAliasInfo);
                 } else if (!nodeAliasInfo.isImplicit() && !implicit) {
-                    throw new IllegalArgumentException("Alias conflict[" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentPath
-                            .toString() + "]");
+                    throw new IllegalArgumentException("Alias conflict [" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentJoinPath
+                        + "]");
                 }
             }
         }
         return node;
     }
 
-    JoinNode findNode(JoinNode baseNode, String path) {
-        JoinNode currentNode = baseNode;
-        String[] pathElements = path.split("\\.");
-        for (int i = 0; i < pathElements.length; i++) {
-            currentNode = currentNode.getNodes().get(pathElements[i]);
+    private JoinNode findNode(JoinNode baseNode, String joinRelationName, ArrayExpression arrayExpression) {
+        JoinTreeNode treeNode = baseNode.getNodes().get(joinRelationName);
+
+        if (treeNode == null) {
+            return null;
         }
-        return currentNode;
+
+        for (JoinNode node : treeNode.getJoinNodes().values()) {
+            Predicate pred = getArrayExpressionPredicate(node, arrayExpression);
+            AndPredicate andPredicate = node.getWithPredicate();
+
+            if (findPredicate(andPredicate, pred)) {
+                return node;
+            }
+        }
+
+        return null;
     }
 
-    JoinNode findNode(String path) {
-        return findNode(rootNode, path);
+    private boolean findPredicate(AndPredicate andPredicate, Predicate pred) {
+        if (andPredicate != null) {
+            for (Predicate p : andPredicate.getChildren()) {
+                if (p.equals(pred)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private boolean startsAtRootAlias(String path) {
@@ -638,17 +710,12 @@ public class JoinManager extends AbstractManager {
      * @param baseNode
      * @param path
      */
-    private void fetchPath(JoinNode baseNode, String path) {
-        JoinNode currentNode = baseNode;
-        String[] pathElements = path.split("\\.");
-        for (int i = 0; i < pathElements.length; i++) {
-            currentNode = currentNode.getNodes().get(pathElements[i]);
+    private void fetchPath(JoinNode node) {
+        JoinNode currentNode = node;
+        while (currentNode != null) {
             currentNode.setFetch(true);
+            currentNode = currentNode.getParent();
         }
-    }
-
-    public void setSubqueryInitFactory(SubqueryInitiatorFactory subqueryInitFactory) {
-        this.subqueryInitFactory = subqueryInitFactory;
     }
 
     private static class JoinResult {
@@ -669,7 +736,7 @@ public class JoinManager extends AbstractManager {
         @Override
         public void onBuilderEnded(PredicateBuilder builder) {
             super.onBuilderEnded(builder);
-            joinNode.setWithPredicate(builder.getPredicate());
+            joinNode.setWithPredicate((AndPredicate) builder.getPredicate());
         }
     }
 }

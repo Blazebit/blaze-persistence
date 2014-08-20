@@ -186,6 +186,19 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     public X join(String path, String alias, JoinType type, boolean fetch);
 
     /**
+     * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * The resulting join will be the default join meaning that expressions which use the absolute path will refer to this join.
+     * If fetch is set to true, a join fetch will be added.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @param type  The join type
+     * @param fetch True if a join fetch should be added
+     * @return The query builder for chaining calls
+     */
+    public X joinDefault(String path, String alias, JoinType type, boolean fetch);
+
+    /**
      * Adds an implicit join fetch to the query.
      *
      * @param path The path to join fetch
@@ -203,6 +216,15 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     public X innerJoinFetch(String path, String alias);
 
     /**
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#INNER} and fetch set to true.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X innerJoinFetchDefault(String path, String alias);
+
+    /**
      * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#LEFT} and fetch set to true.
      *
      * @param path  The path to join
@@ -212,6 +234,15 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     public X leftJoinFetch(String path, String alias);
 
     /**
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#LEFT} and fetch set to true.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X leftJoinFetchDefault(String path, String alias);
+
+    /**
      * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#RIGHT} and fetch set to true.
      *
      * @param path  The path to join
@@ -219,6 +250,15 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public X rightJoinFetch(String path, String alias);
+
+    /**
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#RIGHT} and fetch set to true.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The query builder for chaining calls
+     */
+    public X rightJoinFetchDefault(String path, String alias);
 
     /*
      * Select methods

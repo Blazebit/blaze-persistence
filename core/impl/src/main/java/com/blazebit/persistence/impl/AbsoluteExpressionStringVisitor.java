@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -32,7 +31,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @since 1.0
  */
 public class AbsoluteExpressionStringVisitor extends ExpressionVisitorAdapter {
-    
+
     private final StringBuilder sb;
     private final String rootAlias;
 
@@ -92,7 +91,7 @@ public class AbsoluteExpressionStringVisitor extends ExpressionVisitorAdapter {
             sb.append('.').append(expression.getField());
         }
     }
-    
+
     private void appendAbsolutePath(JoinNode baseNode) {
         sb.append(rootAlias);
         String absolutePath = baseNode.getAliasInfo().getAbsolutePath();
@@ -100,5 +99,5 @@ public class AbsoluteExpressionStringVisitor extends ExpressionVisitorAdapter {
             sb.append('.').append(absolutePath);
         }
     }
-    
+
 }

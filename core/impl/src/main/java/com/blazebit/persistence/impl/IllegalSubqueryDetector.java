@@ -15,16 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class IllegalSubqueryDetector extends VisitorAdapter {
 
@@ -40,35 +40,20 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
     @Override
     public void visit(PathExpression expression) {
         AliasInfo aliasInfo = aliasManager.getAliasInfo(expression.toString());
+
         if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
             ((SelectManager.SelectInfo) aliasInfo).getExpression().accept(this);
-        } else {
-            // check if this path is invalid
-            if (inSubquery) {
-                JoinNode joinNode = (JoinNode) expression.getBaseNode();
-                if (joinNode != null) {
-                    if (joinNode.getAliasInfo().getAliasOwner() == aliasOwner) {
-                        int pathElemStart = 0;
-                        if(joinNode.getAliasInfo().getAbsolutePath().isEmpty()){
-                            // skip root node in for loop
-                            pathElemStart = 1;
-                        }
-                        // we have an external path in the subquery
-                        if (joinNode.isCollection()) {
-                            throw new IllegalStateException("Unsupported external collection access [" + joinNode.getAliasInfo().getAbsolutePath() + "]");
-                        }
-                        for (int i = pathElemStart; i < expression.getExpressions().size(); i++) {
-                            PathElementExpression pathElem = expression.getExpressions().get(i);
-                            if (pathElem instanceof ArrayExpression) {
-                                joinNode = joinNode.getNodes().get(((ArrayExpression) pathElem).getBase().toString());
-                            } else {
-                                joinNode = joinNode.getNodes().get(pathElem.toString());
-                            }
-                            if (joinNode != null && joinNode.isCollection()) {
-                                throw new IllegalStateException("Unsupported external collection access [" + joinNode.getAliasInfo().getAbsolutePath() + "]");
-                            }
-                        }
+        } else if (inSubquery) {
+            JoinNode joinNode = (JoinNode) expression.getBaseNode();
+
+            if (joinNode != null && joinNode.getAliasInfo().getAliasOwner() == aliasOwner) {
+                // we have an external path in the subquery
+                while (joinNode != null) {
+                    if (joinNode.isCollection()) {
+                        throw new IllegalStateException("Unsupported external collection access [" + joinNode.getAliasInfo().getAbsolutePath() + "]");
                     }
+
+                    joinNode = joinNode.getParent();
                 }
             }
         }
@@ -80,6 +65,7 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
         inSubquery = true;
         SubqueryBuilderImpl<?> builder = (SubqueryBuilderImpl<?>) expression.getBuilder();
         builder.applyVisitor(this);
+
         if (!inSubqueryCpy) {
             inSubquery = false;
         }

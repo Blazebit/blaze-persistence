@@ -31,9 +31,11 @@ import java.util.Map;
 
 /**
  *
+ * @deprecated This transformer is actually not used any more because the transformations are included in the join management code
  * @author Moritz Becker
  * @since 1.0
  */
+@Deprecated
 public class ArrayExpressionTransformer implements ExpressionTransformer {
 
     private final Map<TransformationInfo, EqPredicate> transformedPathFilterMap = new HashMap<TransformationInfo, EqPredicate>();
@@ -71,9 +73,9 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
             // do not transform external paths
             JoinNode baseNode = (JoinNode) path.getBaseNode();
             if (baseNode.getAliasInfo().getAliasOwner() != aliasOwner) {
-                if(parentTransformer == null){
+                if (parentTransformer == null) {
                     throw new IllegalStateException("Could not transform array expression [" + path.toString() + "] with unknown alias owner");
-                }else{
+                } else {
                     return parentTransformer.transform(original);
                 }
             }
@@ -112,10 +114,10 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                     keyExpression.getExpressions().add(new FooExpression(")"));
                     EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExp.getIndex());
 
-                    keyPath.setBaseNode(joinManager.findNode(keyPath.getPath()));
-
+                    // TODO: rewrite if the transformer should ever be used again
+//                    keyPath.setBaseNode(joinManager.findNode(keyPath.getPath()));
                     // set the generated predicate on the join node
-                    JoinNode joinNode = joinManager.findNode(absBasePath);
+                    JoinNode joinNode = null;//joinManager.findNode(absBasePath);
                     if (joinNode.getWithPredicate() != null) {
                         Predicate currentPred = joinNode.getWithPredicate();
                         if (currentPred instanceof AndPredicate) {
@@ -131,7 +133,9 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
                             joinNode.setWithPredicate(withAndPredicate);
                         }
                     } else {
-                        joinNode.setWithPredicate(valueKeyFilterPredicate);
+                        AndPredicate withAndPredicate = new AndPredicate();
+                        withAndPredicate.getChildren().add(valueKeyFilterPredicate);
+                        joinNode.setWithPredicate(withAndPredicate);
                     }
                     transformedPathFilterMap.put(transInfo, valueKeyFilterPredicate);
 
@@ -181,7 +185,7 @@ public class ArrayExpressionTransformer implements ExpressionTransformer {
             }
             final TransformationInfo other = (TransformationInfo) obj;
             if ((this.absoluteFieldPath == null) ? (other.absoluteFieldPath != null) : !this.absoluteFieldPath.equals(
-                    other.absoluteFieldPath)) {
+                other.absoluteFieldPath)) {
                 return false;
             }
             if ((this.indexedField == null) ? (other.indexedField != null) : !this.indexedField.equals(other.indexedField)) {

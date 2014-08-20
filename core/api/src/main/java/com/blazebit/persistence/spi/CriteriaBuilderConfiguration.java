@@ -48,54 +48,53 @@ public interface CriteriaBuilderConfiguration {
      * @return A new {@linkplain CriteriaBuilderFactory}
      */
     public CriteriaBuilderFactory createCriteriaBuilderFactory();
-    
 
-	/**
-	 * Returns all properties.
-	 *
-	 * @return All properties
-	 */
-	public Properties getProperties();
+    /**
+     * Returns all properties.
+     *
+     * @return All properties
+     */
+    public Properties getProperties();
 
-	/**
-	 * Returns a property value by name.
-	 *
-	 * @param propertyName The name of the property
-	 * @return The value currently associated with that property name; may be null.
-	 */
-	public String getProperty(String propertyName);
+    /**
+     * Returns a property value by name.
+     *
+     * @param propertyName The name of the property
+     * @return The value currently associated with that property name; may be null.
+     */
+    public String getProperty(String propertyName);
 
-	/**
-	 * Replace the properties of the configuration with the given properties.
-	 *
-	 * @param properties The new set of properties
-	 * @return this for method chaining
-	 */
-	public CriteriaBuilderConfiguration setProperties(Properties properties);
+    /**
+     * Replace the properties of the configuration with the given properties.
+     *
+     * @param properties The new set of properties
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration setProperties(Properties properties);
 
-	/**
-	 * Add the given properties to the properties of the configuration.
-	 *
-	 * @param extraProperties The properties to add.
-	 * @return this for method chaining
-	 *
-	 */
-	public CriteriaBuilderConfiguration addProperties(Properties extraProperties);
+    /**
+     * Add the given properties to the properties of the configuration.
+     *
+     * @param extraProperties The properties to add.
+     * @return this for method chaining
+     *
+     */
+    public CriteriaBuilderConfiguration addProperties(Properties extraProperties);
 
-	/**
-	 * Adds the given properties to the properties of the configuration, without overriding existing values.
-	 *
-	 * @param properties The properties to merge
-	 * @return this for method chaining
-	 */
-	public CriteriaBuilderConfiguration mergeProperties(Properties properties);
+    /**
+     * Adds the given properties to the properties of the configuration, without overriding existing values.
+     *
+     * @param properties The properties to merge
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration mergeProperties(Properties properties);
 
-	/**
-	 * Set a property value by name.
-	 *
-	 * @param propertyName The name of the property to set
-	 * @param value The new property value
-	 * @return this for method chaining
-	 */
-	public CriteriaBuilderConfiguration setProperty(String propertyName, String value);
+    /**
+     * Set a property value by name.
+     *
+     * @param propertyName The name of the property to set
+     * @param value        The new property value
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration setProperty(String propertyName, String value);
 }

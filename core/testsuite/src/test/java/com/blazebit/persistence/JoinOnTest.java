@@ -44,8 +44,7 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.rightJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners RIGHT JOIN partners.localized l WITH l LIKE :param_0", crit
-            .getQueryString());
+            "SELECT d FROM Document d LEFT JOIN d.partners partners RIGHT JOIN partners.localized l WITH l LIKE :param_0", crit.getQueryString());
         crit.getResultList();
     }
 

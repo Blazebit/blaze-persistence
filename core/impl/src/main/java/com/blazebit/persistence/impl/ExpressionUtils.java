@@ -15,10 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,13 +29,13 @@ import java.util.List;
  */
 public class ExpressionUtils {
 
-    public static boolean containsSubqueryExpression(Expression e) {
+    static boolean containsSubqueryExpression(Expression e) {
         SubqueryExpressionDetector detector = new SubqueryExpressionDetector();
         e.accept(detector);
         return detector.hasSubquery;
     }
-    
-    public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
+
+    static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
         final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
         VisitorAdapter transformationVisitor = new VisitorAdapter() {
 
@@ -50,6 +50,7 @@ public class ExpressionUtils {
             }
 
         };
+
         superExpression.accept(transformationVisitor);
     }
 

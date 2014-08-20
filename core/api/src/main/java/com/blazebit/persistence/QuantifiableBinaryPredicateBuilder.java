@@ -24,7 +24,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBuilder<T>, SubqueryInitiator<T> {
-    
+
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of a predicate that uses the ALL quantor.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.

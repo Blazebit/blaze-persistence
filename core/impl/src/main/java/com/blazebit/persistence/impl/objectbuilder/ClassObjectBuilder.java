@@ -28,13 +28,13 @@ import java.util.List;
 public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
 
     private final Class<T> clazz;
+    private Constructor<T> constructor;
 
     public ClassObjectBuilder(Class<T> clazz) {
         this.clazz = clazz;
     }
 
-    @Override
-    public T build(Object[] tuple) {
+    private Constructor<T> getConstructor(Object[] tuple) {
         Constructor<?>[] constructors = clazz.getConstructors();
         Constructor<T> matchingConstr = null;
         for (Constructor<?> constr : constructors) {
@@ -51,16 +51,23 @@ public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
                     if (matchingConstr != null) {
                         throw new RuntimeException("Multiple constructors matching");
                     }
-                    matchingConstr = (Constructor<T>) constr;
+                    return (Constructor<T>) constr;
                 }
 
             }
         }
-        if (matchingConstr == null) {
-            throw new RuntimeException("No matching constructor");
+
+        throw new RuntimeException("No matching constructor");
+    }
+
+    @Override
+    public T build(Object[] tuple) {
+        if (constructor == null) {
+            constructor = getConstructor(tuple);
         }
+
         try {
-            return matchingConstr.newInstance(tuple);
+            return constructor.newInstance(tuple);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

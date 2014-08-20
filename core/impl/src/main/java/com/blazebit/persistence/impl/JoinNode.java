@@ -16,10 +16,9 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import java.util.EnumSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -36,20 +35,34 @@ public class JoinNode {
     // This flag indicates if this join node is required from a select expression only
     // We need this for count and id queries where we do not need all the joins
     private boolean selectOnly = true;
-    private boolean requiredByOrderBy = false;
-    private Class<?> propertyClass;
-    // Use TreeMap so that joins get applied alphabetically for easier testing
-    private final Map<String, JoinNode> nodes = new TreeMap<String, JoinNode>();
+    private final JoinNode parent;
+    private final Class<?> propertyClass;
+    private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied alphabetically for easier testing
     private final boolean collection;
 
-    private Predicate withPredicate;
+    private AndPredicate withPredicate;
 
-    public JoinNode(JoinAliasInfo aliasInfo, JoinType type, boolean fetch, Class<?> propertyClass, boolean collection) {
+    public JoinNode(JoinNode parent, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, boolean collection) {
+        this.parent = parent;
         this.aliasInfo = aliasInfo;
         this.type = type;
-        this.fetch = fetch;
         this.propertyClass = propertyClass;
         this.collection = collection;
+    }
+
+    public void accept(Predicate.Visitor visitor) {
+        if (withPredicate != null) {
+            withPredicate.accept(visitor);
+        }
+        for (JoinTreeNode treeNode : nodes.values()) {
+            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+                joinNode.accept(visitor);
+            }
+        }
+    }
+
+    public JoinNode getParent() {
+        return parent;
     }
 
     public boolean isSelectOnly() {
@@ -84,31 +97,34 @@ public class JoinNode {
         this.fetch = fetch;
     }
 
-    public Map<String, JoinNode> getNodes() {
+    public Map<String, JoinTreeNode> getNodes() {
         return nodes;
+    }
+
+    public JoinTreeNode getOrCreateTreeNode(String joinRelationName) {
+        JoinTreeNode node = nodes.get(joinRelationName);
+
+        if (node == null) {
+            node = new JoinTreeNode();
+            nodes.put(joinRelationName, node);
+        }
+
+        return node;
     }
 
     public Class<?> getPropertyClass() {
         return propertyClass;
     }
 
-    public void setPropertyClass(Class<?> propertyClass) {
-        this.propertyClass = propertyClass;
-    }
-
-    public Predicate getWithPredicate() {
+    public AndPredicate getWithPredicate() {
         return withPredicate;
     }
 
-    public void setWithPredicate(Predicate withPredicate) {
+    public void setWithPredicate(AndPredicate withPredicate) {
         this.withPredicate = withPredicate;
     }
 
     public boolean isCollection() {
         return collection;
-    }
-
-    public void setRequiredByOrderBy(boolean requiredByOrderBy) {
-        this.requiredByOrderBy = requiredByOrderBy;
     }
 }

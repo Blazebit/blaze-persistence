@@ -42,7 +42,7 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
-    
+
     private static final String KEY_SET_PARAMETER_NAME = "_keySetParameter";
 
     private final boolean extractKeySet;
@@ -53,8 +53,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private String[] orderByExpressionStrings;
     private KeySetMode keySetMode = KeySetMode.NONE;
     private boolean needsNewIdList = false;
-    
+
     private static enum KeySetMode {
+
         NONE,
         SAME,
         NEXT,
@@ -75,7 +76,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         this.pageSize = pageSize;
         this.baseBuilder = baseBuilder;
     }
-    
+
     private KeySetMode getKeySetMode() {
         // key set pagination must be activated and a key set must be given
         if (!extractKeySet || keySet == null) {
@@ -89,9 +90,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         if (!Arrays.equals(keySet.getOrderByExpressions(), orderByExpressionStrings)) {
             return KeySetMode.NONE;
         }
-        
+
         int offset = keySet.getFirstResult() - firstRow;
-        
+
         if (offset == pageSize) {
             // We went to the previous page
             if (isValidKey(keySet.getLowest())) {
@@ -118,7 +119,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             return KeySetMode.NONE;
         }
     }
-    
+
     private boolean isValidKey(Serializable[] key) {
         return key != null && key.length == orderByExpressionStrings.length;
     }
@@ -128,7 +129,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         if (!orderByManager.hasOrderBys()) {
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
-        
+
         String countQueryString = getPageCountQueryString();
         TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
         parameterizeQuery(countQuery);
@@ -142,7 +143,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         String idQueryString = getPageIdQueryString();
         Query idQuery = em.createQuery(idQueryString)
             .setMaxResults(pageSize);
-        
+
         if (keySetMode == KeySetMode.NONE) {
             idQuery.setFirstResult(firstRow);
         }
@@ -157,13 +158,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         Serializable[] lowest = null;
         Serializable[] highest = null;
-        
+
         if (needsNewIdList) {
             if (extractKeySet) {
                 lowest = extractKey((Object[]) ids.get(0), 1);
                 highest = extractKey((Object[]) ids.get(ids.size() - 1), 1);
             }
-        
+
             List newIds = new ArrayList(ids.size());
 
             for (int i = 0; i < ids.size(); i++) {
@@ -176,15 +177,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         parameterManager.addParameterMapping(idParamName, ids);
 
         KeySet newKeySet = null;
-        
+
         if (extractKeySet) {
             newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressionStrings, lowest, highest);
         }
-        
+
         PagedList<T> pagedResultList = new PagedListImpl<T>(super.getResultList(), newKeySet, totalSize);
         return pagedResultList;
     }
-    
+
     private Serializable[] extractKey(Object[] tuple, int offset) {
         Serializable[] key = new Serializable[tuple.length - offset];
         System.arraycopy(tuple, offset, key, 0, key.length);
@@ -221,10 +222,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
 
-        StringBuilder sbJoin = new StringBuilder();
-        joinManager.buildJoins(false, sbJoin);
+        joinManager.buildJoins(sbSelectFrom, false);
 
-        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
+        return sbSelectFrom.append(sbRemaining).toString();
     }
 
     @Override
@@ -259,10 +259,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         havingManager.buildClause(sbRemaining);
         orderByManager.buildOrderBy(sbRemaining);
 
-        StringBuilder sbJoin = new StringBuilder();
-        joinManager.buildJoins(true, sbJoin);
+        joinManager.buildJoins(sbSelectFrom, true);
 
-        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
+        return sbSelectFrom.append(sbRemaining).toString();
     }
 
     @Override
@@ -292,49 +291,48 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             sbSelectFrom.append(", ");
             orderByManager.buildSelectClauses(sbSelectFrom, extractKeySet);
         }
-        
+
         sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
 
         StringBuilder sbRemaining = new StringBuilder();
-        
+
         if (keySetMode == KeySetMode.NONE) {
             whereManager.buildClause(sbRemaining);
         } else {
             sbRemaining.append(" WHERE ");
             applyKeySetClause(sbRemaining, keySetMode, orderByManager.getRealExpressions(), keySet);
-            
+
             if (whereManager.hasPredicates()) {
                 sbRemaining.append(" AND (");
                 whereManager.buildClausePredicate(sbRemaining);
                 sbRemaining.append(')');
             }
         }
-        
+
         sbRemaining.append(" GROUP BY ").append(idClause);
         orderByManager.buildOrderBy(sbRemaining);
 
-        StringBuilder sbJoin = new StringBuilder();
-        joinManager.buildJoins(false, sbJoin);
+        joinManager.buildJoins(sbSelectFrom, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager, baseBuilder));
-        
-        return sbSelectFrom.append(sbJoin).append(sbRemaining).toString();
+
+        return sbSelectFrom.append(sbRemaining).toString();
     }
 
     private void applyKeySetClause(StringBuilder sbRemaining, KeySetMode keySetMode, List<Expression> realExpressions, KeySet keySet) {
         String operator;
         Serializable[] key;
-        
+
         if (keySetMode == KeySetMode.SAME) {
             key = keySet.getLowest();
-            
+
             int expressionCount = realExpressions.size();
             sbRemaining.append('(');
-            
+
             for (int i = 0; i < expressionCount; i++) {
                 if (i != 0) {
                     sbRemaining.append(" AND ");
@@ -342,12 +340,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 Expression expr = realExpressions.get(i);
                 applyKeySetItem(0, sbRemaining, expr, ">=", i, false, key[i]);
             }
-            
+
             sbRemaining.append(')');
-            
+
             return;
         }
-        
+
         if (keySetMode == KeySetMode.NEXT) {
             // order by items must be > keySet.getHighest()
             // (x,y) > (a,b) => (x > a OR (x = a AND y > b) )
@@ -361,17 +359,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             operator = "<";
             key = keySet.getLowest();
         }
-        
+
         int expressionCount = realExpressions.size();
         int brackets = 0;
         for (int i = 0; i < expressionCount; i++) {
             boolean openBracket = i + 1 != expressionCount;
-            
+
             if (i != 0) {
                 brackets++;
                 sbRemaining.append(" OR (");
                 Expression expr = realExpressions.get(i - 1);
-                
+
                 brackets = applyKeySetItem(brackets, sbRemaining, expr, "=", i - 1, openBracket, key[i - 1]);
                 sbRemaining.append(" AND ");
             }
@@ -388,7 +386,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             brackets++;
             sbRemaining.append("(");
         }
-        
+
         queryGenerator.setQueryBuffer(sbRemaining);
         expr.accept(queryGenerator);
         sbRemaining.append(" ");

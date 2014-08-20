@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.OuterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *
@@ -27,14 +27,11 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 public class JoinVisitor extends VisitorAdapter {
 
     private final JoinManager joinManager;
-    private final SelectManager<?> selectManager;
-    private final AliasManager aliasManager = null;
     private boolean joinWithObjectLeafAllowed = true;
     private boolean fromSelect = false;
 
-    public JoinVisitor(JoinManager joinManager, SelectManager<?> selectManager) {
+    public JoinVisitor(JoinManager joinManager) {
         this.joinManager = joinManager;
-        this.selectManager = selectManager;
     }
 
     public boolean isFromSelect() {
@@ -47,7 +44,7 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromSelect, false);
+        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromSelect, false, false);
     }
 
     @Override

@@ -20,9 +20,10 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0
  */
-public class SuperExpressionSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
+public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderListenerImpl<T> {
 
     private final String subqueryAlias;
     protected final Expression superExpression;
@@ -33,7 +34,7 @@ public class SuperExpressionSubqueryBuilderListener<X> extends SubqueryBuilderLi
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, new SubqueryExpression(builder));
     }

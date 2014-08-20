@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -38,14 +37,14 @@ public class OrderByManager extends AbstractManager {
         this.aliasManager = aliasManager;
         this.fromClassName = fromClassName;
     }
-    
-    public List<Expression> getRealExpressions() {
+
+    List<Expression> getRealExpressions() {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
-        
+
         List<Expression> realExpressions = new ArrayList<Expression>(orderByInfos.size());
-        
+
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
@@ -55,7 +54,7 @@ public class OrderByManager extends AbstractManager {
                 realExpressions.add(orderByInfo.getExpression());
             }
         }
-        
+
         return realExpressions;
     }
 
@@ -63,40 +62,40 @@ public class OrderByManager extends AbstractManager {
         if (orderByInfos.isEmpty()) {
             return new String[0];
         }
-        
+
         String[] absoluteExpressionStrings = new String[orderByInfos.size()];
         StringBuilder sb = new StringBuilder();
-        
+
         for (int i = 0; i < orderByInfos.size(); i++) {
             OrderByInfo orderByInfo = orderByInfos.get(i);
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             sb.delete(0, sb.length());
-            
+
             if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
                 SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
                 selectInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
             } else {
                 orderByInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
             }
-            
+
             if (orderByInfo.ascending) {
                 sb.append(" ASC");
             } else {
                 sb.append(" DESC");
             }
-            
+
             if (orderByInfo.nullFirst) {
                 sb.append(" NULLS FIRST");
             } else {
                 sb.append(" NULLS LAST");
             }
-            
+
             absoluteExpressionStrings[i] = sb.toString();
         }
-        
+
         return absoluteExpressionStrings;
     }
-    
+
     boolean hasOrderBys() {
         return orderByInfos.size() > 0;
     }
@@ -148,7 +147,7 @@ public class OrderByManager extends AbstractManager {
         queryGenerator.setQueryBuffer(sb);
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         OrderByInfo orderByInfo;
-        
+
         orderByInfo = iter.next();
         String potentialSelectAlias = orderByInfo.getExpression().toString();
         AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
@@ -161,7 +160,7 @@ public class OrderByManager extends AbstractManager {
         } else if (allClauses) {
             orderByInfo.getExpression().accept(queryGenerator);
         }
-        
+
         while (iter.hasNext()) {
             orderByInfo = iter.next();
             potentialSelectAlias = orderByInfo.getExpression().toString();

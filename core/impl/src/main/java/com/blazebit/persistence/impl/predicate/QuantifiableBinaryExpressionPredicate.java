@@ -39,4 +39,27 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
     public PredicateQuantifier getQuantifier() {
         return quantifier;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 97 * hash + (this.quantifier != null ? this.quantifier.hashCode() : 0);
+        hash = 97 * hash + super.hashCode();
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final QuantifiableBinaryExpressionPredicate other = (QuantifiableBinaryExpressionPredicate) obj;
+        if (this.quantifier != other.quantifier) {
+            return false;
+        }
+        return super.equals(obj);
+    }
 }

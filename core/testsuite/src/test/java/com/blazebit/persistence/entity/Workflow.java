@@ -67,13 +67,13 @@ public class Workflow implements Serializable {
 
     @ElementCollection
     @CollectionTable(
-            joinColumns = {
-                @JoinColumn(
-                        name = "ID",
-                        referencedColumnName = "ID",
-                        nullable = false,
-                        insertable = false,
-                        updatable = false)})
+        joinColumns = {
+            @JoinColumn(
+                name = "ID",
+                referencedColumnName = "ID",
+                nullable = false,
+                insertable = false,
+                updatable = false) })
     public Set<Locale> getSupportedLocales() {
         return supportedLocales;
     }
@@ -84,18 +84,18 @@ public class Workflow implements Serializable {
 
     @ElementCollection
     @CollectionTable(
-            joinColumns = {
-                @JoinColumn(
-                        name = "ID",
-                        referencedColumnName = "ID",
-                        nullable = false,
-                        insertable = false,
-                        updatable = false)})
+        joinColumns = {
+            @JoinColumn(
+                name = "ID",
+                referencedColumnName = "ID",
+                nullable = false,
+                insertable = false,
+                updatable = false) })
     @MapKeyColumn(
-            name = "LANGUAGE_CODE",
-            nullable = false,
-            insertable = false,
-            updatable = false)
+        name = "LANGUAGE_CODE",
+        nullable = false,
+        insertable = false,
+        updatable = false)
     public Map<Locale, LocalizedEntity> getLocalized() {
         return localized;
     }

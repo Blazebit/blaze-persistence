@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.junit.Assert;
 import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -65,7 +64,7 @@ public class JPQLSelectExpressionTest {
 
         return listener.getCompositeExpression();
     }
-    
+
     private CompositeExpression parse(String expr) {
         return parse(expr, false);
     }
@@ -427,45 +426,45 @@ public class JPQLSelectExpressionTest {
         assertTrue(expressions.size() == 1);
         assertTrue(expressions.get(0).equals(path("d", "b[:a]", "c[:a]", "f")));
     }
-    
+
     @Test
-    public void testKeyFunction(){
+    public void testKeyFunction() {
         CompositeExpression result = parse("KEY(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 3);
         assertTrue(expressions.get(0).equals(new FooExpression("KEY(")));
         assertTrue(expressions.get(1).equals(path("localized[:locale]")));
         assertTrue(expressions.get(2).equals(new FooExpression(")")));
     }
-    
+
     @Test
-    public void testValueFunction(){
+    public void testValueFunction() {
         CompositeExpression result = parse("VALUE(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 3);
         assertTrue(expressions.get(0).equals(new FooExpression("VALUE(")));
         assertTrue(expressions.get(1).equals(path("localized[:locale]")));
         assertTrue(expressions.get(2).equals(new FooExpression(")")));
     }
-    
+
     @Test
-    public void testEntryFunction(){
+    public void testEntryFunction() {
         CompositeExpression result = parse("ENTRY(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 3);
         assertTrue(expressions.get(0).equals(new FooExpression("ENTRY(")));
         assertTrue(expressions.get(1).equals(path("localized[:locale]")));
         assertTrue(expressions.get(2).equals(new FooExpression(")")));
     }
-    
+
     @Test
-    public void testCaseWhenSwitchTrue(){
+    public void testCaseWhenSwitchTrue() {
         CompositeExpression result = parse("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END", true);
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 6);
         assertTrue(expressions.get(0).equals(new FooExpression("CASE WHEN ")));
         assertTrue(expressions.get(1).equals(new FooExpression("KEY(")));
@@ -474,12 +473,12 @@ public class JPQLSelectExpressionTest {
         assertTrue(expressions.get(4).equals(path("supportedLocales")));
         assertTrue(expressions.get(5).equals(new FooExpression(" THEN true ELSE false END")));
     }
-    
+
     @Test(expected = SyntaxErrorException.class)
-    public void testCaseWhenSwitchFalse(){
+    public void testCaseWhenSwitchFalse() {
         CompositeExpression result = parse("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END", false);
         List<Expression> expressions = result.getExpressions();
-        
+
         assertTrue(expressions.size() == 6);
         assertTrue(expressions.get(0).equals(new FooExpression("CASE WHEN ")));
         assertTrue(expressions.get(1).equals(new FooExpression("KEY(")));

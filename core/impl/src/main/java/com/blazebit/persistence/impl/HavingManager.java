@@ -22,7 +22,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * @author Moritz Becker
  * @since 1.0
  */
-public class HavingManager<U> extends PredicateManager<U> {
+public class HavingManager<T> extends PredicateManager<T> {
 
     HavingManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
@@ -37,8 +37,8 @@ public class HavingManager<U> extends PredicateManager<U> {
     protected boolean isAllowCaseWhenExpressions() {
         return false;
     }
-    
-    HavingOrBuilderImpl<U> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new HavingOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+
+    HavingOrBuilderImpl<T> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
+        return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 }

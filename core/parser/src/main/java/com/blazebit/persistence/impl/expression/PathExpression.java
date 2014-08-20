@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl.expression;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -87,7 +86,7 @@ public class PathExpression implements Expression, Cloneable {
         } else if (size == 1) {
             return pathProperties.get(0).toString();
         }
-        
+
         StringBuilder sb = new StringBuilder();
         sb.append(pathProperties.get(0));
 
@@ -102,10 +101,18 @@ public class PathExpression implements Expression, Cloneable {
         return collectionKeyPath;
     }
 
+    /*
+     * The following equals and hashCode implementation makes it possible that expressions which have different path properties but reference the same object, are equal.
+     */
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 73 * hash + (this.pathProperties != null ? this.pathProperties.hashCode() : 0);
+        int hash = 3;
+        if (this.baseNode != null || this.field != null) {
+            hash = 31 * hash + (this.baseNode != null ? this.baseNode.hashCode() : 0);
+            hash = 31 * hash + (this.field != null ? this.field.hashCode() : 0);
+        } else {
+            hash = 31 * hash + (this.pathProperties != null ? this.pathProperties.hashCode() : 0);
+        }
         return hash;
     }
 
@@ -118,9 +125,17 @@ public class PathExpression implements Expression, Cloneable {
             return false;
         }
         final PathExpression other = (PathExpression) obj;
-        if (this.pathProperties != other.pathProperties && (this.pathProperties == null || !this.pathProperties.equals(
-            other.pathProperties))) {
-            return false;
+        if (this.baseNode != null || this.field != null || other.baseNode != null || other.field != null) {
+            if (this.baseNode != other.baseNode && (this.baseNode == null || !this.baseNode.equals(other.baseNode))) {
+                return false;
+            }
+            if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
+                return false;
+            }
+        } else {
+            if (this.pathProperties != other.pathProperties && (this.pathProperties == null || !this.pathProperties.equals(other.pathProperties))) {
+                return false;
+            }
         }
         return true;
     }

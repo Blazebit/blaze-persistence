@@ -63,4 +63,34 @@ public class BetweenPredicate implements Predicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 97 * hash + (this.left != null ? this.left.hashCode() : 0);
+        hash = 97 * hash + (this.start != null ? this.start.hashCode() : 0);
+        hash = 97 * hash + (this.end != null ? this.end.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final BetweenPredicate other = (BetweenPredicate) obj;
+        if (this.left != other.left && (this.left == null || !this.left.equals(other.left))) {
+            return false;
+        }
+        if (this.start != other.start && (this.start == null || !this.start.equals(other.start))) {
+            return false;
+        }
+        if (this.end != other.end && (this.end == null || !this.end.equals(other.end))) {
+            return false;
+        }
+        return true;
+    }
 }

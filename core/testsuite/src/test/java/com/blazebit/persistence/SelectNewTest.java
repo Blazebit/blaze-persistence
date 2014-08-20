@@ -21,11 +21,11 @@ import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.model.DocumentCount;
 import com.blazebit.persistence.model.DocumentPartnerView;
 import com.blazebit.persistence.model.DocumentViewModel;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import java.lang.reflect.Constructor;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,29 +119,31 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectCollection() {
-        CriteriaBuilder<DocumentPartnerView> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<DocumentPartnerView> criteria = cbf.from(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
 
-        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", crit
-                     .getQueryString());
+        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        criteria.getResultList();
     }
 
     @Test
     public void testSelectNewModel() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4);
+        criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4L);
 
         assertEquals("SELECT owner.name FROM Document d JOIN d.owner owner WHERE d.age < :param_0", criteria.getQueryString());
+        criteria.getResultList();
     }
 
     @Test
     public void testSelectNewWithParameters() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4);
+        criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4L);
 
-        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE
-            + " KEY(contacts) = :index LEFT JOIN contacts.partnerDocument partnerDocument WHERE d.age < :param_0", criteria
-                     .getQueryString());
+        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts_index " + ON_CLAUSE
+            + " KEY(contacts_index) = :index LEFT JOIN contacts_index.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
+        criteria.setParameter("index", 0)
+            .getResultList();
     }
 
     @Test

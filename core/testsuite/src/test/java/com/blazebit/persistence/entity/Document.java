@@ -50,6 +50,7 @@ public class Document implements Serializable {
     private Set<Person> partners = new HashSet<Person>();
     private Person owner;
     private long age;
+    private int index;
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Calendar creationDate;
@@ -110,6 +111,14 @@ public class Document implements Serializable {
 
     public void setAge(long age) {
         this.age = age;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 
     @OneToMany(mappedBy = "partnerDocument")

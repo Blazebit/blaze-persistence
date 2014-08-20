@@ -56,7 +56,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The query builder for chaining calls
      */
     public X join(String path, String alias, JoinType type);
-    
+
     /**
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      * The resulting join will be the default join meaning that expressions which use the absolute path will refer to this join.
@@ -89,7 +89,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The query builder for chaining calls
      */
     public X innerJoin(String path, String alias);
-    
+
     /**
      * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
@@ -119,7 +119,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The query builder for chaining calls
      */
     public X leftJoin(String path, String alias);
-    
+
     /**
      * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
@@ -149,7 +149,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The query builder for chaining calls
      */
     public X rightJoin(String path, String alias);
-    
+
     /**
      * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.

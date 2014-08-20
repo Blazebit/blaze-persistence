@@ -29,15 +29,15 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinOnBuilderImpl<X> implements JoinOnBuilder<X>, PredicateBuilder {
+public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder {
 
-    private final X result;
+    private final T result;
     private final RootPredicate rootPredicate;
     private final PredicateBuilderEndedListener listener;
     private final ExpressionFactory expressionFactory;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    public JoinOnBuilderImpl(X result, PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
+    public JoinOnBuilderImpl(T result, PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.rootPredicate = new RootPredicate(parameterManager);
@@ -46,9 +46,9 @@ public class JoinOnBuilderImpl<X> implements JoinOnBuilder<X>, PredicateBuilder 
     }
 
     @Override
-    public RestrictionBuilder<JoinOnBuilder<X>> on(String expression) {
+    public RestrictionBuilder<JoinOnBuilder<T>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<X>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory, false));
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override
@@ -57,14 +57,14 @@ public class JoinOnBuilderImpl<X> implements JoinOnBuilder<X>, PredicateBuilder 
     }
 
     @Override
-    public X end() {
+    public T end() {
         rootPredicate.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
     }
 
     @Override
-    public JoinOnOrBuilder<JoinOnBuilder<X>> onOr() {
-        return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<X>>(this, rootPredicate, expressionFactory, subqueryInitFactory));
+    public JoinOnOrBuilder<JoinOnBuilder<T>> onOr() {
+        return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, expressionFactory, subqueryInitFactory));
     }
 }

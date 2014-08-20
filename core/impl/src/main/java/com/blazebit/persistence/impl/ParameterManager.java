@@ -38,7 +38,7 @@ public class ParameterManager {
     private final Map<String, Object> parameters = new HashMap<String, Object>();
     private static final Object REGISTERED_PLACEHOLDER = new Object();
 
-    public Parameter<?> getParameter(String parameterName) {
+    Parameter<?> getParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -51,7 +51,7 @@ public class ParameterManager {
         return new ParameterImpl(value == null ? null : value.getClass(), parameterName);
     }
 
-    public Set<? extends Parameter<?>> getParameters() {
+    Set<? extends Parameter<?>> getParameters() {
         Set<Parameter<?>> result = new HashSet<Parameter<?>>();
 
         for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
@@ -61,21 +61,21 @@ public class ParameterManager {
         return result;
     }
 
-    public boolean containsParameter(String parameterName) {
+    boolean containsParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
         return parameters.containsKey(parameterName);
     }
 
-    public boolean isParameterSet(String parameterName) {
+    boolean isParameterSet(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
         return parameters.containsKey(parameterName) && parameters.get(parameterName) != REGISTERED_PLACEHOLDER;
     }
 
-    public Object getParameterValue(String parameterName) {
+    Object getParameterValue(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -83,7 +83,7 @@ public class ParameterManager {
         return o == REGISTERED_PLACEHOLDER ? null : o;
     }
 
-    public String getParamNameForObject(Object o) {
+    String getParamNameForObject(Object o) {
         if (o == null) {
             throw new NullPointerException();
         }
@@ -103,7 +103,7 @@ public class ParameterManager {
         parameters.put(parameterName, o);
     }
 
-    public void registerParameterName(String parameterName) {
+    void registerParameterName(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -112,7 +112,7 @@ public class ParameterManager {
         }
     }
 
-    public void satisfyParameter(String parameterName, Object parameterValue) {
+    void satisfyParameter(String parameterName, Object parameterValue) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }

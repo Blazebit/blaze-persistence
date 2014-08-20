@@ -27,7 +27,7 @@ public class SuperExpressionLeftHandsideSubqueryPredicateBuilder extends SuperEx
     public SuperExpressionLeftHandsideSubqueryPredicateBuilder(String subqueryAlias, Expression superExpression) {
         super(subqueryAlias, superExpression);
     }
-    
+
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<RestrictionBuilderImpl<?>> builder) {
         super.onBuilderEnded(builder);

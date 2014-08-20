@@ -26,9 +26,10 @@ import com.blazebit.persistence.BaseQueryBuilder;
 public class JoinAliasInfo implements AliasInfo {
 
     private String alias;
+    private JoinNode joinNode;
+    private boolean implicit;
     // The absolute normalized path with the root as implicit base
     private final String absolutePath;
-    private boolean implicit;
     private final BaseQueryBuilder<?, ?> aliasOwner;
 
     public JoinAliasInfo(String alias, String absolutePath, boolean implicit, BaseQueryBuilder<?, ?> aliasOwner) {
@@ -46,9 +47,21 @@ public class JoinAliasInfo implements AliasInfo {
     public void setAlias(String alias) {
         this.alias = alias;
     }
+    
+    public JoinNode getJoinNode() {
+        return joinNode;
+    }
+    
+    public void setJoinNode(JoinNode joinNode) {
+        this.joinNode = joinNode;
+    }
 
     public String getAbsolutePath() {
-        return absolutePath;
+        if (implicit) {
+            return absolutePath;
+        } else {
+            return alias;
+        }
     }
 
     public boolean isImplicit() {

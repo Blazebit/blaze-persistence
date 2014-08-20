@@ -59,8 +59,8 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
             return original;
         }
 
-        PathExpression deepPath; // deepPath != path in case path is an alias
-        PathExpression path = deepPath = (PathExpression) original;
+        PathExpression deepPath = (PathExpression) original; // deepPath != path in case path is an alias
+        PathExpression path = deepPath;
 
         if (path.isCollectionKeyPath() || path.isUsedInCollectionFunction()) {
             return path;

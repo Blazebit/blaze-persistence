@@ -20,6 +20,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.SelectManager;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
 
@@ -31,10 +32,13 @@ import javax.persistence.TupleElement;
  */
 public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 
-    private final SelectManager<?> selectManager;
+    private final List<SelectManager.SelectInfo> selectInfos;
+    private final Map<String, Integer> selectAliasToPositionMap;
+    private String[] aliases;
 
-    public TupleObjectBuilder(SelectManager<?> selectManager) {
-        this.selectManager = selectManager;
+    public TupleObjectBuilder(List<SelectManager.SelectInfo> selectInfos, Map<String, Integer> selectAliasToPositionMap) {
+        this.selectInfos = selectInfos;
+        this.selectAliasToPositionMap = selectAliasToPositionMap;
     }
 
     @Override
@@ -51,21 +55,24 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     public void applySelects(SelectBuilder<?, ?> queryBuilder) {
     }
 
+    private String[] getSelectAliases() {
+        if (aliases == null) {
+            aliases = new String[selectInfos.size()];
+            for (int i = 0; i < aliases.length; i++) {
+                aliases[i] = selectInfos.get(i).getAlias();
+            }
+        }
+
+        return aliases;
+    }
+
     private class TupleImpl implements Tuple {
 
         private final Object[] tuple;
-        private final String[] aliases;
         private List<TupleElement<?>> tupleElements;
 
         private TupleImpl(Object[] tuple) {
-            if (tuple.length != selectManager.getSelectInfos().size()) {
-                throw new IllegalArgumentException(
-                    "Size mismatch between tuple result [" + tuple.length
-                    + "] and expected tuple elements [" + selectManager.getSelectAbsolutePathToInfoMap().size() + "]"
-                );
-            }
             this.tuple = tuple;
-            this.aliases = selectManager.getSelectAliases();
         }
 
         @Override
@@ -79,7 +86,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
             if (alias != null) {
                 alias = alias.trim();
                 if (alias.length() > 0) {
-                    index = selectManager.getSelectAliasToPositionMap().get(alias);
+                    index = selectAliasToPositionMap.get(alias);
                 }
             }
             if (index == null) {
@@ -119,6 +126,10 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         @Override
         public List<TupleElement<?>> getElements() {
             if (tupleElements == null) {
+                if (aliases == null) {
+                    aliases = getSelectAliases();
+                }
+
                 tupleElements = new ArrayList<TupleElement<?>>(tuple.length);
                 for (int i = 0; i < tuple.length; i++) {
                     tupleElements.add(new TupleElementImpl<Object>(i));

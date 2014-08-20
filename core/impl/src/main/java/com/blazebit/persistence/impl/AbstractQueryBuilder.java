@@ -46,7 +46,7 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
-        QueryBuilder<T, X> {
+    QueryBuilder<T, X> {
 
     /**
      * This flag indicates whether the current builder has been used to create a
@@ -72,8 +72,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public List<T> getResultList() {
-        return getQuery()
-                .getResultList();
+        return getQuery().getResultList();
     }
 
     @Override
@@ -162,7 +161,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public X fetch(String path) {
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        joinManager.join(path, null, null, true);
+        joinManager.join(path, null, null, true, true);
         return (X) this;
     }
 
@@ -172,8 +171,18 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public X innerJoinFetchDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.INNER, true);
+    }
+
+    @Override
     public X leftJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.LEFT, true);
+    }
+
+    @Override
+    public X leftJoinFetchDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.LEFT, true);
     }
 
     @Override
@@ -182,7 +191,21 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public X rightJoinFetchDefault(String path, String alias) {
+        return joinDefault(path, alias, JoinType.RIGHT, true);
+    }
+
+    @Override
     public X join(String path, String alias, JoinType type, boolean fetch) {
+        return join(path, alias, type, fetch, false);
+    }
+
+    @Override
+    public X joinDefault(String path, String alias, JoinType type, boolean fetch) {
+        return join(path, alias, type, fetch, true);
+    }
+
+    private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
         if (path == null) {
             throw new NullPointerException("path");
         }
@@ -201,7 +224,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         }
 
         verifyBuilderEnded();
-        joinManager.join(path, alias, type, fetch);
+        joinManager.join(path, alias, type, fetch, defaultJoin);
         return (X) this;
     }
 
@@ -260,6 +283,35 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public Metamodel getMetamodel() {
+        return em.getMetamodel();
+    }
+
+    @Override
+    public X groupBy(String expression) {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.groupBy(expression);
+    }
+
+    @Override
+    public X groupBy(String... paths) {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.groupBy(paths);
+    }
+
+    @Override
+    public X distinct() {
+        if (createdPaginatedBuilder) {
+            throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
+        }
+        return super.distinct();
+    }
+
+    @Override
     public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase() {
         return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase();
     }
@@ -307,35 +359,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @Override
     public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
-    }
-
-    @Override
-    public Metamodel getMetamodel() {
-        return em.getMetamodel();
-    }
-
-    @Override
-    public X groupBy(String expression) {
-        if (createdPaginatedBuilder) {
-            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
-        }
-        return super.groupBy(expression);
-    }
-
-    @Override
-    public X groupBy(String... paths) {
-        if (createdPaginatedBuilder) {
-            throw new IllegalStateException("Calling groupBy() on a PaginatedCriteriaBuilder is not allowed.");
-        }
-        return super.groupBy(paths);
-    }
-
-    @Override
-    public X distinct() {
-        if (createdPaginatedBuilder) {
-            throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
-        }
-        return super.distinct(); //To change body of generated methods, choose Tools | Templates.
     }
 
 }

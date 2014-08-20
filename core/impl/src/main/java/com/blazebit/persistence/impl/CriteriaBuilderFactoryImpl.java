@@ -68,13 +68,13 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private Map<String, Object> copyProperties(Properties properties) {
         Map<String, Object> newProperties = new HashMap<String, Object>();
-        
+
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
             Object value = entry.getValue();
             newProperties.put(key, value);
         }
-        
+
         return newProperties;
     }
 

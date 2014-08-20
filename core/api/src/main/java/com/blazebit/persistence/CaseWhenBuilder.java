@@ -31,7 +31,7 @@ public interface CaseWhenBuilder<T> {
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression);
-    
+
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
      * When the subquery builder and the restriction builder for the right hand side are finished,

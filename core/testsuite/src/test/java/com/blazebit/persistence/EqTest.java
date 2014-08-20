@@ -17,9 +17,9 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -87,8 +87,7 @@ public class EqTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").notEqExpression("d.versions.date + 1");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE NOT d.age = versions.date + 1", criteria
-                     .getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE NOT d.age = versions.date + 1", criteria.getQueryString());
         criteria.getResultList();
     }
 

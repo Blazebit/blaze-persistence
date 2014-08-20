@@ -54,28 +54,28 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     @Parameterized.Parameters
     public static Collection expressionOperatorUses() {
         return Arrays.asList(new Object[][]{
-            { "KEY(localized[:locale]) NOT MEMBER OF supportedLocales", "KEY(localized) NOT MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
-            { "KEY(localized[:locale]) MEMBER OF supportedLocales", "KEY(localized) MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
-// IS EMPTY seems to be broken in hibernate for element collections            
+            { "KEY(localized[:locale]) NOT MEMBER OF supportedLocales", "KEY(localized_locale) NOT MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
+            { "KEY(localized[:locale]) MEMBER OF supportedLocales", "KEY(localized_locale) MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
+// TODO: IS EMPTY seems to be broken in hibernate for element collections. Also see https://hibernate.atlassian.net/browse/HHH-6686
 //            { "localized[:locale] IS NOT EMPTY", "localized IS NOT EMPTY", "" },
 //            { "localized[:locale] IS EMPTY", "localized IS EMPTY", "" },
-            { "localized[:locale].name IS NOT NULL", "localized.name IS NOT NULL", "" },
-            { "localized[:locale].name IS NULL", "localized.name IS NULL", "" },
-            { "localized[:locale].name NOT LIKE '%a'", "localized.name NOT LIKE '%a'", "" },
-            { "localized[:locale].name LIKE '%a'", "localized.name LIKE '%a'", "" },
-            { "localized[:locale].name NOT IN ('a', 'b')", "localized.name NOT IN ('a', 'b')", "" },
-            { "localized[:locale].name IN ('a', 'b')", "localized.name IN ('a', 'b')", "" },
-            { "NOT(localized[:locale].name = localized[:locale].description)", "NOT(localized.name = localized.description)", "" },
-            { "localized[:locale].name <> localized[:locale].description", "localized.name <> localized.description", "" },
-            { "localized[:locale].name != localized[:locale].description", "localized.name != localized.description", "" },
-            { "localized[:locale].name = localized[:locale].description", "localized.name = localized.description", "" },
-            { "LENGTH(localized[:locale].name) NOT BETWEEN 1 AND 5", "LENGTH(localized.name) NOT BETWEEN 1 AND 5", "" },
-            { "LENGTH(localized[:locale].name) BETWEEN 1 AND 5", "LENGTH(localized.name) BETWEEN 1 AND 5", "" },
-            { "-LENGTH(localized[:locale].name) = -LENGTH(localized[:locale].description)", "-LENGTH(localized.name) = -LENGTH(localized.description)", "" },
-            { "LENGTH(localized[:locale].name) >= LENGTH(localized[:locale].description)", "LENGTH(localized.name) >= LENGTH(localized.description)", "" },
-            { "LENGTH(localized[:locale].name) > LENGTH(localized[:locale].description)", "LENGTH(localized.name) > LENGTH(localized.description)", "" },
-            { "LENGTH(localized[:locale].name) <= LENGTH(localized[:locale].description)", "LENGTH(localized.name) <= LENGTH(localized.description)", "" },
-            { "LENGTH(localized[:locale].name) < LENGTH(localized[:locale].description)", "LENGTH(localized.name) < LENGTH(localized.description)", "" },
+            { "localized[:locale].name IS NOT NULL", "localized_locale.name IS NOT NULL", "" },
+            { "localized[:locale].name IS NULL", "localized_locale.name IS NULL", "" },
+            { "localized[:locale].name NOT LIKE '%a'", "localized_locale.name NOT LIKE '%a'", "" },
+            { "localized[:locale].name LIKE '%a'", "localized_locale.name LIKE '%a'", "" },
+            { "localized[:locale].name NOT IN ('a', 'b')", "localized_locale.name NOT IN ('a', 'b')", "" },
+            { "localized[:locale].name IN ('a', 'b')", "localized_locale.name IN ('a', 'b')", "" },
+            { "NOT(localized[:locale].name = localized[:locale].description)", "NOT(localized_locale.name = localized_locale.description)", "" },
+            { "localized[:locale].name <> localized[:locale].description", "localized_locale.name <> localized_locale.description", "" },
+            { "localized[:locale].name != localized[:locale].description", "localized_locale.name != localized_locale.description", "" },
+            { "localized[:locale].name = localized[:locale].description", "localized_locale.name = localized_locale.description", "" },
+            { "LENGTH(localized[:locale].name) NOT BETWEEN 1 AND 5", "LENGTH(localized_locale.name) NOT BETWEEN 1 AND 5", "" },
+            { "LENGTH(localized[:locale].name) BETWEEN 1 AND 5", "LENGTH(localized_locale.name) BETWEEN 1 AND 5", "" },
+            { "-LENGTH(localized[:locale].name) = -LENGTH(localized[:locale].description)", "-LENGTH(localized_locale.name) = -LENGTH(localized_locale.description)", "" },
+            { "LENGTH(localized[:locale].name) >= LENGTH(localized[:locale].description)", "LENGTH(localized_locale.name) >= LENGTH(localized_locale.description)", "" },
+            { "LENGTH(localized[:locale].name) > LENGTH(localized[:locale].description)", "LENGTH(localized_locale.name) > LENGTH(localized_locale.description)", "" },
+            { "LENGTH(localized[:locale].name) <= LENGTH(localized[:locale].description)", "LENGTH(localized_locale.name) <= LENGTH(localized_locale.description)", "" },
+            { "LENGTH(localized[:locale].name) < LENGTH(localized[:locale].description)", "LENGTH(localized_locale.name) < LENGTH(localized_locale.description)", "" },
         });
     }
 
@@ -86,7 +86,7 @@ public class ComplexExpressionTest extends AbstractCoreTest {
         String expectedQuery = 
                 "SELECT CASE WHEN " + caseExp2 + " THEN true ELSE false END"
                 + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized " + ON_CLAUSE + " KEY(localized) = :locale"
+                + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
                 + (additionalJoins.isEmpty() ? "" : " " + additionalJoins);
         
         assertEquals(expectedQuery, cb.getQueryString());

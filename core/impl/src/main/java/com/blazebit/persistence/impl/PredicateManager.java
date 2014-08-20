@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -32,13 +31,14 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class PredicateManager<U> extends AbstractManager {
+public abstract class PredicateManager<T> extends AbstractManager {
 
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
@@ -58,29 +58,31 @@ public abstract class PredicateManager<U> extends AbstractManager {
         return rootPredicate;
     }
 
-    RestrictionBuilder<U> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<U>((U) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
+    RestrictionBuilder<T> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
     }
 
-    SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
-        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder(
-            new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
+    SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
+        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
+            new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
-    
-    SubqueryInitiator<RestrictionBuilder<U>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
-        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
-        RestrictionBuilder<U> restrictionBuilder = (RestrictionBuilder<U>) rootPredicate.startBuilder( new RestrictionBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
+
+    SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
+        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
+            new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, isAllowCaseWhenExpressions()));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
-    SubqueryInitiator<U> restrictExists(U result) {
+    SubqueryInitiator<T> restrictExists(T result) {
         rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(
             rootPredicate, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
-    SubqueryInitiator<U> restrictNotExists(U result) {
+    SubqueryInitiator<T> restrictNotExists(T result) {
         RightHandsideSubqueryPredicateBuilder<?> subqueryListener = rootPredicate.startBuilder(
             new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
@@ -97,7 +99,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
         if (rightSubqueryPredicateBuilderListener != null) {
             rightSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
-        if(superExprLeftSubqueryPredicateBuilderListener != null){
+        if (superExprLeftSubqueryPredicateBuilderListener != null) {
             superExprLeftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
@@ -105,7 +107,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
     void acceptVisitor(Predicate.Visitor v) {
         rootPredicate.predicate.accept(v);
     }
-    
+
     boolean hasPredicates() {
         return rootPredicate.predicate.getChildren().size() > 0;
     }
@@ -125,7 +127,7 @@ public abstract class PredicateManager<U> extends AbstractManager {
     }
 
     protected abstract String getClauseName();
-    
+
     protected abstract boolean isAllowCaseWhenExpressions();
 
     void applyPredicate(QueryGenerator queryGenerator, StringBuilder sb) {

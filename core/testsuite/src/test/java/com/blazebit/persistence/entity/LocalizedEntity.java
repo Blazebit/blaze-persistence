@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
@@ -27,7 +26,7 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class LocalizedEntity implements Serializable, Cloneable {
-    
+
     private static final long serialVersionUID = -8539302606114365372L;
 
     private String name;
@@ -51,9 +50,9 @@ public class LocalizedEntity implements Serializable, Cloneable {
     }
 
     @Column(
-            name = "NAME",
-            nullable = false,
-            length = 255)
+        name = "NAME",
+        nullable = false,
+        length = 255)
     public String getName() {
         return this.name;
     }
@@ -63,9 +62,9 @@ public class LocalizedEntity implements Serializable, Cloneable {
     }
 
     @Column(
-            name = "DESCRIPTION",
-            nullable = false,
-            length = 2500)
+        name = "DESCRIPTION",
+        nullable = false,
+        length = 2500)
     public String getDescription() {
         return this.description;
     }
@@ -90,23 +89,30 @@ public class LocalizedEntity implements Serializable, Cloneable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         LocalizedEntity other = (LocalizedEntity) obj;
         if (description == null) {
-            if (other.description != null)
+            if (other.description != null) {
                 return false;
-        } else if (!description.equals(other.description))
+            }
+        } else if (!description.equals(other.description)) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         return true;
     }
 }

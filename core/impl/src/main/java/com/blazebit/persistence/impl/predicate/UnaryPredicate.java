@@ -32,4 +32,26 @@ public abstract class UnaryPredicate implements Predicate {
     public Predicate getPredicate() {
         return predicate;
     }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 47 * hash + (this.predicate != null ? this.predicate.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final UnaryPredicate other = (UnaryPredicate) obj;
+        if (this.predicate != other.predicate && (this.predicate == null || !this.predicate.equals(other.predicate))) {
+            return false;
+        }
+        return true;
+    }
 }

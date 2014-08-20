@@ -18,13 +18,12 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.model.DocumentViewModel;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Assert;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -98,23 +97,23 @@ public class PaginationTest extends AbstractCoreTest {
         crit.orderByAsc("d.id");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized "
-            + ON_CLAUSE + " KEY(localized) = 1 "
-            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized")
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized_1 "
+            + ON_CLAUSE + " KEY(localized_1) = 1 "
+            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
             + ") LIKE UPPER(:param_2)";
 
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
-        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized "
-            + ON_CLAUSE + " KEY(localized) = 1 "
-            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized")
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner LEFT JOIN owner.localized localized_1 "
+            + ON_CLAUSE + " KEY(localized_1) = 1 "
+            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
             + ") LIKE UPPER(:param_2) "
             + "GROUP BY d.id "
             + "ORDER BY d.id ASC NULLS LAST";
 
-        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name, ' user'), COALESCE(" + joinAliasValue("localized")
+        String expectedObjectQuery = "SELECT d.name, CONCAT(owner.name, ' user'), COALESCE(" + joinAliasValue("localized_1")
             + ",'no item'), partnerDocument.name FROM Document d "
-            + "JOIN d.owner owner LEFT JOIN owner.localized localized " + ON_CLAUSE
-            + " KEY(localized) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
+            + "JOIN d.owner owner LEFT JOIN owner.localized localized_1 " + ON_CLAUSE
+            + " KEY(localized_1) = 1 LEFT JOIN owner.partnerDocument partnerDocument "
             + "WHERE d.id IN :ids "
             + "ORDER BY d.id ASC NULLS LAST";
 
@@ -143,8 +142,8 @@ public class PaginationTest extends AbstractCoreTest {
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner WHERE owner.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner WHERE owner.name = :param_0 GROUP BY d.id";
-        String expectedObjectQuery = "SELECT contacts.name FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE
-            + " KEY(contacts) = :contactNr JOIN d.owner owner WHERE d.id IN :ids";
+        String expectedObjectQuery = "SELECT contacts_contactNr.name FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
+            + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner WHERE d.id IN :ids";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
             .where("owner.name").eq("Karl1")
             .select("contacts[:contactNr].name")
@@ -216,22 +215,19 @@ public class PaginationTest extends AbstractCoreTest {
         }
     }
 
-    //#45
-    @Ignore 
     @Test
     public void testOrderByExpression() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
             .orderByAsc("contacts[:contactNr].name")
             .setParameter("contactNr", 1)
             .page(0, 1);
-        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE
-            + " KEY(contacts) = :contactNr GROUP BY d.id ORDER BY contacts.name ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
+            + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        cb.getResultList();
+        // TODO: enable as soon as #45 is fixed
+//        cb.getResultList();
     }
 
-    //#45
-    @Ignore
     @Test
     public void testOrderBySelectAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
@@ -239,10 +235,11 @@ public class PaginationTest extends AbstractCoreTest {
             .orderByAsc("contactName")
             .setParameter("contactNr", 1)
             .page(0, 1);
-        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts " + ON_CLAUSE
-            + " KEY(contacts) = :contactNr GROUP BY d.id ORDER BY contacts.name ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
+            + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        cb.getResultList();
+        // TODO: enable as soon as #45 is fixed
+        //cb.getResultList();
     }
 
     @Test

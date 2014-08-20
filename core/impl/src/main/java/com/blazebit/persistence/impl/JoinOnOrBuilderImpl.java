@@ -30,16 +30,16 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedListener<X> implements JoinOnOrBuilder<X>,
+public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements JoinOnOrBuilder<T>,
     PredicateBuilder {
 
-    private final X result;
+    private final T result;
     private final PredicateBuilderEndedListener listener;
     private final OrPredicate predicate = new OrPredicate();
     private final ExpressionFactory expressionFactory;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    public JoinOnOrBuilderImpl(X result, PredicateBuilderEndedListener listener, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
+    public JoinOnOrBuilderImpl(T result, PredicateBuilderEndedListener listener, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.expressionFactory = expressionFactory;
@@ -47,7 +47,7 @@ public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public X endOr() {
+    public T endOr() {
         verifyBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
@@ -60,14 +60,14 @@ public class JoinOnOrBuilderImpl<X> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public JoinOnAndBuilder<JoinOnOrBuilder<X>> onAnd() {
-        return startBuilder(new JoinOnAndBuilderImpl<JoinOnOrBuilder<X>>(this, this, expressionFactory, subqueryInitFactory));
+    public JoinOnAndBuilder<JoinOnOrBuilder<T>> onAnd() {
+        return startBuilder(new JoinOnAndBuilderImpl<JoinOnOrBuilder<T>>(this, this, expressionFactory, subqueryInitFactory));
     }
 
     @Override
-    public RestrictionBuilder<JoinOnOrBuilder<X>> on(String expression) {
+    public RestrictionBuilder<JoinOnOrBuilder<T>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<X>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, false));
+        return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override

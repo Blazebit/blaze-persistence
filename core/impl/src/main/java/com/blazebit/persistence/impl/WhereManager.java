@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  * @author Moritz Becker
  * @since 1.0
  */
-public class WhereManager<U> extends PredicateManager<U> {
+public class WhereManager<T> extends PredicateManager<T> {
 
     WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
@@ -38,8 +38,8 @@ public class WhereManager<U> extends PredicateManager<U> {
     protected boolean isAllowCaseWhenExpressions() {
         return true;
     }
-    
-    WhereOrBuilder<U> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
-        return rootPredicate.startBuilder(new WhereOrBuilderImpl<U>((U) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+
+    WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
+        return rootPredicate.startBuilder(new WhereOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 }

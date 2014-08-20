@@ -25,6 +25,6 @@ import java.util.Collection;
  */
 public interface SelectObjectBuilderEndedListener {
 
-    void onBuilderEnded(Collection<Expression> expressions);
+    public void onBuilderEnded(Collection<Expression> expressions);
 
 }

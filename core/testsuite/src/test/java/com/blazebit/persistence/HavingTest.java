@@ -17,9 +17,9 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Calendar;
 import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Test;
 
 /**
@@ -35,8 +35,7 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("d.age").gt(0L);
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age > :param_0", criteria
-                     .getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age > :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -46,8 +45,7 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.owner")
             .having("d.age + 1").gt(0L);
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age + 1 > :param_0", criteria
-                     .getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner GROUP BY owner HAVING d.age + 1 > :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
