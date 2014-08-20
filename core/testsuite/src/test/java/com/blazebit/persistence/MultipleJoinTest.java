@@ -63,7 +63,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             .select("localized.name");
         String expectedQuery = "SELECT l1.name, l2.name FROM Workflow workflow"
             + " LEFT JOIN workflow.localized l1 " + ON_CLAUSE + " KEY(l1) = :locale"
-            + " LEFT JOIN workflow.localized l2";
+            + " LEFT JOIN workflow.localized l2"
+            // TODO: remove when #45 or rather HHH-9329 has been fixed
+            + " WHERE l1.description IS NOT NULL AND l1.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -76,7 +78,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             .select("localized.name");
         String expectedQuery = "SELECT localized_locale.name, localized.name FROM Workflow workflow"
             + " LEFT JOIN workflow.localized localized"
-            + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale";
+            + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
+            // TODO: remove when #45 or rather HHH-9329 has been fixed
+            + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -91,7 +95,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             .leftJoinDefault("localized", "l2");
         String expectedQuery = "SELECT l1.name, l2.name FROM Workflow workflow"
             + " LEFT JOIN workflow.localized l1 " + ON_CLAUSE + " KEY(l1) = :locale"
-            + " LEFT JOIN workflow.localized l2";
+            + " LEFT JOIN workflow.localized l2"
+            // TODO: remove when #45 or rather HHH-9329 has been fixed
+            + " WHERE l1.description IS NOT NULL AND l1.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -106,7 +112,9 @@ public class MultipleJoinTest extends AbstractCoreTest {
             .select("localized[defaultLanguage].name");
         String expectedQuery = "SELECT l1.name, l2.name FROM Workflow workflow"
             + " LEFT JOIN workflow.localized l1 " + ON_CLAUSE + " KEY(l1) = :locale"
-            + " LEFT JOIN workflow.localized l2 " + ON_CLAUSE + " KEY(l2) = workflow.defaultLanguage";
+            + " LEFT JOIN workflow.localized l2 " + ON_CLAUSE + " KEY(l2) = workflow.defaultLanguage"
+            // TODO: remove when #45 or rather HHH-9329 has been fixed
+            + " WHERE l1.description IS NOT NULL AND l1.name IS NOT NULL AND l2.description IS NOT NULL AND l2.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();

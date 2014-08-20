@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -32,15 +33,25 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.Predicate.Visitor;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
+import javax.persistence.CollectionTable;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 /**
  *
@@ -124,6 +135,85 @@ public class JoinManager extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         rootNode.accept(new PredicateManager.TransformationVisitor(transformer));
+    }
+    
+    StringBuilder generateWhereClauseConjuncts(boolean includeSelect) {
+        StringBuilder sb = new StringBuilder();
+        generateWhereClauseConjuncts(sb, rootNode, null, includeSelect);
+        return sb;
+    }
+    
+    private void generateWhereClauseConjuncts(StringBuilder sb, JoinNode node, String relation, boolean includeSelect) {
+        if (usesKeyInWithPredicate(node, includeSelect)) {
+            // Safe because root has no with predicate
+            ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
+            Attribute<?, ?> attr = t.getAttribute(relation);
+            
+            if (attr.isCollection() && ((AnnotatedElement) attr.getJavaMember()).getAnnotation(CollectionTable.class) != null) {
+                if (sb.length() > 0) {
+                    sb.append(" AND ");
+                }
+                
+                Type<?> elementType = ((PluralAttribute<?, ?, ?>) attr).getElementType();
+                
+                // Unfortunately we have to branch here because embeddable IS NOT NULL results in a runtime error
+                if (elementType instanceof EntityType) {
+                    sb.append(node.getAliasInfo().getAlias());
+                    sb.append(" IS NOT NULL");
+                } else if (elementType instanceof EmbeddableType) {
+                    SortedSet<Attribute<?, ?>> attributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
+
+                        @Override
+                        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
+                            return o1.getName().compareTo(o2.getName());
+                        }
+                    });
+                    attributes.addAll(((EmbeddableType<?>) elementType).getSingularAttributes());
+                    boolean first = true;
+                    for (Attribute<?, ?> elementAttribute : attributes) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            sb.append(" AND ");
+                        }
+                        
+                        sb.append(node.getAliasInfo().getAlias());
+                        sb.append('.');
+                        sb.append(elementAttribute.getName());
+                        sb.append(" IS NOT NULL");
+                    }
+                }
+            }
+        }
+        for (Map.Entry<String, JoinTreeNode> treeNodeEntry : node.getNodes().entrySet()) {
+            String subRelation = treeNodeEntry.getKey();
+            JoinTreeNode treeNode = treeNodeEntry.getValue();
+            for (JoinNode n : treeNode.getJoinNodes().values()) {
+                generateWhereClauseConjuncts(sb, n, subRelation, includeSelect);
+            }
+        }
+    }
+    
+    private boolean usesKeyInWithPredicate(JoinNode node, boolean includeSelect) {
+        if (!includeSelect && node.isSelectOnly()) {
+            return false;
+        }
+        if (node.getWithPredicate() == null || node.getWithPredicate().getChildren().isEmpty()) {
+            return false;
+        }
+        
+        String keyExpressionString = "KEY(" + node.getAliasInfo().getAlias() + ")";
+        
+        for (Predicate p : node.getWithPredicate().getChildren()) {
+            if (p instanceof EqPredicate) {
+                EqPredicate eq = (EqPredicate) p;
+                if (keyExpressionString.equals(eq.getLeft().toString())) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, boolean includeSelect) {

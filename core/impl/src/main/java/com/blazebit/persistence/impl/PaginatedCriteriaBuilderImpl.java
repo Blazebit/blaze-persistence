@@ -223,6 +223,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         havingManager.buildClause(sbRemaining);
 
         joinManager.buildJoins(sbSelectFrom, false);
+        addWhereClauseConjuncts(sbRemaining, false);
 
         return sbSelectFrom.append(sbRemaining).toString();
     }
@@ -316,6 +317,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         orderByManager.buildOrderBy(sbRemaining);
 
         joinManager.buildJoins(sbSelectFrom, false);
+        addWhereClauseConjuncts(sbRemaining, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager, baseBuilder));

@@ -551,7 +551,36 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
          * necessary for the OUTER() functions in subqueries to take effect.
          */
         joinManager.buildJoins(sbSelectFrom, true);
+        addWhereClauseConjuncts(sbRemaining, true);
+        
         return sbSelectFrom.append(sbRemaining).toString();
+    }
+    
+    protected void addWhereClauseConjuncts(StringBuilder sbRemaining, boolean includeSelects) {
+        // Added a workaround for #45 and HHH-9329
+        StringBuilder whereClauseConjuncts = joinManager.generateWhereClauseConjuncts(includeSelects);
+        
+        if (whereClauseConjuncts.length() > 0) {
+            if (startsWith(sbRemaining, " WHERE ")) {
+                whereClauseConjuncts.append(" AND ");
+                sbRemaining.insert(" WHERE ".length(), whereClauseConjuncts);
+            } else {
+                whereClauseConjuncts.insert(0, " WHERE ");
+                sbRemaining.insert(0, whereClauseConjuncts);
+            }
+        }
+        
+    }
+    
+    private boolean startsWith(StringBuilder sb, String s) {
+        int i = 0;
+        for (; i < s.length() && i < sb.length(); i++) {
+            if (sb.charAt(i) != s.charAt(i)) {
+                return false;
+            }
+        }
+        
+        return i == s.length();
     }
 
     protected void transformQuery(TypedQuery<T> query) {
