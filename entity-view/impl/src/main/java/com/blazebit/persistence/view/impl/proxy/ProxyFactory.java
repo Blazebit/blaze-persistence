@@ -324,8 +324,8 @@ public class ProxyFactory {
         return ctConstructor;
     }
 
-    private CtConstructor findConstructor(CtClass superCc, MappingConstructor<?> constructor) throws NotFoundException {
-        List<ParameterAttribute<?, ?>> parameterAttributes = (List<ParameterAttribute<?, ?>>) constructor.getParameterAttributes();
+    private <T> CtConstructor findConstructor(CtClass superCc, MappingConstructor<T> constructor) throws NotFoundException {
+        List<ParameterAttribute<? super T, ?>> parameterAttributes = constructor.getParameterAttributes();
         CtClass[] parameterTypes = new CtClass[parameterAttributes.size()];
 
         for (int i = 0; i < parameterAttributes.size(); i++) {

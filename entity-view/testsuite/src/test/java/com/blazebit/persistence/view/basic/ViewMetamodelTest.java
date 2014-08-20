@@ -325,16 +325,16 @@ public class ViewMetamodelTest {
     @Test
     public void testGetConstructorsInterfaceView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentViewInterface.class);
-        Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
+        ViewType<DocumentViewInterface> viewType = viewMetamodel.view(DocumentViewInterface.class);
+        Set<MappingConstructor<DocumentViewInterface>> constructors = viewType.getConstructors();
         assertEquals(0, constructors.size());
     }
 
     @Test
     public void testGetConstructorsClassView() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
-        Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
+        ViewType<DocumentViewAbstractClass> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
+        Set<MappingConstructor<DocumentViewAbstractClass>> constructors = viewType.getConstructors();
         assertEquals(1, constructors.size());
         assertNotNull(viewType.getConstructor(Long.class, Integer.class));
         assertTrue(constructors.contains(viewType.getConstructor(Long.class, Integer.class)));
@@ -343,9 +343,9 @@ public class ViewMetamodelTest {
     @Test
     public void testMappingConstructor() throws Exception {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        ViewType<?> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
-        Set<MappingConstructor<?>> constructors = (Set<MappingConstructor<?>>) viewType.getConstructors();
-        MappingConstructor<?> constructor = constructors.iterator().next();
+        ViewType<DocumentViewAbstractClass> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
+        Set<MappingConstructor<DocumentViewAbstractClass>> constructors = viewType.getConstructors();
+        MappingConstructor<DocumentViewAbstractClass> constructor = constructors.iterator().next();
         assertNotNull(constructor);
         assertEquals(2, constructor.getParameterAttributes().size());
 
