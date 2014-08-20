@@ -41,7 +41,9 @@ import javassist.bytecode.AccessFlag;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
+import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
+import javassist.bytecode.SignatureAttribute;
 
 /**
  *
@@ -118,7 +120,7 @@ public class ProxyFactory {
                 attributeField.setModifiers(getModifiers(setter != null));
                 String genericSignature = getGenericSignature(attribute, attributeField);
                 if (genericSignature != null) {
-                    attributeField.setGenericSignature(genericSignature);
+                    setGenericSignature(attributeField, genericSignature);
                 }
                 cc.addField(attributeField);
 
@@ -128,7 +130,7 @@ public class ProxyFactory {
 
                 if (genericSignature != null) {
                     String getterGenericSignature = "()" + genericSignature;
-                    attributeGetter.setGenericSignature(getterGenericSignature);
+                    setGenericSignature(attributeGetter, getterGenericSignature);
                 }
 
                 if (createBridges) {
@@ -141,7 +143,7 @@ public class ProxyFactory {
                     CtMethod attributeSetter = CtNewMethod.setter(setter.getName(), attributeField);
                     if (genericSignature != null) {
                         String setterGenericSignature = "(" + genericSignature + ")V";
-                        attributeSetter.setGenericSignature(setterGenericSignature);
+                        setGenericSignature(attributeSetter, setterGenericSignature);
                     }
 
                     if (createBridges) {
@@ -194,6 +196,16 @@ public class ProxyFactory {
         } finally {
             pool.removeClassPath(classPath);
         }
+    }
+    
+    private void setGenericSignature(CtField field, String signature) {
+        FieldInfo fieldInfo = field.getFieldInfo();
+        fieldInfo.addAttribute(new SignatureAttribute(fieldInfo.getConstPool(), signature));
+    }
+    
+    private void setGenericSignature(CtMethod method, String signature) {
+        MethodInfo methodInfo = method.getMethodInfo();
+        methodInfo.addAttribute(new SignatureAttribute(methodInfo.getConstPool(), signature));
     }
 
     private String getEqualsDesc() throws NotFoundException {
