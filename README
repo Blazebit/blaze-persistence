@@ -1,23 +1,23 @@
-BlazeUtils
+blaze-persistence
 ==========
-BlazeUtils is a utility collection for java based projects.
+blaze-persistence is a rich Criteria API for JPA providers.
 
 What is it?
 ===========
 
-BlazeUtils is a utility collection for Java SE 6 and EE 6 environments,
-that can be used to simplify the usage of various APIs and frameworks like
-Reflection API, JPA, JavaMail, Quartz and many more.
+blaze-persistence is a rich Criteria API for JPA providers that is better
+than all the other Criteria APIs available.
+It provides a fluent API for building queries and removes common restrictions
+encountered when working with JPA directly.
+It offers rich pagination support and also supports keyset pagination.
 
+The entity view module can be used to create views for the JPA entites.
+You can roughly imagine an entity view is to an entity, what a RDBMS view is to a table.
 
 How to use it?
 ==============
-Include the jars you want in your project and get started!
-
-Contents of distribution
-========================
-
-BlazeCommonUtils, BlazeEEUtils, BlazeMailUtils, BlazeQuartzUtils, BlazeUtilsWebapp
+Currently you have to build it yourself, but soon we will publish the version 1.0 to
+the Maven Central.
  
 Licensing
 =========
@@ -28,4 +28,4 @@ License, Version 2.0 (see LICENSE.txt).
 References
 ==========
 
-Project Site:              http://blazebit.com/utils (Coming soon)
+Project Site:              http://blazebit.com/persistence (Coming soon)
