@@ -76,8 +76,8 @@ public class MultipleJoinTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
             .select("localized[:locale].name")
             .select("localized.name");
-        String expectedQuery = "SELECT localized_locale.name, localized.name FROM Workflow workflow"
-            + " LEFT JOIN workflow.localized localized"
+        String expectedQuery = "SELECT localized_locale.name, localized_1.name FROM Workflow workflow"
+            + " LEFT JOIN workflow.localized localized_1"
             + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
             // TODO: remove when #45 or rather HHH-9329 has been fixed
             + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL";
@@ -158,14 +158,11 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
         String expectedQuery = "SELECT " + joinAliasValue("l") + " FROM Document document"
             + " LEFT JOIN document.partners p1"
-            + " LEFT JOIN p1.partnerDocument partnerDocument"
-            // TODO: shouldn't we maybe consider to do the prefixing??
-//            + " LEFT JOIN p1.partnerDocument p1_partnerDocument"
+            + " LEFT JOIN p1.partnerDocument partnerDocument_1"
             // TODO: not sure if the order is correct
-            + " LEFT JOIN document.partners partners"
-            + " LEFT JOIN partners.localized l"
-            + " WHERE partnerDocument.name = :param_0";
-//            + " WHERE p1_partnerDocument.name = :param_0";
+            + " LEFT JOIN document.partners partners_1"
+            + " LEFT JOIN partners_1.localized l"
+            + " WHERE partnerDocument_1.name = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

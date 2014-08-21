@@ -76,6 +76,11 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public T getSingleResult() {
+        return getQuery().getSingleResult();
+    }
+
+    @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
@@ -161,7 +166,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public X fetch(String path) {
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        joinManager.join(path, null, null, true, true);
+        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, true, false, false, true);
         return (X) this;
     }
 

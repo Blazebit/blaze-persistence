@@ -49,7 +49,7 @@ public class LessTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").ltExpression("d.owner.name");
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner WHERE d.age < owner.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age < owner_1.name", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -79,7 +79,7 @@ public class LessTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age").leExpression("d.owner.name");
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner WHERE d.age <= owner.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age <= owner_1.name", criteria.getQueryString());
         criteria.getResultList();
     }
 

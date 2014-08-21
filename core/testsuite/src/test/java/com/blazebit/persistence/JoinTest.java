@@ -133,7 +133,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments_1 LEFT JOIN FETCH ownedDocuments_1.versions cont LEFT JOIN FETCH cont.document document_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -146,7 +146,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments_1 RIGHT JOIN FETCH ownedDocuments_1.versions cont LEFT JOIN FETCH cont.document document_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -159,7 +159,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments LEFT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments_1 LEFT JOIN FETCH ownedDocuments_1.versions cont LEFT JOIN FETCH cont.document document_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -172,7 +172,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments RIGHT JOIN FETCH ownedDocuments.versions cont LEFT JOIN FETCH cont.document document",
+            "SELECT d FROM Document d JOIN FETCH d.owner o LEFT JOIN FETCH o.ownedDocuments ownedDocuments_1 RIGHT JOIN FETCH ownedDocuments_1.versions cont LEFT JOIN FETCH cont.document document_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -241,7 +241,7 @@ public class JoinTest extends AbstractCoreTest {
         criteria.where("versions.document.age").eq(0L).leftJoin("a.partners", "p");
 
         assertEquals(
-            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN a.versions versions LEFT JOIN versions.document document WHERE document.age = :param_0",
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN a.versions versions_1 LEFT JOIN versions_1.document document_1 WHERE document_1.age = :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -255,10 +255,10 @@ public class JoinTest extends AbstractCoreTest {
         criteria2.leftJoin("a.partners", "p").where("p.ownedDocuments.age").eq(0L);
 
         assertEquals(
-            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0",
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments_1 WHERE ownedDocuments_1.age = :param_0",
             criteria1.getQueryString());
         assertEquals(
-            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments WHERE ownedDocuments.age = :param_0",
+            "SELECT a FROM Document a LEFT JOIN a.partners p LEFT JOIN p.ownedDocuments ownedDocuments_1 WHERE ownedDocuments_1.age = :param_0",
             criteria2.getQueryString());
         criteria1.getResultList();
         criteria2.getResultList();
@@ -283,7 +283,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
         crit.select("owner.name");
 
-        assertEquals("SELECT owner.name FROM Document a JOIN a.owner owner", crit.getQueryString());
+        assertEquals("SELECT owner_1.name FROM Document a JOIN a.owner owner_1", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -292,7 +292,16 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
         crit.fetch("owner.name");
 
-        assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner", crit.getQueryString());
+        assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testFetchAmbiguousImplicitAlias() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        crit.fetch("owner.partnerDocument.owner");
+
+        assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
         crit.getResultList();
     }
 }

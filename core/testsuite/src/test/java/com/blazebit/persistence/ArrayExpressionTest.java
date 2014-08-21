@@ -16,6 +16,9 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Workflow;
+import java.util.Locale;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -64,7 +67,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         criteria.select("d.contacts[:age].partnerDocument.versions[d.index]");
 
         assertEquals("SELECT " + joinAliasValue("versions_d_index") + " FROM Document d LEFT JOIN d.contacts contacts_age " + ON_CLAUSE
-            + " KEY(contacts_age) = :age LEFT JOIN contacts_age.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions_d_index "
+            + " KEY(contacts_age) = :age LEFT JOIN contacts_age.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.versions versions_d_index "
             + ON_CLAUSE + " KEY(versions_d_index) = d.index", criteria.getQueryString());
         // TODO: I don't know why this query won't work, maybe it's a hibernate bug?
         criteria.setParameter("age", 1).getResultList();
@@ -76,7 +79,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         criteria.select("d.contacts[d.versions.index]");
 
         // TODO: this fails because currently the join order is ascending by join alias, but here we have dependencies
-        assertEquals("SELECT " + joinAliasValue("contacts_d_versions_index") + " FROM Document d LEFT JOIN d.versions versions LEFT JOIN d.contacts contacts_d_versions_index " + ON_CLAUSE
+        assertEquals("SELECT " + joinAliasValue("contacts_versions_index") + " FROM Document d LEFT JOIN d.versions versions LEFT JOIN d.contacts contacts_versions_index " + ON_CLAUSE
             + " KEY(contacts_d_versions_index) = versions.index", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -109,7 +112,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         criteria.select("owner.partnerDocument", "x").leftJoinDefault("owner.partnerDocument", "p").where("p.contacts[1].name").isNull();
 
         assertEquals(
-            "SELECT p AS x FROM Document d JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts contacts_1 "
+            "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts contacts_1 "
             + ON_CLAUSE + " KEY(contacts_1) = 1 WHERE contacts_1.name IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -121,7 +124,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
             "c[1]").isNull();
 
         assertEquals(
-            "SELECT p AS x FROM Document d JOIN d.owner owner LEFT JOIN owner.partnerDocument p LEFT JOIN p.contacts c "
+            "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts c "
             + ON_CLAUSE + " KEY(c) = 1 WHERE " + joinAliasValue("c") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -131,8 +134,8 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[1].partnerDocument.name", "x");
 
-        assertEquals("SELECT partnerDocument.name AS x FROM Document d LEFT JOIN d.contacts contacts_1 " + ON_CLAUSE
-            + " KEY(contacts_1) = 1 LEFT JOIN contacts_1.partnerDocument partnerDocument", criteria.getQueryString());
+        assertEquals("SELECT partnerDocument_1.name AS x FROM Document d LEFT JOIN d.contacts contacts_1 " + ON_CLAUSE
+            + " KEY(contacts_1) = 1 LEFT JOIN contacts_1.partnerDocument partnerDocument_1", criteria.getQueryString());
         criteria.getResultList();
     }
 

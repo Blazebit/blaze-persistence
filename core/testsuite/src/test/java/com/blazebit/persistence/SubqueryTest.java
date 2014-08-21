@@ -84,8 +84,8 @@ public class SubqueryTest extends AbstractCoreTest {
     public void testRootAliasInSubquery() {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments WHERE "
-            + joinAliasValue("ownedDocuments") + " = d)";
+        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments_1 WHERE "
+            + joinAliasValue("ownedDocuments_1") + " = d)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -150,9 +150,9 @@ public class SubqueryTest extends AbstractCoreTest {
             .getQueryString();
 
         String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions v WHERE d.id IN "
-            + "(SELECT p.id FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments WHERE d.age = SIZE(p.ownedDocuments)) AND d.id NOT IN "
-            + "(SELECT person.id FROM Person person LEFT JOIN person.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions "
-            + "WHERE d.age < SIZE(partnerDocument.versions))";
+            + "(SELECT p.id FROM Person p WHERE d.age = SIZE(p.ownedDocuments)) AND d.id NOT IN "
+            + "(SELECT person.id FROM Person person LEFT JOIN person.partnerDocument partnerDocument_1 "
+            + "WHERE d.age < SIZE(partnerDocument_1.versions))";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -168,8 +168,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 "SIZE(document.partners)").end()
             .getQueryString();
 
-        String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions versions WHERE SIZE(d.versions) < :param_0 AND d.id IN "
-            + "(SELECT document.id FROM Document document LEFT JOIN document.partners partners LEFT JOIN document.versions versions_1 "
+        String expected = "SELECT d.name AS n FROM Document d WHERE SIZE(d.versions) < :param_0 AND d.id IN "
+            + "(SELECT document.id FROM Document document "
             + "WHERE SIZE(document.versions) = SIZE(document.partners))";
 
         assertEquals(expected, crit.getQueryString());
@@ -200,8 +200,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from(Person.class)
                 .where("partnerDocument").eqExpression("d")
             .end();
-        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner WHERE owner IN (SELECT person FROM Person person LEFT JOIN person.partnerDocument partnerDocument "
-            + "WHERE partnerDocument = d)";
+        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE owner_1 IN (SELECT person FROM Person person LEFT JOIN person.partnerDocument partnerDocument_1 "
+            + "WHERE partnerDocument_1 = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -216,7 +216,7 @@ public class SubqueryTest extends AbstractCoreTest {
             .notIn().from(Person.class).select("id").where("d.name").like("test").end()
             .where("SIZE(d.versions)").lt(5)
             .getQueryString();
-        String expected = "SELECT d.name AS n FROM Document d LEFT JOIN d.versions versions WHERE d.id IN (SELECT person.id FROM Person person "
+        String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN (SELECT person.id FROM Person person "
             + "WHERE d.name = :param_0) AND d.id NOT IN (SELECT person.id FROM Person person WHERE d.name LIKE :param_1) AND SIZE(d.versions) < :param_2";
 
         assertEquals(expected, crit.getQueryString());
@@ -229,7 +229,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.leftJoin("d.partners.localized", "l").whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(l)").gt(1).end()
             .like("%dld");
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l WHERE (SELECT p.name FROM Person p "
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WHERE (SELECT p.name FROM Person p "
             + "WHERE LENGTH(l) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
@@ -241,7 +241,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like("%dld");
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
             + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
@@ -259,7 +259,7 @@ public class SubqueryTest extends AbstractCoreTest {
             .end()
             .groupBy("id")
             .orderByAsc("localizedCount");
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = c.id)) AS localizedCount "
+        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized_1) FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = c.id)) AS localizedCount "
             + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -278,8 +278,8 @@ public class SubqueryTest extends AbstractCoreTest {
             .groupBy("id")
             .orderByAsc("localizedCount");
 
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized) FROM Person p LEFT JOIN p.localized localized WHERE p.id = contacts.id)) AS localizedCount "
-            + "FROM Document d LEFT JOIN d.contacts contacts GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
+        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized_1) FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = contacts_1.id)) AS localizedCount "
+            + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
 //        cb.getResultList(); 
@@ -293,7 +293,7 @@ public class SubqueryTest extends AbstractCoreTest {
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like("%dld");
         
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
             + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
@@ -306,8 +306,8 @@ public class SubqueryTest extends AbstractCoreTest {
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like("%dld");
         
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.localized l "
-            + "LEFT JOIN partners.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 WHERE (SELECT p.name FROM Person p "
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l "
+            + "LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 WHERE (SELECT p.name FROM Person p "
             + "WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();

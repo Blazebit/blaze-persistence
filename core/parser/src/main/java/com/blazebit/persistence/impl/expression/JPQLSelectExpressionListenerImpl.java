@@ -345,8 +345,11 @@ class JPQLSelectExpressionListenerImpl extends JPQLSelectExpressionBaseListener 
                 } else if (node.getSymbol().getType() == JPQLSelectExpressionLexer.Outer_function) {
                     outerContext();
                 } else {
-                    if (node.getSymbol().getType() == JPQLSelectExpressionLexer.Size_function) {
-                        usedInCollectionFunction = true;
+                    switch(node.getSymbol().getType()){
+                        case JPQLSelectExpressionLexer.Size_function:
+                        case JPQLSelectExpressionLexer.Member_of_function:
+                        case JPQLSelectExpressionLexer.Empty_function:
+                            usedInCollectionFunction = true;
                     }
                     fooBuilder.append(node.getSymbol().getText());
                 }

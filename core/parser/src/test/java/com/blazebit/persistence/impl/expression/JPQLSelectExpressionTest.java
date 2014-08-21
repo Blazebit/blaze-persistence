@@ -461,6 +461,15 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
+    public void deleteMe() {
+        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END"));
+        CommonTokenStream tokens = new CommonTokenStream(l);tokens.fill();
+        for(int i = 0; i < tokens.size(); i++){
+            System.out.println(tokens.get(i).getText());
+        }
+    }
+    
+    @Test
     public void testCaseWhenSwitchTrue() {
         CompositeExpression result = parse("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END", true);
         List<Expression> expressions = result.getExpressions();

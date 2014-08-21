@@ -260,10 +260,10 @@ simple_subquery_expression : single_valued_path_expression |
  null_comparison_expression : (single_valued_path_expression | Input_parameter) 'IS' ('NOT')? 'NULL'
                             ;
 
- empty_collection_comparison_expression : collection_valued_path_expression 'IS' ('NOT')? 'EMPTY'
+ empty_collection_comparison_expression : collection_valued_path_expression Empty_function
                                         ;
 
- collection_member_expression : entity_or_value_expression ('NOT')? 'MEMBER' ('OF')? collection_valued_path_expression
+ collection_member_expression : entity_or_value_expression Member_of_function collection_valued_path_expression
                               ;
 
  entity_or_value_expression : state_field_path_expression |

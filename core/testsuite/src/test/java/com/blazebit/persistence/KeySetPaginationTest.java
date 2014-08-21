@@ -73,9 +73,9 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 0, 1);
         PagedList<Tuple> result = pcb.getResultList();
         // The first time we have to use the offset
-        String expectedIdQuery = "SELECT d.id, owner.name, d.name FROM Document d JOIN d.owner owner "
+        String expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
             + "GROUP BY d.id "
-            + "ORDER BY owner.name DESC NULLS LAST, d.name ASC NULLS LAST";
+            + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());
@@ -85,19 +85,19 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeySet(), 1, 1);
         result = pcb.getResultList();
         // Finally we can use the key set
-        expectedIdQuery = "SELECT d.id, owner.name, d.name FROM Document d JOIN d.owner owner "
-            + "WHERE (owner.name > :_keySetParameter_0 OR (owner.name = :_keySetParameter_0 AND d.name > :_keySetParameter_1)) "
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
+            + "WHERE (owner_1.name > :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND d.name > :_keySetParameter_1)) "
             + "GROUP BY d.id "
-            + "ORDER BY owner.name DESC NULLS LAST, d.name ASC NULLS LAST";
+            + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         pcb = crit.page(result.getKeySet(), 1, 1);
         result = pcb.getResultList();
         // Same page again key set
-        expectedIdQuery = "SELECT d.id, owner.name, d.name FROM Document d JOIN d.owner owner "
-            + "WHERE (owner.name >= :_keySetParameter_0 AND d.name >= :_keySetParameter_1) "
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
+            + "WHERE (owner_1.name >= :_keySetParameter_0 AND d.name >= :_keySetParameter_1) "
             + "GROUP BY d.id "
-            + "ORDER BY owner.name DESC NULLS LAST, d.name ASC NULLS LAST";
+            + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());
@@ -107,10 +107,10 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeySet(), 0, 1);
         result = pcb.getResultList();
         // Now we scroll back
-        expectedIdQuery = "SELECT d.id, owner.name, d.name FROM Document d JOIN d.owner owner "
-            + "WHERE (owner.name < :_keySetParameter_0 OR (owner.name = :_keySetParameter_0 AND d.name < :_keySetParameter_1)) "
+        expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
+            + "WHERE (owner_1.name < :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND d.name < :_keySetParameter_1)) "
             + "GROUP BY d.id "
-            + "ORDER BY owner.name DESC NULLS LAST, d.name ASC NULLS LAST";
+            + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());

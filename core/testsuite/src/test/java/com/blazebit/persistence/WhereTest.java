@@ -53,7 +53,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.partners.age").gt(0L);
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.age > :param_0", criteria
                      .getQueryString());
         criteria.getResultList();
     }
@@ -64,7 +64,7 @@ public class WhereTest extends AbstractCoreTest {
         criteria.where("d.owner.ownedDocuments.age + 1").ge(25L);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner LEFT JOIN owner.ownedDocuments ownedDocuments WHERE ownedDocuments.age + 1 >= :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.ownedDocuments ownedDocuments_1 WHERE ownedDocuments_1.age + 1 >= :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -75,7 +75,7 @@ public class WhereTest extends AbstractCoreTest {
         criteria.where("d.partners.age").gt(0L).where("d.versions.url").like("http://%");
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 AND versions.url LIKE :param_1",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 WHERE partners_1.age > :param_0 AND versions_1.url LIKE :param_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -86,7 +86,7 @@ public class WhereTest extends AbstractCoreTest {
         criteria.whereOr().where("d.partners.age").gt(0L).where("d.versions.url").like("http://%").endOr();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE partners.age > :param_0 OR versions.url LIKE :param_1",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 WHERE partners_1.age > :param_0 OR versions_1.url LIKE :param_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -106,7 +106,7 @@ public class WhereTest extends AbstractCoreTest {
                 .endAnd()
             .endOr();
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 AND versions.url LIKE :param_1) OR (versions.date < :param_2 AND versions.url LIKE :param_3)",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 WHERE (partners_1.age > :param_0 AND versions_1.url LIKE :param_1) OR (versions_1.date < :param_2 AND versions_1.url LIKE :param_3)",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -125,7 +125,7 @@ public class WhereTest extends AbstractCoreTest {
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE (partners.age > :param_0 OR versions.url LIKE :param_1) AND (versions.date < :param_2 OR versions.url LIKE :param_3)",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 WHERE (partners_1.age > :param_0 OR versions_1.url LIKE :param_1) AND (versions_1.date < :param_2 OR versions_1.url LIKE :param_3)",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -135,7 +135,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().where("d.partners.age").gt(0L).endOr();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners WHERE partners.age > :param_0", criteria
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.age > :param_0", criteria
                      .getQueryString());
         criteria.getResultList();
     }
@@ -145,7 +145,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.versions.date").gt(Calendar.getInstance()).endAnd().endOr();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions WHERE versions.date > :param_0", criteria
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE versions_1.date > :param_0", criteria
                      .getQueryString());
         criteria.getResultList();
     }
@@ -262,7 +262,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -273,7 +273,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -303,7 +303,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id)";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id)";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -315,7 +315,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id)";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -326,7 +326,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner.id";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -338,7 +338,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner.id";
+        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 

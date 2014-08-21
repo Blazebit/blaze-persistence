@@ -122,7 +122,7 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<DocumentPartnerView> criteria = cbf.from(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
 
-        assertEquals("SELECT d.id, " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT d.id, " + joinAliasValue("partners_1") + " FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -131,7 +131,7 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4L);
 
-        assertEquals("SELECT owner.name FROM Document d JOIN d.owner owner WHERE d.age < :param_0", criteria.getQueryString());
+        assertEquals("SELECT owner_1.name FROM Document d JOIN d.owner owner_1 WHERE d.age < :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -140,8 +140,8 @@ public class SelectNewTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4L);
 
-        assertEquals("SELECT partnerDocument.name FROM Document d LEFT JOIN d.contacts contacts_index " + ON_CLAUSE
-            + " KEY(contacts_index) = :index LEFT JOIN contacts_index.partnerDocument partnerDocument WHERE d.age < :param_0", criteria.getQueryString());
+        assertEquals("SELECT partnerDocument_1.name FROM Document d LEFT JOIN d.contacts contacts_index " + ON_CLAUSE
+            + " KEY(contacts_index) = :index LEFT JOIN contacts_index.partnerDocument partnerDocument_1 WHERE d.age < :param_0", criteria.getQueryString());
         criteria.setParameter("index", 0)
             .getResultList();
     }

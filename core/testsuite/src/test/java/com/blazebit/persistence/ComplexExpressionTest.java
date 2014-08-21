@@ -36,12 +36,10 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     
     private final String caseExp1;
     private final String caseExp2;
-    private final String additionalJoins;
 
     public ComplexExpressionTest(String caseExp1, String caseExp2, String additionalJoins) {
         this.caseExp1 = caseExp1;
         this.caseExp2 = caseExp2;
-        this.additionalJoins = additionalJoins;
     }
 
     @Override
@@ -54,8 +52,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     @Parameterized.Parameters
     public static Collection expressionOperatorUses() {
         return Arrays.asList(new Object[][]{
-            { "KEY(localized[:locale]) NOT MEMBER OF supportedLocales", "KEY(localized_locale) NOT MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
-            { "KEY(localized[:locale]) MEMBER OF supportedLocales", "KEY(localized_locale) MEMBER OF supportedLocales", "LEFT JOIN workflow.supportedLocales supportedLocales" },
+            { "KEY(localized[:locale]) NOT MEMBER OF supportedLocales", "KEY(localized_locale) NOT MEMBER OF workflow.supportedLocales", "" },
+            { "KEY(localized[:locale]) MEMBER OF supportedLocales", "KEY(localized_locale) MEMBER OF workflow.supportedLocales", "" },
 // TODO: IS EMPTY seems to be broken in hibernate for element collections. Also see https://hibernate.atlassian.net/browse/HHH-6686
 //            { "localized[:locale] IS NOT EMPTY", "localized IS NOT EMPTY", "" },
 //            { "localized[:locale] IS EMPTY", "localized IS EMPTY", "" },
@@ -87,7 +85,6 @@ public class ComplexExpressionTest extends AbstractCoreTest {
                 "SELECT CASE WHEN " + caseExp2 + " THEN true ELSE false END"
                 + " FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + (additionalJoins.isEmpty() ? "" : " " + additionalJoins)
                 // TODO: remove when #45 or rather HHH-9329 has been fixed
                 + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL";
         

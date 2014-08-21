@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -52,7 +53,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("partners");
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -61,7 +62,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners");
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -70,7 +71,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners + 1");
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " + 1 FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " + 1 FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
     }
 
     @Test
@@ -78,8 +79,8 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners").select("d.versions");
 
-        assertEquals("SELECT " + joinAliasValue("partners") + ", " + joinAliasValue("versions")
-            + " FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + ", " + joinAliasValue("versions_1")
+            + " FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -88,8 +89,8 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").isNull();
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
-            + joinAliasValue("partners") + " IS NULL", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
+            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -98,8 +99,8 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("partners").isNull();
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
-            + joinAliasValue("partners") + " IS NULL", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
+            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -108,8 +109,8 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners", "p").where("p").isNull();
 
-        assertEquals("SELECT " + joinAliasValue("partners") + " AS p FROM Document d LEFT JOIN d.partners partners WHERE "
-            + joinAliasValue("partners") + " IS NULL", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
+            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -119,7 +120,7 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.versions.date", "x").where("SIZE(d.partners)").eq(2);
 
         assertEquals(
-            "SELECT versions.date AS x FROM Document d LEFT JOIN d.partners partners LEFT JOIN d.versions versions WHERE SIZE(d.partners) = :param_0",
+            "SELECT versions_1.date AS x FROM Document d LEFT JOIN d.versions versions_1 WHERE SIZE(d.partners) = :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -148,7 +149,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.partners.name");
 
-        assertEquals("SELECT partners.name FROM Document d LEFT JOIN d.partners partners", criteria.getQueryString());
+        assertEquals("SELECT partners_1.name FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -157,7 +158,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
         criteria.select("a.versions");
 
-        assertEquals("SELECT " + joinAliasValue("versions") + " FROM Document a LEFT JOIN a.versions versions", criteria.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("versions_1") + " FROM Document a LEFT JOIN a.versions versions_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -232,5 +233,14 @@ public class SelectTest extends AbstractCoreTest {
         
         assertEquals("SELECT (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", criteria.getQueryString());
         criteria.getResultList();
+    }
+    
+    @Test
+    public void testGetSingleResult() {
+        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Tuple> t = criteria.select("COUNT(d.id)");
+        
+        assertEquals("SELECT COUNT(d.id) FROM Document d", criteria.getQueryString());
+        assertEquals(0L, t.getSingleResult().get(0));
     }
 }

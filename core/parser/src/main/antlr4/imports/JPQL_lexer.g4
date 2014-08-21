@@ -19,6 +19,10 @@ Star_operator : '*';
     
 Size_function : 'SIZE';
 
+Empty_function : 'IS' ([ ]+ 'NOT' [ ]+)? 'EMPTY';
+
+Member_of_function : ('NOT' [ ]+)? 'MEMBER' ([ ]+ 'OF')?;
+
 Outer_function : 'OUTER';
  
 String_literal : '\'' ~[\']* '\'';

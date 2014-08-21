@@ -136,26 +136,26 @@ public class JoinManager extends AbstractManager {
     void applyTransformer(ExpressionTransformer transformer) {
         rootNode.accept(new PredicateManager.TransformationVisitor(transformer));
     }
-    
+
     StringBuilder generateWhereClauseConjuncts(boolean includeSelect) {
         StringBuilder sb = new StringBuilder();
         generateWhereClauseConjuncts(sb, rootNode, null, includeSelect);
         return sb;
     }
-    
+
     private void generateWhereClauseConjuncts(StringBuilder sb, JoinNode node, String relation, boolean includeSelect) {
         if (usesKeyInWithPredicate(node, includeSelect)) {
             // Safe because root has no with predicate
             ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
             Attribute<?, ?> attr = t.getAttribute(relation);
-            
+
             if (attr.isCollection() && ((AnnotatedElement) attr.getJavaMember()).getAnnotation(CollectionTable.class) != null) {
                 if (sb.length() > 0) {
                     sb.append(" AND ");
                 }
-                
+
                 Type<?> elementType = ((PluralAttribute<?, ?, ?>) attr).getElementType();
-                
+
                 // Unfortunately we have to branch here because embeddable IS NOT NULL results in a runtime error
                 if (elementType instanceof EntityType) {
                     sb.append(node.getAliasInfo().getAlias());
@@ -176,7 +176,7 @@ public class JoinManager extends AbstractManager {
                         } else {
                             sb.append(" AND ");
                         }
-                        
+
                         sb.append(node.getAliasInfo().getAlias());
                         sb.append('.');
                         sb.append(elementAttribute.getName());
@@ -193,7 +193,7 @@ public class JoinManager extends AbstractManager {
             }
         }
     }
-    
+
     private boolean usesKeyInWithPredicate(JoinNode node, boolean includeSelect) {
         if (!includeSelect && node.isSelectOnly()) {
             return false;
@@ -201,9 +201,9 @@ public class JoinManager extends AbstractManager {
         if (node.getWithPredicate() == null || node.getWithPredicate().getChildren().isEmpty()) {
             return false;
         }
-        
+
         String keyExpressionString = "KEY(" + node.getAliasInfo().getAlias() + ")";
-        
+
         for (Predicate p : node.getWithPredicate().getChildren()) {
             if (p instanceof EqPredicate) {
                 EqPredicate eq = (EqPredicate) p;
@@ -212,7 +212,7 @@ public class JoinManager extends AbstractManager {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -357,7 +357,11 @@ public class JoinManager extends AbstractManager {
         return current;
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery, boolean fromSelectAlias) {
+    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery, boolean fromSelectAlias){
+        implicitJoin(expression, objectLeafAllowed, fromSelect, fromSubquery, fromSelectAlias, false);
+    }
+    
+    void implicitJoin(Expression expression, boolean objectLeafAllowed, boolean fromSelect, boolean fromSubquery, boolean fromSelectAlias, boolean fetch) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
@@ -442,7 +446,7 @@ public class JoinManager extends AbstractManager {
                     if (!(selectExpr instanceof PathExpression)) {
                         throw new RuntimeException("The select expression '" + selectExpr.toString() + "' is not a simple path expression! No idea how to implicit join that.");
                     }
-
+                    //TODO: I think this is redundant
                     implicitJoin(selectExpr, objectLeafAllowed, fromSelect, fromSubquery, true);
                     PathExpression selectPathExpr = (PathExpression) selectExpr;
                     result = new JoinResult((JoinNode) selectPathExpr.getBaseNode(), selectPathExpr.getField());
@@ -451,8 +455,10 @@ public class JoinManager extends AbstractManager {
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
                     result = new JoinResult(current, null);
                 }
-            } else {
+            } else if(!pathExpression.isUsedInCollectionFunction()) {
                 result = implicitJoinSingle(current, elementExpr.toString(), objectLeafAllowed, fromSelect);
+            } else{
+                result = new JoinResult(current, elementExpr.toString());
             }
 
             if (pathExpression.isUsedInCollectionFunction() && result.field == null) {
@@ -462,6 +468,10 @@ public class JoinManager extends AbstractManager {
                 } else {
                     result = new JoinResult(result.baseNode.getParent(), elementExpr.toString());
                 }
+            }
+
+            if (fetch) {
+                fetchPath(result.baseNode);
             }
 
             pathExpression.setBaseNode(result.baseNode);
@@ -616,8 +626,8 @@ public class JoinManager extends AbstractManager {
             Attribute attr = metamodel.managedType(baseNodeType).getAttribute(attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
-                    + attributeName + " was not found within class "
-                    + baseNodeType.getName());
+                        + attributeName + " was not found within class "
+                        + baseNodeType.getName());
             }
             if (isJoinable(attr)) {
                 throw new IllegalArgumentException("No object leaf allowed but " + attributeName + " is an object leaf");
@@ -638,8 +648,8 @@ public class JoinManager extends AbstractManager {
 
     private boolean isJoinable(Attribute attr) {
         return attr.isCollection()
-            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     private Class<?> resolveFieldClass(Attribute attr) {
@@ -652,8 +662,8 @@ public class JoinManager extends AbstractManager {
 
     private JoinType getModelAwareType(Attribute attr) {
         if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
-            && ((SingularAttribute) attr).isOptional() == false) {
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
+                && ((SingularAttribute) attr).isOptional() == false) {
             return JoinType.INNER;
         } else {
             return JoinType.LEFT;
@@ -671,20 +681,24 @@ public class JoinManager extends AbstractManager {
         Attribute attr = type.getAttribute(joinRelationName);
         if (attr == null) {
             throw new IllegalArgumentException("Field with name "
-                + joinRelationName + " was not found within class "
-                + baseNodeType.getName());
+                    + joinRelationName + " was not found within class "
+                    + baseNodeType.getName());
         }
         Class<?> resolvedFieldClass = resolveFieldClass(attr);
 
         if (!isJoinable(attr)) {
             LOG.fine(new StringBuilder("Field with name ").append(joinRelationName).append(" of class ").append(baseNodeType.getName()).append(
-                " is parseable and therefore it has not to be fetched explicitly.").toString());
+                    " is parseable and therefore it has not to be fetched explicitly.").toString());
             return baseNode;
         }
 
         if (alias == null) {
-            // default alias
-            alias = joinRelationName;
+            if (implicit) {
+                alias = aliasManager.generatePostfixedAlias(joinRelationName);
+            } else {
+                // default alias
+                alias = joinRelationName;
+            }
         }
         if (joinType == null) {
             joinType = getModelAwareType(attr);
@@ -710,7 +724,7 @@ public class JoinManager extends AbstractManager {
                 throw new IllegalArgumentException(errorMessage);
             } else {
                 throw new RuntimeException("Probably a programming error if this happens. An alias[" + alias + "] for the same join path[" + currentJoinPath
-                    + "] is available but the join node is not!");
+                        + "] is available but the join node is not!");
             }
         }
     }
@@ -752,7 +766,7 @@ public class JoinManager extends AbstractManager {
                     aliasManager.registerAliasInfo(nodeAliasInfo);
                 } else if (!nodeAliasInfo.isImplicit() && !implicit) {
                     throw new IllegalArgumentException("Alias conflict [" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + ", " + alias + "=" + currentJoinPath
-                        + "]");
+                            + "]");
                 }
             }
         }

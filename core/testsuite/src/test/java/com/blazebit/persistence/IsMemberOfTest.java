@@ -16,7 +16,10 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Workflow;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import java.util.Locale;
+import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -34,7 +37,7 @@ public class IsMemberOfTest extends AbstractCoreTest {
         criteria.where("d.owner").isMemberOf("d.contacts");
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.contacts contacts JOIN d.owner owner WHERE owner MEMBER OF d.contacts",
+            "SELECT d FROM Document d JOIN d.owner owner_1 WHERE owner_1 MEMBER OF d.contacts",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -57,7 +60,7 @@ public class IsMemberOfTest extends AbstractCoreTest {
         criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.contacts contacts LEFT JOIN contacts.ownedDocuments ownedDocuments WHERE NOT d MEMBER OF contacts.ownedDocuments",
+            "SELECT d FROM Document d LEFT JOIN d.contacts contacts_1 WHERE NOT d MEMBER OF contacts_1.ownedDocuments",
             criteria.getQueryString());
         criteria.getResultList();
     }

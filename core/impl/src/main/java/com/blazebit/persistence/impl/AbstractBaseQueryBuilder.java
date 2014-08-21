@@ -66,7 +66,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final JPAInfo jpaInfo;
 
     protected final AliasManager aliasManager;
-    private final ExpressionFactory expressionFactory;
+    protected final ExpressionFactory expressionFactory;
 
     private final List<ExpressionTransformer> transformers;
 

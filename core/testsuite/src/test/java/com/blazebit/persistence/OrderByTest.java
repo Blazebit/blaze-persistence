@@ -70,7 +70,7 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.orderBy("d.versions.document.age", false, false);
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document ORDER BY document.age DESC NULLS LAST",
+            "SELECT d FROM Document d LEFT JOIN d.versions versions_1 LEFT JOIN versions_1.document document_1 ORDER BY document_1.age DESC NULLS LAST",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -81,7 +81,7 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.orderBy("d.partners.ownedDocuments.age", false, false).orderBy("d.partners.partnerDocument.age", true, true);
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners LEFT JOIN partners.ownedDocuments ownedDocuments LEFT JOIN partners.partnerDocument partnerDocument ORDER BY ownedDocuments.age DESC NULLS LAST, partnerDocument.age ASC NULLS FIRST",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.ownedDocuments ownedDocuments_1 LEFT JOIN partners_1.partnerDocument partnerDocument_1 ORDER BY ownedDocuments_1.age DESC NULLS LAST, partnerDocument_1.age ASC NULLS FIRST",
             criteria.getQueryString());
         criteria.getResultList();
     }

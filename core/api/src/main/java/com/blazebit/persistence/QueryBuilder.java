@@ -119,6 +119,13 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The list of the results
      */
     public List<T> getResultList();
+    
+    /**
+     * Execute the query expecting a single result.
+     *
+     * @return The single result
+     */
+    public T getSingleResult();
 
     /**
      * Returns the JPA {@link Metamodel} of the persistence unit which is used by this query builder.
