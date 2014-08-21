@@ -36,7 +36,7 @@ public class Version implements Serializable {
     private long id;
     private Document document;
     private Calendar date;
-    private int index;
+    private int idx;
     private String url;
 
     @Id
@@ -67,12 +67,12 @@ public class Version implements Serializable {
         this.date = date;
     }
 
-    public int getIndex() {
-        return index;
+    public int getIdx() {
+        return idx;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
+    public void setIdx(int index) {
+        this.idx = index;
     }
 
     public String getUrl() {

@@ -25,8 +25,18 @@ import java.util.TreeMap;
  */
 public class JoinTreeNode {
 
+    private final String relationName;
     private JoinNode defaultNode;
+    /* maps join aliases to join nodes */
     private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
+
+    public JoinTreeNode(String relationName) {
+        this.relationName = relationName;
+    }
+
+    public String getRelationName() {
+        return relationName;
+    }
 
     public JoinNode getDefaultNode() {
         return defaultNode;

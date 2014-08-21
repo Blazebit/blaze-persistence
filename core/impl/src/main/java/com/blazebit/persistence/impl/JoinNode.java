@@ -16,9 +16,13 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -36,29 +40,50 @@ public class JoinNode {
     // We need this for count and id queries where we do not need all the joins
     private boolean selectOnly = true;
     private final JoinNode parent;
+    private final JoinTreeNode parentTreeNode;
+
     private final Class<?> propertyClass;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied alphabetically for easier testing
     private final boolean collection;
+    // contains other join nodes which this node depends on
+    private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
     private AndPredicate withPredicate;
 
-    public JoinNode(JoinNode parent, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, boolean collection) {
+    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, boolean collection) {
         this.parent = parent;
+        this.parentTreeNode = parentTreeNode;
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.propertyClass = propertyClass;
         this.collection = collection;
     }
 
-    public void accept(Predicate.Visitor visitor) {
+    public void registerDependencies() {
         if (withPredicate != null) {
-            withPredicate.accept(visitor);
+            withPredicate.accept(new VisitorAdapter() {
+                @Override
+                public void visit(PathExpression pathExpr) {
+                    // prevent loop dependencies to the same join node
+                    if (pathExpr.getBaseNode() != JoinNode.this) {
+                        dependencies.add((JoinNode) pathExpr.getBaseNode());
+                    }
+                }
+            });
         }
+    }
+
+    public void accept(JoinNodeVisitor visitor) {
+        visitor.visit(this);
         for (JoinTreeNode treeNode : nodes.values()) {
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
                 joinNode.accept(visitor);
             }
         }
+    }
+
+    public JoinTreeNode getParentTreeNode() {
+        return parentTreeNode;
     }
 
     public JoinNode getParent() {
@@ -105,7 +130,7 @@ public class JoinNode {
         JoinTreeNode node = nodes.get(joinRelationName);
 
         if (node == null) {
-            node = new JoinTreeNode();
+            node = new JoinTreeNode(joinRelationName);
             nodes.put(joinRelationName, node);
         }
 
@@ -126,5 +151,9 @@ public class JoinNode {
 
     public boolean isCollection() {
         return collection;
+    }
+
+    public Set<JoinNode> getDependencies() {
+        return dependencies;
     }
 }

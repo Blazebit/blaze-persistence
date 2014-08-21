@@ -304,4 +304,9 @@ public class JoinTest extends AbstractCoreTest {
         assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    public void testCyclicJoinDependencyDetection(){
+        //TODO: implement test
+    }
 }

@@ -457,9 +457,18 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     protected void applyImplicitJoins() {
         final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
-        joinManager.acceptVisitor(joinVisitor);
-        // carry out implicit joins
+        final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
+
+            @Override
+            public void visit(JoinNode node) {
+                super.visit(node);
+                node.registerDependencies();
+            }
+            
+        };
         joinVisitor.setFromSelect(true);
+        joinManager.acceptVisitor(joinNodeVisitor);
+        // carry out implicit joins
         selectManager.acceptVisitor(joinVisitor);
         joinVisitor.setFromSelect(false);
 
@@ -474,7 +483,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     protected void applyVisitor(VisitorAdapter expressionVisitor) {
         selectManager.acceptVisitor(expressionVisitor);
-        joinManager.acceptVisitor(expressionVisitor);
+        joinManager.acceptVisitor(new OnClauseJoinNodeVisitor(expressionVisitor));
         whereManager.acceptVisitor(expressionVisitor);
         groupByManager.acceptVisitor(expressionVisitor);
         havingManager.acceptVisitor(expressionVisitor);

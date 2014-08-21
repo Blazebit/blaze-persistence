@@ -130,6 +130,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
+        applyImplicitJoins();
+        
         String countQueryString = getPageCountQueryString();
         TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
         parameterizeQuery(countQuery);
@@ -232,7 +234,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     public String getQueryString() {
         verifyBuilderEnded();
         StringBuilder sbSelectFrom = new StringBuilder();
-        applyImplicitJoins();
+        applyImplicitJoins(); //TODO: redundant
         applyExpressionTransformers();
 
         Metamodel m = em.getMetamodel();
