@@ -276,7 +276,7 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().page(0, 1);
         
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts WHERE contacts IS NULL";
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
     }
@@ -291,7 +291,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .end()
                 .where("c").isNull().page(0, 1);
         
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts WHERE contacts IS NULL";
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE +  " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         
     }

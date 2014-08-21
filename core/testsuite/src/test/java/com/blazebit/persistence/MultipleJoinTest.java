@@ -140,7 +140,6 @@ public class MultipleJoinTest extends AbstractCoreTest {
             + " LEFT JOIN document.partners p1"
             + " LEFT JOIN p1.localized l11"
             + " LEFT JOIN p1.localized l12"
-            // TODO: not sure if the order is correct
             + " LEFT JOIN document.partners p2"
             + " LEFT JOIN p2.localized l21"
             + " LEFT JOIN p2.localized l22";
@@ -159,7 +158,6 @@ public class MultipleJoinTest extends AbstractCoreTest {
         String expectedQuery = "SELECT " + joinAliasValue("l") + " FROM Document document"
             + " LEFT JOIN document.partners p1"
             + " LEFT JOIN p1.partnerDocument partnerDocument_1"
-            // TODO: not sure if the order is correct
             + " LEFT JOIN document.partners partners_1"
             + " LEFT JOIN partners_1.localized l"
             + " WHERE partnerDocument_1.name = :param_0";

@@ -307,6 +307,9 @@ public class JoinTest extends AbstractCoreTest {
     
     @Test
     public void testCyclicJoinDependencyDetection(){
-        //TODO: implement test
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d")
+            .leftJoinOn("owner", "o1").on("o1.name").eqExpression("o2.name").end()
+            .leftJoinOn("owner", "o2").on("o2.name").eqExpression("o1.name").end();
+        verifyException(crit, IllegalStateException.class).getQueryString();
     }
 }

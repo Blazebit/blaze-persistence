@@ -64,12 +64,11 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     @Test
     public void testSelectAlternatingArrayPath() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
-        criteria.select("d.contacts[:age].partnerDocument.versions[d.idx]");
+        criteria.select("d.contacts[:age].partnerDocument.contacts[d.idx]");
 
-        assertEquals("SELECT " + joinAliasValue("versions_d_idx") + " FROM Document d LEFT JOIN d.contacts contacts_age " + ON_CLAUSE
-            + " KEY(contacts_age) = :age LEFT JOIN contacts_age.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.versions versions_d_idx "
-            + ON_CLAUSE + " KEY(versions_d_idx) = d.idx", criteria.getQueryString());
-        // TODO: I don't know why this query won't work, maybe it's a hibernate bug?
+        assertEquals("SELECT " + joinAliasValue("contacts_d_idx") + " FROM Document d LEFT JOIN d.contacts contacts_age " + ON_CLAUSE
+            + " KEY(contacts_age) = :age LEFT JOIN contacts_age.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.contacts contacts_d_idx "
+            + ON_CLAUSE + " KEY(contacts_d_idx) = d.idx", criteria.getQueryString());
         criteria.setParameter("age", 1).getResultList();
     }
 
@@ -77,8 +76,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     public void testArrayIndexImplicitJoin() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[d.versions.idx]");
-
-        // TODO: this fails because currently the join order is ascending by join alias, but here we have dependencies
+        
         assertEquals("SELECT " + joinAliasValue("contacts_versions_1_idx") + " FROM Document d LEFT JOIN d.versions versions_1 LEFT JOIN d.contacts contacts_versions_1_idx " + ON_CLAUSE
             + " KEY(contacts_versions_1_idx) = versions_1.idx", criteria.getQueryString());
         criteria.getResultList();
@@ -89,7 +87,6 @@ public class ArrayExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.select("d.contacts[v.idx]").leftJoinDefault("d.versions", "v");
 
-        // TODO: this fails because currently the join order is ascending by join alias, but here we have dependencies
         assertEquals("SELECT " + joinAliasValue("contacts_v_idx") + " FROM Document d LEFT JOIN d.versions v LEFT JOIN d.contacts contacts_v_idx " + ON_CLAUSE
             + " KEY(contacts_v_idx) = v.idx", criteria.getQueryString());
         criteria.getResultList();

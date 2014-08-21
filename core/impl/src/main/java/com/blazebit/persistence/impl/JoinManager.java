@@ -499,7 +499,7 @@ public class JoinManager extends AbstractManager {
 
             // Don't forget to update the fromSelect!!
             if (!fromSelect) {
-                setSelectOnlyFalse(current);
+                setSelectOnlyFalse(result.baseNode);
             }
 
             pathExpression.setBaseNode(result.baseNode);
