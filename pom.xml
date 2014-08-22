@@ -22,6 +22,7 @@
         <module>entity-view</module>
         <module>integration</module>
         <module>testsuite-base</module>
+        <module>documentation</module>
     </modules>
 
     <issueManagement>

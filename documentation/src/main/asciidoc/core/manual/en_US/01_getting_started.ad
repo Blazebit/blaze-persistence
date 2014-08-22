@@ -1,0 +1,26 @@
+== Getting started
+
+This is a step-by-step introduction about how to get started with {projectname}.
+
+=== Setup
+
+TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+TODO: Mention core-integration-cdi for Java EE environment.
+
+=== Environments
+
+==== Java SE
+
+TODO: Describe how a CriteriaBuilderFactory can be built. Mention that the factory should only be built once.
+
+==== Java EE
+
+TODO: Describe how a CriteriaBuilderFactory can be obtained.
+
+=== First criteria query
+
+TODO: First describe a simple JPA model and then show some basic queries.
+
+=== Summary
+
+TODO: Summarize that this should get the user to the point where he could discover the API himself.
