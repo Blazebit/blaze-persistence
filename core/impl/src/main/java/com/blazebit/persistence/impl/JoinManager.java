@@ -98,7 +98,7 @@ public class JoinManager extends AbstractManager {
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
 
-        this.rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz, false);
+        this.rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz);
         rootAliasInfo.setJoinNode(rootNode);
         this.aliasManager = aliasManager;
         this.aliasOwner = aliasOwner;
@@ -307,7 +307,7 @@ public class JoinManager extends AbstractManager {
             // the alias exists but originates from the parent query builder
 
             // an external select alias must not be dereferenced
-            if (aliasInfo instanceof SelectManager.SelectInfo) {
+            if (aliasInfo instanceof SelectInfo) {
                 throw new ExternalAliasDereferencingException("Start alias [" + startAlias + "] of path [" + path.toString() + "] is external and must not be dereferenced");
             }
 
@@ -337,7 +337,7 @@ public class JoinManager extends AbstractManager {
             return false;
         }
 
-        if (aliasInfo instanceof SelectManager.SelectInfo && !fromSelect && !fromSubquery) {
+        if (aliasInfo instanceof SelectInfo && !fromSelect && !fromSubquery) {
             // select alias
             if (!singlePathElement) {
                 throw new IllegalStateException("Path starting with select alias not allowed");
@@ -404,7 +404,7 @@ public class JoinManager extends AbstractManager {
 
             // TODO: no clue about the purpose of this section
             if (isSkipableSelectAlias(path, fromSelect, fromSubquery)) {
-                Expression expr = ((SelectManager.SelectInfo) aliasManager.getAliasInfo(path)).getExpression();
+                Expression expr = ((SelectInfo) aliasManager.getAliasInfo(path)).getExpression();
 
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
                 if (!fromSelectAlias) {
@@ -446,7 +446,7 @@ public class JoinManager extends AbstractManager {
 
                 if (pathElements.size() == 1 && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(joinRelationName)) != null) {
                     // The first node is allowed to be a join alias
-                    if (aliasInfo instanceof SelectManager.SelectInfo) {
+                    if (aliasInfo instanceof SelectInfo) {
                         throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
                     }
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
@@ -462,9 +462,9 @@ public class JoinManager extends AbstractManager {
 
                 result = new JoinResult(current, null);
             } else if (pathElements.size() == 1 && !fromSelectAlias && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(elementExpr.toString())) != null) {
-                if (aliasInfo instanceof SelectManager.SelectInfo) {
+                if (aliasInfo instanceof SelectInfo) {
                     // We actually allow usage of select aliases in expressions, but JPA doesn't, so we have to resolve them here
-                    Expression selectExpr = ((SelectManager.SelectInfo) aliasInfo).getExpression();
+                    Expression selectExpr = ((SelectInfo) aliasInfo).getExpression();
 
                     if (!(selectExpr instanceof PathExpression)) {
                         throw new RuntimeException("The select expression '" + selectExpr.toString() + "' is not a simple path expression! No idea how to implicit join that.");
@@ -607,7 +607,7 @@ public class JoinManager extends AbstractManager {
                     current = matchingNode;
                 } else if (i == start && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(joinRelationName)) != null) {
                     // The first node is allowed to be a join alias
-                    if (aliasInfo instanceof SelectManager.SelectInfo) {
+                    if (aliasInfo instanceof SelectInfo) {
                         throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
                     }
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
@@ -618,7 +618,7 @@ public class JoinManager extends AbstractManager {
                     generateAndApplyWithPredicate(current, arrayExpr);
                 }
             } else if (pathElements.size() == 1 && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(elementExpr.toString())) != null) {
-                if (aliasInfo instanceof SelectManager.SelectInfo) {
+                if (aliasInfo instanceof SelectInfo) {
                     throw new IllegalArgumentException("Can't dereference a select alias");
                 } else {
                     // Join alias usage like in "joinAlias.relationName"
@@ -753,7 +753,7 @@ public class JoinManager extends AbstractManager {
 
     private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
         AliasInfo oldAliasInfo = aliasManager.getAliasInfoForBottomLevel(alias);
-        if (oldAliasInfo instanceof SelectManager.SelectInfo) {
+        if (oldAliasInfo instanceof SelectInfo) {
             throw new IllegalStateException("Alias [" + oldAliasInfo.getAlias() + "] already used as select alias");
         }
         JoinAliasInfo oldJoinAliasInfo = (JoinAliasInfo) oldAliasInfo;
@@ -768,7 +768,7 @@ public class JoinManager extends AbstractManager {
     }
 
     private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean collection, boolean defaultJoin) {
-        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName);
+        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, collection);
         JoinNode node = treeNode.getJoinNode(alias, defaultJoin);
         String currentJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
         if (node == null) {
@@ -782,7 +782,7 @@ public class JoinManager extends AbstractManager {
 
             JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, aliasOwner);
             aliasManager.registerAliasInfo(newAliasInfo);
-            node = new JoinNode(baseNode, treeNode, newAliasInfo, type, joinRelationClass, collection);
+            node = new JoinNode(baseNode, treeNode, newAliasInfo, type, joinRelationClass);
             newAliasInfo.setJoinNode(node);
             treeNode.addJoinNode(node, defaultJoin);
         } else {

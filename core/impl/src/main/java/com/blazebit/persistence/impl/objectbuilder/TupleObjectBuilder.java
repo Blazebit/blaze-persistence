@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +33,11 @@ import javax.persistence.TupleElement;
  */
 public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
 
-    private final List<SelectManager.SelectInfo> selectInfos;
+    private final List<SelectInfo> selectInfos;
     private final Map<String, Integer> selectAliasToPositionMap;
     private String[] aliases;
 
-    public TupleObjectBuilder(List<SelectManager.SelectInfo> selectInfos, Map<String, Integer> selectAliasToPositionMap) {
+    public TupleObjectBuilder(List<SelectInfo> selectInfos, Map<String, Integer> selectAliasToPositionMap) {
         this.selectInfos = selectInfos;
         this.selectAliasToPositionMap = selectAliasToPositionMap;
     }

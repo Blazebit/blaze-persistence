@@ -24,8 +24,10 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
@@ -69,6 +71,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final ExpressionFactory expressionFactory;
 
     private final List<ExpressionTransformer> transformers;
+    private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
 
     protected Class<T> resultType;
 
@@ -95,6 +98,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.expressionFactory = builder.expressionFactory;
         this.transformers = builder.transformers;
         this.resultType = builder.resultType;
+        this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, ArrayExpressionTransformer parentArrayExpressionTransformer) {
@@ -122,11 +126,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = new QueryGenerator(this, this.aliasManager);
 
         this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(),
-                                           parentJoinManager);
+                parentJoinManager);
 
         ArrayExpressionTransformer arrayExpressionTransformer = new ArrayExpressionTransformer(joinManager, this, parentArrayExpressionTransformer);
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(),
-                                                                arrayExpressionTransformer);
+                arrayExpressionTransformer);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -142,7 +146,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.em = em;
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager)/* , arrayExpressionTransformer */,
-                                          new ValueExpressionTransformer(jpaInfo));
+                new ValueExpressionTransformer(jpaInfo));
+        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager);
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -464,7 +469,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 super.visit(node);
                 node.registerDependencies();
             }
-            
+
         };
         joinVisitor.setFromSelect(true);
         joinManager.acceptVisitor(joinNodeVisitor);
@@ -488,6 +493,25 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         groupByManager.acceptVisitor(expressionVisitor);
         havingManager.acceptVisitor(expressionVisitor);
         orderByManager.acceptVisitor(expressionVisitor);
+    }
+
+    protected void applySizeSelectTransformer() {
+        SubqueryRequiringSelectExpressionDetector detector = new SubqueryRequiringSelectExpressionDetector();
+        for (SelectInfo selectInfo : selectManager.getSelectInfos()) {
+            selectInfo.getExpression().accept(detector);
+            if (detector.requiresSubquery()) {
+                break;
+            }
+        }
+
+        if (detector.containsSizeExpression()) {
+            if (detector.requiresSubquery()) {
+//TODO                
+//selectManager.applyTransformer(sizeSelectToSubqueryTransformer);
+            } else {
+                selectManager.applyTransformer(sizeSelectToCountTransformer);
+            }
+        }
     }
 
     protected void applyExpressionTransformers() {
@@ -519,6 +543,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             groupByManager.applyTransformer(transformer);
             orderByManager.applyTransformer(transformer);
         }
+        
+        //TODO: uncomment once implemented
+        //applySizeSelectTransformer();
     }
 
     @Override
@@ -544,9 +571,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
-            .append(fromClazz.getSimpleName())
-            .append(' ')
-            .append(joinManager.getRootAlias());
+                .append(fromClazz.getSimpleName())
+                .append(' ')
+                .append(joinManager.getRootAlias());
 
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
@@ -561,14 +588,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
          */
         joinManager.buildJoins(sbSelectFrom, true);
         addWhereClauseConjuncts(sbRemaining, true);
-        
+
         return sbSelectFrom.append(sbRemaining).toString();
     }
-    
+
     protected void addWhereClauseConjuncts(StringBuilder sbRemaining, boolean includeSelects) {
         // Added a workaround for #45 and HHH-9329
         StringBuilder whereClauseConjuncts = joinManager.generateWhereClauseConjuncts(includeSelects);
-        
+
         if (whereClauseConjuncts.length() > 0) {
             if (startsWith(sbRemaining, " WHERE ")) {
                 whereClauseConjuncts.append(" AND ");
@@ -578,9 +605,9 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 sbRemaining.insert(0, whereClauseConjuncts);
             }
         }
-        
+
     }
-    
+
     private boolean startsWith(StringBuilder sb, String s) {
         int i = 0;
         for (; i < s.length() && i < sb.length(); i++) {
@@ -588,7 +615,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 return false;
             }
         }
-        
+
         return i == s.length();
     }
 
@@ -597,4 +624,56 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
     }
+
+    class SubqueryRequiringSelectExpressionDetector extends VisitorAdapter {
+
+        private boolean requiresSubquery = false;
+        private boolean containsSizeExpression = false;
+
+        @Override
+        public void visit(CompositeExpression expression) {
+            if (!ExpressionUtils.isSizeExpression(expression)) {
+                for (Expression e : expression.getExpressions()) {
+                    e.accept(this);
+                }
+            } else {
+                containsSizeExpression = true;
+            }
+        }
+
+        @Override
+        public void visit(PathExpression expression) {
+            // fast path if we already know that we need subqueries
+            if (requiresSubquery) {
+                return;
+            }
+
+            JoinNode baseNode = (JoinNode) expression.getBaseNode();
+            if (baseNode.getParentTreeNode().isCollection()) {
+                requiresSubquery = true;
+            } // can this happen?
+            else if (expression.getField() != null) {
+                JoinTreeNode fieldNode = baseNode.getNodes().get(expression.getField());
+                if (fieldNode != null && fieldNode.isCollection()) {
+                    requiresSubquery = true;
+                } else {
+                    while ((baseNode = baseNode.getParent()) != null) {
+                        if (baseNode.getParentTreeNode().isCollection()) {
+                            requiresSubquery = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        public boolean requiresSubquery() {
+            return requiresSubquery;
+        }
+
+        public boolean containsSizeExpression() {
+            return containsSizeExpression;
+        }
+    }
+
 }

@@ -29,13 +29,13 @@ import java.util.List;
  */
 public class ExpressionUtils {
 
-    static boolean containsSubqueryExpression(Expression e) {
+    public static boolean containsSubqueryExpression(Expression e) {
         SubqueryExpressionDetector detector = new SubqueryExpressionDetector();
         e.accept(detector);
         return detector.hasSubquery;
     }
 
-    static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
+    public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
         final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
         VisitorAdapter transformationVisitor = new VisitorAdapter() {
 
@@ -52,6 +52,17 @@ public class ExpressionUtils {
         };
 
         superExpression.accept(transformationVisitor);
+    }
+    
+    public static boolean isSizeExpression(Expression expression){
+        if(expression instanceof CompositeExpression){
+            return isSizeExpression((CompositeExpression) expression);
+        }
+        return false;
+    }
+    
+    public static boolean isSizeExpression(CompositeExpression expression){
+        return "SIZE(".equals(expression.getExpressions().get(0).toString());
     }
 
     private static class SubqueryExpressionDetector extends VisitorAdapter {

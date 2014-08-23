@@ -41,15 +41,15 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
     public void visit(PathExpression expression) {
         AliasInfo aliasInfo = aliasManager.getAliasInfo(expression.toString());
 
-        if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-            ((SelectManager.SelectInfo) aliasInfo).getExpression().accept(this);
+        if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            ((SelectInfo) aliasInfo).getExpression().accept(this);
         } else if (inSubquery) {
             JoinNode joinNode = (JoinNode) expression.getBaseNode();
 
             if (joinNode != null && joinNode.getAliasInfo().getAliasOwner() == aliasOwner) {
                 // we have an external path in the subquery
                 while (joinNode != null) {
-                    if (joinNode.isCollection()) {
+                    if (joinNode.getParentTreeNode().isCollection()) {
                         throw new IllegalStateException("Unsupported external collection access [" + joinNode.getAliasInfo().getAbsolutePath() + "]");
                     }
 

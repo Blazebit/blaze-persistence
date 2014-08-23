@@ -19,6 +19,8 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.model.DocumentViewModel;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import org.junit.Assert;
@@ -50,6 +52,7 @@ public class PaginationTest extends AbstractCoreTest {
 
             Person o1 = new Person("Karl1");
             Person o2 = new Person("Karl2");
+            Person o3 = new Person("Moritz");
             o1.getLocalized().put(1, "abra kadabra");
             o2.getLocalized().put(1, "ass");
 
@@ -64,8 +67,11 @@ public class PaginationTest extends AbstractCoreTest {
             doc1.getContacts().put(1, o1);
             doc1.getContacts().put(2, o2);
 
+            doc4.getContacts().put(1, o3);
+
             em.persist(o1);
             em.persist(o2);
+            em.persist(o3);
 
             em.persist(doc1);
             em.persist(doc2);
@@ -86,12 +92,12 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void simpleTest() {
         CriteriaBuilder<DocumentViewModel> crit = cbf.from(em, Document.class, "d")
-            .selectNew(DocumentViewModel.class)
-            .with("d.name")
-            .with("CONCAT(d.owner.name, ' user')")
-            .with("COALESCE(d.owner.localized[1],'no item')")
-            .with("d.owner.partnerDocument.name")
-            .end();
+                .selectNew(DocumentViewModel.class)
+                .with("d.name")
+                .with("CONCAT(d.owner.name, ' user')")
+                .with("COALESCE(d.owner.localized[1],'no item')")
+                .with("d.owner.partnerDocument.name")
+                .end();
         crit.where("d.name").like("doc%", false, null);
         crit.where("d.owner.name").like("%arl%", true, null);
         crit.where("d.owner.localized[1]").like("a%", false, null);
@@ -99,24 +105,24 @@ public class PaginationTest extends AbstractCoreTest {
 
         // do not include joins that are only needed for the select clause
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1 "
-            + ON_CLAUSE + " KEY(localized_1) = 1 "
-            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
-            + ") LIKE UPPER(:param_2)";
+                + ON_CLAUSE + " KEY(localized_1) = 1 "
+                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
+                + ") LIKE UPPER(:param_2)";
 
         // limit this query using setFirstResult() and setMaxResult() according to the parameters passed to page()
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1 "
-            + ON_CLAUSE + " KEY(localized_1) = 1 "
-            + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
-            + ") LIKE UPPER(:param_2) "
-            + "GROUP BY d.id "
-            + "ORDER BY d.id ASC NULLS LAST";
+                + ON_CLAUSE + " KEY(localized_1) = 1 "
+                + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1")
+                + ") LIKE UPPER(:param_2) "
+                + "GROUP BY d.id "
+                + "ORDER BY d.id ASC NULLS LAST";
 
         String expectedObjectQuery = "SELECT d.name, CONCAT(owner_1.name, ' user'), COALESCE(" + joinAliasValue("localized_1")
-            + ",'no item'), partnerDocument_1.name FROM Document d "
-            + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1 " + ON_CLAUSE
-            + " KEY(localized_1) = 1 LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
-            + "WHERE d.id IN :ids "
-            + "ORDER BY d.id ASC NULLS LAST";
+                + ",'no item'), partnerDocument_1.name FROM Document d "
+                + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1 " + ON_CLAUSE
+                + " KEY(localized_1) = 1 LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
+                + "WHERE d.id IN :ids "
+                + "ORDER BY d.id ASC NULLS LAST";
 
         PaginatedCriteriaBuilder<DocumentViewModel> pcb = crit.page(0, 2);
 
@@ -144,11 +150,11 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id";
         String expectedObjectQuery = "SELECT contacts_contactNr.name FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-            + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids";
+                + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .where("owner.name").eq("Karl1")
-            .select("contacts[:contactNr].name")
-            .page(0, 1);
+                .where("owner.name").eq("Karl1")
+                .select("contacts[:contactNr].name")
+                .page(0, 1);
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
@@ -157,28 +163,28 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testSelectEmptyResultList() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
-            .where("name").isNull()
-            .orderByAsc("name")
-            .page(0, 1);
+                .where("name").isNull()
+                .orderByAsc("name")
+                .page(0, 1);
         assertEquals(0, cb.getResultList().size());
     }
 
     @Test
     public void testPaginatedWithGroupBy1() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").groupBy("id");
+                .select("d.id").select("COUNT(contacts.id)").groupBy("id");
         verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
     @Test
     public void testPaginatedWithGroupBy2() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)");
+                .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
             cb.groupBy("id");
             Assert.fail("Expected IllegalStateException");
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // OK, we expected that
         }
     }
@@ -186,12 +192,12 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testPaginatedWithGroupBy3() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)");
+                .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
             cb.groupBy("id", "name");
             Assert.fail("Expected IllegalStateException");
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // OK, we expected that
         }
     }
@@ -199,19 +205,19 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testPaginatedWithDistinct1() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)").distinct();
+                .select("d.id").select("COUNT(contacts.id)").distinct();
         verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
     @Test
     public void testPaginatedWithDistinct2() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("d.id").select("COUNT(contacts.id)");
+                .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
             cb.distinct();
             Assert.fail("Expected IllegalStateException");
-        } catch(IllegalStateException ex) {
+        } catch (IllegalStateException ex) {
             // OK, we expected that
         }
     }
@@ -219,11 +225,11 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testOrderByExpression() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
-            .orderByAsc("contacts[:contactNr].name")
-            .setParameter("contactNr", 1)
-            .page(0, 1);
+                .orderByAsc("contacts[:contactNr].name")
+                .setParameter("contactNr", 1)
+                .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-            + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
+                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         // TODO: enable as soon as #45 is fixed
 //        cb.getResultList();
@@ -232,12 +238,12 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testOrderBySelectAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("contacts[:contactNr].name", "contactName")
-            .orderByAsc("contactName")
-            .setParameter("contactNr", 1)
-            .page(0, 1);
+                .select("contacts[:contactNr].name", "contactName")
+                .orderByAsc("contactName")
+                .setParameter("contactNr", 1)
+                .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-            + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
+                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         // TODO: enable as soon as #45 is fixed
         //cb.getResultList();
@@ -246,13 +252,13 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testOrderBySubquery() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .selectSubquery("contactCount")
-            .from(Document.class, "d2")
-            .select("COUNT(d2.contacts.id)")
-            .where("d2.id").eqExpression("d.id")
-            .end()
-            .orderByAsc("contactCount")
-            .page(0, 1);
+                .selectSubquery("contactCount")
+                .from(Document.class, "d2")
+                .select("COUNT(d2.contacts.id)")
+                .where("d2.id").eqExpression("d.id")
+                .end()
+                .orderByAsc("contactCount")
+                .page(0, 1);
         String expectedIdQuery = "SELECT d.id, (SELECT COUNT(contacts_1.id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) AS contactCount FROM Document d GROUP BY d.id ORDER BY contactCount ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
@@ -262,37 +268,126 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testOrderBySize() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-            .select("SIZE(d.contacts)", "contactCount")
-            .orderByAsc("contactCount")
-            .page(0, 1);
+                .select("SIZE(d.contacts)")
+                .orderByAsc("SIZE(d.contacts)")
+                .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST";
-        em.createQuery(expectedIdQuery).getResultList();
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
+        String expectedObjectQuery = "SELECT COUNT(c) FROM Document d LEFT JOIN d.contacts c WHERE d.id IN :ids GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST";
+
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
         cb.getResultList();
     }
-    
+
+    /*@Ignore
     @Test
-    public void testSelectOnlyPropagationForWithJoins1(){
+    public void deleteMe() {
+        // TODO: Why does hibernate generate a unique constraint for contacts.contact_id??
+        List<Object[]> contacts = em.createNativeQuery("select Document_id, contacts_KEY, contacts_id from contacts c").getResultList();
+        for (Object[] o : contacts) {
+            System.out.println(Arrays.toString(o));
+        }
+        List<Object[]> personen = em.createNativeQuery("select id, age, name, partnerDocument_id from Person p").getResultList();
+        for (Object[] o : personen) {
+            System.out.println(Arrays.toString(o));
+        }
+        List<Object[]> documents = em.createNativeQuery("select id, age, creationDate, idx, lastModified, name, nonJoinable, owner_id from Document d").getResultList();
+        for (Object[] o : documents) {
+            System.out.println(Arrays.toString(o));
+        }
+        em.createNativeQuery("select\n"
+                + "        count(contacts1_.Document_id) as col_0_0_ \n"
+                + "    from\n"
+                + "        Document document0_ cross \n"
+                + "    join\n"
+                + "        contacts contacts1_ \n"
+                + "    where\n"
+                + "        document0_.id=contacts1_.Document_id \n"
+                + "        and (\n"
+                + "            document0_.id in (\n"
+                + "                2\n"
+                + "            )\n"
+                + "        ) \n").getResultList();
+        em.createNativeQuery("select\n"
+                + "        count(contacts1_.Document_id) as col_0_0_ \n"
+                + "    from\n"
+                + "        Document document0_ cross \n"
+                + "    join\n"
+                + "        contacts contacts1_ \n"
+                + "    where\n"
+                + "        document0_.id=contacts1_.Document_id \n"
+                + "        and (\n"
+                + "            document0_.id in (\n"
+                + "                2\n"
+                + "            )\n"
+                + "        ) \n"
+                + "group by document0_.id"
+                + "    order by\n"
+                + "        (select\n"
+                + "            count(contacts2_.Document_id) \n"
+                + "        from\n"
+                + "            contacts contacts2_ \n"
+                + "        where\n"
+                + "            document0_.id=contacts2_.Document_id)").getResultList();
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // not working
+
+        List ids = em.createQuery("SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").setMaxResults(1).getResultList();
+        em.createQuery("SELECT DISTINCT d FROM Document d LEFT JOIN FETCH d.contacts ").getResultList();
+
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2) ORDER BY contactCount ASC NULLS LAST").getResultList();  // works
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2) GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (1,4) GROUP BY d.id").getResultList();  // works
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
+        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3)").getResultList();  // works, cross join yields two rows, both for Document_Id 1 --> both are filtered out by IN
+        em.createQuery("SELECT SIZE(d.contacts) FROM Document d WHERE d.id IN (2) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();
+        em.createQuery("SELECT d.name FROM Document d WHERE SIZE(d.contacts) < 2").getResultList();
+        em.createQuery("SELECT d.id, d.versions, COUNT(c) FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
+        em.createQuery("SELECT d.id, d.contacts FROM Document d").getResultList();
+        em.createQuery("SELECT d.id FROM Document d ORDER BY SIZE(d.contacts)").getResultList();
+    }*/
+    
+    @Ignore //#58
+    @Test
+    public void testOrderBySizeAlias() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("SIZE(d.contacts)", "contactCount")
+                .orderByAsc("contactCount")
+                .page(0, 1);
+        String expectedIdQuery = "SELECT d.id, COUNT(c) AS contactCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY contactCount";
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
+        String expectedObjectQuery = "SELECT COUNT(c) AS contactCount FROM Document d LEFT JOIN d.contacts c WHERE d.id IN :ids GROUP BY d.id ORDER BY contactCount ASC NULLS LAST";
+
+        assertEquals(expectedIdQuery, cb.getPageIdQueryString());
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSelectOnlyPropagationForWithJoins1() {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().page(0, 1);
-        
+
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
     }
-    
+
     @Test
-    public void testSelectOnlyPropagationForWithJoins2(){
+    public void testSelectOnlyPropagationForWithJoins2() {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
                 .select("c")
                 .leftJoinOn("d.contacts", "c")
-                    .on("KEY(c)").eqExpression("d.owner.age")
+                .on("KEY(c)").eqExpression("d.owner.age")
                 .end()
                 .where("c").isNull().page(0, 1);
-        
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE +  " KEY(c) = owner_1.age WHERE c IS NULL";
+
+        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-        
+
     }
 }

@@ -82,7 +82,7 @@ public class SelectManager<T> extends AbstractManager {
         return objectBuilder;
     }
 
-    List<SelectManager.SelectInfo> getSelectInfos() {
+    List<SelectInfo> getSelectInfos() {
         return selectInfos;
     }
 
@@ -326,33 +326,5 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
 
-    }
-
-    public static class SelectInfo extends NodeInfo implements AliasInfo {
-
-        private final String alias;
-        private final BaseQueryBuilder<?, ?> aliasOwner;
-
-        public SelectInfo(Expression expression) {
-            super(expression);
-            this.alias = null;
-            this.aliasOwner = null;
-        }
-
-        public SelectInfo(Expression expression, String alias, BaseQueryBuilder<?, ?> aliasOwner) {
-            super(expression);
-            this.alias = alias;
-            this.aliasOwner = aliasOwner;
-        }
-
-        @Override
-        public String getAlias() {
-            return alias;
-        }
-
-        @Override
-        public BaseQueryBuilder<?, ?> getAliasOwner() {
-            return aliasOwner;
-        }
     }
 }

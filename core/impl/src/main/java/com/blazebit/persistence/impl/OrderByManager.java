@@ -47,8 +47,8 @@ public class OrderByManager extends AbstractManager {
 
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
-            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 realExpressions.add(selectInfo.getExpression());
             } else {
                 realExpressions.add(orderByInfo.getExpression());
@@ -71,8 +71,8 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             sb.delete(0, sb.length());
 
-            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 selectInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
             } else {
                 orderByInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
@@ -111,8 +111,8 @@ public class OrderByManager extends AbstractManager {
 
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
-            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                     return true;
                 }
@@ -151,8 +151,8 @@ public class OrderByManager extends AbstractManager {
         orderByInfo = iter.next();
         String potentialSelectAlias = orderByInfo.getExpression().toString();
         AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-        if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-            SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+        if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+            SelectInfo selectInfo = (SelectInfo) aliasInfo;
             if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                 selectInfo.getExpression().accept(queryGenerator);
                 sb.append(" AS ").append(potentialSelectAlias);
@@ -165,8 +165,8 @@ public class OrderByManager extends AbstractManager {
             orderByInfo = iter.next();
             potentialSelectAlias = orderByInfo.getExpression().toString();
             aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-            if (aliasInfo != null && aliasInfo instanceof SelectManager.SelectInfo) {
-                SelectManager.SelectInfo selectInfo = (SelectManager.SelectInfo) aliasInfo;
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                     sb.append(", ");
                     selectInfo.getExpression().accept(queryGenerator);

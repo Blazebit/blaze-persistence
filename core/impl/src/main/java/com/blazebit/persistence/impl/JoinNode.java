@@ -44,19 +44,18 @@ public class JoinNode {
 
     private final Class<?> propertyClass;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied alphabetically for easier testing
-    private final boolean collection;
+    
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
     private AndPredicate withPredicate;
 
-    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, boolean collection) {
+    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.propertyClass = propertyClass;
-        this.collection = collection;
     }
 
     public void registerDependencies() {
@@ -126,11 +125,11 @@ public class JoinNode {
         return nodes;
     }
 
-    public JoinTreeNode getOrCreateTreeNode(String joinRelationName) {
+    public JoinTreeNode getOrCreateTreeNode(String joinRelationName, boolean collection) {
         JoinTreeNode node = nodes.get(joinRelationName);
 
         if (node == null) {
-            node = new JoinTreeNode(joinRelationName);
+            node = new JoinTreeNode(joinRelationName, collection);
             nodes.put(joinRelationName, node);
         }
 
@@ -147,10 +146,6 @@ public class JoinNode {
 
     public void setWithPredicate(AndPredicate withPredicate) {
         this.withPredicate = withPredicate;
-    }
-
-    public boolean isCollection() {
-        return collection;
     }
 
     public Set<JoinNode> getDependencies() {

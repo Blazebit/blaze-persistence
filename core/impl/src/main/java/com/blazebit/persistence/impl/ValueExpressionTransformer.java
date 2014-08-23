@@ -76,7 +76,7 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
         }
         String collectionValueFunction;
         JoinNode baseNode = (JoinNode) deepPath.getBaseNode();
-        if (baseNode.isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null) {
+        if (baseNode.getParentTreeNode().isCollection() && deepPath.getField() == null && (collectionValueFunction = jpaInfo.getCollectionValueFunction()) != null) {
             if (!transformedExpressions.contains(path)) {
                 List<Expression> transformedExpr = new ArrayList<Expression>();
                 transformedExpr.add(new FooExpression(collectionValueFunction + "("));

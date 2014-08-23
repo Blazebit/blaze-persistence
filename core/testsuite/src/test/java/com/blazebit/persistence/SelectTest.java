@@ -20,6 +20,7 @@ import com.blazebit.persistence.entity.Person;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -242,5 +243,14 @@ public class SelectTest extends AbstractCoreTest {
         
         assertEquals("SELECT COUNT(d.id) FROM Document d", criteria.getQueryString());
         assertEquals(0L, t.getSingleResult().get(0));
+    }
+    
+    @Ignore //#58
+    @Test
+    public void testSelectSizeAsSubexpression() {
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
+        
+        //TODO: implement
     }
 }

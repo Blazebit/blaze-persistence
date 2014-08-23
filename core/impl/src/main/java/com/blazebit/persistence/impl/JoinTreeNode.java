@@ -27,11 +27,13 @@ public class JoinTreeNode {
 
     private final String relationName;
     private JoinNode defaultNode;
+    private final boolean collection;
     /* maps join aliases to join nodes */
     private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
 
-    public JoinTreeNode(String relationName) {
+    public JoinTreeNode(String relationName, boolean collection) {
         this.relationName = relationName;
+        this.collection = collection;
     }
 
     public String getRelationName() {
@@ -67,5 +69,9 @@ public class JoinTreeNode {
         }
 
         joinNodes.put(node.getAliasInfo().getAlias(), node);
+    }
+
+    public boolean isCollection() {
+        return collection;
     }
 }
