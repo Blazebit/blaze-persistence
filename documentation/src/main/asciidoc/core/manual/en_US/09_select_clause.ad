@@ -1,0 +1,32 @@
+== Select clause
+
+TODO: Describe the features here with examples
+TODO: Mention that arbitrary expression can be used
+
+=== Tuple select
+
+=== Case expressions
+
+==== Typesafe
+
+TODO: Mention API
+
+==== Expression support
+
+TODO: Mention that case when expressions can be used in expressions
+
+==== Searched case expression (simple case)
+
+==== Conditional case expression
+
+=== Subqueries
+
+TODO: Mention that subqueries don't have to be repeated if used in select, because select alias can be used.
+
+==== Wrapping expression
+
+TODO: Explain how selectSubquery(String subqueryAlias, String expression) works
+
+=== Select new support
+
+=== Object builder

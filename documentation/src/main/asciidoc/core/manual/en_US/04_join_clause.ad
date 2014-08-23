@@ -1,0 +1,25 @@
+== Join clause
+
+TODO: Describe the features here with examples
+TODO: List the join types and mention the problem of RIGHT JOIN
+
+=== Implicit joins
+
+TODO: Mention the model awareness
+TODO: Mention implicit aliases shouldn't be use, instead the full path or an alias should be used
+
+=== Explicit joins
+
+TODO: Mention that array expressions create explicit joins with a specific structure.
+
+==== Default joins
+
+==== Aliased joins
+
+==== Fetched joins
+
+=== On clause
+
+TODO: Mention that it is commonly used by array expressions
+TODO: Warn that on clauses are no supported by JPA 2.0
+TODO: Also refer to the predicate building section which should explain the basics
