@@ -86,7 +86,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         result = pcb.getResultList();
         // Finally we can use the key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
-            + "WHERE (owner_1.name > :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND d.name > :_keySetParameter_1)) "
+            + "WHERE (owner_1.name < :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND d.name > :_keySetParameter_1)) "
             + "GROUP BY d.id "
             + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -94,6 +94,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         pcb = crit.page(result.getKeySet(), 1, 1);
         result = pcb.getResultList();
         // Same page again key set
+        // TODO: not sure when using SAME that <= should be used even with DESC
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name FROM Document d JOIN d.owner owner_1 "
             + "WHERE (owner_1.name >= :_keySetParameter_0 AND d.name >= :_keySetParameter_1) "
             + "GROUP BY d.id "
