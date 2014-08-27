@@ -16,10 +16,65 @@
 
 package com.blazebit.persistence.impl;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class PaginationHelper {
     
+    public static PaginationStrategy determinePaginationStrategy(boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize, List<OrderByManager.OrderByExpression> orderByExpressions) {
+        
+    }
+    
+    private static KeySetMode getKeySetMode(boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize, String[] orderByExpressionStrings) {
+        // key set pagination must be activated and a key set must be given
+        if (!extractKeySet || keySet == null) {
+            return KeySetMode.NONE;
+        }
+        // The last page size must equal the current page size
+        if (keySet.getMaxResults() != pageSize) {
+            return KeySetMode.NONE;
+        }
+        // Ordering has changed
+        if (!Arrays.equals(keySet.getOrderByExpressions(), orderByExpressionStrings)) {
+            return KeySetMode.NONE;
+        }
+
+        int offset = keySet.getFirstResult() - firstRow;
+
+        if (offset == pageSize) {
+            // We went to the previous page
+            if (isValidKey(keySet.getLowest(), orderByExpressionStrings)) {
+                return KeySetMode.PREVIOUS;
+            } else {
+                return KeySetMode.NONE;
+            }
+        } else if (offset == -pageSize) {
+            // We went to the next page
+            if (isValidKey(keySet.getHighest(), orderByExpressionStrings)) {
+                return KeySetMode.NEXT;
+            } else {
+                return KeySetMode.NONE;
+            }
+        } else if (offset == 0) {
+            // Same page again
+            if (isValidKey(keySet.getLowest(), orderByExpressionStrings)) {
+                return KeySetMode.SAME;
+            } else {
+                return KeySetMode.NONE;
+            }
+        } else {
+            // The last key set is away more than one page
+            return KeySetMode.NONE;
+        }
+    }
+
+    private static boolean isValidKey(Serializable[] key, String[] orderByExpressionStrings) {
+        return key != null && key.length == orderByExpressionStrings.length;
+    }
 }

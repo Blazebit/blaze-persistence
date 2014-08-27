@@ -18,7 +18,8 @@ package com.blazebit.persistence.impl;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface PaginationStrategy {
     
