@@ -50,17 +50,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private final int firstRow;
     private final int pageSize;
     private final AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder;
-    private String[] orderByExpressionStrings;
-    private KeySetMode keySetMode = KeySetMode.NONE;
+//    private String[] orderByExpressionStrings;
+//    private KeySetMode keySetMode = KeySetMode.NONE;
+    private PaginationStrategy paginationStrategy;
     private boolean needsNewIdList = false;
-
-    private static enum KeySetMode {
-
-        NONE,
-        SAME,
-        NEXT,
-        PREVIOUS;
-    }
 
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize) {
         super(baseBuilder);
@@ -77,72 +70,35 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         this.baseBuilder = baseBuilder;
     }
 
-    private KeySetMode getKeySetMode() {
-        // key set pagination must be activated and a key set must be given
-        if (!extractKeySet || keySet == null) {
-            return KeySetMode.NONE;
-        }
-        // The last page size must equal the current page size
-        if (keySet.getMaxResults() != pageSize) {
-            return KeySetMode.NONE;
-        }
-        // Ordering has changed
-        if (!Arrays.equals(keySet.getOrderByExpressions(), orderByExpressionStrings)) {
-            return KeySetMode.NONE;
-        }
-
-        int offset = keySet.getFirstResult() - firstRow;
-
-        if (offset == pageSize) {
-            // We went to the previous page
-            if (isValidKey(keySet.getLowest())) {
-                return KeySetMode.PREVIOUS;
-            } else {
-                return KeySetMode.NONE;
-            }
-        } else if (offset == -pageSize) {
-            // We went to the next page
-            if (isValidKey(keySet.getHighest())) {
-                return KeySetMode.NEXT;
-            } else {
-                return KeySetMode.NONE;
-            }
-        } else if (offset == 0) {
-            // Same page again
-            if (isValidKey(keySet.getLowest())) {
-                return KeySetMode.SAME;
-            } else {
-                return KeySetMode.NONE;
-            }
-        } else {
-            // The last key set is away more than one page
-            return KeySetMode.NONE;
-        }
-    }
-
-    private boolean isValidKey(Serializable[] key) {
-        return key != null && key.length == orderByExpressionStrings.length;
-    }
-
-    @Override
-    public PagedList<T> getResultList() {
+    private void prepareAndCheck() {
+        verifyBuilderEnded();
         if (!orderByManager.hasOrderBys()) {
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
         applyImplicitJoins();
+        applyExpressionTransformers();
+    }
+    
+    @Override
+    public PagedList<T> getResultList() {
+        prepareAndCheck();
         
-        String countQueryString = getPageCountQueryString();
+        String countQueryString = getPageCountQueryString0();
         TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
         parameterizeQuery(countQuery);
 
         long totalSize = countQuery.getSingleResult();
 
         if (totalSize == 0L) {
-            return new PagedListImpl<T>(totalSize);
+            return new PagedListImpl<T>(null, totalSize);
         }
 
-        String idQueryString = getPageIdQueryString();
+        return getResultListViaIdQuery(totalSize);
+    }
+
+    private PagedList<T> getResultListViaIdQuery(long totalSize) {
+        String idQueryString = getPageIdQueryString0();
         Query idQuery = em.createQuery(idQueryString)
             .setMaxResults(pageSize);
 
@@ -154,8 +110,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         List ids = idQuery.getResultList();
 
         if (ids.isEmpty()) {
-            // TODO: maybe we need to add the previous keyset here?
-            return new PagedListImpl<T>(totalSize);
+            KeySet newKeySet = null;
+            if (keySetMode == KeySetMode.NEXT) {
+                // When we scroll over the last page to a non existing one, we reuse the current keyset
+                newKeySet = keySet;
+            }
+            
+            return new PagedListImpl<T>(newKeySet, totalSize);
         }
 
         Serializable[] lowest = null;
@@ -188,20 +149,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return pagedResultList;
     }
 
-    private Serializable[] extractKey(Object[] tuple, int offset) {
-        Serializable[] key = new Serializable[tuple.length - offset];
-        System.arraycopy(tuple, offset, key, 0, key.length);
-        return key;
-    }
-
     @Override
     public String getPageCountQueryString() {
-        verifyBuilderEnded();
+        prepareAndCheck();
+        return getPageCountQueryString0();
+    }
+        
+    private String getPageCountQueryString0() {
         StringBuilder sbSelectFrom = new StringBuilder();
-
-        applyImplicitJoins();
-        applyExpressionTransformers();
-
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
         String idName = entityType.getId(entityType.getIdType()
@@ -232,11 +187,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     @Override
     public String getQueryString() {
-        verifyBuilderEnded();
-        StringBuilder sbSelectFrom = new StringBuilder();
-        applyImplicitJoins(); //TODO: redundant
-        applyExpressionTransformers();
+        prepareAndCheck();
+        return getQueryString0();
+    }
 
+    private String getQueryString0() {
+        StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
         String idName = entityType.getId(entityType.getIdType()
@@ -269,17 +225,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     @Override
     public String getPageIdQueryString() {
-        verifyBuilderEnded();
+        prepareAndCheck();
+        return getPageIdQueryString0();
+    }
+    
+    private String getPageIdQueryString0() {
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
         String idName = entityType.getId(entityType.getIdType()
             .getJavaType())
             .getName();
-
-        applyImplicitJoins();
-        applyExpressionTransformers();
-
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
@@ -288,8 +244,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         sbSelectFrom.append("SELECT ")
             .append(idClause);
 
-        orderByExpressionStrings = orderByManager.getAbsoluteExpressionStrings();
-        keySetMode = getKeySetMode();
+//        orderByExpressionStrings = orderByManager.getAbsoluteExpressionStrings();
+//        keySetMode = getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressionStrings);
+        paginationStrategy = PaginationHelper.determinePaginationStrategy(extractKeySet, keySet, firstRow, pageSize, orderByManager.getRealExpressions());
         if (needsNewIdList = orderByManager.hasOrderBys(extractKeySet)) {
             sbSelectFrom.append(", ");
             orderByManager.buildSelectClauses(sbSelectFrom, extractKeySet);
@@ -327,7 +284,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return sbSelectFrom.append(sbRemaining).toString();
     }
 
-    private void applyKeySetClause(StringBuilder sbRemaining, KeySetMode keySetMode, List<Expression> realExpressions, KeySet keySet) {
+    private Serializable[] extractKey(Object[] tuple, int offset) {
+        Serializable[] key = new Serializable[tuple.length - offset];
+        System.arraycopy(tuple, offset, key, 0, key.length);
+        return key;
+    }
+    
+    private void applyKeySetClause(StringBuilder sbRemaining, KeySetMode keySetMode, List<OrderByManager.OrderByExpression> realExpressions, KeySet keySet) {
         String operator;
         Serializable[] key;
 
@@ -341,12 +304,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 if (i != 0) {
                     sbRemaining.append(" AND ");
                 }
-                Expression expr = realExpressions.get(i);
-                applyKeySetItem(0, sbRemaining, expr, ">=", i, false, key[i]);
+                OrderByManager.OrderByExpression orderByExpr = realExpressions.get(i);
+                Expression expr = orderByExpr.getExpression();
+                if (orderByExpr.isAscending()) {
+                    operator = ">=";
+                } else {
+                    operator = "<=";
+                }
+                applyKeySetItem(0, sbRemaining, expr, operator, i, false, key[i]);
             }
 
             sbRemaining.append(')');
-
             return;
         }
 
@@ -354,13 +322,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             // order by items must be > keySet.getHighest()
             // (x,y) > (a,b) => (x > a OR (x = a AND y > b) )
             // (x,y,z) > (a,b,c) => (x > a OR (x = a AND (y > b OR (y = b AND z > c) ) ) )
-            operator = ">";
             key = keySet.getHighest();
         } else {
             // order by items must be < keySet.getLowest()
             // (x,y) < (a,b) => (x < a OR (x = a AND y < b) )
             // (x,y,z) < (a,b,c) => (x < a OR (x = a AND (y < b OR (y = b AND z < c) ) ) )
-            operator = "<";
             key = keySet.getLowest();
         }
 
@@ -372,12 +338,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             if (i != 0) {
                 brackets++;
                 sbRemaining.append(" OR (");
-                Expression expr = realExpressions.get(i - 1);
+                Expression expr = realExpressions.get(i - 1).getExpression();
 
                 brackets = applyKeySetItem(brackets, sbRemaining, expr, "=", i - 1, openBracket, key[i - 1]);
                 sbRemaining.append(" AND ");
             }
-            Expression expr = realExpressions.get(i);
+            OrderByManager.OrderByExpression orderByExpr = realExpressions.get(i);
+            Expression expr = realExpressions.get(i).getExpression();
+            
+            if ((keySetMode == KeySetMode.NEXT) ^ !orderByExpr.isAscending()) {
+                operator = ">";
+            } else {
+                operator = "<";
+            }
             brackets = applyKeySetItem(brackets, sbRemaining, expr, operator, i, openBracket, key[i]);
         }
         for (int i = 0; i < brackets; i++) {

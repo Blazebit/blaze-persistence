@@ -32,8 +32,8 @@ public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     private final KeySet keySet;
     private final long totalSize;
 
-    public PagedListImpl(long totalSize) {
-        this.keySet = null;
+    public PagedListImpl(KeySet keySet, long totalSize) {
+        this.keySet = keySet;
         this.totalSize = totalSize;
     }
 

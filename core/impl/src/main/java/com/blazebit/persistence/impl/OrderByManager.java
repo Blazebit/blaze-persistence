@@ -38,20 +38,20 @@ public class OrderByManager extends AbstractManager {
         this.fromClassName = fromClassName;
     }
 
-    List<Expression> getRealExpressions() {
+    List<OrderByExpression> getRealExpressions() {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<Expression> realExpressions = new ArrayList<Expression>(orderByInfos.size());
+        List<OrderByExpression> realExpressions = new ArrayList<OrderByExpression>(orderByInfos.size());
 
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                realExpressions.add(selectInfo.getExpression());
+                realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, selectInfo.getExpression()));
             } else {
-                realExpressions.add(orderByInfo.getExpression());
+                realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, orderByInfo.getExpression()));
             }
         }
 
@@ -204,6 +204,60 @@ public class OrderByManager extends AbstractManager {
             sb.append(" NULLS FIRST");
         } else {
             sb.append(" NULLS LAST");
+        }
+    }
+    
+    public static class OrderByExpression {
+        private final boolean ascending;
+        private final boolean nullFirst;
+        private final Expression expression;
+
+        public OrderByExpression(boolean ascending, boolean nullFirst, Expression expression) {
+            this.ascending = ascending;
+            this.nullFirst = nullFirst;
+            this.expression = expression;
+        }
+
+        public boolean isAscending() {
+            return ascending;
+        }
+
+        public boolean isNullFirst() {
+            return nullFirst;
+        }
+
+        public Expression getExpression() {
+            return expression;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 37 * hash + (this.ascending ? 1 : 0);
+            hash = 37 * hash + (this.nullFirst ? 1 : 0);
+            hash = 37 * hash + (this.expression != null ? this.expression.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final OrderByExpression other = (OrderByExpression) obj;
+            if (this.ascending != other.ascending) {
+                return false;
+            }
+            if (this.nullFirst != other.nullFirst) {
+                return false;
+            }
+            if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
+                return false;
+            }
+            return true;
         }
     }
 

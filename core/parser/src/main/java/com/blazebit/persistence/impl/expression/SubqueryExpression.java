@@ -41,6 +41,7 @@ public class SubqueryExpression implements Expression {
     }
     
     @Override
+    // TODO: this method should not be used for query generation since it consumes another string builder
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('(');
@@ -48,4 +49,6 @@ public class SubqueryExpression implements Expression {
         sb.append(')');
         return sb.toString();
     }
+    
+    // TODO: needs a good equals-hashCode implementation
 }
