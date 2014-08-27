@@ -202,7 +202,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  | NULL |  1   | 08 |
 //            |  16  | NULL |  1   | 09 |
 //            |  17  | NULL |  2   | 10 |
-            { fromPage( 0).to( 0),  3,  3, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id >= 3))))"},
+            { fromPage( 0).to( 0),  3,  3, "((k.a >= 0 OR k.a IS NULL) OR (k.a = 0 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id >= 3))))"},
             { fromPage( 0).to( 1),  3, 11, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 3))))"},
             { fromPage( 1).to( 0), 11,  3, "(k.a < 0 OR (k.a = 0 AND ((k.b < 0 OR k.b IS NULL) OR (k.b = 0 AND k.id < 11))))"},
             { fromPage(12).to(13),  1,  2, "(k.a IS NULL AND (k.b IS NOT NULL OR (k.b IS NULL AND k.id > 1)))"},
@@ -228,7 +228,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  |  2   |  1   | 17 |
 //            |  16  |  2   |  2   | 18 |
 //            |  17  |  2   | NULL | 06 |
-            { fromPage( 0).to( 0),  7,  7, "(k.a IS NOT NULL OR (k.a IS NULL AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 7))))"},
+            { fromPage( 0).to( 0),  7,  7, "(k.a IS NOT NULL OR (k.a IS NULL AND ((k.b >= 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 7))))"},
             { fromPage( 0).to( 1),  7,  8, "(k.a IS NOT NULL OR (k.a IS NULL AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 7))))"},
             { fromPage( 1).to( 0),  8,  7, "(k.a IS NULL AND (k.b < 1 OR (k.b = 1 AND k.id < 8)))"},
             { fromPage( 4).to( 5),  1,  2, "(k.a IS NOT NULL OR (k.a IS NULL AND (k.b IS NULL AND k.id > 1)))"},
@@ -253,10 +253,10 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
 //            |  15  | NULL |  2   | 10 |
 //            |  16  | NULL | NULL | 01 |
 //            |  17  | NULL | NULL | 02 |
-            { fromPage( 0).to( 0), 11, 11, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 11))))"},
+            { fromPage( 0).to( 0), 11, 11, "((k.a >= 0 OR k.a IS NULL) OR (k.a = 0 AND ((k.b >= 0 OR k.b IS NULL) OR (k.b = 0 AND k.id >= 11))))"},
             { fromPage( 0).to( 1), 11, 12, "((k.a > 0 OR k.a IS NULL) OR (k.a = 0 AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 11))))"},
             { fromPage( 1).to( 0), 12, 11, "(k.a < 0 OR (k.a = 0 AND (k.b < 1 OR (k.b = 1 AND k.id < 12))))"},
-            { fromPage(12).to(13),  7,  8, "(k.a IS NULL AND ((k.b > 1 OR k.b IS NULL) OR (k.b = 1 AND k.id > 7)))"},
+            { fromPage(12).to(13),  7,  8, "(k.a IS NULL AND ((k.b > 0 OR k.b IS NULL) OR (k.b = 0 AND k.id > 7)))"},
             { fromPage(16).to(17),  1,  2, "(k.a IS NULL AND (k.b IS NULL AND k.id > 1))"},
         });
         
@@ -264,6 +264,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         
         // The following converts the map into an object array so that JUnit can use it
         List<Object[]> possibilities = new ArrayList<Object[]>();
+        List<Object[]> possibilities2 = new ArrayList<Object[]>();
         for (Map.Entry<Object[], Object[][]> entry : cases.entrySet()) {
             Object[] key = entry.getKey();
             Object[][] value = entry.getValue();
@@ -279,10 +280,11 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
                 Object[] possibility2 = new Object[key.length + valueLength];
                 System.arraycopy(possibility1, 0, possibility2, 0, possibility1.length);
                 possibility2[key.length - 1] = false;
-                possibilities.add(possibility2);
+                possibilities2.add(possibility2);
             }
         }
         
+        possibilities.addAll(possibilities2);
         return possibilities;
     }
 
@@ -312,16 +314,16 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
             idNullsFirst = this.idNullsFirst;
         }
         
-        String expectedIdQueryStart = "SELECT k.id FROM KeySetEntity k WHERE ";
+        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeySetEntity k WHERE ";
         String expectedIdQueryEnd = " GROUP BY k.id ORDER BY "
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
         CriteriaBuilder<Tuple> crit = cbf.from(em, KeySetEntity.class, "k")
             .select("id");
-        crit.orderBy("a", aAsc, aNullsFirst)
-            .orderBy("b", bAsc, bNullsFirst)
-            .orderBy("id", idAsc, idNullsFirst);
+        crit.orderBy("a", this.aAsc, this.aNullsFirst)
+            .orderBy("b", this.bAsc, this.bNullsFirst)
+            .orderBy("id", this.idAsc, this.idNullsFirst);
         
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, navigation.from, 1);
         PagedList<Tuple> result = pcb.getResultList();
@@ -337,7 +339,6 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         
         pcb = crit.page(result.getKeySet(), navigation.to, 1);
         result = pcb.getResultList();
-        assertEquals(id2, result.get(0).get(0));
         
         String actualQueryString = pcb.getPageIdQueryString();
         for (int i = 0; i < key.length; i++) {
@@ -347,6 +348,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         }
         
         assertEquals(expectedIdQueryStart + keySetCondition + expectedIdQueryEnd, actualQueryString);
+        assertEquals(id2, result.get(0).get(0));
     }
     
     private String clause(boolean asc, boolean nullsFirst) {

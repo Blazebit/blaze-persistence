@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.KeySet;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  *
@@ -27,11 +28,11 @@ public class KeySetImpl implements KeySet {
 
     private final int firstResult;
     private final int maxResults;
-    private final String[] orderByExpressions;
+    private final List<OrderByExpression> orderByExpressions;
     private final Serializable[] lowest;
     private final Serializable[] highest;
 
-    public KeySetImpl(int firstResult, int maxResults, String[] orderByExpressions, Serializable[] lowest, Serializable[] highest) {
+    public KeySetImpl(int firstResult, int maxResults, List<OrderByExpression> orderByExpressions, Serializable[] lowest, Serializable[] highest) {
         this.firstResult = firstResult;
         this.maxResults = maxResults;
         this.orderByExpressions = orderByExpressions;
@@ -59,7 +60,7 @@ public class KeySetImpl implements KeySet {
         return highest;
     }
 
-    public String[] getOrderByExpressions() {
+    public List<OrderByExpression> getOrderByExpressions() {
         return orderByExpressions;
     }
 }

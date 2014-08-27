@@ -56,11 +56,9 @@ public class QueryGenerator extends VisitorAdapter {
     private boolean replaceSelectAliases = false;
     // cyclic dependency
     private SelectManager<?> selectManager;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
     private final AliasManager aliasManager;
 
-    public QueryGenerator(BaseQueryBuilder<?, ?> aliasOwner, AliasManager aliasManager) {
-        this.aliasOwner = aliasOwner;
+    public QueryGenerator(AliasManager aliasManager) {
         this.aliasManager = aliasManager;
     }
 
@@ -306,7 +304,7 @@ public class QueryGenerator extends VisitorAdapter {
                     absPath += "." + expression.getField();
                 }
                 SelectInfo selectInfo = selectManager.getSelectAbsolutePathToInfoMap().get(absPath);
-                if (selectInfo != null && selectInfo.getAliasOwner() == aliasOwner) {
+                if (selectInfo != null && selectInfo.getAliasOwner() == aliasManager) {
                     sb.append(selectInfo.getAlias());
                     return;
                 }

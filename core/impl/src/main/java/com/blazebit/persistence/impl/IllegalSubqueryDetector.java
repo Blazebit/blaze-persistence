@@ -30,11 +30,9 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
 
     private final AliasManager aliasManager;
     private boolean inSubquery = false;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
 
-    public IllegalSubqueryDetector(AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner) {
+    public IllegalSubqueryDetector(AliasManager aliasManager) {
         this.aliasManager = aliasManager;
-        this.aliasOwner = aliasOwner;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
         } else if (inSubquery) {
             JoinNode joinNode = (JoinNode) expression.getBaseNode();
 
-            if (joinNode != null && joinNode.getAliasInfo().getAliasOwner() == aliasOwner) {
+            if (joinNode != null && joinNode.getAliasInfo().getAliasOwner() == aliasManager) {
                 // we have an external path in the subquery
                 while (joinNode != null) {
                     if (joinNode.getParentTreeNode().isCollection()) {

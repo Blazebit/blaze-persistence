@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -78,6 +79,7 @@ public class Person implements Serializable {
         this.ownedDocuments = ownedDocuments;
     }
 
+    @Basic(optional = false)
     public String getName() {
         return name;
     }

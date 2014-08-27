@@ -148,12 +148,13 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
-        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id";
+        String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id ORDER BY d.id ASC NULLS LAST";
         String expectedObjectQuery = "SELECT contacts_contactNr.name FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-                + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids";
+                + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
+                .orderByAsc("id")
                 .page(0, 1);
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
@@ -369,7 +370,7 @@ public class PaginationTest extends AbstractCoreTest {
     @Test
     public void testSelectOnlyPropagationForWithJoins1() {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
-        PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().page(0, 1);
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
 
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
@@ -384,7 +385,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .leftJoinOn("d.contacts", "c")
                 .on("KEY(c)").eqExpression("d.owner.age")
                 .end()
-                .where("c").isNull().page(0, 1);
+                .where("c").isNull().orderByAsc("id").page(0, 1);
 
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());

@@ -71,7 +71,6 @@ public class JoinManager extends AbstractManager {
     // root entity class
     private final String joinRestrictionKeyword;
     private final AliasManager aliasManager;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
     private final Metamodel metamodel; // needed for model-aware joins
     private final JoinManager parent;
     private final JoinOnBuilderEndedListener joinOnBuilderListener;
@@ -89,19 +88,18 @@ public class JoinManager extends AbstractManager {
         ID
     };
 
-    JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, Metamodel metamodel, JoinManager parent) {
+    JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
         if (rootAlias == null) {
             rootAlias = aliasManager.generatePostfixedAlias(clazz.getSimpleName().toLowerCase());
         }
-        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasOwner);
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
 
         this.rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz);
         rootAliasInfo.setJoinNode(rootNode);
         this.aliasManager = aliasManager;
-        this.aliasOwner = aliasOwner;
         this.metamodel = metamodel;
         this.parent = parent;
         this.joinRestrictionKeyword = " " + jpaInfo.getOnClause() + " ";
@@ -303,7 +301,7 @@ public class JoinManager extends AbstractManager {
             return false;
         }
 
-        if (parent != null && aliasInfo.getAliasOwner() == parent.aliasOwner) {
+        if (parent != null && aliasInfo.getAliasOwner() == parent.aliasManager) {
             // the alias exists but originates from the parent query builder
 
             // an external select alias must not be dereferenced
@@ -313,7 +311,7 @@ public class JoinManager extends AbstractManager {
 
             // the alias is external so we do not have to treat it
             return true;
-        } else if (aliasInfo.getAliasOwner() == aliasOwner) {
+        } else if (aliasInfo.getAliasOwner() == aliasManager) {
             // the alias originates from the current query builder an is therefore not external
             return false;
         } else {
@@ -780,7 +778,7 @@ public class JoinManager extends AbstractManager {
                 alias = aliasManager.generatePostfixedAlias(alias);
             }
 
-            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, aliasOwner);
+            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, aliasManager);
             aliasManager.registerAliasInfo(newAliasInfo);
             node = new JoinNode(baseNode, treeNode, newAliasInfo, type, joinRelationClass);
             newAliasInfo.setJoinNode(node);

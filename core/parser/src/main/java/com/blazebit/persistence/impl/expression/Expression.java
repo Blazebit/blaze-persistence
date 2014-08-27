@@ -40,6 +40,8 @@ public interface Expression {
         public void visit(SubqueryExpression expression);
 
         public void visit(OuterExpression expression);
+
+        public void visit(FunctionExpression expression);
     }
     
     /**

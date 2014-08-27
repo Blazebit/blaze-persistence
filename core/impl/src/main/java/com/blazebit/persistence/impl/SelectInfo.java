@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public class SelectInfo extends NodeInfo implements AliasInfo {
     final String alias;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
+    private final AliasManager aliasOwner;
 
     public SelectInfo(Expression expression) {
         super(expression);
@@ -33,7 +33,7 @@ public class SelectInfo extends NodeInfo implements AliasInfo {
         this.aliasOwner = null;
     }
 
-    public SelectInfo(Expression expression, String alias, BaseQueryBuilder<?, ?> aliasOwner) {
+    public SelectInfo(Expression expression, String alias, AliasManager aliasOwner) {
         super(expression);
         this.alias = alias;
         this.aliasOwner = aliasOwner;
@@ -45,7 +45,7 @@ public class SelectInfo extends NodeInfo implements AliasInfo {
     }
 
     @Override
-    public BaseQueryBuilder<?, ?> getAliasOwner() {
+    public AliasManager getAliasOwner() {
         return aliasOwner;
     }
 

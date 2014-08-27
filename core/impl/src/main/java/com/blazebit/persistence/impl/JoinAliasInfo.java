@@ -30,9 +30,9 @@ public class JoinAliasInfo implements AliasInfo {
     private boolean implicit;
     // The absolute normalized path with the root as implicit base
     private final String absolutePath;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
+    private final AliasManager aliasOwner;
 
-    public JoinAliasInfo(String alias, String absolutePath, boolean implicit, BaseQueryBuilder<?, ?> aliasOwner) {
+    public JoinAliasInfo(String alias, String absolutePath, boolean implicit, AliasManager aliasOwner) {
         this.alias = alias;
         this.absolutePath = absolutePath;
         this.implicit = implicit;
@@ -73,7 +73,7 @@ public class JoinAliasInfo implements AliasInfo {
     }
 
     @Override
-    public BaseQueryBuilder<?, ?> getAliasOwner() {
+    public AliasManager getAliasOwner() {
         return this.aliasOwner;
     }
 }

@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-
 /**
  *
  * @author Moritz Becker
@@ -26,5 +24,5 @@ public interface AliasInfo {
 
     public String getAlias();
 
-    public BaseQueryBuilder<?, ?> getAliasOwner();
+    public AliasManager getAliasOwner();
 }

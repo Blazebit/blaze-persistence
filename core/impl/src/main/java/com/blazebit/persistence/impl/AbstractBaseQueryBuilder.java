@@ -101,7 +101,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, ArrayExpressionTransformer parentArrayExpressionTransformer) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -123,14 +123,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new QueryGenerator(this, this.aliasManager);
+        this.queryGenerator = new QueryGenerator(this.aliasManager);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, this, em.getMetamodel(),
+        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);
 
-        ArrayExpressionTransformer arrayExpressionTransformer = new ArrayExpressionTransformer(joinManager, this, parentArrayExpressionTransformer);
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(),
-                arrayExpressionTransformer);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -138,21 +136,20 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, this, subqueryInitFactory, expressionFactory);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, fromClazz.getName());
 
         //resolve cyclic dependencies
         this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager)/* , arrayExpressionTransformer */,
-                new ValueExpressionTransformer(jpaInfo));
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo));
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager);
         this.resultType = (Class<T>) fromClazz;
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), null);
+        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
     }
 
 
@@ -579,7 +576,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.buildClause(sbRemaining);
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
-        orderByManager.buildOrderBy(sbRemaining);
+        orderByManager.buildOrderBy(sbRemaining, false);
 
         /**
          * We must build the joins at the end This way, subqueries will be

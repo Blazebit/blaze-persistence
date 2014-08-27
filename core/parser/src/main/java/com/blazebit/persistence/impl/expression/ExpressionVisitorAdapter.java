@@ -63,4 +63,11 @@ public abstract class ExpressionVisitorAdapter implements Expression.Visitor {
         expression.getPath().accept(this);
     }
 
+    @Override
+    public void visit(FunctionExpression expression) {
+        for (Expression expr : expression.getExpressions()) {
+            expr.accept(this);
+        }
+    }
+
 }

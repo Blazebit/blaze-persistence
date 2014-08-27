@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -38,7 +40,7 @@ public class OrderByManager extends AbstractManager {
         this.fromClassName = fromClassName;
     }
 
-    List<OrderByExpression> getRealExpressions() {
+    List<OrderByExpression> getRealExpressions(Metamodel metamodel) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
@@ -47,12 +49,18 @@ public class OrderByManager extends AbstractManager {
 
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
+            Expression expr;
+            
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, selectInfo.getExpression()));
+                expr = selectInfo.getExpression();
             } else {
-                realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, orderByInfo.getExpression()));
+                expr = orderByInfo.getExpression();
             }
+            
+            boolean nullable = ExpressionUtils.isNullable(metamodel, expr);
+            boolean unique = ExpressionUtils.isUnique(metamodel, expr);
+            realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique));
         }
 
         return realExpressions;
@@ -100,12 +108,8 @@ public class OrderByManager extends AbstractManager {
         return orderByInfos.size() > 0;
     }
 
-    boolean hasOrderBys(boolean allClauses) {
-        if (orderByInfos.size() > 0) {
-            if (allClauses) {
-                return true;
-            }
-        } else {
+    boolean hasSubqueryOrderBys() {
+        if (orderByInfos.isEmpty()) {
             return false;
         }
 
@@ -179,85 +183,31 @@ public class OrderByManager extends AbstractManager {
         }
     }
 
-    void buildOrderBy(StringBuilder sb) {
+    void buildOrderBy(StringBuilder sb, boolean inverseOrder) {
         if (orderByInfos.isEmpty()) {
             return;
         }
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
-        applyOrderBy(sb, iter.next());
+        applyOrderBy(sb, iter.next(), inverseOrder);
         while (iter.hasNext()) {
             sb.append(", ");
-            applyOrderBy(sb, iter.next());
+            applyOrderBy(sb, iter.next(), inverseOrder);
         }
     }
 
-    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy) {
+    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder) {
         orderBy.getExpression().accept(queryGenerator);
-        if (!orderBy.ascending) {
+        if (orderBy.ascending == inverseOrder) {
             sb.append(" DESC");
         } else {
             sb.append(" ASC");
         }
-        if (orderBy.nullFirst) {
-            sb.append(" NULLS FIRST");
-        } else {
+        if (orderBy.nullFirst == inverseOrder) {
             sb.append(" NULLS LAST");
-        }
-    }
-    
-    public static class OrderByExpression {
-        private final boolean ascending;
-        private final boolean nullFirst;
-        private final Expression expression;
-
-        public OrderByExpression(boolean ascending, boolean nullFirst, Expression expression) {
-            this.ascending = ascending;
-            this.nullFirst = nullFirst;
-            this.expression = expression;
-        }
-
-        public boolean isAscending() {
-            return ascending;
-        }
-
-        public boolean isNullFirst() {
-            return nullFirst;
-        }
-
-        public Expression getExpression() {
-            return expression;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 37 * hash + (this.ascending ? 1 : 0);
-            hash = 37 * hash + (this.nullFirst ? 1 : 0);
-            hash = 37 * hash + (this.expression != null ? this.expression.hashCode() : 0);
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final OrderByExpression other = (OrderByExpression) obj;
-            if (this.ascending != other.ascending) {
-                return false;
-            }
-            if (this.nullFirst != other.nullFirst) {
-                return false;
-            }
-            if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
-                return false;
-            }
-            return true;
+        } else {
+            sb.append(" NULLS FIRST");
         }
     }
 

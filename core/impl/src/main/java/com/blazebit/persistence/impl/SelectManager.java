@@ -55,14 +55,12 @@ public class SelectManager<T> extends AbstractManager {
     private final Map<String, SelectInfo> selectAbsolutePathToInfoMap = new HashMap<String, SelectInfo>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private final AliasManager aliasManager;
-    private final BaseQueryBuilder<?, ?> aliasOwner;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
-    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, BaseQueryBuilder<?, ?> aliasOwner, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
-        this.aliasOwner = aliasOwner;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
@@ -140,7 +138,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
-        SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
+        SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasManager);
         if (selectAlias != null) {
             aliasManager.registerAliasInfo(selectInfo);
             selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
@@ -253,7 +251,7 @@ public class SelectManager<T> extends AbstractManager {
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
             Expression expr = new SubqueryExpression(builder);
-            SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasOwner);
+            SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasManager);
             if (selectAlias != null) {
                 aliasManager.registerAliasInfo(selectInfo);
                 selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());
@@ -281,7 +279,7 @@ public class SelectManager<T> extends AbstractManager {
             super.onBuilderEnded(builder);
 
             //TODO: maybe unify with SelectSubqueryBuilderListener
-            SelectInfo selectInfo = new SelectInfo(superExpression, selectAlias, aliasOwner);
+            SelectInfo selectInfo = new SelectInfo(superExpression, selectAlias, aliasManager);
             if (selectAlias != null) {
                 aliasManager.registerAliasInfo(selectInfo);
                 selectAliasToPositionMap.put(selectAlias, selectAliasToPositionMap.size());

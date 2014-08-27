@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import javax.persistence.Basic;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -79,6 +80,7 @@ public class Document implements Serializable {
         this.id = id;
     }
 
+    @Basic(optional = false)
     public String getName() {
         return name;
     }
