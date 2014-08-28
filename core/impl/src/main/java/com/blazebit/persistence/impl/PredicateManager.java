@@ -133,6 +133,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
     void applyPredicate(QueryGenerator queryGenerator, StringBuilder sb) {
         rootPredicate.predicate.accept(queryGenerator);
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     static class TransformationVisitor extends VisitorAdapter {
 

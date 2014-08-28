@@ -858,6 +858,8 @@ public class JoinManager extends AbstractManager {
             currentNode = currentNode.getParent();
         }
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     private static class JoinResult {
 

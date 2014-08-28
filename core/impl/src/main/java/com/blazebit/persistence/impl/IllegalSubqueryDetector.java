@@ -46,7 +46,7 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
 
             if (joinNode != null && joinNode.getAliasInfo().getAliasOwner() == aliasManager) {
                 // we have an external path in the subquery
-                while (joinNode != null) {
+                while (joinNode != null && joinNode.getParentTreeNode() != null) {
                     if (joinNode.getParentTreeNode().isCollection()) {
                         throw new IllegalStateException("Unsupported external collection access [" + joinNode.getAliasInfo().getAbsolutePath() + "]");
                     }
@@ -61,7 +61,7 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
     public void visit(SubqueryExpression expression) {
         boolean inSubqueryCpy = inSubquery;
         inSubquery = true;
-        SubqueryBuilderImpl<?> builder = (SubqueryBuilderImpl<?>) expression.getBuilder();
+        SubqueryBuilderImpl<?> builder = (SubqueryBuilderImpl<?>) expression.getSubquery();
         builder.applyVisitor(this);
 
         if (!inSubqueryCpy) {

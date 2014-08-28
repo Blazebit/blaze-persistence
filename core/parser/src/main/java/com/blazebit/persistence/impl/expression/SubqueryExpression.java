@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.SubqueryBuilder;
-
 /**
  *
  * @author Christian Beikov
@@ -25,10 +23,10 @@ import com.blazebit.persistence.SubqueryBuilder;
  */
 public class SubqueryExpression implements Expression {
 
-    private final SubqueryBuilder<?> builder;
+    private final Subquery subquery;
 
-    public SubqueryExpression(SubqueryBuilder<?> builder) {
-        this.builder = builder;
+    public SubqueryExpression(Subquery builder) {
+        this.subquery = builder;
     }
 
     @Override
@@ -36,19 +34,38 @@ public class SubqueryExpression implements Expression {
         visitor.visit(this);
     }
 
-    public SubqueryBuilder<?> getBuilder() {
-        return builder;
+    public Subquery getSubquery() {
+        return subquery;
     }
     
     @Override
-    // TODO: this method should not be used for query generation since it consumes another string builder
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append('(');
-        sb.append(builder.getQueryString());
+        sb.append(subquery.getQueryString());
         sb.append(')');
         return sb.toString();
     }
-    
-    // TODO: needs a good equals-hashCode implementation
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 83 * hash + (this.subquery != null ? this.subquery.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final SubqueryExpression other = (SubqueryExpression) obj;
+        if (this.subquery != other.subquery && (this.subquery == null || !this.subquery.equals(other.subquery))) {
+            return false;
+        }
+        return true;
+    }
 }

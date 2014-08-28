@@ -166,6 +166,7 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
                 .where("name").isNull()
                 .orderByAsc("name")
+                .orderByAsc("id")
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());
     }
@@ -227,10 +228,11 @@ public class PaginationTest extends AbstractCoreTest {
     public void testOrderByExpression() {
         PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
                 .orderByAsc("contacts[:contactNr].name")
+                .orderByAsc("id")
                 .setParameter("contactNr", 1)
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
+                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         // TODO: enable as soon as #45 is fixed
 //        cb.getResultList();
@@ -241,10 +243,11 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("contacts[:contactNr].name", "contactName")
                 .orderByAsc("contactName")
+                .orderByAsc("id")
                 .setParameter("contactNr", 1)
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
-                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST";
+                + " KEY(contacts_contactNr) = :contactNr GROUP BY d.id ORDER BY contacts_contactNr.name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         // TODO: enable as soon as #45 is fixed
         //cb.getResultList();
@@ -259,8 +262,9 @@ public class PaginationTest extends AbstractCoreTest {
                 .where("d2.id").eqExpression("d.id")
                 .end()
                 .orderByAsc("contactCount")
+                .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, (SELECT COUNT(contacts_1.id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) AS contactCount FROM Document d GROUP BY d.id ORDER BY contactCount ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id, (SELECT COUNT(contacts_1.id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) AS contactCount FROM Document d GROUP BY d.id ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
     }

@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 /**
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.0
  */
 public class NodeInfo {
@@ -36,5 +37,27 @@ public class NodeInfo {
 
     public void setExpression(Expression expression) {
         this.expression = expression;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 17 * hash + (this.expression != null ? this.expression.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NodeInfo other = (NodeInfo) obj;
+        if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
+            return false;
+        }
+        return true;
     }
 }

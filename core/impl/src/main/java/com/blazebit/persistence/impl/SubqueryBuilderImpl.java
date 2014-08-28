@@ -19,7 +19,11 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.Subquery;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
@@ -29,7 +33,7 @@ import javax.persistence.Tuple;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T> {
+public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T>, Subquery {
 
     private final T result;
     private final SubqueryBuilderListener listener;
@@ -38,6 +42,17 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
         super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
         this.result = result;
         this.listener = listener;
+    }
+
+    @Override
+    public List<Expression> getSelectExpressions() {
+        List<Expression> selectExpressions = new ArrayList<Expression>(selectManager.getSelectInfos().size());
+        
+        for (SelectInfo info : selectManager.getSelectInfos()) {
+            selectExpressions.add(info.getExpression());
+        }
+        
+        return selectExpressions;
     }
 
     @Override

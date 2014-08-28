@@ -46,6 +46,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         return transform(original, false);
     }
 
+    // TODO: needs to be recursive and walk into expressions
     @Override
     public Expression transform(Expression original, boolean selectClause) {
         if (original instanceof CompositeExpression) {

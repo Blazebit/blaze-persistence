@@ -15,10 +15,15 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.OuterExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.ArrayList;
@@ -37,30 +42,108 @@ import javax.persistence.metamodel.SingularAttribute;
 public class ExpressionUtils {
 
     public static boolean isUnique(Metamodel metamodel, Expression expr) {
-        // TODO: implement
+        if (expr instanceof CompositeExpression) {
+            return isUnique(metamodel, (CompositeExpression) expr);
+        } else if (expr instanceof FunctionExpression) {
+            return isUnique(metamodel, (FunctionExpression) expr);
+        } else if (expr instanceof PathExpression) {
+            return isUnique(metamodel, (PathExpression) expr);
+        } else if (expr instanceof SubqueryExpression) {
+            return isUnique(metamodel, (SubqueryExpression) expr);
+        } else if (expr instanceof OuterExpression) {
+            return isUnique(metamodel, ((OuterExpression) expr).getPath());
+        } else if (expr instanceof ParameterExpression) {
+            return false;
+        } else if (expr instanceof FooExpression) {
+            // TODO: Not actually sure how we could do that better
+            return false;
+        } else {
+            throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for uniqueness!");
+        }
+    }
+    
+    private static boolean isUnique(Metamodel metamodel, CompositeExpression expr) {
+        if (expr.getExpressions().size() > 1) {
+            // Maybe the analysis can be done but we actually don't need so accurate results right now
+            return false;
+        }
+        
+        return isUnique(metamodel, expr.getExpressions().get(0));
+    }
+    
+    private static boolean isUnique(Metamodel metamodel, FunctionExpression expr) {
+        // The existing JPA functions don't return unique results regardless of their arguments
         return false;
     }
     
-    // TODO: maybe replace this with a visitor
+    private static boolean isUnique(Metamodel metamodel, SubqueryExpression expr) {
+        List<Expression> expressions = expr.getSubquery().getSelectExpressions();
+        
+        if (expressions.size() != 1) {
+            throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");
+        }
+        
+        return isUnique(metamodel, expressions.get(0));
+    }
+    
+    private static boolean isUnique(Metamodel metamodel, PathExpression expr) {
+        JoinNode baseNode = ((JoinNode) expr.getBaseNode());
+        ManagedType<?> t;
+        Attribute<?, ?> attr;
+        
+        if (expr.getField() != null) {
+            t = metamodel.managedType(baseNode.getPropertyClass());
+            attr = t.getAttribute(expr.getField());
+            if (!isUnique(attr)) {
+                return false;
+            }
+        }
+        
+        while (baseNode.getParent() != null) {
+            t = metamodel.managedType(baseNode.getParent().getPropertyClass());
+            attr = t.getAttribute(baseNode.getParentTreeNode().getRelationName());
+            if (!isUnique(attr)) {
+                return false;
+            }
+            baseNode = baseNode.getParent();
+        }
+        
+        return true;
+    }
+    
+    private static boolean isUnique(Attribute<?, ?> attr) {
+        if (attr.isCollection()) {
+            return false;
+        }
+        
+        // Right now we only support ids, but we actually should check for unique constraints
+        return ((SingularAttribute<?, ?>) attr).isId();
+    }
+    
     public static boolean isNullable(Metamodel metamodel, Expression expr) {
         if (expr instanceof CompositeExpression) {
             return isNullable(metamodel, (CompositeExpression) expr);
+        } else if (expr instanceof FunctionExpression) {
+            return isNullable(metamodel, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
             return isNullable(metamodel, (PathExpression) expr);
+        } else if (expr instanceof SubqueryExpression) {
+            return isNullable(metamodel, (SubqueryExpression) expr);
+        } else if (expr instanceof OuterExpression) {
+            return isNullable(metamodel, ((OuterExpression) expr).getPath());
+        } else if (expr instanceof ParameterExpression) {
+            return true;
+        } else if (expr instanceof FooExpression) {
+            return false;
         } else {
-            // TODO: need subquery implementation
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for nullability!");
         }
     }
     
     private static boolean isNullable(Metamodel metamodel, CompositeExpression expr) {
-        boolean nullable = false;
+        boolean nullable;
         for (Expression subExpr : expr.getExpressions()) {
-            if (subExpr instanceof FunctionExpression) {
-                nullable = isNullable(metamodel, (FunctionExpression) subExpr);
-            } else if (subExpr instanceof PathExpression) {
-                nullable = isNullable(metamodel, (PathExpression) subExpr);
-            }
+            nullable = isNullable(metamodel, subExpr);
 
             if (nullable) {
                 return true;
@@ -74,15 +157,9 @@ public class ExpressionUtils {
         if ("NULLIF".equals(expr.getFunctionName())) {
             return true;
         } else if ("COALESCE".equals(expr.getFunctionName())) {
-            boolean nullable = true;
+            boolean nullable;
             for (Expression subExpr : expr.getExpressions()) {
-                if (subExpr instanceof CompositeExpression) {
-                    nullable = isNullable(metamodel, (CompositeExpression) subExpr);
-                } else if (subExpr instanceof FunctionExpression) {
-                    nullable = isNullable(metamodel, (FunctionExpression) subExpr);
-                } else if (subExpr instanceof PathExpression) {
-                    nullable = isNullable(metamodel, (PathExpression) subExpr);
-                }
+                nullable = isNullable(metamodel, subExpr);
 
                 if (!nullable) {
                     return false;
@@ -91,15 +168,9 @@ public class ExpressionUtils {
 
             return true;
         } else {
-            boolean nullable = false;
+            boolean nullable;
             for (Expression subExpr : expr.getExpressions()) {
-                if (subExpr instanceof CompositeExpression) {
-                    nullable = isNullable(metamodel, (CompositeExpression) subExpr);
-                } else if (subExpr instanceof FunctionExpression) {
-                    nullable = isNullable(metamodel, (FunctionExpression) subExpr);
-                } else if (subExpr instanceof PathExpression) {
-                    nullable = isNullable(metamodel, (PathExpression) subExpr);
-                }
+                nullable = isNullable(metamodel, subExpr);
 
                 if (nullable) {
                     return true;
@@ -108,6 +179,16 @@ public class ExpressionUtils {
 
             return false;
         }
+    }
+    
+    private static boolean isNullable(Metamodel metamodel, SubqueryExpression expr) {
+        List<Expression> expressions = expr.getSubquery().getSelectExpressions();
+        
+        if (expressions.size() != 1) {
+            throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");
+        }
+        
+        return isNullable(metamodel, expressions.get(0));
     }
     
     private static boolean isNullable(Metamodel metamodel, PathExpression expr) {

@@ -156,8 +156,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         applyExpressionTransformers();
         
         Metamodel m = em.getMetamodel();
-        needsNewIdList = extractKeySet || orderByManager.hasSubqueryOrderBys();
         orderByExpressions = orderByManager.getRealExpressions(m);
+        
+        if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
+            throw new IllegalStateException("The last order by item must be unique!");
+        }
+        
+        needsNewIdList = extractKeySet || orderByManager.hasSubqueryOrderBys();
         keySetMode = KeySetPaginationHelper.getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressions);
         // TODO: replace this with needCheck = false as soon as mutation tracking #60 is done
         clearCache();

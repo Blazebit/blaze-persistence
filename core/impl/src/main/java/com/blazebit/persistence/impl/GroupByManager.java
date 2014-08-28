@@ -74,4 +74,26 @@ public class GroupByManager extends AbstractManager {
         return groupByInfos;
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 89 * hash + (this.groupByInfos != null ? this.groupByInfos.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final GroupByManager other = (GroupByManager) obj;
+        if (this.groupByInfos != other.groupByInfos && (this.groupByInfos == null || !this.groupByInfos.equals(other.groupByInfos))) {
+            return false;
+        }
+        return true;
+    }
+
 }

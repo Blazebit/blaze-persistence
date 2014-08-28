@@ -210,6 +210,8 @@ public class OrderByManager extends AbstractManager {
             sb.append(" NULLS FIRST");
         }
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     private static class OrderByInfo extends NodeInfo {
 

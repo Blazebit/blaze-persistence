@@ -121,6 +121,8 @@ public class ParameterManager {
         }
         parameters.put(parameterName, parameterValue);
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     private class ParameterImpl<T> implements Parameter<T> {
 

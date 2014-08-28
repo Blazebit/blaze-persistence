@@ -342,7 +342,7 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(SubqueryExpression expression) {
         sb.append('(');
-        sb.append(expression.getBuilder().getQueryString());
+        sb.append(expression.getSubquery().getQueryString());
         sb.append(')');
     }
 

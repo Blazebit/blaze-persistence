@@ -323,8 +323,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 .where("p.id").eqExpression("c.id")
             .end()
             .orderByAsc("localizedCount")
+            .orderByAsc("id")
             .page(0, 1);
-        
         // In a paginated query access to outer collections is disallowed in the order by clause
         verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }
@@ -338,8 +338,8 @@ public class SubqueryTest extends AbstractCoreTest {
                 .where("p.id").eqExpression("d.contacts.id")
             .end()
             .orderByAsc("localizedCount")
+            .orderByAsc("id")
             .page(0, 1);
-        
         // In a paginated query access to outer collections is disallowed in the order by clause
         verifyException(cb, IllegalStateException.class).getPageIdQueryString();
     }

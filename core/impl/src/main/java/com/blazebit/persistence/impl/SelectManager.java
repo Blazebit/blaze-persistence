@@ -238,6 +238,8 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
 

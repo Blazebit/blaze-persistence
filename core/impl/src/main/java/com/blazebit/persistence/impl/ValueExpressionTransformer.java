@@ -44,6 +44,7 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
         return transform(original);
     }
 
+    // TODO: needs to be recursive and walk into expressions
     @Override
     public Expression transform(Expression original) {
         if (original instanceof CompositeExpression) {

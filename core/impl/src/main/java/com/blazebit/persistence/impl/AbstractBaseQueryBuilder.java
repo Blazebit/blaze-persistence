@@ -73,7 +73,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final List<ExpressionTransformer> transformers;
     private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
 
+    // Mutable state
     protected Class<T> resultType;
+    
+    private boolean needsCheck = true;
+    private boolean implicitJoinsApplied = false;
+    
+    // Cache
+    private String cachedQueryString;
 
     /**
      * Create flat copy of builder
@@ -456,8 +463,15 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         verifyBuilderEnded();
     }
-
+    
     protected void applyImplicitJoins() {
+        // TODO: remove the assignment as soon as mutation tracking #60 is done
+        implicitJoinsApplied = false;
+        
+        if (implicitJoinsApplied) {
+            return;
+        }
+        
         final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
@@ -549,11 +563,33 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public Class<T> getResultType() {
         return resultType;
     }
-
+    
     @Override
     public String getQueryString() {
+        prepareAndCheck();
+        return getQueryString0();
+    }
+    
+    private String getQueryString0() {
+        if (cachedQueryString == null) {
+            cachedQueryString = getQueryString1();
+        }
+        
+        return cachedQueryString;
+    }
+    
+    private void clearCache() {
+        needsCheck = true;
+        cachedQueryString = null;
+        implicitJoinsApplied = false;
+    }
+
+    private void prepareAndCheck() {
+        if (!needsCheck) {
+            return;
+        }
+        
         verifyBuilderEnded();
-        StringBuilder sbSelectFrom = new StringBuilder();
         // resolve unresolved aliases, object model etc.
         // we must do implicit joining at the end because we can only do
         // the aliases resolving at the end and alias resolving must happen before
@@ -565,6 +601,13 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // in the first case
         applyImplicitJoins();
         applyExpressionTransformers();
+        
+        // TODO: replace this with needCheck = false as soon as mutation tracking #60 is done
+        clearCache();
+    }
+
+    private String getQueryString1() {
+        StringBuilder sbSelectFrom = new StringBuilder();
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append("FROM ")
@@ -621,6 +664,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
     }
+    
+    // TODO: needs equals-hashCode implementation
 
     class SubqueryRequiringSelectExpressionDetector extends VisitorAdapter {
 
