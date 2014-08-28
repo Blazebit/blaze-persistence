@@ -66,44 +66,6 @@ public class OrderByManager extends AbstractManager {
         return realExpressions;
     }
 
-    String[] getAbsoluteExpressionStrings() {
-        if (orderByInfos.isEmpty()) {
-            return new String[0];
-        }
-
-        String[] absoluteExpressionStrings = new String[orderByInfos.size()];
-        StringBuilder sb = new StringBuilder();
-
-        for (int i = 0; i < orderByInfos.size(); i++) {
-            OrderByInfo orderByInfo = orderByInfos.get(i);
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
-            sb.delete(0, sb.length());
-
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-                SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                selectInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
-            } else {
-                orderByInfo.getExpression().accept(new AbsoluteExpressionStringVisitor(sb, fromClassName));
-            }
-
-            if (orderByInfo.ascending) {
-                sb.append(" ASC");
-            } else {
-                sb.append(" DESC");
-            }
-
-            if (orderByInfo.nullFirst) {
-                sb.append(" NULLS FIRST");
-            } else {
-                sb.append(" NULLS LAST");
-            }
-
-            absoluteExpressionStrings[i] = sb.toString();
-        }
-
-        return absoluteExpressionStrings;
-    }
-
     boolean hasOrderBys() {
         return orderByInfos.size() > 0;
     }
