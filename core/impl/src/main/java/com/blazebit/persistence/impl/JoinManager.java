@@ -112,6 +112,10 @@ public class JoinManager extends AbstractManager {
         return rootNode.getAliasInfo().getAlias();
     }
 
+    boolean hasCollections() {
+        return rootNode.hasCollections();
+    }
+
     JoinManager getParent() {
         return parent;
     }
