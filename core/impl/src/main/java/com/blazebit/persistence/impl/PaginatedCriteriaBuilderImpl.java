@@ -53,7 +53,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private final KeySetImpl keySet;
     
     // Mutable state
-    private boolean needsCheck = true;
     
     private int firstRow;
     private int pageSize;
@@ -64,7 +63,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     // Cache
     private String cachedCountQueryString;
     private String cachedIdQueryString;
-    private String cachedQueryString;
 
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize) {
         super(baseBuilder);
@@ -147,11 +145,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return cachedQueryString;
     }
     
-    private void clearCache() {
-        needsCheck = true;
+    @Override
+    protected void clearCache() {
+        super.clearCache();
         cachedCountQueryString = null;
         cachedIdQueryString = null;
-        cachedQueryString = null;
     }
 
     private void prepareAndCheck() {
@@ -177,8 +175,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         needsNewIdList = extractKeySet || orderByManager.hasSubqueryOrderBys();
         keySetMode = KeySetPaginationHelper.getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressions);
-        // TODO: replace this with needCheck = false as soon as mutation tracking #60 is done
-        clearCache();
+        // No need to do the check again if no mutation occurs
+        needsCheck = false;
     }
 
     private PagedList<T> getResultListViaObjectQuery(long totalSize) {

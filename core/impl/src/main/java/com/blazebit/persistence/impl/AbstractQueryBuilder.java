@@ -82,6 +82,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public PaginatedCriteriaBuilder<T> page(int firstRow, int pageSize) {
+        clearCache();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -94,6 +95,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstRow, int pageSize) {
+        clearCache();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
@@ -127,6 +129,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Class<Y> clazz) {
+        clearCache();
         if (clazz == null) {
             throw new NullPointerException("clazz");
         }
@@ -137,6 +140,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Constructor<Y> constructor) {
+        clearCache();
         if (constructor == null) {
             throw new NullPointerException("constructor");
         }
@@ -147,6 +151,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> objectBuilder) {
+        clearCache();
         if (objectBuilder == null) {
             throw new NullPointerException("objectBuilder");
         }
@@ -164,6 +169,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
     @Override
     public X fetch(String path) {
+        clearCache();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
         joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
@@ -211,6 +217,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
+        clearCache();
         if (path == null) {
             throw new NullPointerException("path");
         }

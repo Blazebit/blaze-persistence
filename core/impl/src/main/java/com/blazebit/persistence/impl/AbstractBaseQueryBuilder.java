@@ -77,11 +77,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     // Mutable state
     protected Class<T> resultType;
     
-    private boolean needsCheck = true;
-    private boolean implicitJoinsApplied = false;
+    protected boolean needsCheck = true;
+    protected boolean implicitJoinsApplied = false;
     
     // Cache
-    private String cachedQueryString;
+    protected String cachedQueryString;
 
     /**
      * Create flat copy of builder
@@ -164,6 +164,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      * Select methods
      */
     public X distinct() {
+        clearCache();
         selectManager.distinct();
         return (X) this;
     }
@@ -296,6 +297,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public X groupBy(String expression) {
+        clearCache();
         Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
@@ -306,6 +308,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      * Having methods
      */
     public RestrictionBuilder<X> having(String expression) {
+        clearCache();
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -314,6 +317,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public HavingOrBuilder<X> havingOr() {
+        clearCache();
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -321,6 +325,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public SubqueryInitiator<X> havingExists() {
+        clearCache();
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -328,6 +333,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public SubqueryInitiator<X> havingNotExists() {
+        clearCache();
         if (groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
@@ -335,10 +341,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery() {
+        clearCache();
         return havingManager.restrict(this);
     }
 
     public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery(String subqueryAlias, String expression) {
+        clearCache();
         return havingManager.restrict(this, subqueryAlias, expression);
     }
 
@@ -374,6 +382,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+        clearCache();
         Expression expr = expressionFactory.createSimpleExpression(expression);
         verifyBuilderEnded();
         orderByManager.orderBy(expr, ascending, nullFirst);
@@ -415,6 +424,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X join(String path, String alias, JoinType type) {
+        clearCache();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, false);
         return (X) this;
@@ -422,6 +432,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public X joinDefault(String path, String alias, JoinType type) {
+        clearCache();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, true);
         return (X) this;
@@ -429,6 +440,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
+        clearCache();
         checkJoinPreconditions(path, alias, type);
         return joinManager.joinOn((X) this, path, alias, type);
     }
@@ -465,9 +477,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
     
     protected void applyImplicitJoins() {
-        // TODO: remove the assignment as soon as mutation tracking #60 is done
-        implicitJoinsApplied = false;
-        
         if (implicitJoinsApplied) {
             return;
         }
@@ -500,6 +509,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setFromClause(ClauseType.ORDER_BY);
         orderByManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(true);
+        // No need to implicit join again if no mutation occurs
+        implicitJoinsApplied = true;
     }
 
     protected void applyVisitor(VisitorAdapter expressionVisitor) {
@@ -582,7 +593,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return cachedQueryString;
     }
     
-    private void clearCache() {
+    protected void clearCache() {
         needsCheck = true;
         cachedQueryString = null;
         implicitJoinsApplied = false;
@@ -606,8 +617,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         applyImplicitJoins();
         applyExpressionTransformers();
         
-        // TODO: replace this with needCheck = false as soon as mutation tracking #60 is done
-        clearCache();
+        // No need to do all that stuff again if no mutation occurs
+        needsCheck = false;
     }
 
     private String getQueryString1() {
