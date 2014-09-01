@@ -39,19 +39,14 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
         this.jpaInfo = jpaInfo;
     }
 
-    @Override
-    public Expression transform(Expression original, boolean selectClause) {
-        return transform(original);
-    }
-
     // TODO: needs to be recursive and walk into expressions
     @Override
-    public Expression transform(Expression original) {
+    public Expression transform(Expression original, ClauseType fromClause) {
         if (original instanceof CompositeExpression) {
             CompositeExpression composite = (CompositeExpression) original;
             CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
             for (Expression e : composite.getExpressions()) {
-                transformed.getExpressions().add(transform(e));
+                transformed.getExpressions().add(transform(e, fromClause));
             }
             return transformed;
         }

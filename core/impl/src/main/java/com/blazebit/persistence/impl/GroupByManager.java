@@ -17,9 +17,9 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -28,11 +28,11 @@ import java.util.List;
  */
 public class GroupByManager extends AbstractManager {
 
-    private final List<NodeInfo> groupByInfos;
+    private final Set<NodeInfo> groupByInfos;
 
     GroupByManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
         super(queryGenerator, parameterManager);
-        groupByInfos = new ArrayList<NodeInfo>();
+        groupByInfos = new HashSet<NodeInfo>();
     }
 
     void groupBy(Expression expr) {
@@ -45,7 +45,7 @@ public class GroupByManager extends AbstractManager {
         applyGroupBys(queryGenerator, sb, groupByInfos);
     }
 
-    void applyGroupBys(QueryGenerator queryGenerator, StringBuilder sb, List<NodeInfo> groupBys) {
+    void applyGroupBys(QueryGenerator queryGenerator, StringBuilder sb, Set<NodeInfo> groupBys) {
         if (groupBys.isEmpty()) {
             return;
         }
@@ -60,7 +60,7 @@ public class GroupByManager extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         for (NodeInfo groupBy : groupByInfos) {
-            groupBy.setExpression(transformer.transform(groupBy.getExpression()));
+            groupBy.setExpression(transformer.transform(groupBy.getExpression(), ClauseType.GROUP_BY));
         }
     }
 
@@ -70,7 +70,7 @@ public class GroupByManager extends AbstractManager {
         }
     }
 
-    List<NodeInfo> getGroupByInfos() {
+    Set<NodeInfo> getGroupByInfos() {
         return groupByInfos;
     }
 

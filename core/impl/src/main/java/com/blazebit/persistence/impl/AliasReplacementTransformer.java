@@ -34,7 +34,7 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
     }
 
     @Override
-    public Expression transform(Expression original) {
+    public Expression transform(Expression original, ClauseType fromClause) {
         if (original instanceof PathExpression) {
             PathExpression originalPathExpr = (PathExpression) original;
             if (originalPathExpr.toString().equals(alias)) {
@@ -42,11 +42,6 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
             }
         }
         return original;
-    }
-
-    @Override
-    public Expression transform(Expression original, boolean selectClause) {
-        return transform(original);
     }
 
 }

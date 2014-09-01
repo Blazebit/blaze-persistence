@@ -166,7 +166,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public X fetch(String path) {
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, true, false, false, true);
+        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
         return (X) this;
     }
 

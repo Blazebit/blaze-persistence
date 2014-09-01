@@ -269,16 +269,16 @@ public class PaginationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    @Ignore //#58
     @Test
     public void testOrderBySize() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("SIZE(d.contacts)")
                 .orderByAsc("SIZE(d.contacts)")
+                .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST, d.id ASC NULLS LAST";
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
-        String expectedObjectQuery = "SELECT COUNT(c) FROM Document d LEFT JOIN d.contacts c WHERE d.id IN :ids GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST";
+        String expectedObjectQuery = "SELECT COUNT(contacts_1) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST, d.id ASC NULLS LAST";
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
@@ -354,23 +354,23 @@ public class PaginationTest extends AbstractCoreTest {
         em.createQuery("SELECT d.id FROM Document d ORDER BY SIZE(d.contacts)").getResultList();
     }*/
     
-    @Ignore //#58
     @Test
     public void testOrderBySizeAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("SIZE(d.contacts)", "contactCount")
                 .orderByAsc("contactCount")
+                .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, COUNT(c) AS contactCount FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY contactCount";
+        String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY COUNT(contacts_1) ASC NULLS LAST, d.id ASC NULLS LAST";
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
-        String expectedObjectQuery = "SELECT COUNT(c) AS contactCount FROM Document d LEFT JOIN d.contacts c WHERE d.id IN :ids GROUP BY d.id ORDER BY contactCount ASC NULLS LAST";
+        String expectedObjectQuery = "SELECT COUNT(contacts_1) AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
         cb.getResultList();
     }
-
+    
     @Test
     public void testSelectOnlyPropagationForWithJoins1() {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
