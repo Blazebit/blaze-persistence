@@ -120,6 +120,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         // Query
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeSorter("contactCount", Sorters.descending());
+        setting.addAttributeSorter("id", Sorters.descending());
 
         PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView> paginatedCb = evm.applySetting(setting, cb);
         PagedList<DocumentWithExpressionSubqueryView> result = paginatedCb.getResultList();

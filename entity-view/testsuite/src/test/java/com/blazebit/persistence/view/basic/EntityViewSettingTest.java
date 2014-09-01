@@ -101,6 +101,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         setting.addAttributeFilter("name", "Test");
         setting.addAttributeFilter("contactCount", "1");
         setting.addAttributeSorter("name", Sorters.descending());
+        setting.addAttributeSorter("id", Sorters.descending());
         setting.addOptionalParameter("index", 1);
 
         PaginatedCriteriaBuilder<FilteredDocument> paginatedCb = evm.applySetting(setting, cb);

@@ -101,6 +101,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("owner.name", "OWNER");
         setting.addAttributeSorter("owner.name", Sorters.descending());
+        setting.addAttributeSorter("id", Sorters.descending());
         setting.addOptionalParameter("contactPersonNumber", 1);
 
         PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = evm.applySetting(setting, cb);
@@ -129,6 +130,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
         setting.addAttributeFilter("myContactPerson.name", "Owner");
         setting.addAttributeSorter("myContactPerson.name", Sorters.descending());
+        setting.addAttributeSorter("id", Sorters.descending());
         setting.addOptionalParameter("contactPersonNumber", 1);
 
         PaginatedCriteriaBuilder<DocumentMasterView> paginatedCb = evm.applySetting(setting, cb);
