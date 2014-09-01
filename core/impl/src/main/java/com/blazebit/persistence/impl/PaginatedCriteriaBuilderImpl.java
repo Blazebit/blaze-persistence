@@ -159,7 +159,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         verifyBuilderEnded();
         if (!orderByManager.hasOrderBys()) {
-            // TODO: what about implicit order by id in this case?
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
@@ -282,7 +281,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressions, lowest, highest);
         }
 
-        // TODO: replace this with super.getResultList() as soon as caching is implemented
         List<T> queryResultList = getQueryResultList();
         PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeySet, totalSize);
         return pagedResultList;
@@ -327,7 +325,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             whereManager.buildClause(sbSelectFrom);
         }
         
-        whereManager.buildClause(sbSelectFrom);
         havingManager.buildClause(sbSelectFrom);
 
         return sbSelectFrom.toString();

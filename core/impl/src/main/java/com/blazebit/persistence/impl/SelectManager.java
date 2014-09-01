@@ -51,8 +51,6 @@ public class SelectManager<T> extends AbstractManager {
     private SubqueryBuilderListenerImpl subqueryBuilderListener;
     // needed for tuple/alias matching
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
-    // TODO: review if this is really necessary
-    private final Map<String, SelectInfo> selectAbsolutePathToInfoMap = new HashMap<String, SelectInfo>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private final AliasManager aliasManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -63,10 +61,6 @@ public class SelectManager<T> extends AbstractManager {
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
-    }
-
-    public Map<String, SelectInfo> getSelectAbsolutePathToInfoMap() {
-        return selectAbsolutePathToInfoMap;
     }
 
     void verifyBuilderEnded() {
@@ -95,7 +89,6 @@ public class SelectManager<T> extends AbstractManager {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        populateSelectAliasAbsolutePaths();
         queryGenerator.setQueryBuffer(sb);
         Iterator<String> iter = selectAliases.iterator();
         applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
@@ -118,7 +111,6 @@ public class SelectManager<T> extends AbstractManager {
             sb.append(rootAlias);
         } else {
             // we must not replace select alias since we would loose the original expressions
-            populateSelectAliasAbsolutePaths();
             queryGenerator.setQueryBuffer(sb);
             Iterator<SelectInfo> iter = selectInfos.iterator();
             applySelect(queryGenerator, sb, iter.next());
@@ -232,32 +224,6 @@ public class SelectManager<T> extends AbstractManager {
         select.getExpression().accept(queryGenerator);
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);
-        }
-    }
-
-    private void populateSelectAliasAbsolutePaths() {
-        selectAbsolutePathToInfoMap.clear();
-        for (Map.Entry<String, AliasInfo> selectAliasEntry : aliasManager.getAliasMapForBottomLevel().entrySet()) {
-            if (selectAliasEntry.getValue() instanceof SelectInfo) {
-                SelectInfo selectInfo = (SelectInfo) selectAliasEntry.getValue();
-                Expression selectExpr = selectInfo.getExpression();
-
-                if (selectExpr instanceof PathExpression) {
-                    PathExpression pathExpr = (PathExpression) selectExpr;
-                    JoinNode baseNode = (JoinNode) pathExpr.getBaseNode();
-                    String absPath = baseNode.getAliasInfo().getAbsolutePath();
-
-                    if (absPath.isEmpty()) {
-                        // if the absPath is empty the pathExpr is relative to the root and we
-                        // must not insert any select info for this
-                        absPath = pathExpr.getField();
-
-                    } else {
-                        absPath += "." + pathExpr.getField();
-                    }
-                    selectAbsolutePathToInfoMap.put(absPath, selectInfo);
-                }
-            }
         }
     }
 

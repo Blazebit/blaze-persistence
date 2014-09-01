@@ -422,10 +422,8 @@ public class JoinManager extends AbstractManager {
                 }
                 return;
             } else if (isExternal(pathExpression)) {
-
                 // try to set base node and field for the external expression based
                 // on existing joins in the super query
-                //TODO: the usage of fromSelect might not be correct here    
                 parent.implicitJoin(pathExpression, true, fromClause, true, fromSelectAlias);
                 return;
             }
