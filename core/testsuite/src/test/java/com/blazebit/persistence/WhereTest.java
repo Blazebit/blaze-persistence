@@ -262,7 +262,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -273,7 +273,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery().from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -303,7 +303,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id)";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -315,7 +315,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -326,7 +326,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -338,7 +338,7 @@ public class WhereTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
         crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "alias * alias").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 

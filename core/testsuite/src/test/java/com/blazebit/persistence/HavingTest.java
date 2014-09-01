@@ -334,7 +334,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -351,7 +351,7 @@ public class HavingTest extends AbstractCoreTest {
                     .select("id").where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -366,7 +366,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("id")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -383,7 +383,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("COUNT(id)")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) * (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) = owner_1.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) * (SELECT COUNT(p.id) FROM Person p WHERE p.name = d.name) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -403,7 +403,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id)";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -424,7 +424,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id)";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -443,7 +443,7 @@ public class HavingTest extends AbstractCoreTest {
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();        
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = owner_1.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -462,7 +462,7 @@ public class HavingTest extends AbstractCoreTest {
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();        
-        String expected = "SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = owner_1.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
