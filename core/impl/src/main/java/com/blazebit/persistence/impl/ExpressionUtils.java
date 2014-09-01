@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
@@ -23,7 +22,6 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.OuterExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.ArrayList;
@@ -238,7 +236,7 @@ public class ExpressionUtils {
             public void visit(CompositeExpression expression) {
                 List<Expression> transformed = new ArrayList<Expression>();
                 for (Expression expr : expression.getExpressions()) {
-                    transformed.add(replacementTransformer.transform(expr));
+                    transformed.add(replacementTransformer.transform(expr, null));
                 }
                 expression.getExpressions().clear();
                 expression.getExpressions().addAll(transformed);

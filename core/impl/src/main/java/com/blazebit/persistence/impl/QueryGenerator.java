@@ -53,17 +53,11 @@ import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 public class QueryGenerator extends VisitorAdapter {
 
     private StringBuilder sb;
-    private boolean replaceSelectAliases = false;
-    // cyclic dependency
-    private SelectManager<?> selectManager;
+    private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
 
     public QueryGenerator(AliasManager aliasManager) {
         this.aliasManager = aliasManager;
-    }
-
-    void setSelectManager(SelectManager<?> selectManager) {
-        this.selectManager = selectManager;
     }
 
     void setQueryBuffer(StringBuilder sb) {
@@ -294,22 +288,7 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        if (replaceSelectAliases) {
-            if (expression.getBaseNode() != null) {
-                JoinNode baseNode = (JoinNode) expression.getBaseNode();
-                String absPath = baseNode.getAliasInfo().getAbsolutePath();
-                if (absPath.isEmpty()) {
-                    absPath = expression.getField();
-                } else {
-                    absPath += "." + expression.getField();
-                }
-                SelectInfo selectInfo = selectManager.getSelectAbsolutePathToInfoMap().get(absPath);
-                if (selectInfo != null && selectInfo.getAliasOwner() == aliasManager) {
-                    sb.append(selectInfo.getAlias());
-                    return;
-                }
-            }// else the expression is a pure alias and does not require to be replaced
-        } else {
+        if (resolveSelectAliases) {
             // if path expression should not be replaced by select aliases we
             // check for select aliases that have to be replaced with the corresponding
             // path expressions
@@ -334,8 +313,8 @@ public class QueryGenerator extends VisitorAdapter {
         } else {
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias())
-                .append(".")
-                .append(expression.getField());
+                    .append(".")
+                    .append(expression.getField());
         }
     }
 
@@ -346,12 +325,12 @@ public class QueryGenerator extends VisitorAdapter {
         sb.append(')');
     }
 
-    public boolean isReplaceSelectAliases() {
-        return replaceSelectAliases;
+    public boolean isResolveSelectAliases() {
+        return resolveSelectAliases;
     }
 
-    public void setReplaceSelectAliases(boolean replaceSelectAliases) {
-        this.replaceSelectAliases = replaceSelectAliases;
+    public void setResolveSelectAliases(boolean replaceSelectAliases) {
+        this.resolveSelectAliases = replaceSelectAliases;
     }
 
     @Override

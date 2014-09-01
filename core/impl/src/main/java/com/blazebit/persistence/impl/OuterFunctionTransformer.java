@@ -41,19 +41,14 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         this.joinManager = joinManager;
     }
 
-    @Override
-    public Expression transform(Expression original) {
-        return transform(original, false);
-    }
-
     // TODO: needs to be recursive and walk into expressions
     @Override
-    public Expression transform(Expression original, boolean selectClause) {
+    public Expression transform(Expression original, ClauseType fromClause) {
         if (original instanceof CompositeExpression) {
             CompositeExpression compExpr = (CompositeExpression) original;
             CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
             for (Expression e : compExpr.getExpressions()) {
-                transformed.getExpressions().add(transform(e, selectClause));
+                transformed.getExpressions().add(transform(e, fromClause));
             }
             return transformed;
         }
@@ -64,7 +59,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         PathExpression path = ((OuterExpression) original).getPath();
 
         if (joinManager.getParent() != null) {
-            joinManager.getParent().implicitJoin(path, true, selectClause, true, false);
+            joinManager.getParent().implicitJoin(path, true, fromClause, false, true, false);
         }
 
         return original;

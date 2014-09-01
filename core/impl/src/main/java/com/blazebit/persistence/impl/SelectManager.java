@@ -90,6 +90,22 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
+    String buildClausesForAliases(List<String> selectAliases) {
+        if (selectAliases.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        populateSelectAliasAbsolutePaths();
+        queryGenerator.setQueryBuffer(sb);
+        Iterator<String> iter = selectAliases.iterator();
+        applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
+        while (iter.hasNext()) {
+            sb.append(", ");
+            applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
+        }
+        return sb.toString();
+    }
+
     String buildSelect(String rootAlias) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
@@ -118,8 +134,14 @@ public class SelectManager<T> extends AbstractManager {
     void applyTransformer(ExpressionTransformer transformer) {
         // carry out transformations
         for (SelectInfo selectInfo : selectInfos) {
-            Expression transformed = transformer.transform(selectInfo.getExpression(), true);
+            Expression transformed = transformer.transform(selectInfo.getExpression(), ClauseType.SELECT);
             selectInfo.setExpression(transformed);
+        }
+    }
+    
+    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer){
+        for(SelectInfo selectInfo : selectInfos){
+            selectInfoTransformer.transform(selectInfo);
         }
     }
 
@@ -167,7 +189,7 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
-            new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+                new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -181,7 +203,7 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
-            new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+                new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -238,9 +260,8 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
     }
-    
-    // TODO: needs equals-hashCode implementation
 
+    // TODO: needs equals-hashCode implementation
     private class SelectSubqueryBuilderListener<X> extends SubqueryBuilderListenerImpl<X> {
 
         private final String selectAlias;

@@ -32,6 +32,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
@@ -147,11 +148,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, fromClazz.getName());
 
         //resolve cyclic dependencies
-        this.queryGenerator.setSelectManager(selectManager);
         this.em = em;
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo));
-        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager);
+        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -482,17 +482,22 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             }
 
         };
-        joinVisitor.setFromSelect(true);
+        joinVisitor.setFromClause(null);
         joinManager.acceptVisitor(joinNodeVisitor);
         // carry out implicit joins
+        joinVisitor.setFromClause(ClauseType.SELECT);
         selectManager.acceptVisitor(joinVisitor);
-        joinVisitor.setFromSelect(false);
 
+        joinVisitor.setFromClause(ClauseType.WHERE);
         whereManager.acceptVisitor(joinVisitor);
+        joinVisitor.setFromClause(ClauseType.GROUP_BY);
         groupByManager.acceptVisitor(joinVisitor);
 
+        joinVisitor.setFromClause(ClauseType.HAVING);// SELECT SIZE(d.contacts) AS c FROM Document d ORDER BY c
         havingManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(false);
+        
+        joinVisitor.setFromClause(ClauseType.ORDER_BY);
         orderByManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(true);
     }
@@ -520,7 +525,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 //TODO                
 //selectManager.applyTransformer(sizeSelectToSubqueryTransformer);
             } else {
-                selectManager.applyTransformer(sizeSelectToCountTransformer);
+                selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
             }
         }
     }
@@ -555,8 +560,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             orderByManager.applyTransformer(transformer);
         }
         
-        //TODO: uncomment once implemented
-        //applySizeSelectTransformer();
+        applySizeSelectTransformer();
     }
 
     @Override
@@ -619,14 +623,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         whereManager.buildClause(sbRemaining);
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
-        orderByManager.buildOrderBy(sbRemaining, false);
+        queryGenerator.setResolveSelectAliases(false);
+        orderByManager.buildOrderBy(sbRemaining, false, false);
+        queryGenerator.setResolveSelectAliases(true);
 
         /**
          * We must build the joins at the end This way, subqueries will be
          * generated before the joins of the parent query are printed which is
          * necessary for the OUTER() functions in subqueries to take effect.
          */
-        joinManager.buildJoins(sbSelectFrom, true);
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
         addWhereClauseConjuncts(sbRemaining, true);
 
         return sbSelectFrom.append(sbRemaining).toString();
@@ -691,22 +697,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             }
 
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            if (baseNode.getParentTreeNode().isCollection()) {
+            // replace this with joinManager.hasCollections()
+            if (baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isCollection()) {
                 requiresSubquery = true;
             } // can this happen?
-            else if (expression.getField() != null) {
-                JoinTreeNode fieldNode = baseNode.getNodes().get(expression.getField());
-                if (fieldNode != null && fieldNode.isCollection()) {
-                    requiresSubquery = true;
-                } else {
-                    while ((baseNode = baseNode.getParent()) != null) {
-                        if (baseNode.getParentTreeNode().isCollection()) {
-                            requiresSubquery = true;
-                            break;
-                        }
-                    }
-                }
-            }
         }
 
         public boolean requiresSubquery() {

@@ -18,9 +18,10 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.impl.expression.Expression;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import javax.persistence.metamodel.ManagedType;
+import java.util.Set;
 import javax.persistence.metamodel.Metamodel;
 
 /**
@@ -40,7 +41,22 @@ public class OrderByManager extends AbstractManager {
         this.fromClassName = fromClassName;
     }
 
-    List<OrderByExpression> getRealExpressions(Metamodel metamodel) {
+    Set<String> getOrderBySelectAliases(){
+        if (orderByInfos.isEmpty()) {
+            return Collections.emptySet();
+        }
+        
+        Set<String> orderBySelectAliases = new HashSet<String>();
+        for(OrderByInfo orderByInfo : orderByInfos){
+            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            if(aliasManager.isSelectAlias(potentialSelectAlias)){
+                orderBySelectAliases.add(potentialSelectAlias);
+            }
+        }
+        return orderBySelectAliases;
+    }
+    
+    List<OrderByExpression> getOrderByExpressions(Metamodel metamodel) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
         }
@@ -101,7 +117,7 @@ public class OrderByManager extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         for (OrderByInfo orderBy : orderByInfos) {
-            orderBy.setExpression(transformer.transform(orderBy.getExpression()));
+            orderBy.setExpression(transformer.transform(orderBy.getExpression(), ClauseType.ORDER_BY));
         }
     }
 
@@ -145,22 +161,31 @@ public class OrderByManager extends AbstractManager {
         }
     }
 
-    void buildOrderBy(StringBuilder sb, boolean inverseOrder) {
+    void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {
         if (orderByInfos.isEmpty()) {
             return;
         }
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
-        applyOrderBy(sb, iter.next(), inverseOrder);
+        applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
         while (iter.hasNext()) {
             sb.append(", ");
-            applyOrderBy(sb, iter.next(), inverseOrder);
+            applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
         }
     }
 
-    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder) {
-        orderBy.getExpression().accept(queryGenerator);
+    private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
+        if(resolveSelectAliases){
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
+            if(aliasInfo != null && aliasInfo instanceof SelectInfo && !ExpressionUtils.containsSubqueryExpression(((SelectInfo)aliasInfo).getExpression())){
+                ((SelectInfo)aliasInfo).getExpression().accept(queryGenerator);
+            }else{
+                orderBy.getExpression().accept(queryGenerator);
+            }
+        }else{
+            orderBy.getExpression().accept(queryGenerator);
+        }
         if (orderBy.ascending == inverseOrder) {
             sb.append(" DESC");
         } else {

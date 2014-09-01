@@ -29,19 +29,19 @@ public class AliasManager {
     private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of the declaring query
     private final Map<String, Integer> aliasCounterMap = new HashMap<String, Integer>(); // maps non postfixed aliases to alias counter
 
-    AliasManager() {
+    public AliasManager() {
         this.parent = null;
     }
 
-    AliasManager(AliasManager parent) {
+    public AliasManager(AliasManager parent) {
         this.parent = parent;
     }
 
-    AliasInfo getAliasInfo(String alias) {
+    public AliasInfo getAliasInfo(String alias) {
         return getHierarchical(alias);
     }
 
-    AliasInfo getAliasInfoForBottomLevel(String alias) {
+    public AliasInfo getAliasInfoForBottomLevel(String alias) {
         return aliasMap.get(alias);
     }
 
@@ -52,7 +52,7 @@ public class AliasManager {
      * @param aliasInfo
      * @return The registered alias
      */
-    String registerAliasInfo(AliasInfo aliasInfo) {
+    public String registerAliasInfo(AliasInfo aliasInfo) {
         String alias = aliasInfo.getAlias();
         if (getHierarchical(alias) != null) {
             throw new IllegalArgumentException("Alias '" + alias + "' already exsits");
@@ -62,17 +62,17 @@ public class AliasManager {
         return alias;
     }
 
-    String generatePostfixedAlias(String alias) {
+    public String generatePostfixedAlias(String alias) {
         Integer counter;
         String nonPostfixed = alias;
         if ((counter = getCounterHierarchical(alias)) != null) {
             // non postfixed version of the alias already exists
             counter++;
-            alias = alias + "_" + counter;
         } else {
             // alias does not exist so just register it
-            counter = 0;
+            counter = 1;
         }
+        alias = alias + "_" + counter;
         aliasCounterMap.put(nonPostfixed, counter);
         return alias;
     }
@@ -99,11 +99,19 @@ public class AliasManager {
         return counter;
     }
 
-    void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo) {
+    public void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo) {
         aliasMap.remove(aliasInfo.getAlias());
     }
 
-    Map<String, AliasInfo> getAliasMapForBottomLevel() {
+    public Map<String, AliasInfo> getAliasMapForBottomLevel() {
         return aliasMap;
+    }
+    
+    public boolean isSelectAlias(String alias){
+        AliasInfo info;
+        if((info = aliasMap.get(alias)) != null){
+            return info instanceof SelectInfo;
+        }
+        return false;
     }
 }

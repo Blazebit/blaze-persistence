@@ -28,6 +28,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -149,6 +150,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         verifyBuilderEnded();
         if (!orderByManager.hasOrderBys()) {
+            // TODO: what about implicit order by id in this case?
             throw new IllegalStateException("Pagination requires at least one order by item!");
         }
 
@@ -156,7 +158,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         applyExpressionTransformers();
         
         Metamodel m = em.getMetamodel();
-        orderByExpressions = orderByManager.getRealExpressions(m);
+        orderByExpressions = orderByManager.getOrderByExpressions(m);
         
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
             throw new IllegalStateException("The last order by item must be unique!");
@@ -253,10 +255,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         StringBuilder sbRemaining = new StringBuilder();
         whereManager.buildClause(sbRemaining);
-        groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
 
-        joinManager.buildJoins(sbSelectFrom, false);
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
         addWhereClauseConjuncts(sbRemaining, false);
 
         return sbSelectFrom.append(sbRemaining).toString();
@@ -270,9 +271,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
-        String idName = entityType.getId(entityType.getIdType()
-            .getJavaType())
-            .getName();
+        String idName = joinManager.getRootId();
         String idClause = new StringBuilder(joinManager.getRootAlias())
             .append('.')
             .append(idName)
@@ -309,9 +308,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         sbRemaining.append(" GROUP BY ").append(idClause);
         
         boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
-        orderByManager.buildOrderBy(sbRemaining, inverseOrder);
+        orderByManager.buildOrderBy(sbRemaining, inverseOrder, true);
 
-        joinManager.buildJoins(sbSelectFrom, false);
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
         addWhereClauseConjuncts(sbRemaining, false);
 
         // execute illegal collection access check
@@ -349,9 +348,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         groupByManager.buildGroupBy(sbRemaining);
         havingManager.buildClause(sbRemaining);
-        orderByManager.buildOrderBy(sbRemaining, false);
+        queryGenerator.setResolveSelectAliases(false);
+        orderByManager.buildOrderBy(sbRemaining, false, false);
+        queryGenerator.setResolveSelectAliases(true);
 
-        joinManager.buildJoins(sbSelectFrom, true);
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
 
         return sbSelectFrom.append(sbRemaining).toString();
     }

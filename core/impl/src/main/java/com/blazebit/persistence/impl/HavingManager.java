@@ -34,6 +34,11 @@ public class HavingManager<T> extends PredicateManager<T> {
     }
 
     @Override
+    protected ClauseType getClauseType() {
+        return ClauseType.HAVING;
+    }
+    
+    @Override
     protected boolean isAllowCaseWhenExpressions() {
         return false;
     }

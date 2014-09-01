@@ -90,7 +90,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         // carry out transformations
-        rootPredicate.predicate.accept(new TransformationVisitor(transformer));
+        rootPredicate.predicate.accept(new TransformationVisitor(transformer, getClauseType()));
     }
 
     void verifyBuilderEnded() {
@@ -127,6 +127,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     protected abstract String getClauseName();
+    
+    protected abstract ClauseType getClauseType();
 
     protected abstract boolean isAllowCaseWhenExpressions();
 
@@ -139,64 +141,66 @@ public abstract class PredicateManager<T> extends AbstractManager {
     static class TransformationVisitor extends VisitorAdapter {
 
         private final ExpressionTransformer transformer;
+        private final ClauseType fromClause;
 
-        public TransformationVisitor(ExpressionTransformer transformer) {
+        public TransformationVisitor(ExpressionTransformer transformer, ClauseType fromClause) {
             this.transformer = transformer;
+            this.fromClause = fromClause;
         }
 
         @Override
         public void visit(BetweenPredicate predicate) {
-            predicate.setStart(transformer.transform(predicate.getStart()));
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setEnd(transformer.transform(predicate.getEnd()));
+            predicate.setStart(transformer.transform(predicate.getStart(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setEnd(transformer.transform(predicate.getEnd(), fromClause));
         }
 
         @Override
         public void visit(GePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(GtPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(LikePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(EqPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(LePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(LtPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(InPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
 
         @Override
         public void visit(NotInPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft()));
-            predicate.setRight(transformer.transform(predicate.getRight()));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }
     }
 }

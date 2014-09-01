@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -36,9 +37,10 @@ public class JoinNode {
     private JoinAliasInfo aliasInfo;
     private JoinType type = JoinType.LEFT;
     private boolean fetch = false;
-    // This flag indicates if this join node is required from a select expression only
+
     // We need this for count and id queries where we do not need all the joins
-    private boolean selectOnly = true;
+    private final EnumSet<ClauseType> clauseDependencies = EnumSet.noneOf(ClauseType.class);
+    
     private final JoinNode parent;
     private final JoinTreeNode parentTreeNode;
 
@@ -81,20 +83,16 @@ public class JoinNode {
         }
     }
 
+    public EnumSet<ClauseType> getClauseDependencies() {
+        return clauseDependencies;
+    }
+
     public JoinTreeNode getParentTreeNode() {
         return parentTreeNode;
     }
 
     public JoinNode getParent() {
         return parent;
-    }
-
-    public boolean isSelectOnly() {
-        return selectOnly;
-    }
-
-    public void setSelectOnly(boolean selectOnly) {
-        this.selectOnly = selectOnly;
     }
 
     public JoinAliasInfo getAliasInfo() {

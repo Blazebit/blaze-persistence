@@ -35,6 +35,11 @@ public class WhereManager<T> extends PredicateManager<T> {
     }
 
     @Override
+    protected ClauseType getClauseType() {
+        return ClauseType.WHERE;
+    }
+
+    @Override
     protected boolean isAllowCaseWhenExpressions() {
         return true;
     }
