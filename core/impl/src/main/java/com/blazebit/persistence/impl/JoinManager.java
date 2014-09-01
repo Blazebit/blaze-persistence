@@ -117,6 +117,10 @@ public class JoinManager extends AbstractManager {
         return rootNode.getAliasInfo().getAlias();
     }
 
+    boolean hasCollections() {
+        return rootNode.hasCollections();
+    }
+
     String getRootId() {
         EntityType<?> entityType = metamodel.entity(rootNode.getPropertyClass());
         return entityType.getId(entityType.getIdType()

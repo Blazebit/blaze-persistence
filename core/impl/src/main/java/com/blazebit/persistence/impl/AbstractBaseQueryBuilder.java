@@ -512,16 +512,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     protected void applySizeSelectTransformer() {
-        SubqueryRequiringSelectExpressionDetector detector = new SubqueryRequiringSelectExpressionDetector();
+        boolean containsSubquerySelect = false;
         for (SelectInfo selectInfo : selectManager.getSelectInfos()) {
-            selectInfo.getExpression().accept(detector);
-            if (detector.requiresSubquery()) {
+            if(ExpressionUtils.containsSizeExpression(selectInfo.getExpression())){
+                containsSubquerySelect = true;
                 break;
             }
         }
 
-        if (detector.containsSizeExpression()) {
-            if (detector.requiresSubquery()) {
+        if (containsSubquerySelect) {
+            if (joinManager.hasCollections()) {
 //TODO                
 //selectManager.applyTransformer(sizeSelectToSubqueryTransformer);
             } else {
@@ -672,44 +672,5 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
     
     // TODO: needs equals-hashCode implementation
-
-    class SubqueryRequiringSelectExpressionDetector extends VisitorAdapter {
-
-        private boolean requiresSubquery = false;
-        private boolean containsSizeExpression = false;
-
-        @Override
-        public void visit(CompositeExpression expression) {
-            if (!ExpressionUtils.isSizeExpression(expression)) {
-                for (Expression e : expression.getExpressions()) {
-                    e.accept(this);
-                }
-            } else {
-                containsSizeExpression = true;
-            }
-        }
-
-        @Override
-        public void visit(PathExpression expression) {
-            // fast path if we already know that we need subqueries
-            if (requiresSubquery) {
-                return;
-            }
-
-            JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            // replace this with joinManager.hasCollections()
-            if (baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isCollection()) {
-                requiresSubquery = true;
-            } // can this happen?
-        }
-
-        public boolean requiresSubquery() {
-            return requiresSubquery;
-        }
-
-        public boolean containsSizeExpression() {
-            return containsSizeExpression;
-        }
-    }
 
 }

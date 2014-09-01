@@ -227,6 +227,12 @@ public class ExpressionUtils {
         e.accept(detector);
         return detector.hasSubquery;
     }
+    
+    public static boolean containsSizeExpression(Expression e) {
+        SizeExpressionDetector detector = new SizeExpressionDetector();
+        e.accept(detector);
+        return detector.hasSizeExpression;
+    }
 
     public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
         final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
@@ -266,9 +272,18 @@ public class ExpressionUtils {
         public void visit(SubqueryExpression expression) {
             hasSubquery = true;
         }
+    }
+    
+    private static class SizeExpressionDetector extends VisitorAdapter {
 
-        public boolean hasSubquery() {
-            return hasSubquery;
+        private boolean hasSizeExpression = false;
+
+        @Override
+        public void visit(CompositeExpression expression) {
+            if(hasSizeExpression){
+                return;
+            }
+            hasSizeExpression = ExpressionUtils.isSizeExpression(expression);
         }
     }
 }
