@@ -355,6 +355,13 @@ public class PaginationTest extends AbstractCoreTest {
     }*/
     
     @Test
+    public void deleteMe2(){
+        em.createQuery("SELECT p.name FROM Document d LEFT JOIN d.contacts p").getResultList();
+        em.createQuery("SELECT COUNT(*) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+        em.createQuery("SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+        em.createQuery("SELECT COUNT(d.name) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+    }
+    @Test
     public void testOrderBySizeAlias() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("SIZE(d.contacts)", "contactCount")

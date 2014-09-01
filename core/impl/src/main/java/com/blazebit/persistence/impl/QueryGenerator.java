@@ -283,7 +283,7 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(FooExpression expression) {
-        sb.append(expression.getString());
+        sb.append(expression.toString());
     }
 
     @Override

@@ -16,63 +16,67 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
  * @author Moritz Becker
  */
-public class SizeSelectToCountTransformer implements SelectInfoTransformer {
+public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
 
-    private final JoinManager joinManager;
-    private final GroupByManager groupByManager;
-    private final OrderByManager orderByManager;
+//    private final OrderByManager orderByManager;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final AliasManager aliasManager;
 
-    public SizeSelectToCountTransformer(JoinManager joinManager, GroupByManager groupByManager, OrderByManager orderByManager) {
-        this.joinManager = joinManager;
-        this.groupByManager = groupByManager;
-        this.orderByManager = orderByManager;
+    public SizeSelectToSubqueryTransformer(SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager) {
+        this.subqueryInitFactory = subqueryInitFactory;
+        this.aliasManager = aliasManager;
     }
 
     @Override
     public void transform(SelectInfo info) {
         if (ExpressionUtils.isSizeExpression(info.getExpression())) {
+
             PathExpression sizeArg = (PathExpression) ((CompositeExpression) info.getExpression()).getExpressions().get(1);
-            CompositeExpression countExpr = new CompositeExpression(new ArrayList<Expression>());
-            countExpr.getExpressions().add(new FooExpression("COUNT("));
-            sizeArg.setUsedInCollectionFunction(false);
-            countExpr.getExpressions().add(sizeArg);
-            countExpr.getExpressions().add(new FooExpression(")"));
-
-            // fromSelect must be false otherwise the join is not rendered in id query since selectOnly would be true
-            joinManager.implicitJoin(sizeArg, true, ClauseType.SELECT, false, false);
-
-            info.setExpression(countExpr);
+            Class<?> collectionPropertyClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
+            String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
+            String collectionPropertyName = sizeArg.getField();
+            String collectionPropertyAlias = collectionPropertyName;
+            String collectionPropertyClassName = collectionPropertyClass.getSimpleName();
+            String collectionPropertyClassAlias = collectionPropertyClassName;
             
-            // build group by id clause
-            List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-            pathElementExpr.add(new PropertyExpression(joinManager.getRootAlias()));
-            pathElementExpr.add(new PropertyExpression(joinManager.getRootId()));
-            groupByManager.getGroupByInfos().add(new NodeInfo(new PathExpression(pathElementExpr)));
+            if (aliasManager.getAliasInfo(collectionPropertyClassName) != null) {
+                collectionPropertyClassAlias = aliasManager.generatePostfixedAlias(collectionPropertyClassName);
+            }
+            if (aliasManager.getAliasInfo(collectionPropertyName) != null) {
+                collectionPropertyAlias = aliasManager.generatePostfixedAlias(collectionPropertyName);
+            }
+            Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, null).from(collectionPropertyClass, collectionPropertyClassAlias)
+                    .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
+                    .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
+                    .where(collectionPropertyClassAlias).eqExpression(baseAlias);
+
+            info.setExpression(new SubqueryExpression(countSubquery));
         }
 
-        if (orderByManager.getOrderBySelectAliases().contains(info.getAlias())) {
-            info.getExpression().accept(new VisitorAdapter() {
-
-                @Override
-                public void visit(PathExpression expression) {
-                    ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
-                }
-
-            });
-
-        }
+//        if (orderByManager.getOrderBySelectAliases().contains(info.getAlias())) {
+//            info.getExpression().accept(new VisitorAdapter() {
+//
+//                @Override
+//                public void visit(PathExpression expression) {
+//                    ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
+//                }
+//
+//            });
+//
+//        }
     }
 }

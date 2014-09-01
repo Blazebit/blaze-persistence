@@ -261,7 +261,7 @@ public class ExpressionUtils {
     }
     
     public static boolean isSizeExpression(CompositeExpression expression){
-        return "SIZE(".equals(expression.getExpressions().get(0).toString());
+        return expression.getExpressions().get(0).toString().endsWith("SIZE(");
     }
 
     private static class SubqueryExpressionDetector extends VisitorAdapter {

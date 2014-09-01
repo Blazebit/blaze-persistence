@@ -18,13 +18,16 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BufferedTokenStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,7 +54,7 @@ public class JPQLSelectExpressionTest {
 
     private CompositeExpression parse(String expr, boolean allowCaseWhen) {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expr));
-        CommonTokenStream tokens = new CommonTokenStream(l);
+        BufferedTokenStream tokens = new BufferedTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
         p.setTrace(LOG.isLoggable(Level.FINEST));
         JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx = p.parseSimpleExpression();
@@ -59,12 +62,27 @@ public class JPQLSelectExpressionTest {
         LOG.finest(ctx.toStringTree());
         ParseTreeWalker w = new ParseTreeWalker();
 
-        JPQLSelectExpressionListenerImpl listener = new JPQLSelectExpressionListenerImpl(tokens);
-        w.walk(listener, ctx);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
+        return (CompositeExpression) visitor.visit(ctx);
+        
+//        JPQLSelectExpressionListenerImpl listener = new JPQLSelectExpressionListenerImpl(tokens);
+//        w.walk(listener, ctx);
 
-        return listener.getCompositeExpression();
+//        return listener.getCompositeExpression();
     }
 
+    private FunctionExpression function(String name, Expression... args){
+        return new FunctionExpression(name, Arrays.asList(args));
+    }
+    
+    private AggregateExpression aggregate(String name, PathExpression arg, boolean distinct){
+        return new AggregateExpression(distinct, name, arg);
+    }
+    
+    private AggregateExpression aggregate(String name, PathExpression arg){
+        return new AggregateExpression(false, name, arg);
+    }
+    
     private CompositeExpression parse(String expr) {
         return parse(expr, false);
     }
@@ -94,16 +112,27 @@ public class JPQLSelectExpressionTest {
         }
         return new ArrayExpression(new PropertyExpression(base), indexExpr);
     }
+    
+    private ParameterExpression parameter(String name){
+        return new ParameterExpression(name);
+    }
 
+    @Test
+    public void testSizeFunction(){
+        CompositeExpression result = parse("SIZE(d.contacts)");
+        List<Expression> expressions = result.getExpressions();
+        
+        assertTrue(expressions.size() == 1);
+        assertEquals(function("SIZE", path("d", "contacts")), expressions.get(0));
+    }
+    
     @Test
     public void testAggregateExpressionSinglePath() {
         CompositeExpression result = parse("AVG(age)");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("AVG(")));
-        assertTrue(expressions.get(1).equals(path("age")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertEquals(aggregate("AVG", path("age")), expressions.get(0));
     }
 
     @Test
@@ -111,10 +140,8 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("AVG(d.age)");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("AVG(")));
-        assertTrue(expressions.get(1).equals(path("d", "age")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertEquals(function("AVG", path("d", "age")), expressions.get(0));
     }
 
     @Test
@@ -140,12 +167,11 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("d.age + SUM(d.children.age)");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 4);
+        assertTrue(expressions.size() == 3);
 
         assertTrue(expressions.get(0).equals(path("d", "age")));
-        assertTrue(expressions.get(1).equals(new FooExpression(" + SUM(")));
-        assertTrue(expressions.get(2).equals(path("d", "children", "age")));
-        assertTrue(expressions.get(3).equals(new FooExpression(")")));
+        assertTrue(expressions.get(1).equals(new FooExpression(" + ")));
+        assertTrue(expressions.get(2).equals(function("SUM", path("d", "children", "age"))));
     }
 
     @Test
@@ -166,7 +192,7 @@ public class JPQLSelectExpressionTest {
 
         assertTrue(expressions.size() == 1);
 
-        assertTrue(expressions.get(0).equals(new FooExpression("NULLIF(1,1)")));
+        assertTrue(expressions.get(0).equals(function("NULLIF", new FooExpression("1"), new FooExpression("1"))));
     }
 
     @Test
@@ -174,10 +200,8 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("COUNT(id)");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("COUNT(")));
-        assertTrue(expressions.get(1).equals(path("id")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("COUNT", path("id"))));
     }
 
     @Test
@@ -185,10 +209,8 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("KEY(map)");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("KEY(")));
-        assertTrue(expressions.get(1).equals(path("map")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("KEY", path("map"))));
     }
 
     @Test
@@ -197,7 +219,6 @@ public class JPQLSelectExpressionTest {
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 1);
-
         assertTrue(expressions.get(0).equals(path("versions[test]")));
     }
 
@@ -207,7 +228,6 @@ public class JPQLSelectExpressionTest {
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 1);
-
         assertTrue(expressions.get(0).equals(path("versions[test.x.y]")));
     }
 
@@ -428,45 +448,57 @@ public class JPQLSelectExpressionTest {
     }
 
     @Test
-    public void testKeyFunction() {
+    public void testKeyFunctionArray() {
         CompositeExpression result = parse("KEY(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("KEY(")));
-        assertTrue(expressions.get(1).equals(path("localized[:locale]")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("KEY", path("localized[:locale]"))));
+    }
+    
+    @Test
+    public void testKeyFunctionPath() {
+        CompositeExpression result = parse("KEY(d.age)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("KEY", path("d", "age"))));
     }
 
     @Test
-    public void testValueFunction() {
+    public void testValueFunctionArray() {
         CompositeExpression result = parse("VALUE(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("VALUE(")));
-        assertTrue(expressions.get(1).equals(path("localized[:locale]")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("VALUE", path("localized[:locale]"))));
+    }
+    
+    @Test
+    public void testValueFunctionPath() {
+        CompositeExpression result = parse("VALUE(d.age)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("VALUE", path("d", "age"))));
     }
 
     @Test
-    public void testEntryFunction() {
+    public void testEntryFunctionArray() {
         CompositeExpression result = parse("ENTRY(localized[:locale])");
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 3);
-        assertTrue(expressions.get(0).equals(new FooExpression("ENTRY(")));
-        assertTrue(expressions.get(1).equals(path("localized[:locale]")));
-        assertTrue(expressions.get(2).equals(new FooExpression(")")));
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("ENTRY", path("localized[:locale]"))));
     }
-
+    
     @Test
-    public void deleteMe() {
-        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END"));
-        CommonTokenStream tokens = new CommonTokenStream(l);tokens.fill();
-        for(int i = 0; i < tokens.size(); i++){
-            System.out.println(tokens.get(i).getText());
-        }
+    public void testEntryFunctionPath() {
+        CompositeExpression result = parse("ENTRY(d.age)");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("ENTRY", path("d", "age"))));
     }
     
     @Test
@@ -474,13 +506,12 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END", true);
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 6);
+        assertTrue(expressions.size() == 5);
         assertTrue(expressions.get(0).equals(new FooExpression("CASE WHEN ")));
-        assertTrue(expressions.get(1).equals(new FooExpression("KEY(")));
-        assertTrue(expressions.get(2).equals(path("localized[:locale]")));
-        assertTrue(expressions.get(3).equals(new FooExpression(") NOT MEMBER OF ")));
-        assertTrue(expressions.get(4).equals(path("supportedLocales")));
-        assertTrue(expressions.get(5).equals(new FooExpression(" THEN true ELSE false END")));
+        assertTrue(expressions.get(1).equals(function("KEY", path("localized[:locale]"))));
+        assertTrue(expressions.get(2).equals(new FooExpression(" NOT MEMBER OF ")));
+        assertTrue(expressions.get(3).equals(path("supportedLocales")));
+        assertTrue(expressions.get(4).equals(new FooExpression(" THEN true ELSE false END")));
     }
 
     @Test(expected = SyntaxErrorException.class)
@@ -488,12 +519,38 @@ public class JPQLSelectExpressionTest {
         CompositeExpression result = parse("CASE WHEN KEY(localized[:locale]) NOT MEMBER OF supportedLocales THEN true ELSE false END", false);
         List<Expression> expressions = result.getExpressions();
 
-        assertTrue(expressions.size() == 6);
+        assertTrue(expressions.size() == 5);
         assertTrue(expressions.get(0).equals(new FooExpression("CASE WHEN ")));
-        assertTrue(expressions.get(1).equals(new FooExpression("KEY(")));
-        assertTrue(expressions.get(2).equals(path("localized[:locale]")));
-        assertTrue(expressions.get(3).equals(new FooExpression(") NOT MEMBER OF ")));
-        assertTrue(expressions.get(4).equals(path("supportedLocales")));
-        assertTrue(expressions.get(5).equals(new FooExpression(" THEN true ELSE false END")));
+        assertTrue(expressions.get(1).equals(function("KEY", path("localized[:locale]"))));
+        assertTrue(expressions.get(2).equals(new FooExpression(" NOT MEMBER OF ")));
+        assertTrue(expressions.get(3).equals(path("supportedLocales")));
+        assertTrue(expressions.get(4).equals(new FooExpression(" THEN true ELSE false END")));
+    }
+    
+    @Test
+    public void testTypeFunctionPath(){
+        CompositeExpression result = parse("TYPE(d.age)");
+        List<Expression> expressions = result.getExpressions();
+        
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("TYPE", path("d", "age"))));
+    }
+    
+    @Test
+    public void testTypeFunctionParameter(){
+        CompositeExpression result = parse("TYPE(:test)");
+        List<Expression> expressions = result.getExpressions();
+        
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("TYPE", parameter("test"))));
+    }
+    
+    @Test
+    public void testTypeFunctionSingleElementPath(){
+        CompositeExpression result = parse("TYPE(age)");
+        List<Expression> expressions = result.getExpressions();
+        
+        assertTrue(expressions.size() == 1);
+        assertTrue(expressions.get(0).equals(function("TYPE", path("age"))));
     }
 }

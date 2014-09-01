@@ -39,6 +39,47 @@ public class CompositeExpression implements Expression {
     public List<Expression> getExpressions() {
         return expressions;
     }
+    
+    public void append(Expression expr){
+        Expression lastExpr;
+        if(expr instanceof CompositeExpression){
+            CompositeExpression composite = (CompositeExpression) expr;
+            for(Expression subexpr : composite.getExpressions()){
+                append(subexpr);
+            }
+        }else if(!expressions.isEmpty() && expr instanceof FooExpression && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression){
+            ((FooExpression)lastExpr).getStringBuilder().append(((FooExpression)expr).getStringBuilder());
+        }else{
+            expressions.add(expr);
+        }
+    }
+    
+    public void prepend(String str){
+        Expression lastExpr;
+        if(!expressions.isEmpty() && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression){
+            ((FooExpression)lastExpr).getStringBuilder().insert(0, str);
+        }else{
+            expressions.add(0, new FooExpression(str));
+        }
+    }
+    
+    public void append(String str){
+        Expression lastExpr;
+        if(!expressions.isEmpty() && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression){
+            ((FooExpression)lastExpr).getStringBuilder().append(str);
+        }else{
+            expressions.add(new FooExpression(str));
+        }
+    }
+    
+    public void append(StringBuilder sb){
+        Expression lastExpr;
+        if(!expressions.isEmpty() && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression){
+            ((FooExpression)lastExpr).getStringBuilder().append(sb);
+        }else{
+            expressions.add(new FooExpression(sb));
+        }
+    }
 
     @Override
     public String toString() {

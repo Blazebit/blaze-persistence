@@ -245,12 +245,23 @@ public class SelectTest extends AbstractCoreTest {
         assertEquals(0L, t.getSingleResult().get(0));
     }
     
-    @Ignore //#58
+    @Test
+    public void testSelectSizeAsCount() {
+        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+                .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
+        
+        String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
+        String expected = "SELECT CASE WHEN COUNT(contacts) > 2 THEN 2 ELSE COUNT(contacts) END FROM Document d LEFT JOIN d.contacts contacts";
+        assertEquals(expected, cb.getQueryString());
+    }
+    
     @Test
     public void testSelectSizeAsSubexpression() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
         
-        //TODO: implement
+        String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
+        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE (" + expectedSubquery + ") END FROM Document d";
+        assertEquals(expected, cb.getQueryString());
     }
 }
