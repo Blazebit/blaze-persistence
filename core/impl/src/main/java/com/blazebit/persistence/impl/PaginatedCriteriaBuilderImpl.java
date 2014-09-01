@@ -91,7 +91,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             return new PagedListImpl<T>(null, totalSize);
         }
 
-        return getResultListViaIdQuery(totalSize);
+//        if (!joinManager.hasCollections()) {
+//            return getResultListViaObjectQuery(totalSize);
+//        } else {
+            return getResultListViaIdQuery(totalSize);
+//        }
     }
 
     @Override
@@ -169,6 +173,53 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         // TODO: replace this with needCheck = false as soon as mutation tracking #60 is done
         clearCache();
     }
+
+//    private PagedList<T> getResultListViaObjectQuery(long totalSize) {
+//        String queryString = getObjectQueryString0();
+//        TypedQuery<Object[]> query = (TypedQuery) em.createQuery(queryString, Object[].class)
+//            .setMaxResults(pageSize);
+//
+//        if (keySetMode == KeySetMode.NONE) {
+//            query.setFirstResult(firstRow);
+//        }
+//        
+//        // TODO: need custom transformer to extract keyset columns
+//        if (selectManager.getSelectObjectBuilder() != null) {
+//            transformQuery(query);
+//        }
+//
+//        parameterizeQuery(query);
+//        List<Object[]> result = query.getResultList();
+//
+//        if (result.isEmpty()) {
+//            KeySet newKeySet = null;
+//            if (keySetMode == KeySetMode.NEXT) {
+//                // When we scroll over the last page to a non existing one, we reuse the current keyset
+//                newKeySet = keySet;
+//            }
+//            
+//            return new PagedListImpl<T>(newKeySet, totalSize);
+//        }
+//
+//        Serializable[] lowest = null;
+//        Serializable[] highest = null;
+//
+//        if (extractKeySet) {
+//            lowest = KeySetPaginationHelper.extractKey((Object[]) ids.get(0), 1);
+//            highest = KeySetPaginationHelper.extractKey((Object[]) ids.get(ids.size() - 1), 1);
+//        }
+//
+//        KeySet newKeySet = null;
+//
+//        if (extractKeySet) {
+//            newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressions, lowest, highest);
+//        }
+//
+//        // TODO: replace this with super.getResultList() as soon as caching is implemented
+//        List<T> queryResultList = getQueryResultList();
+//        PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeySet, totalSize);
+//        return pagedResultList;
+//    }
 
     private PagedList<T> getResultListViaIdQuery(long totalSize) {
         String idQueryString = getPageIdQueryString0();
@@ -264,10 +315,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
     
     private String getPageIdQueryString1() {
-        if (!needsCheck) {
-            return cachedIdQueryString;
-        }
-        
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);
@@ -320,10 +367,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     private String getQueryString1() {
-        if (!needsCheck) {
-            return cachedQueryString;
-        }
-        
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
         EntityType<?> entityType = m.entity(fromClazz);

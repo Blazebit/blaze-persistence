@@ -18,12 +18,12 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.TreeMap;
 
 /**
@@ -148,5 +148,24 @@ public class JoinNode {
 
     public Set<JoinNode> getDependencies() {
         return dependencies;
+    }
+    
+    public boolean hasCollections() {
+        Stack<JoinTreeNode> stack = new Stack();
+        stack.addAll(nodes.values());
+        
+        while (!stack.isEmpty()) {
+            JoinTreeNode treeNode = stack.pop();
+            
+            if (treeNode.isCollection()) {
+                return true;
+            }
+            
+            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+                stack.addAll(joinNode.nodes.values());
+            }
+        }
+        
+        return false;
     }
 }
