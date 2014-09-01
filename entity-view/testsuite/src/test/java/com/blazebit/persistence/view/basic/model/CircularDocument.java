@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.entity.Document;
 import java.util.Set;
 
@@ -26,6 +27,9 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public interface CircularDocument {
+    
+    @IdMapping("id")
+    public Long getId();
 
     public Set<CircularPerson> getPartners();
 }

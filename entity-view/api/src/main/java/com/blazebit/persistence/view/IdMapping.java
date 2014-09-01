@@ -13,26 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.subview.model.variations;
+package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentCollectionsView;
-import java.util.Set;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
+ * Maps the annotated element to the id attribute of the entity.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(PersonForCollections.class)
-public interface PersonForCollectionsMasterView {
-    
-    @IdMapping("id")
-    public Long getId();
-
-    public String getName();
-
-    public Set<? extends SubviewDocumentCollectionsView> getOwnedDocuments();
+@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface IdMapping {
+    /**
+     * The JPQL expression mapping to the entity id the annotated getter or parameter should map to.
+     *
+     * @return The JPQL expression mapping to the entity id
+     */
+    String value();
 }

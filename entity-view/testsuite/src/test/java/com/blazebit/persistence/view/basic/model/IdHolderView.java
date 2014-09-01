@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.basic.model;
 
+import com.blazebit.persistence.view.IdMapping;
 import java.io.Serializable;
 
 /**
@@ -24,5 +25,6 @@ import java.io.Serializable;
  */
 public interface IdHolderView<T> extends Serializable {
 
+    @IdMapping("id")
     public T getId();
 }

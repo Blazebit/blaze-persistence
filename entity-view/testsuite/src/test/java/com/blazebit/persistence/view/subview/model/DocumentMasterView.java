@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.entity.Document;
@@ -30,6 +31,9 @@ import java.util.Set;
  */
 @EntityView(Document.class)
 public interface DocumentMasterView {
+    
+    @IdMapping("id")
+    public Long getId();
 
     public String getName();
 

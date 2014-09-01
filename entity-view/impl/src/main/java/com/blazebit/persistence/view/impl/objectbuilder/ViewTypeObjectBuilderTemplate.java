@@ -101,6 +101,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
         Class<?> proxyClass = proxyFactory.getProxy(viewType);
         Constructor<?>[] constructors = proxyClass.getDeclaredConstructors();
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
+        // We have special handling for the id attribute since we need to know it's position in advance
+        // Therefore we have to remove it so that it doesn't get processed as normal attribute
+        attributeSet.remove(viewType.getIdAttribute());
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
         boolean[] featuresFound = new boolean[3];
@@ -119,9 +122,17 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
-        String idAttributeName = entityType.getId(entityType.getIdType().getJavaType()).getName();
+        Class<?> idAttributeType = entityType.getIdType().getJavaType();
+        String idAttributeName = entityType.getId(idAttributeType).getName();
+        MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
+        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute) idAttribute;
+        
+        if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
+            throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
+        }
+        
         String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
-        mappingList.add(0, new Object[]{ idMapping, getAlias("_" + aliasPrefix, idAttributeName) });
+        mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
         parameterMappingList.add(0, null);
 
         OUTER:
@@ -130,7 +141,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (length != parameterTypes.length) {
                 continue;
             }
-            // parameterTypes[0] is the id, so no need to check
+            // parameterTypes[0] is the id
+            if (idAttributeType != parameterTypes[0]) {
+                continue;
+            }
             for (int i = 0; i < attributes.length; i++) {
                 MethodAttribute<?, ?> attribute = attributes[i];
                 if (attribute.getJavaType() != parameterTypes[i + 1]) {

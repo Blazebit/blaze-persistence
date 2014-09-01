@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.collections.basic.model;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
@@ -30,6 +31,9 @@ import java.util.Set;
  */
 @EntityView(DocumentForCollections.class)
 public interface BasicDocumentCollectionsView {
+    
+    @IdMapping("id")
+    public Long getId();
 
     public String getName();
 

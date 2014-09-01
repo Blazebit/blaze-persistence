@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 
 /**
  *
@@ -25,5 +26,6 @@ import com.blazebit.persistence.view.EntityView;
 @EntityView(TestEntity.class)
 public interface TestView {
 
+    @IdMapping("id")
     public String getId();
 }

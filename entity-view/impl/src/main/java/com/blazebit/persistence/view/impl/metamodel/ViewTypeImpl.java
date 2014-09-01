@@ -51,6 +51,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Class<X> javaType;
     private final String name;
     private final Class<?> entityClass;
+    private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, MethodAttribute<? super X, ?>> attributes;
     private final Map<ParametersKey, MappingConstructor<X>> constructors;
     private final Map<String, MappingConstructor<X>> constructorIndex;
@@ -77,7 +78,6 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         }
 
         this.entityClass = entityViewAnnot.value();
-        
         this.viewFilters = new HashMap<String, ViewFilterMapping>();
         
         ViewFilter filterMapping = AnnotationUtils.findAnnotation(javaType, ViewFilter.class);
@@ -98,19 +98,34 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         // We use a tree map to get a deterministic attribute order
         this.attributes = new TreeMap<String, MethodAttribute<? super X, ?>>();
         this.attributeFilters = new HashMap<String, AttributeFilterMapping>();
-
+        
+        MethodAttribute<? super X, ?> foundIdAttribute = null;
+        
         for (Method method : clazz.getMethods()) {
             String attributeName = AbstractMethodAttribute.validate(this, method);
 
             if (attributeName != null && !attributes.containsKey(attributeName)) {
                 AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
                 if (attribute != null) {
+                    if (attribute.isId()) {
+                        if (foundIdAttribute != null) {
+                            throw new IllegalArgumentException("Illegal occurrence of multiple id attributes ['" + foundIdAttribute.getName() + "', '" + attribute.getName() + "'] in entity view '" + javaType.getName() + "'!");
+                        } else {
+                            foundIdAttribute = attribute;
+                        }
+                    }
+                    
                     attributes.put(attribute.getName(), attribute);
                     addAttributeFilters(attribute);
                 }
             }
         }
+        
+        if (foundIdAttribute == null) {
+            throw new IllegalArgumentException("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
+        }
 
+        this.idAttribute = foundIdAttribute;
         this.constructors = new HashMap<ParametersKey, MappingConstructor<X>>();
         this.constructorIndex = new HashMap<String, MappingConstructor<X>>();
 
@@ -194,6 +209,11 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     @Override
     public Class<?> getEntityClass() {
         return entityClass;
+    }
+
+    @Override
+    public MethodAttribute<? super X, ?> getIdAttribute() {
+        return idAttribute;
     }
 
     @Override

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.proxy;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Method;
@@ -100,59 +101,23 @@ public class ProxyFactory {
             }
 
             Set<MethodAttribute<? super T, ?>> attributes = viewType.getAttributes();
-            CtField[] attributeFields = new CtField[attributes.size() + 1];
-            CtClass[] attributeTypes = new CtClass[attributes.size() + 1];
+            CtField[] attributeFields = new CtField[attributes.size()];
+            CtClass[] attributeTypes = new CtClass[attributes.size()];
             int i = 1;
 
             // Create the id field
-            CtField idField = new CtField(objectCc, "_id", cc);
-            idField.setModifiers(getModifiers(false));
-            cc.addField(idField);
+            MethodAttribute<? super T, ?> idAttribute = viewType.getIdAttribute();
+            CtField idField = addMembersForAttribute(idAttribute, clazz, cc);
             attributeFields[0] = idField;
             attributeTypes[0] = idField.getType();
+            attributes.remove(idAttribute);
 
             for (MethodAttribute<?, ?> attribute : attributes) {
-                Method getter = attribute.getJavaMethod();
-                Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
-
-                // Create the field from the attribute
-                CtField attributeField = new CtField(getType(attribute), attribute.getName(), cc);
-                attributeField.setModifiers(getModifiers(setter != null));
-                String genericSignature = getGenericSignature(attribute, attributeField);
-                if (genericSignature != null) {
-                    setGenericSignature(attributeField, genericSignature);
+                if (attribute == idAttribute) {
+                    continue;
                 }
-                cc.addField(attributeField);
-
-                boolean createBridges = !attribute.getJavaType().equals(getter.getReturnType());
-
-                CtMethod attributeGetter = CtNewMethod.getter(getter.getName(), attributeField);
-
-                if (genericSignature != null) {
-                    String getterGenericSignature = "()" + genericSignature;
-                    setGenericSignature(attributeGetter, getterGenericSignature);
-                }
-
-                if (createBridges) {
-                    CtMethod getterBridge = createGetterBridge(cc, getter, attributeGetter);
-                    cc.addMethod(getterBridge);
-                }
-                cc.addMethod(attributeGetter);
-
-                if (setter != null) {
-                    CtMethod attributeSetter = CtNewMethod.setter(setter.getName(), attributeField);
-                    if (genericSignature != null) {
-                        String setterGenericSignature = "(" + genericSignature + ")V";
-                        setGenericSignature(attributeSetter, setterGenericSignature);
-                    }
-
-                    if (createBridges) {
-                        CtMethod setterBridge = createSetterBridge(cc, setter, attributeSetter);
-                        cc.addMethod(setterBridge);
-                    }
-                    cc.addMethod(attributeSetter);
-                }
-
+                
+                CtField attributeField = addMembersForAttribute(attribute, clazz, cc);
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
                 i++;
@@ -196,6 +161,51 @@ public class ProxyFactory {
         } finally {
             pool.removeClassPath(classPath);
         }
+    }
+
+    private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
+        Method getter = attribute.getJavaMethod();
+        Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
+        
+        // Create the field from the attribute
+        CtField attributeField = new CtField(getType(attribute), attribute.getName(), cc);
+        attributeField.setModifiers(getModifiers(setter != null));
+        String genericSignature = getGenericSignature(attribute, attributeField);
+        if (genericSignature != null) {
+            setGenericSignature(attributeField, genericSignature);
+        }
+        cc.addField(attributeField);
+        
+        boolean createBridges = !attribute.getJavaType().equals(getter.getReturnType());
+        
+        CtMethod attributeGetter = CtNewMethod.getter(getter.getName(), attributeField);
+        
+        if (genericSignature != null) {
+            String getterGenericSignature = "()" + genericSignature;
+            setGenericSignature(attributeGetter, getterGenericSignature);
+        }
+        
+        if (createBridges) {
+            CtMethod getterBridge = createGetterBridge(cc, getter, attributeGetter);
+            cc.addMethod(getterBridge);
+        }
+        cc.addMethod(attributeGetter);
+        
+        if (setter != null) {
+            CtMethod attributeSetter = CtNewMethod.setter(setter.getName(), attributeField);
+            if (genericSignature != null) {
+                String setterGenericSignature = "(" + genericSignature + ")V";
+                setGenericSignature(attributeSetter, setterGenericSignature);
+            }
+            
+            if (createBridges) {
+                CtMethod setterBridge = createSetterBridge(cc, setter, attributeSetter);
+                cc.addMethod(setterBridge);
+            }
+            cc.addMethod(attributeSetter);
+        }
+        
+        return attributeField;
     }
     
     private void setGenericSignature(CtField field, String signature) {

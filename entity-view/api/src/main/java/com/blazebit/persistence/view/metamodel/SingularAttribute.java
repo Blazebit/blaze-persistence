@@ -31,5 +31,12 @@ public interface SingularAttribute<X, Y> extends Attribute<X, Y> {
      * @return True if this attribute maps to a query parameter, otherwise false
      */
     public boolean isQueryParameter();
+    
+    /**
+     * Returns true if this attribute maps to the entity id, otherwise false.
+     * 
+     * @return True if this attribute maps to the entity id, otherwise false
+     */
+    public boolean isId();
 
 }

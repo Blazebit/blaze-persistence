@@ -19,6 +19,7 @@ import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilters;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -170,6 +171,17 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
         if (mapping == null) {
+            IdMapping idMapping = AnnotationUtils.findAnnotation(m, IdMapping.class);
+
+            if (idMapping != null) {
+                if (idMapping.value().isEmpty()) {
+                    throw new IllegalArgumentException("Illegal empty id mapping for the getter '" + m.getName() + "' in the entity view'" + viewType.getJavaType().getName()
+                        + "'!");
+                }
+
+                return idMapping;
+            }
+            
             MappingParameter mappingParameter = AnnotationUtils.findAnnotation(m, MappingParameter.class);
 
             if (mappingParameter != null) {

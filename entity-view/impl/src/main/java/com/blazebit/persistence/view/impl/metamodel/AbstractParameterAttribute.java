@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -62,7 +63,9 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
 
         for (int i = 0; i < annotations.length; i++) {
-            if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
+            if (ReflectionUtils.isSubtype(annotations[i].annotationType(), IdMapping.class)) {
+                return annotations[i];
+            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), Mapping.class)) {
                 return annotations[i];
             } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
                 return annotations[i];

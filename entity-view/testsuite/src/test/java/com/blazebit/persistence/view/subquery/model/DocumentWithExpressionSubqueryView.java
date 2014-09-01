@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 import com.blazebit.persistence.view.entity.Document;
@@ -27,6 +28,9 @@ import com.blazebit.persistence.view.entity.Document;
  */
 @EntityView(Document.class)
 public interface DocumentWithExpressionSubqueryView {
+    
+    @IdMapping("id")
+    public Long getId();
 
     public String getName();
 

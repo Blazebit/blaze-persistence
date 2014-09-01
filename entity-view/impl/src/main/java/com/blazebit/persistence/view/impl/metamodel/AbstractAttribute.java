@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
@@ -38,7 +39,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
-    protected final boolean mappingParameter;
+    protected final boolean queryParameter;
+    protected final boolean id;
     protected final boolean subqueryMapping;
     protected final boolean subview;
 
@@ -47,17 +49,27 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         this.javaType = javaType;
         this.subview = entityViews.contains(javaType);
 
-        if (mapping instanceof Mapping) {
+        if (mapping instanceof IdMapping) {
+            this.mapping = ((IdMapping) mapping).value();
+            this.subqueryProvider = null;
+            this.id = true;
+            this.queryParameter = false;
+            this.subqueryMapping = false;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
+        } else if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
             this.subqueryProvider = null;
-            this.mappingParameter = false;
+            this.id = false;
+            this.queryParameter = false;
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
             this.subqueryProvider = null;
-            this.mappingParameter = true;
+            this.id = false;
+            this.queryParameter = true;
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
@@ -65,7 +77,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             this.mapping = null;
             this.subqueryProvider = mappingSubquery.value();
-            this.mappingParameter = false;
+            this.id = false;
+            this.queryParameter = false;
             this.subqueryMapping = true;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
@@ -83,7 +96,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     public boolean isQueryParameter() {
-        return mappingParameter;
+        return queryParameter;
+    }
+    
+    public boolean isId() {
+        return id;
     }
 
     public Class<? extends SubqueryProvider> getSubqueryProvider() {

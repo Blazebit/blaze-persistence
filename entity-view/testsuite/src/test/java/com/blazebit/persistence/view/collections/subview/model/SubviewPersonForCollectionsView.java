@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.collections.subview.model;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 
 /**
@@ -25,6 +26,9 @@ import com.blazebit.persistence.view.collections.entity.PersonForCollections;
  */
 @EntityView(PersonForCollections.class)
 public interface SubviewPersonForCollectionsView {
+    
+    @IdMapping("id")
+    public Long getId();
 
     public String getName();
 

@@ -46,6 +46,13 @@ public interface ViewType<X> {
      * @return The entity class that the entity view uses
      */
     public Class<?> getEntityClass();
+    
+    /**
+     * Returns the id attribute of the entity view.
+     * 
+     * @return The id attribute of the entity view
+     */
+    public MethodAttribute<? super X, ?> getIdAttribute();
 
     /**
      * Returns the attributes of the entity view.

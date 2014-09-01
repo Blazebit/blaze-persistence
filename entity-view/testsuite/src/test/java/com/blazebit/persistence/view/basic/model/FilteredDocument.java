@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.basic.model;
 import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewFilter;
@@ -37,6 +38,9 @@ import com.blazebit.persistence.view.filter.GreaterOrEqualFilter;
     @ViewFilter(name = "testFilter", value = FilteredDocument.TestFilter.class)
 })
 public interface FilteredDocument {
+    
+    @IdMapping("id")
+    public Long getId();
 
     @AttributeFilter(ContainsFilter.class)
     public String getName();
