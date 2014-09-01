@@ -114,23 +114,10 @@ public class OrderByManager extends AbstractManager {
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         OrderByInfo orderByInfo;
 
-        orderByInfo = iter.next();
-        String potentialSelectAlias = orderByInfo.getExpression().toString();
-        AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
-        if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
-            SelectInfo selectInfo = (SelectInfo) aliasInfo;
-            if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
-                selectInfo.getExpression().accept(queryGenerator);
-                sb.append(" AS ").append(potentialSelectAlias);
-            }
-        } else if (allClauses) {
-            orderByInfo.getExpression().accept(queryGenerator);
-        }
-
         while (iter.hasNext()) {
             orderByInfo = iter.next();
-            potentialSelectAlias = orderByInfo.getExpression().toString();
-            aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {

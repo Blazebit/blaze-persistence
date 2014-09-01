@@ -319,6 +319,11 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
+        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeySetEntity k WHERE ";
+        String expectedObjectQueryEnd = " ORDER BY "
+            + "k.a " + clause(aAsc, aNullsFirst) + ", "
+            + "k.b " + clause(bAsc, bNullsFirst) + ", "
+            + "k.id " + clause(idAsc, idNullsFirst);
         CriteriaBuilder<Tuple> crit = cbf.from(em, KeySetEntity.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)
@@ -339,7 +344,9 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         
         pcb = crit.page(result.getKeySet(), navigation.to, 1);
         result = pcb.getResultList();
+        assertEquals(id2, result.get(0).get(0));
         
+        // simple page id query test
         String actualQueryString = pcb.getPageIdQueryString();
         for (int i = 0; i < key.length; i++) {
             if (key[i] != null) {
@@ -348,7 +355,16 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         }
         
         assertEquals(expectedIdQueryStart + keySetCondition + expectedIdQueryEnd, actualQueryString);
-        assertEquals(id2, result.get(0).get(0));
+
+        // Optimized object query test
+        String actualObjectQueryString = pcb.getQueryString();
+        for (int i = 0; i < key.length; i++) {
+            if (key[i] != null) {
+                actualObjectQueryString = actualObjectQueryString.replaceAll(Pattern.quote(":_keySetParameter_" + i), key[i].toString());
+            }
+        }
+        
+        assertEquals(expectedObjectQueryStart + keySetCondition + expectedObjectQueryEnd, actualObjectQueryString);
     }
     
     private String clause(boolean asc, boolean nullsFirst) {

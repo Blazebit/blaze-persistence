@@ -610,7 +610,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         StringBuilder sbSelectFrom = new StringBuilder();
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
-        sbSelectFrom.append("FROM ")
+        sbSelectFrom.append(" FROM ")
                 .append(fromClazz.getSimpleName())
                 .append(' ')
                 .append(joinManager.getRootAlias());

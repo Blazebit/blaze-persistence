@@ -111,7 +111,7 @@ public class SelectManager<T> extends AbstractManager {
                 applySelect(queryGenerator, sb, iter.next());
             }
         }
-        sb.append(' ');
+        
         return sb.toString();
     }
 
