@@ -316,15 +316,21 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(fromClazz.getSimpleName())
             .append(' ')
             .append(joinManager.getRootAlias());
-
-        StringBuilder sbRemaining = new StringBuilder();
-        whereManager.buildClause(sbRemaining);
-        havingManager.buildClause(sbRemaining);
-
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
-        addWhereClauseConjuncts(sbRemaining, false);
+        
+        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, false)) {
+            if (whereManager.hasPredicates()) {
+                sbSelectFrom.append(" AND ");
+                whereManager.buildClausePredicate(sbSelectFrom);
+            }
+        } else {
+            whereManager.buildClause(sbSelectFrom);
+        }
+        
+        whereManager.buildClause(sbSelectFrom);
+        havingManager.buildClause(sbSelectFrom);
 
-        return sbSelectFrom.append(sbRemaining).toString();
+        return sbSelectFrom.toString();
     }
     
     private String getPageIdQueryString1() {
@@ -346,33 +352,39 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        StringBuilder sbRemaining = new StringBuilder();
-
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
+        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, false);
         if (keySetMode == KeySetMode.NONE) {
-            whereManager.buildClause(sbRemaining);
+            if (whereGenerated) {
+                if (whereManager.hasPredicates()) {
+                    sbSelectFrom.append(" AND ");
+                    whereManager.buildClausePredicate(sbSelectFrom);
+                }
+            } else {
+                whereManager.buildClause(sbSelectFrom);
+            }
         } else {
-            sbRemaining.append(" WHERE ");
-            applyKeySetClause(sbRemaining);
+            if (!whereGenerated) {
+                sbSelectFrom.append(" WHERE ");
+            }
+            
+            applyKeySetClause(sbSelectFrom);
 
             if (whereManager.hasPredicates()) {
-                sbRemaining.append(" AND (");
-                whereManager.buildClausePredicate(sbRemaining);
-                sbRemaining.append(')');
+                sbSelectFrom.append(" AND ");
+                whereManager.buildClausePredicate(sbSelectFrom);
             }
         }
 
-        sbRemaining.append(" GROUP BY ").append(idClause);
+        sbSelectFrom.append(" GROUP BY ").append(idClause);
         
         boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
-        orderByManager.buildOrderBy(sbRemaining, inverseOrder, true);
-
-        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        addWhereClauseConjuncts(sbRemaining, false);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
 
-        return sbSelectFrom.append(sbRemaining).toString();
+        return sbSelectFrom.toString();
     }
 
     private String getQueryString1() {
@@ -389,8 +401,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        StringBuilder sbRemaining = new StringBuilder();
-        sbRemaining.append(" WHERE ")
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
+        sbSelectFrom.append(" WHERE ")
             .append(joinManager.getRootAlias())
             .append('.')
             .append(idName)
@@ -398,15 +410,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(idParamName)
             .append("");
 
-        groupByManager.buildGroupBy(sbRemaining);
-        havingManager.buildClause(sbRemaining);
+        groupByManager.buildGroupBy(sbSelectFrom);
+        havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbRemaining, false, false);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
 
-        return sbSelectFrom.append(sbRemaining).toString();
+        return sbSelectFrom.toString();
     }
     
     private String getObjectQueryString1() {
@@ -422,37 +433,44 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        StringBuilder sbRemaining = new StringBuilder();
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
+        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, false);
         
         if (keySetMode == KeySetMode.NONE) {
-            whereManager.buildClause(sbRemaining);
+            if (whereGenerated) {
+                if (whereManager.hasPredicates()) {
+                    sbSelectFrom.append(" AND ");
+                    whereManager.buildClausePredicate(sbSelectFrom);
+                }
+            } else {
+                whereManager.buildClause(sbSelectFrom);
+            }
         } else {
-            sbRemaining.append(" WHERE ");
-            applyKeySetClause(sbRemaining);
+            if (!whereGenerated) {
+                sbSelectFrom.append(" WHERE ");
+            }
+            
+            applyKeySetClause(sbSelectFrom);
 
             if (whereManager.hasPredicates()) {
-                sbRemaining.append(" AND (");
-                whereManager.buildClausePredicate(sbRemaining);
-                sbRemaining.append(')');
+                sbSelectFrom.append(" AND ");
+                whereManager.buildClausePredicate(sbSelectFrom);
             }
         }
 
-        groupByManager.buildGroupBy(sbRemaining);
-        havingManager.buildClause(sbRemaining);
+        groupByManager.buildGroupBy(sbSelectFrom);
+        havingManager.buildClause(sbSelectFrom);
         
         boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
-        orderByManager.buildOrderBy(sbRemaining, inverseOrder, false);
-
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
-        addWhereClauseConjuncts(sbRemaining, false);
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
 
-        return sbSelectFrom.append(sbRemaining).toString();
+        return sbSelectFrom.toString();
     }
     
-    private void applyKeySetClause(StringBuilder sbRemaining) {
+    private void applyKeySetClause(StringBuilder sb) {
         int expressionCount = orderByExpressions.size();
         Serializable[] key;
 
@@ -467,7 +485,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         // We wrap the whole thing in brackets
         brackets++;
-        sbRemaining.append('(');
+        sb.append('(');
             
         for (int i = 0; i < expressionCount; i++) {
             boolean isNotLast = i + 1 != expressionCount;
@@ -482,43 +500,43 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                     if (orderByExpr.isNullFirst() == isPrevious) {
                         // Case for previous and null first or not previous and null last
                         generateEqualPredicate = false;
-                        applyKeySetNullItem(sbRemaining, expr, false);
+                        applyKeySetNullItem(sb, expr, false);
                     } else {
                         // Case for previous and null last or not previous and null first
-                        applyKeySetNullItem(sbRemaining, expr, true);
+                        applyKeySetNullItem(sb, expr, true);
                     }
                 } else {
                     if (orderByExpr.isNullFirst() == isPrevious) {
                         // Case for previous and null first or not previous and null last
-                        sbRemaining.append('(');
-                        applyKeySetNotNullableItem(orderByExpr, sbRemaining, expr, i, key);
-                        sbRemaining.append(" OR ");
-                        applyKeySetNullItem(sbRemaining, expr, false);
-                        sbRemaining.append(')');
+                        sb.append('(');
+                        applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
+                        sb.append(" OR ");
+                        applyKeySetNullItem(sb, expr, false);
+                        sb.append(')');
                     } else {
                         // Case for previous and null last or not previous and null first
-                        applyKeySetNotNullableItem(orderByExpr, sbRemaining, expr, i, key);
+                        applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
                     }
                 }
             } else {
-                applyKeySetNotNullableItem(orderByExpr, sbRemaining, expr, i, key);
+                applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
             }
             
             if (isNotLast) {
                 if (generateEqualPredicate) {
                     brackets++;
-                    sbRemaining.append(" OR (");
+                    sb.append(" OR (");
                     if (key[i] == null) {
-                        applyKeySetNullItem(sbRemaining, expr, false);
+                        applyKeySetNullItem(sb, expr, false);
                     } else {
-                        applyKeySetItem(sbRemaining, expr, "=", i, key[i]);
+                        applyKeySetItem(sb, expr, "=", i, key[i]);
                     }
                 }
                 
-                sbRemaining.append(" AND ");
+                sb.append(" AND ");
                 if (i + 2 != expressionCount) {
                     brackets++;
-                    sbRemaining.append('(');
+                    sb.append('(');
                 }
                 
                 generateEqualPredicate = true;
@@ -526,11 +544,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
         
         for (int i = 0; i < brackets; i++) {
-            sbRemaining.append(')');
+            sb.append(')');
         }
     }
 
-    private void applyKeySetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sbRemaining, Expression expr, int i, Serializable[] key) {
+    private void applyKeySetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, Expression expr, int i, Serializable[] key) {
         String operator;
         switch (keySetMode) {
             case SAME:
@@ -546,28 +564,28 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 throw new IllegalArgumentException("Unknown key set mode: " + keySetMode);
         }
         
-        applyKeySetItem(sbRemaining, expr, operator, i, key[i]);
+        applyKeySetItem(sb, expr, operator, i, key[i]);
     }
     
-    private void applyKeySetItem(StringBuilder sbRemaining, Expression expr, String operator, int position, Serializable keyElement) {
-        queryGenerator.setQueryBuffer(sbRemaining);
+    private void applyKeySetItem(StringBuilder sb, Expression expr, String operator, int position, Serializable keyElement) {
+        queryGenerator.setQueryBuffer(sb);
         expr.accept(queryGenerator);
-        sbRemaining.append(" ");
-        sbRemaining.append(operator);
-        sbRemaining.append(" :");
+        sb.append(" ");
+        sb.append(operator);
+        sb.append(" :");
         String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
-        sbRemaining.append(parameterName);
+        sb.append(parameterName);
         parameterManager.addParameterMapping(parameterName, keyElement);
     }
 
-    private void applyKeySetNullItem(StringBuilder sbRemaining, Expression expr, boolean not) {
-        queryGenerator.setQueryBuffer(sbRemaining);
+    private void applyKeySetNullItem(StringBuilder sb, Expression expr, boolean not) {
+        queryGenerator.setQueryBuffer(sb);
         expr.accept(queryGenerator);
         
         if (not) {
-            sbRemaining.append(" IS NOT NULL");
+            sb.append(" IS NOT NULL");
         } else {
-            sbRemaining.append(" IS NULL");
+            sb.append(" IS NULL");
         }
     }
 

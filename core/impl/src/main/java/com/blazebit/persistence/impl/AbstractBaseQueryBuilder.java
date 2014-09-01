@@ -630,50 +630,23 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
-        StringBuilder sbRemaining = new StringBuilder();
-        whereManager.buildClause(sbRemaining);
-        groupByManager.buildGroupBy(sbRemaining);
-        havingManager.buildClause(sbRemaining);
-        queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbRemaining, false, false);
-        queryGenerator.setResolveSelectAliases(true);
-
-        /**
-         * We must build the joins at the end This way, subqueries will be
-         * generated before the joins of the parent query are printed which is
-         * necessary for the OUTER() functions in subqueries to take effect.
-         */
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
-        addWhereClauseConjuncts(sbRemaining, true);
-
-        return sbSelectFrom.append(sbRemaining).toString();
-    }
-
-    protected void addWhereClauseConjuncts(StringBuilder sbRemaining, boolean includeSelects) {
-        // Added a workaround for #45 and HHH-9329
-        StringBuilder whereClauseConjuncts = joinManager.generateWhereClauseConjuncts(includeSelects);
-
-        if (whereClauseConjuncts.length() > 0) {
-            if (startsWith(sbRemaining, " WHERE ")) {
-                whereClauseConjuncts.append(" AND ");
-                sbRemaining.insert(" WHERE ".length(), whereClauseConjuncts);
-            } else {
-                whereClauseConjuncts.insert(0, " WHERE ");
-                sbRemaining.insert(0, whereClauseConjuncts);
+        
+        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, true)) {
+            if (whereManager.hasPredicates()) {
+                sbSelectFrom.append(" AND ");
+                whereManager.buildClausePredicate(sbSelectFrom);
             }
+        } else {
+            whereManager.buildClause(sbSelectFrom);
         }
-
-    }
-
-    private boolean startsWith(StringBuilder sb, String s) {
-        int i = 0;
-        for (; i < s.length() && i < sb.length(); i++) {
-            if (sb.charAt(i) != s.charAt(i)) {
-                return false;
-            }
-        }
-
-        return i == s.length();
+        
+        groupByManager.buildGroupBy(sbSelectFrom);
+        havingManager.buildClause(sbSelectFrom);
+        queryGenerator.setResolveSelectAliases(false);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false);
+        queryGenerator.setResolveSelectAliases(true);
+        return sbSelectFrom.toString();
     }
 
     protected void transformQuery(TypedQuery<T> query) {

@@ -154,20 +154,20 @@ public class JoinManager extends AbstractManager {
         rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     }
 
-    StringBuilder generateWhereClauseConjuncts(boolean includeSelect) {
-        StringBuilder sb = new StringBuilder();
-        generateWhereClauseConjuncts(sb, rootNode, null, includeSelect);
-        return sb;
+    boolean buildWhereClauseConjuncts(StringBuilder sb, boolean includeSelect) {
+        return buildWhereClauseConjuncts(sb, rootNode, null, includeSelect, sb.length());
     }
 
-    private void generateWhereClauseConjuncts(StringBuilder sb, JoinNode node, String relation, boolean includeSelect) {
+    boolean buildWhereClauseConjuncts(StringBuilder sb, JoinNode node, String relation, boolean includeSelect, int originalSize) {
         if (usesKeyInWithPredicate(node, includeSelect)) {
             // Safe because root has no with predicate
             ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
             Attribute<?, ?> attr = t.getAttribute(relation);
 
             if (attr.isCollection() && ((AnnotatedElement) attr.getJavaMember()).getAnnotation(CollectionTable.class) != null) {
-                if (sb.length() > 0) {
+                if (sb.length() == originalSize) {
+                    sb.append(" WHERE ");
+                } else {
                     sb.append(" AND ");
                 }
 
@@ -206,9 +206,11 @@ public class JoinManager extends AbstractManager {
             String subRelation = treeNodeEntry.getKey();
             JoinTreeNode treeNode = treeNodeEntry.getValue();
             for (JoinNode n : treeNode.getJoinNodes().values()) {
-                generateWhereClauseConjuncts(sb, n, subRelation, includeSelect);
+                buildWhereClauseConjuncts(sb, n, subRelation, includeSelect, originalSize);
             }
         }
+        
+        return sb.length() != originalSize;
     }
 
     private boolean usesKeyInWithPredicate(JoinNode node, boolean includeSelect) {
