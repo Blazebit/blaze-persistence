@@ -337,17 +337,10 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean isSkipableSelectAlias(String path, boolean fromSelect, boolean fromSubquery) {
-        int firstDotIndex = path.indexOf('.');
-        boolean singlePathElement;
-        String startAlias;
-        if (firstDotIndex != -1) {
-            singlePathElement = false;
-            startAlias = path.substring(0, firstDotIndex);
-        } else {
-            singlePathElement = true;
-            startAlias = path;
-        }
+    private boolean isJoinableSelectAlias(PathExpression pathExpr, boolean fromSelect, boolean fromSubquery) {
+        boolean singlePathElement = pathExpr.getExpressions().size() == 1;
+        String startAlias = pathExpr.getExpressions().get(0).toString();
+        
         AliasInfo aliasInfo = aliasManager.getAliasInfo(startAlias);
         if (aliasInfo == null) {
             return false;
@@ -359,9 +352,10 @@ public class JoinManager extends AbstractManager {
                 throw new IllegalStateException("Path starting with select alias not allowed");
             }
 
-            // do not join select aliases
+            // might be joinable
             return true;
         }
+        
         return false;
     }
 
@@ -379,7 +373,7 @@ public class JoinManager extends AbstractManager {
             throw new IllegalArgumentException("Join path [" + path + "] is not a path");
         }
 
-        if (isExternal(pathExpression) || isSkipableSelectAlias(path, false, false)) {
+        if (isExternal(pathExpression) || isJoinableSelectAlias(pathExpression, false, false)) {
             throw new IllegalArgumentException("No external path or select alias allowed in join path");
         }
 
@@ -409,11 +403,10 @@ public class JoinManager extends AbstractManager {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
-            String path = pathExpression.getPath();
-
-            // TODO: no clue about the purpose of this section
-            if (isSkipableSelectAlias(path, fromClause == ClauseType.SELECT, fromSubquery)) {
-                Expression expr = ((SelectInfo) aliasManager.getAliasInfo(path)).getExpression();
+            
+            if (isJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) {
+                String alias = pathExpression.getExpressions().get(0).toString();
+                Expression expr = ((SelectInfo) aliasManager.getAliasInfo(alias)).getExpression();
 
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
                 if (!fromSelectAlias) {

@@ -150,7 +150,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         //resolve cyclic dependencies
         this.em = em;
 
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo));
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo), new SubqueryRecursiveExpressionTransformer());
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
         this.resultType = (Class<T>) fromClazz;
     }
