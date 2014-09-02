@@ -63,11 +63,11 @@ String_literal : '\'' ~[\']* '\'';
      : '.'
      ;
  
+ WS: [ \n\t\r]+ -> channel(HIDDEN);
+ 
  Identifier
      : JavaLetter JavaLetterOrDigit*
      ;
-
- WS: [ \n\t\r]+ -> channel(HIDDEN);
  
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';

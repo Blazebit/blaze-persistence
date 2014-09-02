@@ -112,7 +112,7 @@ simple_subquery_expression : single_valued_path_expression |
                    ;
 
  arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
-                       | expr=arithmetic_expression op=( '+' | '-' ) term=arithmetic_term # ArithmeticExpressionPlusMinus
+                       | expr=arithmetic_expression ( '+' | '-' ) arithmetic_term # ArithmeticExpressionPlusMinus
                        ;
 
  arithmetic_term : arithmetic_factor # ArithmeticTermFactor
@@ -121,7 +121,7 @@ simple_subquery_expression : single_valued_path_expression |
 
  arithmetic_factor : signum=( '+' | '-' )? arithmetic_primary;
 
- arithmetic_primary : state_field_path_expression# ArithmeticPrimary
+ arithmetic_primary : state_field_path_expression # ArithmeticPrimary
                     | single_element_path_expression # ArithmeticPrimary
                     | Numeric_literal # ArithmeticPrimary
                     | '('arithmetic_expression')' # ArithmeticPrimaryParanthesis
@@ -156,7 +156,7 @@ simple_subquery_expression : single_valued_path_expression |
                         function_invocation ;
 
  enum_expression : state_field_path_expression |
-                     Enum_literal |
+                     //Enum_literal |
                      Input_parameter |
                      case_expression 
                  ;
@@ -212,7 +212,7 @@ simple_subquery_expression : single_valued_path_expression |
 
  literal
      : Boolean_literal
-     | Enum_literal   
+     //| Enum_literal   
      | Numeric_literal
      | String_literal
      ;
