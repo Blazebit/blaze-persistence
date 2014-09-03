@@ -134,7 +134,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             idAttributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
         }
         
-        String idAttributeName = entityType.getId(idAttributeType).getName();
+        String idAttributeName = jpaIdAttr.getName();
         MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
         MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute) idAttribute;
         
