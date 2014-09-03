@@ -23,7 +23,7 @@ import java.io.Serializable;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface IdHolderView<T> extends Serializable {
+public interface IdHolderView<T extends Serializable> extends Serializable {
 
     @IdMapping("id")
     public T getId();

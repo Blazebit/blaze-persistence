@@ -47,7 +47,10 @@ import com.blazebit.persistence.view.metamodel.SetAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -122,7 +125,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
-        Class<?> idAttributeType = entityType.getIdType().getJavaType();
+        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = entityType.getId(entityType.getIdType().getJavaType());
+        Class<?> idAttributeType;
+        
+        if (jpaIdAttr.getJavaMember() instanceof Field) {
+            idAttributeType = ReflectionUtils.getResolvedFieldType(viewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
+        } else {
+            idAttributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
+        }
+        
         String idAttributeName = entityType.getId(idAttributeType).getName();
         MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
         MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute) idAttribute;
