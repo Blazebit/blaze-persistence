@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -86,7 +87,7 @@ public class OrderByManager extends AbstractManager {
         return orderByInfos.size() > 0;
     }
 
-    boolean hasSubqueryOrderBys() {
+    boolean hasComplexOrderBys() {
         if (orderByInfos.isEmpty()) {
             return false;
         }
@@ -95,8 +96,13 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+//                if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                if (!(selectInfo.getExpression() instanceof PathExpression)) {
                     return true;
+                }
+            } else {
+                if (!(orderByInfo.getExpression() instanceof PathExpression)) {
+                    throw new IllegalArgumentException("Illegal non path expression in order by! " + orderByInfo.getExpression().toString());
                 }
             }
         }
@@ -136,7 +142,8 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+//                if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
                     sb.append(", ");
                     selectInfo.getExpression().accept(queryGenerator);
                     sb.append(" AS ").append(potentialSelectAlias);
@@ -163,14 +170,14 @@ public class OrderByManager extends AbstractManager {
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
-        if(resolveSelectAliases){
+        if (resolveSelectAliases) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-            if(aliasInfo != null && aliasInfo instanceof SelectInfo && !ExpressionUtils.containsSubqueryExpression(((SelectInfo)aliasInfo).getExpression())){
-                ((SelectInfo)aliasInfo).getExpression().accept(queryGenerator);
-            }else{
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo && ((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
+                ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+            } else {
                 orderBy.getExpression().accept(queryGenerator);
             }
-        }else{
+        } else {
             orderBy.getExpression().accept(queryGenerator);
         }
         if (orderBy.ascending == inverseOrder) {

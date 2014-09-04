@@ -172,7 +172,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             throw new IllegalStateException("The last order by item must be unique!");
         }
         
-        needsNewIdList = extractKeySet || orderByManager.hasSubqueryOrderBys();
+        needsNewIdList = extractKeySet || orderByManager.hasComplexOrderBys();
         keySetMode = KeySetPaginationHelper.getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressions);
         // No need to do the check again if no mutation occurs
         needsCheck = false;
