@@ -374,6 +374,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         sbSelectFrom.append(" GROUP BY ").append(idClause);
+        if (needsNewIdList) {
+            orderByManager.buildGroupByClauses(sbSelectFrom, extractKeySet);
+        }
         
         boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);

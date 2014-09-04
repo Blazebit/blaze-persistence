@@ -155,6 +155,37 @@ public class OrderByManager extends AbstractManager {
         }
     }
 
+    void buildGroupByClauses(StringBuilder sb, boolean allClauses) {
+        if (orderByInfos.isEmpty()) {
+            return;
+        }
+
+        queryGenerator.setQueryBuffer(sb);
+        Iterator<OrderByInfo> iter = orderByInfos.iterator();
+        OrderByInfo orderByInfo;
+
+        while (iter.hasNext()) {
+            orderByInfo = iter.next();
+            String potentialSelectAlias = orderByInfo.getExpression().toString();
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                SelectInfo selectInfo = (SelectInfo) aliasInfo;
+//                if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
+                    String expressionString = selectInfo.getExpression().toString().toUpperCase();
+                    if (!expressionString.startsWith("COUNT(") && !expressionString.startsWith("AVG(") && !expressionString.startsWith("SUM(") 
+                        && !expressionString.startsWith("MIN(") && !expressionString.startsWith("MAX(")) {
+                        sb.append(", ");
+                        selectInfo.getExpression().accept(queryGenerator);
+                    }
+                }
+            } else if (allClauses) {
+                sb.append(", ");
+                orderByInfo.getExpression().accept(queryGenerator);
+            }
+        }
+    }
+
     void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {
         if (orderByInfos.isEmpty()) {
             return;

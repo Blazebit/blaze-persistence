@@ -75,7 +75,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         PagedList<Tuple> result = pcb.getResultList();
         // The first time we have to use the offset
         String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
-            + "GROUP BY d.id "
+            + "GROUP BY d.id, owner_1.name, d.name, d.id "
             + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
@@ -88,7 +88,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         // Finally we can use the key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
             + "WHERE (owner_1.name < :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND (d.name > :_keySetParameter_1 OR (d.name = :_keySetParameter_1 AND d.id > :_keySetParameter_2)))) "
-            + "GROUP BY d.id "
+            + "GROUP BY d.id, owner_1.name, d.name, d.id "
             + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
@@ -97,7 +97,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         // Same page again key set
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
             + "WHERE (owner_1.name <= :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND (d.name >= :_keySetParameter_1 OR (d.name = :_keySetParameter_1 AND d.id >= :_keySetParameter_2)))) "
-            + "GROUP BY d.id "
+            + "GROUP BY d.id, owner_1.name, d.name, d.id "
             + "ORDER BY owner_1.name DESC NULLS LAST, d.name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
@@ -110,7 +110,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         // Now we scroll back
         expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
             + "WHERE (owner_1.name > :_keySetParameter_0 OR (owner_1.name = :_keySetParameter_0 AND (d.name < :_keySetParameter_1 OR (d.name = :_keySetParameter_1 AND d.id < :_keySetParameter_2)))) "
-            + "GROUP BY d.id "
+            + "GROUP BY d.id, owner_1.name, d.name, d.id "
             + "ORDER BY owner_1.name ASC NULLS FIRST, d.name DESC NULLS FIRST, d.id DESC NULLS FIRST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         

@@ -315,7 +315,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         }
         
         String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeySetEntity k WHERE ";
-        String expectedIdQueryEnd = " GROUP BY k.id ORDER BY "
+        String expectedIdQueryEnd = " GROUP BY k.id, k.a, k.b, k.id ORDER BY "
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
