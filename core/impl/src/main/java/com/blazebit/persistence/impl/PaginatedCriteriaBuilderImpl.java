@@ -316,7 +316,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
         
-        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, false)) {
+        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), false)) {
             if (whereManager.hasPredicates()) {
                 sbSelectFrom.append(" AND ");
                 whereManager.buildClausePredicate(sbSelectFrom);
@@ -350,7 +350,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, false);
+        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
         if (keySetMode == KeySetMode.NONE) {
             if (whereGenerated) {
                 if (whereManager.hasPredicates()) {
@@ -431,7 +431,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, false);
+        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
         
         if (keySetMode == KeySetMode.NONE) {
             if (whereGenerated) {

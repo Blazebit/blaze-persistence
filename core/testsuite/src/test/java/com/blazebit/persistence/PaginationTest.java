@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.model.DocumentViewModel;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Arrays;
@@ -394,5 +395,25 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
 
+    }
+    
+    @Test
+    public void testCountQueryWhereClauseConjuncts() {
+        CriteriaBuilder<Workflow> cb = cbf.from(em, Workflow.class, "w");
+        PaginatedCriteriaBuilder<Tuple> pcb = cb
+            .select("w.id", "Workflow_id")
+            .select("w.defaultLanguage", "Workflow_defaultLanguage")
+            .select("COALESCE(NULLIF(COALESCE(w.localized[:language].name, w.localized[w.defaultLanguage].name), ''), ' - ')", "Workflow_name")
+            .select("COALESCE(NULLIF(COALESCE(w.localized[:language].description, w.localized[w.defaultLanguage].description), ''), ' - ')", "Workflow_description")
+            .select("COALESCE(NULLIF(SUBSTRING(COALESCE(w.localized[:language].description, w.localized[w.defaultLanguage].description), 1, 20), ''), ' - ')", "Workflow_descriptionPreview")
+            .select("CASE WHEN w.localized[:language].name IS NULL THEN 0 ELSE 1 END", "Workflow_localizedValue")
+            .orderByAsc("Workflow_name")
+            .orderByAsc("Workflow_id")
+            .page(0, 1);
+
+        String expectedCountQuery = "SELECT COUNT(w.id) FROM Workflow w";
+
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        pcb.getPageCountQueryString();
     }
 }

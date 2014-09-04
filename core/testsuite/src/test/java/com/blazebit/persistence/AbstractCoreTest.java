@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.impl.JPAInfo;
 import com.blazebit.testsuite.base.AbstractPersistenceTest;
 
@@ -48,7 +49,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return new Class<?>[]{
             Document.class,
             Version.class,
-            Person.class
+            Person.class,
+            Workflow.class
         };
     }
 

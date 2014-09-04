@@ -136,7 +136,7 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    void buildJoins(StringBuilder sb, EnumSet<ClauseType> clauseExclusions) {
+    void buildJoins(StringBuilder sb, Set<ClauseType> clauseExclusions) {
         rootNode.registerDependencies();
         renderedJoins.clear();
         applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions);
@@ -154,11 +154,15 @@ public class JoinManager extends AbstractManager {
         rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     }
 
-    boolean buildWhereClauseConjuncts(StringBuilder sb, boolean includeSelect) {
-        return buildWhereClauseConjuncts(sb, rootNode, null, includeSelect, sb.length());
+    boolean buildWhereClauseConjuncts(StringBuilder sb, Set<ClauseType> clauseExclusions, boolean includeSelect) {
+        return buildWhereClauseConjuncts(sb, clauseExclusions, rootNode, null, includeSelect, sb.length());
     }
 
-    boolean buildWhereClauseConjuncts(StringBuilder sb, JoinNode node, String relation, boolean includeSelect, int originalSize) {
+    boolean buildWhereClauseConjuncts(StringBuilder sb, Set<ClauseType> clauseExclusions, JoinNode node, String relation, boolean includeSelect, int originalSize) {
+        if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
+            return sb.length() != originalSize;
+        }
+                
         if (usesKeyInWithPredicate(node, includeSelect)) {
             // Safe because root has no with predicate
             ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
@@ -206,7 +210,7 @@ public class JoinManager extends AbstractManager {
             String subRelation = treeNodeEntry.getKey();
             JoinTreeNode treeNode = treeNodeEntry.getValue();
             for (JoinNode n : treeNode.getJoinNodes().values()) {
-                buildWhereClauseConjuncts(sb, n, subRelation, includeSelect, originalSize);
+                buildWhereClauseConjuncts(sb, clauseExclusions, n, subRelation, includeSelect, originalSize);
             }
         }
         
@@ -283,7 +287,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, EnumSet<ClauseType> clauseExclusions) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
 
