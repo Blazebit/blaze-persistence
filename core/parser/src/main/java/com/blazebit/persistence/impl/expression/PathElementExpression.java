@@ -21,6 +21,6 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class PathElementExpression implements Expression {
+public interface PathElementExpression extends Expression {
 
 }

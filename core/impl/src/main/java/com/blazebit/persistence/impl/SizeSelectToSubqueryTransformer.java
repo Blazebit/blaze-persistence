@@ -15,16 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
-import java.util.ArrayList;
-import java.util.List;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -32,9 +27,9 @@ import javax.persistence.metamodel.Metamodel;
  */
 public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
 
-//    private final OrderByManager orderByManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final AliasManager aliasManager;
+    private final DeepSizeSelectToSubqueryTransformer deepTransformer = new DeepSizeSelectToSubqueryTransformer();
 
     public SizeSelectToSubqueryTransformer(SubqueryInitiatorFactory subqueryInitFactory, AliasManager aliasManager) {
         this.subqueryInitFactory = subqueryInitFactory;
@@ -43,40 +38,48 @@ public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
 
     @Override
     public void transform(SelectInfo info) {
-        if (ExpressionUtils.isSizeExpression(info.getExpression())) {
+        if (ExpressionUtils.isSizeFunction(info.getExpression())) {
+            info.setExpression(info.getExpression().accept(deepTransformer));
+        } else {
+            info.getExpression().accept(deepTransformer);
 
-            PathExpression sizeArg = (PathExpression) ((CompositeExpression) info.getExpression()).getExpressions().get(1);
-            Class<?> collectionPropertyClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
-            String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
-            String collectionPropertyName = sizeArg.getField();
-            String collectionPropertyAlias = collectionPropertyName;
-            String collectionPropertyClassName = collectionPropertyClass.getSimpleName();
-            String collectionPropertyClassAlias = collectionPropertyClassName;
-            
-            if (aliasManager.getAliasInfo(collectionPropertyClassName) != null) {
-                collectionPropertyClassAlias = aliasManager.generatePostfixedAlias(collectionPropertyClassName);
-            }
-            if (aliasManager.getAliasInfo(collectionPropertyName) != null) {
-                collectionPropertyAlias = aliasManager.generatePostfixedAlias(collectionPropertyName);
-            }
-            Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, null).from(collectionPropertyClass, collectionPropertyClassAlias)
-                    .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
-                    .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
-                    .where(collectionPropertyClassAlias).eqExpression(baseAlias);
+        }
+    }
 
-            info.setExpression(new SubqueryExpression(countSubquery));
+    private class DeepSizeSelectToSubqueryTransformer extends SizeTransformationVisitor {
+
+        @Override
+        public Expression visit(PathExpression expression) {
+            // performance short-cut
+            return expression;
         }
 
-//        if (orderByManager.getOrderBySelectAliases().contains(info.getAlias())) {
-//            info.getExpression().accept(new VisitorAdapter() {
-//
-//                @Override
-//                public void visit(PathExpression expression) {
-//                    ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
-//                }
-//
-//            });
-//
-//        }
+        @Override
+        public Expression visit(FunctionExpression expression) {
+            if (ExpressionUtils.isSizeFunction(expression)) {
+
+                PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
+                Class<?> collectionPropertyClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
+                String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
+                String collectionPropertyName = sizeArg.getField();
+                String collectionPropertyAlias = collectionPropertyName;
+                String collectionPropertyClassName = collectionPropertyClass.getSimpleName().toLowerCase();
+                String collectionPropertyClassAlias = collectionPropertyClassName;
+
+                if (aliasManager.getAliasInfo(collectionPropertyClassName) != null) {
+                    collectionPropertyClassAlias = aliasManager.generatePostfixedAlias(collectionPropertyClassName);
+                }
+                if (aliasManager.getAliasInfo(collectionPropertyName) != null) {
+                    collectionPropertyAlias = aliasManager.generatePostfixedAlias(collectionPropertyName);
+                }
+                Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl()).from(collectionPropertyClass, collectionPropertyClassAlias)
+                        .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
+                        .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
+                        .where(collectionPropertyClassAlias).eqExpression(baseAlias);
+
+                return new SubqueryExpression(countSubquery);
+            }
+            return expression;
+        }
     }
 }

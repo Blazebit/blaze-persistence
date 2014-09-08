@@ -39,9 +39,38 @@ public interface Expression {
 
         public void visit(SubqueryExpression expression);
 
-        public void visit(OuterExpression expression);
-
         public void visit(FunctionExpression expression);
+                
+        public void visit(WhenClauseExpression expression);
+        
+        public void visit(GeneralCaseExpression expression);
+        
+        public void visit(SimpleCaseExpression expression);
+    }
+    
+    public static interface ResultVisitor<T> {
+
+        public T visit(PathExpression expression);
+
+        public T visit(PropertyExpression expression);
+
+        public T visit(ParameterExpression expression);
+
+        public T visit(ArrayExpression expression);
+
+        public T visit(CompositeExpression expression);
+
+        public T visit(FooExpression expression);
+
+        public T visit(SubqueryExpression expression);
+
+        public T visit(FunctionExpression expression);
+                
+        public T visit(WhenClauseExpression expression);
+        
+        public T visit(GeneralCaseExpression expression);
+        
+        public T visit(SimpleCaseExpression expression);
     }
     
     /**
@@ -50,6 +79,8 @@ public interface Expression {
      * @param visitor
      */
     public void accept(Visitor visitor);
+    
+    public <T> T accept(ResultVisitor<T> visitor);
 
     /**
      * Returns the trimmed original string representation of the expression.

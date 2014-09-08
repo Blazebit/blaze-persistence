@@ -250,18 +250,20 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
         
-        String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
-        String expected = "SELECT CASE WHEN COUNT(contacts) > 2 THEN 2 ELSE COUNT(contacts) END FROM Document d LEFT JOIN d.contacts contacts";
+        String expected = "SELECT CASE WHEN COUNT(contacts_1) > 2 THEN 2 ELSE COUNT(contacts_1) END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
     }
     
     @Test
     public void testSelectSizeAsSubexpression() {
         CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
-                .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
+                .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE 0 END")
+                .where("d.partners.name").likeExpression("'%onny'");
         
         String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
-        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE (" + expectedSubquery + ") END FROM Document d";
+        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
         assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
     }
 }

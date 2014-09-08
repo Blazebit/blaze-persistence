@@ -18,16 +18,22 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.BitSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DiagnosticErrorListener;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.tree.ParseTreeWalker;
 
 /**
  *
@@ -37,6 +43,8 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
  */
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
+    private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+    
     @Override
     public Expression createSimpleExpression(String expression, boolean allowCaseWhen) {
         if (expression == null) {
@@ -46,27 +54,15 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             throw new IllegalArgumentException("expression");
         }
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
-        l.addErrorListener(ERR_LISTENER);
+        configureLexer(l);
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
-        p.addErrorListener(ERR_LISTENER);
+        configureParser(p);
         ParserRuleContext ctx = callStartRule(p);
-
-        ParseTreeWalker w = new ParseTreeWalker();
-
-        JPQLSelectExpressionListenerImpl antlrToExpressionTransformer = new JPQLSelectExpressionListenerImpl(tokens);
-
-        w.walk(antlrToExpressionTransformer, ctx);
-
-        CompositeExpression expr = antlrToExpressionTransformer.getCompositeExpression();
-
-        // unwrap composite expression with single child
-        if (expr.getExpressions()
-            .size() == 1) {
-            return expr.getExpressions()
-                .get(0);
-        }
-        return expr;
+        LOG.finest(ctx.toStringTree());
+        
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
+        return visitor.visit(ctx);
     }
     
     @Override
@@ -83,6 +79,16 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
 
     protected abstract ParserRuleContext callStartRule(JPQLSelectExpressionParser parser);
+    
+    protected void configureLexer(JPQLSelectExpressionLexer lexer){
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(ERR_LISTENER);
+    }
+    
+    protected void configureParser(JPQLSelectExpressionParser parser){
+        parser.removeErrorListeners();
+        parser.addErrorListener(ERR_LISTENER);
+    }
 
     protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
 

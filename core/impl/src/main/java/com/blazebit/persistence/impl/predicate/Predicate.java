@@ -57,7 +57,7 @@ public interface Predicate {
 
         public void visit(ExistsPredicate predicate);
     }
-
+    
     /**
      * The predicate tree is traversed in pre-order.
      *

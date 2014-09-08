@@ -52,8 +52,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     @Parameterized.Parameters
     public static Collection expressionOperatorUses() {
         return Arrays.asList(new Object[][]{
-            { "KEY(localized[:locale]) NOT MEMBER OF supportedLocales", "KEY(localized_locale) NOT MEMBER OF workflow.supportedLocales", "" },
-            { "KEY(localized[:locale]) MEMBER OF supportedLocales", "KEY(localized_locale) MEMBER OF workflow.supportedLocales", "" },
+            { "localized[:locale] NOT MEMBER OF supportedLocales", "localized_locale NOT MEMBER OF workflow.supportedLocales", "" },
+            { "localized[:locale] MEMBER OF supportedLocales", "localized_locale MEMBER OF workflow.supportedLocales", "" },
 // TODO: IS EMPTY seems to be broken in hibernate for element collections. Also see https://hibernate.atlassian.net/browse/HHH-6686
 //            { "localized[:locale] IS NOT EMPTY", "localized IS NOT EMPTY", "" },
 //            { "localized[:locale] IS EMPTY", "localized IS EMPTY", "" },
@@ -61,8 +61,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
             { "localized[:locale].name IS NULL", "localized_locale.name IS NULL", "" },
             { "localized[:locale].name NOT LIKE '%a'", "localized_locale.name NOT LIKE '%a'", "" },
             { "localized[:locale].name LIKE '%a'", "localized_locale.name LIKE '%a'", "" },
-            { "localized[:locale].name NOT IN ('a', 'b')", "localized_locale.name NOT IN ('a', 'b')", "" },
-            { "localized[:locale].name IN ('a', 'b')", "localized_locale.name IN ('a', 'b')", "" },
+            { "localized[:locale].name NOT IN ('a', 'b')", "localized_locale.name NOT IN ('a','b')", "" },
+            { "localized[:locale].name IN ('a', 'b')", "localized_locale.name IN ('a','b')", "" },
             { "NOT(localized[:locale].name = localized[:locale].description)", "NOT(localized_locale.name = localized_locale.description)", "" },
             { "localized[:locale].name <> localized[:locale].description", "localized_locale.name <> localized_locale.description", "" },
             { "localized[:locale].name != localized[:locale].description", "localized_locale.name != localized_locale.description", "" },

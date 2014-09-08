@@ -23,10 +23,10 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class FunctionExpression implements Expression {
+public class FunctionExpression implements Expression  {
 
     private final String functionName;
-    private final List<Expression> expressions;
+    private List<Expression> expressions;
 
     public FunctionExpression(String functionName, List<Expression> expressions) {
         this.functionName = functionName;
@@ -37,13 +37,22 @@ public class FunctionExpression implements Expression {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
     
     public String getFunctionName() {
         return functionName;
     }
 
-    public List<Expression> getExpressions() {
+    public List<? extends Expression> getExpressions() {
         return expressions;
+    }
+
+    public void setExpressions(List<Expression> expressions) {
+        this.expressions = expressions;
     }
 
     @Override

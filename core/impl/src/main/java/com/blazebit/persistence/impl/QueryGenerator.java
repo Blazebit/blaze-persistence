@@ -15,15 +15,17 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -44,6 +46,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import java.util.List;
 
 /**
  *
@@ -325,6 +328,58 @@ public class QueryGenerator extends VisitorAdapter {
         sb.append(')');
     }
 
+    @Override
+    public void visit(FunctionExpression expression) {
+        if (ExpressionUtils.isOuterFunction(expression)) {
+            expression.getExpressions().get(0).accept(this);
+        } else {
+            sb.append(expression.getFunctionName());
+            sb.append('(');
+            if (!expression.getExpressions().isEmpty()) {
+                expression.getExpressions().get(0).accept(this);
+                for (int i = 1; i < expression.getExpressions().size(); i++) {
+                    sb.append(",");
+                    expression.getExpressions().get(i).accept(this);
+                }
+            }
+            sb.append(')');
+        }
+    }
+
+    @Override
+    public void visit(GeneralCaseExpression expression) {
+        handleCaseWhen(null, expression.getWhenClauses(), expression.getDefaultExpr());
+    }
+    
+    @Override
+    public void visit(SimpleCaseExpression expression) {
+        handleCaseWhen(expression.getCaseOperand(), expression.getWhenClauses(), expression.getDefaultExpr());
+    }
+
+    @Override
+    public void visit(WhenClauseExpression expression) {
+        sb.append("WHEN ");
+        expression.getCondition().accept(this);
+        sb.append(" THEN ");
+        expression.getResult().accept(this);
+    }
+    
+    private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr){
+        sb.append("CASE ");
+        if(caseOperand != null){
+            caseOperand.accept(this);
+            sb.append(" ");
+        }
+        
+        for(WhenClauseExpression whenClause : whenClauses){
+            whenClause.accept(this);
+            sb.append(" ");
+        }
+        sb.append("ELSE ");
+        defaultExpr.accept(this);
+        sb.append(" END");
+    }
+    
     public boolean isResolveSelectAliases() {
         return resolveSelectAliases;
     }

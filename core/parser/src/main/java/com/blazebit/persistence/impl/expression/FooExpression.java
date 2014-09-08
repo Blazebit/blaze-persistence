@@ -38,6 +38,11 @@ public class FooExpression implements Expression {
         visitor.visit(this);
     }
 
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     StringBuilder getStringBuilder() {
         return stringBuilder;
     }
@@ -51,7 +56,7 @@ public class FooExpression implements Expression {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 19 * hash + (this.stringBuilder != null ? this.stringBuilder.hashCode() : 0);
+        hash = 19 * hash + (this.stringBuilder.toString() != null ? this.stringBuilder.toString().hashCode() : 0);
         return hash;
     }
 
@@ -64,7 +69,7 @@ public class FooExpression implements Expression {
             return false;
         }
         final FooExpression other = (FooExpression) obj;
-        if (this.stringBuilder != other.stringBuilder && (this.stringBuilder == null || !this.stringBuilder.equals(other.stringBuilder))) {
+        if (this.stringBuilder != other.stringBuilder && (this.stringBuilder == null || !this.stringBuilder.toString().equals(other.stringBuilder.toString()))) {
             return false;
         }
         return true;

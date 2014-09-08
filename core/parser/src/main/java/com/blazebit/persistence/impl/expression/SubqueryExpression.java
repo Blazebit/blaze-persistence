@@ -34,6 +34,11 @@ public class SubqueryExpression implements Expression {
         visitor.visit(this);
     }
 
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     public Subquery getSubquery() {
         return subquery;
     }

@@ -25,10 +25,10 @@ Member_of_function : ('NOT' [ ]+)? 'MEMBER' ([ ]+ 'OF')?;
 
 Outer_function : 'OUTER';
  
+Character_literal : '\''JavaLetter'\'';
+
 String_literal : '\'' ~[\']* '\'';
- 
- Character_literal : '\''JavaLetter'\'';
- 
+
  Input_parameter : ':'Identifier;
  
  //Enum_literal : (Identifier'.')+Identifier;
@@ -68,7 +68,7 @@ String_literal : '\'' ~[\']* '\'';
  Identifier
      : JavaLetter JavaLetterOrDigit*
      ;
- 
+
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
 fragment
