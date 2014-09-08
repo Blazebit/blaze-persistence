@@ -40,6 +40,11 @@ public class ParameterExpression implements Expression {
         visitor.visit(this);
     }
 
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     public String getName() {
         return name;
     }

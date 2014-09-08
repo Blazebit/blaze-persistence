@@ -13,38 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.impl.expression;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
  */
-public class OuterExpression implements Expression {
+public class AggregateExpression extends FunctionExpression {
+    private final boolean distinct;
 
-    private PathExpression path;
-
-    public void setPath(PathExpression path) {
-        this.path = path;
+    public AggregateExpression(boolean distinct, String functionName, PathExpression expression) {
+        super(functionName, Arrays.asList(new Expression[]{expression}));
+        this.distinct = distinct;
+    }
+    
+    /**
+     * Constructor for COUNT(*)
+     * @param distinct
+     */
+    public AggregateExpression() {
+        super("COUNT", Collections.<Expression>emptyList());
+        this.distinct = false;
     }
 
-    public PathExpression getPath() {
-        return path;
+    public boolean isDistinct() {
+        return distinct;
     }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("OUTER(");
-        sb.append(path);
-        sb.append(')');
-        return sb.toString();
-    }
-
 }

@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.OuterExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
@@ -50,9 +50,14 @@ public class JoinVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(OuterExpression expression) {
+    public void visit(FunctionExpression expression) {
         // do not join outer expressions
+        if(!ExpressionUtils.isOuterFunction(expression)){
+            super.visit(expression);
+        }
     }
+    
+    
     
     // Added eager initialization of subqueries
     @Override

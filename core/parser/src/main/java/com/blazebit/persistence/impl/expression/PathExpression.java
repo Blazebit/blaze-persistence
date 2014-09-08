@@ -51,6 +51,11 @@ public class PathExpression implements Expression, Cloneable {
         visitor.visit(this);
     }
 
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
     public List<PathElementExpression> getExpressions() {
         return pathProperties;
     }

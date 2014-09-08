@@ -118,7 +118,7 @@ public class PaginationTest extends AbstractCoreTest {
                 + "GROUP BY d.id "
                 + "ORDER BY d.id ASC NULLS LAST";
 
-        String expectedObjectQuery = "SELECT d.name, CONCAT(owner_1.name, ' user'), COALESCE(" + joinAliasValue("localized_1")
+        String expectedObjectQuery = "SELECT d.name, CONCAT(owner_1.name,' user'), COALESCE(" + joinAliasValue("localized_1")
                 + ",'no item'), partnerDocument_1.name FROM Document d "
                 + "JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1 " + ON_CLAUSE
                 + " KEY(localized_1) = 1 LEFT JOIN owner_1.partnerDocument partnerDocument_1 "
@@ -356,6 +356,14 @@ public class PaginationTest extends AbstractCoreTest {
         em.createQuery("SELECT d.id, d.contacts FROM Document d").getResultList();
         em.createQuery("SELECT d.id FROM Document d ORDER BY SIZE(d.contacts)").getResultList();
     }*/
+    
+    @Test
+    public void deleteMe2(){
+        em.createQuery("SELECT p.name FROM Document d LEFT JOIN d.contacts p").getResultList();
+        em.createQuery("SELECT COUNT(*) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+        em.createQuery("SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+        em.createQuery("SELECT COUNT(d.name) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
+    }
     
     @Test
     public void testOrderBySizeAlias() {

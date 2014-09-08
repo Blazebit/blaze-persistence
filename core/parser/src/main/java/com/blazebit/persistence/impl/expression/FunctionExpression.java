@@ -23,10 +23,10 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class FunctionExpression implements Expression {
+public class FunctionExpression implements Expression  {
 
     private final String functionName;
-    private final List<Expression> expressions;
+    private List<Expression> expressions;
 
     public FunctionExpression(String functionName, List<Expression> expressions) {
         this.functionName = functionName;
@@ -37,13 +37,22 @@ public class FunctionExpression implements Expression {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
     
     public String getFunctionName() {
         return functionName;
     }
 
-    public List<Expression> getExpressions() {
+    public List<? extends Expression> getExpressions() {
         return expressions;
+    }
+
+    public void setExpressions(List<Expression> expressions) {
+        this.expressions = expressions;
     }
 
     @Override
@@ -51,13 +60,39 @@ public class FunctionExpression implements Expression {
         StringBuilder sb = new StringBuilder();
         sb.append(functionName);
         sb.append('(');
-        for (int i = 1; i < expressions.size(); i++) {
-            sb.append(',');
-            sb.append(expressions.get(i));
+        if(!expressions.isEmpty()){
+            sb.append(expressions.get(0));
+            for (int i = 1; i < expressions.size(); i++) {
+                sb.append(',');
+                sb.append(expressions.get(i));
+            }
         }
 
         sb.append(')');
         return sb.toString();
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final FunctionExpression other = (FunctionExpression) obj;
+        if ((this.functionName == null) ? (other.functionName != null) : !this.functionName.equals(other.functionName)) {
+            return false;
+        }
+        if (this.expressions != other.expressions && (this.expressions == null || !this.expressions.equals(other.expressions))) {
+            return false;
+        }
+        return true;
+    }
 }

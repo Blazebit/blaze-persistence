@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
@@ -23,6 +22,7 @@ import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -30,11 +30,11 @@ import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.Predicate.Visitor;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -621,17 +621,12 @@ public class JoinManager extends AbstractManager {
         return sb.toString();
     }
 
-    private Predicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
-        CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
-        keyExpression.getExpressions().add(new FooExpression("KEY("));
-
+    private EqPredicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
         keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
         keyPath.setBaseNode(joinNode);
-        keyExpression.getExpressions().add(keyPath);
-        keyExpression.getExpressions().add(new FooExpression(")"));
-        EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExpr.getIndex());
-        return valueKeyFilterPredicate;
+        FunctionExpression keyExpression = new FunctionExpression("KEY", Arrays.asList((Expression) keyPath));
+        return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 
     private void registerDependencies(final JoinNode joinNode, Predicate withPredicate) {
@@ -647,16 +642,8 @@ public class JoinManager extends AbstractManager {
     }
 
     private void generateAndApplyWithPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
-        CompositeExpression keyExpression = new CompositeExpression(new ArrayList<Expression>());
-        keyExpression.getExpressions().add(new FooExpression("KEY("));
-
-        PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
-        keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
-        keyPath.setBaseNode(joinNode);
-        keyExpression.getExpressions().add(keyPath);
-        keyExpression.getExpressions().add(new FooExpression(")"));
-        EqPredicate valueKeyFilterPredicate = new EqPredicate(keyExpression, arrayExpr.getIndex());
-
+        EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
+        
         if (joinNode.getWithPredicate() != null) {
             AndPredicate currentPred = joinNode.getWithPredicate();
 

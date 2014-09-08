@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.expression;
+
+package com.blazebit.persistence.impl;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
  */
-public interface PathElementExpression extends Expression {
-
+public interface SelectInfoVisitor {
+    public void visit(SelectInfo selectInfo);
 }

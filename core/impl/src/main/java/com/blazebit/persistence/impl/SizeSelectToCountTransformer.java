@@ -15,13 +15,12 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.CompositeExpression;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,6 +33,7 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
     private final OrderByManager orderByManager;
+    private final DeepSizeSelectToCountTransformer deepTransformer = new DeepSizeSelectToCountTransformer();
 
     public SizeSelectToCountTransformer(JoinManager joinManager, GroupByManager groupByManager, OrderByManager orderByManager) {
         this.joinManager = joinManager;
@@ -43,36 +43,50 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
 
     @Override
     public void transform(SelectInfo info) {
-        if (ExpressionUtils.isSizeExpression(info.getExpression())) {
-            PathExpression sizeArg = (PathExpression) ((CompositeExpression) info.getExpression()).getExpressions().get(1);
-            CompositeExpression countExpr = new CompositeExpression(new ArrayList<Expression>());
-            countExpr.getExpressions().add(new FooExpression("COUNT("));
-            sizeArg.setUsedInCollectionFunction(false);
-            countExpr.getExpressions().add(sizeArg);
-            countExpr.getExpressions().add(new FooExpression(")"));
+        deepTransformer.setOrderBySelectClause(orderByManager.getOrderBySelectAliases().contains(info.getAlias()));
+        if (ExpressionUtils.isSizeFunction(info.getExpression())) {
+            info.setExpression(info.getExpression().accept(deepTransformer));
+        } else {
+            info.getExpression().accept(deepTransformer);
 
-            // fromSelect must be false otherwise the join is not rendered in id query since selectOnly would be true
-            joinManager.implicitJoin(sizeArg, true, ClauseType.SELECT, false, false);
+        }
+    }
 
-            info.setExpression(countExpr);
-            
-            // build group by id clause
-            List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-            pathElementExpr.add(new PropertyExpression(joinManager.getRootAlias()));
-            pathElementExpr.add(new PropertyExpression(joinManager.getRootId()));
-            groupByManager.getGroupByInfos().add(new NodeInfo(new PathExpression(pathElementExpr)));
+    private class DeepSizeSelectToCountTransformer extends SizeTransformationVisitor {
+
+        private boolean orderBySelectClause;
+
+        public void setOrderBySelectClause(boolean orderBySelectClause) {
+            this.orderBySelectClause = orderBySelectClause;
         }
 
-        if (orderByManager.getOrderBySelectAliases().contains(info.getAlias())) {
-            info.getExpression().accept(new VisitorAdapter() {
+        @Override
+        public Expression visit(PathExpression expression) {
+            if (orderBySelectClause) {
+                ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
+            }
+            return expression;
+        }
 
-                @Override
-                public void visit(PathExpression expression) {
-                    ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
-                }
+        @Override
+        public Expression visit(FunctionExpression expression) {
+            if (ExpressionUtils.isSizeFunction(expression)) {
+                PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
+                sizeArg.setUsedInCollectionFunction(false);
+                AggregateExpression countExpr = new AggregateExpression(false, "COUNT", sizeArg);
 
-            });
+                joinManager.implicitJoin(sizeArg, true, ClauseType.SELECT, false, false);
 
+                // build group by id clause
+                List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
+                pathElementExpr.add(new PropertyExpression(joinManager.getRootAlias()));
+                pathElementExpr.add(new PropertyExpression(joinManager.getRootId()));
+                groupByManager.getGroupByInfos().add(new NodeInfo(new PathExpression(pathElementExpr)));
+                super.visit(expression);
+
+                return countExpr;
+            }
+            return expression;
         }
     }
 }

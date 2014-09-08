@@ -21,7 +21,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class ArrayExpression extends PathElementExpression {
+public class ArrayExpression implements PathElementExpression {
 
     private final PropertyExpression base;
     private final Expression index;
@@ -34,6 +34,11 @@ public class ArrayExpression extends PathElementExpression {
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
     public PropertyExpression getBase() {

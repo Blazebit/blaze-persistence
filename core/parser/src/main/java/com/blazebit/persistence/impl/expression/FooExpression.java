@@ -23,10 +23,14 @@ package com.blazebit.persistence.impl.expression;
  */
 public class FooExpression implements Expression {
 
-    private final String string;
+    private final StringBuilder stringBuilder;
 
     public FooExpression(String string) {
-        this.string = string;
+        this.stringBuilder = new StringBuilder(string);
+    }
+    
+    public FooExpression(StringBuilder sb) {
+        this.stringBuilder = sb;
     }
 
     @Override
@@ -34,19 +38,25 @@ public class FooExpression implements Expression {
         visitor.visit(this);
     }
 
-    public String getString() {
-        return string;
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
     }
 
+    StringBuilder getStringBuilder() {
+        return stringBuilder;
+    }
+    
+    
     @Override
     public String toString() {
-        return string;
+        return stringBuilder.toString();
     }
 
     @Override
     public int hashCode() {
-        int hash = 3;
-        hash = 23 * hash + (this.string != null ? this.string.hashCode() : 0);
+        int hash = 7;
+        hash = 19 * hash + (this.stringBuilder.toString() != null ? this.stringBuilder.toString().hashCode() : 0);
         return hash;
     }
 
@@ -59,7 +69,7 @@ public class FooExpression implements Expression {
             return false;
         }
         final FooExpression other = (FooExpression) obj;
-        if ((this.string == null) ? (other.string != null) : !this.string.equals(other.string)) {
+        if (this.stringBuilder != other.stringBuilder && (this.stringBuilder == null || !this.stringBuilder.toString().equals(other.stringBuilder.toString()))) {
             return false;
         }
         return true;

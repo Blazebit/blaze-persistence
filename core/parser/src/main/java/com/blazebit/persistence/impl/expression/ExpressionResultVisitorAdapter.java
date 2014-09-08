@@ -20,68 +20,79 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class ExpressionVisitorAdapter implements Expression.Visitor {
+public abstract class ExpressionResultVisitorAdapter implements Expression.ResultVisitor<Expression> {
 
     @Override
-    public void visit(PathExpression expression) {
+    public Expression visit(PathExpression expression) {
         for (PathElementExpression pathElementExpression : expression.getExpressions()) {
             pathElementExpression.accept(this);
         }
+        return expression;
     }
 
     @Override
-    public void visit(ArrayExpression expression) {
+    public Expression visit(ArrayExpression expression) {
         expression.getBase().accept(this);
         expression.getIndex().accept(this);
+        return expression;
     }
 
     @Override
-    public void visit(PropertyExpression expression) {
+    public Expression visit(PropertyExpression expression) {
+        return expression;
     }
 
     @Override
-    public void visit(ParameterExpression expression) {
+    public Expression visit(ParameterExpression expression) {
+        return expression;
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
+    public Expression visit(CompositeExpression expression) {
         for (Expression expr : expression.getExpressions()) {
             expr.accept(this);
         }
+        return expression;
     }
 
     @Override
-    public void visit(FooExpression expression) {
+    public Expression visit(FooExpression expression) {
+        return expression;
     }
 
     @Override
-    public void visit(SubqueryExpression expression) {
+    public Expression visit(SubqueryExpression expression) {
+        return expression;
     }
 
     @Override
-    public void visit(FunctionExpression expression) {
+    public Expression visit(FunctionExpression expression) {
         for (Expression expr : expression.getExpressions()) {
             expr.accept(this);
         }
+        return expression;
     }
 
     @Override
-    public void visit(GeneralCaseExpression expression) {
+    public Expression visit(GeneralCaseExpression expression) {
         for(WhenClauseExpression whenClause : expression.getWhenClauses()){
             whenClause.accept(this);
         }
         expression.getDefaultExpr().accept(this);
+        return expression;
     }
 
     @Override
-    public void visit(SimpleCaseExpression expression) {
+    public Expression visit(SimpleCaseExpression expression) {
         expression.getCaseOperand().accept(this);
         visit((GeneralCaseExpression) expression);
+        return expression;
     }
 
     @Override
-    public void visit(WhenClauseExpression expression) {
+    public Expression visit(WhenClauseExpression expression) {
         expression.getCondition().accept(this);
         expression.getResult().accept(this);
+        return expression;
     }
 }

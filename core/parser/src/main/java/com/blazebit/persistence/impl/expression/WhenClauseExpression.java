@@ -13,20 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.impl.expression;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
  */
-public class PropertyExpression implements PathElementExpression {
+public class WhenClauseExpression implements Expression {
+    private final Expression condition;
+    private Expression result;
 
-    private final String property;
+    public WhenClauseExpression(Expression condition, Expression result) {
+        this.condition = condition;
+        this.result = result;
+    }
 
-    public PropertyExpression(String property) {
-        this.property = property;
+    public Expression getCondition() {
+        return condition;
+    }
+
+    public Expression getResult() {
+        return result;
+    }
+
+    public void setResult(Expression result) {
+        this.result = result;
     }
 
     @Override
@@ -39,19 +51,11 @@ public class PropertyExpression implements PathElementExpression {
         return visitor.visit(this);
     }
 
-    public String getProperty() {
-        return property;
-    }
-
-    @Override
-    public String toString() {
-        return property;
-    }
-
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 29 * hash + (this.property != null ? this.property.hashCode() : 0);
+        hash = 61 * hash + (this.condition != null ? this.condition.hashCode() : 0);
+        hash = 61 * hash + (this.result != null ? this.result.hashCode() : 0);
         return hash;
     }
 
@@ -63,11 +67,18 @@ public class PropertyExpression implements PathElementExpression {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final PropertyExpression other = (PropertyExpression) obj;
-        if ((this.property == null) ? (other.property != null) : !this.property.equals(other.property)) {
+        final WhenClauseExpression other = (WhenClauseExpression) obj;
+        if (this.condition != other.condition && (this.condition == null || !this.condition.equals(other.condition))) {
+            return false;
+        }
+        if (this.result != other.result && (this.result == null || !this.result.equals(other.result))) {
             return false;
         }
         return true;
     }
 
+    @Override
+    public String toString() {
+        return "WHEN " + condition.toString() + " THEN " + result.toString();
+    }
 }

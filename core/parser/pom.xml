@@ -71,6 +71,7 @@
                         </goals>
                         <configuration>
                             <outputDirectory>target/generated/antlr</outputDirectory>
+                            <visitor>true</visitor>
                         </configuration>
                     </execution>
                 </executions>

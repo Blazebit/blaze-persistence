@@ -73,13 +73,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     private final List<ExpressionTransformer> transformers;
     private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
+    private final SizeSelectToSubqueryTransformer sizeSelectToSubqueryTransformer;
 
     // Mutable state
     protected Class<T> resultType;
-    
-    protected boolean needsCheck = true;
-    protected boolean implicitJoinsApplied = false;
-    
+
+    private boolean needsCheck = true;
+    private boolean implicitJoinsApplied = false;
+
     // Cache
     protected String cachedQueryString;
 
@@ -107,6 +108,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.transformers = builder.transformers;
         this.resultType = builder.resultType;
         this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
+        this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
     protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
@@ -152,6 +154,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo), new SubqueryRecursiveExpressionTransformer());
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
+        this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
         this.resultType = (Class<T>) fromClazz;
     }
 
@@ -475,12 +478,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         verifyBuilderEnded();
     }
-    
+
     protected void applyImplicitJoins() {
         if (implicitJoinsApplied) {
             return;
         }
-        
+
         final JoinVisitor joinVisitor = new JoinVisitor(joinManager);
         final JoinNodeVisitor joinNodeVisitor = new OnClauseJoinNodeVisitor(joinVisitor) {
 
@@ -505,7 +508,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinVisitor.setFromClause(ClauseType.HAVING);// SELECT SIZE(d.contacts) AS c FROM Document d ORDER BY c
         havingManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(false);
-        
+
         joinVisitor.setFromClause(ClauseType.ORDER_BY);
         orderByManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(true);
@@ -523,18 +526,17 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     protected void applySizeSelectTransformer() {
-        boolean containsSubquerySelect = false;
+        boolean containsSizeSelect = false;
         for (SelectInfo selectInfo : selectManager.getSelectInfos()) {
-            if(ExpressionUtils.containsSizeExpression(selectInfo.getExpression())){
-                containsSubquerySelect = true;
+            if (ExpressionUtils.containsSizeExpression(selectInfo.getExpression())) {
+                containsSizeSelect = true;
                 break;
             }
         }
 
-        if (containsSubquerySelect) {
+        if (containsSizeSelect) {
             if (joinManager.hasCollections()) {
-//TODO                
-//selectManager.applyTransformer(sizeSelectToSubqueryTransformer);
+                selectManager.applySelectInfoTransformer(sizeSelectToSubqueryTransformer);
             } else {
                 selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
             }
@@ -570,7 +572,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             groupByManager.applyTransformer(transformer);
             orderByManager.applyTransformer(transformer);
         }
-        
+
         applySizeSelectTransformer();
     }
 
@@ -578,18 +580,18 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public Class<T> getResultType() {
         return resultType;
     }
-    
+
     @Override
     public String getQueryString() {
         prepareAndCheck();
         return getQueryString0();
     }
-    
+
     private String getQueryString0() {
         if (cachedQueryString == null) {
             cachedQueryString = getQueryString1();
         }
-        
+
         return cachedQueryString;
     }
     
@@ -603,7 +605,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         if (!needsCheck) {
             return;
         }
-        
+
         verifyBuilderEnded();
         // resolve unresolved aliases, object model etc.
         // we must do implicit joining at the end because we can only do
@@ -654,7 +656,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
     }
-    
-    // TODO: needs equals-hashCode implementation
 
+    // TODO: needs equals-hashCode implementation
 }

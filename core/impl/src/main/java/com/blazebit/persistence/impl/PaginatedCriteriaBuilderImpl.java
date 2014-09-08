@@ -53,6 +53,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private final KeySetImpl keySet;
     
     // Mutable state
+    private boolean needsCheck = true;
     
     private int firstRow;
     private int pageSize;

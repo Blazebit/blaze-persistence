@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +50,14 @@ public class ValueExpressionTransformer implements ExpressionTransformer {
                 transformed.getExpressions().add(transform(e, fromClause));
             }
             return transformed;
+        } else if(original instanceof FunctionExpression){
+            FunctionExpression func = (FunctionExpression) original;
+            List<Expression> transformed = new ArrayList<Expression>();
+            for(Expression e : func.getExpressions()){
+                transformed.add(transform(e, fromClause));
+            }
+            func.setExpressions(transformed);
+            return func;
         }
 
         if (!(original instanceof PathExpression)) {
