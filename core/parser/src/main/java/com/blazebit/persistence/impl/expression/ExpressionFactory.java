@@ -30,4 +30,6 @@ public interface ExpressionFactory {
     public Expression createCaseOperandExpression(String caseOperandExpression);
 
     public Expression createScalarExpression(String expression);
+    
+    public Expression createOrderByExpression(String expression);
 }

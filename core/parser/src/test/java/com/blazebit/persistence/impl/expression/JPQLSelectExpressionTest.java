@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.LogManager;
+import javax.persistence.QueryTimeoutException;
 import org.antlr.v4.runtime.ParserRuleContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -65,6 +66,10 @@ public class JPQLSelectExpressionTest {
         return new CompositeExpression(Arrays.asList(expr));
     }
 
+    private Expression parseOrderBy(String expr){
+        return ef.createOrderByExpression(expr);
+    }
+    
     private Expression parse(String expr) {
         return parse(expr, false);
     }
@@ -639,6 +644,24 @@ public class JPQLSelectExpressionTest {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN (d '1991-05-21') AND (d '1991-05-22') THEN 0 ELSE 1 END", true);
         
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT BETWEEN (d '1991-05-21') AND (d '1991-05-22')")), foo("0"))), foo("1"));
+        assertEquals(expected, result);
+    }
+    
+    @Test(expected = SyntaxErrorException.class)
+    public void testOrderByParsing1(){
+        parseOrderBy("a.b + b.c");
+    }
+    
+    @Test(expected = SyntaxErrorException.class)
+    public void testOrderByParsing2(){
+        parseOrderBy("SIZE(a.b)");
+    }
+    
+    @Test
+    public void testCaseWhenAndOr(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN x.a = y.a OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END", true);
+    
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("x", "a"), foo(" = "), path("y", "a"), foo(" OR "), path("c", "a"), foo(" < 9 AND "), path("b"), foo(" - "), path("c"), foo(" = 2")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
 }

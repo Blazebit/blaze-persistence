@@ -160,10 +160,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitQualified_identification_variable(JPQLSelectExpressionParser.Qualified_identification_variableContext ctx) {
+    public Expression visitEntryFunction(JPQLSelectExpressionParser.EntryFunctionContext ctx) {
         return new FunctionExpression(ctx.name.getText(), Arrays.asList(ctx.collection_valued_path_expression().accept(this)));
     }
 
+    @Override
+    public Expression visitKey_value_expression(JPQLSelectExpressionParser.Key_value_expressionContext ctx) {
+        return new FunctionExpression(ctx.name.getText(), Arrays.asList(ctx.collection_valued_path_expression().accept(this)));
+    }
+    
     @Override
     public Expression visitArray_expression(JPQLSelectExpressionParser.Array_expressionContext ctx) {
         return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.arithmetic_expression().accept(this)));
@@ -221,6 +226,22 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitComparison_operator(JPQLSelectExpressionParser.Comparison_operatorContext ctx) {
         return new FooExpression(getTextWithSurroundingHiddenTokens(ctx.getStart()));
+    }
+
+    @Override
+    public Expression visitConditionalTerm_And(JPQLSelectExpressionParser.ConditionalTerm_AndContext ctx) {
+        CompositeExpression composite = accept(ctx.conditional_term());
+        composite.append(getTextWithSurroundingHiddenTokens(ctx.and));
+        acceptAndCompose(composite, ctx.conditional_factor());
+        return composite;
+    }
+
+    @Override
+    public Expression visitConditionalExpression_Or(JPQLSelectExpressionParser.ConditionalExpression_OrContext ctx) {
+        CompositeExpression composite = accept(ctx.conditional_expression());
+        composite.append(getTextWithSurroundingHiddenTokens(ctx.or));
+        acceptAndCompose(composite, ctx.conditional_term());
+        return composite;
     }
 
     @Override
@@ -329,6 +350,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return unwrap(super.visitParseSimpleExpression(ctx));
     }
 
+    @Override
+    public Expression visitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
+        return unwrap(super.visitParseSimpleSubqueryExpression(ctx));
+    }
+    
     @Override
     public Expression visitChildren(RuleNode node) {
         CompositeExpression result = null;

@@ -26,12 +26,17 @@ public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
 }      
 }
 
+parseOrderByClause : state_field_path_expression EOF
+                   | single_element_path_expression EOF
+                   | key_value_expression EOF
+                   ;
+
 parseSimpleExpression
     : simple_expression EOF 
     ;
 
 parseSimpleSubqueryExpression
-    : simple_subquery_expression 
+    : simple_subquery_expression EOF
     ;
 
 parseScalarExpression
@@ -50,11 +55,13 @@ simple_subquery_expression : single_valued_path_expression # Simple_subquery_exp
                            | Outer_function '(' single_valued_path_expression  ')' # Simple_subquery_expression_outerFunction
                            ;
  
- qualified_identification_variable 
-     : name='KEY' '('collection_valued_path_expression')'
-     | name='VALUE' '('collection_valued_path_expression')'
-     | name='ENTRY' '('collection_valued_path_expression')'
-     ;
+key_value_expression : name='KEY' '('collection_valued_path_expression')'
+                     | name='VALUE' '('collection_valued_path_expression')'
+                     ;
+
+qualified_identification_variable : name='ENTRY' '('collection_valued_path_expression')' # EntryFunction
+                                  | key_value_expression #KeyValueExpression
+                                  ;
 
  single_valued_path_expression 
      : qualified_identification_variable
@@ -232,10 +239,12 @@ simple_subquery_expression : single_valued_path_expression # Simple_subquery_exp
                 | Input_parameter
                 ; 
  /* conditional expression stuff for case when in entity view extension */
- conditional_expression : conditional_term | conditional_expression 'OR' conditional_term
+ conditional_expression : conditional_term # ConditionalExpression
+                        | conditional_expression or='OR' conditional_term # ConditionalExpression_Or
                         ;
 
- conditional_term : conditional_factor | conditional_term 'AND' conditional_factor
+ conditional_term : conditional_factor # ConditionalTerm
+                  | conditional_term and='AND' conditional_factor # ConditionalTerm_And
                   ;
 
  conditional_factor : ('NOT')? conditional_primary

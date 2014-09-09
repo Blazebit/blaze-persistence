@@ -386,7 +386,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     @Override
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
         clearCache();
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createOrderByExpression(expression);
         verifyBuilderEnded();
         orderByManager.orderBy(expr, ascending, nullFirst);
         return (X) this;

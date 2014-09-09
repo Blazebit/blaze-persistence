@@ -66,6 +66,26 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
     
     @Override
+    public Expression createOrderByExpression(String expression) {
+        if (expression == null) {
+            throw new NullPointerException("expression");
+        }
+        if (expression.isEmpty()) {
+            throw new IllegalArgumentException("expression");
+        }
+        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
+        configureLexer(l);
+        CommonTokenStream tokens = new CommonTokenStream(l);
+        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, false);
+        configureParser(p);
+        ParserRuleContext ctx = p.parseOrderByClause();
+        LOG.finest(ctx.toStringTree());
+        
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
+        return visitor.visit(ctx);
+    }
+    
+    @Override
     public Expression createSimpleExpression(String expression) {
         return createSimpleExpression(expression, false);
     }
