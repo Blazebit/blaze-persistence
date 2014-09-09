@@ -33,104 +33,7 @@ import org.junit.Test;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JPQLSelectExpressionTest {
-
-    private ExpressionFactory ef = new AbstractTestExpressionFactory() {
-
-        @Override
-        protected ParserRuleContext callStartRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleExpression();
-        }
-
-    };
-    private ExpressionFactory subqueryEf = new AbstractTestExpressionFactory() {
-
-        @Override
-        protected ParserRuleContext callStartRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleSubqueryExpression();
-        }
-
-    };
-
-    @BeforeClass
-    public static void initLogging() {
-        try {
-            LogManager.getLogManager().readConfiguration(JPQLSelectExpressionTest.class.getResourceAsStream(
-                    "/logging.properties"));
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-        }
-    }
-
-    private CompositeExpression compose(Expression... expr) {
-        return new CompositeExpression(Arrays.asList(expr));
-    }
-
-    private Expression parseOrderBy(String expr){
-        return ef.createOrderByExpression(expr);
-    }
-    
-    private Expression parse(String expr) {
-        return parse(expr, false);
-    }
-
-    private Expression parse(String expr, boolean allowCaseWhen) {
-        return ef.createSimpleExpression(expr, allowCaseWhen);
-    }
-
-    private Expression parseSubqueryExpression(String expr) {
-        return parseSubqueryExpression(expr, false);
-    }
-
-    private Expression parseSubqueryExpression(String expr, boolean allowCaseWhen) {
-        return subqueryEf.createSimpleExpression(expr, allowCaseWhen);
-    }
-    
-    private FooExpression foo(String foo){
-        return new FooExpression(foo);
-    }
-    
-    private FunctionExpression function(String name, Expression... args) {
-        return new FunctionExpression(name, Arrays.asList(args));
-    }
-
-    private AggregateExpression aggregate(String name, PathExpression arg, boolean distinct) {
-        return new AggregateExpression(distinct, name, arg);
-    }
-
-    private AggregateExpression aggregate(String name, PathExpression arg) {
-        return new AggregateExpression(false, name, arg);
-    }
-
-    private PathExpression path(String... properties) {
-        PathExpression p = new PathExpression(new ArrayList<PathElementExpression>());
-        for (String pathElem : properties) {
-            if (pathElem.contains("[")) {
-                p.getExpressions().add(array(pathElem));
-            } else {
-                p.getExpressions().add(new PropertyExpression(pathElem));
-            }
-        }
-        return p;
-    }
-
-    private ArrayExpression array(String expr) {
-        int firstIndex = expr.indexOf('[');
-        int lastIndex = expr.indexOf(']');
-        String base = expr.substring(0, firstIndex);
-        String index = expr.substring(firstIndex + 1, lastIndex);
-        Expression indexExpr;
-        if (index.startsWith(":")) {
-            indexExpr = new ParameterExpression(index.substring(1));
-        } else {
-            indexExpr = path(index.split("\\."));
-        }
-        return new ArrayExpression(new PropertyExpression(base), indexExpr);
-    }
-
-    private ParameterExpression parameter(String name) {
-        return new ParameterExpression(name);
-    }
+public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testSize() {
@@ -496,6 +399,17 @@ public class JPQLSelectExpressionTest {
         Expression result = parseSubqueryExpression("OUTER(a.b.c)");
         assertEquals(function("OUTER", path("a", "b", "c")), result);
     }
+    
+    @Test
+    public void testCompositeOuter() {
+        Expression result = parseSubqueryExpression("OUTER(a.b.c) + OUTER(z.x)");
+        assertEquals(compose(function("OUTER", path("a", "b", "c")), foo(" + "), function("OUTER", path("z", "x"))), result);
+    }
+    
+    @Test(expected = SyntaxErrorException.class)
+    public void testInvalidOuter() {
+        parse("OUTER(a.b.c)");
+    }
 
     @Test
     public void testCoalesce() {
@@ -648,13 +562,19 @@ public class JPQLSelectExpressionTest {
     }
     
     @Test(expected = SyntaxErrorException.class)
-    public void testOrderByParsing1(){
+    public void testInvalidOrderBy1(){
         parseOrderBy("a.b + b.c");
     }
     
     @Test(expected = SyntaxErrorException.class)
-    public void testOrderByParsing2(){
+    public void testInvalidOrderBy2(){
         parseOrderBy("SIZE(a.b)");
+    }
+    
+    @Test
+    public void testOrderBy(){
+        PathExpression pathExpr = (PathExpression) parseOrderBy("id");
+        assertEquals(path("id"), pathExpr);
     }
     
     @Test

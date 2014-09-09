@@ -19,6 +19,7 @@ grammar JPQLSelectExpression;
 import JPQL_lexer;
 
 @parser::members {
+private boolean allowOuter = false;
 private boolean allowCaseWhen = false;
 public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
        this(input);
@@ -36,6 +37,9 @@ parseSimpleExpression
     ;
 
 parseSimpleSubqueryExpression
+@init{
+      allowOuter = true;
+}
     : simple_subquery_expression EOF
     ;
 
@@ -49,10 +53,9 @@ simple_expression : single_valued_path_expression |
                        aggregate_expression
                    ;
 
-simple_subquery_expression : single_valued_path_expression # Simple_subquery_expression_default
-                           | scalar_expression # Simple_subquery_expression_default
-                           | aggregate_expression # Simple_subquery_expression_default
-                           | Outer_function '(' single_valued_path_expression  ')' # Simple_subquery_expression_outerFunction
+simple_subquery_expression : scalar_expression
+                           | aggregate_expression
+                           | single_valued_path_expression
                            ;
  
 key_value_expression : name='KEY' '('collection_valued_path_expression')'
@@ -83,13 +86,21 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
  array_expression : simple_path_element '[' arithmetic_expression ']'
                   ;
       
- general_subpath : general_path_start('.'general_path_element)*;
+ general_subpath : general_path_start('.'general_path_element)*
+                 ;
 
- state_field_path_expression : general_subpath'.'general_path_element;
+ state_field_path_expression : path
+                             | {allowOuter == true}? outer_expression
+                             ;
 
- single_valued_object_path_expression : general_subpath'.'general_path_element;
+ single_valued_object_path_expression : path
+                                      | {allowOuter == true}? outer_expression
+                                      ;
+ 
+ path : general_subpath'.'general_path_element
+      ;
 
- collection_valued_path_expression : single_element_path_expression | state_field_path_expression;
+ collection_valued_path_expression : single_element_path_expression | path;
  
  single_element_path_expression : general_path_start
                               ;
@@ -99,7 +110,7 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                       ;
  
  aggregate_argument : single_element_path_expression
-                    | state_field_path_expression
+                    | path
                     ;
 
  scalar_expression : arithmetic_expression |
@@ -112,6 +123,9 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                        entity_type_expression |
                        case_expression
                    ;
+ 
+ outer_expression : Outer_function '(' single_valued_path_expression  ')'
+                  ;
 
  arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
                        | arithmetic_expression op=( '+' | '-' ) arithmetic_term # ArithmeticExpressionPlusMinus
@@ -158,10 +172,13 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                         function_invocation ;
 
  enum_expression : state_field_path_expression |
-                     //Enum_literal |
+                     enum_literal |
                      Input_parameter |
                      case_expression 
                  ;
+ 
+ enum_literal : 'ENUM' '(' path ')'
+              ;
 
  entity_expression : single_valued_object_path_expression | simple_entity_expression;
 
@@ -220,7 +237,7 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
 
  literal
      : Boolean_literal
-     //| Enum_literal   
+     | enum_literal   
      | Numeric_literal
      | string_literal
      ;
@@ -240,11 +257,11 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                 ; 
  /* conditional expression stuff for case when in entity view extension */
  conditional_expression : conditional_term # ConditionalExpression
-                        | conditional_expression or='OR' conditional_term # ConditionalExpression_Or
+                        | conditional_expression or='OR' conditional_term # ConditionalExpression_or
                         ;
 
  conditional_term : conditional_factor # ConditionalTerm
-                  | conditional_term and='AND' conditional_factor # ConditionalTerm_And
+                  | conditional_term and='AND' conditional_factor # ConditionalTerm_and
                   ;
 
  conditional_factor : ('NOT')? conditional_primary

@@ -53,4 +53,17 @@ public class OuterFunctionTest extends AbstractCoreTest {
         assertEquals(actual, crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    public void testComplexOuterExpression() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereSubquery().from(Person.class, "p").select("id").where("OUTER(id) + LENGTH(OUTER(name))").eqExpression("id").end().eqExpression(
+            "partners.id");
+        String expected = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 WHERE (SELECT p.id FROM Person p WHERE d.id + LENGTH(d.name) = p.id) = partners_1.id";
+        String actual = crit.getQueryString();
+
+        assertEquals(expected, actual);
+        assertEquals(actual, crit.getQueryString());
+        crit.getResultList();
+    }
 }

@@ -37,6 +37,7 @@ import javax.persistence.MapKeyColumn;
  */
 @Entity
 public class Workflow implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private Long id;
     private Locale defaultLanguage;

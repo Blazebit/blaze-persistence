@@ -43,6 +43,7 @@ import javax.persistence.Transient;
  */
 @Entity
 public class Document implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;
@@ -56,6 +57,7 @@ public class Document implements Serializable {
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Calendar creationDate;
     private Date lastModified;
+    private DocumentType documentType;
 
     public Document() {
     }
@@ -63,9 +65,14 @@ public class Document implements Serializable {
     public Document(String name) {
         this.name = name;
     }
+    
+    public Document(String name, DocumentType documentType) {
+        this(name);
+        this.documentType = documentType;
+    }
 
     public Document(String name, Person owner, Version... versions) {
-        this.name = name;
+        this(name);
         this.owner = owner;
         this.versions.addAll(Arrays.asList(versions));
     }
@@ -178,4 +185,11 @@ public class Document implements Serializable {
         this.lastModified = lastModified;
     }
 
+    public DocumentType getDocumentType() {
+        return documentType;
+    }
+
+    public void setDocumentType(DocumentType documentType) {
+        this.documentType = documentType;
+    }
 }

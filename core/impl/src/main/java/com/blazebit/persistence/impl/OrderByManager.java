@@ -96,15 +96,11 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-//                if (ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
                 if (!(selectInfo.getExpression() instanceof PathExpression)) {
                     return true;
                 }
-            } else {
-                if (!(orderByInfo.getExpression() instanceof PathExpression)) {
-                    throw new IllegalArgumentException("Illegal non path expression in order by! " + orderByInfo.getExpression().toString());
-                }
-            }
+            } 
+            // illegal no path expressions are prevented by the parser
         }
 
         return false;

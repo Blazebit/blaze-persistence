@@ -29,46 +29,46 @@ Character_literal : '\''JavaLetter'\'';
 
 String_literal : '\'' ~[\']* '\'';
 
- Input_parameter : ':'Identifier;
+Input_parameter : ':'Identifier;
  
- //Enum_literal : (Identifier'.')+Identifier;
+//Enum_literal : (Identifier'.')+Identifier;
  
- Date_literal : '(' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* ')';
+Date_literal : '(' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* ')';
 
- Time_literal : '(' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* ')';
+Time_literal : '(' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* ')';
 
- Timestamp_literal : '(' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string '\'' (' ' | '\t')* ')';
-
- Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
-
- Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT '.' DIGIT*;
+Timestamp_literal : '(' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string '\'' (' ' | '\t')* ')';
      
- Boolean_literal
+Boolean_literal
      : 'TRUE'
      | 'true'
      | 'FALSE'
      | 'false'
      ;
  
- Not_equal_operator
+Not_equal_operator
      : '<>'
      | '!='
      ;
  
- Numeric_literal
+Numeric_literal
      : DIGIT+
      ;
  
- Path_separator
+Path_separator
      : '.'
      ;
  
- WS: [ \n\t\r]+ -> channel(HIDDEN);
+WS: [ \n\t\r]+ -> channel(HIDDEN);
  
- Identifier
+Identifier
      : JavaLetter JavaLetterOrDigit*
      ;
 
+fragment Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
+
+fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT '.' DIGIT*;
+ 
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
 fragment

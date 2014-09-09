@@ -144,7 +144,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.select("name", "n")
             .leftJoin("versions", "v")
             .where("id")
-            .in().from(Person.class, "p").select("id").where("d.age)").eqExpression("SIZE(p.ownedDocuments)").end()
+            .in().from(Person.class, "p").select("id").where("d.age").eqExpression("SIZE(p.ownedDocuments)").end()
             .where("id")
             .notIn().from(Person.class).select("id").where("d.age").ltExpression("SIZE(partnerDocument.versions)").end()
             .getQueryString();

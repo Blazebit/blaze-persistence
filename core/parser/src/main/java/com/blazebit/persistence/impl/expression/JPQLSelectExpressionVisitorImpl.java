@@ -47,7 +47,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitSimple_subquery_expression_outerFunction(JPQLSelectExpressionParser.Simple_subquery_expression_outerFunctionContext ctx) {
+    public Expression visitOuter_expression(JPQLSelectExpressionParser.Outer_expressionContext ctx) {
         return handleFunction(ctx.getStart().getText(), ctx);
     }
 
@@ -104,13 +104,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitState_field_path_expression(JPQLSelectExpressionParser.State_field_path_expressionContext ctx) {
-        PathExpression result = (PathExpression) ctx.general_subpath().accept(this);
-        result.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
-        return result;
-    }
-
-    @Override
     public Expression visitGeneral_subpath(JPQLSelectExpressionParser.General_subpathContext ctx) {
         List<PathElementExpression> pathElements = new ArrayList<PathElementExpression>();
         pathElements.add((PathElementExpression) ctx.general_path_start().accept(this));
@@ -121,11 +114,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitSingle_valued_object_path_expression(JPQLSelectExpressionParser.Single_valued_object_path_expressionContext ctx) {
+    public Expression visitPath(JPQLSelectExpressionParser.PathContext ctx) {
         PathExpression result = (PathExpression) ctx.general_subpath().accept(this);
         result.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
         return result;
     }
+    
+    
 
     @Override
     public Expression visitSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
@@ -229,7 +224,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitConditionalTerm_And(JPQLSelectExpressionParser.ConditionalTerm_AndContext ctx) {
+    public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
         CompositeExpression composite = accept(ctx.conditional_term());
         composite.append(getTextWithSurroundingHiddenTokens(ctx.and));
         acceptAndCompose(composite, ctx.conditional_factor());
@@ -237,7 +232,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitConditionalExpression_Or(JPQLSelectExpressionParser.ConditionalExpression_OrContext ctx) {
+    public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
         CompositeExpression composite = accept(ctx.conditional_expression());
         composite.append(getTextWithSurroundingHiddenTokens(ctx.or));
         acceptAndCompose(composite, ctx.conditional_term());
@@ -353,6 +348,16 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
         return unwrap(super.visitParseSimpleSubqueryExpression(ctx));
+    }
+
+    @Override
+    public Expression visitParseOrderByClause(JPQLSelectExpressionParser.ParseOrderByClauseContext ctx) {
+        return ctx.getChild(0).accept(this);
+    }
+
+    @Override
+    public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
+        return new FooExpression(ctx.path().accept(this).toString());
     }
     
     @Override
