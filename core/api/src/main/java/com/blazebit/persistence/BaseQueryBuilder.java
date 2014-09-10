@@ -174,16 +174,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * Covariant overrides
      */
     @Override
-    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
 
     @Override
-    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias);
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias);
 
     @Override
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
 
     @Override
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
     @Override
     public BaseQueryBuilder<Tuple, ?> select(String expression);

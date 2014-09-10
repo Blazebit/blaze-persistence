@@ -34,12 +34,11 @@ import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsMemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -137,31 +136,54 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(NotPredicate predicate) {
+        boolean requiresParanthesis = predicate.getPredicate() instanceof AndPredicate || predicate.getPredicate() instanceof OrPredicate;
         sb.append("NOT ");
-        predicate.getPredicate().accept(this);
+        if (requiresParanthesis) {
+            sb.append("(");
+            predicate.getPredicate().accept(this);
+            sb.append(")");
+        } else {
+            predicate.getPredicate().accept(this);
+        }
     }
 
     @Override
     public void visit(EqPredicate predicate) {
-        visitQuantifiableBinaryPredicate(predicate, " = ");
+        if (predicate.isNegated()) {
+            visitQuantifiableBinaryPredicate(predicate, " != ");
+        } else {
+            visitQuantifiableBinaryPredicate(predicate, " = ");
+        }
     }
 
     @Override
     public void visit(IsNullPredicate predicate) {
         predicate.getExpression().accept(this);
-        sb.append(" IS NULL");
+        if (predicate.isNegated()) {
+            sb.append(" IS NOT NULL");
+        } else {
+            sb.append(" IS NULL");
+        }
     }
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
         predicate.getExpression().accept(this);
-        sb.append(" IS EMPTY");
+        if (predicate.isNegated()) {
+            sb.append(" IS NOT EMPTY");
+        } else {
+            sb.append(" IS EMPTY");
+        }
     }
 
     @Override
-    public void visit(IsMemberOfPredicate predicate) {
+    public void visit(MemberOfPredicate predicate) {
         predicate.getLeft().accept(this);
-        sb.append(" MEMBER OF ");
+        if (predicate.isNegated()) {
+            sb.append(" NOT MEMBER OF ");
+        } else {
+            sb.append(" MEMBER OF ");
+        }
         predicate.getRight().accept(this);
     }
 
@@ -174,7 +196,11 @@ public class QueryGenerator extends VisitorAdapter {
         if (!predicate.isCaseSensitive()) {
             sb.append(")");
         }
-        sb.append(" LIKE ");
+        if (predicate.isNegated()) {
+            sb.append(" NOT LIKE ");
+        } else {
+            sb.append(" LIKE ");
+        }
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
@@ -197,7 +223,11 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(BetweenPredicate predicate) {
         predicate.getLeft().accept(this);
-        sb.append(" BETWEEN ");
+        if (predicate.isNegated()) {
+            sb.append(" NOT BETWEEN ");
+        } else {
+            sb.append(" BETWEEN ");
+        }
         predicate.getStart().accept(this);
         sb.append(" AND ");
         predicate.getEnd().accept(this);
@@ -206,30 +236,25 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(InPredicate predicate) {
         predicate.getLeft().accept(this);
-        if (predicate.getRight() instanceof ParameterExpression) {
-            sb.append(" IN ");
-            predicate.getRight().accept(this);
-        } else {
-            sb.append(" IN ");
-            wrapNonSubquery(predicate.getRight(), sb);
+        if (predicate.isNegated()) {
+            sb.append(" NOT");
         }
-    }
-
-    @Override
-    public void visit(NotInPredicate predicate) {
-        predicate.getLeft().accept(this);
-        sb.append(" NOT");
-        if (predicate.getRight() instanceof ParameterExpression) {
-            sb.append(" IN ");
-            predicate.getRight().accept(this);
-        } else {
-            sb.append(" IN ");
-            wrapNonSubquery(predicate.getRight(), sb);
-        }
+        sb.append(" IN ");
+        predicate.getRight().accept(this);
+//        if (predicate.getRight() instanceof ParameterExpression) {
+//            sb.append(" IN ");
+//            predicate.getRight().accept(this);
+//        } else {
+//            sb.append(" IN ");
+//            wrapNonSubquery(predicate.getRight(), sb);
+//        }
     }
 
     @Override
     public void visit(ExistsPredicate predicate) {
+        if (predicate.isNegated()) {
+            sb.append("NOT ");
+        }
         sb.append("EXISTS ");
         predicate.getExpression().accept(this);
     }
@@ -353,7 +378,7 @@ public class QueryGenerator extends VisitorAdapter {
     public void visit(GeneralCaseExpression expression) {
         handleCaseWhen(null, expression.getWhenClauses(), expression.getDefaultExpr());
     }
-    
+
     @Override
     public void visit(SimpleCaseExpression expression) {
         handleCaseWhen(expression.getCaseOperand(), expression.getWhenClauses(), expression.getDefaultExpr());
@@ -366,15 +391,15 @@ public class QueryGenerator extends VisitorAdapter {
         sb.append(" THEN ");
         expression.getResult().accept(this);
     }
-    
-    private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr){
+
+    private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
         sb.append("CASE ");
-        if(caseOperand != null){
+        if (caseOperand != null) {
             caseOperand.accept(this);
             sb.append(" ");
         }
-        
-        for(WhenClauseExpression whenClause : whenClauses){
+
+        for (WhenClauseExpression whenClause : whenClauses) {
             whenClause.accept(this);
             sb.append(" ");
         }
@@ -382,7 +407,7 @@ public class QueryGenerator extends VisitorAdapter {
         defaultExpr.accept(this);
         sb.append(" END");
     }
-    
+
     public boolean isResolveSelectAliases() {
         return resolveSelectAliases;
     }

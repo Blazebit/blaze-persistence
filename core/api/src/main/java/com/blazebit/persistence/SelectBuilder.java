@@ -33,7 +33,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      *
      * @return The case when builder
      */
-    public CaseWhenBuilder<? extends SelectBuilder<Tuple, ?>> selectCase();
+    public CaseWhenStarterBuilder<? extends SelectBuilder<Tuple, ?>> selectCase();
 
     /**
      * Starts a {@link CaseWhenBuilder} with the given alias as select alias.
@@ -41,7 +41,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * @param alias The select alias for the case when expression
      * @return The case when builder
      */
-    public CaseWhenBuilder<? extends SelectBuilder<Tuple, ?>> selectCase(String alias);
+    public CaseWhenStarterBuilder<? extends SelectBuilder<Tuple, ?>> selectCase(String alias);
 
     /**
      * Like {@link Selectable#selectSimpleCase(java.lang.String, java.lang.String)} but without an alias.
@@ -49,7 +49,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * @param expression The case operand
      * @return The simple case when builder
      */
-    public SimpleCaseWhenBuilder<? extends SelectBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    public SimpleCaseWhenStarterBuilder<? extends SelectBuilder<Tuple, ?>> selectSimpleCase(String expression);
 
     /**
      * Starts a {@link SimpleCaseWhenBuilder} with the given alias as select alias.
@@ -59,7 +59,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * @param alias      The select alias for the simple case when expression
      * @return The simple case when builder
      */
-    public SimpleCaseWhenBuilder<? extends SelectBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenStarterBuilder<? extends SelectBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
     /**
      * Like {@link Selectable#selectSubquery(java.lang.String)} but without an alias.

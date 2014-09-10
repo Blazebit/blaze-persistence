@@ -15,18 +15,22 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 
 /**
  *
@@ -42,7 +46,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
-    private RightHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> rightSubqueryPredicateBuilderListener;
+    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
     private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
 
     public HavingOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
@@ -83,6 +87,16 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     }
 
     @Override
+    public CaseWhenStarterBuilder<RestrictionBuilder<HavingOrBuilder<T>>> havingCase() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<HavingOrBuilder<T>>> havingSimpleCase(String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
     public SubqueryInitiator<HavingOrBuilder<T>> havingExists() {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator((HavingOrBuilder<T>) this, rightSubqueryPredicateBuilderListener);
@@ -111,7 +125,7 @@ public class HavingOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl im
     }
 
     @Override
-    protected void verifyBuilderEnded() {
+    public void verifyBuilderEnded() {
         super.verifyBuilderEnded();
         leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         if (rightSubqueryPredicateBuilderListener != null) {

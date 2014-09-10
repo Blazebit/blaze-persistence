@@ -43,4 +43,14 @@ public class AggregateExpression extends FunctionExpression {
     public boolean isDistinct() {
         return distinct;
     }
+    
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

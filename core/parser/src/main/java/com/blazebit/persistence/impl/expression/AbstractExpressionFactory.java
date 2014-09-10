@@ -18,21 +18,15 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.BitSet;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.DiagnosticErrorListener;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.dfa.DFA;
 
 /**
@@ -45,8 +39,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     
-    @Override
-    public Expression createSimpleExpression(String expression, boolean allowCaseWhen) {
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen){
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -58,31 +51,29 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
         configureParser(p);
-        ParserRuleContext ctx = callStartRule(p);
+        ParserRuleContext ctx = ruleInvoker.invokeRule(p);
         LOG.finest(ctx.toStringTree());
         
         JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
         return visitor.visit(ctx);
     }
     
+    protected abstract RuleInvoker getSimpleExpressionRuleInvoker();
+    
+    @Override
+    public Expression createSimpleExpression(String expression, boolean allowCaseWhen) {
+        return createExpression(getSimpleExpressionRuleInvoker(), expression, allowCaseWhen);
+    }
+    
     @Override
     public Expression createOrderByExpression(String expression) {
-        if (expression == null) {
-            throw new NullPointerException("expression");
-        }
-        if (expression.isEmpty()) {
-            throw new IllegalArgumentException("expression");
-        }
-        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
-        configureLexer(l);
-        CommonTokenStream tokens = new CommonTokenStream(l);
-        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, false);
-        configureParser(p);
-        ParserRuleContext ctx = p.parseOrderByClause();
-        LOG.finest(ctx.toStringTree());
-        
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
-        return visitor.visit(ctx);
+        return createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseOrderByClause();
+            }
+        }, expression, false);
     }
     
     @Override
@@ -90,15 +81,27 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         return createSimpleExpression(expression, false);
     }
 
-    public Expression createCaseOperandExpression(String caseOperandExpression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    @Override
+    public Expression createCaseOperandExpression(String expression) {
+        return createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseCaseOperandExpression();
+            }
+        }, expression, false);
     }
 
+    @Override
     public Expression createScalarExpression(String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        return createExpression(new RuleInvoker() {
 
-    protected abstract ParserRuleContext callStartRule(JPQLSelectExpressionParser parser);
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseScalarExpression();
+            }
+        }, expression, false);
+    }
     
     protected void configureLexer(JPQLSelectExpressionLexer lexer){
         lexer.removeErrorListeners();
@@ -129,4 +132,8 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
         }
     };
+    
+    protected interface RuleInvoker {
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser);
+    }
 }

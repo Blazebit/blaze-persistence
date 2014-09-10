@@ -16,15 +16,15 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionVisitorAdapter;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class SubqueryRecursiveExpressionTransformer extends ExpressionVisitorAdapter implements ExpressionTransformer {
+public class SubqueryRecursiveExpressionTransformer extends VisitorAdapter implements ExpressionTransformer {
 
     @Override
     public Expression transform(Expression original, ClauseType fromClause) {

@@ -15,16 +15,22 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.LogManager;
-import javax.persistence.QueryTimeoutException;
-import org.antlr.v4.runtime.ParserRuleContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -321,7 +327,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenSwitchTrue() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN localized[:locale] NOT MEMBER OF supportedLocales THEN true ELSE false END", true);
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(compose(path("localized[:locale]"), foo(" NOT MEMBER OF "), path("supportedLocales")), foo("true"))),
+                new WhenClauseExpression(new MemberOfPredicate(path("localized[:locale]"), path("supportedLocales"), true), foo("true"))),
                 foo("false"));
         assertEquals(expected, result);
     }
@@ -330,8 +336,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenMultipleWhenClauses() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x = 2 THEN true WHEN a.x = 3 THEN false ELSE false END", true);
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(compose(path("a", "x"), foo(" = 2")), foo("true")),
-                new WhenClauseExpression(compose(path("a", "x"), foo(" = 3")), foo("false"))
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), foo("2")), foo("true")),
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), foo("3")), foo("false"))
         ), foo("false"));
         
         assertEquals(expected, result);
@@ -346,7 +352,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenSize() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END", true);
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(function("SIZE", path("d", "contacts")), foo(" > 2")), foo("2"))) , function("SIZE", path("d", "contacts")));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new GtPredicate(function("SIZE", path("d", "contacts")), foo("2")), foo("2"))) , function("SIZE", path("d", "contacts")));
         assertEquals(expected, result);
     }
 
@@ -354,7 +360,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testMemberOf() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN x.a MEMBER OF y.a THEN 0 ELSE 2 END", true);
 
-        CompositeExpression condition = compose(path("x", "a"), new FooExpression(" MEMBER OF "), path("y", "a"));
+        Predicate condition = new MemberOfPredicate(path("x", "a"), path("y", "a"));
         GeneralCaseExpression expectedExpr = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(condition, new FooExpression("0"))), new FooExpression("2"));
         assertEquals(expectedExpr, result);
     }
@@ -421,7 +427,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInParameter(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (:abc) THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IN ("), new ParameterExpression("abc"), foo(")")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -429,7 +435,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInParameterNoParanthesis(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN :abc THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IN "), new ParameterExpression("abc")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -437,7 +443,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInNumericLiterals(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (1, 2, 3, 4) THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IN (1,2,3,4)")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), foo("(1,2,3,4)")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -445,7 +451,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInCharacterLiterals(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN ('1', '2', '3', '4') THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IN ('1','2','3','4')")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), foo("('1','2','3','4')")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -453,7 +459,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testIsNull(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IS NULL THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IS NULL")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new IsNullPredicate(path("a", "x")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -461,7 +467,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testIsNotNull(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IS NOT NULL THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" IS NOT NULL")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new IsNullPredicate(path("a", "x"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -469,7 +475,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLike(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" LIKE 'abc'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, null), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -477,7 +483,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeParameter(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE :x THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" LIKE 'abc' ESCAPE "), new ParameterExpression("x")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, 'x'), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -485,7 +491,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeLiteral(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE 'x' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" LIKE 'abc' ESCAPE 'x'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, 'x'), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -493,7 +499,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotLike(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT LIKE 'abc' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT LIKE 'abc'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, null, true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -501,7 +507,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenArithmetic(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN 1 AND 2 THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" BETWEEN 1 AND 2")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("1"), foo("2")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -509,7 +515,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenArithmetic(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN 1 AND 2 THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT BETWEEN 1 AND 2")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("1"), foo("2"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -517,7 +523,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenString(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN 'ab' AND 'zb' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" BETWEEN 'ab' AND 'zb'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'ab'"), foo("'zb'")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -525,7 +531,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenString(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN 'ab' AND 'zb' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT BETWEEN 'ab' AND 'zb'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'ab'"), foo("'zb'"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -533,7 +539,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenCharacter(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN 'a' AND 'z' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" BETWEEN 'a' AND 'z'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'a'"), foo("'z'")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -541,7 +547,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenCharacter(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN 'a' AND 'z' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT BETWEEN 'a' AND 'z'")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'a'"), foo("'z'"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -549,7 +555,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenDate(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN (d '1991-05-21') AND (d '1991-05-22') THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" BETWEEN (d '1991-05-21') AND (d '1991-05-22')")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("(d '1991-05-21')"), foo("(d '1991-05-22')")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -557,7 +563,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenDate(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN (d '1991-05-21') AND (d '1991-05-22') THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("a", "x"), foo(" NOT BETWEEN (d '1991-05-21') AND (d '1991-05-22')")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("(d '1991-05-21')"), foo("(d '1991-05-22')"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -581,7 +587,31 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenAndOr(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN x.a = y.a OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END", true);
     
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(compose(path("x", "a"), foo(" = "), path("y", "a"), foo(" OR "), path("c", "a"), foo(" < 9 AND "), path("b"), foo(" - "), path("c"), foo(" = 2")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), foo("9")), new EqPredicate(compose(path("b"), foo(" - "), path("c")), foo("2")))), foo("0"))), foo("1"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testNot1(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(x.a = y.a) OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END", true);
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a"), true), new AndPredicate(new LtPredicate(path("c", "a"), foo("9")), new EqPredicate(compose(path("b"), foo(" - "), path("c")), foo("2")))), foo("0"))), foo("1"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testNot2(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(localized[:locale].name = localized[:locale].description) THEN 0 ELSE 1 END", true);
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("localized[:locale]", "name"), path("localized[:locale]", "description"), true), foo("0"))), foo("1"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testNot3(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(x.a = y.a OR c.a < 9 AND b - c = 2) THEN 0 ELSE 1 END", true);
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), foo("9")), new EqPredicate(compose(path("b"), foo(" - "), path("c")), foo("2"))))), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
 }

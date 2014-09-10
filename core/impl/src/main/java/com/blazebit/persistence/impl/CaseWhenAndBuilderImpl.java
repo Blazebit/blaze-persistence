@@ -15,30 +15,40 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
- * TODO: implement
  *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndBuilder<T> {
+public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final AndPredicate predicate = new AndPredicate();
+    private final PredicateBuilderEndedListener listener;
+    private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
 
-    public CaseWhenAndBuilderImpl(T result, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public CaseWhenAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.listener = listener;
     }
 
     @Override
@@ -49,36 +59,52 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        RestrictionBuilder<CaseWhenAndBuilder<T>> restrictionBuilder = startBuilder(
+            new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, true));
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery(String subqueryAlias, String expression) {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        RestrictionBuilder<CaseWhenAndBuilder<T>> restrictionBuilder = startBuilder(
+            new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, true));
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder,
+                                                           superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenAndBuilder<T>> andExists() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate()));
+        return subqueryInitFactory.createSubqueryInitiator((CaseWhenAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenAndBuilder<T>> andNotExists() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not supported yet.");
+        RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate(true)));
+        return subqueryInitFactory.createSubqueryInitiator((CaseWhenAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public CaseWhenOrBuilder<CaseWhenAndBuilder<T>> or() {
-        return new CaseWhenOrBuilderImpl<CaseWhenAndBuilder<T>>(this, subqueryInitFactory, expressionFactory);
+        return startBuilder(new CaseWhenOrBuilderImpl<CaseWhenAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
     }
 
     @Override
     public T endAnd() {
+        listener.onBuilderEnded(this);
         return result;
+    }
+    
+    @Override
+    public void onBuilderEnded(PredicateBuilder builder) {
+        super.onBuilderEnded(builder);
+        predicate.getChildren().add(builder.getPredicate());
+    }
+
+    @Override
+    public Predicate getPredicate() {
+        return predicate;
     }
 
 }

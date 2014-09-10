@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Calendar;
 import static org.junit.Assert.assertEquals;
@@ -166,21 +167,21 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.age");
-        verifyException(criteria, IllegalStateException.class).where("d.owner");
+        verifyException(criteria, BuilderChainingException.class).where("d.owner");
     }
 
     @Test
     public void testWhereOrNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().where("d.partners.age").gt(0L);
-        verifyException(criteria, IllegalStateException.class).where("d.partners.name");
+        verifyException(criteria, BuilderChainingException.class).where("d.partners.name");
     }
 
     @Test
     public void testWhereAndNotClosed() {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.whereOr().whereAnd().where("d.partners.age").gt(0L);
-        verifyException(criteria, IllegalStateException.class).where("d.partners.name");
+        verifyException(criteria, BuilderChainingException.class).where("d.partners.name");
     }
 
     @Test

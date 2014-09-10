@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
@@ -22,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 
 /**
  *

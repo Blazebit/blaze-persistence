@@ -301,16 +301,16 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Covariant overrides
      */
     @Override
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
 
     @Override
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
 
     @Override
-    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase();
+    public CaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectCase();
 
     @Override
-    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias);
+    public CaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias);
 
     @Override
     public QueryBuilder<Tuple, ?> select(String expression);

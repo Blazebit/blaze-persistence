@@ -26,9 +26,17 @@ import org.antlr.v4.runtime.ParserRuleContext;
  */
 public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
 
+    private final RuleInvoker simpleExpressionRuleInvoker = new RuleInvoker() {
+
+        @Override
+        public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+            return parser.parseSimpleExpression();
+        }
+    };
+
     @Override
-    protected ParserRuleContext callStartRule(JPQLSelectExpressionParser parser) {
-        return parser.parseSimpleExpression();
+    protected RuleInvoker getSimpleExpressionRuleInvoker() {
+        return simpleExpressionRuleInvoker;
     }
 
 }

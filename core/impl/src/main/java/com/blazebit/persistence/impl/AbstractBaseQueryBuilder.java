@@ -17,17 +17,16 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
+import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
@@ -173,29 +172,33 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
         return selectCase(null);
     }
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public CaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias) {
-        // TODO: use alias
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String selectAlias) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
         resultType = (Class<T>) Tuple.class;
-        return new CaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, subqueryInitFactory, expressionFactory);
+        return selectManager.selectCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias);
     }
 
     @Override
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
         return selectSimpleCase(expression, null);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias) {
-        // TODO: use alias
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String caseOperandExpression, String selectAlias) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
         resultType = (Class<T>) Tuple.class;
-        return new SimpleCaseWhenBuilderImpl<BaseQueryBuilder<Tuple, ?>>((BaseQueryBuilder<Tuple, ?>) this, expressionFactory, expression);
+        return selectManager.selectSimpleCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias, caseOperandExpression);
     }
 
     @Override
@@ -263,6 +266,19 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         return whereManager.restrict(this, expr);
     }
+    
+    /*
+     * Where methods
+     */
+    @Override
+    public CaseWhenStarterBuilder<RestrictionBuilder<X>> whereCase() {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> whereSimpleCase(String expression) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public WhereOrBuilder<X> whereOr() {
@@ -317,6 +333,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return havingManager.restrict(this, expr);
+    }
+    
+    public CaseWhenStarterBuilder<RestrictionBuilder<X>> havingCase() {
+        throw new UnsupportedOperationException();
+    }
+    
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> havingSimpleCase(String expression) {
+        throw new UnsupportedOperationException();
     }
 
     public HavingOrBuilder<X> havingOr() {

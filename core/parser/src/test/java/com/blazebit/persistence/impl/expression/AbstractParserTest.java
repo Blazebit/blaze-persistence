@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,21 +32,37 @@ public class AbstractParserTest {
 
     protected ExpressionFactory ef = new AbstractTestExpressionFactory() {
 
+        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseSimpleExpression();
+            }
+        };
+
         @Override
-        protected ParserRuleContext callStartRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleExpression();
+        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+            return simpleExpressionRuleInvoker;
         }
 
     };
     protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory() {
 
+        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseSimpleSubqueryExpression();
+            }
+        };
+
         @Override
-        protected ParserRuleContext callStartRule(JPQLSelectExpressionParser parser) {
-            return parser.parseSimpleSubqueryExpression();
+        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+            return simpleExpressionRuleInvoker;
         }
 
     };
-    
+
     @BeforeClass
     public static void initLogging() {
         try {
@@ -55,14 +73,18 @@ public class AbstractParserTest {
         }
     }
 
+    protected NotPredicate not(Predicate p) {
+        return new NotPredicate(p);
+    }
+
     protected CompositeExpression compose(Expression... expr) {
         return new CompositeExpression(Arrays.asList(expr));
     }
 
-    protected Expression parseOrderBy(String expr){
+    protected Expression parseOrderBy(String expr) {
         return ef.createOrderByExpression(expr);
     }
-    
+
     protected Expression parse(String expr) {
         return parse(expr, false);
     }
@@ -78,11 +100,11 @@ public class AbstractParserTest {
     protected Expression parseSubqueryExpression(String expr, boolean allowCaseWhen) {
         return subqueryEf.createSimpleExpression(expr, allowCaseWhen);
     }
-    
-    protected FooExpression foo(String foo){
+
+    protected FooExpression foo(String foo) {
         return new FooExpression(foo);
     }
-    
+
     protected FunctionExpression function(String name, Expression... args) {
         return new FunctionExpression(name, Arrays.asList(args));
     }

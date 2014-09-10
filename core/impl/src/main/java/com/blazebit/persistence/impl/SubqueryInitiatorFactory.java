@@ -42,7 +42,7 @@ public class SubqueryInitiatorFactory {
         this.parentJoinManager = parentJoinManager;
     }
 
-    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener listener) {
+    public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener) {
         return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
     }
 }

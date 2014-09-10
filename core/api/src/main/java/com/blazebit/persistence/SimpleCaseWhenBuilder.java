@@ -25,16 +25,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SimpleCaseWhenBuilder<T> {
-
-    /**
-     * Adds the given when expression with the then expression to the case when builder.
-     *
-     * @param expression     The when expression
-     * @param thenExpression The then expression
-     * @return This simple case when builder
-     */
-    public SimpleCaseWhenBuilder<T> when(String expression, String thenExpression);
+public interface SimpleCaseWhenBuilder<T> extends SimpleCaseWhenStarterBuilder<T> {
 
     /**
      * Adds the given else expression to the case when builder.
@@ -42,5 +33,5 @@ public interface SimpleCaseWhenBuilder<T> {
      * @param elseExpression The else expression
      * @return The parent builder
      */
-    public T thenElse(String elseExpression);
+    public T otherwise(String elseExpression);
 }

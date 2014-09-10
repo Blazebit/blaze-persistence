@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 
 /**
  *

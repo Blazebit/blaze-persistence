@@ -15,6 +15,22 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.Negatable;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -134,11 +150,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitCollection_member_expression(JPQLSelectExpressionParser.Collection_member_expressionContext ctx) {
-        CompositeExpression expr = accept(ctx.entity_or_value_expression());
-        expr.append(getText(ctx.entity_or_value_expression().getStop(), ctx.collection_valued_path_expression().getStart()));
-        acceptAndCompose(expr, ctx.collection_valued_path_expression());
-        ((PathExpression) expr.getExpressions().get(2)).setUsedInCollectionFunction(true);
-        return expr;
+        PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
+        collectionPath.setUsedInCollectionFunction(true);
+        return new MemberOfPredicate(ctx.entity_or_value_expression().accept(this), collectionPath, ctx.not != null);
     }
 
     @Override
@@ -179,28 +193,19 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitBetweenArithmetic(JPQLSelectExpressionParser.BetweenArithmeticContext ctx) {
-        return handleBetween(ctx.expr, ctx.bound1, ctx.bound2);
+        return new BetweenPredicate(ctx.expr.accept(this), ctx.bound1.accept(this), ctx.bound2.accept(this), ctx.not != null);
     }
 
     @Override
     public Expression visitBetweenDatetime(JPQLSelectExpressionParser.BetweenDatetimeContext ctx) {
-        return handleBetween(ctx.expr, ctx.bound1, ctx.bound2);
+        return new BetweenPredicate(ctx.expr.accept(this), ctx.bound1.accept(this), ctx.bound2.accept(this), ctx.not != null);
     }
 
     @Override
     public Expression visitBetweenString(JPQLSelectExpressionParser.BetweenStringContext ctx) {
-        return handleBetween(ctx.expr, ctx.bound1, ctx.bound2);
+        return new BetweenPredicate(ctx.expr.accept(this), ctx.bound1.accept(this), ctx.bound2.accept(this), ctx.not != null);
     }
-
-    private CompositeExpression handleBetween(ParserRuleContext expr, ParserRuleContext bound1, ParserRuleContext bound2) {
-        CompositeExpression composite = accept(expr);
-        composite.append(getText(expr.getStop(), bound1.getStart()));
-        acceptAndCompose(composite, bound1);
-        composite.append(getText(bound1.getStop(), bound2.getStart()));
-        acceptAndCompose(composite, bound2);
-        return composite;
-    }
-
+    
     @Override
     public Expression visitArithmeticPrimaryParanthesis(JPQLSelectExpressionParser.ArithmeticPrimaryParanthesisContext ctx) {
         CompositeExpression expr = accept(ctx.arithmetic_expression());
@@ -219,24 +224,44 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitComparison_operator(JPQLSelectExpressionParser.Comparison_operatorContext ctx) {
-        return new FooExpression(getTextWithSurroundingHiddenTokens(ctx.getStart()));
+    public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
+        Predicate left = (Predicate) ctx.conditional_term().accept(this);
+        if(left instanceof AndPredicate){
+            ((AndPredicate)left).getChildren().add((Predicate) ctx.conditional_factor().accept(this));
+            return left;
+        }else {
+            return new AndPredicate(left, (Predicate) ctx.conditional_factor().accept(this));
+        }
     }
 
     @Override
-    public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
-        CompositeExpression composite = accept(ctx.conditional_term());
-        composite.append(getTextWithSurroundingHiddenTokens(ctx.and));
-        acceptAndCompose(composite, ctx.conditional_factor());
-        return composite;
+    public Expression visitConditionalPrimary(JPQLSelectExpressionParser.ConditionalPrimaryContext ctx) {
+        return ctx.conditional_expression().accept(this);
+    }
+
+    @Override
+    public Expression visitConditional_factor(JPQLSelectExpressionParser.Conditional_factorContext ctx) {
+        Predicate p = (Predicate) ctx.conditional_primary().accept(this);
+        
+        if(ctx.not != null){
+            if(p instanceof Negatable){
+                ((Negatable)p).setNegated(true);
+            }else{
+                p = new NotPredicate(p);
+            }
+        }
+        return p;
     }
 
     @Override
     public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
-        CompositeExpression composite = accept(ctx.conditional_expression());
-        composite.append(getTextWithSurroundingHiddenTokens(ctx.or));
-        acceptAndCompose(composite, ctx.conditional_term());
-        return composite;
+        Predicate left = (Predicate) ctx.conditional_expression().accept(this);
+        if(left instanceof OrPredicate){
+            ((OrPredicate)left).getChildren().add((Predicate) ctx.conditional_term().accept(this));
+            return left;
+        }else {
+            return new OrPredicate(left, (Predicate) ctx.conditional_term().accept(this));
+        }
     }
 
     @Override
@@ -252,22 +277,17 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitNull_comparison_expression(JPQLSelectExpressionParser.Null_comparison_expressionContext ctx) {
-        CompositeExpression result = accept(ctx.getChild(0));
-        result.append(" ");
-        result.append(tokens.getText(ctx.isToken, ctx.nullToken));
-        return result;
+        return new IsNullPredicate(ctx.getChild(0).accept(this), ctx.not != null);
     }
 
     @Override
     public Expression visitLike_expression(JPQLSelectExpressionParser.Like_expressionContext ctx) {
-        CompositeExpression result = accept(ctx.string_expression());
-        result.append(getText(ctx.string_expression().getStop(), ctx.pattern_value().getStart()));
-        acceptAndCompose(result, ctx.pattern_value());
-        if (ctx.escapeToken != null) {
-            result.append(getText(ctx.pattern_value().getStop(), ctx.escape_character().getStart()));
-            acceptAndCompose(result, ctx.escape_character());
-        }
-        return result;
+        return new LikePredicate(
+                ctx.string_expression().accept(this),
+                ctx.pattern_value().accept(this), 
+                true, 
+                ctx.escape_character() != null ? ctx.escape_character().accept(this).toString().charAt(1) : null,
+                ctx.not != null);
     }
 
     @Override
@@ -299,7 +319,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     private WhenClauseExpression handleWhenClause(ParserRuleContext condition, ParserRuleContext result) {
-        return new WhenClauseExpression(condition.accept(this), result.accept(this));
+        return new WhenClauseExpression((Predicate) condition.accept(this), result.accept(this));
     }
 
     @Override
@@ -308,23 +328,21 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
-        ParserRuleContext leftElem = (ParserRuleContext) ctx.getChild(0);
-        CompositeExpression inExpr = accept(ctx.getChild(0));
-        if (ctx.paranth == null) {
-            inExpr.append(getText(leftElem.getStop(), ctx.param));
-            acceptAndCompose(inExpr, ctx.Input_parameter());
-        } else {
-            inExpr.append(getText(leftElem.getStop(), ctx.paranth));
-            inExpr.append("(");
-            acceptAndCompose(inExpr, ctx.in_item(0));
-            for (int i = 1; i < ctx.in_item().size(); i++) {
-                inExpr.append(",");
-                acceptAndCompose(inExpr, ctx.in_item(i));
+    public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {      
+        Expression inExpr;
+        if(ctx.param == null){
+            CompositeExpression compositeInExpr = accept(ctx.literal(0));
+            compositeInExpr.prepend("(");
+            for (int i = 1; i < ctx.literal().size(); i++) {
+                compositeInExpr.append(",");
+                acceptAndCompose(compositeInExpr, ctx.literal(i));
             }
-            inExpr.append(")");
+            compositeInExpr.append(")");
+            inExpr = unwrap(compositeInExpr);
+        }else{
+            inExpr = ctx.Input_parameter().accept(this);
         }
-        return inExpr;
+        return new InPredicate(ctx.getChild(0).accept(this), inExpr, ctx.not != null);
     }
 
     @Override
@@ -358,6 +376,78 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
         return new FooExpression(ctx.path().accept(this).toString());
+    }
+
+    @Override
+    public Expression visitComparisonExpression_string(JPQLSelectExpressionParser.ComparisonExpression_stringContext ctx) {
+        return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_arithmetic(JPQLSelectExpressionParser.ComparisonExpression_arithmeticContext ctx) {
+        return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_boolean(JPQLSelectExpressionParser.ComparisonExpression_booleanContext ctx) {
+        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_datetime(JPQLSelectExpressionParser.ComparisonExpression_datetimeContext ctx) {
+        return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_entity(JPQLSelectExpressionParser.ComparisonExpression_entityContext ctx) {
+        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_entityType(JPQLSelectExpressionParser.ComparisonExpression_entityTypeContext ctx) {
+        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_enum(JPQLSelectExpressionParser.ComparisonExpression_enumContext ctx) {
+        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+    }
+    
+    BinaryExpressionPredicate handleComparison(ParseTree left, ParseTree comparisonOperator, ParseTree right){
+        BinaryExpressionPredicate pred = (BinaryExpressionPredicate) comparisonOperator.accept(this);
+        pred.setLeft(left.accept(this));
+        pred.setRight(right.accept(this));
+        return pred;
+    }
+    
+    @Override
+    public Expression visitEqPredicate(JPQLSelectExpressionParser.EqPredicateContext ctx) {
+        return new EqPredicate(false);
+    }
+
+    @Override
+    public Expression visitNeqPredicate(JPQLSelectExpressionParser.NeqPredicateContext ctx) {
+        return new EqPredicate(true);
+    }
+
+    @Override
+    public Expression visitGtPredicate(JPQLSelectExpressionParser.GtPredicateContext ctx) {
+        return new GtPredicate();
+    }
+
+    @Override
+    public Expression visitGePredicate(JPQLSelectExpressionParser.GePredicateContext ctx) {
+        return new GePredicate();
+    }
+
+    @Override
+    public Expression visitLtPredicate(JPQLSelectExpressionParser.LtPredicateContext ctx) {
+        return new LtPredicate();
+    }
+
+    @Override
+    public Expression visitLePredicate(JPQLSelectExpressionParser.LePredicateContext ctx) {
+        return new LePredicate();
     }
     
     @Override

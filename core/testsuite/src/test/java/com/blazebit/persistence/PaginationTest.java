@@ -359,6 +359,8 @@ public class PaginationTest extends AbstractCoreTest {
     
     @Test
     public void deleteMe2(){
+        em.createQuery("SELECT d FROM Document d LEFT JOIN d.partners p WHERE d.age BETWEEN (SELECT SUM(doc.age) FROM Document doc)+1 AND 2").getResultList();
+        em.createQuery("SELECT d FROM Document d LEFT JOIN d.partners p WHERE d.name LIKE COALESCE(SUBSTRING(p.name,0, 10), 'test')").getResultList();
         em.createQuery("SELECT d FROM Document d WHERE d.documentType = com.blazebit.persistence.entity.DocumentType.NOVEL").getResultList();
         em.createQuery("SELECT p.name FROM Document d LEFT JOIN d.contacts p").getResultList();
         em.createQuery("SELECT COUNT(*) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();

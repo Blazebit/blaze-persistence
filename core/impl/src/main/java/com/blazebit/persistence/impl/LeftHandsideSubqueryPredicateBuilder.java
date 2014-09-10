@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
@@ -22,12 +24,12 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class LeftHandsideSubqueryPredicateBuilder extends SubqueryBuilderListenerImpl<RestrictionBuilderImpl<?>> {
+public class LeftHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<RestrictionBuilder<T>> {
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<RestrictionBuilderImpl<?>> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<RestrictionBuilder<T>> builder) {
         super.onBuilderEnded(builder);
-        RestrictionBuilderImpl<?> restrictionBuilder = builder.getResult();
+        RestrictionBuilderImpl<?> restrictionBuilder = (RestrictionBuilderImpl<?>) builder.getResult();
         restrictionBuilder.setLeftExpression(new SubqueryExpression(builder));
     }
 }

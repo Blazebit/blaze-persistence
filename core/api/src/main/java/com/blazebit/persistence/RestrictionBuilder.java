@@ -26,25 +26,78 @@ import java.util.List;
  * @since 1.0
  */
 public interface RestrictionBuilder<T> {
-
+    
     /**
-     * Finishes the BETWEEN predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * TODO
      * The predicate checks if the left hand side is between start and end.
-     *
-     * @param start The between start value
-     * @param end   The between end value
-     * @return The parent predicate container builder
+     * 
+     * @param start The between start expression
+     * @return The {@link BetweenBuilder}
      */
-    public T between(Object start, Object end);
-
+    public BetweenBuilder<T> betweenExpression(String start);
+    
     /**
-     * Like {@link RestrictionBuilder#between(java.lang.Object, java.lang.Object) } but the result is wrapped in a NOT predicate.
-     *
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
      * @param start The between start value
-     * @param end   The between end value
-     * @return The parent predicate container builder
+     * @return The {@link BetweenBuilder}
      */
-    public T notBetween(Object start, Object end);
+    public BetweenBuilder<T> between(Object start);
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @return The {@link SubqueryInitiator}
+     */
+    public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery();
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The {@link SubqueryInitiator}
+     */
+    public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression);
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @param start The between start expression
+     * @return The {@link BetweenBuilder}
+     */
+    public BetweenBuilder<T> notBetweenExpression(String start);
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @param start The between start value
+     * @return The {@link BetweenBuilder}
+     */
+    public BetweenBuilder<T> notBetween(Object start);
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @return The {@link SubqueryInitiator}
+     */
+    public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery();
+    
+    /**
+     * TODO
+     * The predicate checks if the left hand side is between start and end.
+     * 
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression    The expression which will be used as left hand side of a predicate
+     * @return The {@link SubqueryInitiator}
+     */
+    public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression);
 
     /**
      * Starts a {@link QuantifiableBinaryPredicateBuilder} for the EQ predicate that can be used to apply quantors.
@@ -393,7 +446,7 @@ public interface RestrictionBuilder<T> {
      * @return The parent predicate container builder
      */
     public T likeExpression(String expression);
-
+    
     /**
      * Like {@link RestrictionBuilder#likeExpression(java.lang.String, boolean, java.lang.Character) } but with escapeCharacter set to null.
      *

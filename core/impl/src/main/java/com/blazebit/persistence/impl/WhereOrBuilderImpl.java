@@ -15,7 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
@@ -26,7 +29,7 @@ import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 
 /**
  *
@@ -80,6 +83,16 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
     public RestrictionBuilder<WhereOrBuilder<T>> where(String expression) {
         Expression exp = expressionFactory.createSimpleExpression(expression, true);
         return startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, exp, subqueryInitFactory, expressionFactory, true));
+    }
+
+    @Override
+    public CaseWhenStarterBuilder<RestrictionBuilder<WhereOrBuilder<T>>> whereCase() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<WhereOrBuilder<T>>> whereSimpleCase(String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override

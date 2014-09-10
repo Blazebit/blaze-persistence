@@ -15,6 +15,22 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.OrPredicate;
+
 /**
  *
  * @author Christian Beikov
@@ -24,7 +40,7 @@ package com.blazebit.persistence.impl.expression;
 public interface Expression {
 
     public static interface Visitor {
-
+        // Expressions
         public void visit(PathExpression expression);
 
         public void visit(PropertyExpression expression);
@@ -46,10 +62,41 @@ public interface Expression {
         public void visit(GeneralCaseExpression expression);
         
         public void visit(SimpleCaseExpression expression);
+        
+        // Predicates
+        public void visit(AndPredicate predicate);
+
+        public void visit(OrPredicate predicate);
+
+        public void visit(NotPredicate predicate);
+
+        public void visit(EqPredicate predicate);
+
+        public void visit(IsNullPredicate predicate);
+
+        public void visit(IsEmptyPredicate predicate);
+
+        public void visit(MemberOfPredicate predicate);
+
+        public void visit(LikePredicate predicate);
+
+        public void visit(BetweenPredicate predicate);
+
+        public void visit(InPredicate predicate);
+
+        public void visit(GtPredicate predicate);
+
+        public void visit(GePredicate predicate);
+
+        public void visit(LtPredicate predicate);
+
+        public void visit(LePredicate predicate);
+
+        public void visit(ExistsPredicate predicate);
     }
     
     public static interface ResultVisitor<T> {
-
+        // Expressions
         public T visit(PathExpression expression);
 
         public T visit(PropertyExpression expression);
@@ -71,6 +118,37 @@ public interface Expression {
         public T visit(GeneralCaseExpression expression);
         
         public T visit(SimpleCaseExpression expression);
+        
+        // Predicates
+        public T visit(AndPredicate predicate);
+
+        public T visit(OrPredicate predicate);
+
+        public T visit(NotPredicate predicate);
+
+        public T visit(EqPredicate predicate);
+
+        public T visit(IsNullPredicate predicate);
+
+        public T visit(IsEmptyPredicate predicate);
+
+        public T visit(MemberOfPredicate predicate);
+
+        public T visit(LikePredicate predicate);
+
+        public T visit(BetweenPredicate predicate);
+
+        public T visit(InPredicate predicate);
+
+        public T visit(GtPredicate predicate);
+
+        public T visit(GePredicate predicate);
+
+        public T visit(LtPredicate predicate);
+
+        public T visit(LePredicate predicate);
+
+        public T visit(ExistsPredicate predicate);
     }
     
     /**

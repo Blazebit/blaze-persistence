@@ -32,11 +32,11 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final X result;
     private final ParameterManager parameterManager;
     private final AliasManager aliasManager;
-    private final SubqueryBuilderListener listener;
+    private final SubqueryBuilderListener<X> listener;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
 
-    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory) {
         this.cbf = cbf;
         this.em = em;
         this.result = result;

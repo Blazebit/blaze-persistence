@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  *
@@ -25,6 +26,11 @@ import java.util.Collection;
  */
 public interface SelectObjectBuilderEndedListener {
 
-    public void onBuilderEnded(Collection<Expression> expressions);
+    /**
+     * 
+     * @param expressions Collection containing map entries with expressions and their select aliases.
+     * A select alias is null if none was specified.
+     */
+    public void onBuilderEnded(Collection<Map.Entry<Expression, String>> expressions);
 
 }

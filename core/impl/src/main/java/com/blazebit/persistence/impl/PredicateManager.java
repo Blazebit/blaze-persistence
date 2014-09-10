@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -28,7 +29,6 @@ import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotInPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.VisitorAdapter;
@@ -42,7 +42,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     final RootPredicate rootPredicate;
-    private RightHandsideSubqueryPredicateBuilder<?> rightSubqueryPredicateBuilderListener;
+    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
     private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
     private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
     protected final ExpressionFactory expressionFactory;
@@ -83,7 +83,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
-        RightHandsideSubqueryPredicateBuilder<?> subqueryListener = rootPredicate.startBuilder(
+        RightHandsideSubqueryPredicateBuilder subqueryListener = rootPredicate.startBuilder(
             new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
     }
@@ -193,12 +193,6 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         @Override
         public void visit(InPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
-        }
-
-        @Override
-        public void visit(NotInPredicate predicate) {
             predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
             predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
         }

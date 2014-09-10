@@ -21,7 +21,7 @@ Size_function : 'SIZE';
 
 Empty_function : 'IS' ([ ]+ 'NOT' [ ]+)? 'EMPTY';
 
-Member_of_function : ('NOT' [ ]+)? 'MEMBER' ([ ]+ 'OF')?;
+Member_of_function : 'MEMBER' ([ ]+ 'OF')?;
 
 Outer_function : 'OUTER';
  

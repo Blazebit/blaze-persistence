@@ -15,18 +15,21 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 
 /**
  *
@@ -42,9 +45,9 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     private final AndPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    private final LeftHandsideSubqueryPredicateBuilder leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder();
-    private RightHandsideSubqueryPredicateBuilder<RestrictionBuilder<?>> rightSubqueryPredicateBuilderListener;
-    private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
+    private final LeftHandsideSubqueryPredicateBuilder<HavingAndBuilder<T>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<HavingAndBuilder<T>>();
+    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
+    private SuperExpressionLeftHandsideSubqueryPredicateBuilder<HavingAndBuilder<T>> superExprLeftSubqueryPredicateBuilderListener;
 
     public HavingAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -84,6 +87,16 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     }
 
     @Override
+    public CaseWhenStarterBuilder<RestrictionBuilder<HavingAndBuilder<T>>> havingCase() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<HavingAndBuilder<T>>> havingSimpleCase(String expression) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    @Override
     public SubqueryInitiator<HavingAndBuilder<T>> havingExists() {
         rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder(this, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator((HavingAndBuilder<T>) this, rightSubqueryPredicateBuilderListener);
@@ -99,17 +112,17 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
     public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> havingSubquery() {
         RestrictionBuilder<HavingAndBuilder<T>> restrictionBuilder = startBuilder(
             new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, false));
-        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingAndBuilder<T>>) restrictionBuilder,
+        return subqueryInitFactory.createSubqueryInitiator( restrictionBuilder,
                                                            leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> havingSubquery(String subqueryAlias, String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
-        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder<HavingAndBuilder<T>>(subqueryAlias, expr);
         RestrictionBuilder<HavingAndBuilder<T>> restrictionBuilder = startBuilder(
             new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, false));
-        return subqueryInitFactory.createSubqueryInitiator((RestrictionBuilder<HavingAndBuilder<T>>) restrictionBuilder,
+        return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder,
                                                            superExprLeftSubqueryPredicateBuilderListener);
     }
 

@@ -45,6 +45,7 @@ parseSimpleSubqueryExpression
 
 parseScalarExpression
     : scalar_expression;
+
 parseCaseOperandExpression
     : case_operand;
 
@@ -228,8 +229,6 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                      coalesce_expression |
                      nullif_expression
                  ;
- 
- case_operand : state_field_path_expression | type_discriminator;
 
  coalesce_expression : 'COALESCE' '('scalar_expression (',' scalar_expression)+')';
 
@@ -264,10 +263,11 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                   | conditional_term and='AND' conditional_factor # ConditionalTerm_and
                   ;
 
- conditional_factor : ('NOT')? conditional_primary
+ conditional_factor : (not='NOT')? conditional_primary
                     ;
 
- conditional_primary : simple_cond_expression | '('conditional_expression')'
+ conditional_primary : simple_cond_expression # ConditionalPrimary_simple
+                     | '('conditional_expression')' # ConditionalPrimary
                      ;
 
  simple_cond_expression : comparison_expression |
@@ -279,18 +279,15 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                             collection_member_expression |
                         ;
 
- between_expression : expr=arithmetic_expression ('NOT')? 'BETWEEN' bound1=arithmetic_expression 'AND' bound2=arithmetic_expression # BetweenArithmetic
-                    | expr=string_expression ('NOT')? 'BETWEEN' bound1=string_expression 'AND' bound2=string_expression # BetweenString
-                    | expr=datetime_expression ('NOT')? 'BETWEEN' bound1=datetime_expression 'AND' bound2=datetime_expression # BetweenDatetime
+ between_expression : expr=arithmetic_expression (not='NOT')? 'BETWEEN' bound1=arithmetic_expression 'AND' bound2=arithmetic_expression # BetweenArithmetic
+                    | expr=string_expression (not='NOT')? 'BETWEEN' bound1=string_expression 'AND' bound2=string_expression # BetweenString
+                    | expr=datetime_expression (not='NOT')? 'BETWEEN' bound1=datetime_expression 'AND' bound2=datetime_expression # BetweenDatetime
                     ;
 
- in_expression : (state_field_path_expression | type_discriminator) ('NOT')? 'IN' ( paranth='(' in_item (',' in_item)* ')' | param=Input_parameter )
+ in_expression : (state_field_path_expression | type_discriminator) (not='NOT')? 'IN' ( '(' inItems+=literal (',' inItems+=literal)* ')' | param=Input_parameter | '(' param=Input_parameter ')' )
                ;
 
- in_item : literal | Input_parameter
-         ;
-
- like_expression : string_expression ('NOT')? 'LIKE' pattern_value (escapeToken='ESCAPE' escape_character)?
+ like_expression : string_expression (not='NOT')? 'LIKE' pattern_value ('ESCAPE' escape_character)?
                  ;
  
  pattern_value : string_literal
@@ -301,13 +298,13 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                   | Input_parameter
                   ;
 
- null_comparison_expression : (single_valued_path_expression | Input_parameter) isToken='IS' ('NOT')? nullToken='NULL'
+ null_comparison_expression : (single_valued_path_expression | Input_parameter) 'IS' (not='NOT')? 'NULL'
                             ;
 
  empty_collection_comparison_expression : collection_valued_path_expression Empty_function
                                         ;
 
- collection_member_expression : entity_or_value_expression Member_of_function collection_valued_path_expression
+ collection_member_expression : entity_or_value_expression (not='NOT')? Member_of_function collection_valued_path_expression
                               ;
 
  entity_or_value_expression : state_field_path_expression |
@@ -320,16 +317,21 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
                                        literal
                                    ;
  
- comparison_expression : string_expression comparison_operator string_expression |
-                           boolean_expression ( '=' | Not_equal_operator ) boolean_expression |
-                           enum_expression ( '=' | Not_equal_operator ) enum_expression |
-                           datetime_expression comparison_operator datetime_expression |
-                           entity_expression ( '=' | Not_equal_operator ) entity_expression |
-                           arithmetic_expression comparison_operator arithmetic_expression |
-                           entity_type_expression ( '=' | Not_equal_operator ) entity_type_expression
+ comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
+                       | left=boolean_expression op=( '=' | Not_equal_operator ) right=boolean_expression # ComparisonExpression_boolean
+                       | left=enum_expression op=( '=' | Not_equal_operator ) right=enum_expression # ComparisonExpression_enum
+                       | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
+                       | left=entity_expression op=( '=' | Not_equal_operator ) right=entity_expression # ComparisonExpression_entity
+                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
+                       | left=entity_type_expression op=( '=' | Not_equal_operator ) right=entity_type_expression # ComparisonExpression_entityType
                        ;
  
- comparison_operator : '=' | '>' | '>=' | '<' | '<=' | Not_equal_operator
+ comparison_operator : '=' # EqPredicate
+                     | '>' # GtPredicate
+                     | '>=' # GePredicate
+                     | '<' # LtPredicate
+                     | '<=' # LePredicate
+                     | Not_equal_operator # NeqPredicate
                      ;
  
  general_case_expression : caseTerminal='CASE' when_clause (when_clause)* elseTerminal='ELSE' scalar_expression endTerminal='END'
@@ -343,3 +345,5 @@ qualified_identification_variable : name='ENTRY' '('collection_valued_path_expre
 
  simple_when_clause : whenTerminal='WHEN' scalar_expression thenTerminal='THEN' scalar_expression
                     ;
+ 
+ case_operand : state_field_path_expression | type_discriminator;

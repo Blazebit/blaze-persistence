@@ -16,46 +16,57 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * TODO: implement
  *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T> {
+public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, ExpressionBuilder {
 
     private final T result;
     private final Expression caseOperandExpression;
-    private final List<Expression[]> whenExpressions;
-    private Expression elseExpression;
+    private final List<WhenClauseExpression> whenExpressions;
+    private SimpleCaseExpression expression;
     private final ExpressionFactory expressionFactory;
+    private final ExpressionBuilderEndedListener listener;
 
-    public SimpleCaseWhenBuilderImpl(T result, ExpressionFactory expressionFactory, String caseOperandExpression) {
+    public SimpleCaseWhenBuilderImpl(T result, ExpressionBuilderEndedListener listener, ExpressionFactory expressionFactory, String caseOperandExpression) {
         this.result = result;
         this.caseOperandExpression = expressionFactory.createCaseOperandExpression(caseOperandExpression);
-        this.whenExpressions = new ArrayList<Expression[]>();
+        this.whenExpressions = new ArrayList<WhenClauseExpression>();
         this.expressionFactory = expressionFactory;
+        this.listener = listener;
     }
 
     @Override
-    public SimpleCaseWhenBuilder<T> when(String expression, String thenExpression) {
-        Expression[] whenExpression = new Expression[2];
-        whenExpression[0] = expressionFactory.createScalarExpression(expression);
-        whenExpression[1] = expressionFactory.createScalarExpression(thenExpression);
-        whenExpressions.add(whenExpression);
+    public SimpleCaseWhenBuilder<T> when(String condition, String thenExpression) {
+        whenExpressions.add(new WhenClauseExpression(expressionFactory.createScalarExpression(condition), expressionFactory.createScalarExpression(thenExpression)));
         return this;
     }
 
     @Override
-    public T thenElse(String elseExpression) {
-        this.elseExpression = expressionFactory.createScalarExpression(elseExpression);
+    public T otherwise(String elseExpression) {
+        if(whenExpressions.isEmpty()){
+            throw new IllegalStateException("No when clauses specified");
+        }
+        expression = new SimpleCaseExpression(caseOperandExpression, whenExpressions, expressionFactory.createScalarExpression(elseExpression));
+        listener.onBuilderEnded(this);
         return result;
+    }
+
+    @Override
+    public Expression getExpression() {
+        return expression;
     }
 
 }

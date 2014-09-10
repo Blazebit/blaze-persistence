@@ -27,14 +27,14 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
 
     protected void verifySubqueryBuilderEnded() {
         if (currentSubqueryBuilder != null) {
-            throw new IllegalStateException("A builder was not ended properly.");
+            throw new BuilderChainingException("A builder was not ended properly.");
         }
     }
 
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         if (currentSubqueryBuilder == null) {
-            throw new IllegalStateException("There was an attempt to end a builder that was not started or already closed.");
+            throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
         }
         currentSubqueryBuilder = null;
     }
@@ -42,7 +42,7 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
     @Override
     public void onBuilderStarted(SubqueryBuilderImpl<T> builder) {
         if (currentSubqueryBuilder != null) {
-            throw new IllegalStateException("There was an attempt to start a builder but a previous builder was not ended.");
+            throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
         }
 
         currentSubqueryBuilder = builder;

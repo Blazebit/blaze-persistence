@@ -54,6 +54,25 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<T> having(String expression);
+    
+    /**
+     * Starts a {@link CaseWhenBuilder} for a where predicate.
+     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
+     * the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @return A {@link CaseWhenBuilder}
+     */
+    public CaseWhenStarterBuilder<RestrictionBuilder<T>> havingCase();
+    
+    /**
+     * Starts a {@link SimpleCaseWhenBuilder} for a where predicate.
+     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
+     * the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     *
+     * @param expression Case operand expression
+     * @return A {@link CaseWhenBuilder}
+     */
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<T>> havingSimpleCase(String expression);
 
     /**
      * Starts an exists predicate for the having clause with a subquery on the right hand side.

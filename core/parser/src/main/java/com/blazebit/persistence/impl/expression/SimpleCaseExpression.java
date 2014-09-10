@@ -38,6 +38,11 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
+    
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 
     @Override
     public int hashCode() {
@@ -62,8 +67,4 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
         }
         return true;
     }
-
-    
-    
-    
 }

@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.Predicate;
+
 /**
  *
  * @author Moritz Becker
