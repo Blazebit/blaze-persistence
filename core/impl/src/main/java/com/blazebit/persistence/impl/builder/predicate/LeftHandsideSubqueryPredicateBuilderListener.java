@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
@@ -24,12 +25,12 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class LeftHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<RestrictionBuilder<T>> {
+public class LeftHandsideSubqueryPredicateBuilderListener<T extends LeftHandsideSubqueryPredicateBuilder> extends SubqueryBuilderListenerImpl<T> {
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<RestrictionBuilder<T>> builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
-        RestrictionBuilderImpl<?> restrictionBuilder = (RestrictionBuilderImpl<?>) builder.getResult();
-        restrictionBuilder.setLeftExpression(new SubqueryExpression(builder));
+        LeftHandsideSubqueryPredicateBuilder leftHandsideSubqueryPredicateBuilder = (LeftHandsideSubqueryPredicateBuilder) builder.getResult();
+        leftHandsideSubqueryPredicateBuilder.setLeftExpression(new SubqueryExpression(builder));
     }
 }

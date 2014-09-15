@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.impl.BuilderChainingException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Calendar;
 import static org.junit.Assert.assertEquals;
@@ -467,5 +468,44 @@ public class HavingTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
 //        cb.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingCase() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").then("2").otherwise("1").eqExpression("d.idx");
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingCaseBuilderNotEnded() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("d.id").havingCase();
+        verifyBuilderChainingException(crit);
+    }
+    
+    @Test
+    public void testHavingSimpleCaseBuilderNotEnded() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("d.id").havingCase();
+        verifyBuilderChainingException(crit);
+    }
+    
+    @Test
+    public void testHavingSimpleCase() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.groupBy("d.id").havingSimpleCase("d.id").when("1", "d.age").otherwise("d.idx").eqExpression("d.idx");
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
+        verifyException(crit, BuilderChainingException.class).havingCase();
+        verifyException(crit, BuilderChainingException.class).havingSimpleCase("d.id");
+        verifyException(crit, BuilderChainingException.class).having("d.id");
+        verifyException(crit, BuilderChainingException.class).getQueryString();
     }
 }

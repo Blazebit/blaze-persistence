@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
@@ -23,6 +23,10 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
+import com.blazebit.persistence.impl.PredicateAndExpressionBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -51,7 +55,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     private Predicate whenPredicate;
     private GeneralCaseExpression expression;
     
-    private final LeftHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>();
+    private final SubqueryBuilderListenerImpl<?> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener<RestrictionBuilderImpl<?>>();
     private final ExpressionBuilderEndedListener listener;
 
     public CaseWhenBuilderImpl(T result, ExpressionBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
@@ -75,17 +79,17 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> restrictionBuilder = startBuilder(
             new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, subqueryInitFactory, expressionFactory, true));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder,
-                                                           leftSubqueryPredicateBuilderListener);
+                                                           (SubqueryBuilderListener<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>>) leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubquery(String subqueryAlias, String expression) {
         verifyBuilderEnded();
-        SuperExpressionLeftHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        SuperExpressionLeftHandsideSubqueryPredicateBuilder<?> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder<RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> restrictionBuilder = startBuilder(
             new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, subqueryInitFactory, expressionFactory, true));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder,
-                                                           superExprLeftSubqueryPredicateBuilderListener);
+                                                           (SubqueryBuilderListener<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>>) superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
@@ -146,6 +150,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     @Override
     public void verifyBuilderEnded() {
         super.verifyBuilderEnded();
+        leftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
     }
 
     @Override

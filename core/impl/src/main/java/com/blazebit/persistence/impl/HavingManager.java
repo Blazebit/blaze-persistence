@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.builder.predicate.HavingOrBuilderImpl;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**

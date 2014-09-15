@@ -84,6 +84,10 @@ public class AbstractParserTest {
     protected Expression parseOrderBy(String expr) {
         return ef.createOrderByExpression(expr);
     }
+    
+    protected Expression parseArithmetic(String expr) {
+        return ef.createArithmeticExpression(expr);
+    }
 
     protected Expression parse(String expr) {
         return parse(expr, false);

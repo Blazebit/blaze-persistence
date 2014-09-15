@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.AliasManager;
+import com.blazebit.persistence.impl.CriteriaBuilderFactoryImpl;
+import com.blazebit.persistence.impl.JoinManager;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
 

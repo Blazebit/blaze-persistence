@@ -150,7 +150,7 @@ public class QueryGenerator extends VisitorAdapter {
     @Override
     public void visit(EqPredicate predicate) {
         if (predicate.isNegated()) {
-            visitQuantifiableBinaryPredicate(predicate, " != ");
+            visitQuantifiableBinaryPredicate(predicate, " <> ");
         } else {
             visitQuantifiableBinaryPredicate(predicate, " = ");
         }

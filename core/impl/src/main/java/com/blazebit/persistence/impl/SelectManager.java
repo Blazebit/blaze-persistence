@@ -15,6 +15,14 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
+import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListener;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.ObjectBuilder;
@@ -81,7 +89,7 @@ public class SelectManager<T> extends AbstractManager {
         return objectBuilder;
     }
 
-    List<SelectInfo> getSelectInfos() {
+    public List<SelectInfo> getSelectInfos() {
         return selectInfos;
     }
 
@@ -164,7 +172,7 @@ public class SelectManager<T> extends AbstractManager {
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
-    <T extends BaseQueryBuilder<?, ?>> SimpleCaseWhenStarterBuilder<T> selectSimpleCase(T builder, final String selectAlias, String caseOperandExpression) {
+    <T extends BaseQueryBuilder<?, ?>> SimpleCaseWhenStarterBuilder<T> selectSimpleCase(T builder, final String selectAlias, Expression caseOperandExpression) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));

@@ -102,6 +102,17 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             }
         }, expression, false);
     }
+
+    @Override
+    public Expression createArithmeticExpression(String expression) {
+        return createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseArithmeticExpression();
+            }
+        }, expression, false);
+    }
     
     protected void configureLexer(JPQLSelectExpressionLexer lexer){
         lexer.removeErrorListeners();

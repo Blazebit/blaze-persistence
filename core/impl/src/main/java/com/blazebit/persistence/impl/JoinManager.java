@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;

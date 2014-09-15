@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
@@ -40,9 +40,9 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, E
     private final ExpressionFactory expressionFactory;
     private final ExpressionBuilderEndedListener listener;
 
-    public SimpleCaseWhenBuilderImpl(T result, ExpressionBuilderEndedListener listener, ExpressionFactory expressionFactory, String caseOperandExpression) {
+    public SimpleCaseWhenBuilderImpl(T result, ExpressionBuilderEndedListener listener, ExpressionFactory expressionFactory, Expression caseOperandExpression) {
         this.result = result;
-        this.caseOperandExpression = expressionFactory.createCaseOperandExpression(caseOperandExpression);
+        this.caseOperandExpression = caseOperandExpression;
         this.whenExpressions = new ArrayList<WhenClauseExpression>();
         this.expressionFactory = expressionFactory;
         this.listener = listener;

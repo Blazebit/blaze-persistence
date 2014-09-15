@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
@@ -49,7 +50,7 @@ import javax.persistence.TypedQuery;
 public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
-    protected static final String idParamName = "ids";
+    public static final String idParamName = "ids";
 
     protected final CriteriaBuilderFactoryImpl cbf;
     protected final Class<?> fromClazz;
@@ -198,7 +199,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new IllegalArgumentException("selectAlias");
         }
         resultType = (Class<T>) Tuple.class;
-        return selectManager.selectSimpleCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias, caseOperandExpression);
+        return selectManager.selectSimpleCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
     @Override
@@ -272,12 +273,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public CaseWhenStarterBuilder<RestrictionBuilder<X>> whereCase() {
-        throw new UnsupportedOperationException();
+        return whereManager.restrictCase(this);
     }
     
     @Override
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> whereSimpleCase(String expression) {
-        throw new UnsupportedOperationException();
+        return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     @Override
@@ -336,11 +337,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
     
     public CaseWhenStarterBuilder<RestrictionBuilder<X>> havingCase() {
-        throw new UnsupportedOperationException();
+        return havingManager.restrictCase(this);
     }
     
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> havingSimpleCase(String expression) {
-        throw new UnsupportedOperationException();
+        return havingManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
     public HavingOrBuilder<X> havingOr() {

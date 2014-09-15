@@ -73,8 +73,8 @@ public class GeneralParserTest extends AbstractParserTest {
     }
 
     @Test
-    public void testParserArithmetic() {
-        CompositeExpression result = (CompositeExpression) parse("d.age + SUM(d.children.age)");
+    public void testParserArithmetic1() {
+        CompositeExpression result = (CompositeExpression) parseArithmetic("d.age + SUM(d.children.age)");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 3);
@@ -86,7 +86,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testParserArithmetic2() {
-        CompositeExpression result = (CompositeExpression) parse("age + 1");
+        CompositeExpression result = (CompositeExpression) parseArithmetic("age + 1");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 2);
@@ -97,13 +97,24 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testParserArithmetic3() {
-        CompositeExpression result = (CompositeExpression) parse("age * 1");
+        CompositeExpression result = (CompositeExpression) parseArithmetic("age * 1");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 2);
 
         assertEquals(path("age"), expressions.get(0));
         assertEquals(new FooExpression(" * 1"), expressions.get(1));
+    }
+    
+    @Test
+    public void testParserArithmeticNoHiddenTokens() {
+        CompositeExpression result = (CompositeExpression) parseArithmetic("age+1");
+        List<Expression> expressions = result.getExpressions();
+
+        assertTrue(expressions.size() == 2);
+
+        assertTrue(expressions.get(0).equals(path("age")));
+        assertTrue(expressions.get(1).equals(new FooExpression("+1")));
     }
 
     @Test

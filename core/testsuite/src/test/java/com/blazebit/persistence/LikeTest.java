@@ -116,7 +116,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLike(pattern, true, null);
 
-        assertEquals("SELECT d FROM Document d WHERE NOT d.name LIKE :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.name NOT LIKE :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -126,7 +126,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLike(pattern, true, '\\');
 
-        assertEquals("SELECT d FROM Document d WHERE NOT d.name LIKE :param_0 ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.name NOT LIKE :param_0 ESCAPE '\\'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -171,7 +171,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", true, null);
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE NOT d.name LIKE owner_1.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name NOT LIKE owner_1.name", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -180,7 +180,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").notLikeExpression("d.owner.name", true, '\\');
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE NOT d.name LIKE owner_1.name ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name NOT LIKE owner_1.name ESCAPE '\\'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -191,7 +191,10 @@ public class LikeTest extends AbstractCoreTest {
     }
 
     private String getCaseInsensitiveLike(String property, String likeParam, Character escape) {
-        String res = "UPPER(" + property + ") LIKE UPPER(" + likeParam + ")";
+        return getCaseInsensitiveLike(property, likeParam, escape, false);
+    }
+    private String getCaseInsensitiveLike(String property, String likeParam, Character escape, boolean negated) {
+        String res = "UPPER(" + property + ")" + (negated ? " NOT": "") + " LIKE UPPER(" + likeParam + ")";
         if (escape != null) {
             res += " ESCAPE UPPER('" + escape + "')";
         }
@@ -199,6 +202,6 @@ public class LikeTest extends AbstractCoreTest {
     }
 
     private String getCaseInsensitiveNotLike(String property, String likeParam, Character escape) {
-        return "NOT " + getCaseInsensitiveLike(property, likeParam, escape);
+        return getCaseInsensitiveLike(property, likeParam, escape, true);
     }
 }

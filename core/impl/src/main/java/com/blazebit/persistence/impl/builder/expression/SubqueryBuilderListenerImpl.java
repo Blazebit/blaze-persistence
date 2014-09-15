@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.expression;
+
+import com.blazebit.persistence.impl.BuilderChainingException;
 
 /**
  *
@@ -25,7 +27,7 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
 
     private SubqueryBuilderImpl<?> currentSubqueryBuilder;
 
-    protected void verifySubqueryBuilderEnded() {
+    public void verifySubqueryBuilderEnded() {
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("A builder was not ended properly.");
         }

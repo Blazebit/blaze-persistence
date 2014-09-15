@@ -344,4 +344,43 @@ public class WhereTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }
+    
+    @Test
+    public void testWhereCase() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereCase().when("d.id").geExpression("d.age").then("2").otherwise("1").eqExpression("d.idx");
+        String expected = "SELECT d FROM Document d WHERE CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testWhereCaseBuilderNotEnded() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereCase();
+        verifyBuilderChainingException(crit);
+    }
+    
+    @Test
+    public void testWhereSimpleCaseBuilderNotEnded() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereCase();
+        verifyBuilderChainingException(crit);
+    }
+    
+    @Test
+    public void testWhereSimpleCase() {
+        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        crit.whereSimpleCase("d.id").when("1", "d.age").otherwise("d.idx").eqExpression("d.idx");
+        String expected = "SELECT d FROM Document d WHERE CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
+        verifyException(crit, BuilderChainingException.class).whereCase();
+        verifyException(crit, BuilderChainingException.class).whereSimpleCase("d.id");
+        verifyException(crit, BuilderChainingException.class).where("d.id");
+        verifyException(crit, BuilderChainingException.class).getQueryString();
+    }
 }

@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.predicate;
 
+import com.blazebit.persistence.impl.AbstractQueryBuilder;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
@@ -30,7 +32,7 @@ import com.blazebit.persistence.impl.predicate.VisitorAdapter;
  */
 public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
-    final AndPredicate predicate;
+    private final AndPredicate predicate;
     private final ParameterManager parameterManager;
 
     private final VisitorAdapter parameterRegistrationVisitor = new VisitorAdapter() {
@@ -67,5 +69,9 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
     private void registerParameterExpressions(Predicate predicate) {
         predicate.accept(parameterRegistrationVisitor);
+    }
+
+    public AndPredicate getPredicate() {
+        return predicate;
     }
 }

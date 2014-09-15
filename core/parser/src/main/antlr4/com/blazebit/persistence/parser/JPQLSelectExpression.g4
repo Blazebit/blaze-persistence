@@ -46,6 +46,9 @@ parseSimpleSubqueryExpression
 parseScalarExpression
     : scalar_expression;
 
+parseArithmeticExpression
+    : arithmetic_expression;
+
 parseCaseOperandExpression
     : case_operand;
 

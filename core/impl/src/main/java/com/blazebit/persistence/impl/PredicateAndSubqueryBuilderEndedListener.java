@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListener;
+import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;

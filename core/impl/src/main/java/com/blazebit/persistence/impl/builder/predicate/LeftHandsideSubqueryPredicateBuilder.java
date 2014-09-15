@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.expression;
+
+package com.blazebit.persistence.impl.builder.predicate;
+
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
  */
-public interface ExpressionFactory {
-
-    public Expression createSimpleExpression(String expression, boolean allowCaseWhen);
-    
-    public Expression createSimpleExpression(String expression);
-
-    public Expression createCaseOperandExpression(String caseOperandExpression);
-
-    public Expression createScalarExpression(String expression);
-    
-    public Expression createArithmeticExpression(String expression);
-    
-    public Expression createOrderByExpression(String expression);
+public interface LeftHandsideSubqueryPredicateBuilder extends PredicateBuilder {
+    public void setLeftExpression(Expression left);
 }

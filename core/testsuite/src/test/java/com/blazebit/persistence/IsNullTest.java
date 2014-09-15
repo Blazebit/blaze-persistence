@@ -41,7 +41,7 @@ public class IsNullTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
         criteria.where("d.name").isNotNull();
 
-        assertEquals("SELECT d FROM Document d WHERE NOT d.name IS NULL", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.name IS NOT NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 }

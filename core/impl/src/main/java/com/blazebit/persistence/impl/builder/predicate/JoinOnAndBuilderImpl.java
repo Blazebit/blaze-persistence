@@ -13,15 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.JoinOnAndBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
@@ -31,16 +33,16 @@ import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedList
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements JoinOnOrBuilder<T>,
+public class JoinOnAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements JoinOnAndBuilder<T>,
     PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final OrPredicate predicate = new OrPredicate();
+    private final AndPredicate predicate = new AndPredicate();
     private final ExpressionFactory expressionFactory;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    public JoinOnOrBuilderImpl(T result, PredicateBuilderEndedListener listener, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
+    public JoinOnAndBuilderImpl(T result, PredicateBuilderEndedListener listener, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.expressionFactory = expressionFactory;
@@ -48,7 +50,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public T endOr() {
+    public T endAnd() {
         verifyBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
@@ -61,14 +63,14 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public JoinOnAndBuilder<JoinOnOrBuilder<T>> onAnd() {
-        return startBuilder(new JoinOnAndBuilderImpl<JoinOnOrBuilder<T>>(this, this, expressionFactory, subqueryInitFactory));
+    public JoinOnOrBuilder<JoinOnAndBuilder<T>> onOr() {
+        return startBuilder(new JoinOnOrBuilderImpl<JoinOnAndBuilder<T>>(this, this, expressionFactory, subqueryInitFactory));
     }
 
     @Override
-    public RestrictionBuilder<JoinOnOrBuilder<T>> on(String expression) {
+    public RestrictionBuilder<JoinOnAndBuilder<T>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, false));
+        return startBuilder(new RestrictionBuilderImpl<JoinOnAndBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, false));
     }
 
     @Override
