@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
-
 /**
  * A builder for criteria queries. This is the entry point for building queries.
  *
@@ -31,16 +29,22 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
      * Covariant overrides.
      */
     @Override
-    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression);
+    public CriteriaBuilder<T> from(Class<?> entityClass);
 
     @Override
-    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias);
+    public CriteriaBuilder<T> from(Class<?> entityClass, String alias);
+    
+    @Override
+    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression);
 
     @Override
-    public CaseWhenStarterBuilder<CriteriaBuilder<Tuple>> selectCase();
+    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression, String alias);
 
     @Override
-    public CaseWhenStarterBuilder<CriteriaBuilder<Tuple>> selectCase(String alias);
+    public CaseWhenStarterBuilder<CriteriaBuilder<T>> selectCase();
+
+    @Override
+    public CaseWhenStarterBuilder<CriteriaBuilder<T>> selectCase(String alias);
 
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
@@ -49,20 +53,20 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression);
+    public CriteriaBuilder<T> select(String expression);
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression, String alias);
+    public CriteriaBuilder<T> select(String expression, String alias);
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery();
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery();
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String alias);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String alias);
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression);
 }

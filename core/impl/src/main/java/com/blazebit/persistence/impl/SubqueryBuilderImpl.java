@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.builder.expression;
+package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
@@ -45,9 +45,10 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     private final SubqueryBuilderListener listener;
 
     public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
-        super(cbf, em, Tuple.class, fromClazz, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
+        super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
         this.result = result;
         this.listener = listener;
+        
     }
 
     @Override

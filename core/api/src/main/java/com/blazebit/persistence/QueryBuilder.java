@@ -137,22 +137,28 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /**
      * Paginates the results of this query.
      *
+     * <p>
      * Please note:
      * The pagination only works on entity level and NOT on row level. This means
      * that for queries which yield multiple result set rows per entity (i.e. rows with
      * the same entity id), the multiple rows are treated as 1 page entry during
      * the pagination process. Hence, the result size of such paginated queries
      * might be greater than the specified page size.
-     *
+     * </p>
+     * 
+     * <p>
      * An example for such queries would be a query that joins a collection:
      * SELECT d.id, contacts.name FROM Document d LEFT JOIN d.contacts contacts
      * If one Document has associated multiple contacts, the above query will produce
      * multiple result set rows for this document.
-     *
+     * </p>
+     * 
+     * <p>
      * Since the pagination works on entity id level, the results are implicitely
      * grouped by id and distinct. Therefore calling distinct() or groupBy() on a
      * PaginatedCriteriaBuilder is not allowed.
-     *
+     * </p>
+     * 
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults  The maximum number of results to retrieve
      * @return This query builder as paginated query builder
@@ -161,13 +167,21 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
 
     /**
      * Like {@link QueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
-     * Key set pagination is under the following circumstances possible
+     * 
+     * <p>
+     * Key set pagination is possible if and only if the following condition is met:
      * <ul>
-     * <li>this query builder and the one with which the key set was obtained are equal</li>
-     * <li>{@link KeySet#getMaxResults()} and <code>maxResults</code> evaluate to the same value</li>
-     * <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is 0</li>
-     * <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
+     * <li>This query builder and the one with which the key set was obtained are equal AND</li>
+     * 
+     * <li>{@link KeySet#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
+     * <li>One of the following conditions is met:
+     *  <ul>
+     *      <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is 0</li>
+     *      <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
+     *  </ul>
+     * </li>
      * </ul>
+     * </p>
      *
      * @param keySet      The key set from a previous result
      * @param firstResult The position of the first result to retrieve, numbered from 0
@@ -301,32 +315,32 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Covariant overrides
      */
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression);
 
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression, String alias);
 
     @Override
-    public CaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectCase();
+    public CaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectCase();
 
     @Override
-    public CaseWhenStarterBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias);
+    public CaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectCase(String alias);
 
     @Override
-    public QueryBuilder<Tuple, ?> select(String expression);
+    public QueryBuilder<T, ?> select(String expression);
 
     @Override
-    public QueryBuilder<Tuple, ?> select(String expression, String alias);
+    public QueryBuilder<T, ?> select(String expression, String alias);
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery();
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery();
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String alias);
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression);
 }

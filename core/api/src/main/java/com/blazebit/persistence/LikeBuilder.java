@@ -13,17 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.builder.expression;
+
+package com.blazebit.persistence;
 
 /**
  *
- * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
  */
-public interface SubqueryBuilderListener<T> {
-
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder);
-
-    public void onBuilderStarted(SubqueryBuilderImpl<T> builder);
+//TODO: javadoc
+public interface LikeBuilder<T> extends BinaryPredicateBuilder<EscapeBuilder<T>> {
+   
 }

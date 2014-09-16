@@ -38,7 +38,7 @@ public class EmbeddableTest extends AbstractCoreTest {
     
     @Test
     public void testEmbeddableSelect() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .select("localized[:locale].name");
         String expectedQuery = "SELECT localized_locale.name FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
@@ -51,7 +51,7 @@ public class EmbeddableTest extends AbstractCoreTest {
     
     @Test
     public void testEmbeddableWhere() {
-        CriteriaBuilder<Workflow> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Workflow> cb = cbf.create(em, Workflow.class)
             .where("localized[:locale].name").eq("bla");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
@@ -66,7 +66,7 @@ public class EmbeddableTest extends AbstractCoreTest {
     
     @Test
     public void testEmbeddableOrderBy() {
-        CriteriaBuilder<Workflow> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Workflow> cb = cbf.create(em, Workflow.class)
             .orderByAsc("localized[:locale].name");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"

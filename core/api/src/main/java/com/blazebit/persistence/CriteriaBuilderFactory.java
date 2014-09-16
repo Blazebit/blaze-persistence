@@ -24,26 +24,26 @@ import javax.persistence.EntityManager;
  * @since 1.0
  */
 public interface CriteriaBuilderFactory {
-
+    
     /**
-     * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the
-     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
+     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String) 
+     * but with a default alias of {@code resultClass.getSimpleName()}.
      *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param entityClass   The entity class which should be the root entity
-     * @param <T>           The type of the entity class
+     * @param resultClass   The result class of the query
+     * @param <T>           The type of the result class
      * @return A new criteria builder
      */
-    public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass);
-
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass);
+    
     /**
-     * Creates a new criteria builder with the given entity class as root entity in the FROM clause with the given alias.
+     * Creates a new criteria builder with the given result class.
      *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param entityClass   The entity class which should be the root entity
-     * @param alias         The alias for the root entity
-     * @param <T>           The type of the entity class
+     * @param resultClass   The result class of the query
+     * @param <T>           The type of the result class
+     * @param alias         The alias that should be used for the result class from clause
      * @return A new criteria builder
      */
-    public <T> CriteriaBuilder<T> from(EntityManager entityManager, Class<T> entityClass, String alias);
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias);
 }

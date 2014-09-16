@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
@@ -22,7 +23,6 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 
 /**
  *
@@ -38,23 +38,33 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     }
 
     @Override
-    public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase() {
-        return (CaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectCase();
+    public CriteriaBuilder<T> from(Class<?> clazz) {
+        return (CriteriaBuilder<T>) super.from(clazz);
     }
 
     @Override
-    public CaseWhenBuilder<CriteriaBuilder<Tuple>> selectCase(String alias) {
-        return (CaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectCase(alias);
+    public CriteriaBuilder<T> from(Class<?> clazz, String alias) {
+        return (CriteriaBuilder<T>) super.from(clazz, alias);
+    }
+    
+    @Override
+    public CaseWhenBuilder<CriteriaBuilder<T>> selectCase() {
+        return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase();
     }
 
     @Override
-    public SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression) {
-        return (SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectSimpleCase(expression);
+    public CaseWhenBuilder<CriteriaBuilder<T>> selectCase(String alias) {
+        return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase(alias);
     }
 
     @Override
-    public SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias) {
-        return (SimpleCaseWhenBuilder<CriteriaBuilder<Tuple>>) super.selectSimpleCase(expression, alias);
+    public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression) {
+        return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression);
+    }
+
+    @Override
+    public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression, String alias) {
+        return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression, alias);
     }
 
     @Override
@@ -68,33 +78,33 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     }
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression) {
-        return (CriteriaBuilder<Tuple>) super.select(expression);
+    public CriteriaBuilder<T> select(String expression) {
+        return (CriteriaBuilder<T>) super.select(expression);
     }
 
     @Override
-    public CriteriaBuilder<Tuple> select(String expression, String alias) {
-        return (CriteriaBuilder<Tuple>) super.select(expression, alias);
+    public CriteriaBuilder<T> select(String expression, String alias) {
+        return (CriteriaBuilder<T>) super.select(expression, alias);
     }
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery() {
-        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery();
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery() {
+        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery();
     }
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String alias) {
-        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(alias);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String alias) {
+        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(alias);
     }
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression) {
-        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
-    public SubqueryInitiator<CriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        return (SubqueryInitiator<CriteriaBuilder<Tuple>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
 
 }

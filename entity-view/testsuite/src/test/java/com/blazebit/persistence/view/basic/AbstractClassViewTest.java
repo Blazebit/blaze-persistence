@@ -98,7 +98,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
 
     @Test
     public void testAbstractClass() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
         List<DocumentViewAbstractClass> results = evm.applyObjectBuilder(DocumentViewAbstractClass.class, criteria)
             .setParameter("contactPersonNumber", 2).getResultList();

@@ -15,10 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -53,7 +53,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public static final String idParamName = "ids";
 
     protected final CriteriaBuilderFactoryImpl cbf;
-    protected final Class<?> fromClazz;
+    protected Class<?> fromClazz;
     protected final EntityManager em;
 
     protected final ParameterManager parameterManager;
@@ -74,6 +74,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final List<ExpressionTransformer> transformers;
     private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
     private final SizeSelectToSubqueryTransformer sizeSelectToSubqueryTransformer;
+    private boolean fromClassExplicitelySet = false;
 
     // Mutable state
     protected Class<T> resultType;
@@ -111,15 +112,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, Class<?> fromClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
         if (em == null) {
             throw new NullPointerException("entityManager");
-        }
-        if (fromClazz == null) {
-            throw new NullPointerException("fromClazz");
         }
         if (resultClazz == null) {
             throw new NullPointerException("resultClazz");
@@ -127,7 +125,6 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.cbf = cbf;
         this.jpaInfo = new JPAInfo(em);
-        this.fromClazz = fromClazz;
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
 
@@ -135,8 +132,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.queryGenerator = new QueryGenerator(this.aliasManager);
 
-        this.joinManager = new JoinManager(alias, fromClazz, queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
+        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);
+        
+        // set defaults
+        this.joinManager.setRoot(resultClazz, alias);
+        this.fromClazz = resultClazz;
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
 
@@ -146,8 +147,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, fromClazz.getName());
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, resultClazz);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
 
         //resolve cyclic dependencies
         this.em = em;
@@ -155,14 +156,29 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo), new SubqueryRecursiveExpressionTransformer());
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
         this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
-        this.resultType = (Class<T>) fromClazz;
+        this.resultType = resultClazz;
     }
 
     public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(cbf, em, clazz, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
+        this(cbf, em, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
     }
 
+    @Override
+    public BaseQueryBuilder<T, ?> from(Class<?> clazz) {
+        return from(clazz, clazz.getSimpleName().toLowerCase());
+    }
 
+    @Override
+    public BaseQueryBuilder<T, ?> from(Class<?> clazz, String alias) {
+        if(fromClassExplicitelySet){
+            throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
+        }
+        this.fromClazz = clazz;
+        this.joinManager.setRoot(fromClazz, alias);
+        fromClassExplicitelySet = true;
+        return this;
+    }
+    
     /*
      * Select methods
      */
@@ -173,42 +189,40 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase() {
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase() {
         return selectCase(null);
     }
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String selectAlias) {
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        resultType = (Class<T>) Tuple.class;
-        return selectManager.selectCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias);
+        return selectManager.selectCase((BaseQueryBuilder<T, ?>) this, selectAlias);
     }
 
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String expression) {
         return selectSimpleCase(expression, null);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String caseOperandExpression, String selectAlias) {
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String caseOperandExpression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        resultType = (Class<T>) Tuple.class;
-        return selectManager.selectSimpleCase((BaseQueryBuilder<Tuple, ?>) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
+        return selectManager.selectSimpleCase((BaseQueryBuilder<T, ?>) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
     @Override
-    public BaseQueryBuilder<Tuple, ?> select(String expression) {
+    public BaseQueryBuilder<T, ?> select(String expression) {
         return select(expression, null);
     }
 
     @Override
-    public BaseQueryBuilder<Tuple, ?> select(String expression, String selectAlias) {
+    public BaseQueryBuilder<T, ?> select(String expression, String selectAlias) {
         Expression expr = expressionFactory.createSimpleExpression(expression, true);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
@@ -216,30 +230,30 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         verifyBuilderEnded();
         selectManager.select(this, expr, selectAlias);
         resultType = (Class<T>) Tuple.class;
-        return (BaseQueryBuilder<Tuple, ?>) this;
+        return (BaseQueryBuilder<T, ?>) this;
     }
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery() {
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery() {
         return selectSubquery(null);
     }
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String selectAlias) {
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((BaseQueryBuilder<Tuple, ?>) this, selectAlias);
+        return selectManager.selectSubquery((BaseQueryBuilder<T, ?>) this, selectAlias);
     }
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression) {
         return selectSubquery(subqueryAlias, expression, null);
     }
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -256,7 +270,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((BaseQueryBuilder<Tuple, ?>) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
+        return selectManager.selectSubquery((BaseQueryBuilder<T, ?>) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
     }
 
     /*

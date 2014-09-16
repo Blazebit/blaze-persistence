@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.impl.builder.expression;
 
+import com.blazebit.persistence.impl.SubqueryBuilderListener;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.CaseWhenAndThenBuilder;

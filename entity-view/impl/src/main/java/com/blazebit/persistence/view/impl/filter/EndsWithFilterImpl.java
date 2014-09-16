@@ -37,6 +37,6 @@ public class EndsWithFilterImpl extends EndsWithFilter {
 
     @Override
     public <T> T apply(RestrictionBuilder<T> rb) {
-        return rb.like(value);
+        return rb.like().value(value).noEscape();
     }
 }

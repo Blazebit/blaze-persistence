@@ -15,15 +15,10 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.KeySetEntity;
-import com.blazebit.persistence.entity.Person;
 import java.io.Serializable;
-import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +138,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
     }
     
     private CriteriaBuilder<Tuple> getTableCriteriaBuilder() {
-        CriteriaBuilder<Tuple> crit = cbf.from(em, KeySetEntity.class, "k")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeySetEntity.class, "k")
             .select("a").select("b").select("id");
         crit.orderBy("a", aAsc, aNullsFirst)
             .orderBy("b", bAsc, bNullsFirst)
@@ -324,7 +319,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
-        CriteriaBuilder<Tuple> crit = cbf.from(em, KeySetEntity.class, "k")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeySetEntity.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)
             .orderBy("b", this.bAsc, this.bNullsFirst)

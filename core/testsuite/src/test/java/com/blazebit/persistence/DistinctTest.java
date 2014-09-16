@@ -29,7 +29,7 @@ public class DistinctTest extends AbstractCoreTest {
 
     @Test
     public void testDistinct() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.partners.name").distinct();
 
         assertEquals("SELECT DISTINCT partners_1.name FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
@@ -37,7 +37,7 @@ public class DistinctTest extends AbstractCoreTest {
 
     @Test
     public void testDistinctWithoutSelect() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.distinct();
         assertEquals("SELECT DISTINCT d FROM Document d", criteria.getQueryString());
     }

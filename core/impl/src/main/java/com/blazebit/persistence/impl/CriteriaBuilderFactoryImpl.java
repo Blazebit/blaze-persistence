@@ -57,13 +57,14 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz) {
-        return new CriteriaBuilderImpl<T>(this, em, clazz, clazz.getSimpleName().toLowerCase());
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass) {
+        return create(entityManager, resultClass, resultClass.getSimpleName().toLowerCase());
     }
-
+    
     @Override
-    public <T> CriteriaBuilder<T> from(EntityManager em, Class<T> clazz, String alias) {
-        return new CriteriaBuilderImpl<T>(this, em, clazz, alias);
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
+        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, entityManager, resultClass, alias);
+        return cb;
     }
 
     private Map<String, Object> copyProperties(Properties properties) {

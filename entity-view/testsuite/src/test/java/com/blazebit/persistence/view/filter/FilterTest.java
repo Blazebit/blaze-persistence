@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.filter;
 
+import com.blazebit.persistence.EscapeBuilder;
+import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.WhereBuilder;
 import com.blazebit.persistence.view.AttributeFilterProvider;
@@ -41,37 +43,37 @@ public class FilterTest {
     @Test
     public void testContains() {
         AttributeFilterProvider filter = new ContainsFilterImpl(value);
-        verifyFilter(filter, expression).like("%" + value + "%");
+        Mockito.verify(verifyLikeFilter(filter, expression).like()).value("%" + value + "%");
     }
 
     @Test
     public void testContainsIgnoreCase() {
         AttributeFilterProvider filter = new ContainsIgnoreCaseFilterImpl(value);
-        verifyFilter(filter, expression).like("%" + value + "%", false);
+        Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value("%" + value + "%");
     }
 
     @Test
     public void testEndsWith() {
         AttributeFilterProvider filter = new EndsWithFilterImpl(value);
-        verifyFilter(filter, expression).like("%" + value);
+        Mockito.verify(verifyLikeFilter(filter, expression).like()).value("%" + value);
     }
 
     @Test
     public void testEndsWithIgnoreCase() {
         AttributeFilterProvider filter = new EndsWithIgnoreCaseFilterImpl(value);
-        verifyFilter(filter, expression).like("%" + value, false);
+        Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value("%" + value);
     }
 
     @Test
     public void testStartsWith() {
         AttributeFilterProvider filter = new StartsWithFilterImpl(value);
-        verifyFilter(filter, expression).like(value + "%");
+        Mockito.verify(verifyLikeFilter(filter, expression).like()).value(value + "%");
     }
 
     @Test
     public void testStartsWithIgnoreCase() {
         AttributeFilterProvider filter = new StartsWithIgnoreCaseFilterImpl(value);
-        verifyFilter(filter, expression).like(value + "%", false);
+        Mockito.verify(verifyLikeFilter(filter, expression).like(false)).value(value + "%");
     }
 
     @Test
@@ -86,5 +88,21 @@ public class FilterTest {
         Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
         filter.apply(whereBuilder, expression);
         return Mockito.verify(rb);
+    }
+    
+    public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
+        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+        RestrictionBuilder rb = Mockito.mock(RestrictionBuilder.class, Mockito.RETURNS_DEEP_STUBS);
+        EscapeBuilder eb = Mockito.mock(EscapeBuilder.class);
+        LikeBuilder lb = Mockito.mock(LikeBuilder.class);
+        Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
+        Mockito.when(rb.like()).thenReturn(lb);
+        Mockito.when(rb.like(false)).thenReturn(lb);
+        Mockito.when(lb.value("%" + value)).thenReturn(eb);
+        Mockito.when(lb.value(value + "%")).thenReturn(eb);
+        Mockito.when(lb.value("%" + value + "%")).thenReturn(eb);
+        Mockito.when(eb.noEscape()).thenReturn(whereBuilder);
+        filter.apply(whereBuilder, expression);
+        return rb;
     }
 }

@@ -60,7 +60,7 @@ public class EnumTest extends AbstractCoreTest {
     }
     @Test
     public void testEnumLiteral(){
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d").where("d.documentType").eqExpression("ENUM(com.blazebit.persistence.entity.DocumentType.NOVEL)");
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d").where("d.documentType").eqExpression("ENUM(com.blazebit.persistence.entity.DocumentType.NOVEL)");
         String expected = "SELECT d FROM Document d WHERE d.documentType = com.blazebit.persistence.entity.DocumentType.NOVEL";
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();

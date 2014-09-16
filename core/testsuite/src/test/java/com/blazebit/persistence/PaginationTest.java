@@ -20,8 +20,7 @@ import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.model.DocumentViewModel;
 import static com.googlecode.catchexception.CatchException.verifyException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Locale;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import org.junit.Assert;
@@ -92,16 +91,16 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void simpleTest() {
-        CriteriaBuilder<DocumentViewModel> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<DocumentViewModel> crit = cbf.create(em, Document.class, "d")
                 .selectNew(DocumentViewModel.class)
                 .with("d.name")
                 .with("CONCAT(d.owner.name, ' user')")
                 .with("COALESCE(d.owner.localized[1],'no item')")
                 .with("d.owner.partnerDocument.name")
                 .end();
-        crit.where("d.name").like("doc%", false, null);
-        crit.where("d.owner.name").like("%arl%", true, null);
-        crit.where("d.owner.localized[1]").like("a%", false, null);
+        crit.where("d.name").like(false).value("doc%").noEscape();
+        crit.where("d.owner.name").like().value("%arl%").noEscape();
+        crit.where("d.owner.localized[1]").like(false).value("a%").noEscape();
         crit.orderByAsc("d.id");
 
         // do not include joins that are only needed for the select clause
@@ -152,7 +151,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id ORDER BY d.id ASC NULLS LAST";
         String expectedObjectQuery = "SELECT contacts_contactNr.name FROM Document d LEFT JOIN d.contacts contacts_contactNr " + ON_CLAUSE
                 + " KEY(contacts_contactNr) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
                 .orderByAsc("id")
@@ -160,28 +159,30 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
+        cb.setParameter("contactNr", 1).getResultList();
     }
 
     @Test
     public void testSelectEmptyResultList() {
-        PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("name").isNull()
                 .orderByAsc("name")
                 .orderByAsc("id")
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());
+        cb.getResultList();
     }
 
     @Test
     public void testPaginatedWithGroupBy1() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)").groupBy("id");
         verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
     @Test
     public void testPaginatedWithGroupBy2() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
@@ -194,7 +195,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testPaginatedWithGroupBy3() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
@@ -207,14 +208,14 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testPaginatedWithDistinct1() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)").distinct();
         verifyException(cb, IllegalStateException.class).page(0, 1);
     }
 
     @Test
     public void testPaginatedWithDistinct2() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.id").select("COUNT(contacts.id)");
         cb.page(0, 1);
         try {
@@ -227,7 +228,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testOrderByExpression() {
-        PaginatedCriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .orderByAsc("contacts[:contactNr].name")
                 .orderByAsc("id")
                 .setParameter("contactNr", 1)
@@ -241,7 +242,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testOrderBySelectAlias() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("contacts[:contactNr].name", "contactName")
                 .orderByAsc("contactName")
                 .orderByAsc("id")
@@ -256,7 +257,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testOrderBySubquery() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectSubquery("contactCount")
                 .from(Document.class, "d2")
                 .select("COUNT(d2.contacts.id)")
@@ -274,7 +275,7 @@ public class PaginationTest extends AbstractCoreTest {
     @Ignore
     @Test
     public void testOrderBySize() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)")
                 .orderByAsc("SIZE(d.contacts)")
                 .orderByAsc("id")
@@ -370,7 +371,7 @@ public class PaginationTest extends AbstractCoreTest {
     
     @Test
     public void testOrderBySizeAlias() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)", "contactCount")
                 .orderByAsc("contactCount")
                 .orderByAsc("id")
@@ -387,17 +388,18 @@ public class PaginationTest extends AbstractCoreTest {
     
     @Test
     public void testSelectOnlyPropagationForWithJoins1() {
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
 
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
+        cb.getResultList();
     }
 
     @Test
     public void testSelectOnlyPropagationForWithJoins2() {
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
                 .select("c")
                 .leftJoinOn("d.contacts", "c")
@@ -407,12 +409,12 @@ public class PaginationTest extends AbstractCoreTest {
 
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
-
+        cb.getResultList();
     }
     
     @Test
     public void testCountQueryWhereClauseConjuncts() {
-        CriteriaBuilder<Workflow> cb = cbf.from(em, Workflow.class, "w");
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
             .select("w.id", "Workflow_id")
             .select("w.defaultLanguage", "Workflow_defaultLanguage")
@@ -428,5 +430,6 @@ public class PaginationTest extends AbstractCoreTest {
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
+        cb.setParameter("language", Locale.GERMAN).getResultList();
     }
 }

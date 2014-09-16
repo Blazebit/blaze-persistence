@@ -11,6 +11,17 @@ TODO: Mention core-integration-cdi for Java EE environment.
 
 ==== Java SE
 
+An instance of `CriteriaBuilderFactory` can be obtained as follows:
+
+[source,java]
+----
+CriteriaBuilderConfiguration config = Criteria.getDefault();
+// optionally, perform dynamic configuration
+CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory();
+----
+
+The `CriteriaBuilderConfiguration` instance allows dynamic configuration of the
+factory.
 TODO: Describe how a CriteriaBuilderFactory can be built. Mention that the factory should only be built once.
 
 ==== Java EE
@@ -20,6 +31,45 @@ TODO: Describe how a CriteriaBuilderFactory can be obtained.
 === First criteria query
 
 TODO: First describe a simple JPA model and then show some basic queries.
+
+Suppose following JPA entity model (for the sake of compactness, setters are omitted):
+
+[source,java]
+----
+@Entity
+public class Document {
+    private Long id;
+    private String name;
+    private Set<Version> versions;
+
+    @OneToMany(mappedBy = "document")
+    public Set<Version> getVersions() {
+        return versions;
+    }
+}
+
+@Entity
+public class Version {
+    private Long id;
+    private Calendar creationDate;
+    private Document document;
+
+    @Temporal(TemporalType.DATE)
+    public Calendar getCreationDate() {
+        return creationDate;
+    }
+
+    @ManyToOne
+    public Document getDocument() {
+        return document;
+    }
+}
+----
+
+Following example queries will assume the `cbf` field to hold an instance of
+CriteriaBuilderFactory.
+
+
 
 === Summary
 

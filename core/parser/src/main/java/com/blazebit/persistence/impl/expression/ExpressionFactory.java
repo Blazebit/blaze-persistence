@@ -33,5 +33,7 @@ public interface ExpressionFactory {
     
     public Expression createArithmeticExpression(String expression);
     
+    public Expression createStringExpression(String expression);
+    
     public Expression createOrderByExpression(String expression);
 }

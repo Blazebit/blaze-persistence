@@ -79,7 +79,7 @@ public class ComplexExpressionTest extends AbstractCoreTest {
 
     @Test
     public void testCaseWhenExpressionOperatorUsesInSelect() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN " + caseExp1 + " THEN true ELSE false END");
         String expectedQuery = 
                 "SELECT CASE WHEN " + caseExp2 + " THEN true ELSE false END"

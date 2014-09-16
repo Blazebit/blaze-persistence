@@ -30,6 +30,24 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
     OrderByBuilder<X>, SelectBuilder<T, X> {
 
     /**
+     * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the
+     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
+     *
+     * @param entityClass   The entity class which should be the root entity
+     * @return A new criteria builder
+     */
+    public BaseQueryBuilder<T, ?> from(Class<?> entityClass);
+
+    /**
+     * Adds a entity class to the from clause of the query with the given alias.
+     *
+     * @param entityClass   The entity class which should be the root entity
+     * @param alias         The alias for the root entity
+     * @return A new criteria builder
+     */
+    public BaseQueryBuilder<T, ?> from(Class<?> entityClass, String alias);
+    
+    /**
      * Returns the result type of this query.
      *
      * @return The result type of this query
@@ -70,9 +88,12 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
 
     /**
      * Adds a join with an on-clause to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * 
+     * <p>
      * The resulting join is different from a default join because it can only be referred to via it's alias.
      * The absolute path can only be used if the joined path is a map and the on-clause contains a EQ predicate with the KEY on the left hand side.
-     *
+     * </p>
+     * 
      * @param path  The path to join
      * @param alias The alias for the joined element
      * @param type  The join type
@@ -174,32 +195,32 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * Covariant overrides
      */
     @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase();
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase();
 
     @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectCase(String alias);
+    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase(String alias);
 
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression);
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String expression);
 
     @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String expression, String alias);
 
     @Override
-    public BaseQueryBuilder<Tuple, ?> select(String expression);
+    public BaseQueryBuilder<T, ?> select(String expression);
 
     @Override
-    public BaseQueryBuilder<Tuple, ?> select(String expression, String alias);
+    public BaseQueryBuilder<T, ?> select(String expression, String alias);
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery();
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery();
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String alias);
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String alias);
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
 
     @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression);
+    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression);
 }

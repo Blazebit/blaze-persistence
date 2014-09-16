@@ -33,7 +33,7 @@ public class InTest extends AbstractCoreTest {
 
     @Test
     public void testIn() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").in(ages);
 
@@ -43,13 +43,13 @@ public class InTest extends AbstractCoreTest {
 
     @Test
     public void testInNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).in((List<?>) null);
     }
 
     @Test
     public void testNotIn() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").notIn(ages);
         assertEquals("SELECT d FROM Document d WHERE d.age NOT IN :param_0", criteria.getQueryString());
@@ -58,7 +58,7 @@ public class InTest extends AbstractCoreTest {
 
     @Test
     public void testNotInNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).notIn((List<?>) null);
     }
 

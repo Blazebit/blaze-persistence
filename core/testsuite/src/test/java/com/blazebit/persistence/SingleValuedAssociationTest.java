@@ -31,7 +31,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     
     @Test
     public void testSingleValuedAssociationRelativeIdAccess() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("owner.id");
         String expectedQuery = "SELECT d.owner.id FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
@@ -39,7 +39,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     
     @Test
     public void testSingleValuedAssociationAbsoluteIdAccess() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id");
         String expectedQuery = "SELECT d.owner.id FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
@@ -47,7 +47,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     
     @Test
     public void testSingleValuedAssociationIdAccessJoinOverride1() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("d.owner.id")
                 .leftJoinDefault("owner", "o");
         String expectedQuery = "SELECT o.id FROM Document d LEFT JOIN d.owner o";
@@ -56,7 +56,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     
     @Test
     public void testSingleValuedAssociationIdAccessJoinOverride2() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("o.id")
                 .leftJoinDefault("owner", "o");
         String expectedQuery = "SELECT o.id FROM Document d LEFT JOIN d.owner o";
@@ -65,7 +65,7 @@ public class SingleValuedAssociationTest extends AbstractCoreTest {
     
     @Test
     public void testSingleValuedAssociationIdAccessJoinOverride3() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("o.id")
                 .leftJoin("owner", "o");
         String expectedQuery = "SELECT o.id FROM Document d LEFT JOIN d.owner o";

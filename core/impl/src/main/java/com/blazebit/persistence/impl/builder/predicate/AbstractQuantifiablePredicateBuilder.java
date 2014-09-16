@@ -21,11 +21,15 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryAndExpressionBuilderListener;
+import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -43,7 +47,7 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
+public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAndExpressionBuilderListener<T> implements QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
@@ -66,14 +70,14 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
     protected abstract QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier);
 
     protected T chain(Predicate predicate) {
-        verifySubqueryBuilderEnded();
+        verifyBuilderEnded();
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
         listener.onBuilderEnded(this);
         return result;
     }
 
-    protected void chainSubquery(Predicate predicate) {
-        verifySubqueryBuilderEnded();
+    protected void chainSubbuilder(Predicate predicate) {
+        verifyBuilderEnded();
         this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
     }
 
@@ -87,67 +91,78 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
         return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
                 PredicateQuantifier.ONE));
     }
-    
+
     /* case when functions */
-    
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhen(String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).when(expression);
     }
 
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> caseWhenAnd() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenAnd();
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenExists();
+    }
+    
+    @Override
+    public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists() {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenNotExists();
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenSubquery();
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenSubquery(subqueryAlias, expression);
     }
 
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> caseWhenOr() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenOr();
     }
-    
-    /* quantification functions */
 
     @Override
+    public SimpleCaseWhenBuilder<T> simpleCase(String caseOperand) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new SimpleCaseWhenBuilderImpl<T>(result, this, expressionFactory, expressionFactory.createCaseOperandExpression(caseOperand)));
+    }
+
+    /* quantification functions */
+    @Override
     public SubqueryInitiator<T> all() {
-        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ALL));
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ALL));
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
     public SubqueryInitiator<T> any() {
-        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ANY));
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ANY));
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
     public SubqueryBuilder<T> from(Class<?> clazz) {
-        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().from(clazz);
     }
 
     @Override
     public SubqueryBuilder<T> from(Class<?> clazz, String alias) {
-        chainSubquery(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return getSubqueryInitiator().from(clazz, alias);
     }
 
@@ -156,6 +171,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
         Predicate pred;
+        // TODO: is this needed anymore?
         if (predicate instanceof NotPredicate) {
             // unwrap not predicate
             pred = ((NotPredicate) predicate).getPredicate();
@@ -182,5 +198,17 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryBu
             subqueryInitiator = subqueryInitFactory.createSubqueryInitiator(result, this);
         }
         return subqueryInitiator;
+    }
+
+    @Override
+    public void onBuilderEnded(ExpressionBuilder builder) {
+        super.onBuilderEnded(builder);
+        if (predicate instanceof BinaryExpressionPredicate) {
+            ((BinaryExpressionPredicate) predicate).setRight(builder.getExpression());
+        } else {
+            throw new IllegalStateException("ExpressionBuilder ended but predicate type was unexpected");
+        }
+
+        listener.onBuilderEnded(AbstractQuantifiablePredicateBuilder.this);
     }
 }

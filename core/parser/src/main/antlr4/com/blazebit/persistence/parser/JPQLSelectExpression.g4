@@ -49,6 +49,9 @@ parseScalarExpression
 parseArithmeticExpression
     : arithmetic_expression;
 
+parseStringExpression
+    : string_expression;
+
 parseCaseOperandExpression
     : case_operand;
 

@@ -98,7 +98,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
             DocumentMasterView.class, 0, 1);
 
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("owner.name", "OWNER");
         setting.addAttributeSorter("owner.name", Sorters.descending());
         setting.addAttributeSorter("id", Sorters.descending());
@@ -127,7 +127,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
             DocumentMasterView.class, 0, 1);
 
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("myContactPerson.name", "Owner");
         setting.addAttributeSorter("myContactPerson.name", Sorters.descending());
         setting.addAttributeSorter("id", Sorters.descending());

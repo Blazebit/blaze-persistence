@@ -16,15 +16,16 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.BetweenBuilder;
+import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListener;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.SubqueryBuilderListener;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -360,82 +361,23 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public T like(String value) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), true, null));
+    public LikeBuilder<T> like(boolean caseSensitive) {
+        return startBuilder(new LikeBuilderImpl<T>(result, this, leftExpression, expressionFactory, subqueryInitFactory, false, caseSensitive));
     }
 
     @Override
-    public T like(String value, boolean caseSensitive) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, null));
+    public LikeBuilder<T> like() {
+        return like(true);
     }
 
     @Override
-    public T like(String value, boolean caseSensitive, Character escapeCharacter) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, escapeCharacter));
+    public LikeBuilder<T> notLike(boolean caseSensitive) {
+        return startBuilder(new LikeBuilderImpl<T>(result, this, leftExpression, expressionFactory, subqueryInitFactory, true, caseSensitive));
     }
 
     @Override
-    //TODO: actually LIKE only supports string literals and parameters as pattern value...
-    public T likeExpression(String expression) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), true, null));
-    }
-
-    @Override
-    public T likeExpression(String expression, boolean caseSensitive) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, null));
-    }
-
-    @Override
-    public T likeExpression(String expression, boolean caseSensitive, Character escapeCharacter) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, escapeCharacter));
-    }
-
-    @Override
-    public T notLike(String value) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), true, null, true));
-    }
-
-    @Override
-    public T notLike(String value, boolean caseSensitive) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, null, true));
-    }
-
-    @Override
-    public T notLike(String value, boolean caseSensitive, Character escapeCharacter) {
-        if (value == null) {
-            throw new NullPointerException("value");
-        }
-        return chain(new LikePredicate(leftExpression, new ParameterExpression((Object) value), caseSensitive, escapeCharacter, true));
-    }
-
-    @Override
-    public T notLikeExpression(String expression) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), true, null, true));
-    }
-
-    @Override
-    public T notLikeExpression(String expression, boolean caseSensitive) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, null, true));
-    }
-
-    @Override
-    public T notLikeExpression(String expression, boolean caseSensitive, Character escapeCharacter) {
-        return chain(new LikePredicate(leftExpression, expressionFactory.createSimpleExpression(expression), caseSensitive, escapeCharacter, true));
+    public LikeBuilder<T> notLike() {
+        return notLike(true);
     }
 
     @Override

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.builder.expression;
+package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.BuilderChainingException;
 

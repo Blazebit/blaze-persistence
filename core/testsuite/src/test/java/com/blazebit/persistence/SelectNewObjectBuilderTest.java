@@ -61,7 +61,7 @@ public class SelectNewObjectBuilderTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewDocumentObjectBuilder() {
-        CriteriaBuilder<String[]> criteria = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<String[]> criteria = cbf.create(em, Document.class, "d")
             .selectNew(new ObjectBuilder<String[]>() {
 
                 @Override

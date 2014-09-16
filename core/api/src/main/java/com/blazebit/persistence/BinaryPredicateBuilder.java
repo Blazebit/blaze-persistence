@@ -44,67 +44,119 @@ public interface BinaryPredicateBuilder<T> {
      */
     public T expression(String expression);
     
-    
     /**
-     * Starts a {@link RestrictionBuilder} to create a when predicate where expression will be on the left hand side of the predicate.
+     * Starts a {@link RestrictionBuilder} to create a when expression with a single predicate
+     * in which {@code expression} will be on the left hand side of the predicate.
      *
-     * @param expression The left hand expression for a when predicate
+     * @see CaseWhenStarterBuilder#when(java.lang.String) More details about this method
+     * 
+     * @param expression The left hand side expression for a when predicate
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhen(String expression);
 
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single predicate
+     * in which the left hand side will be a subquery.
+     * 
+     * <p>
      * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with it's then expression are added to the case when builder.
-     *
+     * the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see CaseWhenStarterBuilder#whenSubquery() More details about this method
+     * 
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery();
 
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate. All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single predicate
+     * in which the left hand side will be a subquery.
+     * 
+     * <p>
      * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with it's then expression are added to the case when builder.
-     *
+     * the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression);
 
     /**
-     * Starts an exists predicate for the when clause with a subquery on the right hand side.
-     * When the builder finishes, the when predicate in conjunction with it's then expression are added to the case when builder.
-     *
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single exists predicate.
+     * 
+     * <p>
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see CaseWhenStarterBuilder#whenExists() More details about this method
+     * 
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenExists();
 
     /**
-     * Starts an exists predicate for the when clause with a subquery on the right hand side.
-     * When the builder finishes, the when predicate in conjunction with it's then expression are added to the case when builder.
-     *
+     * Starts a {@link SubqueryInitiator} to create a when expression with a single negated exists predicate.
+     * 
+     * <p>
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see CaseWhenStarterBuilder#whenNotExists() More details about this method
+     * 
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists();
 
     /**
-     * Starts a {@link CaseWhenAndThenBuilder} which is a predicate consisting only of
-     * conjunctive connected predicates. When the builder finishes, the when predicate
-     * in conjunction with it's then expression are added to the case when builder.
-     *
+     * Starts a {@link CaseWhenAndThenBuilder} for building a when expression 
+     * with conjunctively connected predicates.
+     * 
+     * <p>
+     * When the builder finishes, the when predicate
+     * in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see CaseWhenStarterBuilder#whenAnd() More details about this method
+     * 
      * @return The and predicate builder for the when expression
      */
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> caseWhenAnd();
 
     /**
-     * Starts a {@link CaseWhenOrThenBuilder} which is a predicate consisting only of
-     * disjunctiv connected predicates. When the builder finishes, the when predicate
-     * in conjunction with it's then expression are added to the case when builder.
-     *
+     * Starts a {@link CaseWhenOrThenBuilder} for building a when expression 
+     * with disjunctively connected predicates.
+     * 
+     * 
+     * <p>
+     * When the builder finishes, the when predicate
+     * in conjunction with its then expression are added to the case when builder.
+     * <p/>
+     * 
+     * @see CaseWhenStarterBuilder#whenOr() More details about this method
+     * 
      * @return The or predicate builder for the when expression
      */
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> caseWhenOr();
+    
+    /**
+     * Starts a {@link SimpleCaseWhenBuilder} for building a simple case when expression.
+     * 
+     * <p>
+     * When the builder finishes, the when predicate
+     * in conjunction with its then expression are added to the case when builder.
+     * </p>
+     * 
+     * @see SimpleCaseWhenStarterBuilder#when(java.lang.String, java.lang.String) More details about this method
+     * 
+     * @param caseOperand The case operand
+     * @return The or predicate builder for the when expression
+     */
+    public SimpleCaseWhenBuilder<T> simpleCase(String caseOperand);
 }

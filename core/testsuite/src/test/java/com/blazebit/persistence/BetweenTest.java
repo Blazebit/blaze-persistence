@@ -32,7 +32,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetween() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").between(1L).and(10L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age BETWEEN :param_0 AND :param_1", criteria.getQueryString());
@@ -41,19 +41,19 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenValueAndNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age").between(1), NullPointerException.class).and(null);
     }
 
     @Test
     public void testBetweenNullAndValue() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).between(null);
     }
 
     @Test
     public void testNotBetween() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").notBetween(1L).and(10L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age NOT BETWEEN :param_0 AND :param_1", criteria.getQueryString());
@@ -62,20 +62,20 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testNotBetweenValueAndNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age").notBetween(1), NullPointerException.class).and(null);
     }
 
     @Test
     public void testNotBetweenNullAndValue() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).notBetween(null);
     }
 
     /* builder ended tests */
     @Test
     public void testBetweenObjectBuilderNotEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.between(1);
         verifyBuilderChainingException(restrictionBuilder);
@@ -84,7 +84,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testNotBetweenObjectBuilderNotEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetween(1);
         verifyBuilderChainingException(restrictionBuilder);
@@ -93,7 +93,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenExpressionBuilderNotEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenExpression("1");
         verifyBuilderChainingException(restrictionBuilder);
@@ -102,7 +102,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testNotBetweenExpressionBuilderNotEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenExpression("1");
         verifyBuilderChainingException(restrictionBuilder);
@@ -111,7 +111,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenSubqueryBuilderNotEnded1() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenSubquery();
         verifyBuilderChainingException(restrictionBuilder);
@@ -120,7 +120,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testNotBetweenSubqueryBuilderNotEnded1() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenSubquery();
         verifyBuilderChainingException(restrictionBuilder);
@@ -129,7 +129,7 @@ public class BetweenTest extends AbstractCoreTest {
     
     @Test
     public void testBetweenSubqueryBuilderNotEnded2() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.betweenSubquery("s", "s+1");
         verifyBuilderChainingException(restrictionBuilder);
@@ -138,7 +138,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testNotBetweenSubqueryBuilderNotEnded2() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         RestrictionBuilder<CriteriaBuilder<Document>> restrictionBuilder = criteria.where("d.age");
         restrictionBuilder.notBetweenSubquery("s", "s+1");
         verifyBuilderChainingException(restrictionBuilder);
@@ -147,7 +147,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenAndSubqueryBuilderNotEnded1() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.andSubqery();
         verifyBuilderChainingException(betweenBuilder);
@@ -156,7 +156,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenAndSubqueryBuilderNotEnded2() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.andSubqery("s", "s+1");
         verifyBuilderChainingException(betweenBuilder);
@@ -165,7 +165,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenAndBuilderAlreadyEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.and(1);
         verifyBuilderChainingExceptionWithEndedBuilder(betweenBuilder);
@@ -173,7 +173,7 @@ public class BetweenTest extends AbstractCoreTest {
 
     @Test
     public void testBetweenAndExpressionBuilderAlreadyEnded() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         BetweenBuilder<CriteriaBuilder<Document>> betweenBuilder = criteria.where("d.age").between(1);
         betweenBuilder.andExpression("1");
         verifyBuilderChainingExceptionWithEndedBuilder(betweenBuilder);

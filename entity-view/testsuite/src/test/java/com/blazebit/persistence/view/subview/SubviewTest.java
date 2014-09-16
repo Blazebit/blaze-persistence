@@ -113,7 +113,7 @@ public class SubviewTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonSubViewFiltered.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
         CriteriaBuilder<DocumentMasterView> cb = evm.applyObjectBuilder(DocumentMasterView.class, criteria)
             .setParameter("contactPersonNumber", 2);

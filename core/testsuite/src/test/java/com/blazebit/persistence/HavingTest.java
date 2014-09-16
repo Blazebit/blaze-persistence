@@ -33,7 +33,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHaving() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("d.age").gt(0L);
         assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY owner_1 HAVING d.age > :param_0", criteria.getQueryString());
@@ -42,7 +42,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingPropertyExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("d.age + 1").gt(0L);
 
@@ -52,7 +52,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingPath() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("LENGTH(d.partners.name)").gt(0);
 
@@ -64,7 +64,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingPathExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("LENGTH(d.partners.name) + 1").gt(0);
 
@@ -76,10 +76,10 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingAnd() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .having("LENGTH(d.partners.name)").gt(0)
-            .having("d.versions.url").like("http://%");
+            .having("d.versions.url").like().value("http://%").noEscape();
 
         assertEquals(
             "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0 AND versions_1.url LIKE :param_1",
@@ -89,11 +89,11 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingOr() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
                 .having("LENGTH(d.partners.name)").gt(0)
-                .having("d.versions.url").like("http://%")
+                .having("d.versions.url").like().value("http://%").noEscape()
             .endOr();
 
         assertEquals(
@@ -104,16 +104,16 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingOrAnd() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
                 .havingAnd()
                     .having("LENGTH(d.partners.name)").gt(0)
-                    .having("d.versions.url").like("http://%")
+                    .having("d.versions.url").like().value("http://%").noEscape()
                 .endAnd()
                 .havingAnd()
                     .having("d.versions.date").lt(Calendar.getInstance())
-                    .having("d.versions.url").like("ftp://%")
+                    .having("d.versions.url").like().value("ftp://%").noEscape()
                 .endAnd()
             .endOr();
 
@@ -125,15 +125,15 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingAndOr() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
                 .having("LENGTH(d.partners.name)").gt(0)
-                .having("d.versions.url").like("http://%")
+                .having("d.versions.url").like().value("http://%").noEscape()
             .endOr()
             .havingOr()
                 .having("d.versions.date").lt(Calendar.getInstance())
-                .having("d.versions.url").like("ftp://%")
+                .having("d.versions.url").like().value("ftp://%").noEscape()
             .endOr();
 
         assertEquals(
@@ -144,7 +144,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingOrSingleClause() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
                 .having("LENGTH(d.partners.name)").gt(0)
@@ -158,7 +158,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingOrHavingAndSingleClause() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
                 .havingAnd()
@@ -174,19 +174,19 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingWithoutGroupBy() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, IllegalStateException.class).having("d.partners.name");
     }
 
     @Test
     public void testHavingNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.groupBy("d.owner"), NullPointerException.class).having(null);
     }
 
     @Test
     public void testHavingExists() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingExists()
                 .from(Person.class, "p")
@@ -201,7 +201,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingNotExists() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingNotExists()
                 .from(Person.class, "p")
@@ -216,7 +216,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingNotExists2() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingNotExists()
@@ -232,7 +232,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingExistsAndBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingOr()
@@ -252,7 +252,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingNotExistsAndBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingOr()
@@ -272,7 +272,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingExistsOrBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
@@ -290,7 +290,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingNotExistsOrBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
@@ -308,7 +308,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingLeftSubquery() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("id")
             .havingSubquery()
                 .from(Person.class, "p")
@@ -323,7 +323,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingLeftSubqueryAndBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingOr()
@@ -343,7 +343,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testHavingLeftSubqueryOrBuilder() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
@@ -360,7 +360,7 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingSubquery("alias", "SUM(alias)")
                 .from(Person.class, "p")
@@ -377,7 +377,7 @@ public class HavingTest extends AbstractCoreTest {
 
     @Test
     public void testWhereMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingSubquery("alias", "alias * alias")
                 .from(Person.class, "p")
@@ -392,7 +392,7 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingAndSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingOr()
@@ -413,7 +413,7 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingAndMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .having("d.name").eq("test")
             .havingOr()
@@ -434,7 +434,7 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingOrSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
@@ -453,7 +453,7 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingOrMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
@@ -470,9 +470,11 @@ public class HavingTest extends AbstractCoreTest {
 //        cb.getResultList(); 
     }
     
+    /* having case tests */
+    
     @Test
     public void testHavingCase() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").then("2").otherwise("1").eqExpression("d.idx");
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, crit.getQueryString());
@@ -481,23 +483,67 @@ public class HavingTest extends AbstractCoreTest {
     
     @Test
     public void testHavingCaseBuilderNotEnded() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingCase();
         verifyBuilderChainingException(crit);
     }
     
     @Test
     public void testHavingSimpleCaseBuilderNotEnded() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingCase();
         verifyBuilderChainingException(crit);
     }
     
     @Test
     public void testHavingSimpleCase() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingSimpleCase("d.id").when("1", "d.age").otherwise("d.idx").eqExpression("d.idx");
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE d.id WHEN 1 THEN d.age ELSE d.idx END = d.idx";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingAndCase() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.groupBy("d.id").havingOr().havingAnd().havingCase()
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
+                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endAnd().endOr();
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingAndSimpleCase() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.groupBy("d.id").havingOr().havingAnd().havingSimpleCase("d.id")
+                .when("d.age", "2")
+                .when("4", "4").otherwise("3").eqExpression("2").endAnd().endOr();
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingOrCase() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.groupBy("d.id").havingOr().havingCase()
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
+                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endOr();
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList(); 
+    }
+    
+    @Test
+    public void testHavingOrSimpleCase() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.groupBy("d.id").havingOr().havingSimpleCase("d.id")
+                .when("d.age", "2")
+                .when("4", "4").otherwise("3").eqExpression("2").endOr();
+        String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE d.id WHEN d.age THEN 2 WHEN 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }

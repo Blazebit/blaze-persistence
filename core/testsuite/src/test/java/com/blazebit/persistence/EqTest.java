@@ -32,7 +32,7 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqualTo() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").eq(20L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age = :param_0", criteria.getQueryString());
@@ -41,13 +41,13 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqualToNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).eq(null);
     }
 
     @Test
     public void testEqualToExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").eqExpression("d.versions.date + 1");
 
         assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.age = versions_1.date + 1", criteria
@@ -57,19 +57,19 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqualToEmptyExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), IllegalArgumentException.class).eqExpression("");
     }
 
     @Test
     public void testEqualToNullExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).eqExpression(null);
     }
 
     @Test
     public void testNotEqualTo() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").notEq(20L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age <> :param_0", criteria.getQueryString());
@@ -78,13 +78,13 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testNotEqualToNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).notEq(null);
     }
 
     @Test
     public void testNotEqualToExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").notEqExpression("d.versions.date + 1");
 
         assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.age <> versions_1.date + 1", criteria.getQueryString());
@@ -93,19 +93,19 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testNotEqualToEmptyExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), IllegalArgumentException.class).notEqExpression("");
     }
 
     @Test
     public void testNotEqualToNullExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).notEqExpression(null);
     }
 
     @Test
     public void testEqAll() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").eq().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -115,7 +115,7 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqAny() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").eq().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -125,7 +125,7 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqOne() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").eq().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name = (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -134,7 +134,7 @@ public class EqTest extends AbstractCoreTest {
     
     @Test
     public void testEqSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").eq("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age = 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -143,7 +143,7 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testEqMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").eq("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age = (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -152,7 +152,7 @@ public class EqTest extends AbstractCoreTest {
     
     @Test
     public void testNotEqSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").notEq("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE NOT d.age = 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -161,7 +161,7 @@ public class EqTest extends AbstractCoreTest {
 
     @Test
     public void testNotEqMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").notEq("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE NOT d.age = (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());

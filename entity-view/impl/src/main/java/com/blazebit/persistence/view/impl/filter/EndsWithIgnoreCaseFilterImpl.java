@@ -37,6 +37,6 @@ public class EndsWithIgnoreCaseFilterImpl extends EndsWithIgnoreCaseFilter {
 
     @Override
     public <T> T apply(RestrictionBuilder<T> rb) {
-        return rb.like(value, false);
+        return rb.like(false).value(value).noEscape();
     }
 }

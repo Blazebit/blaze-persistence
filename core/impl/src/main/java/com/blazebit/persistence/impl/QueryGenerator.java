@@ -316,8 +316,6 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        // TODO: what the hell is this? I don't see any reason to include this piece of code in here
-        // It is already handled in the order by manager, why duplicate it here??
         if (resolveSelectAliases) {
             // if path expression should not be replaced by select aliases we
             // check for select aliases that have to be replaced with the corresponding

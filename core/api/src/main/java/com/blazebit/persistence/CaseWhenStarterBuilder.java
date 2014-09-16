@@ -43,12 +43,30 @@ public interface CaseWhenStarterBuilder<T> {
 
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate. All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. This allows to build
+     * expressions containing subqueries like following example shows:
+     * </p>
+     * 
+     * <p>
+     * {@code whenSubquery("x", "x * 2 + 1").from(Person.class, "p").select("COUNT(p)").end(); }
+     * </p>
+     * 
+     * <p>
+     * results in:
+     * </p>
+     * 
+     * <p>
+     * {@code (SELECT COUNT(p) FROM Person p) * 2 + 1}
+     * </p>
+     * 
+     * <p>
      * When the subquery builder and the restriction builder for the right hand side are finished,
      * the when predicate in conjunction with it's then expression are added to the case when builder.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubquery(String subqueryAlias, String expression);

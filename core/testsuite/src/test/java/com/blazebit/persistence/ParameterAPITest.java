@@ -37,25 +37,25 @@ public class ParameterAPITest extends AbstractCoreTest {
 
     @Test
     public void testSetParameter_noSuchParamter() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
         verifyException(crit, IllegalArgumentException.class).setParameter("index", 0);
     }
 
     @Test
     public void testSetDateParameter_noSuchParamter() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
         verifyException(crit, IllegalArgumentException.class).setParameter("index", new Date(), TemporalType.DATE);
     }
 
     @Test
     public void testSetCalendarParameter_noSuchParamter() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
         verifyException(crit, IllegalArgumentException.class).setParameter("index", Calendar.getInstance(), TemporalType.DATE);
     }
 
     @Test
     public void test() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
         crit.select("contacts[:index]")
             .where("contacts[:where_index]").isNotNull()
             .where("name").eq("MyDoc")
@@ -92,20 +92,20 @@ public class ParameterAPITest extends AbstractCoreTest {
 
     @Test
     public void testReservedParameterName1() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, IllegalArgumentException.class).select("contacts[:ids]");
     }
 
     @Test
     public void testUseParameterTwoTimes() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class).select(":test")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class).select(":test")
             .where("contacts[:test]").isNull();
         assertFalse(cb.isParameterSet("test"));
     }
 
     @Test
     public void testIsParameterSetWithNonExistingParameter() {
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         assertFalse(cb.isParameterSet("test"));
     }
 }

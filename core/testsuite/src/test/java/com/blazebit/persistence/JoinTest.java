@@ -33,14 +33,14 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testDefaultAlias() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         assertEquals("SELECT " + defaultDocumentAlias + " FROM Document " + defaultDocumentAlias, criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testRightJoinFetch() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.rightJoinFetch("owner", "o");
         criteria.rightJoinFetch("versions", "v");
         criteria.where("o.age").eq(0L);
@@ -52,7 +52,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testRightJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.rightJoin("owner", "o");
         criteria.rightJoin("versions", "v");
 
@@ -62,7 +62,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testLeftJoinFetch() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.leftJoinFetch("owner", "o");
         criteria.leftJoinFetch("versions", "v");
 
@@ -72,7 +72,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testLeftJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.leftJoin("owner", "o");
         criteria.leftJoin("versions", "v");
 
@@ -82,7 +82,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testInnerJoinFetch() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoinFetch("owner", "o");
         criteria.innerJoinFetch("versions", "v");
 
@@ -92,7 +92,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testInnerJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.innerJoin("owner", "o");
         criteria.innerJoin("versions", "v");
 
@@ -102,32 +102,32 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testJoinMethodEquivalences() {
-        final String qInnerJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, false).getQueryString();
-        final String qInnerJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.INNER, true)
+        final String qInnerJoin = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.INNER, false).getQueryString();
+        final String qInnerJoinFetch = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.INNER, true)
             .getQueryString();
-        final String qLeftJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, false).getQueryString();
-        final String qLeftJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.LEFT, true).getQueryString();
-        final String qRightJoin = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, false).getQueryString();
-        final String qRightJoinFetch = cbf.from(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, true)
+        final String qLeftJoin = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.LEFT, false).getQueryString();
+        final String qLeftJoinFetch = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.LEFT, true).getQueryString();
+        final String qRightJoin = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, false).getQueryString();
+        final String qRightJoinFetch = cbf.create(em, Document.class, "d").join("owner", "o", JoinType.RIGHT, true)
             .getQueryString();
 
-        assertEquals(cbf.from(em, Document.class, "d").innerJoin("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").innerJoin("owner", "o").getQueryString(),
                      qInnerJoin);
-        assertEquals(cbf.from(em, Document.class, "d").innerJoinFetch("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").innerJoinFetch("owner", "o").getQueryString(),
                      qInnerJoinFetch);
-        assertEquals(cbf.from(em, Document.class, "d").rightJoin("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").rightJoin("owner", "o").getQueryString(),
                      qRightJoin);
-        assertEquals(cbf.from(em, Document.class, "d").rightJoinFetch("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").rightJoinFetch("owner", "o").getQueryString(),
                      qRightJoinFetch);
-        assertEquals(cbf.from(em, Document.class, "d").leftJoin("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").leftJoin("owner", "o").getQueryString(),
                      qLeftJoin);
-        assertEquals(cbf.from(em, Document.class, "d").leftJoinFetch("owner", "o").getQueryString(),
+        assertEquals(cbf.create(em, Document.class, "d").leftJoinFetch("owner", "o").getQueryString(),
                      qLeftJoinFetch);
     }
 
     @Test
     public void testNestedLeftJoinBeforeRightJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
         criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
@@ -140,7 +140,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testNestedRightJoinBeforeLeftJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
         criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
@@ -153,7 +153,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testNestedLeftJoinAfterRightJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.RIGHT, true);
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.LEFT, false);
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
@@ -166,7 +166,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testNestedRightJoinAfterLeftJoin() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.joinDefault("owner.ownedDocuments.versions.document.name", "contName", JoinType.LEFT, true);
         criteria.joinDefault("owner.ownedDocuments.versions", "cont", JoinType.RIGHT, false);
         criteria.joinDefault("owner", "o", JoinType.INNER, true);
@@ -179,41 +179,41 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testConstructorClassNull() {
-        verifyException(cbf, NullPointerException.class).from(em, null, "d");
+        verifyException(cbf, NullPointerException.class).create(em, null, "d");
     }
 
     @Test
     public void testConstructorEntityManagerNull() {
-        verifyException(cbf, NullPointerException.class).from(null, Document.class, "d");
+        verifyException(cbf, NullPointerException.class).create(null, Document.class, "d");
     }
 
     @Test
     public void testJoinNullPath() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, NullPointerException.class).join(null, "o", JoinType.LEFT, true);
     }
 
     @Test
     public void testJoinNullAlias() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, NullPointerException.class).join("owner", null, JoinType.LEFT, true);
     }
 
     @Test
     public void testJoinNullJoinType() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, NullPointerException.class).join("owner", "o", null, true);
     }
 
     @Test
     public void testJoinEmptyAlias() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         verifyException(criteria, IllegalArgumentException.class).join("owner", "", JoinType.LEFT, true);
     }
 
     @Test
     public void testUnresolvedAlias1() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("z.c.x").eq(0).leftJoin("d.partners", "p");
 
         verifyException(criteria, IllegalArgumentException.class).getQueryString();
@@ -221,7 +221,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testUnresolvedAlias2() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "a");
         criteria.where("z").eq(0);
 
         verifyException(criteria, IllegalArgumentException.class).getQueryString();
@@ -229,7 +229,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testUnresolvedAliasInOrderBy() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "a");
         criteria.orderByAsc("z");
 
         verifyException(criteria, IllegalArgumentException.class).getQueryString();
@@ -237,7 +237,7 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testImplicitRootRelativeAlias() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "a");
         criteria.where("versions.document.age").eq(0L).leftJoin("a.partners", "p");
 
         assertEquals(
@@ -248,8 +248,8 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testCallOrderInvariance() {
-        CriteriaBuilder<Document> criteria1 = cbf.from(em, Document.class, "a");
-        CriteriaBuilder<Document> criteria2 = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> criteria1 = cbf.create(em, Document.class, "a");
+        CriteriaBuilder<Document> criteria2 = cbf.create(em, Document.class, "a");
 
         criteria1.where("p.ownedDocuments.age").eq(0L).leftJoin("a.partners", "p");
         criteria2.leftJoin("a.partners", "p").where("p.ownedDocuments.age").eq(0L);
@@ -266,21 +266,21 @@ public class JoinTest extends AbstractCoreTest {
 
     @Test
     public void testFetchJoinCheck1() {
-        CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "a")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
         verifyException(crit, IllegalStateException.class).join("d.versions", "versions", JoinType.LEFT, true);
     }
     
     @Test
     public void testFetchJoinCheck2() {
-        CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "a")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("name");
         verifyException(crit, IllegalStateException.class).fetch("d.versions");
     }
 
     @Test
     public void testModelAwareJoin() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.select("owner.name");
 
         assertEquals("SELECT owner_1.name FROM Document a JOIN a.owner owner_1", crit.getQueryString());
@@ -289,7 +289,7 @@ public class JoinTest extends AbstractCoreTest {
     
     @Test
     public void testFetch() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.fetch("owner.name");
 
         assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1", crit.getQueryString());
@@ -298,7 +298,7 @@ public class JoinTest extends AbstractCoreTest {
     
     @Test
     public void testFetchAmbiguousImplicitAlias() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "a");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "a");
         crit.fetch("owner.partnerDocument.owner");
 
         assertEquals("SELECT a FROM Document a JOIN FETCH a.owner owner_1 LEFT JOIN FETCH owner_1.partnerDocument partnerDocument_1 JOIN FETCH partnerDocument_1.owner owner_2", crit.getQueryString());
@@ -307,7 +307,7 @@ public class JoinTest extends AbstractCoreTest {
     
     @Test
     public void testCyclicJoinDependencyDetection(){
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("owner", "o1").on("o1.name").eqExpression("o2.name").end()
             .leftJoinOn("owner", "o2").on("o2.name").eqExpression("o1.name").end();
         verifyException(crit, IllegalStateException.class).getQueryString();

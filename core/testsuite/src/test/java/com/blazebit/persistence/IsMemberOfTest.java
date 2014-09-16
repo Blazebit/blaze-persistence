@@ -16,10 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Workflow;
 import static com.googlecode.catchexception.CatchException.verifyException;
-import java.util.Locale;
-import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -33,7 +30,7 @@ public class IsMemberOfTest extends AbstractCoreTest {
 
     @Test
     public void testIsMemberOf() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.owner").isMemberOf("d.contacts");
 
         assertEquals(
@@ -44,19 +41,19 @@ public class IsMemberOfTest extends AbstractCoreTest {
 
     @Test
     public void testIsMemberOfNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.name"), NullPointerException.class).isMemberOf(null);
     }
 
     @Test
     public void testIsMemberOfEmpty() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.name"), IllegalArgumentException.class).isMemberOf("");
     }
 
     @Test
     public void testIsNotMemberOf() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");
 
         assertEquals(
@@ -67,13 +64,13 @@ public class IsMemberOfTest extends AbstractCoreTest {
 
     @Test
     public void testIsNotMemberOfNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.name"), NullPointerException.class).isNotMemberOf(null);
     }
 
     @Test
     public void testIsNotMemberOfEmpty() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.name"), IllegalArgumentException.class).isNotMemberOf("");
     }
 }

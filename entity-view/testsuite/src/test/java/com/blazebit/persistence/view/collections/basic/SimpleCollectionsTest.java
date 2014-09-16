@@ -136,7 +136,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
         cfg.addEntityView(viewType);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<DocumentForCollections> criteria = cbf.from(em, DocumentForCollections.class, "d")
+        CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applyObjectBuilder(viewType, criteria);
         List<T> results = cb.getResultList();

@@ -13,26 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListenerImpl;
 
 /**
  *
  * @author Moritz Becker
- * @since 1.0
  */
-public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBuilderEndedListener, SubqueryBuilderListener<T> {
-
-    private final PredicateBuilderEndedListenerImpl predicateBuilderListener = new PredicateBuilderEndedListenerImpl();
+public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderListener<T>, ExpressionBuilderEndedListener {
     private final SubqueryBuilderListenerImpl<T> subqueryBuilderListener = new SubqueryBuilderListenerImpl<T>();
-
-    @Override
-    public void onBuilderEnded(PredicateBuilder o) {
-        predicateBuilderListener.onBuilderEnded(o);
-    }
+    private final ExpressionBuilderEndedListenerImpl expressionBuilderEndedListener = new ExpressionBuilderEndedListenerImpl();
 
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
@@ -44,12 +38,17 @@ public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBui
         subqueryBuilderListener.onBuilderStarted(builder);
     }
 
+    @Override
+    public void onBuilderEnded(ExpressionBuilder builder) {
+        expressionBuilderEndedListener.onBuilderEnded(builder);
+    }
+    
     protected void verifyBuilderEnded() {
-        predicateBuilderListener.verifyBuilderEnded();
+        expressionBuilderEndedListener.verifyBuilderEnded();
         subqueryBuilderListener.verifySubqueryBuilderEnded();
     }
 
-    protected <T extends PredicateBuilder> T startBuilder(T builder) {
-        return predicateBuilderListener.startBuilder(builder);
+    protected <T extends ExpressionBuilder> T startBuilder(T builder) {
+        return expressionBuilderEndedListener.startBuilder(builder);
     }
 }

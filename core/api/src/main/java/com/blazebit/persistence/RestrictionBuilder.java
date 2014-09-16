@@ -28,8 +28,7 @@ import java.util.List;
 public interface RestrictionBuilder<T> {
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Starts a builder for a between predicate with lower bound expression.
      * 
      * @param start The between start expression
      * @return The {@link BetweenBuilder}
@@ -37,8 +36,7 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> betweenExpression(String start);
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Starts a builder for a between predicate with parameterized lower bound.
      * 
      * @param start The between start value
      * @return The {@link BetweenBuilder}
@@ -46,26 +44,31 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> between(Object start);
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Starts a builder for a between predicate with a subquery as lower bound.
      * 
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery();
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Starts a builder for a between predicate with a subquery as lower bound.
+     * 
+     * <p>
+     * All occurrences of
+     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished,
+     * the when predicate in conjunction with it's then expression are added to this predicate container as disjunct.
+     * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression);
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Like {@link RestrictionBuilder#betweenExpression(java.lang.String)} but the resulting predicate is negated.
      * 
      * @param start The between start expression
      * @return The {@link BetweenBuilder}
@@ -73,8 +76,7 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> notBetweenExpression(String start);
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Like {@link RestrictionBuilder#notBetween(java.lang.Object)} but the resulting predicate is negated.
      * 
      * @param start The between start value
      * @return The {@link BetweenBuilder}
@@ -82,19 +84,18 @@ public interface RestrictionBuilder<T> {
     public BetweenBuilder<T> notBetween(Object start);
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Like {@link RestrictionBuilder#betweenSubquery()} but the resulting predicate is negated.
      * 
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery();
     
     /**
-     * TODO
-     * The predicate checks if the left hand side is between start and end.
+     * Like {@link RestrictionBuilder#betweenSubquery(java.lang.String, java.lang.String)} but the resulting predicate is negated.
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression);
@@ -108,12 +109,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the EQ predicate that can be used to apply quantors.
+     * 
+     * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> eq(String subqueryAlias, String expression);
@@ -177,12 +182,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the GT predicate that can be used to apply quantors.
+     * 
+     * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> gt(String subqueryAlias, String expression);
@@ -214,12 +223,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the GE predicate that can be used to apply quantors.
+     * 
+     * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> ge(String subqueryAlias, String expression);
@@ -251,12 +264,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the LT predicate that can be used to apply quantors.
+     * 
+     * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> lt(String subqueryAlias, String expression);
@@ -288,12 +305,16 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link QuantifiableSubqueryInitiator} for the LE predicate that can be used to apply quantors.
+     * 
+     * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type {@linkplain T}.
-     *
+     * </p>
+     * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression    The expression which will be used as left hand side of a predicate.
+     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> le(String subqueryAlias, String expression);
@@ -412,112 +433,40 @@ public interface RestrictionBuilder<T> {
     public T isNotMemberOf(String expression);
 
     /**
-     * Like {@link RestrictionBuilder#like(java.lang.String, boolean) } but with caseSensitive set to true.
-     *
-     * @param value The value on the right hand side
-     * @return The parent predicate container builder
+     * Creates a {@link LikeBuilder} for building a like predicate.
+     * 
+     * <p>
+     * The predicate checks if the left hand side is like the pattern delivered by the {@link LikeBuilder}
+     * while respecting the case sensitivity according to the {@code caseSensitive} parameter.
+     * </p>
+     * 
+     * <p>
+     * Once the {@link LikeBuilder} is finished, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * </p>
+     * 
+     * @param caseSensitive If true, the comparison of the left hand side expression with the pattern
+     * respects is performed case sensitive, else it is performed case insensitive.
+     * @return The {@link LikeBuilder} for building the comparison pattern.
      */
-    public T like(String value);
-
-    /**
-     * Like {@link RestrictionBuilder#like(java.lang.String, boolean, java.lang.Character) } but with escapeCharacter set to null.
-     *
-     * @param value         The value on the right hand side
-     * @param caseSensitive Whether the like predicate should be case sensitive or not
-     * @return The parent predicate container builder
-     */
-    public T like(String value, boolean caseSensitive);
-
-    /**
-     * Finishes the LIKE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
-     * The predicate checks either case sensitive or unsensitive if the left hand side is like the given value. The escape character is used to escape the placeholders.
-     *
-     * @param value           The value on the right hand side
-     * @param caseSensitive   Whether the like predicate should be case sensitive or not
-     * @param escapeCharacter The escape character for placeholders
-     * @return The parent predicate container builder
-     */
-    public T like(String value, boolean caseSensitive, Character escapeCharacter);
-
-    /**
-     * Like {@link RestrictionBuilder#likeExpression(java.lang.String, boolean) } but with caseSensitive set to true.
-     *
-     * @param expression The expression on the right hand side
-     * @return The parent predicate container builder
-     */
-    public T likeExpression(String expression);
+    public LikeBuilder<T> like(boolean caseSensitive);
     
     /**
-     * Like {@link RestrictionBuilder#likeExpression(java.lang.String, boolean, java.lang.Character) } but with escapeCharacter set to null.
-     *
-     * @param expression    The expression on the right hand side
-     * @param caseSensitive Whether the like predicate should be case sensitive or not
-     * @return The parent predicate container builder
+     * Like {@link RestrictionBuilder#like(boolean)} with {@code caseSensitive = true}.
+     * @return The {@link LikeBuilder} for building the comparison pattern.
      */
-    public T likeExpression(String expression, boolean caseSensitive);
-
+    public LikeBuilder<T> like();
     /**
-     * Finishes the LIKE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
-     * The predicate checks either case sensitive or unsensitive if the left hand side is like the given expression. The escape character is used to escape the placeholders.
-     *
-     * @param expression      The expression on the right hand side
-     * @param caseSensitive   Whether the like predicate should be case sensitive or not
-     * @param escapeCharacter The escape character for placeholders
-     * @return The parent predicate container builder
+     * Like {@link RestrictionBuilder#like(boolean)} but the resulting like predicate is negated.
+     * 
+     * @param caseSensitive If true, the comparison of the left hand side expression with the pattern
+     * respects is performed case sensitive, else it is performed case insensitive.
+     * @return The {@link LikeBuilder} for building the comparison pattern.
      */
-    public T likeExpression(String expression, boolean caseSensitive, Character escapeCharacter);
-
+    public LikeBuilder<T> notLike(boolean caseSensitive);
+    
     /**
-     * Like {@link RestrictionBuilder#like(java.lang.String) } but the result is wrapped in a NOT predicate.
-     *
-     * @param value The value on the right hand side
-     * @return The parent predicate container builder
+     * Like {@link RestrictionBuilder#notLike(boolean)} with {@code caseSensitive = true}.
+     * @return The {@link LikeBuilder} for building the comparison pattern.
      */
-    public T notLike(String value);
-
-    /**
-     * Like {@link RestrictionBuilder#like(java.lang.String, boolean) } but the result is wrapped in a NOT predicate.
-     *
-     * @param value         The value on the right hand side
-     * @param caseSensitive Whether the like predicate should be case sensitive or not
-     * @return The parent predicate container builder
-     */
-    public T notLike(String value, boolean caseSensitive);
-
-    /**
-     * Like {@link RestrictionBuilder#like(java.lang.String, boolean, java.lang.Character) } but the result is wrapped in a NOT predicate.
-     *
-     * @param value           The value on the right hand side
-     * @param caseSensitive   Whether the like predicate should be case sensitive or not
-     * @param escapeCharacter The escape character for placeholders
-     * @return The parent predicate container builder
-     */
-    public T notLike(String value, boolean caseSensitive, Character escapeCharacter);
-
-    /**
-     * Like {@link RestrictionBuilder#likeExpression(java.lang.String) } but the result is wrapped in a NOT predicate.
-     *
-     * @param expression The expression on the right hand side
-     * @return The parent predicate container builder
-     */
-    public T notLikeExpression(String expression);
-
-    /**
-     * Like {@link RestrictionBuilder#likeExpression(java.lang.String, boolean) } but the result is wrapped in a NOT predicate.
-     *
-     * @param expression    The expression on the right hand side
-     * @param caseSensitive Whether the like predicate should be case sensitive or not
-     * @return The parent predicate container builder
-     */
-    public T notLikeExpression(String expression, boolean caseSensitive);
-
-    /**
-     * Like {@link RestrictionBuilder#likeExpression(java.lang.String, boolean, java.lang.Character) } but the result is wrapped in a NOT predicate.
-     *
-     * @param expression      The expression on the right hand side
-     * @param caseSensitive   Whether the like predicate should be case sensitive or not
-     * @param escapeCharacter The escape character for placeholders
-     * @return The parent predicate container builder
-     */
-    public T notLikeExpression(String expression, boolean caseSensitive, Character escapeCharacter);
+    public LikeBuilder<T> notLike();
 }

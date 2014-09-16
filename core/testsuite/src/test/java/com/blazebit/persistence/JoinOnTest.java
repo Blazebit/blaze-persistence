@@ -29,8 +29,8 @@ public class JoinOnTest extends AbstractCoreTest {
 
     @Test
     public void testLeftJoinOn() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.leftJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.leftJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
             "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WITH l LIKE :param_0", crit
@@ -40,8 +40,8 @@ public class JoinOnTest extends AbstractCoreTest {
 
     @Test
     public void testRightJoinOn() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.rightJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.rightJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
             "SELECT d FROM Document d LEFT JOIN d.partners partners_1 RIGHT JOIN partners_1.localized l WITH l LIKE :param_0", crit.getQueryString());
@@ -50,8 +50,8 @@ public class JoinOnTest extends AbstractCoreTest {
 
     @Test
     public void testInnerJoinOn() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.innerJoinOn("d.partners.localized", "l").on("l").like("%dld").end();
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.innerJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 JOIN partners_1.localized l WITH l LIKE :param_0",
                      crit.getQueryString());
@@ -60,8 +60,8 @@ public class JoinOnTest extends AbstractCoreTest {
 
     @Test
     public void testLeftJoinOnComplex() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
-        crit.leftJoinOn("d.partners.localized", "l").on("l").like("%dld")
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.leftJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape()
             .on("l").gt("1")
             .onOr()
                 .on("l").eq("2")

@@ -97,7 +97,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentWithSubquery.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class).orderByAsc("id");
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         List<DocumentWithSubquery> list = evm.applyObjectBuilder(DocumentWithSubquery.class, cb).getResultList();
 
         assertEquals(2, list.size());
@@ -118,7 +118,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
             .create(DocumentWithExpressionSubqueryView.class, 0, 2);
 
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeSorter("contactCount", Sorters.descending());
         setting.addAttributeSorter("id", Sorters.descending());
 
@@ -141,7 +141,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentWithSubquery.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class).orderByDesc("id");
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting
             .create(DocumentWithSubquery.class, 0, 1);
         setting.addAttributeFilter("contactCount", "0");

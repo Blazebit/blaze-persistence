@@ -37,7 +37,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
 
     @Test
     public void testCaseWhenBooleanExpressionSelect() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END");
         String expectedQuery = "SELECT CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END FROM Workflow workflow"
                 + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
@@ -52,7 +52,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     
     @Test
     public void testCaseWhenWithFunctionsInSelectAndLiterals() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END,' - '),0,20)");
         String expectedQuery = 
                 "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END,' - '),0,20)"

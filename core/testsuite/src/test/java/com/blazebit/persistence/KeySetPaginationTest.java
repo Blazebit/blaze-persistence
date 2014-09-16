@@ -65,7 +65,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
 
     @Test
     public void simpleTest() {
-        CriteriaBuilder<Tuple> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("d.name").select("d.owner.name");
         crit.orderByDesc("d.owner.name")
             .orderByAsc("d.name")

@@ -82,7 +82,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testRootAliasInSubquery() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
         String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments_1 WHERE "
             + joinAliasValue("ownedDocuments_1") + " = d)";
@@ -95,7 +95,7 @@ public class SubqueryTest extends AbstractCoreTest {
     public void testAmbiguousSelectAliases() {
         // we decided that this should not throw an exception
         // - we first check for existing aliases and if none exist we check if an implicit root alias is possible
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "name").where("id").in().from(Person.class).select("id").where("name").eqExpression("name").end()
             .getQueryString();
         String expected = "SELECT d.name AS name FROM Document d WHERE d.id IN "
@@ -107,7 +107,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSelectAliases() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n").where("id")
             .in().from(Person.class).select("id").where("d.name").eqExpression("name")
             .end()
@@ -121,12 +121,12 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleSubqueriesWithSelectAliases() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n")
             .where("id")
             .in().from(Person.class).select("id").where("name").eqExpression("d.name").end()
             .where("id")
-            .notIn().from(Person.class).select("id").where("d.name").likeExpression("name").end()
+            .notIn().from(Person.class).select("id").where("d.name").like().expression("name").noEscape().end()
             .orderByAsc("n")
             .getQueryString();
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN "
@@ -140,7 +140,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleSubqueriesWithJoinAliases() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n")
             .leftJoin("versions", "v")
             .where("id")
@@ -160,7 +160,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testImplicitAliasPostfixing() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n")
             .where("SIZE(d.versions)").lt(5)
             .where("id")
@@ -178,7 +178,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testImplicitRootAliasPostfixing() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "document");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "document");
         crit.select("name", "n")
             .leftJoinDefault("versions", "v")
             .where("SIZE(document.versions)").lt(5)
@@ -195,7 +195,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSubqueryWithoutSelect() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .where("owner").in()
                 .from(Person.class)
                 .where("partnerDocument").eqExpression("d")
@@ -208,12 +208,12 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleSubqueriesWithParameters() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n")
             .where("id")
             .in().from(Person.class).select("id").where("d.name").eq("name").end()
             .where("id")
-            .notIn().from(Person.class).select("id").where("d.name").like("test").end()
+            .notIn().from(Person.class).select("id").where("d.name").like().value("test").noEscape().end()
             .where("SIZE(d.versions)").lt(5)
             .getQueryString();
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN (SELECT person.id FROM Person person "
@@ -225,10 +225,10 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSubqueryCollectionAccessUsesJoin() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.leftJoin("d.partners.localized", "l").whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(l)").gt(1).end()
-            .like("%dld");
+            .like().value("%dld").noEscape();
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WHERE (SELECT p.name FROM Person p "
             + "WHERE LENGTH(l) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
@@ -237,10 +237,10 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSubqueryCollectionAccessAddsJoin() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
-            .like("%dld");
+            .like().value("%dld").noEscape();
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
             + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
@@ -249,7 +249,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSubqueryUsesOuterJoin() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
             .leftJoin("d.contacts", "c")
             .select("id")
             .selectSubquery("alias", "SUM(alias)", "localizedCount")
@@ -268,7 +268,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testSubqueryAddsJoin() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("id")
             .selectSubquery("alias", "SUM(alias)", "localizedCount")
                 .from(Person.class, "p")
@@ -288,10 +288,10 @@ public class SubqueryTest extends AbstractCoreTest {
     
     @Test
     public void testSubqueryCollectionAccess() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
-            .like("%dld");
+            .like().value("%dld").noEscape();
         
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
             + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
@@ -301,10 +301,10 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleJoinPathSubqueryCollectionAccess() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.leftJoin("d.partners.localized", "l").whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
-            .like("%dld");
+            .like().value("%dld").noEscape();
         
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l "
             + "LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 WHERE (SELECT p.name FROM Person p "
@@ -315,7 +315,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testInvalidSubqueryOrderByCollectionAccess() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
             .leftJoin("d.contacts", "c")
             .selectSubquery("localizedCount")
                 .from(Person.class, "p")
@@ -331,7 +331,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
     @Test
     public void testInvalidSubqueryOrderByCollectionAccessNewJoin() {
-        PaginatedCriteriaBuilder<Tuple> cb = cbf.from(em, Document.class, "d")
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
             .selectSubquery("localizedCount")
                 .from(Person.class, "p")
                 .select("COUNT(p.localized)")

@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
-
 /**
  * A builder for paginated criteria queries.
  *
@@ -44,19 +42,25 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      * Covariant overrides
      */
     @Override
+    public PaginatedCriteriaBuilder<T> from(Class<?> entityClass);
+
+    @Override
+    public PaginatedCriteriaBuilder<T> from(Class<?> entityClass, String alias);
+    
+    @Override
     public PagedList<T> getResultList();
 
     @Override
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression);
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression);
 
     @Override
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectSimpleCase(String expression, String alias);
+    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression, String alias);
 
     @Override
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase();
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase();
 
     @Override
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<Tuple>> selectCase(String alias);
+    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase(String alias);
 
     @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
@@ -65,21 +69,21 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
 
     @Override
-    public PaginatedCriteriaBuilder<Tuple> select(String expression);
+    public PaginatedCriteriaBuilder<T> select(String expression);
 
     @Override
-    public PaginatedCriteriaBuilder<Tuple> select(String expression, String alias);
+    public PaginatedCriteriaBuilder<T> select(String expression, String alias);
 
     @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery();
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery();
 
     @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String alias);
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String alias);
 
     @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
 
     @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<Tuple>> selectSubquery(String subqueryAlias, String expression);
+    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression);
 
 }

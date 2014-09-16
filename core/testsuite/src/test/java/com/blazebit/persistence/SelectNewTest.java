@@ -70,7 +70,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewDocumentViewModel() {
-        CriteriaBuilder<DocumentViewModel> criteria = cbf.from(em, Document.class)
+        CriteriaBuilder<DocumentViewModel> criteria = cbf.create(em, Document.class)
             .selectNew(DocumentViewModel.class).with("name").end().orderByAsc("name");
 
         assertEquals("SELECT document.name FROM Document document ORDER BY document.name ASC NULLS LAST", criteria
@@ -88,7 +88,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewDocument() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.name").end().where("LENGTH(d.name)").le(4).orderByAsc("d.name");
         assertEquals("SELECT d.name FROM Document d WHERE LENGTH(d.name) <= :param_0 ORDER BY d.name ASC NULLS LAST", criteria
                      .getQueryString());
@@ -105,7 +105,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewSubquery() {
-        CriteriaBuilder<DocumentCount> crit = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<DocumentCount> crit = cbf.create(em, Document.class, "d")
             .selectNew(DocumentCount.class).withSubquery().from(Document.class).select("COUNT(document.id)").end().end();
 
         assertEquals("SELECT (SELECT COUNT(document.id) FROM Document document) FROM Document d", crit.getQueryString());
@@ -119,7 +119,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectCollection() {
-        CriteriaBuilder<DocumentPartnerView> criteria = cbf.from(em, Document.class, "d")
+        CriteriaBuilder<DocumentPartnerView> criteria = cbf.create(em, Document.class, "d")
             .selectNew(DocumentPartnerView.class).with("id").with("partners").end();
 
         assertEquals("SELECT d.id, " + joinAliasValue("partners_1") + " FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
@@ -128,7 +128,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewModel() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.owner.name").end().where("d.age").lt(4L);
 
         assertEquals("SELECT owner_1.name FROM Document d JOIN d.owner owner_1 WHERE d.age < :param_0", criteria.getQueryString());
@@ -137,7 +137,7 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewWithParameters() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.selectNew(Document.class).with("d.contacts[:index].partnerDocument.name").end().where("d.age").lt(4L);
 
         assertEquals("SELECT partnerDocument_1.name FROM Document d LEFT JOIN d.contacts contacts_index " + ON_CLAUSE
@@ -148,13 +148,13 @@ public class SelectNewTest extends AbstractCoreTest {
 
     @Test
     public void testSelectNewNullClass() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, NullPointerException.class).selectNew((Class<Document>) null);
     }
 
     @Test
     public void testSelectNewNullConstructor() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, NullPointerException.class).selectNew((Constructor<Document>) null);
     }
 }

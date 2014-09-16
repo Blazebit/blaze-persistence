@@ -31,7 +31,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGt() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").gt(20L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age > :param_0", criteria.getQueryString());
@@ -40,13 +40,13 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).gt(null);
     }
 
     @Test
     public void testGtExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").gtExpression("d.owner.name");
 
         assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age > owner_1.name", criteria.getQueryString());
@@ -55,13 +55,13 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtExpressionNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).gtExpression(null);
     }
 
     @Test
     public void testGe() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").ge(20L);
 
         assertEquals("SELECT d FROM Document d WHERE d.age >= :param_0", criteria.getQueryString());
@@ -70,13 +70,13 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGeNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).ge(null);
     }
 
     @Test
     public void testGeExpression() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.age").geExpression("d.owner.name");
 
         assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age >= owner_1.name", criteria.getQueryString());
@@ -85,13 +85,13 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGeExpressionNull() {
-        CriteriaBuilder<Document> criteria = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).geExpression(null);
     }
 
     @Test
     public void testGeAll() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").ge().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name >= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -101,7 +101,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGeAny() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").ge().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name >= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -111,7 +111,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGeOne() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").ge().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name >= (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -121,7 +121,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtAll() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").gt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name > ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -130,7 +130,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtAny() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").gt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name > ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -139,7 +139,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtOne() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("name").gt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
         String expected = "SELECT d FROM Document d WHERE d.name > (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
@@ -148,7 +148,7 @@ public class GreaterTest extends AbstractCoreTest {
     
     @Test
     public void testGtSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").gt("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age > 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -157,7 +157,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGtMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").gt("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age > (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -166,7 +166,7 @@ public class GreaterTest extends AbstractCoreTest {
     
     @Test
     public void testGeSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").ge("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age >= 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
@@ -175,7 +175,7 @@ public class GreaterTest extends AbstractCoreTest {
 
     @Test
     public void testGeMultipleSubqueryWithSurroundingExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").ge("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
         assertEquals("SELECT d FROM Document d WHERE d.age >= (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());

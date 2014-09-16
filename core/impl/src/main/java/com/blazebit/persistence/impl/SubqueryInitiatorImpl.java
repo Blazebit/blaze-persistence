@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.builder.expression;
+package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.AliasManager;
-import com.blazebit.persistence.impl.CriteriaBuilderFactoryImpl;
-import com.blazebit.persistence.impl.JoinManager;
-import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
 
 /**
  *
@@ -53,16 +50,14 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, null, result, parameterManager, aliasManager, parentJoinManager, listener,
-                                                                            expressionFactory);
-        listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder;
+        return from(clazz, null);
     }
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, clazz, alias, result, parameterManager, aliasManager, parentJoinManager, listener,
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener,
                                                                             expressionFactory);
+        subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
     }

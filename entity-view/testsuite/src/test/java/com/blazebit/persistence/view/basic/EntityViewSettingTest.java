@@ -29,7 +29,6 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
-import static com.googlecode.catchexception.CatchException.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,7 +96,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             FilteredDocument.class, 0, 1);
 
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("name", "Test");
         setting.addAttributeFilter("contactCount", "1");
         setting.addAttributeSorter("name", Sorters.descending());
@@ -124,7 +123,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
             .create(DocumentWithEntityView.class, 0, 1);
 
         // Query
-        CriteriaBuilder<Document> cb = cbf.from(em, Document.class);
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         setting.addAttributeFilter("owner.name", "pers2");
 
         // Currently we have no way to express what filter should be used when using entity attributes

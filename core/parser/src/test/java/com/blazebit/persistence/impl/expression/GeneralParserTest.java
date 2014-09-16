@@ -74,7 +74,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testParserArithmetic1() {
-        CompositeExpression result = (CompositeExpression) parseArithmetic("d.age + SUM(d.children.age)");
+        CompositeExpression result = (CompositeExpression) parseArithmeticExpr("d.age + SUM(d.children.age)");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 3);
@@ -86,7 +86,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testParserArithmetic2() {
-        CompositeExpression result = (CompositeExpression) parseArithmetic("age + 1");
+        CompositeExpression result = (CompositeExpression) parseArithmeticExpr("age + 1");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 2);
@@ -97,7 +97,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testParserArithmetic3() {
-        CompositeExpression result = (CompositeExpression) parseArithmetic("age * 1");
+        CompositeExpression result = (CompositeExpression) parseArithmeticExpr("age * 1");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 2);
@@ -108,7 +108,7 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testParserArithmeticNoHiddenTokens() {
-        CompositeExpression result = (CompositeExpression) parseArithmetic("age+1");
+        CompositeExpression result = (CompositeExpression) parseArithmeticExpr("age+1");
         List<Expression> expressions = result.getExpressions();
 
         assertTrue(expressions.size() == 2);
@@ -486,7 +486,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLike(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, null), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, null), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -494,7 +494,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeParameter(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE :x THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, 'x'), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, 'x'), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -502,7 +502,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeLiteral(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE 'x' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, 'x'), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, 'x'), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     
@@ -510,7 +510,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotLike(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT LIKE 'abc' THEN 0 ELSE 1 END", true);
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), foo("'abc'"), true, null, true), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, null, true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
     

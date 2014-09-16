@@ -16,8 +16,8 @@
 package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.impl.ExpressionUtils;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryBuilderImpl;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 

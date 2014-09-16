@@ -33,7 +33,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Metamodel;
 
@@ -324,53 +323,53 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
-    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase() {
-        return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase();
+    public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase() {
+        return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase();
     }
 
     @Override
-    public CaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectCase(String alias) {
-        return (CaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectCase(alias);
+    public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase(String alias) {
+        return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase(alias);
     }
 
     @Override
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression) {
-        return (SimpleCaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectSimpleCase(expression);
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression) {
+        return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression);
     }
 
     @Override
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<Tuple, ?>> selectSimpleCase(String expression, String alias) {
-        return (SimpleCaseWhenBuilder<QueryBuilder<Tuple, ?>>) super.selectSimpleCase(expression, alias);
+    public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression, String alias) {
+        return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression, alias);
     }
 
     @Override
-    public QueryBuilder<Tuple, ?> select(String expression) {
-        return (QueryBuilder<Tuple, ?>) super.select(expression);
+    public QueryBuilder<T, ?> select(String expression) {
+        return (QueryBuilder<T, ?>) super.select(expression);
     }
 
     @Override
-    public QueryBuilder<Tuple, ?> select(String expression, String alias) {
-        return (QueryBuilder<Tuple, ?>) super.select(expression, alias);
+    public QueryBuilder<T, ?> select(String expression, String alias) {
+        return (QueryBuilder<T, ?>) super.select(expression, alias);
     }
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery() {
-        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery();
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery() {
+        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery();
     }
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String alias) {
-        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(alias);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String alias) {
+        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(alias);
     }
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression) {
-        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(subqueryAlias, expression);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression) {
+        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
-    public SubqueryInitiator<? extends QueryBuilder<Tuple, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        return (SubqueryInitiator<? extends QueryBuilder<Tuple, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
 
 }

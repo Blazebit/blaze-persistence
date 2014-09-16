@@ -34,12 +34,10 @@ public class OrderByManager extends AbstractManager {
 
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
     private final AliasManager aliasManager;
-    private final String fromClassName;
 
-    OrderByManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, String fromClassName) {
+    OrderByManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
-        this.fromClassName = fromClassName;
     }
 
     Set<String> getOrderBySelectAliases(){

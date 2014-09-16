@@ -30,7 +30,7 @@ public class OuterFunctionTest extends AbstractCoreTest {
 
     @Test
     public void testOuter1() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery().from(Person.class, "p").select("id").where("OUTER(owner.name)").eqExpression("OUTER(name)").end()
             .eqExpression("partners.id");
         String expected = "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 WHERE (SELECT p.id FROM Person p WHERE owner_1.name = d.name) = partners_1.id";
@@ -43,7 +43,7 @@ public class OuterFunctionTest extends AbstractCoreTest {
 
     @Test
     public void testOuter2() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery().from(Person.class, "p").select("id").where("OUTER(id)").eqExpression("id").end().eqExpression(
             "partners.id");
         String expected = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 WHERE (SELECT p.id FROM Person p WHERE d.id = p.id) = partners_1.id";
@@ -56,7 +56,7 @@ public class OuterFunctionTest extends AbstractCoreTest {
     
     @Test
     public void testComplexOuterExpression() {
-        CriteriaBuilder<Document> crit = cbf.from(em, Document.class, "d");
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereSubquery().from(Person.class, "p").select("id").where("OUTER(id) + LENGTH(OUTER(name))").eqExpression("id").end().eqExpression(
             "partners.id");
         String expected = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 WHERE (SELECT p.id FROM Person p WHERE d.id + LENGTH(d.name) = p.id) = partners_1.id";

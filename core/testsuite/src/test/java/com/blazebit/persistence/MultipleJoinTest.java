@@ -43,7 +43,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testExcplicitMultipleJoins() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .leftJoin("localized", "l1")
             .leftJoin("localized", "l2")
             .select("id");
@@ -56,7 +56,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testOneExplicitJoinAndOneExplicitDefaultJoin() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .leftJoinOn("localized", "l1").on("KEY(l1)").eqExpression(":locale").end()
             .leftJoinDefault("localized", "l2")
             .select("localized[:locale].name")
@@ -73,7 +73,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testOneImplicitJoinAndOneImplicitDefaultJoin() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .select("localized[:locale].name")
             .select("localized.name");
         String expectedQuery = "SELECT localized_locale.name, localized_1.name FROM Workflow workflow"
@@ -88,7 +88,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testFirstOneImplicitJoinAndOneImplicitDefaultJoinThenExplicit() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .select("localized[:locale].name")
             .select("localized.name")
             .leftJoinOn("localized", "l1").on("KEY(l1)").eqExpression(":locale").end()
@@ -105,7 +105,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testExcplicitMultipleJoinsWithParameterMatch() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Workflow.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .leftJoinOn("localized", "l1").on("KEY(l1)").eqExpression(":locale").end()
             .leftJoinOn("localized", "l2").on("KEY(l2)").eqExpression("workflow.defaultLanguage").end()
             .select("localized[:locale].name")
@@ -122,7 +122,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleNestedJoins() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class)
             .leftJoin("partners", "p1")
             .leftJoin("partners", "p2")
             .leftJoin("p1.localized", "l11")
@@ -149,7 +149,7 @@ public class MultipleJoinTest extends AbstractCoreTest {
 
     @Test
     public void testMultipleNestedJoinsWithDefault() {
-        CriteriaBuilder<Tuple> cb = cbf.from(em, Document.class)
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class)
             .leftJoin("partners", "p1")
             .leftJoin("partners.localized", "l")
             .where("p1.partnerDocument.name").eq("doc")

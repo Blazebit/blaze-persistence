@@ -16,10 +16,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListener;
-import com.blazebit.persistence.impl.builder.expression.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
@@ -46,6 +42,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.Tuple;
 
 /**
  *
@@ -68,11 +65,14 @@ public class SelectManager<T> extends AbstractManager {
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
-    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        if(resultClazz.equals(Tuple.class)){
+            objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
+        }
     }
 
     void verifyBuilderEnded() {
@@ -180,9 +180,6 @@ public class SelectManager<T> extends AbstractManager {
 
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         handleSelect(expr, selectAlias);
-        if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
-            objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
-        }
     }
 
     private void handleSelect(Expression expr, String selectAlias) {
@@ -264,9 +261,6 @@ public class SelectManager<T> extends AbstractManager {
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
             handleSelect(new SubqueryExpression(builder), selectAlias);
-            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
-                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
-            }
         }
     }
 
@@ -283,9 +277,6 @@ public class SelectManager<T> extends AbstractManager {
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
             handleSelect(superExpression, selectAlias);
-            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
-                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
-            }
         }
     }
 
@@ -301,9 +292,6 @@ public class SelectManager<T> extends AbstractManager {
         public void onBuilderEnded(ExpressionBuilder builder) {
             super.onBuilderEnded(builder); //To change body of generated methods, choose Tools | Templates.
             handleSelect(builder.getExpression(), selectAlias);
-            if (objectBuilder == null || !(objectBuilder instanceof TupleObjectBuilder)) {
-                objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
-            }
         }
 
     }

@@ -15,19 +15,17 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
-import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -217,20 +215,6 @@ public abstract class PredicateManager<T> extends AbstractManager {
         public void visit(InPredicate predicate) {
             predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
             predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
-        }
-    }
-
-    private class CaseExpressionBuilderListener extends ExpressionBuilderEndedListenerImpl {
-        private final RestrictionBuilderImpl<?> restrictionBuilder;
-
-        public CaseExpressionBuilderListener(RestrictionBuilderImpl<?> restrictionBuilder) {
-            this.restrictionBuilder = restrictionBuilder;
-        }
-        
-        @Override
-        public void onBuilderEnded(ExpressionBuilder builder) {
-            super.onBuilderEnded(builder);
-            restrictionBuilder.setLeftExpression(builder.getExpression());
         }
     }
 }

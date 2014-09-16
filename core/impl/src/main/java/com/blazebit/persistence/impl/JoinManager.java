@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.builder.expression.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -71,7 +70,7 @@ public class JoinManager extends AbstractManager {
     // hence we need a List of NodeInfos.
     // e.g. SELECT a.X, a.Y FROM A a
     // a is unresolved for both X and Y
-    private final JoinNode rootNode;
+    private JoinNode rootNode;
     // root entity class
     private final String joinRestrictionKeyword;
     private final AliasManager aliasManager;
@@ -92,8 +91,18 @@ public class JoinManager extends AbstractManager {
         ID
     };
 
-    JoinManager(String rootAlias, Class<?> clazz, QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
+    JoinManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
+        this.aliasManager = aliasManager;
+        this.metamodel = metamodel;
+        this.parent = parent;
+        this.joinRestrictionKeyword = " " + jpaInfo.getOnClause() + " ";
+        this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
+        this.subqueryInitFactory = subqueryInitFactory;
+        this.expressionFactory = expressionFactory;
+    }
+    
+    void setRoot(Class<?> clazz, String rootAlias){
         if (rootAlias == null) {
             if (aliasManager.getAliasInfo(clazz.getSimpleName().toLowerCase()) == null) {
                 rootAlias = clazz.getSimpleName().toLowerCase();
@@ -102,18 +111,10 @@ public class JoinManager extends AbstractManager {
             }
         }
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
+        rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz);
+        rootAliasInfo.setJoinNode(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
-
-        this.rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz);
-        rootAliasInfo.setJoinNode(rootNode);
-        this.aliasManager = aliasManager;
-        this.metamodel = metamodel;
-        this.parent = parent;
-        this.joinRestrictionKeyword = " " + jpaInfo.getOnClause() + " ";
-        this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
-        this.subqueryInitFactory = subqueryInitFactory;
-        this.expressionFactory = expressionFactory;
     }
 
     String getRootAlias() {
@@ -165,7 +166,7 @@ public class JoinManager extends AbstractManager {
         if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
             return sb.length() != originalSize;
         }
-                
+
         if (usesKeyInWithPredicate(node, includeSelect)) {
             // Safe because root has no with predicate
             ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
@@ -216,7 +217,7 @@ public class JoinManager extends AbstractManager {
                 buildWhereClauseConjuncts(sb, clauseExclusions, n, subRelation, includeSelect, originalSize);
             }
         }
-        
+
         return sb.length() != originalSize;
     }
 
@@ -347,7 +348,7 @@ public class JoinManager extends AbstractManager {
     private boolean isJoinableSelectAlias(PathExpression pathExpr, boolean fromSelect, boolean fromSubquery) {
         boolean singlePathElement = pathExpr.getExpressions().size() == 1;
         String startAlias = pathExpr.getExpressions().get(0).toString();
-        
+
         AliasInfo aliasInfo = aliasManager.getAliasInfo(startAlias);
         if (aliasInfo == null) {
             return false;
@@ -362,7 +363,7 @@ public class JoinManager extends AbstractManager {
             // might be joinable
             return true;
         }
-        
+
         return false;
     }
 
@@ -410,7 +411,7 @@ public class JoinManager extends AbstractManager {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
-            
+
             if (isJoinableSelectAlias(pathExpression, fromClause == ClauseType.SELECT, fromSubquery)) {
                 String alias = pathExpression.getExpressions().get(0).toString();
                 Expression expr = ((SelectInfo) aliasManager.getAliasInfo(alias)).getExpression();
@@ -439,20 +440,20 @@ public class JoinManager extends AbstractManager {
             PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
             boolean singleValuedAssociationIdExpression = false;
             JoinNode current;
-            
+
             boolean explicitRootAlias = pathElements.get(0).toString().equals(rootNode.getAliasInfo().getAlias());
             int startIndex = 0;
-            
+
             if (explicitRootAlias) {
                 startIndex = 1;
             }
-            
+
             if (pathElements.size() > startIndex + 1) {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 current = implicitJoin(null, pathExpression, startIndex, maybeSingularAssociationIndex);
                 singleValuedAssociationIdExpression = isSingleValuedAssociationId(current, pathElements);
-                
+
                 if (singleValuedAssociationIdExpression) {
                 } else {
                     current = implicitJoin(current, pathExpression, maybeSingularAssociationIndex, maybeSingularAssociationIdIndex);
@@ -460,7 +461,7 @@ public class JoinManager extends AbstractManager {
             } else {
                 current = implicitJoin(null, pathExpression, startIndex, pathElements.size() - 1);
             }
-            
+
             // current might be null
             current = current == null ? rootNode : current;
 
@@ -471,20 +472,20 @@ public class JoinManager extends AbstractManager {
                 String associationName = pathElements.get(pathElements.size() - 2).toString();
                 AliasInfo a = aliasManager.getAliasInfo(associationName);
                 JoinTreeNode treeNode;
-                
+
                 if (a != null) {
                     current = ((JoinAliasInfo) a).getJoinNode();
                     result = new JoinResult(current, elementExpr.toString());
                 } else {
                     treeNode = current.getNodes().get(associationName);
-                    
+
                     if (treeNode != null && treeNode.getDefaultNode() != null) {
                         result = new JoinResult(treeNode.getDefaultNode(), elementExpr.toString());
                     } else {
                         result = new JoinResult(current, associationName + "." + elementExpr.toString());
                     }
                 }
-            } else  if (elementExpr instanceof ArrayExpression) {
+            } else if (elementExpr instanceof ArrayExpression) {
                 ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
                 String joinRelationName = arrayExpr.getBase().toString();
 
@@ -516,8 +517,10 @@ public class JoinManager extends AbstractManager {
                     if (!(selectExpr instanceof PathExpression)) {
                         throw new RuntimeException("The select expression '" + selectExpr.toString() + "' is not a simple path expression! No idea how to implicit join that.");
                     }
-                    //TODO: I think this is redundant
-                    implicitJoin(selectExpr, objectLeafAllowed, fromClause, fromSubquery, true);
+                    // join the expression behind a select alias once when it is encountered the first time
+                    if (((PathExpression) selectExpr).getBaseNode() == null) {
+                        implicitJoin(selectExpr, objectLeafAllowed, fromClause, fromSubquery, true);
+                    }
                     PathExpression selectPathExpr = (PathExpression) selectExpr;
                     result = new JoinResult((JoinNode) selectPathExpr.getBaseNode(), selectPathExpr.getField());
                 } else {
@@ -548,7 +551,7 @@ public class JoinManager extends AbstractManager {
             }
         }
     }
-    
+
     private boolean isSingleValuedAssociationId(JoinNode parent, List<PathElementExpression> pathElements) {
         int maybeSingularAssociationIndex = pathElements.size() - 2;
         int maybeSingularAssociationIdIndex = pathElements.size() - 1;
@@ -557,12 +560,12 @@ public class JoinManager extends AbstractManager {
         if (parent == null) {
             // This is the case when we have exactly 2 path elements
             AliasInfo a = aliasManager.getAliasInfo(pathElements.get(maybeSingularAssociationIndex).toString());
-            
+
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
                 ManagedType<?> baseType = metamodel.managedType(rootNode.getPropertyClass());
                 maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
-            } else if(!(a instanceof JoinAliasInfo)) {
+            } else if (!(a instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("Can't dereference select alias in the expression!");
             } else {
                 // If there is a JoinAliasInfo for the path element, we have to use the alias
@@ -572,30 +575,29 @@ public class JoinManager extends AbstractManager {
 //                ManagedType<?> baseType = metamodel.managedType(maybeSingularAssociationJoinNode.getParent().getPropertyClass());
 //                maybeSingularAssociation = baseType.getAttribute(maybeSingularAssociationJoinNode.getParentTreeNode().getRelationName());
             }
-            
+
         } else {
             ManagedType<?> baseType = metamodel.managedType(parent.getPropertyClass());
             maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
         }
-        
+
         if (maybeSingularAssociation == null) {
             return false;
         }
-        
-        if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE
-                // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
-//                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
+
+        if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
+                //                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
                 ) {
             return false;
         }
-        
+
         ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociation.getJavaType());
         Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationType.getAttribute(pathElements.get(maybeSingularAssociationIdIndex).toString());
-        
+
         if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
             return false;
         }
-        
+
         return ((SingularAttribute<?, ?>) maybeSingularAssociationId).isId();
     }
 
@@ -646,7 +648,7 @@ public class JoinManager extends AbstractManager {
 
     private void generateAndApplyWithPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
-        
+
         if (joinNode.getWithPredicate() != null) {
             AndPredicate currentPred = joinNode.getWithPredicate();
 
