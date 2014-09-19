@@ -1,0 +1,187 @@
+== Getting started
+
+This is a step-by-step introduction about how to get started with the entity view module of {projectname}.
+
+The entity view module requires the {projectname} core so if you have not read the getting started
+guide for the core yet, you might want to start your reading there.
+
+=== Setup
+
+TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+TODO: Mention core-integration-cdi for Java EE environment.
+
+=== Environments [[Environments]]
+
+The entity view module of {projectname} is usable in Java EE as well as in Java SE environments.
+
+==== Java SE
+
+In a Java SE environment the `EntityViewConfiguration` as well as the `EntityViewManager` must
+be created manually as follows:
+[source,java]
+----
+EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+cfg.addEntityView(EntityView1.class);
+...
+cfg.addEntityView(EntityViewn.class);
+EntityViewManager evm = cfg.createEntityViewManager();
+----
+As you can see, the `EntityViewConfiguration` is used to register all the entity
+view classes that you want to make accessible within the an `EntityViewManager`.
+
+NOTE: You may create multiple `EntityViewManager` instances with potentially different
+configurations.
+
+==== Java EE
+
+For usage with CDI blaze-persistence-integration provides a CDI
+extension which takes over the task of configuring and creating the `EntityViewManager`
+and allows the injection of the `EntityViewManager` into your application's CDI beans like following example shows.
+
+[source,java]
+----
+public class KittenDataAccess {
+    @Inject
+    private EntityViewManager evm;
+}
+----
+
+=== First entity view query
+
+This section is supposed to give you a first feeling of how to use entity views.
+For more detailed information, please see the subsequent chapters.
+
+NOTE: In the following we suppose `cbf`, `em` and `evm` to refer to an instance of `CriteriaBuilderFactory`, 
+JPA's `EntityManager` and `EntityViewManager`, respectively.
+See <<Environments>> for how to obtain an `EntityViewManager`.
+
+An entity view can be thought of as the ORM world's dual to a database table view.
+It enables the user to query just a subset of an entity's fields. This enables
+developers to only query what they actually need for their current use case, thereby
+reducing network traffic and improving performance.
+
+Let's start with a very simple example. Assume that in our application we want to
+display a list of the names of all the cats in our database. Using entity views
+we would first define a new view for this purpose:
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatNameView {
+    public String getName();
+}
+----
+The usage of the `CatNameView` could look like this:
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
+CriteriaBuilder<CatNameView> catNameBuilder = evm.applyObjectBuilder(CatNameView.class, cb);
+List<CatNameView> catNameViews = catNameBuilder.getResultList();
+----
+
+Of course, you can apply further restrictions to your query by `CriteriaBuilder` means.
+E.g. you could avoid duplicate names in the above example by calling `distinct()` on the
+CriteriaBuilder at any point after its creation.
+
+The EntityViewManager's default behavior is that it looks for entity field names
+equal to the names of the abstract getter methods in the view definition and selects the
+matching fields. So the `getName()` getter in the above example actually triggers querying
+of the `name` field. If we want to use a different name for the getter method we would
+have to add an additional `@Mapping` annotation:
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatNameView {
+    @Mapping("name")
+    public String getCatName();
+}
+----
+
+Of course, it is also possible to combine various views via inheritance.
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatKittens {
+    public List<Kitten> getKittens();
+}
+@EntityView(Cat.class)
+public interface CatNameView {
+    @Mapping("name")
+    public String getCatName();
+}
+public interface CombinedView extends CatKittens, CatNameView {
+    @Mapping("SIZE(kittens)")
+    public Integer getKittenSize();
+}
+----
+The above example also shows that a view which inherits other views is not required
+the be annotated again with the same `@EntityView` annotation. In such cases the
+`EntityViewManager` searches the class hierarchy and assumes the first `@EntityView`
+annotation that it finds.
+
+NOTE: An entity view does not have to be an interface, it can be any class.
+
+Moreover you can see that it is possible to use whole expressions inside the `@Mapping` annotations.
+The allowed expression will be covered in more detail in subsequent chapters.
+
+Another useful feature are subviews which is illustrated in following example.
+[source,java]
+----
+@EntityView(Landlord.class)
+public interface LandlordView {
+    public String getName();
+    public Integer getAge();
+    @Mapping("ownedProperties")
+    public PropertyAddressView getHouses();
+}
+@EntityView(Property.class)
+public interface PropertyAddressView {
+    public String getAddress();
+}
+----
+
+The last feature we are going to cover here are filters and sorters in conjunction with `EntityViewSetting` which
+allows the dynamic configuration of filters and sorters on your entity view and are
+also usable together with pagination. This makes them ideal an ideal fit whenever you need to query data for display
+in a filterable and/or sortable data table. Following example illustrates how this looks like:
+[source,java]
+----
+@EntityView(Cat.class)
+@ViewFilters({
+    @ViewFilter(name = "customFilter", value = FilteredDocument.CustomFilter.class)
+})
+public interface FilteredCatView {
+    @AttributeFilter(ContainsFilter.class)
+    public String getName();
+
+    public static class CustomFilter extends ViewFilterProvider {
+        @Override
+        public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
+            return whereBuilder.where("doctor.name").like().expression("Julia%").noEscape();
+        }
+    }
+}
+----
+In this example we once again define a view on our Cat entity and select the cat's name only.
+But in addition we applied a filter on the name attribute. In this case we chose the `ContainsFilter`, one
+of the predefined filters. We also defined a custom filter where we check whether the cat's doctor's name
+starts with the string 'Julia'.
+The next code snippet shows how we dynamically set the actual filter value by which the
+query should filter and how we paginate the resulting query.
+[source,java]
+----
+// Base setting
+EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = EntityViewSetting.create(
+            FilteredCatView.class, 0, 10);
+
+// Query
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
+setting.addAttributeFilter("name", "Kitty");
+
+PaginatedCriteriaBuilder<FilteredCatView> paginatedCb = evm.applySetting(setting, cb);
+PagedList<FilteredCatView> result = paginatedCb.getResultList();
+----
+
+=== Summary
+
+If you want to go into more detail, you are now ready to discover the other chapters of the documentation or
+the API yourself.
