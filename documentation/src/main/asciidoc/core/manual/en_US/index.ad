@@ -2,7 +2,7 @@ Blaze Persistence - Criteria API for JPA backends
 =================================================
 :projectname: Blaze Persistence
 :author:  	  Christian Beikov - Blazebit, Moritz Becker - Curecomp
-:version: 	  1.0.0.Final
+:version: 	  {version}
 :toc:
 :toc-placement: manual
 
