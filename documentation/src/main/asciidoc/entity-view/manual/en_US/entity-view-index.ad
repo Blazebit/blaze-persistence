@@ -9,3 +9,5 @@ Copyright (C) 2014 Blazebit
 {localdate}
 
 toc::[]
+
+include::01_getting_started.ad[]
