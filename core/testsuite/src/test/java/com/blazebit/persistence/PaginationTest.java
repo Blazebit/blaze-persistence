@@ -432,4 +432,17 @@ public class PaginationTest extends AbstractCoreTest {
         pcb.getPageCountQueryString();
         cb.setParameter("language", Locale.GERMAN).getResultList();
     }
+    
+    @Test
+    public void testPaginationWithoutOrderBy(){
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d").page(0, 10);
+        verifyException(cb, IllegalStateException.class).getResultList();
+    }
+    
+    @Test
+    public void testPaginationWithoutUniqueLastOrderBy(){
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .orderByAsc("d.id").orderByAsc("d.name").page(0, 10);
+        verifyException(cb, IllegalStateException.class).getResultList();
+    }
 }

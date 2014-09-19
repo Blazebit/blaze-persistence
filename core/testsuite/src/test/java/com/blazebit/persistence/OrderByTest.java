@@ -18,7 +18,6 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import static com.googlecode.catchexception.CatchException.verifyException;
-import org.hibernate.hql.internal.ast.QuerySyntaxException;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 

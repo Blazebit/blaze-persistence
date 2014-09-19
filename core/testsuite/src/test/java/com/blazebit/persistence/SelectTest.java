@@ -32,6 +32,15 @@ import org.junit.Test;
 public class SelectTest extends AbstractCoreTest {
 
     @Test
+    public void testSelectNonEntity(){
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
+        criteria.select("d.age");
+        
+        assertEquals("SELECT d.age FROM Document d", criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
     public void testSelectNonJoinable() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("nonJoinable");
