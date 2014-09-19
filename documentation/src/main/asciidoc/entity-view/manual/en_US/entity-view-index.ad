@@ -1,7 +1,7 @@
 = Blaze Persistence - Entity View Module
 :projectname: Blaze Persistence
 :author:  	  Christian Beikov - Blazebit, Moritz Becker - Curecomp
-:version: 	  1.0.0.Final
+:version: 	  {version}
 :toc:
 :toc-placement: manual
 

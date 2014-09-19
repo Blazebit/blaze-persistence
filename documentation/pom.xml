@@ -11,33 +11,78 @@
     </parent>
 
     <artifactId>blaze-persistence-documentation</artifactId>
-    <packaging>pom</packaging>
 	
     <name>Blazebit Persistence Documentation</name>
 	
-	<properties>
-		<version.asciidoctor>0.1.3.1</version.asciidoctor>
-	</properties>
+    <properties>
+        <version.asciidoctor>1.5.0</version.asciidoctor>
+    </properties>
 
     <build>
-		<plugins>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<version>${version.asciidoctor}</version>
-				<executions>
-					<execution>
-						<id>output-html</id>               
-						<phase>generate-resources</phase>  
-						<goals>
-							<goal>process-asciidoc</goal>    
-						</goals>
-						<configuration>
-							<backend>html</backend>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-asciidoc-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/style</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>target/generated-docs</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>${version.asciidoctor}</version>
+                <configuration>
+                    <attributes>
+                        <endpoint-url>http://blazebit.github.io/blaze-persistence</endpoint-url>
+                        <preserveDirectories>true</preserveDirectories>
+                    </attributes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>core-manual-html</id>               
+                        <phase>generate-resources</phase>  
+                        <goals>
+                            <goal>process-asciidoc</goal>    
+                        </goals>
+                        <configuration>
+                            <sourcedir>${basedir}/src/main/asciidoc/core</sourcedir>
+                            <backend>html5</backend>
+                            <sourceHighlighter>coderay</sourceHighlighter>
+                            <attributes>
+                                <imagesdir>src/main/asciidoc/core/manual/images</imagesdir>
+                                <stylesheet>css/style.css</stylesheet>
+                                
+                                <toc>left</toc>
+                                <icons>font</icons>
+                                <sectanchors>true</sectanchors>
+                                <!-- set the idprefix to blank -->
+                                <idprefix/>
+                                <idseparator>-</idseparator>
+                                <docinfo1>true</docinfo1>
+                                <version>${project.version}</version>
+                            </attributes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
