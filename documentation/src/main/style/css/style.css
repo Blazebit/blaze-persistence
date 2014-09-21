@@ -3,6 +3,31 @@
  * AsciiDoc theme based on css from http://volnitsky.com,
  * which was in turn based on default theme from AsciiDoc
  */
+ 
+.vendor {
+	background: url("../images/vendor.png") no-repeat scroll left top rgba(0, 0, 0, 0);
+    display: block;
+    float: left;
+    height: 29px;
+    width: 104px;
+}
+
+.vendor strong {
+	display: none;
+}
+
+.logo {
+	background: url("../images/logo.png") no-repeat scroll left top rgba(0, 0, 0, 0);
+    display: block;
+    float: left;
+    height: 29px;
+    width: 170px;
+	float: right;
+}
+
+.logo strong {
+	display: none;
+}
 
 a {
   color: blue;
@@ -58,13 +83,13 @@ pre {
   margin: 0;
 }
 
-span#author {
+span.author {
   color: #444466;
   font-family: sans-serif;
   font-weight: bold;
   font-size: 1.1em;
 }
-span#email {}
+span.email {}
 span#revnumber, span#revdate, span#revremark { font-family: sans-serif; }
 
 div#footer {

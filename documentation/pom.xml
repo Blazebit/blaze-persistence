@@ -26,7 +26,7 @@
                 <version>2.6</version>
                 <executions>
                     <execution>
-                        <id>copy-asciidoc-resources</id>
+                        <id>copy-asciidoc-resources-core-manual-en_US</id>
                         <phase>process-resources</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -40,7 +40,25 @@
                                     </includes>
                                 </resource>
                             </resources>
-                            <outputDirectory>target/generated-docs</outputDirectory>
+                            <outputDirectory>${project.build.directory}/generated-docs/core/manual/en_US</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-asciidoc-resources-entity-view-manual-en_US</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/style</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}/generated-docs/entity-view/manual/en_US</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -57,23 +75,28 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>core-manual-html</id>               
+                        <id>core-manual-en_US-html</id>               
                         <phase>generate-resources</phase>  
                         <goals>
                             <goal>process-asciidoc</goal>    
                         </goals>
                         <configuration>
-                            <sourcedir>${basedir}/src/main/asciidoc/core</sourcedir>
+                            <sourceDirectory>${basedir}/src/main/asciidoc/core/manual/en_US</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-docs/core/manual/en_US</outputDirectory>
+                             see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 
+                            <templateDir>${basedir}/src/main/template</templateDir>
+                            <imagesDir>${basedir}/src/main/asciidoc/core/manual/images</imagesDir>
+                            <doctype>book</doctype>
+                            <eruby>erb</eruby>
                             <backend>html5</backend>
-                            <sourceHighlighter>coderay</sourceHighlighter>
+                            <sourceHighlighter>highlightjs</sourceHighlighter>
                             <attributes>
-                                <imagesdir>src/main/asciidoc/core/manual/images</imagesdir>
+                                <linkcss>true</linkcss>
                                 <stylesheet>css/style.css</stylesheet>
                                 
                                 <toc>left</toc>
-                                <icons>font</icons>
+                                <icons>picture</icons>
                                 <sectanchors>true</sectanchors>
-                                <!-- set the idprefix to blank -->
                                 <idprefix/>
                                 <idseparator>-</idseparator>
                                 <docinfo1>true</docinfo1>

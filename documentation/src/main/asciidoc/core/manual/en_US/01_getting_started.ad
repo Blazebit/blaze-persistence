@@ -57,9 +57,9 @@ Let's start with the simplest query possible:
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
-[source,sql]
 ----
 This query simply selects all Cat objects and is equivalent to following JPQL query:
+[source,sql]
 ----
 SELECT c FROM Cat c
 ----

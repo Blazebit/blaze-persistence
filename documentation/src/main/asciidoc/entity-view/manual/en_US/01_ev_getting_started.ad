@@ -20,9 +20,9 @@ In a Java SE environment the `EntityViewConfiguration` as well as the `EntityVie
 be created manually as follows:
 [source,java]
 ----
-EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
 cfg.addEntityView(EntityView1.class);
-...
+// Add some more
 cfg.addEntityView(EntityViewn.class);
 EntityViewManager evm = cfg.createEntityViewManager();
 ----

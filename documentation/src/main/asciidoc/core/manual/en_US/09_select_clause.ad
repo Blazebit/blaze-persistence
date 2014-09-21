@@ -5,7 +5,11 @@ TODO: Mention that arbitrary expression can be used
 
 === Tuple select
 
+TODO: Mention that by default JPA creates `Object[]` but you can also use a `javax.persistence.Tuple`
+
 === Case expressions
+
+TODO: Explain that you can use case when in string expression and that there is also the API
 
 ==== Typesafe
 
@@ -29,4 +33,8 @@ TODO: Explain how selectSubquery(String subqueryAlias, String expression) works
 
 === Select new support
 
+TODO: Mention the select new methods and explain what they do
+
 === Object builder
+
+TODO: Mention that entity views use this extension point

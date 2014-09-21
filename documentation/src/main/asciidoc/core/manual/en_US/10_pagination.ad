@@ -12,6 +12,8 @@ TODO: Describe the limitations already mentioned in the javadoc and if one needs
 
 === Offset pagination
 
+TODO: Describe performance penalty and suggest that keyset pagination is better
+
 === Keyset pagination
 
 TODO: Describe that a unique index column is needed
