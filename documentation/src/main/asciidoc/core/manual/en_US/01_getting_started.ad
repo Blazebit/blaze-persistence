@@ -88,13 +88,14 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 
 Next we want to build a more complicated query. Let's select all cats with an
 age between 5 and 10 years and with at least two kittens. Additionally, we would
-like to order the results by name ascending.
+like to order the results by name ascending and by id in case of equal names.
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "c")
  .where("c.age").betweenExpression("5").andExpression("10")
  .where("SIZE(c.kittens)").geExpression("2")
- .orderByAsc("c.name");
+ .orderByAsc("c.name")
+ .orderByAsc("c.id");
 ----
 
 We have built a couple of queries so far but how can we retrieve the results?
@@ -102,7 +103,7 @@ There are two possible ways:
 
 * `List<Cat> cats = cb.getResultList();` to retrieve all results
 * `PagedList<Cat> cats = cb.page(0, 10).getResultList();` to retrieve 10 results starting from the first result
-(the default ordering is by `@Id`)
+(you must specify at least one unique column to determine the order of results)
 +
 The `PagedList<Cat>` features the `totalSize()` method which is perfectly suited for displaying the results in a
 paginated table. Moreover the `getKeySet()` method can be used to switch to keyset pagination for further paging.
