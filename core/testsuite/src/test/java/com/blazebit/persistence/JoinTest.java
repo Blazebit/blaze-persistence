@@ -312,4 +312,11 @@ public class JoinTest extends AbstractCoreTest {
             .leftJoinOn("owner", "o2").on("o2.name").eqExpression("o1.name").end();
         verifyException(crit, IllegalStateException.class).getQueryString();
     }
+    
+    @Test
+    public void testLeftJoinChildRelationsOnLeftJoin(){
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+            .leftJoin("partners", "p").where("p.partnerDocument.owner.name").eqExpression("'John'");
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners p LEFT JOIN p.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.owner owner_1 WHERE owner_1.name = 'John'", crit.getQueryString());
+    }
 }
