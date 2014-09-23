@@ -784,7 +784,11 @@ public class JoinManager extends AbstractManager {
         return attr.getJavaType();
     }
 
-    private JoinType getModelAwareType(Attribute attr) {
+    private JoinType getModelAwareType(JoinNode baseNode, Attribute attr) {
+        if (baseNode.getType() == JoinType.LEFT) {
+            return JoinType.LEFT;
+        }
+        
         if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
                 && ((SingularAttribute) attr).isOptional() == false) {
@@ -820,7 +824,7 @@ public class JoinManager extends AbstractManager {
             }
         }
         if (joinType == null) {
-            joinType = getModelAwareType(attr);
+            joinType = getModelAwareType(baseNode, attr);
         }
 
         JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, attr.isCollection(), defaultJoin);
