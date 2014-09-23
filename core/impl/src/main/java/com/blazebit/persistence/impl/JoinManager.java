@@ -815,14 +815,11 @@ public class JoinManager extends AbstractManager {
             return baseNode;
         }
 
-        if (alias == null) {
-            if (implicit) {
-                alias = aliasManager.generatePostfixedAlias(joinRelationName);
-            } else {
-                // default alias
-                alias = joinRelationName;
-            }
+        if (implicit) {
+            String aliasToUse = alias == null ? joinRelationName : alias;
+            alias = aliasManager.generatePostfixedAlias(aliasToUse);
         }
+        
         if (joinType == null) {
             joinType = getModelAwareType(baseNode, attr);
         }

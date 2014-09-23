@@ -39,12 +39,12 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     public void testCaseWhenBooleanExpressionSelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END");
-        String expectedQuery = "SELECT CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage) = workflow.defaultLanguage"
+        String expectedQuery = "SELECT CASE WHEN localized_locale_1.name IS NULL THEN localized_workflow_defaultLanguage_1 ELSE localized_locale_1 END FROM Workflow workflow"
+                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1 " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage"
                 // TODO: remove when #45 or rather HHH-9329 has been fixed
-                + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL"
-                + " AND localized_workflow_defaultLanguage.description IS NOT NULL AND localized_workflow_defaultLanguage.name IS NOT NULL";
+                + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL"
+                + " AND localized_workflow_defaultLanguage_1.description IS NOT NULL AND localized_workflow_defaultLanguage_1.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -55,13 +55,13 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END,' - '),0,20)");
         String expectedQuery = 
-                "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale.name IS NULL THEN localized_workflow_defaultLanguage ELSE localized_locale END,' - '),0,20)"
+                "SELECT SUBSTRING(COALESCE(CASE WHEN localized_locale_1.name IS NULL THEN localized_workflow_defaultLanguage_1 ELSE localized_locale_1 END,' - '),0,20)"
                 + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
-                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage) = workflow.defaultLanguage"
+                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
+                + " LEFT JOIN workflow.localized localized_workflow_defaultLanguage_1 " + ON_CLAUSE + " KEY(localized_workflow_defaultLanguage_1) = workflow.defaultLanguage"
                 // TODO: remove when #45 or rather HHH-9329 has been fixed
-                + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL"
-                + " AND localized_workflow_defaultLanguage.description IS NOT NULL AND localized_workflow_defaultLanguage.name IS NOT NULL";
+                + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL"
+                + " AND localized_workflow_defaultLanguage_1.description IS NOT NULL AND localized_workflow_defaultLanguage_1.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();

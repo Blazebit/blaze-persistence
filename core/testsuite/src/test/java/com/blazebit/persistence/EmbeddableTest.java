@@ -40,10 +40,10 @@ public class EmbeddableTest extends AbstractCoreTest {
     public void testEmbeddableSelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .select("localized[:locale].name");
-        String expectedQuery = "SELECT localized_locale.name FROM Workflow workflow "
-            + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
+        String expectedQuery = "SELECT localized_locale_1.name FROM Workflow workflow "
+            + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
             // TODO: remove when #45 or rather HHH-9329 has been fixed
-            + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL";
+            + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -54,10 +54,10 @@ public class EmbeddableTest extends AbstractCoreTest {
         CriteriaBuilder<Workflow> cb = cbf.create(em, Workflow.class)
             .where("localized[:locale].name").eq("bla");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
-            + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
+            + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
             // TODO: remove when #45 or rather HHH-9329 has been fixed
-            + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL"
-            + " AND localized_locale.name = :param_0";
+            + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL"
+            + " AND localized_locale_1.name = :param_0";
 //            + " WHERE localized_locale.name = :param_0"
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
@@ -69,10 +69,10 @@ public class EmbeddableTest extends AbstractCoreTest {
         CriteriaBuilder<Workflow> cb = cbf.create(em, Workflow.class)
             .orderByAsc("localized[:locale].name");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
-            + "LEFT JOIN workflow.localized localized_locale " + ON_CLAUSE + " KEY(localized_locale) = :locale"
+            + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
             // TODO: remove when #45 or rather HHH-9329 has been fixed
-            + " WHERE localized_locale.description IS NOT NULL AND localized_locale.name IS NOT NULL"
-            + " ORDER BY localized_locale.name ASC NULLS LAST";
+            + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL"
+            + " ORDER BY localized_locale_1.name ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
