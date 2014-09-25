@@ -317,17 +317,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
-        
-        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), false)) {
-            if (whereManager.hasPredicates()) {
-                sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom);
-            }
-        } else {
-            whereManager.buildClause(sbSelectFrom);
-        }
-        
-        havingManager.buildClause(sbSelectFrom);
+        whereManager.buildClause(sbSelectFrom);
 
         return sbSelectFrom.toString();
     }
@@ -352,20 +342,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
+
         if (keySetMode == KeySetMode.NONE) {
-            if (whereGenerated) {
-                if (whereManager.hasPredicates()) {
-                    sbSelectFrom.append(" AND ");
-                    whereManager.buildClausePredicate(sbSelectFrom);
-                }
-            } else {
-                whereManager.buildClause(sbSelectFrom);
-            }
+            whereManager.buildClause(sbSelectFrom);
         } else {
-            if (!whereGenerated) {
-                sbSelectFrom.append(" WHERE ");
-            }
+            sbSelectFrom.append(" WHERE ");
             
             applyKeySetClause(sbSelectFrom);
 
@@ -434,21 +415,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
         
         if (keySetMode == KeySetMode.NONE) {
-            if (whereGenerated) {
-                if (whereManager.hasPredicates()) {
-                    sbSelectFrom.append(" AND ");
-                    whereManager.buildClausePredicate(sbSelectFrom);
-                }
-            } else {
-                whereManager.buildClause(sbSelectFrom);
-            }
+            whereManager.buildClause(sbSelectFrom);
         } else {
-            if (!whereGenerated) {
-                sbSelectFrom.append(" WHERE ");
-            }
+            sbSelectFrom.append(" WHERE ");
             
             applyKeySetClause(sbSelectFrom);
 

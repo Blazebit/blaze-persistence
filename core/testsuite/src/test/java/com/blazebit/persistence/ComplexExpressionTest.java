@@ -84,9 +84,7 @@ public class ComplexExpressionTest extends AbstractCoreTest {
         String expectedQuery = 
                 "SELECT CASE WHEN " + caseExp2 + " THEN true ELSE false END"
                 + " FROM Workflow workflow"
-                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-                // TODO: remove when #45 or rather HHH-9329 has been fixed
-                + " WHERE localized_locale_1.description IS NOT NULL AND localized_locale_1.name IS NOT NULL";
+                + " LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale";
         
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
