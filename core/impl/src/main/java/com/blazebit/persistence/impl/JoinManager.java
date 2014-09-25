@@ -186,6 +186,7 @@ public class JoinManager extends AbstractManager {
                     sb.append(node.getAliasInfo().getAlias());
                     sb.append(" IS NOT NULL");
                 } else if (elementType instanceof EmbeddableType) {
+                    // TODO: I think this is wrong
                     SortedSet<Attribute<?, ?>> attributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
 
                         @Override
@@ -547,6 +548,10 @@ public class JoinManager extends AbstractManager {
             pathExpression.setField(result.field);
         } else if (expression instanceof CompositeExpression) {
             for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
+                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
+            }
+        } else if (expression instanceof FunctionExpression) {
+            for (Expression exp : ((FunctionExpression) expression).getExpressions()) {
                 implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
             }
         }
