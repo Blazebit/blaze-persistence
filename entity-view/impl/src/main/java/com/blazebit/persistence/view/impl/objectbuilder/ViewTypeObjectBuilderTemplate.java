@@ -55,6 +55,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
@@ -109,7 +111,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         attributeSet.remove(viewType.getIdAttribute());
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
-        boolean[] featuresFound = new boolean[3];
 
         if (mappingConstructor == null) {
             parameterAttributes = new ParameterAttribute<?, ?>[0];
@@ -120,8 +121,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         int length = 1 + attributes.length + parameterAttributes.length;
         Constructor<? extends T> javaConstructor = null;
-        List<Object> mappingList = new ArrayList<Object>(length);
-        List<String> parameterMappingList = new ArrayList<String>(length);
 
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
@@ -143,44 +142,43 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
         
         String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
+        
+        List<Object> mappingList = new ArrayList<Object>(length);
+        List<String> parameterMappingList = new ArrayList<String>(length);
+        Class<?>[] parameterTypes = new Class<?>[length];
+        boolean[] featuresFound = new boolean[3];
+        
+        parameterTypes[0] = idAttributeType;
         mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
         parameterMappingList.add(0, null);
-
-        OUTER:
-        for (Constructor<?> constructor : constructors) {
-            Class<?>[] parameterTypes = constructor.getParameterTypes();
-            if (length != parameterTypes.length) {
-                continue;
-            }
-            // parameterTypes[0] is the id
-            if (idAttributeType != parameterTypes[0]) {
-                continue;
-            }
-            for (int i = 0; i < attributes.length; i++) {
-                MethodAttribute<?, ?> attribute = attributes[i];
-                if (attribute.getJavaType() != parameterTypes[i + 1]) {
-                    continue OUTER;
-                } else {
-                    applyMapping(attribute, mappingList, parameterMappingList, featuresFound);
-                }
-            }
-            for (int i = 0; i < parameterAttributes.length; i++) {
-                ParameterAttribute<?, ?> attribute = parameterAttributes[i];
-
-                if (attribute.getJavaType() != parameterTypes[i + attributes.length + 1]) {
-                    continue OUTER;
-                } else {
-                    applyMapping(attribute, mappingList, parameterMappingList, featuresFound);
-                }
-            }
-
-            javaConstructor = (Constructor<? extends T>) constructor;
-            break;
+        
+        for (int i = 0; i < attributes.length; i++) {
+            parameterTypes[i + 1] = attributes[i].getJavaType();
         }
-
+        for (int i = 0; i < parameterAttributes.length; i++) {
+            parameterTypes[i + attributes.length + 1] = parameterAttributes[i].getJavaType();
+        }
+        
+        try {
+            javaConstructor = (Constructor<? extends T>) proxyClass.getDeclaredConstructor(parameterTypes);
+        } catch (NoSuchMethodException ex) {
+            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
+                .getName(), ex);
+        } catch (SecurityException ex) {
+            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
+                .getName(), ex);
+        }
+        
         if (javaConstructor == null) {
             throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
                 .getName());
+        }
+        
+        for (int i = 0; i < attributes.length; i++) {
+            applyMapping(attributes[i], mappingList, parameterMappingList, featuresFound);
+        }
+        for (int i = 0; i < parameterAttributes.length; i++) {
+            applyMapping(parameterAttributes[i], mappingList, parameterMappingList, featuresFound);
         }
 
         this.hasParameters = featuresFound[0];
@@ -309,7 +307,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private void applyCollectionKeyMapping(String keyFunction, MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList) {
         Object[] mapping = new Object[2];
         mapping[0] = keyFunction + "(" + getMapping(mappingPrefix, mappingAttribute) + ")";
-        mapping[1] = getAlias(aliasPrefix, attribute) + "_KEY";
+        String alias = getAlias(aliasPrefix, attribute);
+        mapping[1] = alias == null ? null : alias + "_KEY";
         mappingList.add(mapping);
     }
 
@@ -400,15 +399,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     private static String getAlias(String prefix, String attributeName) {
-        return prefix + "_" + attributeName;
+        if (prefix == null) {
+            return attributeName;
+        } else {
+            return prefix + "_" + attributeName;
+        }
     }
 
     private static <T> String getAlias(String prefix, Attribute<?, ?> attribute) {
         if (attribute instanceof MethodAttribute<?, ?>) {
             return getAlias(prefix, ((MethodAttribute<?, ?>) attribute).getName());
+        } else {
+            return getAlias(prefix, "$" + ((ParameterAttribute<?, ?>) attribute).getIndex());
         }
-
-        return null;
     }
 
     public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder) {

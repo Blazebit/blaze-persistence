@@ -45,6 +45,8 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
             }
         }
 
+        // We can return the actual array here because we know that the only possible delegate
+        // is the ViewTypeObjectBuilder which consumes the elements of the array
         return super.build(newTuple.getArray());
     }
 
@@ -56,7 +58,7 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         public FastArrayList(int initialSize) {
             this.size = 0;
             this.array = new Object[initialSize];
-        }
+}
 
         public void clear() {
             size = 0;

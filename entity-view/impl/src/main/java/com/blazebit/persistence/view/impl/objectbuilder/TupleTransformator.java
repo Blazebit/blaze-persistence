@@ -55,7 +55,7 @@ public class TupleTransformator {
         }
 
         for (int i = 0; i < transformatorLevels.size(); i++) {
-            if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
+                if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
                 ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
 
                 while (newTupleListIter.hasNext()) {

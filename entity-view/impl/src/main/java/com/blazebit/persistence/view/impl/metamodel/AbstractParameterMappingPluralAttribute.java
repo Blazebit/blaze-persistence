@@ -58,6 +58,11 @@ public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends A
     }
 
     @Override
+    public boolean isSubview() {
+        return subview;
+    }
+
+    @Override
     public Class<? extends SubqueryProvider> getSubqueryProvider() {
         throw new IllegalStateException("This method should not be accessible!");
     }
