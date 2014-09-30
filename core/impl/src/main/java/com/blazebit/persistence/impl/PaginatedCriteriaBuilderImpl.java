@@ -382,7 +382,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
         sbSelectFrom.append(" WHERE ")
             .append(joinManager.getRootAlias())
             .append('.')
@@ -414,7 +414,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
         
         if (keySetMode == KeySetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

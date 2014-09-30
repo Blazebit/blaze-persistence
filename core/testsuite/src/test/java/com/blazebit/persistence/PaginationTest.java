@@ -150,7 +150,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id, d.id ORDER BY d.id ASC NULLS LAST";
         String expectedObjectQuery = "SELECT contacts_contactNr_1.name FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
-                + " KEY(contacts_contactNr_1) = :contactNr JOIN d.owner owner_1 WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
+                + " KEY(contacts_contactNr_1) = :contactNr WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
                 .where("owner.name").eq("Karl1")
                 .select("contacts[:contactNr].name")
@@ -444,5 +444,16 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .orderByAsc("d.id").orderByAsc("d.name").page(0, 10);
         verifyException(cb, IllegalStateException.class).getResultList();
+    }
+    
+    @Test
+    public void testPaginationObjectQueryClauseExclusions(){
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("id")
+                .innerJoinDefault("contacts", "c")
+                .where("c.name").eq("Karl1")
+                .orderByAsc("d.id").page(0, 10);
+        String query = "SELECT d.id FROM Document d WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
+        assertEquals(query, cb.getQueryString());
     }
 }
