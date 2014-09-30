@@ -39,5 +39,5 @@ public final class OrPredicate extends MultinaryPredicate {
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
     }
-    
+
 }

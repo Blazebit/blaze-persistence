@@ -39,6 +39,10 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression){
+        return createExpression(ruleInvoker, expression, true);
+    }
+    
     private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen){
         if (expression == null) {
             throw new NullPointerException("expression");
@@ -61,8 +65,15 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     protected abstract RuleInvoker getSimpleExpressionRuleInvoker();
     
     @Override
-    public Expression createSimpleExpression(String expression, boolean allowCaseWhen) {
-        return createExpression(getSimpleExpressionRuleInvoker(), expression, allowCaseWhen);
+    public PathExpression createPathExpression(String expression) {
+        CompositeExpression comp = (CompositeExpression) createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parsePath();
+            }
+        } , expression);
+        return (PathExpression) comp.getExpressions().get(0);
     }
     
     @Override
@@ -73,12 +84,12 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseOrderByClause();
             }
-        }, expression, false);
+        }, expression);
     }
     
     @Override
     public Expression createSimpleExpression(String expression) {
-        return createSimpleExpression(expression, false);
+        return createExpression(getSimpleExpressionRuleInvoker(), expression);
     }
 
     @Override
@@ -89,7 +100,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseCaseOperandExpression();
             }
-        }, expression, false);
+        }, expression);
     }
 
     @Override

@@ -32,6 +32,10 @@ parseOrderByClause : state_field_path_expression EOF
                    | key_value_expression EOF
                    ;
 
+parsePath : state_field_path_expression EOF
+          | single_element_path_expression EOF
+          ;
+
 parseSimpleExpression
     : simple_expression EOF 
     ;

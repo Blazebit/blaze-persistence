@@ -373,7 +373,7 @@ public class JoinManager extends AbstractManager {
     }
 
     JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
-        Expression expr = expressionFactory.createSimpleExpression(path);
+        Expression expr = expressionFactory.createPathExpression(path);
         PathExpression pathExpression;
         if (expr instanceof PathExpression) {
             pathExpression = (PathExpression) expr;

@@ -223,7 +223,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public BaseQueryBuilder<T, ?> select(String expression, String selectAlias) {
-        Expression expr = expressionFactory.createSimpleExpression(expression, true);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -278,7 +278,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
      */
     @Override
     public RestrictionBuilder<X> where(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression, true);
+        Expression expr = expressionFactory.createSimpleExpression(expression);
         return whereManager.restrict(this, expr);
     }
     
@@ -332,7 +332,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     public X groupBy(String expression) {
         clearCache();
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createPathExpression(expression);
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
         return (X) this;

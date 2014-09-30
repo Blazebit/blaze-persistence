@@ -38,11 +38,6 @@ public class HavingManager<T> extends PredicateManager<T> {
     protected ClauseType getClauseType() {
         return ClauseType.HAVING;
     }
-    
-    @Override
-    protected boolean isAllowCaseWhenExpressions() {
-        return false;
-    }
 
     HavingOrBuilderImpl<T> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));

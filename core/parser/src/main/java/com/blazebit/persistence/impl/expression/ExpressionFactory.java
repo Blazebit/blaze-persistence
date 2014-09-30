@@ -23,7 +23,7 @@ package com.blazebit.persistence.impl.expression;
  */
 public interface ExpressionFactory {
 
-    public Expression createSimpleExpression(String expression, boolean allowCaseWhen);
+    public PathExpression createPathExpression(String expression);
     
     public Expression createSimpleExpression(String expression);
 

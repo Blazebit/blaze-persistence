@@ -94,19 +94,15 @@ public class AbstractParserTest {
     }
 
     protected Expression parse(String expr) {
-        return parse(expr, false);
-    }
-
-    protected Expression parse(String expr, boolean allowCaseWhen) {
-        return ef.createSimpleExpression(expr, allowCaseWhen);
+        return ef.createSimpleExpression(expr);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return parseSubqueryExpression(expr, false);
+        return subqueryEf.createSimpleExpression(expr);
     }
-
-    protected Expression parseSubqueryExpression(String expr, boolean allowCaseWhen) {
-        return subqueryEf.createSimpleExpression(expr, allowCaseWhen);
+    
+    protected PathExpression parsePath(String expr){
+        return ef.createPathExpression(expr);
     }
 
     protected FooExpression foo(String foo) {

@@ -40,11 +40,6 @@ public class WhereManager<T> extends PredicateManager<T> {
         return ClauseType.WHERE;
     }
 
-    @Override
-    protected boolean isAllowCaseWhenExpressions() {
-        return true;
-    }
-
     WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new WhereOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
