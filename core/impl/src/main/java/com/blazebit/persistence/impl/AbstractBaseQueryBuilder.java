@@ -672,16 +672,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
-        
-        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.noneOf(ClauseType.class), true)) {
-            if (whereManager.hasPredicates()) {
-                sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom);
-            }
-        } else {
-            whereManager.buildClause(sbSelectFrom);
-        }
-        
+        whereManager.buildClause(sbSelectFrom);
         groupByManager.buildGroupBy(sbSelectFrom);
         havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);

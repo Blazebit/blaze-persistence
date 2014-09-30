@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.basic;
+package com.blazebit.persistence.view.collections.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListSetMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapListSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapSetListView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetListMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetMapListView;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
+import com.blazebit.persistence.view.collections.subview.model.SubviewClassDocumentForCollectionsView;
+import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,15 +41,15 @@ import org.junit.runners.Parameterized;
  * @since 1.0
  */
 @RunWith(Parameterized.class)
-public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {
+public class SubviewClassCollectionsTest extends AbstractEntityViewTest {
 
-    private final Class<T> viewType;
+    private final String viewConstructorName;
 
     private DocumentForCollections doc1;
     private DocumentForCollections doc2;
 
-    public SimpleCollectionsTest(Class<T> viewType) {
-        this.viewType = viewType;
+    public SubviewClassCollectionsTest(String viewConstructorName) {
+        this.viewConstructorName = viewConstructorName;
     }
 
     @Override
@@ -119,40 +115,62 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
         }
     }
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{0}")
     public static Collection entityViewCombinations() {
         return Arrays.asList(new Object[][]{
-            { BasicDocumentListMapSetView.class },
-            { BasicDocumentListSetMapView.class },
-            { BasicDocumentMapListSetView.class },
-            { BasicDocumentMapSetListView.class },
-            { BasicDocumentSetListMapView.class },
-            { BasicDocumentSetMapListView.class }
+            { SubviewClassDocumentForCollectionsView.STRING_MAP_SET_LIST_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.STRING_MAP_LIST_SET_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.STRING_SET_MAP_LIST_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.STRING_SET_LIST_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.STRING_LIST_SET_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.STRING_LIST_MAP_SET_CONSTRUCTOR },
+
+            { SubviewClassDocumentForCollectionsView.MAP_SET_STRING_LIST_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.MAP_SET_LIST_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.MAP_LIST_SET_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.MAP_LIST_STRING_SET_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.MAP_STRING_SET_LIST_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.MAP_STRING_LIST_SET_CONSTRUCTOR },
+
+            { SubviewClassDocumentForCollectionsView.LIST_MAP_STRING_SET_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.LIST_MAP_SET_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.LIST_SET_MAP_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.LIST_SET_STRING_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.LIST_STRING_SET_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.LIST_STRING_MAP_SET_CONSTRUCTOR },
+
+            { SubviewClassDocumentForCollectionsView.SET_MAP_LIST_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.SET_MAP_STRING_LIST_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.SET_LIST_MAP_STRING_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.SET_LIST_STRING_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.SET_STRING_LIST_MAP_CONSTRUCTOR },
+            { SubviewClassDocumentForCollectionsView.SET_STRING_MAP_LIST_CONSTRUCTOR }
         });
     }
 
     @Test
     public void testCollections() {
         EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
-        cfg.addEntityView(viewType);
+        cfg.addEntityView(SubviewClassDocumentForCollectionsView.class);
+        cfg.addEntityView(SubviewPersonForCollectionsView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
-        List<T> results = cb.getResultList();
+        CriteriaBuilder<SubviewClassDocumentForCollectionsView> cb = evm.applySetting(EntityViewSetting.create(SubviewClassDocumentForCollectionsView.class, viewConstructorName), criteria);
+        List<SubviewClassDocumentForCollectionsView> results = cb.getResultList();
 
         assertEquals(2, results.size());
         // Doc1
         assertEquals(doc1.getName(), results.get(0).getName());
-        assertEquals(doc1.getContacts(), results.get(0).getContacts());
-        assertEquals(doc1.getPartners(), results.get(0).getPartners());
-        assertEquals(doc1.getPersonList(), results.get(0).getPersonList());
+        assertSubviewEquals(doc1.getContacts(), results.get(0).getContacts());
+        assertSubviewEquals(doc1.getPartners(), results.get(0).getPartners());
+        assertSubviewEquals(doc1.getPersonList(), results.get(0).getPersonList());
 
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
-        assertEquals(doc2.getContacts(), results.get(1).getContacts());
-        assertEquals(doc2.getPartners(), results.get(1).getPartners());
-        assertEquals(doc2.getPersonList(), results.get(1).getPersonList());
+        assertSubviewEquals(doc2.getContacts(), results.get(1).getContacts());
+        assertSubviewEquals(doc2.getPartners(), results.get(1).getPartners());
+        assertSubviewEquals(doc2.getPersonList(), results.get(1).getPersonList());
     }
 }

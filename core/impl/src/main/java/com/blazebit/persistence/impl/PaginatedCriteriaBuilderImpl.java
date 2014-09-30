@@ -317,17 +317,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
-        
-        if (joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), false)) {
-            if (whereManager.hasPredicates()) {
-                sbSelectFrom.append(" AND ");
-                whereManager.buildClausePredicate(sbSelectFrom);
-            }
-        } else {
-            whereManager.buildClause(sbSelectFrom);
-        }
-        
-        havingManager.buildClause(sbSelectFrom);
+        whereManager.buildClause(sbSelectFrom);
 
         return sbSelectFrom.toString();
     }
@@ -352,20 +342,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
+
         if (keySetMode == KeySetMode.NONE) {
-            if (whereGenerated) {
-                if (whereManager.hasPredicates()) {
-                    sbSelectFrom.append(" AND ");
-                    whereManager.buildClausePredicate(sbSelectFrom);
-                }
-            } else {
-                whereManager.buildClause(sbSelectFrom);
-            }
+            whereManager.buildClause(sbSelectFrom);
         } else {
-            if (!whereGenerated) {
-                sbSelectFrom.append(" WHERE ");
-            }
+            sbSelectFrom.append(" WHERE ");
             
             applyKeySetClause(sbSelectFrom);
 
@@ -376,9 +357,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         sbSelectFrom.append(" GROUP BY ").append(idClause);
-        if (needsNewIdList) {
-            orderByManager.buildGroupByClauses(sbSelectFrom, extractKeySet);
-        }
+        orderByManager.buildGroupByClauses(sbSelectFrom);
         
         boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
@@ -403,7 +382,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
         sbSelectFrom.append(" WHERE ")
             .append(joinManager.getRootAlias())
             .append('.')
@@ -435,22 +414,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(' ')
             .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
-        boolean whereGenerated = joinManager.buildWhereClauseConjuncts(sbSelectFrom, EnumSet.of(ClauseType.SELECT), false);
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
         
         if (keySetMode == KeySetMode.NONE) {
-            if (whereGenerated) {
-                if (whereManager.hasPredicates()) {
-                    sbSelectFrom.append(" AND ");
-                    whereManager.buildClausePredicate(sbSelectFrom);
-                }
-            } else {
-                whereManager.buildClause(sbSelectFrom);
-            }
+            whereManager.buildClause(sbSelectFrom);
         } else {
-            if (!whereGenerated) {
-                sbSelectFrom.append(" WHERE ");
-            }
+            sbSelectFrom.append(" WHERE ");
             
             applyKeySetClause(sbSelectFrom);
 

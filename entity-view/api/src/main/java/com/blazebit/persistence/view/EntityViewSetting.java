@@ -39,6 +39,7 @@ import java.util.Set;
 public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
 
     private final Class<T> entityViewClass;
+    private final String viewConstructorName;
     private final int firstResult;
     private final int maxResults;
     private final boolean paginated;
@@ -48,28 +49,40 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
 
-    private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate) {
+    private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate, String viewConstructorName) {
         this.entityViewClass = entityViewClass;
+        this.viewConstructorName = viewConstructorName;
         this.firstResult = firstRow;
         this.maxResults = maxRows;
         this.paginated = paginate;
     }
 
     /**
-     * Creates a new {@linkplain EntityViewSetting} that can be applied on
-     * criteria builders.
+     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param <T>             The type of the entity view
      * @return A new entity view setting
      */
     public static <T> EntityViewSetting<T, CriteriaBuilder<T>> create(Class<T> entityViewClass) {
-        return new EntityViewSetting<T, CriteriaBuilder<T>>(entityViewClass, 0, Integer.MAX_VALUE, false);
+        return new EntityViewSetting<T, CriteriaBuilder<T>>(entityViewClass, 0, Integer.MAX_VALUE, false, null);
     }
-
+    
     /**
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
+     *
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param viewConstructorName The name of the view constructor
+     * @param <T>             The type of the entity view
+     * @return A new entity view setting
+     */
+    public static <T> EntityViewSetting<T, CriteriaBuilder<T>> create(Class<T> entityViewClass, String viewConstructorName) {
+        return new EntityViewSetting<T, CriteriaBuilder<T>>(entityViewClass, 0, Integer.MAX_VALUE, false, viewConstructorName);
+    }
+
+    /**
+     * Like {@link EntityViewSetting#create(java.lang.Class, int, int, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
      *
      * @param entityViewClass The entity view class that should be used for the object builder
      * @param firstRow        The position of the first result to retrieve, numbered from 0
@@ -78,7 +91,22 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * @return A new entity view setting
      */
     public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows) {
-        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true);
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true, null);
+    }
+    
+    /**
+     * Creates a new {@linkplain EntityViewSetting} that can be applied on
+     * criteria builders.
+     *
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param firstRow        The position of the first result to retrieve, numbered from 0
+     * @param maxRows         The maximum number of results to retrieve
+     * @param viewConstructorName The name of the view constructor
+     * @param <T>             The type of the entity view
+     * @return A new entity view setting
+     */
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows, String viewConstructorName) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true, viewConstructorName);
     }
 
     /**
@@ -88,6 +116,15 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      */
     public Class<T> getEntityViewClass() {
         return entityViewClass;
+    }
+
+    /**
+     * Returns the entity view constructor name.
+     * 
+     * @return The entity view constructor name
+     */
+    public String getViewConstructorName() {
+        return viewConstructorName;
     }
 
     /**

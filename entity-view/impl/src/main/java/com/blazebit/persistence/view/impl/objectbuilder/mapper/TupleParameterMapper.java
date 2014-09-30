@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 import com.blazebit.persistence.QueryBuilder;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -46,7 +47,7 @@ public class TupleParameterMapper {
         this.parameterIndices = Arrays.copyOf(paramIndices, size);
     }
 
-    public void applyMapping(QueryBuilder<?, ?> queryBuilder, Object[] tuple) {
+    public void applyMapping(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
             tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
         }

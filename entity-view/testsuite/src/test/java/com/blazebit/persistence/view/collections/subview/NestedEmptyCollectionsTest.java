@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.collections.subview;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
@@ -138,7 +139,7 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())
             .orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applyObjectBuilder(viewType, criteria);
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
 
         assertEquals(2, results.size());

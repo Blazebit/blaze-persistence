@@ -158,91 +158,6 @@ public class JoinManager extends AbstractManager {
         rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     }
 
-    boolean buildWhereClauseConjuncts(StringBuilder sb, Set<ClauseType> clauseExclusions, boolean includeSelect) {
-        return buildWhereClauseConjuncts(sb, clauseExclusions, rootNode, null, includeSelect, sb.length());
-    }
-
-    boolean buildWhereClauseConjuncts(StringBuilder sb, Set<ClauseType> clauseExclusions, JoinNode node, String relation, boolean includeSelect, int originalSize) {
-        if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
-            return sb.length() != originalSize;
-        }
-
-        if (usesKeyInWithPredicate(node, includeSelect)) {
-            // Safe because root has no with predicate
-            ManagedType<?> t = metamodel.managedType(node.getParent().getPropertyClass());
-            Attribute<?, ?> attr = t.getAttribute(relation);
-
-            if (attr.isCollection() && ((AnnotatedElement) attr.getJavaMember()).getAnnotation(CollectionTable.class) != null) {
-                if (sb.length() == originalSize) {
-                    sb.append(" WHERE ");
-                } else {
-                    sb.append(" AND ");
-                }
-
-                Type<?> elementType = ((PluralAttribute<?, ?, ?>) attr).getElementType();
-
-                // Unfortunately we have to branch here because embeddable IS NOT NULL results in a runtime error
-                if (elementType instanceof EntityType) {
-                    sb.append(node.getAliasInfo().getAlias());
-                    sb.append(" IS NOT NULL");
-                } else if (elementType instanceof EmbeddableType) {
-                    SortedSet<Attribute<?, ?>> attributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
-
-                        @Override
-                        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
-                            return o1.getName().compareTo(o2.getName());
-                        }
-                    });
-                    attributes.addAll(((EmbeddableType<?>) elementType).getSingularAttributes());
-                    boolean first = true;
-                    for (Attribute<?, ?> elementAttribute : attributes) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            sb.append(" AND ");
-                        }
-
-                        sb.append(node.getAliasInfo().getAlias());
-                        sb.append('.');
-                        sb.append(elementAttribute.getName());
-                        sb.append(" IS NOT NULL");
-                    }
-                }
-            }
-        }
-        for (Map.Entry<String, JoinTreeNode> treeNodeEntry : node.getNodes().entrySet()) {
-            String subRelation = treeNodeEntry.getKey();
-            JoinTreeNode treeNode = treeNodeEntry.getValue();
-            for (JoinNode n : treeNode.getJoinNodes().values()) {
-                buildWhereClauseConjuncts(sb, clauseExclusions, n, subRelation, includeSelect, originalSize);
-            }
-        }
-
-        return sb.length() != originalSize;
-    }
-
-    private boolean usesKeyInWithPredicate(JoinNode node, boolean includeSelect) {
-        if (!includeSelect && node.getClauseDependencies().equals(EnumSet.of(ClauseType.SELECT))) {
-            return false;
-        }
-        if (node.getWithPredicate() == null || node.getWithPredicate().getChildren().isEmpty()) {
-            return false;
-        }
-
-        String keyExpressionString = "KEY(" + node.getAliasInfo().getAlias() + ")";
-
-        for (Predicate p : node.getWithPredicate().getChildren()) {
-            if (p instanceof EqPredicate) {
-                EqPredicate eq = (EqPredicate) p;
-                if (keyExpressionString.equals(eq.getLeft().toString())) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node) {
         if (!renderedJoins.contains(node)) {
             switch (node.getType()) {
@@ -373,7 +288,7 @@ public class JoinManager extends AbstractManager {
     }
 
     JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
-        Expression expr = expressionFactory.createPathExpression(path);
+        Expression expr = expressionFactory.createSimpleExpression(path);
         PathExpression pathExpression;
         if (expr instanceof PathExpression) {
             pathExpression = (PathExpression) expr;
@@ -547,6 +462,10 @@ public class JoinManager extends AbstractManager {
             pathExpression.setField(result.field);
         } else if (expression instanceof CompositeExpression) {
             for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
+                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
+            }
+        } else if (expression instanceof FunctionExpression) {
+            for (Expression exp : ((FunctionExpression) expression).getExpressions()) {
                 implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
             }
         }
@@ -815,14 +734,11 @@ public class JoinManager extends AbstractManager {
             return baseNode;
         }
 
-        if (alias == null) {
-            if (implicit) {
-                alias = aliasManager.generatePostfixedAlias(joinRelationName);
-            } else {
-                // default alias
-                alias = joinRelationName;
-            }
+        if (implicit) {
+            String aliasToUse = alias == null ? joinRelationName : alias;
+            alias = aliasManager.generatePostfixedAlias(aliasToUse);
         }
+        
         if (joinType == null) {
             joinType = getModelAwareType(baseNode, attr);
         }

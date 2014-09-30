@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.basic;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.PersonView1;
@@ -98,7 +99,7 @@ public class InterfaceViewTest extends AbstractEntityViewTest {
     public void testInterface() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
-        List<DocumentViewInterface> results = evm.applyObjectBuilder(DocumentViewInterface.class, criteria)
+        List<DocumentViewInterface> results = evm.applySetting(EntityViewSetting.create(DocumentViewInterface.class), criteria)
             .setParameter("contactPersonNumber", 2)
             .getResultList();
 

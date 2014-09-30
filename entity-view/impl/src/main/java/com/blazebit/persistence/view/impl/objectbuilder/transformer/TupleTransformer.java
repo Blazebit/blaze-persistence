@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
 import com.blazebit.persistence.QueryBuilder;
+import java.util.Map;
 
 /**
  *
@@ -26,7 +27,7 @@ public abstract class TupleTransformer {
 
     public abstract Object[] transform(Object[] tuple);
 
-    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
+    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         return this;
     }
 }

@@ -98,7 +98,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
-        List<DocumentWithSubquery> list = evm.applyObjectBuilder(DocumentWithSubquery.class, cb).getResultList();
+        List<DocumentWithSubquery> list = evm.applySetting(EntityViewSetting.create(DocumentWithSubquery.class), cb).getResultList();
 
         assertEquals(2, list.size());
         assertEquals("doc1", list.get(0).getName());

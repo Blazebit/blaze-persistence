@@ -178,39 +178,27 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return null;
     }
 
-    @Override
-    public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, PaginatedCriteriaBuilder<?> criteriaBuilder) {
-        return applyObjectBuilder(clazz, null, criteriaBuilder);
-    }
-
-    @Override
-    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, CriteriaBuilder<?> criteriaBuilder) {
-        return applyObjectBuilder(clazz, null, criteriaBuilder);
-    }
-
-    @Override
-    public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder) {
+    public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
+        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
-    @Override
-    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder) {
+    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder);
+        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
 
-    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder) {
+    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
         if (criteriaBuilder.getResultType() != viewType.getEntityClass()) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
 
-        criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder));
+        criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 
     private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(Metamodel metamodel, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {

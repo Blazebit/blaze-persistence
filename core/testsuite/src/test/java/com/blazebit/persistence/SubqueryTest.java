@@ -241,8 +241,8 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.whereSubquery()
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like().value("%dld").noEscape();
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
-            + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 "
+            + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -293,8 +293,8 @@ public class SubqueryTest extends AbstractCoreTest {
             .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
             .like().value("%dld").noEscape();
         
-        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 "
-            + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
+        String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 "
+            + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -307,8 +307,8 @@ public class SubqueryTest extends AbstractCoreTest {
             .like().value("%dld").noEscape();
         
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l "
-            + "LEFT JOIN partners_1.localized localized_1 " + ON_CLAUSE + " KEY(localized_1) = 1 WHERE (SELECT p.name FROM Person p "
-            + "WHERE LENGTH(localized_1) > :param_0) LIKE :param_1";
+            + "LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 WHERE (SELECT p.name FROM Person p "
+            + "WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

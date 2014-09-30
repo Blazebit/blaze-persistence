@@ -104,4 +104,19 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, SyntaxErrorException.class).orderByAsc("SIZE(d.partners)");
     }
+    
+    @Test
+    public void testOrderByFunctionExpression(){
+        PaginatedCriteriaBuilder<String> criteria = cbf.create(em, String.class)
+                .from(Document.class, "d")
+                .select("COALESCE(d.owner.name, 'a')", "asd")
+                .orderByAsc("asd")
+                .orderByAsc("id")
+                .page(0, 1);
+        String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
+                + "JOIN d.owner owner_1 "
+                + "GROUP BY d.id, COALESCE(owner_1.name,'a'), d.id "
+                + "ORDER BY asd ASC NULLS LAST, d.id ASC NULLS LAST";
+        assertEquals(expectedQuery, criteria.getPageIdQueryString());
+    }
 }
