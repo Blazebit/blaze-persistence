@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.KeySet;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import java.util.HashMap;
@@ -48,6 +49,9 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
     private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
+    
+    private KeySet keySet;
+    private boolean keySetPaginated;
 
     private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate, String viewConstructorName) {
         this.entityViewClass = entityViewClass;
@@ -157,6 +161,36 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      */
     public boolean isPaginated() {
         return paginated;
+    }
+
+    /**
+     * Returns the key set of this setting.
+     * 
+     * @return The key set of this setting
+     */
+    public KeySet getKeySet() {
+        return keySet;
+    }
+
+    /**
+     * Sets the key set of this setting.
+     * 
+     * @param keySet the new key set
+     * @return this setting for chaining
+     */
+    public EntityViewSetting<T, Q> withKeySet(KeySet keySet) {
+        this.keySet = keySet;
+        this.keySetPaginated = true;
+        return this;
+    }
+
+    /**
+     * Returns true if this setting is key set paginated.
+     * 
+     * @return true if this setting is key set paginated
+     */
+    public boolean isKeySetPaginated() {
+        return keySetPaginated;
     }
 
     /**
