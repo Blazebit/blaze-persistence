@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.List;
 
 /**
@@ -66,5 +67,14 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
+        return sb.toString();
     }
 }

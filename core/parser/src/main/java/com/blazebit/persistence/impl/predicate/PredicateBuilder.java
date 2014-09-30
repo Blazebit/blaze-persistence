@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.Expression;
-
 /**
  *
  * @author Christian Beikov

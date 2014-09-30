@@ -39,6 +39,7 @@ public abstract class NegatableBinaryExpressionPredicate extends BinaryExpressio
         return negated;
     }
 
+    @Override
     public void setNegated(boolean negated) {
         this.negated = negated;
     }

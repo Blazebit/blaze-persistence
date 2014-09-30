@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
+
 /**
  *
  * @author Christian Beikov
@@ -61,6 +63,15 @@ public class NotPredicate implements Predicate {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
+        return sb.toString();
     }
 
     @Override

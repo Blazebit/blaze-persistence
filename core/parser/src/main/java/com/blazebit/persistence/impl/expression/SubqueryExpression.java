@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
+
 /**
  *
  * @author Christian Beikov
@@ -42,13 +44,13 @@ public class SubqueryExpression implements Expression {
     public Subquery getSubquery() {
         return subquery;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append('(');
-        sb.append(subquery.getQueryString());
-        sb.append(')');
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
         return sb.toString();
     }
 

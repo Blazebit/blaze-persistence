@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
@@ -377,7 +378,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (prefixParts != null && prefixParts.size() > 0) {
             Expression expr = evm.getExpressionFactory().createSimpleExpression(mapping);
             expr.accept(new SubviewPrefixExpressionVisitor(prefixParts));
-            return expr.toString();
+            SimpleQueryGenerator generator = new SimpleQueryGenerator();
+            // TODO: maybe cache the string builder
+            StringBuilder sb = new StringBuilder();
+            generator.setQueryBuffer(sb);
+            expr.accept(generator);
+            return sb.toString();
         }
 
         return mapping;

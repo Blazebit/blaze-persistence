@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.List;
 
 /**
@@ -58,17 +59,9 @@ public class FunctionExpression implements Expression  {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(functionName);
-        sb.append('(');
-        if(!expressions.isEmpty()){
-            sb.append(expressions.get(0));
-            for (int i = 1; i < expressions.size(); i++) {
-                sb.append(',');
-                sb.append(expressions.get(i));
-            }
-        }
-
-        sb.append(')');
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
         return sb.toString();
     }
 

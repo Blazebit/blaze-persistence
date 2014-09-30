@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.List;
 
 /**
@@ -81,14 +82,11 @@ public class GeneralCaseExpression implements Expression {
 
     @Override
     public String toString() {
-        StringBuilder whenClauseBuilder = new StringBuilder();
-        for(WhenClauseExpression whenClause : whenClauses){
-            whenClauseBuilder.append(whenClause.toString());
-            whenClauseBuilder.append(" ");
-        }
-       
-        return "CASE " + whenClauseBuilder.toString() + "ELSE " + defaultExpr.toString() + " END";
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
+        return sb.toString();
     }
-    
     
 }
