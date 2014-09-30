@@ -49,7 +49,11 @@ public class TupleParameterMapper {
 
     public void applyMapping(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, Object[] tuple) {
         for (int i = 0; i < parameterMappings.length; i++) {
-            tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
+            if (queryBuilder.isParameterSet(parameterMappings[i])) {
+                tuple[parameterIndices[i]] = queryBuilder.getParameterValue(parameterMappings[i]);
+            } else {
+                tuple[parameterIndices[i]] = optionalParameters.get(parameterMappings[i]);
+            }
         }
     }
 }

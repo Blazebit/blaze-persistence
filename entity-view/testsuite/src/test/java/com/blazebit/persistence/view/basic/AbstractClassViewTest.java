@@ -101,7 +101,10 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
     public void testAbstractClass() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
-        List<DocumentViewAbstractClass> results = evm.applySetting(EntityViewSetting.create(DocumentViewAbstractClass.class), criteria)
+        EntityViewSetting<DocumentViewAbstractClass, CriteriaBuilder<DocumentViewAbstractClass>> setting;
+        setting = EntityViewSetting.create(DocumentViewAbstractClass.class);
+        setting.addOptionalParameter("optionalParameter", "Test");
+        List<DocumentViewAbstractClass> results = evm.applySetting(setting, criteria)
             .setParameter("contactPersonNumber", 2).getResultList();
 
         assertEquals(2, results.size());
@@ -114,6 +117,7 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber());
         assertEquals(Integer.valueOf(2), results.get(0).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(0).getContactCount());
+        assertEquals("Test", results.get(0).getOptionalParameter());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
@@ -123,5 +127,6 @@ public class AbstractClassViewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber());
         assertEquals(Integer.valueOf(2), results.get(1).getContactPersonNumber2());
         assertEquals(Long.valueOf(1), results.get(1).getContactCount());
+        assertEquals("Test", results.get(1).getOptionalParameter());
     }
 }
