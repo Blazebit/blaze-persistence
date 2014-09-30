@@ -54,6 +54,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -414,11 +415,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder) {
-        return createObjectBuilder(queryBuilder, false);
+    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+        return createObjectBuilder(queryBuilder, optionalParameters, false);
     }
 
-    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, boolean isSubview) {
+    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, boolean isSubview) {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
 
@@ -429,11 +430,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (hasParameters) {
-            result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, tupleOffset);
+            result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, optionalParameters, tupleOffset);
         }
 
         if (tupleTransformator.hasTransformers() && !isSubview) {
-            result = new ChainingObjectBuilder<T>(tupleTransformator, result, queryBuilder, tupleOffset);
+            result = new ChainingObjectBuilder<T>(tupleTransformator, result, queryBuilder, optionalParameters, tupleOffset);
         }
 
         return result;

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.collections.subview;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
@@ -156,7 +157,7 @@ public class SubviewClassCollectionsTest extends AbstractEntityViewTest {
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");
-        CriteriaBuilder<SubviewClassDocumentForCollectionsView> cb = evm.applyObjectBuilder(SubviewClassDocumentForCollectionsView.class, viewConstructorName, criteria);
+        CriteriaBuilder<SubviewClassDocumentForCollectionsView> cb = evm.applySetting(EntityViewSetting.create(SubviewClassDocumentForCollectionsView.class, viewConstructorName), criteria);
         List<SubviewClassDocumentForCollectionsView> results = cb.getResultList();
 
         assertEquals(2, results.size());

@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map;
 
 /**
  *
@@ -117,10 +118,10 @@ public class TupleTransformator {
         transformatorLevels.get(currentLevel).tupleTransformers.add(tupleTransformer);
     }
 
-    public void init(QueryBuilder<?, ?> queryBuilder) {
+    public void init(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         for (TupleTransformatorLevel thisLevel : transformatorLevels) {
             for (TupleTransformer t : thisLevel.tupleTransformers) {
-                t.init(queryBuilder);
+                t.init(queryBuilder, optionalParameters);
             }
         }
     }

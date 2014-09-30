@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
+import java.util.Map;
 
 /**
  *
@@ -28,8 +29,9 @@ public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T
 
     private final TupleParameterMapper parameterMapper;
     private final QueryBuilder<?, ?> queryBuilder;
+    private final Map<String, Object> optionalParameters;
 
-    public ParameterViewTypeObjectBuilder(ObjectBuilder<T> delegate, ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, int startIndex) {
+    public ParameterViewTypeObjectBuilder(ObjectBuilder<T> delegate, ViewTypeObjectBuilderTemplate<T> template, QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, int startIndex) {
         super(delegate);
 
         if (!template.hasParameters()) {
@@ -38,11 +40,12 @@ public class ParameterViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T
 
         this.parameterMapper = template.getParameterMapper();
         this.queryBuilder = queryBuilder;
+        this.optionalParameters = optionalParameters;
     }
 
     @Override
     public T build(Object[] tuple) {
-        parameterMapper.applyMapping(queryBuilder, tuple);
+        parameterMapper.applyMapping(queryBuilder, optionalParameters, tuple);
         return super.build(tuple);
     }
 }

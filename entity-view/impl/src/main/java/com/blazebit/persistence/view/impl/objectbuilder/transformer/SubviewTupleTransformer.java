@@ -19,6 +19,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import java.util.Map;
 
 /**
  *
@@ -39,8 +40,8 @@ public class SubviewTupleTransformer extends TupleTransformer {
     }
 
     @Override
-    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        this.objectBuilder = template.createObjectBuilder(queryBuilder, true);
+    public TupleTransformer init(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+        this.objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, true);
         return this;
     }
 

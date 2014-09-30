@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view;
 
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.entity.Version;
@@ -34,6 +36,11 @@ public class AbstractEntityViewTest extends AbstractPersistenceTest {
             Version.class,
             Person.class
         };
+    }
+    
+    protected <T> CriteriaBuilder<T> applySetting(EntityViewManager evm, Class<T> entityViewClass, CriteriaBuilder<?> criteriaBuilder) {
+        EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityViewClass);
+        return evm.applySetting(setting, criteriaBuilder);
     }
 
 }

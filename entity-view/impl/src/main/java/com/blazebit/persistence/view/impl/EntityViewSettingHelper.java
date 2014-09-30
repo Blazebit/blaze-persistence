@@ -47,7 +47,7 @@ public final class EntityViewSettingHelper {
     public static <T, Q extends QueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder) {
         applyAttributeFilters(setting, evm, criteriaBuilder);
         applyAttributeSorters(setting, evm, criteriaBuilder);
-        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), criteriaBuilder);
+        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), criteriaBuilder, setting.getOptionalParameters());
         applyOptionalParameters(setting, normalCb);
 
         if (setting.isPaginated()) {

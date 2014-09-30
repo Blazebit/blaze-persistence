@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.collections.basic;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListSetMapView;
@@ -138,7 +139,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applyObjectBuilder(viewType, criteria);
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
 
         assertEquals(2, results.size());

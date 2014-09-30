@@ -136,7 +136,7 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-//                if (allClauses || ExpressionUtils.containsSubqueryExpression(selectInfo.getExpression())) {
+                
                 if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
                     sb.append(", ");
                     selectInfo.getExpression().accept(queryGenerator);

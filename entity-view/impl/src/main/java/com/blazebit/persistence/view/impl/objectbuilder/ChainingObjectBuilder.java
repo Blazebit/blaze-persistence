@@ -20,6 +20,7 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -31,10 +32,10 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 
-    public ChainingObjectBuilder(TupleTransformator transformator, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, int startIndex) {
+    public ChainingObjectBuilder(TupleTransformator transformator, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, int startIndex) {
         this.transformator = transformator;
         this.objectBuilder = objectBuilder;
-        transformator.init(queryBuilder);
+        transformator.init(queryBuilder, optionalParameters);
     }
 
     @Override
