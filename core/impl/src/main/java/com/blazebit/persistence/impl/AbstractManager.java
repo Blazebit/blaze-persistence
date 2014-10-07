@@ -25,11 +25,11 @@ import com.blazebit.persistence.impl.predicate.VisitorAdapter;
  */
 public class AbstractManager {
 
-    protected final QueryGenerator queryGenerator;
+    protected final ResolvingQueryGenerator queryGenerator;
     protected final ParameterManager parameterManager;
     private final VisitorAdapter parameterRegistrationVisitor;
 
-    protected AbstractManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
+    protected AbstractManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);

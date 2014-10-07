@@ -55,7 +55,7 @@ import java.util.List;
  */
 public class SimpleQueryGenerator extends VisitorAdapter {
 
-    private StringBuilder sb;
+    protected StringBuilder sb;
 
     public void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
@@ -75,7 +75,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 int len = sb.length();
                 child.accept(this);
                 if (len == sb.length()) {
-                    // delete "("
                     sb.deleteCharAt(len - 1);
                 } else {
                     sb.append(")");
@@ -109,7 +108,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 int len = sb.length();
                 child.accept(this);
                 if (len == sb.length()) {
-                    // delete "("
                     sb.deleteCharAt(len - 1);
                 } else {
                     sb.append(")");
@@ -236,13 +234,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
         sb.append(" IN ");
         predicate.getRight().accept(this);
-//        if (predicate.getRight() instanceof ParameterExpression) {
-//            sb.append(" IN ");
-//            predicate.getRight().accept(this);
-//        } else {
-//            sb.append(" IN ");
-//            wrapNonSubquery(predicate.getRight(), sb);
-//        }
     }
 
     @Override
@@ -381,7 +372,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     public void visit(ArrayExpression expression) {
     }
 
-    private void wrapNonSubquery(Expression p, StringBuilder sb) {
+    protected void wrapNonSubquery(Expression p, StringBuilder sb) {
         boolean isNotSubquery = !(p instanceof SubqueryExpression);
         if (isNotSubquery) {
             sb.append("(");

@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  */
 public class HavingManager<T> extends PredicateManager<T> {
 
-    HavingManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    HavingManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
     }
 

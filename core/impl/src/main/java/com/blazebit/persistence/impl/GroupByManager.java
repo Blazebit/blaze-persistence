@@ -30,7 +30,7 @@ public class GroupByManager extends AbstractManager {
 
     private final Set<NodeInfo> groupByInfos;
 
-    GroupByManager(QueryGenerator queryGenerator, ParameterManager parameterManager) {
+    GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         super(queryGenerator, parameterManager);
         groupByInfos = new HashSet<NodeInfo>();
     }
@@ -45,7 +45,7 @@ public class GroupByManager extends AbstractManager {
         applyGroupBys(queryGenerator, sb, groupByInfos);
     }
 
-    void applyGroupBys(QueryGenerator queryGenerator, StringBuilder sb, Set<NodeInfo> groupBys) {
+    void applyGroupBys(ResolvingQueryGenerator queryGenerator, StringBuilder sb, Set<NodeInfo> groupBys) {
         if (groupBys.isEmpty()) {
             return;
         }

@@ -91,7 +91,7 @@ public class JoinManager extends AbstractManager {
         ID
     };
 
-    JoinManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
+    JoinManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.metamodel = metamodel;

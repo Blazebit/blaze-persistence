@@ -26,7 +26,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
  */
 public class WhereManager<T> extends PredicateManager<T> {
 
-    WhereManager(QueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    WhereManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
     }
 

@@ -63,7 +63,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
-    protected final QueryGenerator queryGenerator;
+    protected final ResolvingQueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
     protected final JPAInfo jpaInfo;
@@ -130,7 +130,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new QueryGenerator(this.aliasManager);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager);
 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);

@@ -65,7 +65,7 @@ public class SelectManager<T> extends AbstractManager {
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
 
-    public SelectManager(QueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
@@ -241,7 +241,7 @@ public class SelectManager<T> extends AbstractManager {
         return this.distinct;
     }
 
-    private void applySelect(QueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
+    private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
         select.getExpression().accept(queryGenerator);
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);
