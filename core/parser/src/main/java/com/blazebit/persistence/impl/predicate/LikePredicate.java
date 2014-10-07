@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -83,6 +84,15 @@ public class LikePredicate extends NegatableBinaryExpressionPredicate {
             return false;
         }
         return super.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
+        return sb.toString();
     }
 
 }

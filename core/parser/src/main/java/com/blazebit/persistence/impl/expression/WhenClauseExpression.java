@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
@@ -81,6 +82,10 @@ public class WhenClauseExpression implements Expression {
 
     @Override
     public String toString() {
-        return "WHEN " + condition.toString() + " THEN " + result.toString();
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        generator.visit(this);
+        return sb.toString();
     }
 }

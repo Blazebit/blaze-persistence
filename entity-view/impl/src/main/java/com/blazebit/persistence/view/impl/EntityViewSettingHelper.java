@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -51,7 +52,11 @@ public final class EntityViewSettingHelper {
         applyOptionalParameters(setting, normalCb);
 
         if (setting.isPaginated()) {
-            return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
+            if (setting.isKeySetPaginated()) {
+                return (Q) normalCb.page(setting.getKeySet(), setting.getFirstResult(), setting.getMaxResults());
+            } else {
+                return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
+            }
         } else {
             return (Q) criteriaBuilder;
         }
@@ -326,7 +331,12 @@ public final class EntityViewSettingHelper {
         if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
             Expression expr = evm.getExpressionFactory().createSimpleExpression(mappingExpression);
             expr.accept(new SubviewPrefixExpressionVisitor(subviewPrefixParts));
-            return expr.toString();
+            SimpleQueryGenerator generator = new SimpleQueryGenerator();
+            // TODO: maybe cache the string builder
+            StringBuilder sb = new StringBuilder();
+            generator.setQueryBuffer(sb);
+            expr.accept(generator);
+            return sb.toString();
         }
         
         return mappingExpression;

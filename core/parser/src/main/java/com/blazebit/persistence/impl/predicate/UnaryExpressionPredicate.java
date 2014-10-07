@@ -49,6 +49,7 @@ public abstract class UnaryExpressionPredicate implements Predicate, Negatable {
         return negated;
     }
 
+    @Override
     public void setNegated(boolean negated) {
         this.negated = negated;
     }

@@ -484,7 +484,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
-        return joinManager.joinOn((X) this, path, alias, type);
+        return joinManager.joinOn((X) this, path, alias, type, false);
+    }
+
+    @Override
+    public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type) {
+        clearCache();
+        checkJoinPreconditions(path, alias, type);
+        return joinManager.joinOn((X) this, path, alias, type, true);
     }
 
     @Override
@@ -493,13 +500,28 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     }
 
     @Override
+    public JoinOnBuilder<X> innerJoinDefaultOn(String path, String alias) {
+        return joinDefaultOn(path, alias, JoinType.INNER);
+    }
+
+    @Override
     public JoinOnBuilder<X> leftJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.LEFT);
     }
 
     @Override
+    public JoinOnBuilder<X> leftJoinDefaultOn(String path, String alias) {
+        return joinDefaultOn(path, alias, JoinType.LEFT);
+    }
+
+    @Override
     public JoinOnBuilder<X> rightJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.RIGHT);
+    }
+
+    @Override
+    public JoinOnBuilder<X> rightJoinDefaultOn(String path, String alias) {
+        return joinDefaultOn(path, alias, JoinType.RIGHT);
     }
 
     private void checkJoinPreconditions(String path, String alias, JoinType type) {

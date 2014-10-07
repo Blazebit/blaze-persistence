@@ -104,7 +104,7 @@ public class PaginationTest extends AbstractCoreTest {
         crit.orderByAsc("d.id");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
                 + ON_CLAUSE + " KEY(localized_1_1) = 1 "
                 + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
                 + ") LIKE UPPER(:param_2)";
@@ -147,7 +147,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testSelectIndexedWithParameter() {
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id, d.id ORDER BY d.id ASC NULLS LAST";
         String expectedObjectQuery = "SELECT contacts_contactNr_1.name FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
                 + " KEY(contacts_contactNr_1) = :contactNr WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
@@ -281,92 +281,13 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST, d.id ASC NULLS LAST";
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String expectedObjectQuery = "SELECT COUNT(contacts_1) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST, d.id ASC NULLS LAST";
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, cb.getQueryString());
         cb.getResultList();
-    }
-
-    /*@Ignore
-    @Test
-    public void deleteMe() {
-        // TODO: Why does hibernate generate a unique constraint for contacts.contact_id??
-        List<Object[]> contacts = em.createNativeQuery("select Document_id, contacts_KEY, contacts_id from contacts c").getResultList();
-        for (Object[] o : contacts) {
-            System.out.println(Arrays.toString(o));
-        }
-        List<Object[]> personen = em.createNativeQuery("select id, age, name, partnerDocument_id from Person p").getResultList();
-        for (Object[] o : personen) {
-            System.out.println(Arrays.toString(o));
-        }
-        List<Object[]> documents = em.createNativeQuery("select id, age, creationDate, idx, lastModified, name, nonJoinable, owner_id from Document d").getResultList();
-        for (Object[] o : documents) {
-            System.out.println(Arrays.toString(o));
-        }
-        em.createNativeQuery("select\n"
-                + "        count(contacts1_.Document_id) as col_0_0_ \n"
-                + "    from\n"
-                + "        Document document0_ cross \n"
-                + "    join\n"
-                + "        contacts contacts1_ \n"
-                + "    where\n"
-                + "        document0_.id=contacts1_.Document_id \n"
-                + "        and (\n"
-                + "            document0_.id in (\n"
-                + "                2\n"
-                + "            )\n"
-                + "        ) \n").getResultList();
-        em.createNativeQuery("select\n"
-                + "        count(contacts1_.Document_id) as col_0_0_ \n"
-                + "    from\n"
-                + "        Document document0_ cross \n"
-                + "    join\n"
-                + "        contacts contacts1_ \n"
-                + "    where\n"
-                + "        document0_.id=contacts1_.Document_id \n"
-                + "        and (\n"
-                + "            document0_.id in (\n"
-                + "                2\n"
-                + "            )\n"
-                + "        ) \n"
-                + "group by document0_.id"
-                + "    order by\n"
-                + "        (select\n"
-                + "            count(contacts2_.Document_id) \n"
-                + "        from\n"
-                + "            contacts contacts2_ \n"
-                + "        where\n"
-                + "            document0_.id=contacts2_.Document_id)").getResultList();
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // not working
-
-        List ids = em.createQuery("SELECT d.id FROM Document d GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").setMaxResults(1).getResultList();
-        em.createQuery("SELECT DISTINCT d FROM Document d LEFT JOIN FETCH d.contacts ").getResultList();
-
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2) ORDER BY contactCount ASC NULLS LAST").getResultList();  // works
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2) GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (1,4) GROUP BY d.id").getResultList();  // works
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) GROUP BY d.id ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();  // works
-        em.createQuery("SELECT SIZE(d.contacts) AS contactCount FROM Document d WHERE d.id IN (2,3)").getResultList();  // works, cross join yields two rows, both for Document_Id 1 --> both are filtered out by IN
-        em.createQuery("SELECT SIZE(d.contacts) FROM Document d WHERE d.id IN (2) ORDER BY SIZE(d.contacts) ASC NULLS LAST").getResultList();
-        em.createQuery("SELECT d.name FROM Document d WHERE SIZE(d.contacts) < 2").getResultList();
-        em.createQuery("SELECT d.id, d.versions, COUNT(c) FROM Document d LEFT JOIN d.contacts c GROUP BY d.id").getResultList();
-        em.createQuery("SELECT d.id, d.contacts FROM Document d").getResultList();
-        em.createQuery("SELECT d.id FROM Document d ORDER BY SIZE(d.contacts)").getResultList();
-    }*/
-    
-    @Test
-    public void deleteMe2(){
-        em.createQuery("SELECT d FROM Document d LEFT JOIN d.partners p WHERE d.age BETWEEN (SELECT SUM(doc.age) FROM Document doc)+1 AND 2").getResultList();
-        em.createQuery("SELECT d FROM Document d LEFT JOIN d.partners p WHERE d.name LIKE COALESCE(SUBSTRING(p.name,0, 10), 'test')").getResultList();
-        em.createQuery("SELECT d FROM Document d WHERE d.documentType = com.blazebit.persistence.entity.DocumentType.NOVEL").getResultList();
-        em.createQuery("SELECT p.name FROM Document d LEFT JOIN d.contacts p").getResultList();
-        em.createQuery("SELECT COUNT(*) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
-        em.createQuery("SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
-        em.createQuery("SELECT COUNT(d.name) FROM Document d LEFT JOIN d.contacts p GROUP BY d.id").getResultList();
     }
     
     @Test
@@ -377,7 +298,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id, COUNT(contacts_1) AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id, d.id ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String expectedObjectQuery = "SELECT COUNT(contacts_1) AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
@@ -391,7 +312,7 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE contacts_1 IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
         cb.getResultList();
@@ -407,7 +328,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .end()
                 .where("c").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE c IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         cb.getResultList();
     }
@@ -426,7 +347,7 @@ public class PaginationTest extends AbstractCoreTest {
             .orderByAsc("Workflow_id")
             .page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(w.id) FROM Workflow w";
+        String expectedCountQuery = "SELECT COUNT(DISTINCT w.id) FROM Workflow w";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();

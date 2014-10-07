@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
+
 /**
  *
  * @author Christian Beikov
@@ -69,5 +71,5 @@ public class PropertyExpression implements PathElementExpression {
         }
         return true;
     }
-
+    
 }

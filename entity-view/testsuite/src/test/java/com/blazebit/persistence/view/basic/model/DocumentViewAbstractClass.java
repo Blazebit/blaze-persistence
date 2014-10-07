@@ -29,13 +29,16 @@ public abstract class DocumentViewAbstractClass implements DocumentViewInterface
 
     private final long age;
     private final Integer contactPersonNumber;
+    private final String optionalParameter;
 
     public DocumentViewAbstractClass(
         @Mapping("age + 1") Long age,
-        @MappingParameter("contactPersonNumber") Integer contactPersonNumber
+        @MappingParameter("contactPersonNumber") Integer contactPersonNumber,
+        @MappingParameter("optionalParameter") String optionalParameter
     ) {
         this.age = age;
         this.contactPersonNumber = contactPersonNumber;
+        this.optionalParameter = optionalParameter;
     }
 
     public long getAge() {
@@ -44,5 +47,9 @@ public abstract class DocumentViewAbstractClass implements DocumentViewInterface
 
     public Integer getContactPersonNumber() {
         return contactPersonNumber;
+    }
+
+    public String getOptionalParameter() {
+        return optionalParameter;
     }
 }

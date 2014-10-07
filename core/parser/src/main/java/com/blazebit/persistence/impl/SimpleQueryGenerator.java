@@ -53,17 +53,11 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class QueryGenerator extends VisitorAdapter {
+public class SimpleQueryGenerator extends VisitorAdapter {
 
     private StringBuilder sb;
-    private boolean resolveSelectAliases = true;
-    private final AliasManager aliasManager;
 
-    public QueryGenerator(AliasManager aliasManager) {
-        this.aliasManager = aliasManager;
-    }
-
-    void setQueryBuffer(StringBuilder sb) {
+    public void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
     }
 
@@ -317,35 +311,7 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        if (resolveSelectAliases) {
-            // if path expression should not be replaced by select aliases we
-            // check for select aliases that have to be replaced with the corresponding
-            // path expressions
-            if (expression.getBaseNode() == null) {
-                AliasInfo aliasInfo;
-                if ((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null) {
-                    if (aliasInfo instanceof SelectInfo) {
-                        SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
-//                        if (!ExpressionUtils.containsSubqueryExpression(selectAliasInfo.getExpression())) {
-                        if (((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
-                            selectAliasInfo.getExpression().accept(this);
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-        if (expression.getBaseNode() == null) {
-            sb.append(expression.getPath());
-        } else if (expression.getField() == null) {
-            JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            sb.append(baseNode.getAliasInfo().getAlias());
-        } else {
-            JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            sb.append(baseNode.getAliasInfo().getAlias())
-                    .append(".")
-                    .append(expression.getField());
-        }
+        sb.append(expression.getPath());
     }
 
     @Override
@@ -357,28 +323,24 @@ public class QueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (ExpressionUtils.isOuterFunction(expression)) {
-            expression.getExpressions().get(0).accept(this);
-        } else {
-            sb.append(expression.getFunctionName());
-            sb.append('(');
+        sb.append(expression.getFunctionName());
+        sb.append('(');
         
-            if (expression instanceof AggregateExpression) {
-                AggregateExpression aggregateExpression = (AggregateExpression) expression;
-                if (aggregateExpression.isDistinct()) {
-                    sb.append("DISTINCT ");
-                }
+        if (expression instanceof AggregateExpression) {
+            AggregateExpression aggregateExpression = (AggregateExpression) expression;
+            if (aggregateExpression.isDistinct()) {
+                sb.append("DISTINCT ");
             }
-            
-            if (!expression.getExpressions().isEmpty()) {
-                expression.getExpressions().get(0).accept(this);
-                for (int i = 1; i < expression.getExpressions().size(); i++) {
-                    sb.append(",");
-                    expression.getExpressions().get(i).accept(this);
-                }
-            }
-            sb.append(')');
         }
+        
+        if (!expression.getExpressions().isEmpty()) {
+            expression.getExpressions().get(0).accept(this);
+            for (int i = 1; i < expression.getExpressions().size(); i++) {
+                sb.append(",");
+                expression.getExpressions().get(i).accept(this);
+            }
+        }
+        sb.append(')');
     }
 
     @Override
@@ -413,14 +375,6 @@ public class QueryGenerator extends VisitorAdapter {
         sb.append("ELSE ");
         defaultExpr.accept(this);
         sb.append(" END");
-    }
-
-    public boolean isResolveSelectAliases() {
-        return resolveSelectAliases;
-    }
-
-    public void setResolveSelectAliases(boolean replaceSelectAliases) {
-        this.resolveSelectAliases = replaceSelectAliases;
     }
 
     @Override

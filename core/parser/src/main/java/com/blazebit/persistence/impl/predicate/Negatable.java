@@ -21,6 +21,8 @@ package com.blazebit.persistence.impl.predicate;
  * @author Moritz Becker
  */
 public interface Negatable {
+    
     public boolean isNegated();
+    
     public void setNegated(boolean negated);
 }

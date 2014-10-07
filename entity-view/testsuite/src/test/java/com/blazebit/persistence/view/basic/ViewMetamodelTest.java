@@ -336,8 +336,8 @@ public class ViewMetamodelTest {
         ViewType<DocumentViewAbstractClass> viewType = viewMetamodel.view(DocumentViewAbstractClass.class);
         Set<MappingConstructor<DocumentViewAbstractClass>> constructors = viewType.getConstructors();
         assertEquals(1, constructors.size());
-        assertNotNull(viewType.getConstructor(Long.class, Integer.class));
-        assertTrue(constructors.contains(viewType.getConstructor(Long.class, Integer.class)));
+        assertNotNull(viewType.getConstructor(Long.class, Integer.class, String.class));
+        assertTrue(constructors.contains(viewType.getConstructor(Long.class, Integer.class, String.class)));
     }
 
     @Test
@@ -347,7 +347,7 @@ public class ViewMetamodelTest {
         Set<MappingConstructor<DocumentViewAbstractClass>> constructors = viewType.getConstructors();
         MappingConstructor<DocumentViewAbstractClass> constructor = constructors.iterator().next();
         assertNotNull(constructor);
-        assertEquals(2, constructor.getParameterAttributes().size());
+        assertEquals(3, constructor.getParameterAttributes().size());
 
         assertEquals(Long.class, constructor.getParameterAttributes().get(0).getJavaType());
         assertEquals(constructor, constructor.getParameterAttributes().get(0).getDeclaringConstructor());
@@ -367,7 +367,16 @@ public class ViewMetamodelTest {
         assertFalse(constructor.getParameterAttributes().get(1).isCollection());
         assertTrue(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(1)).isQueryParameter());
 
-        assertEquals(DocumentViewAbstractClass.class.getConstructor(Long.class, Integer.class), constructor.getJavaConstructor());
+        assertEquals(String.class, constructor.getParameterAttributes().get(2).getJavaType());
+        assertEquals(constructor, constructor.getParameterAttributes().get(2).getDeclaringConstructor());
+        assertEquals(viewType, constructor.getParameterAttributes().get(2).getDeclaringType());
+        assertEquals(2, constructor.getParameterAttributes().get(2).getIndex());
+        assertFalse(constructor.getParameterAttributes().get(2).isSubquery());
+        assertEquals("optionalParameter", ((MappingAttribute) constructor.getParameterAttributes().get(2)).getMapping());
+        assertFalse(constructor.getParameterAttributes().get(2).isCollection());
+        assertTrue(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(2)).isQueryParameter());
+
+        assertEquals(DocumentViewAbstractClass.class.getConstructor(Long.class, Integer.class, String.class), constructor.getJavaConstructor());
         assertEquals(viewType, constructor.getDeclaringType());
     }
     

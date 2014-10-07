@@ -311,7 +311,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             .append(idName)
             .toString();
 
-        sbSelectFrom.append("SELECT COUNT(").append(idClause).append(')');
+        sbSelectFrom.append("SELECT COUNT(DISTINCT ").append(idClause).append(')');
         sbSelectFrom.append(" FROM ")
             .append(fromClazz.getSimpleName())
             .append(' ')
