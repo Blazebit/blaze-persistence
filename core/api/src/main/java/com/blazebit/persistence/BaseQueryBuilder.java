@@ -102,6 +102,17 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type);
 
     /**
+     * Adds a join with an on-clause to the query, possibly specializing implicit joins, and giving the joined element an alias.
+     * The resulting join will be the default join meaning that expressions which use the absolute path will refer to this join.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @param type  The join type
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type);
+
+    /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
@@ -130,6 +141,15 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The restriction builder for the on-clause
      */
     public JoinOnBuilder<X> innerJoinOn(String path, String alias);
+    /**
+     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#INNER}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> innerJoinDefaultOn(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -160,6 +180,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The restriction builder for the on-clause
      */
     public JoinOnBuilder<X> leftJoinOn(String path, String alias);
+    
+    /**
+     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#LEFT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> leftJoinDefaultOn(String path, String alias);
 
     /**
      * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
@@ -190,6 +220,16 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The restriction builder for the on-clause
      */
     public JoinOnBuilder<X> rightJoinOn(String path, String alias);
+
+    /**
+     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * {@link JoinType#RIGHT}.
+     *
+     * @param path  The path to join
+     * @param alias The alias for the joined element
+     * @return The restriction builder for the on-clause
+     */
+    public JoinOnBuilder<X> rightJoinDefaultOn(String path, String alias);
 
     /*
      * Covariant overrides

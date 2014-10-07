@@ -282,8 +282,8 @@ public class JoinManager extends AbstractManager {
         return false;
     }
 
-    <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type) {
-        joinOnBuilderListener.joinNode = join(path, alias, type, false, false);
+    <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type, boolean defaultJoin) {
+        joinOnBuilderListener.joinNode = join(path, alias, type, false, defaultJoin);
         return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
