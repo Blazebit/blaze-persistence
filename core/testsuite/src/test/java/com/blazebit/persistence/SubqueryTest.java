@@ -92,6 +92,22 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testWrongAliasUsageSubquery() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.where("id").notIn()
+                .from(Document.class, "d2")
+                .select("d2.versions.document.owner.id")
+                .where("id").notEqExpression("d.id")
+                .end();
+        
+        String expected = "SELECT d FROM Document d WHERE d.id NOT IN "
+                + "(SELECT document_1.owner.id FROM Document d2 LEFT JOIN d2.versions versions_1 LEFT JOIN versions_1.document document_1 WHERE d2.id <> d.id)";
+
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
     public void testAmbiguousSelectAliases() {
         // we decided that this should not throw an exception
         // - we first check for existing aliases and if none exist we check if an implicit root alias is possible
