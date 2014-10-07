@@ -374,7 +374,25 @@ public class PaginationTest extends AbstractCoreTest {
                 .innerJoinDefault("contacts", "c")
                 .where("c.name").eq("Karl1")
                 .orderByAsc("d.id").page(0, 10);
-        String query = "SELECT d.id FROM Document d WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
+        String query = "SELECT d.id FROM Document d JOIN d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
         assertEquals(query, cb.getQueryString());
+    }
+    
+    @Test
+    public void testPaginationWithExplicitRestrictingJoin(){
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("id").select("c.name")
+                .innerJoinDefaultOn("contacts", "c")
+                    .on("KEY(c)").eqExpression("1")
+                .end()
+                .orderByAsc("d.id")
+                .page(0, 10);
+        
+        String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1";
+        String idQuery = "SELECT d.id FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 GROUP BY d.id, d.id ORDER BY d.id ASC NULLS LAST";
+        String objectQuery = "SELECT d.id, c.name FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST";
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(objectQuery, cb.getQueryString());
     }
 }

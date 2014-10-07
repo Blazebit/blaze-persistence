@@ -39,7 +39,7 @@ public class KeySetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public T build(Object[] tuple) {
         Object[] newTuple = new Object[tuple.length - keySetSize];
-        System.arraycopy(tuple, keySetSize, newTuple, 0, newTuple.length);
+        System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
         
         if (first == null) {
             first = tuple;
