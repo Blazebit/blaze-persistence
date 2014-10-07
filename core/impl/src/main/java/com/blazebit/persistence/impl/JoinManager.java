@@ -447,6 +447,7 @@ public class JoinManager extends AbstractManager {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 current = implicitJoin(null, pathExpression, startIndex, maybeSingularAssociationIndex);
+                current = current == null ? rootNode : current;
                 singleValuedAssociationIdExpression = isSingleValuedAssociationId(current, pathElements);
 
                 if (singleValuedAssociationIdExpression) {
@@ -465,7 +466,7 @@ public class JoinManager extends AbstractManager {
 
             if (singleValuedAssociationIdExpression) {
                 String associationName = pathElements.get(pathElements.size() - 2).toString();
-                AliasInfo a = aliasManager.getAliasInfo(associationName);
+                AliasInfo a = aliasManager.getAliasInfoForBottomLevel(associationName);
                 JoinTreeNode treeNode;
 
                 if (a != null) {
