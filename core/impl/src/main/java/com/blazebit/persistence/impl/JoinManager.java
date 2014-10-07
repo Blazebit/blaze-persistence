@@ -434,20 +434,20 @@ public class JoinManager extends AbstractManager {
             List<PathElementExpression> pathElements = pathExpression.getExpressions();
             PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
             boolean singleValuedAssociationIdExpression = false;
-            JoinNode current;
+            JoinNode current = null;
 
             boolean explicitRootAlias = pathElements.get(0).toString().equals(rootNode.getAliasInfo().getAlias());
             int startIndex = 0;
 
             if (explicitRootAlias) {
                 startIndex = 1;
+                current = rootNode;
             }
 
             if (pathElements.size() > startIndex + 1) {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
-                current = implicitJoin(null, pathExpression, startIndex, maybeSingularAssociationIndex);
-                current = current == null ? rootNode : current;
+                current = implicitJoin(current, pathExpression, startIndex, maybeSingularAssociationIndex);
                 singleValuedAssociationIdExpression = isSingleValuedAssociationId(current, pathElements);
 
                 if (singleValuedAssociationIdExpression) {
@@ -455,7 +455,7 @@ public class JoinManager extends AbstractManager {
                     current = implicitJoin(current, pathExpression, maybeSingularAssociationIndex, maybeSingularAssociationIdIndex);
                 }
             } else {
-                current = implicitJoin(null, pathExpression, startIndex, pathElements.size() - 1);
+                current = implicitJoin(current, pathExpression, startIndex, pathElements.size() - 1);
             }
 
             // current might be null
