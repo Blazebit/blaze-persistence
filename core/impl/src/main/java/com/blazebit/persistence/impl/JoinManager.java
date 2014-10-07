@@ -205,13 +205,93 @@ public class JoinManager extends AbstractManager {
             renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency);
         }
     }
+    
+    private boolean isOptionalRelation(JoinNode node) {
+        Class<?> baseNodeType = node.getParent().getPropertyClass();
+        ManagedType type = metamodel.managedType(baseNodeType);
+        Attribute attr = type.getAttribute(node.getParentTreeNode().getRelationName());
+        if (attr == null) {
+            throw new IllegalArgumentException("Field with name "
+                    + node.getParentTreeNode().getRelationName() + " was not found within class "
+                    + baseNodeType.getName());
+        }
+        
+        if (attr instanceof SingularAttribute<?, ?>) {
+            return ((SingularAttribute<?, ?>) attr).isOptional();
+        }
+        
+        return true;
+    }
+    
+    private boolean isEmptyCondition(JoinNode node) {
+        return node.getWithPredicate() == null || node.getWithPredicate().getChildren().isEmpty();
+    }
+    
+    private boolean isArrayExpressionCondition(JoinNode node) {
+        if (node.getWithPredicate() == null || node.getWithPredicate().getChildren().size() != 1) {
+            return false;
+        }
+        
+        Predicate predicate = node.getWithPredicate().getChildren().get(0);
+        if (!(predicate instanceof EqPredicate)) {
+            return false;
+        }
+        
+        EqPredicate eqPredicate = (EqPredicate) predicate;
+        Expression left = eqPredicate.getLeft();
+        if (!(left instanceof FunctionExpression)) {
+            return false;
+        }
+        
+        FunctionExpression keyExpression = (FunctionExpression) left;
+        if (!"KEY".equals(keyExpression.getFunctionName())) {
+            return false;
+        }
+        
+        Expression keyContentExpression = keyExpression.getExpressions().get(0);
+        if (!(keyContentExpression instanceof PathExpression)) {
+            return false;
+        }
+        
+        PathExpression keyPath = (PathExpression) keyContentExpression;
+        if (!node.equals(keyPath.getBaseNode())) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // TODO: Maybe do that more efficient in a future version
+    private boolean isMandatoryJoin(JoinNode node) {
+        if (node.getType() == JoinType.INNER) {
+            if (isOptionalRelation(node) || !isEmptyCondition(node)) {
+                return true;
+            }
+        } else if (node.getType() == JoinType.LEFT) {
+            if (!isEmptyCondition(node) && !isArrayExpressionCondition(node)) {
+                return true;
+            }
+            
+            for (Map.Entry<String, JoinTreeNode> nodeEntry : node.getNodes().entrySet()) {
+                JoinTreeNode treeNode = nodeEntry.getValue();
+
+                for (JoinNode childNode : treeNode.getJoinNodes().values()) {
+                    if (isMandatoryJoin(childNode)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
 
     private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
 
             for (JoinNode node : treeNode.getJoinNodes().values()) {
-                if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
+                if (!isMandatoryJoin(node) && !clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
                     continue;
                 }
 
@@ -282,13 +362,13 @@ public class JoinManager extends AbstractManager {
         return false;
     }
 
-    <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type) {
-        joinOnBuilderListener.joinNode = join(path, alias, type, false, false);
+    <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type, boolean defaultJoin) {
+        joinOnBuilderListener.joinNode = join(path, alias, type, false, defaultJoin);
         return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
     JoinNode join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
-        Expression expr = expressionFactory.createSimpleExpression(path);
+        Expression expr = expressionFactory.createPathExpression(path);
         PathExpression pathExpression;
         if (expr instanceof PathExpression) {
             pathExpression = (PathExpression) expr;
@@ -367,6 +447,7 @@ public class JoinManager extends AbstractManager {
                 int maybeSingularAssociationIndex = pathElements.size() - 2;
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 current = implicitJoin(null, pathExpression, startIndex, maybeSingularAssociationIndex);
+                current = current == null ? rootNode : current;
                 singleValuedAssociationIdExpression = isSingleValuedAssociationId(current, pathElements);
 
                 if (singleValuedAssociationIdExpression) {
@@ -385,7 +466,7 @@ public class JoinManager extends AbstractManager {
 
             if (singleValuedAssociationIdExpression) {
                 String associationName = pathElements.get(pathElements.size() - 2).toString();
-                AliasInfo a = aliasManager.getAliasInfo(associationName);
+                AliasInfo a = aliasManager.getAliasInfoForBottomLevel(associationName);
                 JoinTreeNode treeNode;
 
                 if (a != null) {
@@ -716,7 +797,7 @@ public class JoinManager extends AbstractManager {
             return JoinType.LEFT;
         }
     }
-
+    
     private JoinNode createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Class<?> baseNodeType = baseNode.getPropertyClass();
         ManagedType type = metamodel.managedType(baseNodeType);

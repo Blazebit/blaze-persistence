@@ -16,6 +16,8 @@
 package com.blazebit.persistence.impl.builder.object;
 
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.SelectBuilder;
+import java.util.List;
 
 /**
  *
@@ -34,6 +36,16 @@ public class DelegatingKeySetExtractionObjectBuilder<T> extends KeySetExtraction
     @Override
     public T build(Object[] tuple) {
         return objectBuilder.build((Object[]) super.build(tuple));
+    }
+
+    @Override
+    public List<T> buildList(List<T> list) {
+        return objectBuilder.buildList(list);
+    }
+
+    @Override
+    public void applySelects(SelectBuilder<?, ?> selectBuilder) {
+        objectBuilder.applySelects(selectBuilder);
     }
 
 }

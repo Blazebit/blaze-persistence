@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import java.util.List;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
@@ -117,5 +118,42 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         assertEquals(1, result.size());
         assertEquals(3, result.totalSize());
         assertEquals("doc3", result.get(0).get(0));
+    }
+
+    @Test
+    public void keySetPaginationWithSimpleObjectQueryTest() {
+        KeySet keySet = null;
+        PaginatedCriteriaBuilder<String> crit = cbf.create(em, String.class)
+            .from(Document.class, "d")
+            .orderByAsc("d.id")
+            .selectNew(new ObjectBuilder<String>() {
+
+                @Override
+                public void applySelects(SelectBuilder<?, ?> selectBuilder) {
+                    selectBuilder
+                        .select("d.name")
+                        .select("d.owner.name");
+                }
+
+                @Override
+                public String build(Object[] tuple) {
+                    return tuple[0] + " - " + tuple[1];
+                }
+
+                @Override
+                public List<String> buildList(List<String> list) {
+                    return list;
+                }
+            })
+            .page(keySet, 0, 1);
+        PagedList<String> result = crit.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1 - Karl1", result.get(0));
+        
+        keySet = result.getKeySet();
+        crit = crit.page(keySet, 1, 1);
+        result = crit.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc2 - Karl2", result.get(0));
     }
 }

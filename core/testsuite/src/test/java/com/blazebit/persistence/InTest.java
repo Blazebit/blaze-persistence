@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -31,6 +32,40 @@ import org.junit.Test;
  */
 public class InTest extends AbstractCoreTest {
 
+    @Test
+    @Ignore("Enable again when HHH-7407 is fixed")
+    public void testBuggyHqlIn() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });
+        criteria
+            .where("1").eqExpression("1")
+            .whereOr()
+                .where("1").eqExpression("1")
+                .where("d.idx").in(indicies)
+            .endOr();
+
+        assertEquals("SELECT d FROM Document d WHERE 1 = 1 AND (1 = 1 OR d.idx IN :param_0)", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    @Ignore("Enable again when HHH-7407 is fixed")
+    public void testBuggyHqlIn1() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });
+        criteria
+            .whereOr()
+                .where("1").eqExpression("1")
+                .whereAnd()
+                    .where("1").eqExpression("1")
+                    .where("d.idx").in(indicies)
+                .endAnd()
+            .endOr();
+
+        assertEquals("SELECT d FROM Document d WHERE 1 = 1 OR (1 = 1 AND d.idx IN :param_0)", criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
     @Test
     public void testIn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
