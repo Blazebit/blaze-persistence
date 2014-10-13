@@ -35,14 +35,30 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
+import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import javax.persistence.FetchType;
 import javax.persistence.Tuple;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -70,7 +86,7 @@ public class SelectManager<T> extends AbstractManager {
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
-        if(resultClazz.equals(Tuple.class)){
+        if (resultClazz.equals(Tuple.class)) {
             objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
         }
     }
@@ -114,7 +130,43 @@ public class SelectManager<T> extends AbstractManager {
         return sb.toString();
     }
 
-    String buildSelect(String rootAlias) {
+    /**
+     * Used for generating group bys for all selects if a aggregate is used in
+     * the select clause. This is required for DB2.
+     *
+     * @return
+     */
+    boolean hasAggregateFunctions() {
+        AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
+        for (SelectInfo info : selectInfos) {
+            if (info.getExpression().accept(aggregateDetector)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Set<String> buildGroupByClauses(final Metamodel m) {
+        if (selectInfos.isEmpty()) {
+            return Collections.EMPTY_SET;
+        }
+        EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m);
+        for (SelectInfo selectInfo : selectInfos) {
+            selectInfo.getExpression().accept(resolveVisitor);
+        }
+        Set<String> groupByClauses = new LinkedHashSet<String>();
+        for (PathExpression pathExpr : resolveVisitor.getPathExpressions()) {
+            StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
+            queryGenerator.setQueryBuffer(sb);
+            pathExpr.accept(queryGenerator);
+            groupByClauses.add(sb.toString());
+
+        }
+        return groupByClauses;
+    }
+
+    String buildSelect(String rootAlias
+    ) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
 
@@ -138,7 +190,8 @@ public class SelectManager<T> extends AbstractManager {
         return sb.toString();
     }
 
-    void applyTransformer(ExpressionTransformer transformer) {
+    void applyTransformer(ExpressionTransformer transformer
+    ) {
         // carry out transformations
         for (SelectInfo selectInfo : selectInfos) {
             Expression transformed = transformer.transform(selectInfo.getExpression(), ClauseType.SELECT);
@@ -146,39 +199,49 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
+    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer
+    ) {
         for (SelectInfo selectInfo : selectInfos) {
             selectInfoTransformer.transform(selectInfo);
         }
     }
 
-    <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias) {
+    <T extends BaseQueryBuilder<?, ?>>
+            SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias
+            ) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<T>(selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<T>) subqueryBuilderListener);
     }
 
-    <T extends BaseQueryBuilder<?, ?>> SubqueryInitiator<T> selectSubquery(T builder, String subqueryAlias, Expression expression, String selectAlias) {
+    <T extends BaseQueryBuilder<?, ?>>
+            SubqueryInitiator<T> selectSubquery(T builder, String subqueryAlias, Expression expression, String selectAlias
+            ) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<T>(subqueryAlias, expression, selectAlias);
         return subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<T>) subqueryBuilderListener);
     }
 
-    <T extends BaseQueryBuilder<?, ?>> CaseWhenStarterBuilder<T> selectCase(T builder, final String selectAlias) {
+    <T extends BaseQueryBuilder<?, ?>>
+            CaseWhenStarterBuilder<T> selectCase(T builder, final String selectAlias
+            ) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
-    <T extends BaseQueryBuilder<?, ?>> SimpleCaseWhenStarterBuilder<T> selectSimpleCase(T builder, final String selectAlias, Expression caseOperandExpression) {
+    <T extends BaseQueryBuilder<?, ?>>
+            SimpleCaseWhenStarterBuilder<T> selectSimpleCase(T builder, final String selectAlias, Expression caseOperandExpression
+            ) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
 
-    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
+    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias
+    ) {
         handleSelect(expr, selectAlias);
     }
 
@@ -333,5 +396,85 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
 
+    }
+
+    private class AggregateDetectionVisitor extends AbortableVisitorAdapter {
+
+        @Override
+        public Boolean visit(FunctionExpression expression) {
+            if (expression instanceof AggregateExpression) {
+                return true;
+            }
+            return super.visit(expression);
+        }
+    }
+
+    private class EntitySelectResolveVisitor extends VisitorAdapter {
+
+        private final Set<PathExpression> pathExpressions = new LinkedHashSet<PathExpression>();
+        private final Metamodel m;
+
+        public EntitySelectResolveVisitor(Metamodel m) {
+            this.m = m;
+        }
+
+        public Set<PathExpression> getPathExpressions() {
+            return pathExpressions;
+        }
+
+        @Override
+        public void visit(FunctionExpression expression) {
+            if (!(expression instanceof AggregateExpression)) {
+                super.visit(expression);
+            }
+        }
+
+        @Override
+        public void visit(PathExpression expression) {
+            if (expression.getField() == null) {
+                /**
+                 * We need to resolve entity selects because hibernate will
+                 * select every entity attribute. Since we need every select in
+                 * the group by (because of DB2) we need to resolve such entity
+                 * selects here
+                 */
+                JoinNode baseNode = ((JoinNode) expression.getBaseNode());
+                try {
+                    EntityType<?> entityType = m.entity(baseNode.getPropertyClass());
+                    // we need to ensure a deterministic order for testing
+                    SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
+
+                        @Override
+                        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
+                            return o1.getName().compareTo(o2.getName());
+                        }
+
+                    });
+                    sortedAttributes.addAll(entityType.getAttributes());
+                    for (Attribute<?, ?> attr : sortedAttributes) {
+                        boolean resolve = false;
+                        if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
+                            resolve = true;
+                        } else if (ExpressionUtils.getFetchType(attr) == FetchType.EAGER) {
+                            if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                                throw new UnsupportedOperationException("Eager element collections are not supported");
+                            }
+                            resolve = true;
+                        }
+
+                        if (resolve) {
+                            PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
+                            attrPath.setBaseNode(baseNode);
+                            attrPath.setField(attr.getName());
+                            pathExpressions.add(attrPath);
+                        }
+                    }
+                    return;
+                } catch (IllegalArgumentException e) {
+                    // ignore if the expression is not an entity
+                }
+            }
+            pathExpressions.add(expression);
+        }
     }
 }

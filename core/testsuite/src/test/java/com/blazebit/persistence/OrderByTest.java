@@ -115,7 +115,7 @@ public class OrderByTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY d.id, COALESCE(owner_1.name,'a'), d.id "
+                + "GROUP BY d.id, COALESCE(owner_1.name,'a') "
                 + "ORDER BY asd ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }

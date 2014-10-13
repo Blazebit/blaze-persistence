@@ -16,9 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -29,11 +27,14 @@ import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
@@ -134,7 +135,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);
-        
+
         // set defaults
         this.joinManager.setRoot(resultClazz, alias);
         this.fromClazz = resultClazz;
@@ -170,7 +171,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
     @Override
     public BaseQueryBuilder<T, ?> from(Class<?> clazz, String alias) {
-        if(fromClassExplicitelySet){
+        if (fromClassExplicitelySet) {
             throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
         }
         this.fromClazz = clazz;
@@ -178,7 +179,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         fromClassExplicitelySet = true;
         return this;
     }
-    
+
     /*
      * Select methods
      */
@@ -281,7 +282,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return whereManager.restrict(this, expr);
     }
-    
+
     /*
      * Where methods
      */
@@ -289,7 +290,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public CaseWhenStarterBuilder<RestrictionBuilder<X>> whereCase() {
         return whereManager.restrictCase(this);
     }
-    
+
     @Override
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> whereSimpleCase(String expression) {
         return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
@@ -349,11 +350,11 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return havingManager.restrict(this, expr);
     }
-    
+
     public CaseWhenStarterBuilder<RestrictionBuilder<X>> havingCase() {
         return havingManager.restrictCase(this);
     }
-    
+
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> havingSimpleCase(String expression) {
         return havingManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
@@ -655,7 +656,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         return cachedQueryString;
     }
-    
+
     protected void clearCache() {
         needsCheck = true;
         cachedQueryString = null;
@@ -679,7 +680,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // in the first case
         applyImplicitJoins();
         applyExpressionTransformers();
-        
+
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
     }
@@ -695,7 +696,15 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
         whereManager.buildClause(sbSelectFrom);
-        groupByManager.buildGroupBy(sbSelectFrom);
+
+        Set<String> clauses = new LinkedHashSet<String>();
+        clauses.addAll(groupByManager.buildGroupByClauses());
+        if (selectManager.hasAggregateFunctions()) {
+            clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
+            clauses.addAll(orderByManager.buildGroupByClauses());
+        }
+        groupByManager.buildGroupBy(sbSelectFrom, clauses);
+
         havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);
         orderByManager.buildOrderBy(sbSelectFrom, false, false);

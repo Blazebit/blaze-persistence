@@ -18,7 +18,7 @@ package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import java.util.ArrayList;
 import java.util.List;
 

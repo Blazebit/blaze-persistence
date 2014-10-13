@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  *

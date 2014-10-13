@@ -45,7 +45,7 @@ import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import java.util.List;
 
 /**

@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -62,7 +63,7 @@ public class Person implements Serializable {
         this.id = id;
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     public Document getPartnerDocument() {
         return partnerDocument;
     }
@@ -88,7 +89,7 @@ public class Person implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-
+    
     @ElementCollection
     public Map<Integer, String> getLocalized() {
         return localized;

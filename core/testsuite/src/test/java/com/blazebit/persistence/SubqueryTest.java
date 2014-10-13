@@ -401,7 +401,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) GROUP BY document.id, document.id ORDER BY document.id ASC NULLS LAST";
+        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) GROUP BY document.id ORDER BY document.id ASC NULLS LAST";
         String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0)";
         String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) ORDER BY document.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -419,7 +419,7 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("version.document.id").eqExpression("OUTER(id)") // we have to fully qualify version.document.id
                 .end().orderByAsc("id").page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY document.id, document.id ORDER BY document.id ASC NULLS LAST";
+        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY document.id ORDER BY document.id ASC NULLS LAST";
         String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document";
         String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version WHERE version.document.id = document.id) FROM Document document ORDER BY document.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
