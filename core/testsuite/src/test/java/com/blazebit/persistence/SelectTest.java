@@ -394,4 +394,5 @@ public class SelectTest extends AbstractCoreTest {
 //        
 //        cb.getResultList();
 //    }
+    
 }
