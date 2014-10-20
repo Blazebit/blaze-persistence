@@ -16,7 +16,9 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  *
@@ -37,5 +39,16 @@ public class AbstractManager {
 
     protected void registerParameterExpressions(Expression expression) {
         expression.accept(parameterRegistrationVisitor);
+    }
+    
+    protected void build(StringBuilder sb, Set<String> clauses) {
+        Iterator<String> iter = clauses.iterator();
+        if (iter.hasNext()) {
+            sb.append(iter.next());
+        }
+        while (iter.hasNext()) {
+            sb.append(", ");
+            sb.append(iter.next());
+        }
     }
 }

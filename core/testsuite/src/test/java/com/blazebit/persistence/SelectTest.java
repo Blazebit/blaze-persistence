@@ -32,14 +32,14 @@ import org.junit.Test;
 public class SelectTest extends AbstractCoreTest {
 
     @Test
-    public void testSelectNonEntity(){
+    public void testSelectNonEntity() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
         criteria.select("d.age");
-        
+
         assertEquals("SELECT d.age FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
     public void testSelectNonJoinable() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
@@ -90,7 +90,7 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.partners").select("d.versions");
 
         assertEquals("SELECT " + joinAliasValue("partners_1") + ", " + joinAliasValue("versions_1")
-            + " FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1", criteria.getQueryString());
+                + " FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -100,7 +100,7 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.partners", "p").where("p").isNull();
 
         assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
+                + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -110,7 +110,7 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.partners", "p").where("partners").isNull();
 
         assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
+                + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -120,7 +120,7 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.partners", "p").where("p").isNull();
 
         assertEquals("SELECT " + joinAliasValue("partners_1") + " AS p FROM Document d LEFT JOIN d.partners partners_1 WHERE "
-            + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
+                + joinAliasValue("partners_1") + " IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -130,8 +130,8 @@ public class SelectTest extends AbstractCoreTest {
         criteria.select("d.versions.date", "x").where("SIZE(d.partners)").eq(2);
 
         assertEquals(
-            "SELECT versions_1.date AS x FROM Document d LEFT JOIN d.versions versions_1 WHERE SIZE(d.partners) = :param_0",
-            criteria.getQueryString());
+                "SELECT versions_1.date AS x FROM Document d LEFT JOIN d.versions versions_1 WHERE SIZE(d.partners) = :param_0",
+                criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -148,7 +148,7 @@ public class SelectTest extends AbstractCoreTest {
     public void testSelectAliasJoin4() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d").select("C.name", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X")
-            .eqExpression("B.id");
+                .eqExpression("B.id");
 
         assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.name = B.id", criteria.getQueryString());
         criteria.getResultList();
@@ -217,62 +217,181 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, NullPointerException.class).select((String) null);
     }
-    
+
     @Test
     public void testSelectSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.selectSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
-        
+        criteria.selectSubquery("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();
+
         assertEquals("SELECT 1 + (SELECT COUNT(p.id) FROM Person p) FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
     public void testSelectSubqueryWithSurroundingExpressionWithAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.selectSubquery("alias", "1 + alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
-        
+        criteria.selectSubquery("alias", "1 + alias", "alias").from(Person.class, "p").select("COUNT(id)").end();
+
         assertEquals("SELECT 1 + (SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
     public void testSelectMultipleSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.selectSubquery("alias", "alias * alias", "alias").from(Person.class, "p").select("COUNT(id)").end();     
-        
+        criteria.selectSubquery("alias", "alias * alias", "alias").from(Person.class, "p").select("COUNT(id)").end();
+
         assertEquals("SELECT (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p) AS alias FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
-    
+
     @Test
     public void testGetSingleResult() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d");
         CriteriaBuilder<Tuple> t = criteria.select("COUNT(d.id)");
-        
+
         assertEquals("SELECT COUNT(d.id) FROM Document d", criteria.getQueryString());
         assertEquals(0L, t.getSingleResult().get(0));
     }
-    
+
     @Test
     public void testSelectSizeAsCount() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
-        
+
         String expected = "SELECT CASE WHEN COUNT(contacts_1) > 2 THEN 2 ELSE COUNT(contacts_1) END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
-    
+
     @Test
     public void testSelectSizeAsSubexpression() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE 0 END")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
-        
+
         String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
         String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
+
+    @Test
+    public void testSelectAggregate() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("SIZE(versions)")
+                .select("owner.name")
+                .orderByDesc("id");
+
+        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, owner_1.name ORDER BY d.id DESC NULLS LAST";
+        assertEquals(objectQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSelectAggregatePaginated() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("SIZE(versions)")
+                .select("owner.name")
+                .orderByDesc("id")
+                .page(0, 10);
+
+        String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY d.id, owner_1.name ORDER BY d.id DESC NULLS LAST";
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(objectQuery, cb.getQueryString());
+
+        cb.getResultList();
+    }
+    
+    @Test
+    public void testSelectNestedAggregate() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .select("owner.name")
+                .orderByDesc("id");
+
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1.name FROM Document d JOIN d.owner owner_1 GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+        assertEquals(objectQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSelectNestedAggregatePaginated() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .select("owner.name")
+                .orderByDesc("id")
+                .page(0, 10);
+
+        String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1.name FROM Document d JOIN d.owner owner_1 "
+                + "GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(objectQuery, cb.getQueryString());
+
+        cb.getResultList();
+    }
+    
+    @Test
+    public void testSelectAggregateEntitySelect() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .select("owner")
+                .orderByDesc("id");
+
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+                + "JOIN d.owner owner_1 "
+                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
+                + "ORDER BY d.id DESC NULLS LAST";
+
+        assertEquals(objectQuery, cb.getQueryString());
+        
+        cb.getResultList();
+    }
+    
+    @Test
+    public void testSelectAggregateEntitySelectPaginated() {
+        PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .select("owner")
+                .orderByDesc("id")
+                .page(0, 10);
+
+        String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+                + "JOIN d.owner owner_1 "
+                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
+                + "ORDER BY d.id DESC NULLS LAST";
+
+        assertEquals(countQuery, cb.getPageCountQueryString());
+        assertEquals(idQuery, cb.getPageIdQueryString());
+        assertEquals(objectQuery, cb.getQueryString());
+
+        cb.getResultList();
+    }
+    
+//    @Test
+//    public void testSelectAggregateEntitySelectLazyAssociation() {
+//        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+//                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+//                .select("owner")
+//                .orderByDesc("id");
+//
+//        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+//                + "JOIN d.owner owner_1 "
+//                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
+//                + "ORDER BY d.id DESC NULLS LAST";
+//
+//        assertEquals(objectQuery, cb.getQueryString());
+//        
+//        cb.getResultList();
+//    }
 }

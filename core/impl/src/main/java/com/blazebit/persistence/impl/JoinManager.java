@@ -33,7 +33,7 @@ import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
 import java.util.Arrays;

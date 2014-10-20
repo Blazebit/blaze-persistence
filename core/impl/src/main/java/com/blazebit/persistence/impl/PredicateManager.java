@@ -40,7 +40,7 @@ import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  *

@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
@@ -22,10 +23,24 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import javax.persistence.Basic;
+import javax.persistence.ElementCollection;
+import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -216,6 +231,61 @@ public class ExpressionUtils {
         }
 
         return ((SingularAttribute<?, ?>) attr).isOptional();
+    }
+
+    public static FetchType getFetchType(Attribute<?, ?> attr) {
+        Member m = attr.getJavaMember();
+        Set<Annotation> annotations;
+        if (m instanceof Method) {
+            annotations = AnnotationUtils.getAllAnnotations((Method) m);
+        } else if (m instanceof Field) {
+            annotations = new HashSet<Annotation>();
+            Collections.addAll(annotations, ((Field) m).getAnnotations());
+        } else {
+            throw new IllegalStateException("Attribute member [" + attr.getName() + "] is neither field nor method");
+        }
+        Class<? extends Annotation> annotationType;
+        switch (attr.getPersistentAttributeType()) {
+            case BASIC:
+                annotationType = Basic.class;
+                break;
+            case ELEMENT_COLLECTION:
+                annotationType = ElementCollection.class;
+                break;
+            case EMBEDDED:
+                return FetchType.EAGER;
+            case MANY_TO_MANY:
+                annotationType = ManyToMany.class;
+                break;
+            case MANY_TO_ONE:
+                annotationType = ManyToOne.class;
+                break;
+            case ONE_TO_MANY:
+                annotationType = OneToMany.class;
+                break;
+            case ONE_TO_ONE:
+                annotationType = OneToOne.class;
+                break;
+            default:
+                return FetchType.EAGER;
+        }
+        for (Annotation annotation : annotations) {
+            if (annotation.annotationType().isAssignableFrom(annotationType)) {
+                FetchType type;
+                try {
+                    return (FetchType) annotation.annotationType().getMethod("fetch").invoke(annotation);
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        }
+        return FetchType.EAGER;
+
+    }
+    
+    public static boolean isAssociation(Attribute<?,?> attr){
+        return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static boolean containsSubqueryExpression(Expression e) {
