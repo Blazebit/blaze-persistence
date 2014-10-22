@@ -62,7 +62,9 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         boolean foundAnnotation = false;
         
         for (Annotation a : annotations) {
-            if (MappingParameter.class.isInstance(a)) {
+            if (MappingParameter.class.isInstance(a)
+                    || Mapping.class.isInstance(a)
+                    || MappingSubquery.class.isInstance(a)) {
                 foundAnnotation = true;
                 break;
             }
