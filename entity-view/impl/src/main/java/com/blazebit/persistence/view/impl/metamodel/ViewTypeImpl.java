@@ -129,6 +129,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         this.constructors = new HashMap<ParametersKey, MappingConstructor<X>>();
         this.constructorIndex = new HashMap<String, MappingConstructor<X>>();
 
+        // TODO: This is probably not deterministic since the constructor order is not defined
         for (Constructor<?> constructor : clazz.getDeclaredConstructors()) {
             String constructorName = MappingConstructorImpl.validate(this, constructor);
             if (constructorIndex.containsKey(constructorName)) {

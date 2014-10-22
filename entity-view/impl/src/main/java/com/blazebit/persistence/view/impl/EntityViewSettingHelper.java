@@ -240,10 +240,30 @@ public final class EntityViewSettingHelper {
 
         return sb.toString();
     }
+    
+    private static MethodAttribute<?, ?> getAttribute(ViewType<?> viewType, String attributeName, ViewType<?> baseViewType, String attributePath) {
+        MethodAttribute<?, ?> attribute = viewType.getAttribute(attributeName);
+        
+        if (attribute == null) {
+            throw new IllegalArgumentException("The attribute with the name '" + attributeName + "' couldn't be found on the view type '" + viewType.getName() + "' during resolving the attribute path '" + attributePath + "' on the view type '" + baseViewType.getName() + "'");
+        }
+        
+        return attribute;
+    }
 
+    private static MethodAttribute<?, ?> getAttribute(ViewType<?> viewType, String attributeName) {
+        MethodAttribute<?, ?> attribute = viewType.getAttribute(attributeName);
+        
+        if (attribute == null) {
+            throw new IllegalArgumentException("The attribute with the name '" + attributeName + "' couldn't be found on the view type '" + viewType.getName() + "'");
+        }
+        
+        return attribute;
+    }
+    
     private static AttributeInfo resolveAttributeInfo(ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String attributePath) {
         if (attributePath.indexOf('.') == -1) {
-            MethodAttribute<?, ?> attribute = viewType.getAttribute(attributePath);
+            MethodAttribute<?, ?> attribute = getAttribute(viewType, attributePath);
             Object mapping;
 
             if (attribute.isSubquery()) {
@@ -264,7 +284,7 @@ public final class EntityViewSettingHelper {
         boolean foundEntityAttribute = false;
 
         for (int i = 0; i < parts.length; i++) {
-            currentAttribute = currentViewType.getAttribute(parts[i]);
+            currentAttribute = getAttribute(currentViewType, parts[i], viewType, attributePath);
 
             if (currentAttribute.isSubquery()) {
                 // Note that if a subquery filtering is done, we ignore the mappings we gathered in the StringBuilder

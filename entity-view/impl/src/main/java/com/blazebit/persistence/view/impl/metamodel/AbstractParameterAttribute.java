@@ -57,6 +57,23 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
             throw new IllegalArgumentException("Primitive type not allowed for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
                 + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
         }
+        
+        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
+        boolean foundAnnotation = false;
+        
+        for (Annotation a : annotations) {
+            if (MappingParameter.class.isInstance(a)
+                    || Mapping.class.isInstance(a)
+                    || MappingSubquery.class.isInstance(a)) {
+                foundAnnotation = true;
+                break;
+            }
+        }
+        
+        if (!foundAnnotation) {
+            throw new IllegalArgumentException("No MappingParameter annotation given for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
+                + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
+        }
     }
 
     public static Annotation getMapping(MappingConstructor<?> constructor, int index) {
