@@ -135,5 +135,28 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         }
     }
     
+    @Test
+    public void testEntityViewSettingNotExistingFilterAttribute() {
+        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        cfg.addEntityView(DocumentWithEntityView.class);
+        EntityViewManager evm = cfg.createEntityViewManager();
+
+        // Base setting
+        EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
+            .create(DocumentWithEntityView.class, 0, 1);
+
+        // Query
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        setting.addAttributeFilter("asd", "test");
+
+        // Currently we have no way to express what filter should be used when using entity attributes
+        try {
+            evm.applySetting(setting, cb);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException ex) {
+            // Ok
+        }
+    }
+    
     // TODO: needs more tests
 }
