@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.metamodel.Metamodel;
@@ -154,7 +155,7 @@ public class OrderByManager extends AbstractManager {
             return Collections.EMPTY_SET;
         }
 
-        Set<String> groupByClauses = new HashSet<String>();
+        Set<String> groupByClauses = new LinkedHashSet<String>();
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         OrderByInfo orderByInfo;
 
