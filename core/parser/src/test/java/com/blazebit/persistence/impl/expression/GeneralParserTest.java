@@ -675,7 +675,7 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testNot3() {
-        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(x.a = y.a OR c.a < 9 AND b - c = 2) THEN 0 ELSE 1 END");
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CaSe WHEN NoT(x.a = y.a OR c.a < 9 and b - c = 2) THeN 0 eLsE 1 ENd");
 
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), foo("9")), new EqPredicate(compose(path("b"), foo(" - "), path("c")), foo("2"))))), foo("0"))), foo("1"));
         assertEquals(expected, result);
