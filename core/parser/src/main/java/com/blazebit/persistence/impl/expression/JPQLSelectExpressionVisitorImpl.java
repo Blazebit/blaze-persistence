@@ -116,10 +116,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         for (JPQLSelectExpressionParser.Function_argContext argCtx : ctx.args) {
             funcArgs.add(argCtx.accept(this));
         }
-        // resolve function immediately
-        String functionName = funcArgs.remove(0).toString();
-        functionName = functionName.substring(1, functionName.length() - 1); // remove quotes
-        return new FunctionExpression(functionName, funcArgs);
+        return new FunctionExpression(ctx.getStart().getText(), funcArgs);
     }
 
     @Override

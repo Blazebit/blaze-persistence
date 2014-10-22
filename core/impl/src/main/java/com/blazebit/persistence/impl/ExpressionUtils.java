@@ -130,6 +130,10 @@ public class ExpressionUtils {
         // Right now we only support ids, but we actually should check for unique constraints
         return ((SingularAttribute<?, ?>) attr).isId();
     }
+    
+    public static boolean isFunctionFunctionExpression(FunctionExpression func){
+        return "FUNCTION".equals(func.getFunctionName());
+    }
 
     public static boolean isNullable(Metamodel metamodel, Expression expr) {
         if (expr instanceof CompositeExpression) {

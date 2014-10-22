@@ -29,34 +29,32 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
+    private final JPAInfo jpaInfo;
 
-    public ResolvingQueryGenerator(AliasManager aliasManager) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, JPAInfo jpaInfo) {
         this.aliasManager = aliasManager;
+        this.jpaInfo = jpaInfo;
     }
-    
+
     @Override
     public void visit(FunctionExpression expression) {
         if (ExpressionUtils.isOuterFunction(expression)) {
             expression.getExpressions().get(0).accept(this);
-        } else {
-            sb.append(expression.getFunctionName());
+        } else if (ExpressionUtils.isFunctionFunctionExpression(expression) && !jpaInfo.isJPA21) {
+            // resolve function
+            String functionName = expression.getExpressions().get(0).toString();
+            functionName = functionName.substring(1, functionName.length() - 1); // remove quotes
+            sb.append(functionName);
             sb.append('(');
-        
-            if (expression instanceof AggregateExpression) {
-                AggregateExpression aggregateExpression = (AggregateExpression) expression;
-                if (aggregateExpression.isDistinct()) {
-                    sb.append("DISTINCT ");
-                }
-            }
-            
             if (!expression.getExpressions().isEmpty()) {
-                expression.getExpressions().get(0).accept(this);
                 for (int i = 1; i < expression.getExpressions().size(); i++) {
                     sb.append(",");
                     expression.getExpressions().get(i).accept(this);
                 }
             }
             sb.append(')');
+        } else {
+            super.visit(expression);
         }
     }
 

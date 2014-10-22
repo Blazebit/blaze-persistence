@@ -131,7 +131,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaInfo);
 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);

@@ -457,7 +457,7 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testFunctionInvocation() {
         Expression result = parse("FUNCTION('myfunc', a.b, 'b', 12)");
-        assertEquals(function("myfunc", path("a", "b"), new FooExpression("'b'"), new FooExpression("12")), result);
+        assertEquals(function("FUNCTION", foo("'myfunc'"), path("a", "b"), new FooExpression("'b'"), new FooExpression("12")), result);
     }
 
     @Test
