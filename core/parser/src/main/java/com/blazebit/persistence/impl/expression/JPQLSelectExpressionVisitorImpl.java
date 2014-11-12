@@ -388,7 +388,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitComparisonExpression_boolean(JPQLSelectExpressionParser.ComparisonExpression_booleanContext ctx) {
-        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+        return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
 
     @Override
@@ -398,17 +398,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitComparisonExpression_entity(JPQLSelectExpressionParser.ComparisonExpression_entityContext ctx) {
-        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+        return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
-
-    @Override
-    public Expression visitComparisonExpression_entityType(JPQLSelectExpressionParser.ComparisonExpression_entityTypeContext ctx) {
-        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
-    }
-
+    
     @Override
     public Expression visitComparisonExpression_enum(JPQLSelectExpressionParser.ComparisonExpression_enumContext ctx) {
-        return handleComparison(ctx.left, ctx.getToken(ctx.op.getType(), ctx.op.getTokenIndex()), ctx.right);
+        return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
 
     BinaryExpressionPredicate handleComparison(ParseTree left, ParseTree comparisonOperator, ParseTree right) {

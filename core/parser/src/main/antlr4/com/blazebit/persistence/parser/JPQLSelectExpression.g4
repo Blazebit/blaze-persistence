@@ -59,10 +59,10 @@ parseStringExpression
 parseCaseOperandExpression
     : case_operand;
 
-simple_expression : single_valued_path_expression |
-                       scalar_expression |
-                       aggregate_expression
-                   ;
+simple_expression : single_valued_path_expression
+                  | scalar_expression 
+                  | aggregate_expression
+                  ;
 
 simple_subquery_expression : scalar_expression
                            | aggregate_expression
@@ -111,10 +111,12 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  path : general_subpath'.'general_path_element
       ;
 
- collection_valued_path_expression : single_element_path_expression | path;
+ collection_valued_path_expression : single_element_path_expression 
+                                   | path
+                                   ;
  
  single_element_path_expression : general_path_start
-                              ;
+                                ;
 
  aggregate_expression : funcname=( AVG | MAX | MIN | SUM | COUNT) '('(distinct=DISTINCT)? aggregate_argument ')'  # AggregateExpression
                       | funcname=COUNT '(' Star_operator ')' # CountStar
@@ -124,15 +126,15 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                     | path
                     ;
 
- scalar_expression : arithmetic_expression |
-                       string_expression |
-                       enum_expression |
-                       datetime_expression |
-                       boolean_expression |
-                       coalesce_expression |
-                       nullif_expression |
-                       entity_type_expression |
-                       case_expression
+ scalar_expression : arithmetic_expression
+                   | string_expression 
+                   | enum_expression 
+                   | datetime_expression 
+                   | boolean_expression 
+                   | coalesce_expression 
+                   | nullif_expression 
+                   | entity_type_expression 
+                   | case_expression
                    ;
  
  outer_expression : Outer_function '(' single_valued_path_expression  ')'
@@ -159,46 +161,56 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                     | function_invocation # ArithmeticPrimary
                     ;
 
- string_expression : state_field_path_expression |
-                     single_element_path_expression |
-                       string_literal |
-                       Input_parameter |
-                       functions_returning_strings |
-                       aggregate_expression |
-                       case_expression |
-                       function_invocation ;
+ string_expression : state_field_path_expression 
+                   | single_element_path_expression 
+                   | string_literal 
+                   | Input_parameter 
+                   | functions_returning_strings 
+                   | aggregate_expression 
+                   | case_expression 
+                   | function_invocation
+                   ;
 
- datetime_expression : state_field_path_expression |
-                         Input_parameter |
-                         functions_returning_datetime |
-                         aggregate_expression |
-                         case_expression |
-                         function_invocation |
-                         literal_temporal ;
+ datetime_expression : state_field_path_expression
+                     | single_element_path_expression 
+                     | Input_parameter 
+                     | functions_returning_datetime 
+                     | aggregate_expression 
+                     | case_expression 
+                     | function_invocation 
+                     | literal_temporal
+                     ;
 
- boolean_expression : state_field_path_expression |
-                        Boolean_literal |
-                        Input_parameter |
-                        case_expression |
-                        function_invocation ;
+ boolean_expression : state_field_path_expression 
+                    | single_element_path_expression 
+                    | Boolean_literal 
+                    | Input_parameter 
+                    | case_expression 
+                    | function_invocation
+                    ;
 
- enum_expression : state_field_path_expression |
-                     enum_literal |
-                     Input_parameter |
-                     case_expression 
+ enum_expression : state_field_path_expression 
+                 | single_element_path_expression 
+                 | enum_literal 
+                 | Input_parameter 
+                 | case_expression 
                  ;
  
  enum_literal : ENUM '(' path ')'
               ;
 
- entity_expression : single_valued_object_path_expression | simple_entity_expression;
+ entity_expression : single_valued_object_path_expression
+                   | simple_entity_expression
+                   ;
 
- simple_entity_expression : Identifier |
-                              Input_parameter;
+ simple_entity_expression : Identifier
+                          | Input_parameter
+                          ;
 
- entity_type_expression : type_discriminator |
-                            Identifier |
-                            Input_parameter;
+ entity_type_expression : type_discriminator 
+                        | Identifier 
+                        | Input_parameter
+                        ;
 
  type_discriminator : TYPE '(' type_discriminator_arg ')';
  
@@ -225,19 +237,23 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                              | UPPER '('string_expression')' # StringFunction
                              ;
 
- trim_specification : LEADING | TRAILING | BOTH;
+ trim_specification : LEADING 
+                    | TRAILING 
+                    | BOTH
+                    ;
 
  function_invocation : FUNCTION '(' string_literal (',' args+=function_arg)*')';
 
- function_arg : literal |
-                  state_field_path_expression |
-                  Input_parameter |
-                  scalar_expression;
+ function_arg : literal
+              | state_field_path_expression 
+              | Input_parameter 
+              | scalar_expression
+              ;
 
- case_expression : {allowCaseWhen == true}? general_case_expression |    //for entity view extension only
-                    {allowCaseWhen == true}? simple_case_expression |   //for entity view extension only
-                     coalesce_expression |
-                     nullif_expression
+ case_expression : {allowCaseWhen == true}? general_case_expression     //for entity view extension only
+                 | {allowCaseWhen == true}? simple_case_expression     //for entity view extension only
+                 | coalesce_expression 
+                 | nullif_expression
                  ;
 
  coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';
@@ -317,31 +333,33 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  collection_member_expression : entity_or_value_expression (not=NOT)? Member_of_function collection_valued_path_expression
                               ;
 
- entity_or_value_expression : state_field_path_expression |
-                              simple_entity_or_value_expression |
-                              single_element_path_expression
+ entity_or_value_expression : state_field_path_expression
+                            | simple_entity_or_value_expression 
+                            | single_element_path_expression
                             ;
 
- simple_entity_or_value_expression : Identifier |
-                                       Input_parameter |
-                                       literal
+ simple_entity_or_value_expression : Identifier 
+                                   | Input_parameter 
+                                   | literal
                                    ;
  
  comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
-                       | left=boolean_expression op=( '=' | Not_equal_operator ) right=boolean_expression # ComparisonExpression_boolean
-                       | left=enum_expression op=( '=' | Not_equal_operator ) right=enum_expression # ComparisonExpression_enum
+                       | left=boolean_expression op=equality_comparison_operator right=boolean_expression # ComparisonExpression_boolean
+                       | left=enum_expression op=equality_comparison_operator right=enum_expression # ComparisonExpression_enum
                        | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
-                       | left=entity_expression op=( '=' | Not_equal_operator ) right=entity_expression # ComparisonExpression_entity
+                       | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
                        | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
-                       | left=entity_type_expression op=( '=' | Not_equal_operator ) right=entity_type_expression # ComparisonExpression_entityType
                        ;
  
- comparison_operator : '=' # EqPredicate
+ equality_comparison_operator : '=' # EqPredicate
+                              | Not_equal_operator # NeqPredicate
+                              ;
+ 
+ comparison_operator : equality_comparison_operator # EqOrNeqPredicate
                      | '>' # GtPredicate
                      | '>=' # GePredicate
                      | '<' # LtPredicate
                      | '<=' # LePredicate
-                     | Not_equal_operator # NeqPredicate
                      ;
  
  general_case_expression : caseTerminal=CASE when_clause (when_clause)* elseTerminal=ELSE scalar_expression endTerminal=END
@@ -356,4 +374,6 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  simple_when_clause : whenTerminal=WHEN scalar_expression thenTerminal=THEN scalar_expression
                     ;
  
- case_operand : state_field_path_expression | type_discriminator;
+ case_operand : state_field_path_expression
+              | type_discriminator
+              ;

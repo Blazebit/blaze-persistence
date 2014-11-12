@@ -59,6 +59,7 @@ public class Document implements Serializable {
     private Calendar creationDate;
     private Date lastModified;
     private DocumentType documentType;
+    private Boolean archived = false;
 
     public Document() {
     }
@@ -192,5 +193,13 @@ public class Document implements Serializable {
 
     public void setDocumentType(DocumentType documentType) {
         this.documentType = documentType;
+    }
+
+    public Boolean isArchived() {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived) {
+        this.archived = archived;
     }
 }

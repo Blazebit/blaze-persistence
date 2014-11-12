@@ -680,4 +680,28 @@ public class GeneralParserTest extends AbstractParserTest {
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), foo("9")), new EqPredicate(compose(path("b"), foo(" - "), path("c")), foo("2"))))), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
+    
+    @Test
+    public void testBooleanCompare(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = true THEN 1 ELSE 2 END");
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), foo("true")), foo("1"))), foo("2"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testEnumCompare(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = ENUM(a.b.c) THEN 1 ELSE 2 END");
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), foo("a.b.c")), foo("1"))), foo("2"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testEntityCompare(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a = b THEN 1 ELSE 2 END");
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("a"), path("b")), foo("1"))), foo("2"));
+        assertEquals(expected, result);
+    }
 }
