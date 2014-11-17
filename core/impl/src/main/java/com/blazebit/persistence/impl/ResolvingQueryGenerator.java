@@ -46,8 +46,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             functionName = functionName.substring(1, functionName.length() - 1); // remove quotes
             sb.append(functionName);
             sb.append('(');
-            if (!expression.getExpressions().isEmpty()) {
-                for (int i = 1; i < expression.getExpressions().size(); i++) {
+            if (expression.getExpressions().size() > 1) {
+                expression.getExpressions().get(1).accept(this);
+                for (int i = 2; i < expression.getExpressions().size(); i++) {
                     sb.append(",");
                     expression.getExpressions().get(i).accept(this);
                 }
