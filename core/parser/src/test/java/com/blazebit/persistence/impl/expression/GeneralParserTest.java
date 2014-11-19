@@ -42,6 +42,30 @@ import org.junit.Test;
 public class GeneralParserTest extends AbstractParserTest {
 
     @Test
+    public void testTypeAsUpperPath() {
+        Expression result = parse("entity.TYPE");
+        assertEquals(path("entity", "TYPE"), result);
+    }
+    
+    @Test
+    public void testTypeAsPath() {
+        Expression result = parse("entity.type");
+        assertEquals(path("entity", "type"), result);
+    }
+
+    @Test
+    public void testTypeAsUpperFunction() {
+        Expression result = parse("TYPE(entity.type)");
+        assertEquals(function("TYPE", path("entity", "type")), result);
+    }
+
+    @Test
+    public void testTypeAsFunction() {
+        Expression result = parse("type(entity.type)");
+        assertEquals(function("type", path("entity", "type")), result);
+    }
+    
+    @Test
     public void testSize() {
         Expression result = parse("SIZE(d.contacts)");
         assertEquals(function("SIZE", path("d", "contacts")), result);
