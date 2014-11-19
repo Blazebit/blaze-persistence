@@ -20,10 +20,12 @@ import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -65,6 +67,8 @@ public class ExpressionUtils {
             return isUnique(metamodel, (SubqueryExpression) expr);
         } else if (expr instanceof ParameterExpression) {
             return false;
+        } else if (expr instanceof GeneralCaseExpression) {
+            return isUnique(metamodel, (GeneralCaseExpression) expr);
         } else if (expr instanceof FooExpression) {
             // TODO: Not actually sure how we could do that better
             return false;
@@ -95,6 +99,20 @@ public class ExpressionUtils {
         }
 
         return isUnique(metamodel, expressions.get(0));
+    }
+
+    private static boolean isUnique(Metamodel metamodel, GeneralCaseExpression expr) {
+        if (!isUnique(metamodel, expr.getDefaultExpr())) {
+            return false;
+        }
+        
+        for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
+            if (!isUnique(metamodel, whenExpr.getResult())) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     private static boolean isUnique(Metamodel metamodel, PathExpression expr) {
@@ -146,6 +164,8 @@ public class ExpressionUtils {
             return isNullable(metamodel, (SubqueryExpression) expr);
         } else if (expr instanceof ParameterExpression) {
             return true;
+        } else if (expr instanceof GeneralCaseExpression) {
+            return isNullable(metamodel, (GeneralCaseExpression) expr);
         } else if (expr instanceof FooExpression) {
             return false;
         } else {
@@ -163,6 +183,20 @@ public class ExpressionUtils {
             }
         }
 
+        return false;
+    }
+
+    private static boolean isNullable(Metamodel metamodel, GeneralCaseExpression expr) {
+        if (isNullable(metamodel, expr.getDefaultExpr())) {
+            return true;
+        }
+        
+        for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
+            if (isNullable(metamodel, whenExpr.getResult())) {
+                return true;
+            }
+        }
+        
         return false;
     }
 
