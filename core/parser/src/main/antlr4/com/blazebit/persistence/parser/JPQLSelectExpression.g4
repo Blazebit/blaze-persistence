@@ -26,10 +26,6 @@ public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
        this.allowCaseWhen = allowCaseWhen;
 }      
 
-public boolean isKeyword() {
-    return _input.LA(1) >= KEY && _input.LA(1) <= Outer_function;
-}
-
 }
 
 parseOrderByClause : state_field_path_expression EOF
