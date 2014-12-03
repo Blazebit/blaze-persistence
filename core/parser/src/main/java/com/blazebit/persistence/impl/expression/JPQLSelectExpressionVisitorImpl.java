@@ -143,7 +143,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitSimple_path_element(JPQLSelectExpressionParser.Simple_path_elementContext ctx) {
-        return new PropertyExpression(ctx.Identifier().getText());
+        return new PropertyExpression(ctx.identifier().getText());
     }
 
     @Override

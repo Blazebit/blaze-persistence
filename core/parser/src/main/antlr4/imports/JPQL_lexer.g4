@@ -109,14 +109,14 @@ THEN : [Tt][Hh][Ee][Nn];
     
 SIZE : [Ss][Ii][Zz][Ee];
 
-Star_operator : '*';
-
 Empty_function : [Ii][Ss] ([ ]+ NOT_FRAG [ ]+)? [Ee][Mm][Pp][Tt][Yy];
 
 Member_of_function : [Mm][Ee][Mm][Bb][Ee][Rr] ([ ]+ [Oo][Ff])?;
 
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
  
+Star_operator : '*';
+
 Character_literal : '\''JavaLetter'\'';
 
 String_literal : '\'' ~[\']* '\'';

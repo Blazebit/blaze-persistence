@@ -25,6 +25,11 @@ public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
        this(input);
        this.allowCaseWhen = allowCaseWhen;
 }      
+
+public boolean isKeyword() {
+    return _input.LA(1) >= KEY && _input.LA(1) <= Outer_function;
+}
+
 }
 
 parseOrderByClause : state_field_path_expression EOF
@@ -86,7 +91,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  general_path_start : general_path_element
                     ;
 
- simple_path_element : Identifier
+ simple_path_element : identifier
                      ;
   
  general_path_element : simple_path_element
@@ -203,12 +208,12 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                    | simple_entity_expression
                    ;
 
- simple_entity_expression : Identifier
+ simple_entity_expression : identifier
                           | Input_parameter
                           ;
 
  entity_type_expression : type_discriminator 
-                        | Identifier 
+                        | identifier 
                         | Input_parameter
                         ;
 
@@ -338,7 +343,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                             | single_element_path_expression
                             ;
 
- simple_entity_or_value_expression : Identifier 
+ simple_entity_or_value_expression : identifier 
                                    | Input_parameter 
                                    | literal
                                    ;
@@ -377,3 +382,60 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  case_operand : state_field_path_expression
               | type_discriminator
               ;
+ 
+ keyword :KEY
+        | VALUE
+        | ENTRY
+        | AVG
+        | SUM
+        | MAX
+        | MIN
+        | COUNT
+        | DISTINCT
+        | ENUM
+        | TYPE
+        | LENGTH
+        | LOCATE
+        | ABS
+        | SQRT
+        | MOD
+        | INDEX
+        | CURRENT_DATE
+        | CURRENT_TIME
+        | CURRENT_TIMESTAMP
+        | CONCAT
+        | SUBSTRING
+        | TRIM
+        | LOWER
+        | UPPER
+        | FROM
+        | LEADING
+        | TRAILING
+        | BOTH
+        | FUNCTION
+        | COALESCE
+        | NULLIF
+        | NOT
+        | OR
+        | AND
+        | BETWEEN
+        | IN
+        | LIKE
+        | ESCAPE
+        | IS
+        | NULL
+        | CASE
+        | ELSE
+        | END
+        | WHEN
+        | THEN
+        | SIZE
+        | Empty_function
+        | Member_of_function
+        | Outer_function
+        ;
+ 
+ identifier : Identifier
+            | keyword
+            ;
+             
