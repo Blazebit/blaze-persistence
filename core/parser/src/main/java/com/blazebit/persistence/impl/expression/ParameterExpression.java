@@ -36,6 +36,11 @@ public class ParameterExpression implements Expression {
     }
 
     @Override
+    public ParameterExpression clone() {
+        return new ParameterExpression(name);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

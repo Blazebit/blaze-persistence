@@ -24,7 +24,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public abstract class UnaryExpressionPredicate implements Predicate, Negatable {
-    private boolean negated;
+    protected boolean negated;
     protected Expression expression;
 
     public UnaryExpressionPredicate(Expression expression, boolean negated) {
@@ -35,6 +35,9 @@ public abstract class UnaryExpressionPredicate implements Predicate, Negatable {
     public UnaryExpressionPredicate(Expression expression) {
         this(expression, false);
     }
+
+    @Override
+    public abstract UnaryExpressionPredicate clone();
 
     public Expression getExpression() {
         return expression;

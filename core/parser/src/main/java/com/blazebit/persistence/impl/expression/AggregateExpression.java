@@ -34,11 +34,19 @@ public class AggregateExpression extends FunctionExpression {
     
     /**
      * Constructor for COUNT(*)
-     * @param distinct
      */
     public AggregateExpression() {
         super("COUNT", Collections.<Expression>emptyList());
         this.distinct = false;
+    }
+    
+    @Override
+    public AggregateExpression clone() {
+        if (expressions.isEmpty()) {
+            return new AggregateExpression();
+        } else {
+            return new AggregateExpression(distinct, functionName, (PathExpression) expressions.get(0).clone());
+        }
     }
 
     public boolean isDistinct() {

@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  */
 public abstract class NegatableBinaryExpressionPredicate extends BinaryExpressionPredicate implements Negatable {
-    private boolean negated;
+    protected boolean negated;
 
     public NegatableBinaryExpressionPredicate(Expression left, Expression right, boolean negated) {
         super(left, right);
@@ -33,6 +33,9 @@ public abstract class NegatableBinaryExpressionPredicate extends BinaryExpressio
     public NegatableBinaryExpressionPredicate(Expression left, Expression right) {
         this(left, right, false);
     }
+    
+    @Override
+    public abstract NegatableBinaryExpressionPredicate clone();
 
     @Override
     public boolean isNegated() {

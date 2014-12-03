@@ -27,14 +27,23 @@ import java.util.List;
  */
 public abstract class MultinaryPredicate implements Predicate {
 
-    protected final List<Predicate> children = new ArrayList<Predicate>();
+    protected final List<Predicate> children;
 
     public MultinaryPredicate() {
+        this.children = new ArrayList<Predicate>();
     }
 
     public MultinaryPredicate(Predicate... children) {
+        this.children = new ArrayList<Predicate>();
         this.children.addAll(Arrays.asList(children));
     }
+    
+    protected MultinaryPredicate(List<Predicate> children) {
+        this.children = children;
+    }
+    
+    @Override
+    public abstract MultinaryPredicate clone();
     
     public List<Predicate> getChildren() {
         return children;

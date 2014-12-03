@@ -32,6 +32,11 @@ public class WhenClauseExpression implements Expression {
         this.result = result;
     }
 
+    @Override
+    public WhenClauseExpression clone() {
+        return new WhenClauseExpression(condition.clone(), result.clone());
+    }
+
     public Expression getCondition() {
         return condition;
     }

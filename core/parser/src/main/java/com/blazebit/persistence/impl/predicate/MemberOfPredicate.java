@@ -35,6 +35,11 @@ public class MemberOfPredicate extends NegatableBinaryExpressionPredicate {
     }
 
     @Override
+    public MemberOfPredicate clone() {
+        return new MemberOfPredicate(left.clone(), right.clone(), negated);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

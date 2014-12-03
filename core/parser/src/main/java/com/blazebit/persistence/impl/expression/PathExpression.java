@@ -46,6 +46,26 @@ public class PathExpression implements Expression, Cloneable {
         this.collectionKeyPath = isCollectionKeyPath;
     }
 
+    public PathExpression(List<PathElementExpression> pathProperties, Object baseNode, String field, boolean usedInCollectionFunction, boolean collectionKeyPath) {
+        this.pathProperties = pathProperties;
+        this.baseNode = baseNode;
+        this.field = field;
+        this.usedInCollectionFunction = usedInCollectionFunction;
+        this.collectionKeyPath = collectionKeyPath;
+    }
+
+    @Override
+    public Expression clone() {
+        int size = pathProperties.size();
+        List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
+        
+        for (int i = 0; i < size; i++) {
+            newPathProperties.add(pathProperties.get(i).clone());
+        }
+        
+        return new PathExpression(newPathProperties, baseNode, field, usedInCollectionFunction, collectionKeyPath);
+    }
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
@@ -148,11 +168,5 @@ public class PathExpression implements Expression, Cloneable {
     @Override
     public String toString() {
         return getPath();
-    }
-
-    @Override
-    protected Object clone() throws CloneNotSupportedException {
-        //TODO: implement
-        return super.clone();
     }
 }

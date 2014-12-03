@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,6 +30,18 @@ public class CompositeExpression implements Expression {
 
     public CompositeExpression(List<Expression> expressions) {
         this.expressions = expressions;
+    }
+
+    @Override
+    public CompositeExpression clone() {
+        int size = expressions.size();
+        List<Expression> newExpressions = new ArrayList<Expression>(size);
+        
+        for (int i = 0; i < size; i++) {
+            newExpressions.add(expressions.get(i).clone());
+        }
+        
+        return new CompositeExpression(newExpressions);
     }
 
     @Override

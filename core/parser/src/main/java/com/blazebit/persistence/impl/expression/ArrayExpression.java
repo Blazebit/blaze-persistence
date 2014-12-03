@@ -32,6 +32,11 @@ public class ArrayExpression implements PathElementExpression {
     }
 
     @Override
+    public ArrayExpression clone() {
+        return new ArrayExpression(base.clone(), index.clone());
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

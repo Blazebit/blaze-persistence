@@ -17,6 +17,7 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,6 +31,22 @@ public class GeneralCaseExpression implements Expression {
     public GeneralCaseExpression(List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
         this.whenClauses = whenClauses;
         this.defaultExpr = defaultExpr;
+    }
+
+    @Override
+    public GeneralCaseExpression clone() {
+        int size = whenClauses.size();
+        List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
+        
+        for (int i = 0; i < size; i++) {
+            newWhenClauses.add(whenClauses.get(i).clone());
+        }
+        
+        if (defaultExpr == null) {
+            return new GeneralCaseExpression(whenClauses, null);
+        } else {
+            return new GeneralCaseExpression(newWhenClauses, defaultExpr.clone());
+        }
     }
 
     public List<WhenClauseExpression> getWhenClauses() {

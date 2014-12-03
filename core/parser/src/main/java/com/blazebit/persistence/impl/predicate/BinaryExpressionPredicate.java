@@ -25,13 +25,16 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public abstract class BinaryExpressionPredicate implements Predicate {
 
-    private Expression left;
-    private Expression right;
+    protected Expression left;
+    protected Expression right;
 
     public BinaryExpressionPredicate(Expression left, Expression right) {
         this.left = left;
         this.right = right;
     }
+    
+    @Override
+    public abstract BinaryExpressionPredicate clone();
 
     public Expression getLeft() {
         return left;

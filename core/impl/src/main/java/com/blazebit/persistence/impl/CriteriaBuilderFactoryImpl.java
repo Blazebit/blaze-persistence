@@ -19,6 +19,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +41,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
-        this.expressionFactory = new ExpressionFactoryImpl();
+//        this.expressionFactory = new ExpressionFactoryImpl();
+        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
         this.properties = copyProperties(config.getProperties());
     }
 

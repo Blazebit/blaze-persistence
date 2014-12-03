@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,12 +27,24 @@ import java.util.List;
  */
 public class FunctionExpression implements Expression  {
 
-    private final String functionName;
-    private List<Expression> expressions;
+    protected final String functionName;
+    protected List<Expression> expressions;
 
     public FunctionExpression(String functionName, List<Expression> expressions) {
         this.functionName = functionName;
         this.expressions = expressions;
+    }
+
+    @Override
+    public FunctionExpression clone() {
+        int size = expressions.size();
+        List<Expression> newExpressions = new ArrayList<Expression>(size);
+        
+        for (int i = 0; i < size; i++) {
+            newExpressions.add(expressions.get(i).clone());
+        }
+        
+        return new FunctionExpression(functionName, newExpressions);
     }
 
     @Override

@@ -35,6 +35,11 @@ public class NotPredicate implements Predicate {
         this.predicate = predicate;
     }
 
+    @Override
+    public NotPredicate clone() {
+        return new NotPredicate(predicate.clone());
+    }
+
     public Predicate getPredicate() {
         return predicate;
     }

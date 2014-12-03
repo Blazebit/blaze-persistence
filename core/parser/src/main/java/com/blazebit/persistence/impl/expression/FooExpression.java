@@ -25,12 +25,17 @@ public class FooExpression implements Expression {
 
     private final StringBuilder stringBuilder;
 
-    public FooExpression(String string) {
+    public FooExpression(CharSequence string) {
         this.stringBuilder = new StringBuilder(string);
     }
     
     public FooExpression(StringBuilder sb) {
         this.stringBuilder = sb;
+    }
+
+    @Override
+    public FooExpression clone() {
+        return new FooExpression(stringBuilder);
     }
 
     @Override

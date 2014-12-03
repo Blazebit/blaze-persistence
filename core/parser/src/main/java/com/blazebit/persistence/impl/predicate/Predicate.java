@@ -25,4 +25,6 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public interface Predicate extends Expression {
 
+    @Override
+    public Predicate clone();
 }

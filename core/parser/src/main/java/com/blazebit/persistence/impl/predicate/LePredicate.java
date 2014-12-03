@@ -38,6 +38,11 @@ public class LePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     @Override
+    public LePredicate clone() {
+        return new LePredicate(left.clone(), right.clone(), quantifier);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

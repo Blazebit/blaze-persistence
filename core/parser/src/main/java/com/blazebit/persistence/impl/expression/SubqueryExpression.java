@@ -32,6 +32,11 @@ public class SubqueryExpression implements Expression {
     }
 
     @Override
+    public SubqueryExpression clone() {
+        return new SubqueryExpression(subquery);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

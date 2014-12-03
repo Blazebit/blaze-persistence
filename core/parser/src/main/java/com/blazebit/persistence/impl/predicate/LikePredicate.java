@@ -42,6 +42,11 @@ public class LikePredicate extends NegatableBinaryExpressionPredicate {
     }
 
     @Override
+    public LikePredicate clone() {
+        return new LikePredicate(left.clone(), right.clone(), caseSensitive, escapeCharacter, negated);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

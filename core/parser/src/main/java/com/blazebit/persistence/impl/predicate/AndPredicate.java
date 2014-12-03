@@ -16,6 +16,8 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -30,6 +32,22 @@ public final class AndPredicate extends MultinaryPredicate {
     
     public AndPredicate(Predicate... children) {
         super(children);
+    }
+    
+    private AndPredicate(List<Predicate> children) {
+        super(children);
+    }
+
+    @Override
+    public AndPredicate clone() {
+        int size = children.size();
+        List<Predicate> newChildren = new ArrayList<Predicate>(size);
+        
+        for (int i = 0; i < size; i++) {
+            newChildren.add(children.get(i).clone());
+        }
+        
+        return new AndPredicate(newChildren);
     }
 
     @Override

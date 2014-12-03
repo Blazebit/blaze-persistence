@@ -50,6 +50,11 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     }
 
     @Override
+    public EqPredicate clone() {
+        return new EqPredicate(left.clone(), right.clone(), quantifier, negated);
+    }
+
+    @Override
     public boolean isNegated() {
         return negated;
     }

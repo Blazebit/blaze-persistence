@@ -25,7 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpressionPredicate {
 
-    private final PredicateQuantifier quantifier;
+    protected final PredicateQuantifier quantifier;
 
     public QuantifiableBinaryExpressionPredicate() {
         this(null, null);
@@ -39,6 +39,9 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
         super(left, right);
         this.quantifier = quantifier;
     }
+
+    @Override
+    public abstract QuantifiableBinaryExpressionPredicate clone();
 
     public PredicateQuantifier getQuantifier() {
         return quantifier;

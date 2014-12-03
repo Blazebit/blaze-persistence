@@ -1,0 +1,61 @@
+/*
+ * Copyright 2014 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.blazebit.persistence.impl.expression;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+/**
+ *
+ * @author cpbec
+ */
+public class SimpleCachingExpressionFactory extends AbstractCachingExpressionFactory {
+    
+    private final ConcurrentMap<String, ConcurrentMap<String, Expression>> cacheManager;
+
+    public SimpleCachingExpressionFactory(ExpressionFactory delegate) {
+        super(delegate);
+        this.cacheManager = new ConcurrentHashMap<String, ConcurrentMap<String, Expression>>();
+    }
+
+    @Override
+    protected <E extends Expression> E getOrDefault(String cacheName, String cacheKey, Supplier<E> defaultSupplier) {
+        ConcurrentMap<String, Expression> cache = cacheManager.get(cacheName);
+        
+        if (cache == null) {
+            cache = new ConcurrentHashMap<String, Expression>();
+            ConcurrentMap<String, Expression> oldCache = cacheManager.putIfAbsent(cacheKey, cache);
+            
+            if (oldCache != null) {
+                cache = oldCache;
+            }
+        }
+        
+        E expr = (E) cache.get(cacheKey);
+        
+        if (expr == null) {
+            expr = defaultSupplier.get();
+            E oldExpr = (E) cache.putIfAbsent(cacheKey, expr);
+            
+            if (oldExpr != null) {
+                expr = oldExpr;
+            }
+        }
+        
+        return (E) expr.clone();
+    }
+    
+}

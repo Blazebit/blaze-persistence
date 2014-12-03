@@ -35,6 +35,11 @@ public class InPredicate extends NegatableBinaryExpressionPredicate {
     }
 
     @Override
+    public InPredicate clone() {
+        return new InPredicate(left.clone(), right.clone(), negated);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

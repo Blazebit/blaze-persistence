@@ -35,6 +35,11 @@ public class IsNullPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
+    public IsNullPredicate clone() {
+        return new IsNullPredicate(expression.clone(), negated);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

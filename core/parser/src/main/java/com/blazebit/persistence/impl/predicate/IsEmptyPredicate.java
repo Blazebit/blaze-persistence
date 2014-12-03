@@ -35,6 +35,11 @@ public class IsEmptyPredicate extends UnaryExpressionPredicate {
     }
 
     @Override
+    public IsEmptyPredicate clone() {
+        return new IsEmptyPredicate(expression.clone(), negated);
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

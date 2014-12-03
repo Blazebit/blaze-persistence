@@ -32,6 +32,12 @@ public class PropertyExpression implements PathElementExpression {
     }
 
     @Override
+    public PropertyExpression clone() {
+        // We can do this since this is immutable
+        return this;
+    }
+
+    @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }

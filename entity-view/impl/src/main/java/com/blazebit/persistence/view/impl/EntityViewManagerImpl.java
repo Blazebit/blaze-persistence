@@ -20,6 +20,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -78,7 +79,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
-        this.expressionFactory = new ExpressionFactoryImpl();
+        // TODO: Would be nice if we could reuse the expression factory of
+        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();

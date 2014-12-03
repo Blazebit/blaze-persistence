@@ -42,6 +42,11 @@ public class BetweenPredicate implements Predicate, Negatable {
     }
 
     @Override
+    public BetweenPredicate clone() {
+        return new BetweenPredicate(left.clone(), start.clone(), end.clone(), negated);
+    }
+
+    @Override
     public boolean isNegated() {
         return negated;
     }

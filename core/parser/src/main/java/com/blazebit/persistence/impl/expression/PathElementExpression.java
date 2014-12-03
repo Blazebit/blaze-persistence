@@ -23,4 +23,5 @@ package com.blazebit.persistence.impl.expression;
  */
 public interface PathElementExpression extends Expression {
 
+    public PathElementExpression clone();
 }

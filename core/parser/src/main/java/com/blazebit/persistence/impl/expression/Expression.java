@@ -151,6 +151,8 @@ public interface Expression {
         public T visit(ExistsPredicate predicate);
     }
     
+    public Expression clone();
+    
     /**
      * The expression tree is traversed in pre-order.
      *
