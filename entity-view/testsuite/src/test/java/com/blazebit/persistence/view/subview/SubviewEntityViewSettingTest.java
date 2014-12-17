@@ -108,7 +108,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         PagedList<DocumentMasterView> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
-        assertEquals(2, result.totalSize());
+        assertEquals(2, result.getTotalSize());
 
         assertEquals("HisTest", result.get(0).getName());
         assertEquals("DocumentOwnerSlave".toUpperCase(), result.get(0).getOwner().getName());
@@ -137,7 +137,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         PagedList<DocumentMasterView> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
-        assertEquals(2, result.totalSize());
+        assertEquals(2, result.getTotalSize());
 
         assertEquals("HisTest", result.get(0).getName());
         assertEquals("DocumentOwnerSlave".toUpperCase(), result.get(0).getOwner().getName());

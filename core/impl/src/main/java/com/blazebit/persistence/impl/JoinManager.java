@@ -140,10 +140,10 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    void buildJoins(StringBuilder sb, Set<ClauseType> clauseExclusions) {
+    void buildJoins(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix) {
         rootNode.registerDependencies();
         renderedJoins.clear();
-        applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions);
+        applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix);
     }
 
     void verifyBuilderEnded() {
@@ -158,7 +158,7 @@ public class JoinManager extends AbstractManager {
         rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     }
 
-    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node) {
+    private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix) {
         if (!renderedJoins.contains(node)) {
             switch (node.getType()) {
                 case INNER:
@@ -174,7 +174,18 @@ public class JoinManager extends AbstractManager {
             if (node.isFetch()) {
                 sb.append("FETCH ");
             }
-            sb.append(joinBase.getAlias()).append('.').append(node.getParentTreeNode().getRelationName()).append(' ').append(node.getAliasInfo().getAlias());
+            
+            if (aliasPrefix != null) {
+                sb.append(aliasPrefix);
+            }
+            
+            sb.append(joinBase.getAlias()).append('.').append(node.getParentTreeNode().getRelationName()).append(' ');
+            
+            if (aliasPrefix != null) {
+                sb.append(aliasPrefix);
+            }
+            
+            sb.append(node.getAliasInfo().getAlias());
 
             if (node.getWithPredicate() != null && !node.getWithPredicate().getChildren().isEmpty()) {
                 sb.append(joinRestrictionKeyword);
@@ -185,9 +196,9 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private void renderReverseDependency(StringBuilder sb, JoinNode dependency) {
+    private void renderReverseDependency(StringBuilder sb, JoinNode dependency, String aliasPrefix) {
         if (dependency.getParent() != null) {
-            renderReverseDependency(sb, dependency.getParent());
+            renderReverseDependency(sb, dependency.getParent(), aliasPrefix);
             if (!dependency.getDependencies().isEmpty()) {
                 markedJoinNodes.add(dependency);
                 try {
@@ -196,13 +207,13 @@ public class JoinManager extends AbstractManager {
                             throw new IllegalStateException("Cyclic join dependency detected at absolute path [" + dep.getAliasInfo().getAbsolutePath() + "] with alias [" + dep.getAliasInfo().getAlias() + "]");
                         }
                         //render reverse dependencies
-                        renderReverseDependency(sb, dep);
+                        renderReverseDependency(sb, dep, aliasPrefix);
                     }
                 } finally {
                     markedJoinNodes.remove(dependency);
                 }
             }
-            renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency);
+            renderJoinNode(sb, dependency.getParent().getAliasInfo(), dependency, aliasPrefix);
         }
     }
     
@@ -286,7 +297,7 @@ public class JoinManager extends AbstractManager {
         return false;
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
 
@@ -296,13 +307,13 @@ public class JoinManager extends AbstractManager {
                 }
 
                 if (!node.getDependencies().isEmpty()) {
-                    renderReverseDependency(sb, node);
+                    renderReverseDependency(sb, node, aliasPrefix);
                 }
 
-                renderJoinNode(sb, joinBase, node);
+                renderJoinNode(sb, joinBase, node, aliasPrefix);
 
                 if (!node.getNodes().isEmpty()) {
-                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions);
+                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix);
                 }
             }
         }

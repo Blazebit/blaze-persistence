@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence;
+package com.blazebit.persistence.impl.hibernate.function.pageposition;
 
 /**
- * A builder for the like predicate.
  *
- * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.0
  */
-public interface LikeBuilder<T> extends BinaryPredicateBuilder<EscapeBuilder<T>> {
-   
+public class TransactSQLPagePositionFunction extends PagePositionFunction {
+
+    @Override
+    protected String getRownumFunction() {
+        return "row_number() over(order by (select 0))";
+    }
+    
 }

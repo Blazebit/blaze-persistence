@@ -28,7 +28,7 @@ public interface KeySet extends Serializable {
 
     /**
      * Returns the position of the first result, numbered from 0.
-     * This is the position which was passed into {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)}.
+     * This is the position of the first element of this key set.
      *
      * @return The position of the first result
      */
@@ -36,7 +36,7 @@ public interface KeySet extends Serializable {
 
     /**
      * Returns the maximum number of results.
-     * This is the maximum number which was passed into {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)}.
+     * This is the maximum number of results of this key set.
      *
      * @return The maximum number of results
      */

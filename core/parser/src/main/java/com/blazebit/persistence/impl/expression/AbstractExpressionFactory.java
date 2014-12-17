@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import java.util.BitSet;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -56,7 +57,10 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
         configureParser(p);
         ParserRuleContext ctx = ruleInvoker.invokeRule(p);
-        LOG.finest(ctx.toStringTree());
+        
+        if (LOG.isLoggable(Level.FINEST)) {
+            LOG.finest(ctx.toStringTree());
+        }
         
         JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
         return visitor.visit(ctx);

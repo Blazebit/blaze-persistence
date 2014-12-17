@@ -49,6 +49,8 @@ import javax.persistence.metamodel.Metamodel;
 public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
 
     private static final String KEY_SET_PARAMETER_NAME = "_keySetParameter";
+    private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
+    private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
 
     private final boolean extractKeySet;
     private final KeySetImpl keySet;
@@ -56,6 +58,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     // Mutable state
     private boolean needsCheck = true;
 
+    private Object entityId;
+    private int firstResult;
     private int firstRow;
     private int pageSize;
     private boolean needsNewIdList;
@@ -65,6 +69,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     // Cache
     private String cachedCountQueryString;
     private String cachedIdQueryString;
+
+    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, Object entityId, int pageSize) {
+        super(baseBuilder);
+        if (firstRow < 0) {
+            throw new IllegalArgumentException("firstRow may not be negative");
+        }
+        if (pageSize <= 0) {
+            throw new IllegalArgumentException("pageSize may not be zero or negative");
+        }
+        this.extractKeySet = extractKeySet;
+        this.keySet = keySet;
+        this.firstResult = -1;
+        this.firstRow = -1;
+        this.entityId = entityId;
+        this.pageSize = pageSize;
+    }
 
     public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize) {
         super(baseBuilder);
@@ -76,7 +96,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
         this.extractKeySet = extractKeySet;
         this.keySet = keySet;
+        this.firstResult = firstRow;
         this.firstRow = firstRow;
+        this.entityId = null;
         this.pageSize = pageSize;
     }
 
@@ -85,13 +107,35 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         prepareAndCheck();
 
         String countQueryString = getPageCountQueryString0();
-        TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
-        parameterizeQuery(countQuery);
+        long totalSize;
+        
+        if (entityId == null) {
+            // No reference entity id, so just do a simple count query
+            TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
+            parameterizeQuery(countQuery);
 
-        long totalSize = countQuery.getSingleResult();
+            totalSize = countQuery.getSingleResult();
+        } else {
+            // There is a reference entity id, so we need to extract the page position
+            TypedQuery<Object[]> countQuery = em.createQuery(countQueryString, Object[].class);
+            parameterizeQuery(countQuery);
+            
+            Object[] result = countQuery.getSingleResult();
+            totalSize = (Long) result[0];
+            
+            if (result[1] == null) {
+                // If the reference entity id is not contained (i.e. has no position), we return this special value
+                firstResult = -1;
+                firstRow = 0;
+            } else {
+                // The page position is numbered from 1 so we need to correct this here
+                int position = ((Long) result[1]).intValue() - 1;
+                firstResult = firstRow = position == 0 ? 0 : position - (position % pageSize);
+            }
+        }
 
         if (totalSize == 0L) {
-            return new PagedListImpl<T>(null, totalSize);
+            return new PagedListImpl<T>(null, totalSize, firstResult, pageSize);
         }
 
         if (!joinManager.hasCollections()) {
@@ -175,6 +219,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         needsNewIdList = extractKeySet || orderByManager.hasComplexOrderBys();
+        // TODO: checking the order by expressions is only partly sufficient since the result also depends on other parts of the query
         keySetMode = KeySetPaginationHelper.getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressions);
         // No need to do the check again if no mutation occurs
         needsCheck = false;
@@ -220,7 +265,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 newKeySet = keySet;
             }
 
-            return new PagedListImpl<T>(newKeySet, totalSize);
+            return new PagedListImpl<T>(newKeySet, totalSize, firstResult, pageSize);
         }
 
         KeySet newKeySet = null;
@@ -231,7 +276,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressions, lowest, highest);
         }
 
-        PagedList<T> pagedResultList = new PagedListImpl<T>(result, newKeySet, totalSize);
+        PagedList<T> pagedResultList = new PagedListImpl<T>(result, newKeySet, totalSize, firstResult, pageSize);
         return pagedResultList;
     }
 
@@ -254,7 +299,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 newKeySet = keySet;
             }
 
-            return new PagedListImpl<T>(newKeySet, totalSize);
+            return new PagedListImpl<T>(newKeySet, totalSize, firstResult, pageSize);
         }
 
         Serializable[] lowest = null;
@@ -284,7 +329,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         List<T> queryResultList = getQueryResultList();
-        PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeySet, totalSize);
+        PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeySet, totalSize, firstResult, pageSize);
         return pagedResultList;
     }
 
@@ -312,13 +357,64 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .toString();
 
         sbSelectFrom.append("SELECT COUNT(DISTINCT ").append(idClause).append(')');
+        
+        if (entityId != null) {
+            parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
+            
+            sbSelectFrom.append(", ");
+            if (!jpaInfo.isHibernate) {
+                sbSelectFrom.append("FUNCTION('PAGE_POSITION', (");
+            } else {
+                sbSelectFrom.append("PAGE_POSITION((");
+            }
+            
+            appendSimplePageIdQueryString(sbSelectFrom);
+            sbSelectFrom.append("), ");
+            
+            sbSelectFrom.append(':').append(ENTITY_PAGE_POSITION_PARAMETER_NAME);
+            sbSelectFrom.append(")");
+        }
+        
         sbSelectFrom.append(" FROM ")
                 .append(fromClazz.getSimpleName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
-        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null);
         whereManager.buildClause(sbSelectFrom);
 
+        return sbSelectFrom.toString();
+    }
+    
+    private String appendSimplePageIdQueryString(StringBuilder sbSelectFrom) {
+        queryGenerator.setAliasPrefix(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
+        
+        String idName = joinManager.getRootId();
+        StringBuilder idClause = new StringBuilder(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX)
+                .append(joinManager.getRootAlias())
+                .append('.')
+                .append(idName);
+
+        sbSelectFrom.append("SELECT ")
+                .append(idClause);
+        
+        sbSelectFrom.append(" FROM ")
+                .append(fromClazz.getSimpleName())
+                .append(' ')
+                .append(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX)
+                .append(joinManager.getRootAlias());
+
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
+        whereManager.buildClause(sbSelectFrom);
+        
+        Set<String> clauses = new LinkedHashSet<String>();
+        clauses.add(idClause.toString());
+        clauses.addAll(orderByManager.buildGroupByClauses());
+        groupByManager.buildGroupBy(sbSelectFrom, clauses);
+
+        boolean inverseOrder = false;
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
+
+        queryGenerator.setAliasPrefix(null);
         return sbSelectFrom.toString();
     }
 
@@ -341,7 +437,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null);
 
         if (keySetMode == KeySetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -384,7 +480,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null);
         sbSelectFrom.append(" WHERE ")
                 .append(joinManager.getRootAlias())
                 .append('.')
@@ -422,7 +518,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
 
         if (keySetMode == KeySetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

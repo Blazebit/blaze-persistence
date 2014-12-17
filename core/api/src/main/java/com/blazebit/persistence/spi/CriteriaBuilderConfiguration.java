@@ -41,6 +41,21 @@ public interface CriteriaBuilderConfiguration {
      * @return A list of registered query transformers
      */
     public List<QueryTransformer> getQueryTransformers();
+    
+    /**
+     * Registers the given entity manager enricher in the configuration.
+     *
+     * @param entityManagerEnricher The enricher that should be addded
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration registerEntityManagerEnricher(EntityManagerEnricher entityManagerEnricher);
+    
+    /**
+     * Returns a list of registered entity manager enrichers.
+     *
+     * @return A list of registered entity manager enrichers
+     */
+    public List<EntityManagerEnricher> getEntityManagerEnrichers();
 
     /**
      * Creates a new {@linkplain CriteriaBuilderFactory} based on this configuration.

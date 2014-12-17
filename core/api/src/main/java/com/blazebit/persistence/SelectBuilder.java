@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
-
 /**
  * An interface for builders that support selecting.
  * This is related to the fact, that a query builder supports select clauses.

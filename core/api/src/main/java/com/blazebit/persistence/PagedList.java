@@ -27,18 +27,58 @@ import java.util.List;
 public interface PagedList<T> extends List<T> {
 
     /**
-     * The total size of the list.
+     * Returns the actual size of this page.
+     * 
+     * @see List#size() 
+     * @return The actual size
+     */
+    public int getSize();
+    
+    /**
+     * Returns the total size of the list.
      *
      * @return The total size
      */
-    public long totalSize();
+    public long getTotalSize();
+    
+    /**
+     * Returns the number of this page, numbered from 1.
+     * 
+     * @return The number of this page
+     */
+    public int getPage();
+    
+    /**
+     * Returns the number of total pages.
+     * 
+     * @return The number of total pages
+     */
+    public int getTotalPages();
+    
+    /**
+     * Returns the position of the first result, numbered from 0.
+     * This is the position which was actually queried. This value might be different from {@linkplain KeySet#getFirstResult()}.
+     * 
+     * If this list was queried with an entity id which does not exist, this will return <code>-1</code>;
+     *
+     * @return The position of the first result or <code>-1</code> if the queried entity id does not exist
+     */
+    public int getFirstResult();
+
+    /**
+     * Returns the maximum number of results.
+     * This is the maximum number which was actually queried. This value might be different from {@linkplain KeySet#getFirstResult()}.
+     *
+     * @return The maximum number of results
+     */
+    public int getMaxResults();
 
     /**
      * Returns the key set for this paged list which can be used for key set pagination.
      * The key set may be null if key set pagination wasn't used.
      *
      * @see QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)
-     * @return
+     * @return The key set
      */
     public KeySet getKeySet();
 }

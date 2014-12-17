@@ -34,6 +34,7 @@ import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 /**
@@ -93,6 +94,20 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public PaginatedCriteriaBuilder<T> page(Object entityId, int pageSize) {
+        clearCache();
+        if (selectManager.isDistinct()) {
+            throw new IllegalStateException("Cannot paginate a DISTINCT query");
+        }
+        if (!groupByManager.getGroupByInfos().isEmpty()) {
+            throw new IllegalStateException("Cannot paginate a GROUP BY query");
+        }
+        checkEntityId(entityId);
+        createdPaginatedBuilder = true;
+        return new PaginatedCriteriaBuilderImpl<T>(this, false, null, entityId, pageSize);
+    }
+
+    @Override
     public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstRow, int pageSize) {
         clearCache();
         if (selectManager.isDistinct()) {
@@ -106,6 +121,36 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         }
         createdPaginatedBuilder = true;
         return new PaginatedCriteriaBuilderImpl<T>(this, true, (KeySetImpl) keySet, firstRow, pageSize);
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> page(KeySet keySet, Object entityId, int pageSize) {
+        clearCache();
+        if (selectManager.isDistinct()) {
+            throw new IllegalStateException("Cannot paginate a DISTINCT query");
+        }
+        if (!groupByManager.getGroupByInfos().isEmpty()) {
+            throw new IllegalStateException("Cannot paginate a GROUP BY query");
+        }
+        if (keySet != null && !(keySet instanceof KeySetImpl)) {
+            throw new IllegalArgumentException("Invalid key set given. Only key sets of paged lists are allowed.");
+        }
+        checkEntityId(entityId);
+        createdPaginatedBuilder = true;
+        return new PaginatedCriteriaBuilderImpl<T>(this, true, (KeySetImpl) keySet, entityId, pageSize);
+    }
+    
+    private void checkEntityId(Object entityId) {
+        if (entityId == null) {
+            throw new IllegalArgumentException("Invalid null entity id given");
+        } 
+        
+        EntityType<?> entityType = em.getMetamodel().entity(fromClazz);
+        Class<?> idType = entityType.getIdType().getJavaType();
+        
+        if (!idType.isInstance(entityId)) {
+            throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName() + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + fromClazz.getName() + "'");
+        }
     }
 
     @Override

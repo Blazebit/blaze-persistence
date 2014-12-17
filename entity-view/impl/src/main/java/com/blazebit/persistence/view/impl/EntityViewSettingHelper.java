@@ -53,7 +53,11 @@ public final class EntityViewSettingHelper {
 
         if (setting.isPaginated()) {
             if (setting.isKeySetPaginated()) {
-                return (Q) normalCb.page(setting.getKeySet(), setting.getFirstResult(), setting.getMaxResults());
+                if (setting.getFirstResult() == -1) {
+                    return (Q) normalCb.page(setting.getKeySet(), setting.getEntityId(), setting.getMaxResults());
+                } else {
+                    return (Q) normalCb.page(setting.getKeySet(), setting.getFirstResult(), setting.getMaxResults());
+                }
             } else {
                 return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
             }

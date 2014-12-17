@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
-
 /**
  * A base interface for builders that support basic query functionality.
  * This interface is shared between normal query builders and subquery builders.

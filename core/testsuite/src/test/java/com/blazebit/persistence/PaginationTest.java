@@ -20,6 +20,7 @@ import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.model.DocumentViewModel;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import java.util.List;
 import java.util.Locale;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
@@ -132,7 +133,7 @@ public class PaginationTest extends AbstractCoreTest {
 
         PagedList<DocumentViewModel> result = pcb.getResultList();
         assertEquals(2, result.size());
-        assertEquals(5, result.totalSize());
+        assertEquals(5, result.getTotalSize());
         assertEquals("doc1", result.get(0).getName());
         assertEquals("Doc2", result.get(1).getName());
 
@@ -171,6 +172,78 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         assertEquals(0, cb.getResultList().size());
         cb.getResultList();
+    }
+
+    @Test
+    public void testPaginationWithReferenceObject() {
+        Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
+        String expectedCountQuery =
+                "SELECT COUNT(DISTINCT d.id), "
+                + "PAGE_POSITION("
+                        + "(SELECT _page_position_d.id "
+                        + "FROM Document _page_position_d "
+                        + "GROUP BY _page_position_d.id, _page_position_d.name "
+                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + ":_entityPagePositionParameter"
+                    + ") "
+                + "FROM Document d";
+        
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .orderByAsc("name")
+                .orderByAsc("id")
+                .page(reference.getId(), 1);
+        
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        PagedList<Document> list = cb.getResultList();
+        assertEquals(2, list.getFirstResult());
+        assertEquals(3, list.getPage());
+        assertEquals(7, list.getTotalPages());
+        assertEquals(7, list.getTotalSize());
+        assertEquals(1, list.size());
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testPaginationWithInvalidReferenceObject() {
+        cbf.create(em, Document.class, "d").page("test", 1);
+    }
+
+    @Test
+    public void testPaginationWithNotExistingReferenceObject() {
+        Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
+        String expectedCountQuery =
+                "SELECT COUNT(DISTINCT d.id), "
+                + "PAGE_POSITION("
+                        + "(SELECT _page_position_d.id "
+                        + "FROM Document _page_position_d "
+                        + "WHERE _page_position_d.name <> :param_0 "
+                        + "GROUP BY _page_position_d.id, _page_position_d.name "
+                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + ":_entityPagePositionParameter"
+                    + ") "
+                + "FROM Document d "
+                + "WHERE d.name <> :param_0";
+        
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+                .where("name").notEq("adoc")
+                .orderByAsc("name")
+                .orderByAsc("id")
+                .page(reference.getId(), 1);
+        PaginatedCriteriaBuilder<Document> firstPageCb = cbf.create(em, Document.class, "d")
+                .where("name").notEq("adoc")
+                .orderByAsc("name")
+                .orderByAsc("id")
+                .page(0, 1);
+        
+        assertEquals(expectedCountQuery, cb.getPageCountQueryString());
+        PagedList<Document> expectedList = firstPageCb.getResultList();
+        PagedList<Document> list = cb.getResultList();
+        assertEquals(expectedList, list);
+        
+        assertEquals(-1, list.getFirstResult());
+        assertEquals(1, list.getPage());
+        assertEquals(6, list.getTotalPages());
+        assertEquals(6, list.getTotalSize());
+        assertEquals(1, list.size());
     }
 
     @Test

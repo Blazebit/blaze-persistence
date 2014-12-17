@@ -694,7 +694,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class));
+        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
         whereManager.buildClause(sbSelectFrom);
 
         Set<String> clauses = new LinkedHashSet<String>();

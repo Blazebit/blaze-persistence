@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence;
+package com.blazebit.persistence.impl.hibernate.function.pageposition;
 
 /**
- * A builder for the like predicate.
  *
- * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.0
  */
-public interface LikeBuilder<T> extends BinaryPredicateBuilder<EscapeBuilder<T>> {
-   
+public class MySQLPagePositionFunction extends PagePositionFunction {
+
+    public MySQLPagePositionFunction() {
+        super("(select rownumber_ from (select @i:=@i+1 as rownumber_, base_.* from (?2) as base_, (SELECT @i:=1) as iter_) where ?1)");
+    }
+    
 }

@@ -42,25 +42,60 @@ import org.junit.Test;
 public class GeneralParserTest extends AbstractParserTest {
 
     @Test
-    public void testTypeAsUpperPath() {
+    public void testSoftKeywordsMultipleKeywordsAsSimpleUpperPath() {
+        Expression result = parse("ANDOR");
+        assertEquals(path("ANDOR"), result);
+    }
+    
+    @Test
+    public void testSoftKeywordsMultipleKeywordsAsSimplePath() {
+        Expression result = parse("andOr");
+        assertEquals(path("andOr"), result);
+    }
+    @Test
+    public void testSoftKeywordsMultipleKeywordsAsUpperPath() {
+        Expression result = parse("entity.ANDOR");
+        assertEquals(path("entity", "ANDOR"), result);
+    }
+    
+    @Test
+    public void testSoftKeywordsMultipleKeywordsAsPath() {
+        Expression result = parse("entity.andOr");
+        assertEquals(path("entity", "andOr"), result);
+    }
+    
+    @Test
+    public void testSoftKeywordsTypeAsUpperPath() {
         Expression result = parse("entity.TYPE");
         assertEquals(path("entity", "TYPE"), result);
     }
     
     @Test
-    public void testTypeAsPath() {
+    public void testSoftKeywordsTypeAsPath() {
         Expression result = parse("entity.type");
         assertEquals(path("entity", "type"), result);
     }
+    
+    @Test
+    public void testSoftKeywordsTypeAsSimpleUpperPath() {
+        Expression result = parse("TYPE");
+        assertEquals(path("TYPE"), result);
+    }
+    
+    @Test
+    public void testSoftKeywordsTypeAsSimplePath() {
+        Expression result = parse("type");
+        assertEquals(path("type"), result);
+    }
 
     @Test
-    public void testTypeAsUpperFunction() {
+    public void testSoftKeywordsTypeAsUpperFunction() {
         Expression result = parse("TYPE(entity.type)");
         assertEquals(function("TYPE", path("entity", "type")), result);
     }
 
     @Test
-    public void testTypeAsFunction() {
+    public void testSoftKeywordsTypeAsFunction() {
         Expression result = parse("type(entity.type)");
         assertEquals(function("type", path("entity", "type")), result);
     }

@@ -17,8 +17,13 @@
 package com.blazebit.persistence;
 
 /**
+ * The first builder for simple case when expressions.
  *
- * @author Moritz Becker
+ * This builder is used to enforce the correct usage of case when by disallowing an immediate call to {@link SimpleCaseWhenBuilder#otherwise(java.lang.String)}.
+ *
+ * @param <T> The builder type that is returned on terminal operations
+ * @author Christian Beikov
+ * @since 1.0
  */
 public interface SimpleCaseWhenStarterBuilder<T> {
 

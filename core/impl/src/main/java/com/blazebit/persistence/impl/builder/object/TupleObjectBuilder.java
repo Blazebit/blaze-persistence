@@ -20,6 +20,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.SelectManager;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.Tuple;
@@ -157,6 +158,28 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
             public String getAlias() {
                 return aliases[index];
             }
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 5;
+            hash = 29 * hash + Arrays.deepHashCode(this.tuple);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final TupleImpl other = (TupleImpl) obj;
+            if (!Arrays.deepEquals(this.tuple, other.tuple)) {
+                return false;
+            }
+            return true;
         }
 
     }

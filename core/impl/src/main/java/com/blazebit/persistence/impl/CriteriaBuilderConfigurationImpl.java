@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.EntityManagerEnricher;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -33,11 +34,13 @@ import java.util.ServiceLoader;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
+    private final List<EntityManagerEnricher> entityManagerEnrichers = new ArrayList<EntityManagerEnricher>();
     private Properties properties = new Properties();
 
     public CriteriaBuilderConfigurationImpl() {
         loadDefaultProperties();
         loadQueryTransformers();
+        loadEntityManagerEnrichers();
     }
 
     private void loadDefaultProperties() {
@@ -53,6 +56,16 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
     }
 
+    private void loadEntityManagerEnrichers() {
+        ServiceLoader<EntityManagerEnricher> serviceLoader = ServiceLoader.load(EntityManagerEnricher.class);
+        Iterator<EntityManagerEnricher> iterator = serviceLoader.iterator();
+
+        if (iterator.hasNext()) {
+            EntityManagerEnricher enricher = iterator.next();
+            entityManagerEnrichers.add(enricher);
+        }
+    }
+
     @Override
     public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer transformer) {
         queryTransformers.add(transformer);
@@ -62,6 +75,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     @Override
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
+    }
+
+    @Override
+    public CriteriaBuilderConfiguration registerEntityManagerEnricher(EntityManagerEnricher entityManagerEnricher) {
+        entityManagerEnrichers.add(entityManagerEnricher);
+        return this;
+    }
+
+    @Override
+    public List<EntityManagerEnricher> getEntityManagerEnrichers() {
+        return entityManagerEnrichers;
     }
 
     @Override

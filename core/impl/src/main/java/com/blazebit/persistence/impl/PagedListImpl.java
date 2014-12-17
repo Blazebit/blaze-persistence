@@ -31,21 +31,58 @@ public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
 
     private final KeySet keySet;
     private final long totalSize;
+    private final int page;
+    private final int totalPages;
+    private final int firstResult;
+    private final int maxResults;
 
-    public PagedListImpl(KeySet keySet, long totalSize) {
+    public PagedListImpl(KeySet keySet, long totalSize, int firstResult, int maxResults) {
         this.keySet = keySet;
         this.totalSize = totalSize;
+        this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
+        this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
+        this.firstResult = firstResult;
+        this.maxResults = maxResults;
     }
 
-    PagedListImpl(Collection<? extends T> collection, KeySet keySet, long totalSize) {
+    PagedListImpl(Collection<? extends T> collection, KeySet keySet, long totalSize, int firstResult, int maxResults) {
         super(collection);
         this.keySet = keySet;
         this.totalSize = totalSize;
+        this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
+        this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
+        this.firstResult = firstResult;
+        this.maxResults = maxResults;
     }
 
     @Override
-    public long totalSize() {
+    public int getSize() {
+        return size();
+    }
+
+    @Override
+    public long getTotalSize() {
         return totalSize;
+    }
+
+    @Override
+    public int getPage() {
+        return page;
+    }
+
+    @Override
+    public int getTotalPages() {
+        return totalPages;
+    }
+
+    @Override
+    public int getFirstResult() {
+        return firstResult;
+    }
+
+    @Override
+    public int getMaxResults() {
+        return maxResults;
     }
 
     @Override

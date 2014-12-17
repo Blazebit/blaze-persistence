@@ -126,7 +126,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         PagedList<DocumentWithExpressionSubqueryView> result = paginatedCb.getResultList();
 
         assertEquals(2, result.size());
-        assertEquals(2, result.totalSize());
+        assertEquals(2, result.getTotalSize());
 
         assertEquals(doc2.getName(), result.get(0).getName());
         assertEquals(Long.valueOf(22), result.get(0).getContactCount());
@@ -148,7 +148,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         PagedList<DocumentWithSubquery> list = evm.applySetting(setting, cb).getResultList();
 
         assertEquals(1, list.size());
-        assertEquals(2, list.totalSize());
+        assertEquals(2, list.getTotalSize());
         assertEquals("doc2", list.get(0).getName());
         assertEquals(Long.valueOf(2), list.get(0).getContactCount());
     }

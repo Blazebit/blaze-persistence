@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.blazebit.persistence.spi;
 
-package com.blazebit.persistence;
+import javax.persistence.EntityManager;
 
 /**
- * A builder for the like predicate.
+ * Interface implemented by the criteria provider.
  *
- * @param <T> The builder type that is returned on terminal operations
+ * It is invoked to enrich entity managers
+ *
  * @author Christian Beikov
- * @author Moritz Becker
  * @since 1.0
  */
-public interface LikeBuilder<T> extends BinaryPredicateBuilder<EscapeBuilder<T>> {
-   
+public interface EntityManagerEnricher {
+
+    /**
+     * Enriches the given entity manager.
+     *
+     * @param entityManager The entity manager which should be enriched
+     * @return The enriched entity manager
+     */
+    public EntityManager enrich(EntityManager entityManager);
 }

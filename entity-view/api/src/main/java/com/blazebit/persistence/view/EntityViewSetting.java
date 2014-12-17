@@ -41,6 +41,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
 
     private final Class<T> entityViewClass;
     private final String viewConstructorName;
+    private final Object entityId;
     private final int firstResult;
     private final int maxResults;
     private final boolean paginated;
@@ -53,9 +54,23 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     private KeySet keySet;
     private boolean keySetPaginated;
 
-    private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate, String viewConstructorName) {
+    private EntityViewSetting(Class<T> entityViewClass, Object entityId, int maxRows, boolean paginate, String viewConstructorName) {
         this.entityViewClass = entityViewClass;
         this.viewConstructorName = viewConstructorName;
+        this.entityId = entityId;
+        this.firstResult = -1;
+        this.maxResults = maxRows;
+        this.paginated = paginate;
+    }
+
+    private EntityViewSetting(Class<T> entityViewClass, int firstRow, int maxRows, boolean paginate, String viewConstructorName) {
+        if (firstRow < 0) {
+            throw new IllegalArgumentException("Invalid negative value for firstRow");
+        }
+        
+        this.entityViewClass = entityViewClass;
+        this.viewConstructorName = viewConstructorName;
+        this.entityId = null;
         this.firstResult = firstRow;
         this.maxResults = maxRows;
         this.paginated = paginate;
@@ -99,6 +114,19 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     }
     
     /**
+     * Like {@link EntityViewSetting#create(java.lang.Class, java.lang.Object, int, java.lang.String)} but with the <code>viewConstructorname</code> set to null.
+     *
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param entityId        The id of the entity which should be located on a page
+     * @param maxRows         The maximum number of results to retrieve
+     * @param <T>             The type of the entity view
+     * @return A new entity view setting
+     */
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxRows) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxRows, true, null);
+    }
+    
+    /**
      * Creates a new {@linkplain EntityViewSetting} that can be applied on
      * criteria builders.
      *
@@ -111,6 +139,21 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      */
     public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, int firstRow, int maxRows, String viewConstructorName) {
         return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, firstRow, maxRows, true, viewConstructorName);
+    }
+    
+    /**
+     * Creates a new {@linkplain EntityViewSetting} that can be applied on
+     * criteria builders.
+     *
+     * @param entityViewClass The entity view class that should be used for the object builder
+     * @param entityId        The id of the entity which should be located on a page
+     * @param maxRows         The maximum number of results to retrieve
+     * @param viewConstructorName The name of the view constructor
+     * @param <T>             The type of the entity view
+     * @return A new entity view setting
+     */
+    public static <T> EntityViewSetting<T, PaginatedCriteriaBuilder<T>> create(Class<T> entityViewClass, Object entityId, int maxRows, String viewConstructorName) {
+        return new EntityViewSetting<T, PaginatedCriteriaBuilder<T>>(entityViewClass, entityId, maxRows, true, viewConstructorName);
     }
 
     /**
@@ -132,8 +175,19 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     }
 
     /**
+     * The id of the entity which should be located on the page returned result.
+     * Returns <code>null</code> if no pagination or a absolute first result will be applied.
+     *
+     * @see QueryBuilder#page(java.lang.Object, int)
+     * @return The id of the entity which should be located on a page
+     */
+    public Object getEntityId() {
+        return entityId;
+    }
+
+    /**
      * The first result that the criteria builder should return. Returns 0 if no
-     * pagination will be applied.
+     * pagination will be applied. Returns -1 if an entity id was supplied.
      *
      * @see QueryBuilder#page(int, int)
      * @return The first result

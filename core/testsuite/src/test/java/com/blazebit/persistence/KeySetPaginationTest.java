@@ -65,7 +65,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    public void simpleTest() {
+    public void simpleNormalTest() {
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("d.name").select("d.owner.name");
         crit.orderByDesc("d.owner.name")
@@ -74,6 +74,88 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         
         PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 0, 1);
         PagedList<Tuple> result = pcb.getResultList();
+        simpleTest(crit, pcb, result);
+    }
+
+    @Test
+    public void testWithReferenceObject() {
+        Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
+        String expectedCountQuery =
+                "SELECT COUNT(DISTINCT d.id), "
+                + "PAGE_POSITION("
+                        + "(SELECT _page_position_d.id "
+                        + "FROM Document _page_position_d "
+                        + "JOIN _page_position_d.owner _page_position_owner_1 "
+                        + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + ":_entityPagePositionParameter"
+                    + ") "
+                + "FROM Document d";
+        
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+            .select("d.name").select("d.owner.name")
+            .orderByDesc("d.owner.name")
+            .orderByAsc("d.name")
+            .orderByAsc("d.id");
+        
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, reference.getId(), 1);
+        
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        PagedList<Tuple> list = pcb.getResultList();
+        assertEquals(0, list.getFirstResult());
+        assertEquals(1, list.getPage());
+        assertEquals(3, list.getTotalPages());
+        assertEquals(3, list.getTotalSize());
+        assertEquals(1, list.size());
+        simpleTest(crit, pcb, list);
+    }
+
+    @Test
+    public void testWithNotExistingReferenceObject() {
+        Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
+        String expectedCountQuery =
+                "SELECT COUNT(DISTINCT d.id), "
+                + "PAGE_POSITION("
+                        + "(SELECT _page_position_d.id "
+                        + "FROM Document _page_position_d "
+                        + "JOIN _page_position_d.owner _page_position_owner_1 "
+                        + "WHERE _page_position_d.name <> :param_0 "
+                        + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + ":_entityPagePositionParameter"
+                    + ") "
+                + "FROM Document d "
+                + "WHERE d.name <> :param_0";
+        
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+            .select("d.name").select("d.owner.name")
+            .where("d.name").notEq("doc3")
+            .orderByDesc("d.owner.name")
+            .orderByAsc("d.name")
+            .orderByAsc("d.id");
+        PaginatedCriteriaBuilder<Tuple> firstPageCb = cbf.create(em, Tuple.class).from(Document.class, "d")
+            .select("d.name").select("d.owner.name")
+            .where("d.name").notEq("doc3")
+            .orderByDesc("d.owner.name")
+            .orderByAsc("d.name")
+            .orderByAsc("d.id")
+            .page(null, 0, 1);
+        
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, reference.getId(), 1);
+        
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        PagedList<Tuple> expectedList = firstPageCb.getResultList();
+        PagedList<Tuple> list = pcb.getResultList();
+        assertEquals(expectedList, list);
+        
+        assertEquals(-1, list.getFirstResult());
+        assertEquals(1, list.getPage());
+        assertEquals(2, list.getTotalPages());
+        assertEquals(2, list.getTotalSize());
+        assertEquals(1, list.size());
+    }
+    
+    public void simpleTest(CriteriaBuilder<Tuple> crit, PaginatedCriteriaBuilder<Tuple> pcb, PagedList<Tuple> result) {
         // The first time we have to use the offset
         String expectedIdQuery = "SELECT d.id, owner_1.name, d.name, d.id FROM Document d JOIN d.owner owner_1 "
             + "GROUP BY d.id, owner_1.name, d.name "
@@ -81,7 +163,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());
-        assertEquals(3, result.totalSize());
+        assertEquals(3, result.getTotalSize());
         assertEquals("doc3", result.get(0).get(0));
         
         pcb = crit.page(result.getKeySet(), 1, 1);
@@ -103,7 +185,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());
-        assertEquals(3, result.totalSize());
+        assertEquals(3, result.getTotalSize());
         assertEquals("doc2", result.get(0).get(0));
         
         pcb = crit.page(result.getKeySet(), 0, 1);
@@ -116,7 +198,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         
         assertEquals(1, result.size());
-        assertEquals(3, result.totalSize());
+        assertEquals(3, result.getTotalSize());
         assertEquals("doc3", result.get(0).get(0));
     }
 

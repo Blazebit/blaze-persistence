@@ -45,7 +45,6 @@ public interface CaseWhenStarterBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate. All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. This allows to build
      * expressions containing subqueries like following example shows:
-     * </p>
      * 
      * <p>
      * {@code whenSubquery("x", "x * 2 + 1").from(Person.class, "p").select("COUNT(p)").end(); }

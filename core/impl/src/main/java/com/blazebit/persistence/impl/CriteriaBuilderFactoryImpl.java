@@ -20,6 +20,7 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.spi.EntityManagerEnricher;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,12 +37,13 @@ import javax.persistence.EntityManager;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final List<QueryTransformer> queryTransformers;
+    private final List<EntityManagerEnricher> entityManagerEnrichers;
     private final ExpressionFactory expressionFactory;
     private final Map<String, Object> properties;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
-//        this.expressionFactory = new ExpressionFactoryImpl();
+        this.entityManagerEnrichers = new ArrayList<EntityManagerEnricher>(config.getEntityManagerEnrichers());
         this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
         this.properties = copyProperties(config.getProperties());
     }
@@ -65,7 +67,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     
     @Override
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
-        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, entityManager, resultClass, alias);
+        EntityManager em = entityManager;
+        for (int i = 0; i < entityManagerEnrichers.size(); i++) {
+            em = entityManagerEnrichers.get(i).enrich(em);
+        }
+        
+        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, resultClass, alias);
         return cb;
     }
 

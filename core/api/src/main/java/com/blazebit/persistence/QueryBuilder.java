@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Metamodel;
 
@@ -164,6 +163,23 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return This query builder as paginated query builder
      */
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
+    
+    /**
+     * Paginates the results of this query and navigates to the page on which
+     * the entity with the given entity id is located.
+     * 
+     * Beware that the same limitations like for {@link QueryBuilder#page(int, int)} apply.
+     * If the entity with the given entity id does not exist in the result list:
+     * <ul>
+     *  <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
+     *  <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
+     * </ul>
+     * 
+     * @param entityId   The id of the entity which should be located on the page
+     * @param maxResults The maximum number of results to retrieve
+     * @return This query builder as paginated query builder
+     */
+    public PaginatedCriteriaBuilder<T> page(Object entityId, int maxResults);
 
     /**
      * Like {@link QueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
@@ -190,6 +206,24 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @see PagedList#getKeySet()
      */
     public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstResult, int maxResults);
+    
+    /**
+     * Like {@link QueryBuilder#page(java.lang.Object, int)} but additionally uses key set pagination when possible.
+     * 
+     * Beware that the same limitations like for {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)} apply.
+     * If the entity with the given entity id does not exist in the result list:
+     * <ul>
+     *  <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
+     *  <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
+     * </ul>
+     * 
+     * @param keySet     The key set from a previous result
+     * @param entityId   The id of the entity which should be located on the page
+     * @param maxResults The maximum number of results to retrieve
+     * @return This query builder as paginated query builder
+     * @see PagedList#getKeySet()
+     */
+    public PaginatedCriteriaBuilder<T> page(KeySet keySet, Object entityId, int maxResults);
 
     /*
      * Join methods

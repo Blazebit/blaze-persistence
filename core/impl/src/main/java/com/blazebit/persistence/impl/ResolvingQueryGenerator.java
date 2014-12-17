@@ -30,6 +30,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
     private final JPAInfo jpaInfo;
+    protected String aliasPrefix;
 
     public ResolvingQueryGenerator(AliasManager aliasManager, JPAInfo jpaInfo) {
         this.aliasManager = aliasManager;
@@ -70,7 +71,6 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 if ((aliasInfo = aliasManager.getAliasInfo(expression.toString())) != null) {
                     if (aliasInfo instanceof SelectInfo) {
                         SelectInfo selectAliasInfo = (SelectInfo) aliasInfo;
-//                        if (!ExpressionUtils.containsSubqueryExpression(selectAliasInfo.getExpression())) {
                         if (((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
                             selectAliasInfo.getExpression().accept(this);
                             return;
@@ -82,9 +82,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());
         } else if (expression.getField() == null) {
+            if (aliasPrefix != null) {
+                sb.append(aliasPrefix);
+            }
+            
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias());
         } else {
+            if (aliasPrefix != null) {
+                sb.append(aliasPrefix);
+            }
+            
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias())
                     .append(".")
@@ -98,6 +106,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     public void setResolveSelectAliases(boolean replaceSelectAliases) {
         this.resolveSelectAliases = replaceSelectAliases;
+    }
+
+    public String getAliasPrefix() {
+        return aliasPrefix;
+    }
+
+    public void setAliasPrefix(String aliasPrefix) {
+        this.aliasPrefix = aliasPrefix;
     }
 
     @Override

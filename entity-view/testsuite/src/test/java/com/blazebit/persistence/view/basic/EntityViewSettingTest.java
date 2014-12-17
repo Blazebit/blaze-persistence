@@ -107,7 +107,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         PagedList<FilteredDocument> result = paginatedCb.getResultList();
 
         assertEquals(1, result.size());
-        assertEquals(2, result.totalSize());
+        assertEquals(2, result.getTotalSize());
         assertEquals("YourTest", result.get(0).getName());
         assertEquals("pers2", result.get(0).getContactName());
     }
