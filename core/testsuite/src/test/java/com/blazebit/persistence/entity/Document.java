@@ -43,7 +43,7 @@ import javax.persistence.Transient;
  * @since 1.0
  */
 @Entity
-public class Document implements Serializable {
+public class Document extends Ownable<Person> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;
@@ -51,7 +51,7 @@ public class Document implements Serializable {
     private Object someTransientField;
     private Set<Version> versions = new HashSet<Version>();
     private Set<Person> partners = new HashSet<Person>();
-    private Person owner;
+//    private Person owner;
     private long age;
     private int idx;
     private String nonJoinable;
@@ -75,7 +75,7 @@ public class Document implements Serializable {
 
     public Document(String name, Person owner, Version... versions) {
         this(name);
-        this.owner = owner;
+        setOwner(owner);
         this.versions.addAll(Arrays.asList(versions));
     }
 
@@ -141,14 +141,16 @@ public class Document implements Serializable {
         this.partners = partners;
     }
 
-    @ManyToOne(optional = false)
-    public Person getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Person owner) {
-        this.owner = owner;
-    }
+//    @Override
+//    @ManyToOne(optional = false)
+//    public Person getOwner() {
+//        return owner;
+//    }
+//
+//    @Override
+//    public void setOwner(Person owner) {
+//        this.owner = owner;
+//    }
 
     public String getNonJoinable() {
         return nonJoinable;

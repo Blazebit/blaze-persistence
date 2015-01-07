@@ -32,6 +32,13 @@ public class JoinTest extends AbstractCoreTest {
     final String defaultDocumentAlias = "document";
 
     @Test
+    public void testGenerics() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").where("owner.name").eq("test");
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0", criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
     public void testDefaultAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class);
         assertEquals("SELECT " + defaultDocumentAlias + " FROM Document " + defaultDocumentAlias, criteria.getQueryString());

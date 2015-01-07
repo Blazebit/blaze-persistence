@@ -34,7 +34,10 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -566,6 +569,7 @@ public class JoinManager extends AbstractManager {
     private boolean isSingleValuedAssociationId(JoinNode parent, List<PathElementExpression> pathElements) {
         int maybeSingularAssociationIndex = pathElements.size() - 2;
         int maybeSingularAssociationIdIndex = pathElements.size() - 1;
+        ManagedType<?> baseType;
         Attribute<?, ?> maybeSingularAssociation;
 
         if (parent == null) {
@@ -574,7 +578,7 @@ public class JoinManager extends AbstractManager {
 
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
-                ManagedType<?> baseType = metamodel.managedType(rootNode.getPropertyClass());
+                baseType = metamodel.managedType(rootNode.getPropertyClass());
                 maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
             } else if (!(a instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("Can't dereference select alias in the expression!");
@@ -588,7 +592,7 @@ public class JoinManager extends AbstractManager {
             }
 
         } else {
-            ManagedType<?> baseType = metamodel.managedType(parent.getPropertyClass());
+            baseType = metamodel.managedType(parent.getPropertyClass());
             maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
         }
 
@@ -602,7 +606,8 @@ public class JoinManager extends AbstractManager {
             return false;
         }
 
-        ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociation.getJavaType());
+        Class<?> maybeSingularAssociationClass = resolveFieldClass(baseType.getJavaType(), maybeSingularAssociation);
+        ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociationClass);
         Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationType.getAttribute(pathElements.get(maybeSingularAssociationIdIndex).toString());
 
         if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
@@ -787,12 +792,30 @@ public class JoinManager extends AbstractManager {
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
-    private Class<?> resolveFieldClass(Attribute attr) {
+    private Class<?> resolveFieldClass(Class<?> baseClass, Attribute attr) {
         if (attr.isCollection()) {
-            return ((PluralAttribute) attr).getElementType().getJavaType();
+            PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
+            
+            if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                if (attr.getJavaMember() instanceof Method) {
+                    return ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, (Method) attr.getJavaMember())[1];
+                } else {
+                    return ReflectionUtils.getResolvedFieldTypeArguments(baseClass, (Field) attr.getJavaMember())[1];
+                }
+            } else {
+                if (attr.getJavaMember() instanceof Method) {
+                    return ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, (Method) attr.getJavaMember())[0];
+                } else {
+                    return ReflectionUtils.getResolvedFieldTypeArguments(baseClass, (Field) attr.getJavaMember())[0];
+                }
+            }
         }
 
-        return attr.getJavaType();
+        if (attr.getJavaMember() instanceof Method) {
+            return ReflectionUtils.getResolvedMethodReturnType(baseClass, (Method) attr.getJavaMember());
+        } else {
+            return ReflectionUtils.getResolvedFieldType(baseClass, (Field) attr.getJavaMember());
+        }
     }
 
     private JoinType getModelAwareType(JoinNode baseNode, Attribute attr) {
@@ -818,7 +841,7 @@ public class JoinManager extends AbstractManager {
                     + joinRelationName + " was not found within class "
                     + baseNodeType.getName());
         }
-        Class<?> resolvedFieldClass = resolveFieldClass(attr);
+        Class<?> resolvedFieldClass = resolveFieldClass(baseNodeType, attr);
 
         if (!isJoinable(attr)) {
             LOG.fine(new StringBuilder("Field with name ").append(joinRelationName).append(" of class ").append(baseNodeType.getName()).append(
