@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.openjpa;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
+import java.util.logging.Logger;
 import javax.persistence.TypedQuery;
 import org.apache.openjpa.persistence.OpenJPAQuerySPI;
 
@@ -28,6 +29,10 @@ import org.apache.openjpa.persistence.OpenJPAQuerySPI;
  */
 @ServiceProvider(QueryTransformer.class)
 public class OpenJPAQueryTransformer implements QueryTransformer {
+    
+    public OpenJPAQueryTransformer() {
+        Logger.getLogger(OpenJPAQueryTransformer.class.getName()).warning("The OpenJPA integration is experimental and should not be used in production yet!");
+    }
 
     @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {

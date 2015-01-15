@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.eclipselink;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;
+import java.util.logging.Logger;
 import javax.persistence.TypedQuery;
 import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.queries.DatabaseQuery;
@@ -29,6 +30,10 @@ import org.eclipse.persistence.queries.DatabaseQuery;
  */
 @ServiceProvider(QueryTransformer.class)
 public class EclipseLinkQueryTransformer implements QueryTransformer {
+    
+    public EclipseLinkQueryTransformer() {
+        Logger.getLogger(EclipseLinkQueryTransformer.class.getName()).warning("The EclipseLink integration is experimental and should not be used in production yet!");
+    }
 
     @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {
