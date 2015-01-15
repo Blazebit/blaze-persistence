@@ -39,6 +39,7 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
 
 /**
  *
@@ -54,7 +55,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public static final String idParamName = "ids";
 
     protected final CriteriaBuilderFactoryImpl cbf;
-    protected Class<?> fromClazz;
+    protected EntityType<?> fromClazz;
     protected final EntityManager em;
 
     protected final ParameterManager parameterManager;
@@ -137,8 +138,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 parentJoinManager);
 
         // set defaults
-        this.joinManager.setRoot(resultClazz, alias);
-        this.fromClazz = resultClazz;
+        try {
+            this.fromClazz = em.getMetamodel().entity(resultClazz);
+            this.joinManager.setRoot(fromClazz, alias);
+        } catch(IllegalArgumentException ex) {
+            this.fromClazz = null;
+        }
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
 
@@ -174,7 +179,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         if (fromClassExplicitelySet) {
             throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
         }
-        this.fromClazz = clazz;
+        this.fromClazz = em.getMetamodel().entity(clazz);
         this.joinManager.setRoot(fromClazz, alias);
         fromClassExplicitelySet = true;
         return this;
@@ -690,7 +695,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
 

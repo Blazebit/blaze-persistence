@@ -74,7 +74,7 @@ The usage of the `CatNameView` could look like this:
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);
-CriteriaBuilder<CatNameView> catNameBuilder = evm.applyObjectBuilder(CatNameView.class, cb);
+CriteriaBuilder<CatNameView> catNameBuilder = evm.applySetting(EntityViewSetting.create(CatNameView.class), cb);
 List<CatNameView> catNameViews = catNameBuilder.getResultList();
 ----
 

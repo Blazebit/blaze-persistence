@@ -346,7 +346,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private String getPageCountQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
-        EntityType<?> entityType = m.entity(fromClazz);
+        EntityType<?> entityType = fromClazz;
         String idName = entityType.getId(entityType.getIdType()
                 .getJavaType())
                 .getName();
@@ -376,7 +376,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
         
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null);
@@ -398,7 +398,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(idClause);
         
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX)
                 .append(joinManager.getRootAlias());
@@ -433,7 +433,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
@@ -469,14 +469,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
         Metamodel m = em.getMetamodel();
-        EntityType<?> entityType = m.entity(fromClazz);
+        EntityType<?> entityType = fromClazz;
         String idName = entityType.getId(entityType.getIdType()
                 .getJavaType())
                 .getName();
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
@@ -514,7 +514,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getSimpleName())
+                .append(fromClazz.getName())
                 .append(' ')
                 .append(joinManager.getRootAlias());
 

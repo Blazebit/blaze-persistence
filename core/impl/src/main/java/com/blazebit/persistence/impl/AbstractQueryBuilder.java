@@ -145,7 +145,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalArgumentException("Invalid null entity id given");
         } 
         
-        EntityType<?> entityType = em.getMetamodel().entity(fromClazz);
+        EntityType<?> entityType = fromClazz;
         Class<?> idType = entityType.getIdType().getJavaType();
         
         if (!idType.isInstance(entityId)) {

@@ -105,16 +105,21 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
     
-    void setRoot(Class<?> clazz, String rootAlias){
+    void setRoot(EntityType<?> clazz, String rootAlias){
         if (rootAlias == null) {
-            if (aliasManager.getAliasInfo(clazz.getSimpleName().toLowerCase()) == null) {
-                rootAlias = clazz.getSimpleName().toLowerCase();
+            // TODO: not sure if other JPA providers support case sensitive queries like hibernate
+            StringBuilder sb = new StringBuilder(clazz.getName());
+            sb.setCharAt(0, Character.toLowerCase(sb.charAt(0)));
+            String alias = sb.toString();
+            
+            if (aliasManager.getAliasInfo(alias) == null) {
+                rootAlias = alias;
             } else {
-                rootAlias = aliasManager.generatePostfixedAlias(clazz.getSimpleName().toLowerCase());
+                rootAlias = aliasManager.generatePostfixedAlias(alias);
             }
         }
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
-        rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz);
+        rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz.getJavaType());
         rootAliasInfo.setJoinNode(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
