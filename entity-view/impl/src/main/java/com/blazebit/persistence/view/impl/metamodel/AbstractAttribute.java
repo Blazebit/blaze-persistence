@@ -45,6 +45,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final boolean subview;
 
     public AbstractAttribute(ViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
+        if (javaType == null) {
+            throw new IllegalArgumentException("The attribute type is not resolvable " + errorLocation);
+        }
+        
         this.declaringType = declaringType;
         this.javaType = javaType;
         this.subview = entityViews.contains(javaType);

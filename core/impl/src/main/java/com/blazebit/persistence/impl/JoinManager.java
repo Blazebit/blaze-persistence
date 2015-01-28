@@ -23,7 +23,6 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
@@ -35,30 +34,24 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.reflection.ReflectionUtils;
-import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.logging.Logger;
-import javax.persistence.CollectionTable;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
 
 /**
  *
@@ -798,28 +791,66 @@ public class JoinManager extends AbstractManager {
     }
 
     private Class<?> resolveFieldClass(Class<?> baseClass, Attribute attr) {
+        Class<?> fieldClass;
+        
         if (attr.isCollection()) {
             PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
             
             if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 if (attr.getJavaMember() instanceof Method) {
-                    return ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, (Method) attr.getJavaMember())[1];
+                    Method method = (Method) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, method)[1];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(baseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
+                    }
                 } else {
-                    return ReflectionUtils.getResolvedFieldTypeArguments(baseClass, (Field) attr.getJavaMember())[1];
+                    Field field = (Field) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(baseClass, field)[1];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(baseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
+                    }
                 }
             } else {
                 if (attr.getJavaMember() instanceof Method) {
-                    return ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, (Method) attr.getJavaMember())[0];
+                    Method method = (Method) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, method)[0];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(baseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                    }
                 } else {
-                    return ReflectionUtils.getResolvedFieldTypeArguments(baseClass, (Field) attr.getJavaMember())[0];
+                    Field field = (Field) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(baseClass, field)[0];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(baseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                    }
+                }
+            }
+        } else {
+            if (attr.getJavaMember() instanceof Method) {
+                Method method = (Method) attr.getJavaMember();
+                fieldClass = ReflectionUtils.getResolvedMethodReturnType(baseClass, method);
+                if (fieldClass == null) {
+                    fieldClass = resolveType(baseClass, method.getGenericReturnType());
+                }
+            } else {
+                Field field = (Field) attr.getJavaMember();
+                fieldClass = ReflectionUtils.getResolvedFieldType(baseClass, field);
+                if (fieldClass == null) {
+                    fieldClass = resolveType(baseClass, field.getGenericType());
                 }
             }
         }
-
-        if (attr.getJavaMember() instanceof Method) {
-            return ReflectionUtils.getResolvedMethodReturnType(baseClass, (Method) attr.getJavaMember());
+        
+        return fieldClass;
+    }
+    
+    private Class<?> resolveType(Class<?> concreteClass, java.lang.reflect.Type type) {
+        if (type instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) type).getRawType();
+        } else if (type instanceof TypeVariable) {
+            return resolveType(concreteClass, ((TypeVariable<?>) type).getBounds()[0]);
         } else {
-            return ReflectionUtils.getResolvedFieldType(baseClass, (Field) attr.getJavaMember());
+            throw new IllegalArgumentException("Unsupported type for resolving: " + type);
         }
     }
 

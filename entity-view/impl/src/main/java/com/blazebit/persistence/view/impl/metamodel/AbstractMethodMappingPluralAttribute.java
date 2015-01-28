@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -38,6 +39,10 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
+        if (elementType == null) {
+            throw new IllegalArgumentException("The element type is not resolvable " + "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+        }
+        
         this.subview = entityViews.contains(elementType);
     }
 

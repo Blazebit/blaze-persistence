@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
@@ -36,6 +37,9 @@ public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappin
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.keyType = (Class<K>) typeArguments[0];
+        if (keyType == null) {
+            throw new IllegalArgumentException("The key type is not resolvable " + "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
+        }
     }
 
     @Override

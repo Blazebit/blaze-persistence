@@ -370,6 +370,10 @@ public class ProxyFactory {
         sb.append('<');
 
         for (int i = 0; i < typeArguments.length; i++) {
+            if (typeArguments[i] == null) {
+                throw new IllegalArgumentException("The type argument can not be resolved at index '" + i + "' for the attribute '" + attribute.getName() + "' of the class '" + attribute.getDeclaringType().getJavaType().getName() + "'!");
+            }
+            
             sb.append(Descriptor.of(typeArguments[i].getName()));
         }
 

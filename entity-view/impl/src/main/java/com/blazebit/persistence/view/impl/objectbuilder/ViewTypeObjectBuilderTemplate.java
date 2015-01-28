@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
@@ -133,6 +134,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
             idAttributeType = ReflectionUtils.getResolvedFieldType(viewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
         } else {
             idAttributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
+        }
+        
+        if (idAttributeType == null) {
+            throw new IllegalArgumentException("The id attribute type is not resolvable " + "for the attribute '" + jpaIdAttr.getName() + "' of the class '" + viewType.getEntityClass().getName() + "'!");
         }
         
         String idAttributeName = jpaIdAttr.getName();
