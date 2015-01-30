@@ -1,0 +1,185 @@
+<%#encoding:UTF-8%><!DOCTYPE html>
+<html<%= (attr? :nolang) ? nil : %( lang="#{attr :lang, 'en'}") %>>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=<%= attr :encoding %>">
+<meta name="generator" content="Asciidoctor <%= attr 'asciidoctor-version' %>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><%
+[:description, :keywords, :author, :copyright].each do |key|
+  if attr? key %>
+<meta name="<%= key %>" content="<%= attr key %>"><%
+  end
+end %>
+<title><%= doctitle(:sanitize => true) || (attr 'untitled-label') %></title><%
+if Asciidoctor::DEFAULT_STYLESHEET_KEYS.include?(attr :stylesheet)
+  if @safe >= Asciidoctor::SafeMode::SECURE || (attr? :linkcss) %>
+<link rel="stylesheet" href="<%= normalize_web_path(Asciidoctor::DEFAULT_STYLESHEET_NAME, (attr :stylesdir, '')) %>"><%
+  else %>
+<%= Asciidoctor::Stylesheets.instance.embed_primary_stylesheet %>
+<%
+  end
+elsif attr? :stylesheet
+  if @safe >= Asciidoctor::SafeMode::SECURE || (attr? :linkcss) %>
+<link rel="stylesheet" href="<%= normalize_web_path((attr :stylesheet), attr(:stylesdir, '')) %>"><%
+  else %>
+<style>
+<%= read_asset normalize_system_path((attr :stylesheet), (attr :stylesdir, '')), true %>
+</style><%
+  end
+end
+if attr? :icons, 'font'
+  if !(attr 'iconfont-remote', '').nil? %>
+<link rel="stylesheet" href="<%= attr 'iconfont-cdn', 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css' %>"><%
+  else %>
+<link rel="stylesheet" href="<%= normalize_web_path(%(#{attr 'iconfont-name', 'font-awesome'}.css), (attr :stylesdir, '')) %>"><%
+  end
+end
+case attr 'source-highlighter'
+when 'coderay'
+  if (attr 'coderay-css', 'class') == 'class'
+    if @safe >= Asciidoctor::SafeMode::SECURE || (attr? :linkcss) %>
+<link rel="stylesheet" href="<%= normalize_web_path('asciidoctor-coderay.css', (attr :stylesdir, '')) %>"><%
+    else %>
+<%= Asciidoctor::Stylesheets.embed_coderay_stylesheet %>
+<%
+    end
+  end
+when 'pygments'
+  if (attr 'pygments-css', 'class') == 'class'
+    if @safe >= Asciidoctor::SafeMode::SECURE || (attr? :linkcss) %>
+<link rel="stylesheet" href="<%= normalize_web_path('asciidoctor-pygments.css', (attr :stylesdir, '')) %>"><%
+    else %>
+<%= Asciidoctor::Stylesheets.embed_pygments_stylesheet(attr 'pygments-style') %>
+<%
+    end
+  end
+when 'highlightjs' %>
+<link rel="stylesheet" href="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/styles/<%= attr 'highlightjs-theme', 'googlecode' %>.min.css">
+<script src="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/highlight.min.js"></script>
+<script src="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/lang/common.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script><%
+when 'prettify' %>
+<link rel="stylesheet" href="<%= attr 'prettifydir', 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298' %>/<%= attr 'prettify-theme', 'prettify' %>.min.css">
+<script src="<%= attr 'prettifydir', 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298' %>/prettify.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded', prettyPrint)</script><%
+end
+if attr? 'math' %>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [<%= Asciidoctor::INLINE_MATH_DELIMITERS[:latexmath] %>],
+    displayMath: [<%= Asciidoctor::BLOCK_MATH_DELIMITERS[:latexmath] %>],
+    ignoreClass: 'nomath|nolatexmath'
+  },
+  asciimath2jax: {
+    delimiters: [<%= Asciidoctor::BLOCK_MATH_DELIMITERS[:asciimath] %>],
+    ignoreClass: 'nomath|noasciimath'
+  }
+});
+</script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+<script>document.addEventListener('DOMContentLoaded', MathJax.Hub.TypeSet)</script><%
+end
+%><%= (docinfo_content = docinfo).empty? ? nil : %(
+#{docinfo_content}) %>
+</head>
+<body<%= @id && %( id="#{@id}") %> class="<%= [(attr :doctype),((attr? 'toc-class') && (attr? :toc) && (attr? 'toc-placement', 'auto') ? %(#{attr 'toc-class'} toc-#{attr 'toc-position', 'left'}) : nil)].compact * ' ' %>"<%= (attr? 'max-width') ? %( style="max-width: #{attr 'max-width'};") : nil %>>
+
+<div class="brand">
+	<a class="vendor" href="http://blazebit.com">
+		<strong>Blazebit.com</strong>
+	</a>
+	<a class="logo" href="http://blazebit.github.io/blaze-persistence">
+		<strong>blaze-persistence</strong>
+	</a>
+</div>
+<br/>
+<%
+unless noheader %>
+<div id="header"><%
+  if doctype == 'manpage' %>
+<h1><%= doctitle %> Manual Page</h1><%
+    if (attr? :toc) && (attr? 'toc-placement', 'auto') %>
+<div id="toc" class="<%= attr 'toc-class', 'toc' %>">
+<div id="toctitle"><%= attr 'toc-title' %></div>
+<%= converter.convert self, 'outline' %>
+</div><%
+    end %>
+<h2><%= attr 'manname-title' %></h2>
+<div class="sectionbody">
+<p><%= %(#{attr :manname} - #{attr :manpurpose}) %></p>
+</div><%
+  else 
+    if has_header?
+      unless notitle %>
+<h1><%= @header.title %></h1><%
+      end
+      if (attr? :author) || (attr? :revnumber) || (attr? :revdate) || (attr? :revremark) %>
+<div class="details"><%
+        if attr? :author %>
+<span id="author" class="author"><%= attr :author %></span><br><%
+          if attr? :email %>
+<span id="email" class="email"><%= sub_macros(attr :email) %></span><br><%
+          end
+          if (authorcount = (attr :authorcount).to_i) > 1
+            (2..authorcount).each do |idx| %>
+<span id="author<%= idx %>" class="author"><%= attr %(author_#{idx}) %></span><br><%
+              if attr?  %(email_#{idx}) %>
+<span id="email<%= idx %>" class="email"><%= sub_macros(attr %(email_#{idx})) %></span><br><%
+              end
+            end
+          end
+        end
+        if attr? :revnumber %>
+<span id="revnumber"><%= attr :revnumber %><%= attr?(:revdate) ? ',' : '' %></span><%
+        end
+        if attr? :revdate %>
+<span id="revdate"><%= attr :revdate %></span><%
+        end
+        if attr? :revremark %>
+<br>
+<span id="revremark"><%= attr :revremark %></span><%
+        end
+        if attr? :copyrighttext %>
+<br>
+<span class="copyright"><%= attr :copyrighttext %></span><%
+        end %>
+</div><%
+      end
+    end
+    if (attr? :toc) && (attr? 'toc-placement', 'auto') %>
+<div id="toc" class="<%= attr 'toc-class', 'toc' %>">
+<div id="toctitle"><%= attr 'toc-title' %></div>
+<%= converter.convert self, 'outline' %>
+</div><%
+    end
+  end %>
+</div><%
+end %>
+<div id="content">
+<%= content %>
+</div><%
+unless !footnotes? || attr?(:nofootnotes) %>
+<div id="footnotes">
+<hr><%
+  footnotes.each do |fn| %>
+<div class="footnote" id="_footnote_<%= fn.index %>">
+<a href="#_footnoteref_<%= fn.index %>"><%= fn.index %></a>. <%= fn.text %>
+</div><%
+  end %>
+</div><%
+end %><%
+unless nofooter %>
+<div id="footer">
+<div id="footer-text"><%
+if attr? :revnumber %>
+<%= %(#{attr 'version-label'} #{attr :revnumber}) %><br><%
+end
+if attr? 'last-update-label' %>
+<%= %(#{attr 'last-update-label'} #{attr :docdatetime}) %><%
+end %><%= (docinfo_content = (docinfo :footer)).empty? ? nil : %(
+#{docinfo_content}) %>
+</div>
+</div><%
+end %>
+</body>
+</html>

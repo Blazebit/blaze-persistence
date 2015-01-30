@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.blazebit</groupId>
+        <artifactId>blaze-persistence</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>blaze-persistence-website</artifactId>
+	
+    <name>Blazebit Persistence Website</name>
+	
+    <properties>
+        <version.asciidoctor>1.5.0</version.asciidoctor>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+                <executions>
+                    <execution>
+                        <id>copy-asciidoc-resources-core-manual-en_US</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/style</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}/generated-docs/core/manual/en_US</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-asciidoc-resources-entity-view-manual-en_US</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/style</directory>
+                                    <includes>
+                                        <include>**/*</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                            <outputDirectory>${project.build.directory}/generated-docs/entity-view/manual/en_US</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.asciidoctor</groupId>
+                <artifactId>asciidoctor-maven-plugin</artifactId>
+                <version>${version.asciidoctor}</version>
+                <configuration>
+                    <attributes>
+                        <endpoint-url>http://blazebit.github.io/blaze-persistence</endpoint-url>
+                        <preserveDirectories>true</preserveDirectories>
+                    </attributes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>core-manual-en_US-html</id>               
+                        <phase>generate-resources</phase>  
+                        <goals>
+                            <goal>process-asciidoc</goal>    
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${basedir}/src/main/asciidoc/core/manual/en_US</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-docs/core/manual/en_US</outputDirectory>
+                             see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 
+                            <templateDir>${basedir}/src/main/template</templateDir>
+                            <imagesDir>${basedir}/src/main/asciidoc/core/manual/images</imagesDir>
+                            <doctype>book</doctype>
+                            <eruby>erb</eruby>
+                            <backend>html5</backend>
+                            <sourceHighlighter>highlightjs</sourceHighlighter>
+                            <attributes>
+                                <linkcss>true</linkcss>
+                                <stylesheet>css/style.css</stylesheet>
+                                
+                                <toc>left</toc>
+                                <icons>picture</icons>
+                                <sectanchors>true</sectanchors>
+                                <idprefix/>
+                                <idseparator>-</idseparator>
+                                <docinfo1>true</docinfo1>
+                                <version>${project.version}</version>
+                            </attributes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
