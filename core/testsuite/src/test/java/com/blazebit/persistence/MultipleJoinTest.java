@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.entity.Workflow;
@@ -37,7 +38,8 @@ public class MultipleJoinTest extends AbstractCoreTest {
             Workflow.class,
             Document.class,
             Version.class,
-            Person.class
+            Person.class,
+            IntIdEntity.class
         };
     }
 
