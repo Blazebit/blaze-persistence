@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.entity.Workflow;
@@ -50,7 +51,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             Document.class,
             Version.class,
             Person.class,
-            Workflow.class
+            Workflow.class,
+            IntIdEntity.class
         };
     }
 

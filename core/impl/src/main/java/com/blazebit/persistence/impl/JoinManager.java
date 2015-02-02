@@ -630,7 +630,7 @@ public class JoinManager extends AbstractManager {
 
             if (indexPathExpr.getField() != null) {
                 sb.append('_');
-                sb.append(indexPathExpr.getField());
+                sb.append(indexPathExpr.getField().replaceAll("\\.", "_"));
             }
         } else {
             sb.append('_');
@@ -845,7 +845,9 @@ public class JoinManager extends AbstractManager {
     }
     
     private Class<?> resolveType(Class<?> concreteClass, java.lang.reflect.Type type) {
-        if (type instanceof ParameterizedType) {
+        if (type instanceof Class<?>) {
+            return (Class<?>) type;
+        } else if (type instanceof ParameterizedType) {
             return (Class<?>) ((ParameterizedType) type).getRawType();
         } else if (type instanceof TypeVariable) {
             return resolveType(concreteClass, ((TypeVariable<?>) type).getBounds()[0]);

@@ -83,6 +83,16 @@ public class ArrayExpressionTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testArrayIndexImplicitJoinImplicitRoot() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.contacts[intIdEntity.id]");
+        
+        assertEquals("SELECT " + joinAliasValue("contacts_d_intIdEntity_1_id_1") + " FROM Document d LEFT JOIN d.contacts contacts_d_intIdEntity_1_id_1 " + ON_CLAUSE
+            + " KEY(contacts_d_intIdEntity_1_id_1) = d.intIdEntity.id", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
     public void testArrayIndexExplicitJoinAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.contacts[v.idx]").leftJoinDefault("d.versions", "v");

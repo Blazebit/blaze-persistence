@@ -52,6 +52,7 @@ public class Document extends Ownable<Person> implements Serializable {
     private Set<Version> versions = new HashSet<Version>();
     private Set<Person> partners = new HashSet<Person>();
 //    private Person owner;
+    private IntIdEntity intIdEntity;
     private long age;
     private int idx;
     private String nonJoinable;
@@ -151,6 +152,15 @@ public class Document extends Ownable<Person> implements Serializable {
 //    public void setOwner(Person owner) {
 //        this.owner = owner;
 //    }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    public IntIdEntity getIntIdEntity() {
+        return intIdEntity;
+    }
+    
+    public void setIntIdEntity(IntIdEntity intIdEntity) {
+        this.intIdEntity = intIdEntity;
+    }
 
     public String getNonJoinable() {
         return nonJoinable;
