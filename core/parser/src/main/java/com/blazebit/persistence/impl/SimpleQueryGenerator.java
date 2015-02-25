@@ -284,8 +284,20 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         } else {
             paramName = expression.getName();
         }
+        // Workaround for hibernate
+        // TODO: Remove when HHH-7407 is fixed
+        boolean needsBrackets = expression.getValue() instanceof List<?> && ((List<?>) expression.getValue()).size() > 1;
+        
+        if (needsBrackets) {
+            sb.append('(');
+        }
+        
         sb.append(":");
         sb.append(paramName);
+        
+        if (needsBrackets) {
+            sb.append(')');
+        }
     }
 
     @Override

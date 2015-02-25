@@ -72,6 +72,17 @@ public class InTest extends AbstractCoreTest {
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").in(ages);
 
+        assertEquals("SELECT d FROM Document d WHERE d.age IN (:param_0)", criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
+    @Ignore("Enable again when HHH-7407 is fixed")
+    public void testIn2() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
+        criteria.where("d.age").in(ages);
+
         assertEquals("SELECT d FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
         criteria.getResultList();
     }
@@ -84,6 +95,16 @@ public class InTest extends AbstractCoreTest {
 
     @Test
     public void testNotIn() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
+        criteria.where("d.age").notIn(ages);
+        assertEquals("SELECT d FROM Document d WHERE d.age NOT IN (:param_0)", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    @Ignore("Enable again when HHH-7407 is fixed")
+    public void testNotIn2() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").notIn(ages);
