@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  *
@@ -30,6 +31,7 @@ import javax.persistence.OneToMany;
  * @since 1.0
  */
 @Entity
+@Table(name = "ORDERS")
 public class Order implements Serializable {
     private static final long serialVersionUID = 1L;
 

@@ -24,6 +24,7 @@ import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -68,11 +69,10 @@ public class EmbeddedTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testEmbeddedPropertyOn() {
-        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "order");
-        criteria.where("order.number").in(1, 2, 3);
-        criteria.leftJoinDefaultOn("order.orderPositions", "position")
-//                .on("order.number").in(1, 2, 3)
+    @Ignore
+    public void testCyclicDependencyInOnClauseImplicitJoin() {
+        CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
+        criteria.leftJoinDefaultOn("o.orderPositions", "position")
                 .on("position.head.number").in(1, 2, 3)
             .end();
         criteria.getResultList();
