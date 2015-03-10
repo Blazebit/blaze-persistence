@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -122,11 +123,11 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testInSubqueryAliasExpression(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.id")
+        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
                 .in("alias", "FUNCTION('LIMIT', alias, 10)")
                     .from(Document.class, "d2").select("d2.id")
                 .end();
-        assertEquals("SELECT d FROM Document d WHERE d.id IN (FUNCTION('LIMIT', (SELECT d2.id FROM Document d2), 10))", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.id IN LIMIT((SELECT d2.id FROM Document d2),10)", criteria.getQueryString());
     }
 
 }
