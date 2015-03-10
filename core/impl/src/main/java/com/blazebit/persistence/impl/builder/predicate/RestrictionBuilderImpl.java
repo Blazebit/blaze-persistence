@@ -18,7 +18,7 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
-import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
@@ -26,6 +26,7 @@ import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
@@ -41,7 +42,6 @@ import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -55,7 +55,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements RestrictionBuilder<T>, LeftHandsideSubqueryPredicateBuilder {
+public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListener<T> implements RestrictionBuilderExperimental<T>, LeftHandsideSubqueryPredicateBuilder {
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
@@ -66,7 +66,8 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private SuperExpressionRightHandsideSubqueryPredicateBuilder rightSuperExprSubqueryPredicateBuilderListener;
     private SuperExpressionLeftHandsideSubqueryPredicateBuilder leftSuperExprSubqueryPredicateBuilderListener;
     private final SubqueryBuilderListenerImpl<?> betweenStartSubqueryBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener<BetweenBuilderImpl<T>>();
-
+    private SuperExpressionSubqueryBuilderListener<T> rightSuperExprSubqueryBuilderListener;
+    
     public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.leftExpression = leftExpression;
         this.listener = listener;
@@ -385,6 +386,42 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public SubqueryInitiator<T> in(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        
+        this.predicate = new InPredicate(leftExpression, null);
+        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)){
+
+            @Override
+            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+                super.onBuilderEnded(builder);
+                onSubqueryBuilderEnded(superExpression);
+                listener.onBuilderEnded(RestrictionBuilderImpl.this);
+            }
+            
+        };
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener);
+    }
+    
+    @Override
+    public SubqueryInitiator<T> notIn(String subqueryAlias, String expression) {
+        verifyBuilderEnded();
+        
+        this.predicate = new InPredicate(leftExpression, null, true);
+        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)){
+
+            @Override
+            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+                super.onBuilderEnded(builder);
+                onSubqueryBuilderEnded(superExpression);
+                listener.onBuilderEnded(RestrictionBuilderImpl.this);
+            }
+            
+        };
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener);
+    }
+
+    @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
         this.predicate = new InPredicate(leftExpression, null, true);
@@ -407,21 +444,25 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
-        // set the finished subquery builder on the previously created predicate
+        onSubqueryBuilderEnded(new SubqueryExpression(builder));
+        listener.onBuilderEnded(this);
+    }
+    
+    private void onSubqueryBuilderEnded(Expression rightHandsideExpression){
         if (predicate instanceof InPredicate) {
-            ((InPredicate) predicate).setRight(new SubqueryExpression(builder));
+            ((InPredicate) predicate).setRight(rightHandsideExpression);
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate was not an IN predicate");
         }
-
-        listener.onBuilderEnded(this);
     }
-
     
     @Override
     protected void verifyBuilderEnded() {
         super.verifyBuilderEnded();
         betweenStartSubqueryBuilderListener.verifySubqueryBuilderEnded();
+        if(rightSuperExprSubqueryBuilderListener != null){
+            rightSuperExprSubqueryBuilderListener.verifySubqueryBuilderEnded();
+        }
     }
 
     private Expression makeCollectionValued(Expression expr) {

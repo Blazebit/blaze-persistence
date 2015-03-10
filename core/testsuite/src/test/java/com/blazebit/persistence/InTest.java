@@ -117,5 +117,16 @@ public class InTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria.where("d.age"), NullPointerException.class).notIn((List<?>) null);
     }
+    
+    
+    @Test
+    public void testInSubqueryAliasExpression(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.where("d.id")
+                .in("alias", "FUNCTION('LIMIT', alias, 10)")
+                    .from(Document.class, "d2").select("d2.id")
+                .end();
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (FUNCTION('LIMIT', (SELECT d2.id FROM Document d2), 10))", criteria.getQueryString());
+    }
 
 }
