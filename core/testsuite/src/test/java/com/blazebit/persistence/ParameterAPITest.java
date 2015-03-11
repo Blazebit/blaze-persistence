@@ -17,13 +17,17 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import static com.googlecode.catchexception.CatchException.verifyException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
@@ -107,5 +111,30 @@ public class ParameterAPITest extends AbstractCoreTest {
     public void testIsParameterSetWithNonExistingParameter() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         assertFalse(cb.isParameterSet("test"));
+    }
+    
+    @Test
+    public void testParametersInFunction() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.from(Document.class, "d")
+                .where("FUNCTION('F1', FUNCTION('F2', :f2param))").eqExpression("1");
+        cb.setParameter("f2param", 3);
+        
+        assertTrue(cb.isParameterSet("f2param"));
+        assertEquals("SELECT d FROM Document d WHERE F1(F2(:f2param)) = 1", cb.getQueryString());
+    }
+    
+    @Test
+    public void testParametersInSubqueryInFunction() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.from(Document.class, "d")
+                .where("d.id").in()
+                    .from(Document.class, "d2")
+                    .where("FUNCTION('F1', FUNCTION('F2', :f2param))").eqExpression("1")
+                .end();
+        cb.setParameter("f2param", 3);
+        
+        assertTrue(cb.isParameterSet("f2param"));
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (SELECT d2 FROM Document d2 WHERE F1(F2(:f2param)) = 1)", cb.getQueryString());
     }
 }

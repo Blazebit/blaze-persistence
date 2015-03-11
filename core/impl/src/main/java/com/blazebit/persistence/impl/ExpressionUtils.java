@@ -149,6 +149,19 @@ public class ExpressionUtils {
         return ((SingularAttribute<?, ?>) attr).isId();
     }
     
+    /**
+     * 
+     * @param stringLiteral A possibly quoted string literal
+     * @return The stringLiteral without quotes
+     */
+    public static String unwrapStringLiteral(String stringLiteral){
+        if(stringLiteral.length() >= 2 && stringLiteral.startsWith("'") && stringLiteral.endsWith("'")){
+            return stringLiteral.substring(1, stringLiteral.length()-1);
+        }else{
+            return stringLiteral;
+        }
+    }
+    
     public static boolean isFunctionFunctionExpression(FunctionExpression func){
         return "FUNCTION".equals(func.getFunctionName());
     }
@@ -344,6 +357,7 @@ public class ExpressionUtils {
 
             @Override
             public void visit(CompositeExpression expression) {
+                super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
                 for (Expression expr : expression.getExpressions()) {
                     transformed.add(replacementTransformer.transform(expr, null));

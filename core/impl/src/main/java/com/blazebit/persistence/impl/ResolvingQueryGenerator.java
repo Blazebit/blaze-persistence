@@ -15,10 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import java.util.Set;
 
 /**
  *
@@ -31,30 +31,33 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     private final AliasManager aliasManager;
     private final JPAInfo jpaInfo;
     protected String aliasPrefix;
-
-    public ResolvingQueryGenerator(AliasManager aliasManager, JPAInfo jpaInfo) {
+    private final Set<String> registeredFunctions;
+    
+    public ResolvingQueryGenerator(AliasManager aliasManager, JPAInfo jpaInfo, Set<String> registeredFunctions) {
         this.aliasManager = aliasManager;
         this.jpaInfo = jpaInfo;
+        this.registeredFunctions = registeredFunctions;
     }
 
     @Override
     public void visit(FunctionExpression expression) {
         if (ExpressionUtils.isOuterFunction(expression)) {
             expression.getExpressions().get(0).accept(this);
-        } else if (ExpressionUtils.isFunctionFunctionExpression(expression) && !jpaInfo.isJPA21) {
-            // resolve function
-            String functionName = expression.getExpressions().get(0).toString();
-            functionName = functionName.substring(1, functionName.length() - 1); // remove quotes
-            sb.append(functionName);
-            sb.append('(');
-            if (expression.getExpressions().size() > 1) {
-                expression.getExpressions().get(1).accept(this);
-                for (int i = 2; i < expression.getExpressions().size(); i++) {
-                    sb.append(",");
-                    expression.getExpressions().get(i).accept(this);
+        } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
+            String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());
+            if(registeredFunctions.contains(functionName.toLowerCase()) || !jpaInfo.isJPA21){
+                // resolve function
+                sb.append(functionName);
+                sb.append('(');
+                if (expression.getExpressions().size() > 1) {
+                    expression.getExpressions().get(1).accept(this);
+                    for (int i = 2; i < expression.getExpressions().size(); i++) {
+                        sb.append(",");
+                        expression.getExpressions().get(i).accept(this);
+                    }
                 }
+                sb.append(')');
             }
-            sb.append(')');
         } else {
             super.visit(expression);
         }

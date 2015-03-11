@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.internal.OrderByBuilderExperimental;
+
 /**
  * A base interface for builders that support basic query functionality.
  * This interface is shared between normal query builders and subquery builders.
@@ -25,7 +27,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends WhereBuilder<X>,
-    OrderByBuilder<X>, SelectBuilder<T, X> {
+        OrderByBuilderExperimental<X>, SelectBuilder<T, X> {
 
     /**
      * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the

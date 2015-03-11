@@ -48,14 +48,14 @@ public interface CriteriaBuilderConfiguration {
      * @param entityManagerEnricher The enricher that should be addded
      * @return this for method chaining
      */
-    public CriteriaBuilderConfiguration registerEntityManagerEnricher(EntityManagerEnricher entityManagerEnricher);
+    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher);
     
     /**
      * Returns a list of registered entity manager enrichers.
      *
      * @return A list of registered entity manager enrichers
      */
-    public List<EntityManagerEnricher> getEntityManagerEnrichers();
+    public List<EntityManagerIntegrator> getEntityManagerIntegrators();
 
     /**
      * Creates a new {@linkplain CriteriaBuilderFactory} based on this configuration.

@@ -119,15 +119,26 @@ public class InTest extends AbstractCoreTest {
         verifyException(criteria.where("d.age"), NullPointerException.class).notIn((List<?>) null);
     }
     
-    
     @Test
-    public void testInSubqueryAliasExpression(){
+    public void testInSubqueryAliasExpression1(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
-                .in("alias", "FUNCTION('LIMIT', alias, 10)")
-                    .from(Document.class, "d2").select("d2.id")
+                .in("alias", "(FUNCTION('LIMIT', alias, :elementCount))")
+                    .from(Document.class, "d2")
+                    .select("d2.id")
+                    .select("FUNCTION('ARRAY_LENGTH',FUNCTION('ARRAY_INTERSECT',d2.id,FUNCTION('CAST_TO_SMALLINT_ARRAY',FUNCTION('STRING_TO_ARRAY',:colors))),1)", "colorMatches")
                 .end();
-        assertEquals("SELECT d FROM Document d WHERE d.id IN LIMIT((SELECT d2.id FROM Document d2),10)", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (LIMIT((SELECT d2.id, ARRAY_LENGTH(ARRAY_INTERSECT(d2.id,CAST_TO_SMALLINT_ARRAY(STRING_TO_ARRAY(:colors))),1) AS colorMatches FROM Document d2),:elementCount))", criteria.getQueryString());
     }
-
+    
+    // this is not redundant with testInSubqueryAliasExpression1o
+    @Test
+    public void testInSubqueryAliasExpression2(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
+                .in("alias", "(FUNCTION('LIMIT', alias, :elementCount))")
+                    .from(Document.class, "d2")
+                .end();
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (LIMIT((SELECT d2 FROM Document d2),:elementCount))", criteria.getQueryString());
+    }
 }

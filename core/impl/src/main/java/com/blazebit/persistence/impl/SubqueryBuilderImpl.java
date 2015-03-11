@@ -19,17 +19,12 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.AbstractBaseQueryBuilder;
-import com.blazebit.persistence.impl.AliasManager;
-import com.blazebit.persistence.impl.CriteriaBuilderFactoryImpl;
-import com.blazebit.persistence.impl.JoinManager;
-import com.blazebit.persistence.impl.ParameterManager;
-import com.blazebit.persistence.impl.SelectInfo;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.Subquery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
@@ -44,8 +39,8 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
     private final T result;
     private final SubqueryBuilderListener listener;
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory) {
-        super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory);
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+        super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
         this.result = result;
         this.listener = listener;
         
