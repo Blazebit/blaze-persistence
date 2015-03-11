@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.LogManager;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
@@ -36,6 +37,7 @@ import javax.persistence.spi.PersistenceUnitInfo;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 
 /**
  *
@@ -46,6 +48,16 @@ public abstract class AbstractJpaPersistenceTest {
 
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
+
+    @BeforeClass
+    public static void initLogging() {
+        try {
+            LogManager.getLogManager().readConfiguration(AbstractJpaPersistenceTest.class.getResourceAsStream(
+                    "/logging.properties"));
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
+        }
+    }
 
     @Before
     public void init() {
