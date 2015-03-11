@@ -32,11 +32,10 @@
             <artifactId>blaze-apt-utils</artifactId>
             <scope>provided</scope>
         </dependency>
-
+        
         <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blaze-persistence-integration-jpa-base</artifactId>
         </dependency>
         
         <dependency>

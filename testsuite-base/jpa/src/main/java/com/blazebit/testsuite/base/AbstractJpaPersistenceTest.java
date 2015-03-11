@@ -54,6 +54,7 @@ public abstract class AbstractJpaPersistenceTest {
         properties.put("javax.persistence.jdbc.user", "admin");
         properties.put("javax.persistence.jdbc.password", "admin");
         properties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+        properties.put("javax.persistence.sharedCache.mode", "NONE");
 
         EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", applyProperties(properties));
         em = factory.createEntityManager();

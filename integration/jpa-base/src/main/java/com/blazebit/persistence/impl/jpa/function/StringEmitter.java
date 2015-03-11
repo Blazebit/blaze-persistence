@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.impl.jpa.function;
+
+import java.util.List;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0
+ * @author Christian
  */
-public class MySQLPagePositionFunction extends PagePositionFunction {
+public class StringEmitter implements TemplateEmitter {
 
-    public MySQLPagePositionFunction() {
-        super("(select rownumber_ from (select @i:=@i+1 as rownumber_, base_.* from (?2) as base_, (SELECT @i:=1) as iter_) where ?1)");
+    private final String string;
+
+    public StringEmitter(String string) {
+        this.string = string;
+    }
+    
+    @Override
+    public void emit(StringBuilder sb, List<?> parameters) {
+        sb.append(string);
     }
     
 }

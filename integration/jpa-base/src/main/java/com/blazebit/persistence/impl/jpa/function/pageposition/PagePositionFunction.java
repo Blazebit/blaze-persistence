@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.impl.jpa.function.pageposition;
 
+import com.blazebit.persistence.impl.jpa.function.TemplateRenderer;
 import java.util.ArrayList;
 import java.util.List;
-import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.TemplateRenderer;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.LongType;
-import org.hibernate.type.Type;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class PagePositionFunction implements SQLFunction {
+public class PagePositionFunction {
     
     private final TemplateRenderer renderer;
     
@@ -47,23 +41,7 @@ public class PagePositionFunction implements SQLFunction {
         return "row_number() over ()";
     }
 
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return LongType.INSTANCE;
-    }
-
-    @Override
-    public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) throws QueryException {
+    public String render(List<?> args) {
         if (args.size() != 2) {
             throw new RuntimeException("The page position function needs exactly two arguments <base_query> and <entity_id>! args=" + args);
         }
@@ -96,7 +74,7 @@ public class PagePositionFunction implements SQLFunction {
         newArgs.add(args.get(1));
         newArgs.add(idName);
         
-        return renderer.render(newArgs, factory);
+        return renderer.render(newArgs);
     }
     
     private boolean startsWithIgnoreCase(String s1, String s2) {

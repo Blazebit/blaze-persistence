@@ -15,13 +15,6 @@
     <name>Blazebit Persistence Entity-View Testsuite</name>
 
     <dependencies>
-        <!-- Platform dependencies -->
-
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
         
         <!-- Test dependencies -->
         

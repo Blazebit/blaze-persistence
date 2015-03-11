@@ -36,6 +36,7 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Needed for CDI and JPA -->
         <dependency>
             <groupId>org.apache.openejb</groupId>
             <artifactId>javaee-api</artifactId>

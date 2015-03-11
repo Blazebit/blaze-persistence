@@ -36,10 +36,10 @@ public class EclipseLinkQueryTransformer implements QueryTransformer {
     }
 
     @Override
-    public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {
+    public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         DatabaseQuery databaseQuery = JpaHelper.getDatabaseQuery(query);
         databaseQuery.setRedirector(new ObjectBuilderQueryRedirectorAdapter(objectBuilder));
-        return query;
+        return (TypedQuery<X>) query;
     }
 
 }

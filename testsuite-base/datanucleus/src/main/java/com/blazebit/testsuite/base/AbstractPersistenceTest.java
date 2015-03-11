@@ -13,18 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.testsuite.base;
+
+import java.util.Properties;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class TransactSQLPagePositionFunction extends PagePositionFunction {
+public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
 
     @Override
-    protected String getRownumFunction() {
-        return "row_number() over(order by (select 0))";
+    protected Properties applyProperties(Properties properties) {
+        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
+        return properties;
     }
-    
 }

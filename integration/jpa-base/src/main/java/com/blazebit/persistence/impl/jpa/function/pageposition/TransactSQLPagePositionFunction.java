@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.impl.jpa.function.pageposition;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class OraclePagePositionFunction extends PagePositionFunction {
+public class TransactSQLPagePositionFunction extends PagePositionFunction {
 
     @Override
     protected String getRownumFunction() {
-        return "rownum";
+        return "row_number() over(order by (select 0))";
     }
     
 }

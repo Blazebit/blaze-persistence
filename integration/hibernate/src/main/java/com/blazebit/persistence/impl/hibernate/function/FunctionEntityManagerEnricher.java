@@ -16,10 +16,11 @@
 package com.blazebit.persistence.impl.hibernate.function;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.impl.hibernate.function.pageposition.MySQLPagePositionFunction;
-import com.blazebit.persistence.impl.hibernate.function.pageposition.OraclePagePositionFunction;
-import com.blazebit.persistence.impl.hibernate.function.pageposition.PagePositionFunction;
-import com.blazebit.persistence.impl.hibernate.function.pageposition.TransactSQLPagePositionFunction;
+import com.blazebit.persistence.impl.hibernate.function.pageposition.PagePositionFunctionAdapter;
+import com.blazebit.persistence.impl.jpa.function.pageposition.MySQLPagePositionFunction;
+import com.blazebit.persistence.impl.jpa.function.pageposition.OraclePagePositionFunction;
+import com.blazebit.persistence.impl.jpa.function.pageposition.PagePositionFunction;
+import com.blazebit.persistence.impl.jpa.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.spi.EntityManagerEnricher;
 import java.util.Map;
 import javax.persistence.EntityManager;
@@ -58,15 +59,15 @@ public class FunctionEntityManagerEnricher implements EntityManagerEnricher {
         Map<String, SQLFunction> functions = dialect.getFunctions();
         
         if (dialect instanceof MySQLDialect) {
-            functions.put(PAGE_POSITION_FUNCTION, new MySQLPagePositionFunction());
+            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunctionAdapter(new MySQLPagePositionFunction()));
         } else if (dialect instanceof Oracle8iDialect) {
-            functions.put(PAGE_POSITION_FUNCTION, new OraclePagePositionFunction());
+            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunctionAdapter(new OraclePagePositionFunction()));
         } else if (dialect instanceof SQLServerDialect) {
-            functions.put(PAGE_POSITION_FUNCTION, new TransactSQLPagePositionFunction());
+            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunctionAdapter(new TransactSQLPagePositionFunction()));
         } else if (dialect instanceof SybaseDialect) {
-            functions.put(PAGE_POSITION_FUNCTION, new TransactSQLPagePositionFunction());
+            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunctionAdapter(new TransactSQLPagePositionFunction()));
         } else {
-            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunction());
+            functions.put(PAGE_POSITION_FUNCTION, new PagePositionFunctionAdapter(new PagePositionFunction()));
         }
     }
 }

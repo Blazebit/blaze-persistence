@@ -15,13 +15,6 @@
     <name>Blazebit Persistence Core Testsuite</name>
 
     <dependencies>
-        <!-- Platform dependencies -->
-
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
         
         <!-- Test dependencies -->
         
@@ -71,6 +64,21 @@
             </dependencies>
         </profile>
         <profile>
+            <id>hibernate-4.3</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>4.3.8.Final</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>eclipselink</id>
             <dependencies>
                 <dependency>
@@ -79,6 +87,38 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
+        </profile>
+        <profile>
+            <id>datanucleus</id>
+            <dependencies>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+<!--            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.datanucleus</groupId>
+                        <artifactId>datanucleus-maven-plugin</artifactId>
+                        <version>4.0.0-release</version>
+                        <configuration>
+                            <api>JPA</api>
+                            <persistenceUnitName>TestPU</persistenceUnitName>
+                            <verbose>true</verbose>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>process-test-classes</phase>
+                                <goals>
+                                    <goal>enhance</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>-->
         </profile>
         <profile>
             <id>openjpa</id>
