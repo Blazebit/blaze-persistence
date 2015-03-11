@@ -420,7 +420,43 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     public X orderByAsc(String expression, boolean nullFirst) {
         return orderBy(expression, true, nullFirst);
     }
+    
+    @Override
+    public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+        _orderBy(expressionFactory.createOrderByExpression(expression), ascending, nullFirst);
+        return (X) this;
+    }
+    
+    /*
+     * Experimental order by methods
+     */
+    
+    @Override
+    public X orderByFunctionDesc(String expression) {
+        return orderByFunction(expression, false, false);
+    }
 
+    @Override
+    public X orderByFunctionAsc(String expression) {
+        return orderByFunction(expression, true, false);
+    }
+
+    @Override
+    public X orderByFunctionDesc(String expression, boolean nullFirst) {
+        return orderByFunction(expression, false, nullFirst);
+    }
+
+    @Override
+    public X orderByFunctionAsc(String expression, boolean nullFirst) {
+        return orderByFunction(expression, true, nullFirst);
+    }
+    
+    @Override
+    public X orderByFunction(String expression, boolean ascending, boolean nullFirst) {
+        _orderBy(expressionFactory.createScalarExpression(expression), ascending, nullFirst);
+        return (X) this;
+    }
+    
     protected void verifyBuilderEnded() {
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
@@ -428,13 +464,10 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         joinManager.verifyBuilderEnded();
     }
 
-    @Override
-    public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+    public void _orderBy(Expression expression, boolean ascending, boolean nullFirst){
         clearCache();
-        Expression expr = expressionFactory.createOrderByExpression(expression);
         verifyBuilderEnded();
-        orderByManager.orderBy(expr, ascending, nullFirst);
-        return (X) this;
+        orderByManager.orderBy(expression, ascending, nullFirst);
     }
 
     /*
@@ -712,7 +745,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbSelectFrom, false, false);
+            orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
         return sbSelectFrom.toString();
     }

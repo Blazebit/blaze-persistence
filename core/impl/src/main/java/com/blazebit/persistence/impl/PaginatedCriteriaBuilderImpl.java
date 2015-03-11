@@ -499,9 +499,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         
         havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);
-        orderByManager.buildOrderBy(sbSelectFrom, false, false);
+            orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
-
+        
         return sbSelectFrom.toString();
     }
 

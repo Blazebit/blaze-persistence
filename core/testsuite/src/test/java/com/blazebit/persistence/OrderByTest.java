@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -118,5 +119,12 @@ public class OrderByTest extends AbstractCoreTest {
                 + "GROUP BY d.id, COALESCE(owner_1.name,'a') "
                 + "ORDER BY asd ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
+    }
+    
+    @Test
+    public void testOrderByFunctionExperimental(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        ((OrderByBuilderExperimental<CriteriaBuilder<Document>>) criteria).orderByFunctionDesc("FUNCTION('ARRAY_LENGTH',FUNCTION('ARRAY_INTERSECT',d.id,FUNCTION('CAST_TO_SMALLINT_ARRAY',FUNCTION('STRING_TO_ARRAY',:colors))),1)");
+        assertEquals("SELECT d FROM Document d ORDER BY ARRAY_LENGTH(ARRAY_INTERSECT(d.id,CAST_TO_SMALLINT_ARRAY(STRING_TO_ARRAY(:colors))),1) DESC NULLS LAST", criteria.getQueryString());
     }
 }
