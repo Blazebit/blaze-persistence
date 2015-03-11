@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,25 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.spi;
 
-import javax.persistence.EntityManager;
+import java.util.Set;
 
 /**
- * Interface implemented by the criteria provider.
  *
- * It is invoked to enrich entity managers
- *
- * @author Christian Beikov
- * @since 1.0
+ * @author Moritz Becker
  */
-public interface EntityManagerEnricher {
-
-    /**
-     * Enriches the given entity manager.
-     *
-     * @param entityManager The entity manager which should be enriched
-     * @return The enriched entity manager
-     */
-    public EntityManager enrich(EntityManager entityManager);
+public interface FunctionEntityManagerIntegrator extends EntityManagerIntegrator {
+    public Set<String> getRegisteredFunctions();
 }

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
@@ -36,8 +37,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final SubqueryBuilderListener<X> listener;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
+    private final Set<String> registeredFunctions;
 
-    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         this.cbf = cbf;
         this.em = em;
         this.result = result;
@@ -46,6 +48,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         this.listener = listener;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
+        this.registeredFunctions = registeredFunctions;
     }
 
     @Override
@@ -56,7 +59,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
         SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener,
-                                                                            expressionFactory);
+                                                                            expressionFactory, registeredFunctions);
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;

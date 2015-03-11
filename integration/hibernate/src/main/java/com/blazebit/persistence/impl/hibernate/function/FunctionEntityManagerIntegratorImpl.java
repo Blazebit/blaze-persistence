@@ -20,8 +20,11 @@ import com.blazebit.persistence.impl.hibernate.function.pageposition.MySQLPagePo
 import com.blazebit.persistence.impl.hibernate.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.hibernate.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.hibernate.function.pageposition.TransactSQLPagePositionFunction;
-import com.blazebit.persistence.spi.EntityManagerEnricher;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.FunctionEntityManagerIntegrator;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManager;
 import org.hibernate.Session;
 import org.hibernate.dialect.Dialect;
@@ -37,10 +40,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Christian Beikov
  * @since 1.0
  */
-@ServiceProvider(EntityManagerEnricher.class)
-public class FunctionEntityManagerEnricher implements EntityManagerEnricher {
+@ServiceProvider(EntityManagerIntegrator.class)
+public class FunctionEntityManagerIntegratorImpl implements FunctionEntityManagerIntegrator {
     
     private static final String PAGE_POSITION_FUNCTION = "page_position";
+    private final Set<String> registeredFunctions = new HashSet<String>();
     
     @Override
     public EntityManager enrich(EntityManager em) {
@@ -49,8 +53,15 @@ public class FunctionEntityManagerEnricher implements EntityManagerEnricher {
         Dialect dialect = sf.getDialect();
         
         enrich(dialect);
+        
+        registeredFunctions.addAll(dialect.getFunctions().keySet());
 
         return em;
+    }
+
+    @Override
+    public Set<String> getRegisteredFunctions() {
+        return registeredFunctions;
     }
     
     public void enrich(Dialect dialect) {

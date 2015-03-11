@@ -16,11 +16,8 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.AliasManager;
-import com.blazebit.persistence.impl.CriteriaBuilderFactoryImpl;
-import com.blazebit.persistence.impl.JoinManager;
-import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import java.util.Set;
 import javax.persistence.EntityManager;
 
 /**
@@ -36,17 +33,19 @@ public class SubqueryInitiatorFactory {
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
+    private final Set<String> registeredFunctions;
 
-    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         this.cbf = cbf;
         this.em = em;
         this.parameterManager = parameterManager;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
+        this.registeredFunctions = registeredFunctions;
     }
 
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener) {
-        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory);
+        return new SubqueryInitiatorImpl<T>(cbf, em, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
     }
 }

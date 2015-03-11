@@ -17,7 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.EntityManagerEnricher;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -34,13 +34,13 @@ import java.util.ServiceLoader;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
-    private final List<EntityManagerEnricher> entityManagerEnrichers = new ArrayList<EntityManagerEnricher>();
+    private final List<EntityManagerIntegrator> entityManagerEnrichers = new ArrayList<EntityManagerIntegrator>();
     private Properties properties = new Properties();
 
     public CriteriaBuilderConfigurationImpl() {
         loadDefaultProperties();
         loadQueryTransformers();
-        loadEntityManagerEnrichers();
+        loadEntityManagerIntegrator();
     }
 
     private void loadDefaultProperties() {
@@ -56,12 +56,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         }
     }
 
-    private void loadEntityManagerEnrichers() {
-        ServiceLoader<EntityManagerEnricher> serviceLoader = ServiceLoader.load(EntityManagerEnricher.class);
-        Iterator<EntityManagerEnricher> iterator = serviceLoader.iterator();
+    private void loadEntityManagerIntegrator() {
+        ServiceLoader<EntityManagerIntegrator> serviceLoader = ServiceLoader.load(EntityManagerIntegrator.class);
+        Iterator<EntityManagerIntegrator> iterator = serviceLoader.iterator();
 
         if (iterator.hasNext()) {
-            EntityManagerEnricher enricher = iterator.next();
+            EntityManagerIntegrator enricher = iterator.next();
             entityManagerEnrichers.add(enricher);
         }
     }
@@ -78,13 +78,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     @Override
-    public CriteriaBuilderConfiguration registerEntityManagerEnricher(EntityManagerEnricher entityManagerEnricher) {
+    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher) {
         entityManagerEnrichers.add(entityManagerEnricher);
         return this;
     }
 
     @Override
-    public List<EntityManagerEnricher> getEntityManagerEnrichers() {
+    public List<EntityManagerIntegrator> getEntityManagerIntegrators() {
         return entityManagerEnrichers;
     }
 

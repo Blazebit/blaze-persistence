@@ -114,7 +114,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -132,7 +132,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaInfo);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaInfo, registeredFunctions);
 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);
@@ -145,7 +145,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
             this.fromClazz = null;
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory());
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(), registeredFunctions);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -165,8 +165,8 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.resultType = resultClazz;
     }
 
-    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        this(cbf, em, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory());
+    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+        this(cbf, em, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
     @Override

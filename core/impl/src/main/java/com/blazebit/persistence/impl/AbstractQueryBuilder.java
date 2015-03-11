@@ -66,8 +66,8 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         super(builder);
     }
 
-    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias) {
-        super(cbf, em, clazz, alias);
+    public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+        super(cbf, em, clazz, alias, registeredFunctions);
     }
 
     @Override
