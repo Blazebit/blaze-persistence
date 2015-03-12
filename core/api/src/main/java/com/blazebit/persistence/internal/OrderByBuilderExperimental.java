@@ -22,7 +22,7 @@ import com.blazebit.persistence.OrderByBuilder;
  *
  * @author Moritz Becker
  */
-public interface OrderByBuilderExperimental<T extends OrderByBuilderExperimental<T>> extends OrderByBuilder<T> {
+public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends OrderByBuilder<T> {
     /**
      * Adds an order by clause with the given expression to the query.
      *

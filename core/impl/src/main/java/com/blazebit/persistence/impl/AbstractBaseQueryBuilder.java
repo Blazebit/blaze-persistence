@@ -28,10 +28,10 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,7 +49,7 @@ import javax.persistence.metamodel.EntityType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
+public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>, OrderByBuilderExperimental<X> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
