@@ -39,6 +39,7 @@ public class CriteriaBuilderExtension implements Extension {
     private final CriteriaBuilderConfiguration configuration = Criteria.getDefault();
 
     void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        bm.fireEvent(configuration);
         CriteriaBuilderFactory criteriaBuilderFactory = configuration.createCriteriaBuilderFactory();
         Bean<CriteriaBuilderFactory> bean = new BeanBuilder<CriteriaBuilderFactory>(bm)
             .beanClass(CriteriaBuilderFactory.class)

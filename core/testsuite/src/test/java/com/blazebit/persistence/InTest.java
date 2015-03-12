@@ -73,18 +73,7 @@ public class InTest extends AbstractCoreTest {
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").in(ages);
 
-        assertEquals("SELECT d FROM Document d WHERE d.age IN (:param_0)", criteria.getQueryString());
-        criteria.getResultList();
-    }
-    
-    @Test
-    @Ignore("Enable again when HHH-7407 is fixed")
-    public void testIn2() {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
-        criteria.where("d.age").in(ages);
-
-        assertEquals("SELECT d FROM Document d WHERE d.age IN :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age IN " + listParameter("param_0"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -99,17 +88,7 @@ public class InTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
         criteria.where("d.age").notIn(ages);
-        assertEquals("SELECT d FROM Document d WHERE d.age NOT IN (:param_0)", criteria.getQueryString());
-        criteria.getResultList();
-    }
-
-    @Test
-    @Ignore("Enable again when HHH-7407 is fixed")
-    public void testNotIn2() {
-        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        List<Long> ages = new ArrayList<Long>(Arrays.asList(new Long[]{ 1L, 2L, 3L, 4L, 5L }));
-        criteria.where("d.age").notIn(ages);
-        assertEquals("SELECT d FROM Document d WHERE d.age NOT IN :param_0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age NOT IN " + listParameter("param_0"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -123,12 +102,12 @@ public class InTest extends AbstractCoreTest {
     public void testInSubqueryAliasExpression1(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
-                .in("alias", "(FUNCTION('LIMIT', alias, :elementCount))")
+                .in("alias", "(FUNCTION('zero', alias, :elementCount))")
                     .from(Document.class, "d2")
                     .select("d2.id")
-                    .select("FUNCTION('ARRAY_LENGTH',FUNCTION('ARRAY_INTERSECT',d2.id,FUNCTION('CAST_TO_SMALLINT_ARRAY',FUNCTION('STRING_TO_ARRAY',:colors))),1)", "colorMatches")
+                    .select("FUNCTION('zero',FUNCTION('zero',d2.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)", "colorMatches")
                 .end();
-        assertEquals("SELECT d FROM Document d WHERE d.id IN (LIMIT((SELECT d2.id, ARRAY_LENGTH(ARRAY_INTERSECT(d2.id,CAST_TO_SMALLINT_ARRAY(STRING_TO_ARRAY(:colors))),1) AS colorMatches FROM Document d2),:elementCount))", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (" + function("zero", "(SELECT d2.id, " + function("zero", function("zero", "d2.id", function("zero", function("zero", ":colors"))), "1") + " AS colorMatches FROM Document d2)", ":elementCount") + ")", criteria.getQueryString());
     }
     
     // this is not redundant with testInSubqueryAliasExpression1o
@@ -136,9 +115,9 @@ public class InTest extends AbstractCoreTest {
     public void testInSubqueryAliasExpression2(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
-                .in("alias", "(FUNCTION('LIMIT', alias, :elementCount))")
+                .in("alias", "(FUNCTION('zero', alias, :elementCount))")
                     .from(Document.class, "d2")
                 .end();
-        assertEquals("SELECT d FROM Document d WHERE d.id IN (LIMIT((SELECT d2 FROM Document d2),:elementCount))", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (" + function("zero", "(SELECT d2 FROM Document d2)", ":elementCount") + ")", criteria.getQueryString());
     }
 }

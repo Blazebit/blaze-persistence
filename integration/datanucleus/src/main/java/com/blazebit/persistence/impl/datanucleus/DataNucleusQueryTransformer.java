@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.datanucleus;
 
+import com.blazebit.persistence.impl.jpa.ObjectBuilderJPAQueryAdapter;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.spi.QueryTransformer;

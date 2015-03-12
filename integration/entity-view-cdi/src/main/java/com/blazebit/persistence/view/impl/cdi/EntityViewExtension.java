@@ -49,6 +49,7 @@ public class EntityViewExtension implements Extension {
     }
 
     void beforeBuild(@Observes AfterBeanDiscovery abd, BeanManager bm) {
+        bm.fireEvent(configuration);
         final EntityViewManager entityViewManager = configuration.createEntityViewManager();
         Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
             .beanClass(EntityViewManager.class)

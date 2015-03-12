@@ -30,18 +30,18 @@ public class IsEmptyTest extends AbstractCoreTest {
     @Test
     public void testIsEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.name").isEmpty();
+        criteria.where("d.partners").isEmpty();
 
-        assertEquals("SELECT d FROM Document d WHERE d.name IS EMPTY", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.partners IS EMPTY", criteria.getQueryString());
         criteria.getResultList();
     }
 
     @Test
     public void testIsNotEmpty() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.name").isNotEmpty();
+        criteria.where("d.partners").isNotEmpty();
 
-        assertEquals("SELECT d FROM Document d WHERE d.name IS NOT EMPTY", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.partners IS NOT EMPTY", criteria.getQueryString());
         criteria.getResultList();
     }
 }

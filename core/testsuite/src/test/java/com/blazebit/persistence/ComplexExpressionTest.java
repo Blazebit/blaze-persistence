@@ -79,6 +79,7 @@ public class ComplexExpressionTest extends AbstractCoreTest {
 
     @Test
     public void testCaseWhenExpressionOperatorUsesInSelect() {
+        // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN " + caseExp1 + " THEN true ELSE false END");
         String expectedQuery = 

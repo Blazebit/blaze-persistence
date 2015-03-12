@@ -201,7 +201,7 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testSelectCaseWhenSizeAsSubexpression() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").then("2").otherwise("0").where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expectedSubquery = "SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
+        String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") +  ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
         String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();

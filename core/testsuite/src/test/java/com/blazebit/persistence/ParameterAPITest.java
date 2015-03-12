@@ -117,11 +117,11 @@ public class ParameterAPITest extends AbstractCoreTest {
     public void testParametersInFunction() {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.from(Document.class, "d")
-                .where("FUNCTION('F1', FUNCTION('F2', :f2param))").eqExpression("1");
+                .where("FUNCTION('zero', FUNCTION('zero', :f2param))").eqExpression("1");
         cb.setParameter("f2param", 3);
         
         assertTrue(cb.isParameterSet("f2param"));
-        assertEquals("SELECT d FROM Document d WHERE F1(F2(:f2param)) = 1", cb.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE " + function("zero", function("zero", ":f2param")) + " = 1", cb.getQueryString());
     }
     
     @Test
@@ -130,11 +130,11 @@ public class ParameterAPITest extends AbstractCoreTest {
         cb.from(Document.class, "d")
                 .where("d.id").in()
                     .from(Document.class, "d2")
-                    .where("FUNCTION('F1', FUNCTION('F2', :f2param))").eqExpression("1")
+                    .where("FUNCTION('zero', FUNCTION('zero', :f2param))").eqExpression("1")
                 .end();
         cb.setParameter("f2param", 3);
         
         assertTrue(cb.isParameterSet("f2param"));
-        assertEquals("SELECT d FROM Document d WHERE d.id IN (SELECT d2 FROM Document d2 WHERE F1(F2(:f2param)) = 1)", cb.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (SELECT d2 FROM Document d2 WHERE " + function("zero", function("zero", ":f2param")) + " = 1)", cb.getQueryString());
     }
 }

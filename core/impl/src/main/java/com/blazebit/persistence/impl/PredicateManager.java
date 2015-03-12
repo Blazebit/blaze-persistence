@@ -41,6 +41,11 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.OrPredicate;
 
 /**
  *
@@ -213,6 +218,27 @@ public abstract class PredicateManager<T> extends AbstractManager {
         public void visit(InPredicate predicate) {
             predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
             predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+        }
+
+        @Override
+        public void visit(ExistsPredicate predicate) {
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
+        }
+
+        @Override
+        public void visit(MemberOfPredicate predicate) {
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+        }
+
+        @Override
+        public void visit(IsEmptyPredicate predicate) {
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
+        }
+
+        @Override
+        public void visit(IsNullPredicate predicate) {
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
         }
     }
 }

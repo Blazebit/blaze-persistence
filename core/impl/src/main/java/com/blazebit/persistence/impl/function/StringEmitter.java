@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.testsuite.base;
+package com.blazebit.persistence.impl.function;
 
-import java.util.Properties;
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import java.util.List;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0
+ * @author Christian
  */
-public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
+public class StringEmitter implements TemplateEmitter {
 
-    @Override
-    protected Properties applyProperties(Properties properties) {
-        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
-//        properties.put("eclipselink.logging.level.sql", "FINE");
-//        properties.put("eclipselink.logging.parameters", "true");
-        return properties;
+    private final String string;
+
+    public StringEmitter(String string) {
+        this.string = string;
     }
-
+    
+    @Override
+    public void emit(FunctionRenderContext context, List<?> parameters) {
+        context.addChunk(string);
+    }
+    
 }

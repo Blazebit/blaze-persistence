@@ -31,7 +31,6 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,6 +68,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
     protected final JPAInfo jpaInfo;
+    protected final Set<String> registeredFunctions;
 
     protected final AliasManager aliasManager;
     protected final ExpressionFactory expressionFactory;
@@ -105,6 +105,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
         this.jpaInfo = builder.jpaInfo;
+        this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
@@ -132,6 +133,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.parameterManager = parameterManager;
 
+        this.registeredFunctions = registeredFunctions;
         this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaInfo, registeredFunctions);
 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
@@ -750,10 +752,12 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return sbSelectFrom.toString();
     }
 
-    protected void transformQuery(TypedQuery<T> query) {
+    protected <T> TypedQuery<T> transformQuery(TypedQuery<T> query) {
+        TypedQuery<T> currentQuery = query;
         for (QueryTransformer transformer : cbf.getQueryTransformers()) {
-            transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
+            currentQuery = (TypedQuery<T>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
+        return currentQuery;
     }
 
     // TODO: needs equals-hashCode implementation

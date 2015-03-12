@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.testsuite.base;
 
-import java.util.Properties;
+package com.blazebit.persistence.spi;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
  */
-public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
-
-    @Override
-    protected Properties applyProperties(Properties properties) {
-        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
-//        properties.put("eclipselink.logging.level.sql", "FINE");
-//        properties.put("eclipselink.logging.parameters", "true");
-        return properties;
-    }
-
+public interface JpqlFunction {
+    
+    public void render(FunctionRenderContext context);
+    
 }

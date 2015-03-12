@@ -336,7 +336,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private List<T> getQueryResultList() {
         TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString0(), Object[].class);
         if (selectManager.getSelectObjectBuilder() != null) {
-            transformQuery(query);
+            query = transformQuery(query);
         }
 
         parameterizeQuery(query);
@@ -362,10 +362,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
             
             sbSelectFrom.append(", ");
-            if (!jpaInfo.isHibernate) {
-                sbSelectFrom.append("FUNCTION('PAGE_POSITION', (");
-            } else {
+            
+            // TODO: This is JPA Provider specific code that should be abstracted
+            if (jpaInfo.isHibernate) {
                 sbSelectFrom.append("PAGE_POSITION((");
+            } else if (jpaInfo.isEclipseLink24) {
+                sbSelectFrom.append("OPERATOR('PAGE_POSITION', (");
+            } else {
+                sbSelectFrom.append("FUNCTION('PAGE_POSITION', (");
             }
             
             appendSimplePageIdQueryString(sbSelectFrom);

@@ -21,7 +21,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.FunctionEntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,12 +40,14 @@ import javax.persistence.EntityManager;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final List<QueryTransformer> queryTransformers;
+    private final Map<String, Map<String, JpqlFunction>> functions;
     private final List<EntityManagerIntegrator> entityManagerIntegrators;
     private final ExpressionFactory expressionFactory;
     private final Map<String, Object> properties;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
+        this.functions = new HashMap<String, Map<String, JpqlFunction>>(config.getFunctions());
         this.entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>(config.getEntityManagerIntegrators());
         this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
         this.properties = copyProperties(config.getProperties());
@@ -53,6 +55,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
+    }
+    
+    public Map<String, Map<String, JpqlFunction>> getFunctions() {
+        return functions;
     }
 
     public ExpressionFactory getExpressionFactory() {
@@ -74,10 +80,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         EntityManager em = entityManager;
         for (int i = 0; i < entityManagerIntegrators.size(); i++) {
             EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
-            em = integrator.enrich(em);
-            if(integrator instanceof FunctionEntityManagerIntegrator){
-                registeredFunctions.addAll(((FunctionEntityManagerIntegrator) integrator).getRegisteredFunctions());
-            }
+            em = integrator.registerFunctions(em, functions);
+            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
         }
         
         CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, resultClass, alias, registeredFunctions);

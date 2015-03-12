@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.testsuite.base;
+package com.blazebit.persistence.function;
 
-import java.util.Properties;
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest {
+public class ConcatenateFunction implements JpqlFunction {
 
     @Override
-    protected Properties applyProperties(Properties properties) {
-        properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
-//        properties.put("eclipselink.logging.level.sql", "FINE");
-//        properties.put("eclipselink.logging.parameters", "true");
-        return properties;
+    public void render(FunctionRenderContext context) {
+        context.addChunk("concat(");
+        context.addArgument(0);
+        
+        for (int i = 1; i < context.getArgumentsSize(); i++) {
+            context.addChunk(",");
+            context.addArgument(i);
+        }
+        
+        context.addChunk(")");
     }
-
+    
 }

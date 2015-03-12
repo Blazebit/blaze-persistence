@@ -18,6 +18,7 @@ package com.blazebit.persistence.spi;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.
@@ -41,6 +42,32 @@ public interface CriteriaBuilderConfiguration {
      * @return A list of registered query transformers
      */
     public List<QueryTransformer> getQueryTransformers();
+    
+    /**
+     * Registers the given jpql function under the given name in the configuration.
+     *
+     * @param name The name the function should have
+     * @param function The function that should be addded
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration registerFunction(String name, JpqlFunction function);
+    
+    /**
+     * Registers the given jpql function under the given name for the given dbms in the configuration.
+     *
+     * @param name The name the function should have
+     * @param dbms The dbms for which the function should be registered
+     * @param function The function that should be addded
+     * @return this for method chaining
+     */
+    public CriteriaBuilderConfiguration registerFunction(String name, String dbms, JpqlFunction function);
+    
+    /**
+     * Returns the set of registered functions.
+     * 
+     * @return the set of registered functions
+     */
+    public Set<String> getFunctionNames();
     
     /**
      * Registers the given entity manager enricher in the configuration.

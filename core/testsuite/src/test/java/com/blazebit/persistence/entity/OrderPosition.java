@@ -60,10 +60,12 @@ public class OrderPosition implements Serializable {
     @JoinColumns({
             @JoinColumn(
                     name = "orderId",
+                    referencedColumnName = "id.orderId",
                     insertable = false,
                     updatable = false),
             @JoinColumn(
                     name = "position",
+                    referencedColumnName = "id.position",
                     insertable = false,
                     updatable = false) })
     public OrderPositionHead getHead() {
