@@ -38,7 +38,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 import java.util.TreeMap;
 
 /**
@@ -174,6 +178,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         }
     }
 
+    // If you change something here don't forget to also update MappingConstructorImpl#createMethodAttribute
     private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
@@ -186,9 +191,9 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (List.class == attributeType) {
             return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
-        } else if (Set.class == attributeType) {
+        } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             return new MethodMappingSetAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
-        } else if (Map.class == attributeType) {
+        } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             return new MethodMappingMapAttributeImpl<X, Object, Object>(viewType, method, mapping, entityViews);
         } else if (mapping instanceof MappingSubquery) {
             return new MethodSubquerySingularAttributeImpl<X, Object>(viewType, method, mapping, entityViews);

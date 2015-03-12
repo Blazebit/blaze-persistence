@@ -26,5 +26,5 @@ import java.util.Collection;
  * @since 1.0
  */
 public interface CollectionAttribute<X, E> extends PluralAttribute<X, Collection<E>, E> {
-
+    
 }

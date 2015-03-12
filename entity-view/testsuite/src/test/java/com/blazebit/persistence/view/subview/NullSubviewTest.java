@@ -81,7 +81,6 @@ public class NullSubviewTest extends AbstractEntityViewTest {
             .orderByAsc("id");
         CriteriaBuilder<DocumentMasterView> cb = evm.applySetting(EntityViewSetting.create(DocumentMasterView.class), criteria)
             .setParameter("contactPersonNumber", 2);
-        System.out.println(cb.getQueryString());
         List<DocumentMasterView> results = cb.getResultList();
 
         assertEquals(1, results.size());

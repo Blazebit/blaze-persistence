@@ -33,10 +33,14 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
     private final Class<K> keyType;
 
     public ParameterMappingMapAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews);
+        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];
         Class<?>[] typeArguments = ReflectionUtils.resolveTypeArguments(mappingConstructor.getDeclaringType().getJavaType(), parameterType);
         this.keyType = (Class<K>) typeArguments[0];
+        if (isIgnoreIndex()) {
+            throw new IllegalArgumentException("Illegal ignoreIndex mapping for the parameter of the constructor '" + mappingConstructor.getJavaConstructor().toString()
+                + "' at the index '" + index + "'!");
+        }
     }
 
     @Override
@@ -47,6 +51,11 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.MAP;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return true;
     }
 
 }

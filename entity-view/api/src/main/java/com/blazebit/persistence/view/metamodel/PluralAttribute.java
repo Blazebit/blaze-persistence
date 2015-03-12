@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
+import java.util.Comparator;
+
 /**
  * Instances of the type {@linkplain PluralAttribute} represent collection-valued attributes.
  *
@@ -39,6 +41,43 @@ public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
      * @return The element type
      */
     public Class<E> getElementType();
+    
+    /**
+     * Returns whether this collection is indexed or not.
+     * 
+     * @return true if the collection is indexed, false otherwise
+     */
+    public boolean isIndexed();
+    
+    /**
+     * Returns whether this collection is ordered or not.
+     * 
+     * @return true if the collection is ordered, false otherwise
+     */
+    public boolean isOrdered();
+    
+    /**
+     * Returns whether this collection is sorted or not.
+     * 
+     * @return true if the collection is sorted, false otherwise
+     */
+    public boolean isSorted();
+    
+    /**
+     * Returns the comparator that should be used for sorting.
+     * Returns null if no sorting is used or the natural sort order should be used.
+     * 
+     * @return the comparator that should be used for sorting
+     */
+    public Comparator<E> getComparator();
+    
+    /**
+     * Returns the comparator class that should be used for sorting.
+     * Returns null if no sorting is used or the natural sort order should be used.
+     * 
+     * @return the comparator class that should be used for sorting
+     */
+    public Class<Comparator<E>> getComparatorClass();
 
     /**
      * The different collection types.

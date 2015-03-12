@@ -28,13 +28,31 @@ import java.util.Set;
  */
 public class ParameterMappingListAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
+    private final boolean hasIndex;
+    
     public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews);
+        super(mappingConstructor, index, mapping, entityViews, false);
+        this.hasIndex = MetamodelUtils.isIndexedList(mappingConstructor.getDeclaringType().getEntityClass(), mapping);
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.LIST;
+    }
+
+    @Override
+    public boolean isSorted() {
+        return false;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return !isIgnoreIndex() && hasIndex;
+    }
+
+    @Override
+    public boolean isOrdered() {
+        return !isIndexed();
     }
 
 }

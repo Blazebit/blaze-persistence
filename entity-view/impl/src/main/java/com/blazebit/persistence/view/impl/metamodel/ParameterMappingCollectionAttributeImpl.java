@@ -29,13 +29,27 @@ import java.util.Set;
 public class ParameterMappingCollectionAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
     public ParameterMappingCollectionAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews);
-        throw new IllegalArgumentException("Collection types are not supported. Please use a Set or a List instead.");
+        super(mappingConstructor, index, mapping, entityViews, false);
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.COLLECTION;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return false;
+    }
+
+    @Override
+    public boolean isSorted() {
+        return false;
+    }
+    
+    @Override
+    public boolean isOrdered() {
+        return true;
     }
 
 }

@@ -15,42 +15,44 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.CollectionAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.CollectionMapping;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Set;
+import java.util.Comparator;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MethodMappingCollectionAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
+public class CollectionMappingLiteral implements CollectionMapping {
 
-    public MethodMappingCollectionAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews, false);
+    private final Class<? extends Comparator> comparator;
+    private final boolean ordered;
+    private final boolean ignoreIndex;
+
+    public CollectionMappingLiteral(Class<? extends Comparator> comparator, boolean ordered, boolean ignoreIndex) {
+        this.comparator = comparator;
+        this.ordered = ordered;
+        this.ignoreIndex = ignoreIndex;
     }
 
     @Override
-    public CollectionType getCollectionType() {
-        return CollectionType.COLLECTION;
+    public Class<? extends Comparator> comparator() {
+        return comparator;
     }
 
     @Override
-    public boolean isIndexed() {
-        return false;
+    public boolean ordered() {
+        return ordered;
     }
 
     @Override
-    public boolean isSorted() {
-        return false;
-    }
-    
-    @Override
-    public boolean isOrdered() {
-        return true;
+    public boolean ignoreIndex() {
+        return ignoreIndex;
     }
 
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return CollectionMapping.class;
+    }
 }

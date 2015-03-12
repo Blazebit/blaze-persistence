@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.impl.metamodel;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -23,6 +24,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Comparator;
 import java.util.Set;
 
 /**
@@ -34,8 +36,13 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
 
     private final Class<Y> elementType;
     private final boolean subview;
+    private final boolean sorted;
+    private final boolean ordered;
+    private final boolean ignoreIndex;
+    private final Class<Comparator<Y>> comparatorClass;
+    private final Comparator<Y> comparator;
 
-    public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
@@ -44,6 +51,13 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
         }
         
         this.subview = entityViews.contains(elementType);
+        this.sorted = sorted;
+        
+        CollectionMapping collectionMapping = MetamodelUtils.getCollectionMapping(method);
+        this.ordered = collectionMapping.ordered();
+        this.ignoreIndex = collectionMapping.ignoreIndex();
+        this.comparatorClass = MetamodelUtils.getComparatorClass(collectionMapping);
+        this.comparator = MetamodelUtils.getComparator(comparatorClass);
     }
 
     @Override
@@ -74,6 +88,30 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
     @Override
     public boolean isQueryParameter() {
         return false;
+    }
+
+    @Override
+    public boolean isSorted() {
+        return sorted;
+    }
+
+    @Override
+    public boolean isOrdered() {
+        return ordered;
+    }
+    
+    protected boolean isIgnoreIndex() {
+        return ignoreIndex;
+    }
+
+    @Override
+    public Class<Comparator<Y>> getComparatorClass() {
+        return comparatorClass;
+    }
+
+    @Override
+    public Comparator<Y> getComparator() {
+        return comparator;
     }
 
 }

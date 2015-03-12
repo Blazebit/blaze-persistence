@@ -8,11 +8,13 @@ script:
 #after_success:
 #  - "bash ./.travis-deploy.sh"
 matrix:
+  fast_finish: true
   include:
     - env: JPAPROVIDER=hibernate
       jdk: openjdk7
     - env: JPAPROVIDER=hibernate-4.3
       jdk: openjdk7
+  allow_failures:
     - env: JPAPROVIDER=eclipselink
       jdk: openjdk7
     - env: JPAPROVIDER=openjpa

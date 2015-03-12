@@ -27,7 +27,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.NavigableSet;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
 /**
  *
@@ -71,6 +75,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         return viewConstructor.value();
     }
 
+    // If you change something here don't forget to also update ViewTypeImpl#createMethodAttribute
     private static <X> ParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
@@ -83,9 +88,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (List.class == attributeType) {
             return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
-        } else if (Set.class == attributeType) {
+        } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
-        } else if (Map.class == attributeType) {
+        } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
             return new ParameterMappingMapAttributeImpl<X, Object, Object>(constructor, index, mapping, entityViews);
         } else if (mapping instanceof MappingSubquery) {
             return new ParameterSubquerySingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);

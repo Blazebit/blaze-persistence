@@ -32,9 +32,14 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleEl
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.ListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedListTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedSetTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformer;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Attribute;
@@ -254,8 +259,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
         } else {
             MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
             if (attribute.isCollection()) {
-                boolean listKey = attribute instanceof ListAttribute<?, ?>;
-                boolean mapKey = attribute instanceof MapAttribute<?, ?, ?>;
+                PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
+                boolean listKey = pluralAttribute.isIndexed() && attribute instanceof ListAttribute<?, ?>;
+                boolean mapKey = pluralAttribute.isIndexed() && attribute instanceof MapAttribute<?, ?, ?>;
                 int startIndex = tupleOffset + mappingList.size();
 
                 if (listKey) {
@@ -271,7 +277,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 if (attribute.isSubview()) {
                     featuresFound[2] = true;
 
-                    PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
                     int[] newIdPositions;
 
                     if (listKey || mapKey) {
@@ -288,15 +293,46 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 }
 
                 if (listKey) {
-                    tupleTransformator.add(new ListTupleListTransformer(idPositions, startIndex));
-                } else if (mapKey) {
-                    tupleTransformator.add(new MapTupleListTransformer(idPositions, startIndex));
-                } else {
-                    if (attribute instanceof SetAttribute<?, ?>) {
-                        tupleTransformator.add(new SetTupleListTransformer(idPositions, startIndex));
+                    if (pluralAttribute.isSorted()) {
+                        throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        // Collection
-                        throw new IllegalArgumentException("Collection types are not supported. Please use a Set or a List instead.");
+                        tupleTransformator.add(new IndexedListTupleListTransformer(idPositions, startIndex));
+                    }
+                } else if (mapKey) {
+                    if (pluralAttribute.isSorted()) {
+                        tupleTransformator.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                    } else if (pluralAttribute.isOrdered()) {
+                        tupleTransformator.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
+                    } else {
+                        tupleTransformator.add(new MapTupleListTransformer(idPositions, startIndex));
+                    }
+                } else {
+                    switch (pluralAttribute.getCollectionType()) {
+                        case COLLECTION:
+                            if (pluralAttribute.isSorted()) {
+                                throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
+                            } else {
+                                tupleTransformator.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                            }
+                            break;
+                        case LIST:
+                            if (pluralAttribute.isSorted()) {
+                                throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
+                            } else {
+                                tupleTransformator.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                            }
+                            break;
+                        case SET:
+                            if (pluralAttribute.isSorted()) {
+                                tupleTransformator.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                            } else if (pluralAttribute.isOrdered()) {
+                                tupleTransformator.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
+                            } else {
+                                tupleTransformator.add(new SetTupleListTransformer(idPositions, startIndex));
+                            }
+                            break;
+                        case MAP:
+                            throw new IllegalArgumentException("Ignoring the index on the attribute '" + pluralAttribute + "' is not possible!");
                     }
                 }
             } else if (((SingularAttribute) attribute).isQueryParameter()) {

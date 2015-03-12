@@ -15,28 +15,26 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Comparator;
+import java.util.TreeSet;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class SetTupleListTransformer extends AbstractNonIndexedTupleListTransformer<Set<Object>> {
+public class SortedSetTupleListTransformer extends SetTupleListTransformer {
+    
+    private final Comparator<Object> comparator;
 
-    public SetTupleListTransformer(int[] parentIdPositions, int startIndex) {
+    public SortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
         super(parentIdPositions, startIndex);
+        this.comparator = (Comparator<Object>) comparator;
     }
     
     @Override
     protected Object createCollection() {
-        return new HashSet<Object>();
-    }
-
-    @Override
-    protected void addToCollection(Set<Object> set, Object value) {
-        set.add(value);
+        return new TreeSet<Object>(comparator);
     }
 
 }

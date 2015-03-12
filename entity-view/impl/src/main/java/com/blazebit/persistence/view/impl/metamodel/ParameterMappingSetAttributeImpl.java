@@ -28,12 +28,17 @@ import java.util.Set;
 public class ParameterMappingSetAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
     public ParameterMappingSetAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
-        super(mappingConstructor, index, mapping, entityViews);
+        super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.SET;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return false;
     }
 
 }

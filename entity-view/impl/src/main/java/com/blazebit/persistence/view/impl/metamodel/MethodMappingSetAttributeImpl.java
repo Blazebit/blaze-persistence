@@ -29,12 +29,17 @@ import java.util.Set;
 public class MethodMappingSetAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
     public MethodMappingSetAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+        super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method));
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.SET;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return false;
     }
 
 }

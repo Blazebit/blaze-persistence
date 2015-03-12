@@ -15,28 +15,22 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.LinkedHashSet;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class SetTupleListTransformer extends AbstractNonIndexedTupleListTransformer<Set<Object>> {
+public class OrderedSetTupleListTransformer extends SetTupleListTransformer {
 
-    public SetTupleListTransformer(int[] parentIdPositions, int startIndex) {
+    public OrderedSetTupleListTransformer(int[] parentIdPositions, int startIndex) {
         super(parentIdPositions, startIndex);
     }
     
     @Override
     protected Object createCollection() {
-        return new HashSet<Object>();
-    }
-
-    @Override
-    protected void addToCollection(Set<Object> set, Object value) {
-        set.add(value);
+        return new LinkedHashSet<Object>();
     }
 
 }

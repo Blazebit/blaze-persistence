@@ -29,13 +29,31 @@ import java.util.Set;
  */
 public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
+    private final boolean hasIndex;
+    
     public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
+        super(viewType, method, mapping, entityViews, false);
+        this.hasIndex = MetamodelUtils.isIndexedList(viewType.getEntityClass(), mapping);
     }
 
     @Override
     public CollectionType getCollectionType() {
         return CollectionType.LIST;
+    }
+
+    @Override
+    public boolean isSorted() {
+        return false;
+    }
+
+    @Override
+    public boolean isIndexed() {
+        return !isIgnoreIndex() && hasIndex;
+    }
+
+    @Override
+    public boolean isOrdered() {
+        return !isIndexed();
     }
 
 }
