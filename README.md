@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Blazebit/blaze-persistence.svg?branch=master)](https://travis-ci.org/Blazebit/blaze-persistence)
+
 blaze-persistence
 ==========
 blaze-persistence is a rich Criteria API for JPA providers.
