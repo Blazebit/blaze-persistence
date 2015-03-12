@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.datanucleus.function.pageposition;
 
-import com.blazebit.persistence.impl.jpa.function.pageposition.PagePositionFunction;
 import java.util.ArrayList;
 import java.util.List;
 import org.datanucleus.store.rdbms.sql.expression.NumericExpression;
@@ -29,11 +28,11 @@ import org.datanucleus.store.rdbms.sql.method.AbstractSQLMethod;
  */
 public class AbstractPagePositionSQLMethod extends AbstractSQLMethod {
 
-    private final PagePositionFunction function;
-
-    public AbstractPagePositionSQLMethod(PagePositionFunction function) {
-        this.function = function;
-    }
+//    private final PagePositionFunction function;
+//
+//    public AbstractPagePositionSQLMethod(PagePositionFunction function) {
+//        this.function = function;
+//    }
 
     @Override
     public SQLExpression getExpression(SQLExpression expr, List<SQLExpression> args) {
@@ -41,6 +40,7 @@ public class AbstractPagePositionSQLMethod extends AbstractSQLMethod {
         for (int i = 0; i < args.size(); i++) {
             newArgs.add(args.get(i).toSQLText().toSQL());
         }
-        return new NumericExpression(stmt, getMappingForClass(long.class), function.render(newArgs));
+//        return new NumericExpression(stmt, getMappingForClass(long.class), function.render(newArgs));
+        return null;
     }
 }
