@@ -34,5 +34,11 @@ public class JuniorProjectLeader extends ProjectLeader<SmallProject> {
     public Set<SmallProject> getLeadedProjects() {
         return super.getLeadedProjects();
     }
+
+    // Needed for DataNucleus
+    @Override
+    public void setLeadedProjects(Set<SmallProject> leadedProjects) {
+        super.setLeadedProjects(leadedProjects);
+    }
     
 }

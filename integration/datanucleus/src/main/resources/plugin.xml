@@ -15,12 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <plugin>
-    <!-- SQL METHOD -->
-    <extension point="org.datanucleus.store.rdbms.sql_method">
-        <sql-method method="PAGE_POSITION" datastore="mysql" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.MySQLPagePositionSQLMethod"/>
-        <sql-method method="PAGE_POSITION" datastore="oracle" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.OraclePagePositionSQLMethod"/>
-        <sql-method method="PAGE_POSITION" datastore="sybase" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.TransactSQLPagePositionSQLMethod"/>
-        <sql-method method="PAGE_POSITION" datastore="microsoft" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.TransactSQLPagePositionSQLMethod"/>
-        <sql-method method="PAGE_POSITION" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.PagePositionSQLMethod"/>
+    <extension point="org.datanucleus.store.rdbms.datastore_mapping">
+        <mapping java-type="java.sql.Timestamp" rdbms-mapping-class="org.datanucleus.store.rdbms.mapping.datastore.DateRDBMSMapping" 
+            jdbc-type="DATE" sql-type="DATE" default="false"/>
     </extension>
 </plugin>

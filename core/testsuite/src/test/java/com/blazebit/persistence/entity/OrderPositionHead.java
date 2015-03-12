@@ -32,16 +32,17 @@ import javax.persistence.Entity;
  * @since 1.0
  */
 @Entity
-@AttributeOverrides({
-    @AttributeOverride(name = "id.orderId", column = @Column(name = "head_order_id")),
-    @AttributeOverride(name = "id.position", column = @Column(name = "head_position"))
-})
 public class OrderPositionHead implements Serializable {
     
     private OrderPositionHeadId id;
     private Integer number;
 
+    // Note that DataNucleus requires this override to be directly on the id
     @EmbeddedId
+    @AttributeOverrides({
+        @AttributeOverride(name = "orderId", column = @Column(name = "head_order_id")),
+        @AttributeOverride(name = "position", column = @Column(name = "head_position"))
+    })
     public OrderPositionHeadId getId() {
         return id;
     }

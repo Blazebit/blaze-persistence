@@ -93,6 +93,7 @@
                 <configuration>
                     <archive>
                         <index>true</index>
+                        <!-- This is duplicated in META-INF/MANIFEST.MF so we can work within IDE -->
                         <manifestEntries>
                             <Require-Bundle>org.datanucleus, org.datanucleus.store.rdbms</Require-Bundle>
                         </manifestEntries>

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.datanucleus.function;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
 import com.blazebit.persistence.spi.JpqlFunction;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.EntityManager;
@@ -41,15 +42,23 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
         Bundle bundle = new Bundle("blaze-persistence", "blaze-persistence", "blazebit", "1.0", null);
         Extension extension = new Extension(point.getUniqueId(), bundle);
         
+        // TODO: Implement
 //        extension.addConfigurationElement(newMethod(extension, name, dbms, clazz));
         
-        point.addExtension(extension);
+//        <sql-method method="PAGE_POSITION" datastore="mysql" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.MySQLPagePositionSQLMethod"/>
+//        <sql-method method="PAGE_POSITION" datastore="oracle" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.OraclePagePositionSQLMethod"/>
+//        <sql-method method="PAGE_POSITION" datastore="sybase" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.TransactSQLPagePositionSQLMethod"/>
+//        <sql-method method="PAGE_POSITION" datastore="microsoft" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.TransactSQLPagePositionSQLMethod"/>
+//        <sql-method method="PAGE_POSITION" evaluator="com.blazebit.persistence.impl.datanucleus.function.pageposition.PagePositionSQLMethod"/>
+        
+//        point.addExtension(extension);
         return entityManager;
     }
 
     @Override
     public Set<String> getRegisteredFunctions(EntityManager entityManager) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        // TODO: Implement
+        return new HashSet<String>();
     }
 
     private ConfigurationElement newMethod(Extension extension, String name, String datastore, Class<?> clazz) {

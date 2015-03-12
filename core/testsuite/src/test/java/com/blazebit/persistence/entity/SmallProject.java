@@ -30,7 +30,8 @@ public class SmallProject extends Project<JuniorProjectLeader> {
 
     @Override
     public JuniorProjectLeader getLeader() {
-        return super.getLeader();
+        // The verifier does not allow that without casting?!?
+        return (JuniorProjectLeader) super.getLeader();
     }
     
 }

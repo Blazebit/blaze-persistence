@@ -97,7 +97,7 @@
                     <scope>test</scope>
                 </dependency>
             </dependencies>
-<!--            <build>
+            <build>
                 <plugins>
                     <plugin>
                         <groupId>org.datanucleus</groupId>
@@ -105,8 +105,12 @@
                         <version>4.0.0-release</version>
                         <configuration>
                             <api>JPA</api>
-                            <persistenceUnitName>TestPU</persistenceUnitName>
-                            <verbose>true</verbose>
+                            <persistenceUnitName>TestsuiteBase</persistenceUnitName>
+                            <verbose>false</verbose>
+                            <fork>true</fork>
+                            <log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
+                            <metadataDirectory>${project.build.testOutputDirectory}</metadataDirectory>
+                            <useFileListFile>true</useFileListFile>
                         </configuration>
                         <executions>
                             <execution>
@@ -116,9 +120,16 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <dependencies>
+                            <dependency>
+                                <groupId>${project.groupId}</groupId>
+                                <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+                                <version>${project.version}</version>
+                            </dependency>
+                        </dependencies>
                     </plugin>
                 </plugins>
-            </build>-->
+            </build>
         </profile>
         <profile>
             <id>openjpa</id>

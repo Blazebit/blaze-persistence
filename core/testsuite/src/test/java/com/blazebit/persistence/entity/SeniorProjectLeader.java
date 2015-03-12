@@ -34,5 +34,11 @@ public class SeniorProjectLeader extends ProjectLeader<LargeProject> {
     public Set<LargeProject> getLeadedProjects() {
         return super.getLeadedProjects();
     }
+
+    // Needed for DataNucleus
+    @Override
+    public void setLeadedProjects(Set<LargeProject> leadedProjects) {
+        super.setLeadedProjects(leadedProjects);
+    }
     
 }
