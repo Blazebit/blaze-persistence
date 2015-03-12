@@ -30,10 +30,10 @@ import org.hibernate.Query;
 public class HibernateQueryTransformer implements QueryTransformer {
 
     @Override
-    public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {
+    public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         Query hQuery = query.unwrap(Query.class);
         hQuery.setResultTransformer(new ObjectBuilderResultTransformerAdapter(objectBuilder));
-        return query;
+        return (TypedQuery<X>) query;
     }
 
 }

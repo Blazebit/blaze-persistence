@@ -69,7 +69,7 @@ public class EmbeddedTest extends AbstractCoreTest {
     }
     
     @Test
-    @Ignore
+    @Ignore("This is still causing problems in the JoinManager because of the cyclic dependency")
     public void testCyclicDependencyInOnClauseImplicitJoin() {
         CriteriaBuilder<Order> criteria = cbf.create(em, Order.class, "o");
         criteria.leftJoinDefaultOn("o.orderPositions", "position")

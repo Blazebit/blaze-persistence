@@ -38,7 +38,10 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
 
     @Override
     protected void configureParser(JPQLSelectExpressionParser parser) {
-        parser.setTrace(true);
+        if (LOG.isLoggable(Level.FINEST)) {
+            parser.setTrace(true);
+        }
+        
         parser.removeErrorListeners();
         parser.addErrorListener(ERR_LISTENER);
         parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);

@@ -16,15 +16,22 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
+import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
+import java.util.Set;
 
 /**
  *
@@ -34,6 +41,7 @@ import java.util.ServiceLoader;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
+    private final Map<String, Map<String, JpqlFunction>> functions = new HashMap<String, Map<String, JpqlFunction>>();
     private final List<EntityManagerIntegrator> entityManagerEnrichers = new ArrayList<EntityManagerIntegrator>();
     private Properties properties = new Properties();
 
@@ -41,6 +49,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         loadDefaultProperties();
         loadQueryTransformers();
         loadEntityManagerIntegrator();
+        loadFunctions();
+    }
+    
+    private void loadFunctions() {
+        Map<String, JpqlFunction> jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new PagePositionFunction());
+        jpqlFunctions.put("mysql", new MySQLPagePositionFunction());
+        jpqlFunctions.put("oracle", new OraclePagePositionFunction());
+        jpqlFunctions.put("sybase", new TransactSQLPagePositionFunction());
+        jpqlFunctions.put("microsoft", new TransactSQLPagePositionFunction());
+        functions.put("page_position", jpqlFunctions);
     }
 
     private void loadDefaultProperties() {
@@ -64,6 +83,33 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             EntityManagerIntegrator enricher = iterator.next();
             entityManagerEnrichers.add(enricher);
         }
+    }
+    
+    @Override
+    public CriteriaBuilderConfiguration registerFunction(String name, JpqlFunction function) {
+        return registerFunction(name, null, function);
+    }
+    
+    @Override
+    public CriteriaBuilderConfiguration registerFunction(String name, String dbms, JpqlFunction function) {
+        String functionName = name.toLowerCase();
+        Map<String, JpqlFunction> dbmsFunctions = functions.get(functionName);
+        
+        if (dbmsFunctions == null) {
+            functions.put(functionName, dbmsFunctions = new HashMap<String, JpqlFunction>());
+        }
+        
+        dbmsFunctions.put(dbms == null ? null : dbms.toLowerCase(), function);
+        return this;
+    }
+    
+    public Map<String, Map<String, JpqlFunction>> getFunctions() {
+        return functions;
+    }
+    
+    @Override
+    public Set<String> getFunctionNames() {
+        return functions.keySet();
     }
 
     @Override

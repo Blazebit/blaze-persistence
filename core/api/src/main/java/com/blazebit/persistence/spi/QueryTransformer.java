@@ -36,5 +36,5 @@ public interface QueryTransformer {
      * @param objectBuilder The object build that should be used to transform the query
      * @return The transformed query
      */
-    public <T> TypedQuery<T> transformQuery(TypedQuery<T> query, ObjectBuilder<T> objectBuilder);
+    public <T> TypedQuery<T> transformQuery(TypedQuery<?> query, ObjectBuilder<T> objectBuilder);
 }

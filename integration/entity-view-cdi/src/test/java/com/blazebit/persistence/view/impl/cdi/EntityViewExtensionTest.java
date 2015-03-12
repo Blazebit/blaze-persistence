@@ -20,8 +20,7 @@ import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -42,6 +41,7 @@ public class EntityViewExtensionTest {
             .startContexts();
         BeanProvider.injectFields(this);
 
+        assertTrue(ConfigObserver.observed);
         assertNotNull(evm);
         assertFalse(evm.getMetamodel()
             .getViews()

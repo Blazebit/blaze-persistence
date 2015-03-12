@@ -16,7 +16,9 @@
     <name>Blazebit Persistence Integrations</name>
 
     <modules>
+        <module>jpa-base</module>
         <module>hibernate</module>
+        <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>
         <module>core-cdi</module>

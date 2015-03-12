@@ -20,7 +20,7 @@ import javax.inject.Inject;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import org.junit.Test;
 
 /**
@@ -29,7 +29,7 @@ import org.junit.Test;
  * @since 1.0
  */
 public class CriteriaBuilderExtensionTest {
-
+    
     @Inject
     private CriteriaBuilderFactory cbf;
 
@@ -41,6 +41,7 @@ public class CriteriaBuilderExtensionTest {
             .startContexts();
         BeanProvider.injectFields(this);
 
+        assertTrue(ConfigObserver.observed);
         assertNotNull(cbf);
 
         container.shutdown();

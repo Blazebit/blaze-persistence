@@ -14,13 +14,7 @@
 
     <name>Blazebit Persistence Testsuite Base Hibernate</name>
     
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        
+    <dependencies>        
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>

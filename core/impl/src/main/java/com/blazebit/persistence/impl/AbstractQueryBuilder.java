@@ -288,7 +288,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     public TypedQuery<T> getQuery() {
         TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString(), Object[].class);
         if (selectManager.getSelectObjectBuilder() != null) {
-            transformQuery(query);
+            query = transformQuery(query);
         }
 
         parameterizeQuery(query);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.function;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MySQLPagePositionFunction extends PagePositionFunction {
+public class ZeroFunction implements JpqlFunction {
 
-    public MySQLPagePositionFunction() {
-        super("(select rownumber_ from (select @i:=@i+1 as rownumber_, base_.* from (?2) as base_, (SELECT @i:=1) as iter_) where ?1)");
+    @Override
+    public void render(FunctionRenderContext context) {
+        context.addChunk("zero()");
     }
     
 }

@@ -87,7 +87,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
                         + "FROM Document _page_position_d "
                         + "JOIN _page_position_d.owner _page_position_owner_1 "
                         + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
-                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST),"
                         + ":_entityPagePositionParameter"
                     + ") "
                 + "FROM Document d";
@@ -121,7 +121,7 @@ public class KeySetPaginationTest extends AbstractCoreTest {
                         + "JOIN _page_position_d.owner _page_position_owner_1 "
                         + "WHERE _page_position_d.name <> :param_0 "
                         + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
-                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST),"
                         + ":_entityPagePositionParameter"
                     + ") "
                 + "FROM Document d "

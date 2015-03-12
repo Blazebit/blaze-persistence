@@ -124,7 +124,7 @@ public class OrderByTest extends AbstractCoreTest {
     @Test
     public void testOrderByFunctionExperimental(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        ((OrderByBuilderExperimental<CriteriaBuilder<Document>>) criteria).orderByFunctionDesc("FUNCTION('ARRAY_LENGTH',FUNCTION('ARRAY_INTERSECT',d.id,FUNCTION('CAST_TO_SMALLINT_ARRAY',FUNCTION('STRING_TO_ARRAY',:colors))),1)");
-        assertEquals("SELECT d FROM Document d ORDER BY ARRAY_LENGTH(ARRAY_INTERSECT(d.id,CAST_TO_SMALLINT_ARRAY(STRING_TO_ARRAY(:colors))),1) DESC NULLS LAST", criteria.getQueryString());
+        ((OrderByBuilderExperimental<CriteriaBuilder<Document>>) criteria).orderByFunctionDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
+        assertEquals("SELECT d FROM Document d ORDER BY " + function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1") + " DESC NULLS LAST", criteria.getQueryString());
     }
 }

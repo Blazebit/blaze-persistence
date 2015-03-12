@@ -15,23 +15,37 @@
  */
 package com.blazebit.persistence.spi;
 
+import java.util.Map;
+import java.util.Set;
 import javax.persistence.EntityManager;
 
 /**
  * Interface implemented by the criteria provider.
  *
- * It is invoked to enrich entity managers
+ * It is used to integrate some features with the persistence provider.
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
 public interface EntityManagerIntegrator {
 
     /**
-     * Enriches the given entity manager.
+     * Registers the given functions under the given names on the given entity manager.
+     * The dbmsFunctions map the function name to a map of dbms specific functions.
+     * The dbms specific functions map uses a dbms identifier as key.
      *
      * @param entityManager The entity manager which should be enriched
+     * @param dbmsFunctions The functions for various dbms
      * @return The enriched entity manager
      */
-    public EntityManager enrich(EntityManager entityManager);
+    public EntityManager registerFunctions(EntityManager entityManager, Map<String, Map<String, JpqlFunction>> dbmsFunctions);
+    
+    /**
+     * Returns the names of all registered functions.
+     * 
+     * @param entityManager The entity manager which should be queried
+     * @return The set of function names
+     */
+    public Set<String> getRegisteredFunctions(EntityManager entityManager);
 }

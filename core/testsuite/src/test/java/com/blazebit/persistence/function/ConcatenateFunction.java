@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.function;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class OraclePagePositionFunction extends PagePositionFunction {
+public class ConcatenateFunction implements JpqlFunction {
 
     @Override
-    protected String getRownumFunction() {
-        return "rownum";
+    public void render(FunctionRenderContext context) {
+        context.addChunk("concat(");
+        context.addArgument(0);
+        
+        for (int i = 1; i < context.getArgumentsSize(); i++) {
+            context.addChunk(",");
+            context.addArgument(i);
+        }
+        
+        context.addChunk(")");
     }
     
 }

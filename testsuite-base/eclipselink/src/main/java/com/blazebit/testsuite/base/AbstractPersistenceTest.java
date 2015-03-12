@@ -27,8 +27,8 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected Properties applyProperties(Properties properties) {
         properties.put("eclipselink.ddl-generation", "drop-and-create-tables");
-        properties.put("eclipselink.logging.level.sql", "FINE");
-        properties.put("eclipselink.logging.parameters", "true");
+//        properties.put("eclipselink.logging.level.sql", "FINE");
+//        properties.put("eclipselink.logging.parameters", "true");
         return properties;
     }
 

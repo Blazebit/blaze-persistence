@@ -176,16 +176,17 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testPaginationWithReferenceObject() {
+        // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
                 "SELECT COUNT(DISTINCT d.id), "
-                + "PAGE_POSITION("
-                        + "(SELECT _page_position_d.id "
+                + function("PAGE_POSITION",
+                        "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "GROUP BY _page_position_d.id, _page_position_d.name "
-                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
-                        + ":_entityPagePositionParameter"
-                    + ") "
+                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST)",
+                        ":_entityPagePositionParameter")
+                    + " "
                 + "FROM Document d";
         
         PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
@@ -209,17 +210,18 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testPaginationWithNotExistingReferenceObject() {
+        // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
                 "SELECT COUNT(DISTINCT d.id), "
-                + "PAGE_POSITION("
-                        + "(SELECT _page_position_d.id "
+                + function("PAGE_POSITION",
+                        "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "WHERE _page_position_d.name <> :param_0 "
                         + "GROUP BY _page_position_d.id, _page_position_d.name "
-                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST), "
-                        + ":_entityPagePositionParameter"
-                    + ") "
+                        + "ORDER BY _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST)",
+                        ":_entityPagePositionParameter")
+                    + " "
                 + "FROM Document d "
                 + "WHERE d.name <> :param_0";
         
@@ -408,6 +410,7 @@ public class PaginationTest extends AbstractCoreTest {
     
     @Test
     public void testCountQueryWhereClauseConjuncts() {
+        // TODO: Maybe report that EclipseLink has a bug in case when rendering
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
             .select("w.id", "Workflow_id")

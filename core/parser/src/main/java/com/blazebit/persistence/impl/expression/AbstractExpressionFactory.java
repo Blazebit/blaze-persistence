@@ -38,7 +38,7 @@ import org.antlr.v4.runtime.dfa.DFA;
  */
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
-    private static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+    protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     
     private Expression createExpression(RuleInvoker ruleInvoker, String expression){
         return createExpression(ruleInvoker, expression, true);

@@ -17,7 +17,9 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -45,18 +47,46 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());
-            if(registeredFunctions.contains(functionName.toLowerCase()) || !jpaInfo.isJPA21){
-                // resolve function
-                sb.append(functionName);
-                sb.append('(');
-                if (expression.getExpressions().size() > 1) {
-                    expression.getExpressions().get(1).accept(this);
-                    for (int i = 2; i < expression.getExpressions().size(); i++) {
-                        sb.append(",");
+            if(registeredFunctions.contains(functionName.toLowerCase())) {
+                if (jpaInfo.isHibernate) {
+                    // resolve function
+                    sb.append(functionName);
+                    sb.append('(');
+                    if (expression.getExpressions().size() > 1) {
+                        expression.getExpressions().get(1).accept(this);
+                        for (int i = 2; i < expression.getExpressions().size(); i++) {
+                            sb.append(",");
+                            expression.getExpressions().get(i).accept(this);
+                        }
+                    }
+                    sb.append(')');
+                } else {
+                    // EclipseLink operator style
+                    sb.append("OPERATOR('");
+                    sb.append(functionName);
+                    sb.append('\'');
+
+                    for (int i = 1; i < expression.getExpressions().size(); i++) {
+                        sb.append(',');
                         expression.getExpressions().get(i).accept(this);
                     }
+
+                    sb.append(')');
                 }
+            } else if (jpaInfo.isJPA21) {
+                // Add the JPA 2.1 Function style function
+                sb.append("FUNCTION('");
+                sb.append(functionName);
+                sb.append('\'');
+                
+                for (int i = 1; i < expression.getExpressions().size(); i++) {
+                    sb.append(',');
+                    expression.getExpressions().get(i).accept(this);
+                }
+                
                 sb.append(')');
+            } else {
+                throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
             }
         } else {
             super.visit(expression);
@@ -100,6 +130,30 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             sb.append(baseNode.getAliasInfo().getAlias())
                     .append(".")
                     .append(expression.getField());
+        }
+    }
+    
+    @Override
+    public void visit(ParameterExpression expression) {
+        String paramName;
+        if (expression.getName() == null) {
+            throw new IllegalStateException("Unsatisfied parameter " + expression.getName());
+        } else {
+            paramName = expression.getName();
+        }
+        // Workaround for hibernate
+        // TODO: Remove when HHH-7407 is fixed
+        boolean needsBrackets = jpaInfo.isHibernate && expression.getValue() instanceof List<?> && ((List<?>) expression.getValue()).size() > 1;
+        
+        if (needsBrackets) {
+            sb.append('(');
+        }
+        
+        sb.append(":");
+        sb.append(paramName);
+        
+        if (needsBrackets) {
+            sb.append(')');
         }
     }
 

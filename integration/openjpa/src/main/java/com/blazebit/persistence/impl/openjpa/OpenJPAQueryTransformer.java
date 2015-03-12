@@ -35,10 +35,10 @@ public class OpenJPAQueryTransformer implements QueryTransformer {
     }
 
     @Override
-    public <X> TypedQuery<X> transformQuery(TypedQuery<X> query, ObjectBuilder<X> objectBuilder) {
+    public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         OpenJPAQuerySPI nativeQuery = query.unwrap(OpenJPAQuerySPI.class);
         nativeQuery.addAggregateListener(new ObjectBuilderAggregateListenerAdapter(objectBuilder));
-        return query;
+        return (TypedQuery<X>) query;
     }
 
 }

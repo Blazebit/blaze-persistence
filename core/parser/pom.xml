@@ -33,14 +33,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-        <!-- Platform dependencies -->
-
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
         
         <!-- Test dependencies -->
         <dependency>

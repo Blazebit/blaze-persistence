@@ -37,6 +37,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
 
     @Test
     public void testCaseWhenBooleanExpressionSelect() {
+        // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END");
         String expectedQuery = "SELECT CASE WHEN localized_locale_1.name IS NULL THEN localized_workflow_defaultLanguage_1 ELSE localized_locale_1 END FROM Workflow workflow"
@@ -49,6 +50,7 @@ public class MultipleJoinComplexExpressionTest extends AbstractCoreTest {
     
     @Test
     public void testCaseWhenWithFunctionsInSelectAndLiterals() {
+        // TODO: Report that EclipseLink has a bug in case when handling
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
                 .select("SUBSTRING(COALESCE(CASE WHEN localized[:locale].name IS NULL THEN localized[defaultLanguage] ELSE localized[:locale] END,' - '),0,20)");
         String expectedQuery = 

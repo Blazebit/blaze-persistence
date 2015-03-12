@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.view.impl.cdi;
+
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import javax.enterprise.event.Observes;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class TransactSQLPagePositionFunction extends PagePositionFunction {
+public class ConfigObserver {
 
-    @Override
-    protected String getRownumFunction() {
-        return "row_number() over(order by (select 0))";
+    public static boolean observed = false;
+    
+    public void testObserve(@Observes EntityViewConfiguration config) {
+        observed = true;
     }
     
 }

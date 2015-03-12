@@ -648,15 +648,16 @@ public class JoinManager extends AbstractManager {
         int maybeSingularAssociationIdIndex = pathElements.size() - 1;
         ManagedType<?> baseType;
         Attribute<?, ?> maybeSingularAssociation;
+        String maybeSingularAssociationName = getSimpleName(pathElements.get(maybeSingularAssociationIndex));
 
         if (parent == null) {
             // This is the case when we have exactly 2 path elements
-            AliasInfo a = aliasManager.getAliasInfo(pathElements.get(maybeSingularAssociationIndex).toString());
+            AliasInfo a = aliasManager.getAliasInfo(maybeSingularAssociationName);
 
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
                 baseType = metamodel.managedType(rootNode.getPropertyClass());
-                maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
+                maybeSingularAssociation = baseType.getAttribute(maybeSingularAssociationName);
             } else if (!(a instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("Can't dereference select alias in the expression!");
             } else {
@@ -670,7 +671,7 @@ public class JoinManager extends AbstractManager {
 
         } else {
             baseType = metamodel.managedType(parent.getPropertyClass());
-            maybeSingularAssociation = baseType.getAttribute(pathElements.get(maybeSingularAssociationIndex).toString());
+            maybeSingularAssociation = baseType.getAttribute(maybeSingularAssociationName);
         }
 
         if (maybeSingularAssociation == null) {
@@ -685,13 +686,24 @@ public class JoinManager extends AbstractManager {
 
         Class<?> maybeSingularAssociationClass = resolveFieldClass(baseType.getJavaType(), maybeSingularAssociation);
         ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociationClass);
-        Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationType.getAttribute(pathElements.get(maybeSingularAssociationIdIndex).toString());
+        String maybeSingularAssociationIdName = getSimpleName(pathElements.get(maybeSingularAssociationIdIndex));
+        Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationType.getAttribute(maybeSingularAssociationIdName);
 
         if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
             return false;
         }
 
         return ((SingularAttribute<?, ?>) maybeSingularAssociationId).isId();
+    }
+    
+    private String getSimpleName(PathElementExpression element) {
+        if (element == null) {
+            return null;
+        } else if (element instanceof ArrayExpression) {
+            return ((ArrayExpression) element).getBase().getProperty();
+        } else {
+            return element.toString();
+        }
     }
 
     private String getJoinAlias(ArrayExpression expr) {

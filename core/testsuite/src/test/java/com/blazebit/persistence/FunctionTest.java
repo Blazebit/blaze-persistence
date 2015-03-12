@@ -17,6 +17,12 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Workflow;
+import com.blazebit.persistence.function.ConcatenateFunction;
+import com.blazebit.persistence.function.ZeroFunction;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.JpqlFunction;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
@@ -39,24 +45,24 @@ public class FunctionTest extends AbstractCoreTest {
     @Test
     public void testCustomFunctionNoArgs() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
-            .select("FUNCTION('bla')");
-        String expectedQuery = "SELECT bla() FROM Workflow workflow";
+            .select("FUNCTION('zero')");
+        String expectedQuery = "SELECT " + function("zero") + " FROM Workflow workflow";
         assertEquals(expectedQuery, cb.getQueryString());
     }
     
     @Test
     public void testCustomFunctionSingleArg() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
-            .select("FUNCTION('bla', id)");
-        String expectedQuery = "SELECT bla(workflow.id) FROM Workflow workflow";
+            .select("FUNCTION('zero', id)");
+        String expectedQuery = "SELECT " + function("zero", "workflow.id") + " FROM Workflow workflow";
         assertEquals(expectedQuery, cb.getQueryString());
     }
     
     @Test
     public void testCustomFunctionMultipleArgs() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
-            .select("FUNCTION('bla', id, id)");
-        String expectedQuery = "SELECT bla(workflow.id,workflow.id) FROM Workflow workflow";
+            .select("FUNCTION('zero', id, id)");
+        String expectedQuery = "SELECT " + function("zero", "workflow.id", "workflow.id") + " FROM Workflow workflow";
         assertEquals(expectedQuery, cb.getQueryString());
     }
 }

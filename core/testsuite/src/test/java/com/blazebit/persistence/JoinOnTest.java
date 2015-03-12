@@ -33,7 +33,7 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.leftJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WITH l LIKE :param_0", crit
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l " + ON_CLAUSE + " l LIKE :param_0", crit
             .getQueryString());
         crit.getResultList();
     }
@@ -44,7 +44,7 @@ public class JoinOnTest extends AbstractCoreTest {
         crit.rightJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 RIGHT JOIN partners_1.localized l WITH l LIKE :param_0", crit.getQueryString());
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 RIGHT JOIN partners_1.localized l " + ON_CLAUSE + " l LIKE :param_0", crit.getQueryString());
         crit.getResultList();
     }
 
@@ -53,7 +53,7 @@ public class JoinOnTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.innerJoinOn("d.partners.localized", "l").on("l").like().value("%dld").noEscape().end();
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 JOIN partners_1.localized l WITH l LIKE :param_0",
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.partners partners_1 JOIN partners_1.localized l " + ON_CLAUSE + " l LIKE :param_0",
                      crit.getQueryString());
         crit.getResultList();
     }
@@ -74,7 +74,7 @@ public class JoinOnTest extends AbstractCoreTest {
             .endOr().end();
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WITH l LIKE :param_0 AND l > :param_1 AND (l = :param_2 OR (l = :param_3 AND (l = :param_4)))",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l " + ON_CLAUSE + " l LIKE :param_0 AND l > :param_1 AND (l = :param_2 OR (l = :param_3 AND (l = :param_4)))",
             crit.getQueryString());
         crit.getResultList();
     }

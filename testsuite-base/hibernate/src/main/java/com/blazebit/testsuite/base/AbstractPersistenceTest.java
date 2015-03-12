@@ -32,8 +32,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
         properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
-        properties.put("hibernate.show_sql", "true");
-        properties.put("hibernate.format_sql", "true");
+        // We use the following only for debugging purposes
+        // Normally these settings should be disabled since the output would be too big TravisCI
+//        properties.put("hibernate.show_sql", "true");
+//        properties.put("hibernate.format_sql", "true");
         return properties;
     }
 }

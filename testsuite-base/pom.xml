@@ -16,6 +16,7 @@
     <modules>
         <module>jpa</module>
         <module>hibernate</module>
+        <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>
     </modules>

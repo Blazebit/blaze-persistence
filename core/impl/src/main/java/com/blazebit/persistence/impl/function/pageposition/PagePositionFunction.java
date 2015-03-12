@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,62 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.hibernate.function.pageposition;
+package com.blazebit.persistence.impl.function.pageposition;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
-import org.hibernate.dialect.function.TemplateRenderer;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.LongType;
-import org.hibernate.type.Type;
+import com.blazebit.persistence.impl.function.TemplateRenderer;
+import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  *
- * @author Christian Beikov
- * @since 1.0
+ * @author Christian
  */
-public class PagePositionFunction implements SQLFunction {
-    
+public class PagePositionFunction implements JpqlFunction {
+
     private final TemplateRenderer renderer;
-    
-    protected PagePositionFunction(String template) {
-        this.renderer = new TemplateRenderer(template);
+
+    public PagePositionFunction() {
+        this.renderer = new TemplateRenderer("(select base1_.rownumber_ from (select " + getRownumFunction() + " as rownumber_, base_.* from ?1 as base_) as base1_ where ?2 = base1_.?3)");
     }
     
-    public PagePositionFunction() {
-        //PAGE_POSITION(ID_SUBQUERY, ID_VALUE)
-        this.renderer = new TemplateRenderer("(select base1_.rownumber_ from (select " + getRownumFunction() + " as rownumber_, base_.* from ?1 as base_) as base1_ where ?2 = base1_.?3)");
+    public PagePositionFunction(String template) {
+        this.renderer = new TemplateRenderer(template);
     }
     
     protected String getRownumFunction() {
         return "row_number() over ()";
     }
-
+    
     @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return LongType.INSTANCE;
-    }
-
-    @Override
-    public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) throws QueryException {
-        if (args.size() != 2) {
-            throw new RuntimeException("The page position function needs exactly two arguments <base_query> and <entity_id>! args=" + args);
+    public void render(FunctionRenderContext context) {
+        if (context.getArgumentsSize() != 2) {
+            throw new RuntimeException("The page position function needs exactly two arguments <base_query> and <entity_id>! args=" + context);
         }
         
-        String subquery = args.get(0).toString();
+        String subquery = context.getArgument(0);
         String subqueryStart = "(select ";
         int fromIndex;
         
@@ -91,12 +68,11 @@ public class PagePositionFunction implements SQLFunction {
         }
         
         String idName = id.substring(dotIndex + 1);
-        List<Object> newArgs = new ArrayList<Object>(3);
-        newArgs.add(subquery);
-        newArgs.add(args.get(1));
-        newArgs.add(idName);
-        
-        return renderer.render(newArgs, factory);
+        renderer.start(context)
+                .addArgument(0)
+                .addArgument(1)
+                .addParameter(idName)
+                .build();
     }
     
     private boolean startsWithIgnoreCase(String s1, String s2) {

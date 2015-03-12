@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.spi;
 
-import java.util.Set;
-
 /**
  *
- * @author Moritz Becker
+ * @author Christian Beikov
  */
-public interface FunctionEntityManagerIntegrator extends EntityManagerIntegrator {
-    public Set<String> getRegisteredFunctions();
+public interface JpqlFunction {
+    
+    public void render(FunctionRenderContext context);
+    
 }
