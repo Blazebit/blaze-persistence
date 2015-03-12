@@ -367,13 +367,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             if (jpaInfo.isHibernate) {
                 sbSelectFrom.append("PAGE_POSITION((");
             } else if (jpaInfo.isEclipseLink24) {
-                sbSelectFrom.append("OPERATOR('PAGE_POSITION', (");
+                sbSelectFrom.append("OPERATOR('PAGE_POSITION',(");
             } else {
-                sbSelectFrom.append("FUNCTION('PAGE_POSITION', (");
+                sbSelectFrom.append("FUNCTION('PAGE_POSITION',(");
             }
             
             appendSimplePageIdQueryString(sbSelectFrom);
-            sbSelectFrom.append("), ");
+            sbSelectFrom.append("),");
             
             sbSelectFrom.append(':').append(ENTITY_PAGE_POSITION_PARAMETER_NAME);
             sbSelectFrom.append(")");

@@ -16,6 +16,11 @@
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
+import javax.persistence.AssociationOverride;
+import javax.persistence.AssociationOverrides;
+import javax.persistence.AttributeOverride;
+import javax.persistence.AttributeOverrides;
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -27,6 +32,10 @@ import javax.persistence.Entity;
  * @since 1.0
  */
 @Entity
+@AttributeOverrides({
+    @AttributeOverride(name = "id.orderId", column = @Column(name = "head_order_id")),
+    @AttributeOverride(name = "id.position", column = @Column(name = "head_position"))
+})
 public class OrderPositionHead implements Serializable {
     
     private OrderPositionHeadId id;
