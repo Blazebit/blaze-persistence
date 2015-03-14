@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -57,6 +58,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
 
     private Predicate whenPredicate;
     private GeneralCaseExpression expression;
+    private Expression thenExpression;
     
     private final SubqueryBuilderListenerImpl<?> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener<RestrictionBuilderImpl<?>>();
     private final ExpressionBuilderEndedListener listener;
@@ -110,11 +112,26 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     }
 
     @Override
-    public CaseWhenBuilder<T> then(String expression) {
-        whenClauses.add(new WhenClauseExpression(whenPredicate, expressionFactory.createScalarExpression(expression)));
+    public CaseWhenBuilder<T> thenExpression(String expression) {
+        // verify that thenExpression is called for the first time
+        if(thenExpression != null){
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
+        }
+        thenExpression = expressionFactory.createScalarExpression(expression);
+        whenClauses.add(new WhenClauseExpression(whenPredicate, thenExpression));
         return this;
     }
-
+    
+    @Override
+    public CaseWhenBuilder<T> then(Object value) {
+        if(thenExpression != null){
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
+        }
+        thenExpression = new ParameterExpression(value);
+        whenClauses.add(new WhenClauseExpression(whenPredicate, thenExpression));
+        return this;
+    }
+    
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd() {
         verifyBuilderEnded();
@@ -128,7 +145,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     }
 
     @Override
-    public T otherwise(String elseExpression) {
+    public T otherwiseExpression(String elseExpression) {
         verifyBuilderEnded();
         if(whenClauses.isEmpty()){
             throw new IllegalStateException("No when clauses specified");
@@ -138,6 +155,17 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         return result;
     }
 
+    @Override
+    public T otherwise(Object value) {
+        verifyBuilderEnded();
+        if(whenClauses.isEmpty()){
+            throw new IllegalStateException("No when clauses specified");
+        }
+        expression = new GeneralCaseExpression(whenClauses, new ParameterExpression(value));
+        listener.onBuilderEnded(this);
+        return result;
+    }
+    
     @Override
     public void onBuilderEnded(PredicateBuilder o) {
         super.onBuilderEnded(o);

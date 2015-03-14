@@ -475,7 +475,7 @@ public class HavingTest extends AbstractCoreTest {
     @Test
     public void testHavingCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").then("2").otherwise("1").eqExpression("d.idx");
+        crit.groupBy("d.id").havingCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -508,8 +508,8 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingAndCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingOr().havingAnd().havingCase()
-                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
-                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endAnd().endOr();
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
+                .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endAnd().endOr();
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -530,8 +530,8 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingOrCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.groupBy("d.id").havingOr().havingCase()
-                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
-                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endOr();
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
+                .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endOr();
         String expected = "SELECT d FROM Document d GROUP BY d.id HAVING CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 

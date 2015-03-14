@@ -368,6 +368,7 @@ public class ExpressionUtils {
 
             @Override
             public void visit(FunctionExpression expression) {
+                super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
                 for (Expression expr : expression.getExpressions()) {
                     transformed.add(replacementTransformer.transform(expr, null));

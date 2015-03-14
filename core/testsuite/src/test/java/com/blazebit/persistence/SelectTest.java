@@ -17,7 +17,13 @@ package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.function.ConcatenateFunction;
+import com.blazebit.persistence.function.ZeroFunction;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
 import org.junit.Ignore;
@@ -31,6 +37,22 @@ import org.junit.Test;
  */
 public class SelectTest extends AbstractCoreTest {
 
+    @Override
+    protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
+        config = super.configure(config);
+        config.registerFunction("array", new ZeroFunction());
+        config.registerFunction("unnest", new ZeroFunction());
+        return config;
+    }
+    
+    protected Set<String> getRegisteredFunctions() {
+        Set<String> functions = super.getRegisteredFunctions();
+        functions.addAll(Arrays.asList(
+                "array",
+                "unnest"));
+        return functions;
+    }
+    
     @Test
     public void testSelectNonEntity() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
@@ -310,7 +332,7 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
                 .select("owner.name")
                 .orderByDesc("id");
 
@@ -322,7 +344,7 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectNestedAggregatePaginated() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
                 .select("owner.name")
                 .orderByDesc("id")
                 .page(0, 10);
@@ -342,7 +364,7 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
                 .select("owner")
                 .orderByDesc("id");
 
@@ -359,7 +381,7 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectAggregateEntitySelectPaginated() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
                 .select("owner")
                 .orderByDesc("id")
                 .page(0, 10);
@@ -378,6 +400,17 @@ public class SelectTest extends AbstractCoreTest {
         cb.getResultList();
     }
     
+    @Test
+    public void testSelectSuperExpressionSubquery(){
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.selectSubquery("alias", "FUNCTION('ARRAY',alias)")
+                .from(Document.class, "d2")
+                .select("FUNCTION('UNNEST',d2.creationDate)")
+                .distinct()
+        .end();
+        
+        assertEquals("SELECT " + function("ARRAY", "(SELECT DISTINCT " + function("UNNEST","d2.creationDate") + " FROM Document d2)") + " FROM Document document", cb.getQueryString());
+    }
 //    @Test
 //    public void testSelectAggregateEntitySelectLazyAssociation() {
 //        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")

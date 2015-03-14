@@ -348,7 +348,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.whereCase().when("d.id").geExpression("d.age").then("2").otherwise("1").eqExpression("d.idx");
+        crit.whereCase().when("d.id").geExpression("d.age").thenExpression("2").otherwiseExpression("1").eqExpression("d.idx");
         String expected = "SELECT d FROM Document d WHERE CASE WHEN d.id >= d.age THEN 2 ELSE 1 END = d.idx";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -381,8 +381,8 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereAndCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereOr().whereAnd().whereCase()
-                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
-                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endAnd().endOr();
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
+                .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endAnd().endOr();
         String expected = "SELECT d FROM Document d WHERE CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -403,8 +403,8 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereOrCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.whereOr().whereCase()
-                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").then("2")
-                .when("d.id").eqExpression("4").then("4").otherwise("3").eqExpression("2").endOr();
+                .whenAnd().and("d.id").eqExpression("d.age").and("d.age").ltExpression("4").thenExpression("2")
+                .when("d.id").eqExpression("4").thenExpression("4").otherwiseExpression("3").eqExpression("2").endOr();
         String expected = "SELECT d FROM Document d WHERE CASE WHEN d.id = d.age AND d.age < 4 THEN 2 WHEN d.id = 4 THEN 4 ELSE 3 END = 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -424,7 +424,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCase() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhen("d.age").eqExpression("3").then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhen("d.age").eqExpression("3").thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN d.age = 3 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -433,7 +433,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseAnd() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenAnd().and("d.id").eqExpression("3").and("d.age").ltExpression("3").then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenAnd().and("d.id").eqExpression("3").and("d.age").ltExpression("3").thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN d.id = 3 AND d.age < 3 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -442,7 +442,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseOr() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenOr().or("d.id").eqExpression("3").or("d.age").ltExpression("3").then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenOr().or("d.id").eqExpression("3").or("d.age").ltExpression("3").thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN d.id = 3 OR d.age < 3 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -451,7 +451,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseExists() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenExists().from(Person.class).end().then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenExists().from(Person.class).end().thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN EXISTS (SELECT person FROM Person person) THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -460,7 +460,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseNotExists() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenNotExists().from(Person.class).end().then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenNotExists().from(Person.class).end().thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN NOT EXISTS (SELECT person FROM Person person) THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -469,7 +469,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseSubquery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenSubquery().from(Person.class).select("COUNT(person.id)").end().geExpression("4").then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenSubquery().from(Person.class).select("COUNT(person.id)").end().geExpression("4").thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN (SELECT COUNT(person.id) FROM Person person) >= 4 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
@@ -478,7 +478,7 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereRightSideCaseSubqueryExpression() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.id").lt().caseWhenSubquery("s", "s+1").from(Person.class).select("COUNT(person.id)").end().geExpression("4").then("4").otherwise("1");
+        crit.where("d.id").lt().caseWhenSubquery("s", "s+1").from(Person.class).select("COUNT(person.id)").end().geExpression("4").thenExpression("4").otherwiseExpression("1");
         String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN (SELECT COUNT(person.id) FROM Person person)+1 >= 4 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 

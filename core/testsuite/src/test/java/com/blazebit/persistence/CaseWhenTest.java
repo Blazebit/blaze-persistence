@@ -36,19 +36,19 @@ public class CaseWhenTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
         criteria.selectCase("myAlias")
-                .when("d.name").eqExpression("'v'").then("2")
+                .when("d.name").eqExpression("'v'").thenExpression("2")
                 .whenAnd()
                 .and("d.name").eqExpression("'v'")
                 .and("d.name").eqExpression("'i'")
-                .then("1")
+                .thenExpression("1")
                 .whenAnd()
                 .and("d.name").eqExpression("'v'")
                 .and("d.name").eqExpression("'i'")
-                .then("1")
+                .thenExpression("1")
                 .whenOr()
                 .or("d.name").eqExpression("'v'")
                 .or("d.name").eqExpression("'i'")
-                .then("1")
+                .thenExpression("1")
                 .whenOr()
                 .and()
                 .and("d.name").eqExpression("'v'")
@@ -58,8 +58,8 @@ public class CaseWhenTest extends AbstractCoreTest {
                 .and("d.name").eqExpression("'v'")
                 .and("d.name").eqExpression("'i'")
                 .endAnd()
-                .then("2")
-                .otherwise("0");
+                .thenExpression("2")
+                .otherwiseExpression("0");
 
         String expected = "SELECT CASE "
                 + "WHEN d.name = 'v' THEN 2 "
@@ -77,8 +77,8 @@ public class CaseWhenTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
         criteria.selectCase()
-                .when("d.name").eqExpression("'v'").then("2")
-                .otherwise("0");
+                .when("d.name").eqExpression("'v'").thenExpression("2")
+                .otherwiseExpression("0");
 
         String expected = "SELECT CASE "
                 + "WHEN d.name = 'v' THEN 2 "
@@ -91,21 +91,21 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testGeneralCaseWhenNoAndClauses() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
-        verifyException(criteria.selectCase().whenAnd(), IllegalStateException.class).then("d.name");
+        verifyException(criteria.selectCase().whenAnd(), IllegalStateException.class).thenExpression("d.name");
     }
 
     @Test
     public void testGeneralCaseWhenNoOrClauses() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
 
-        verifyException(criteria.selectCase().whenOr(), IllegalStateException.class).then("d.name");
+        verifyException(criteria.selectCase().whenOr(), IllegalStateException.class).thenExpression("d.name");
     }
 
     @Test
     public void testGeneralCaseWhenOrThenBuilderNotEnded() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         CaseWhenStarterBuilder<?> caseWhenBuilder = criteria.selectCase();
-        caseWhenBuilder.whenOr().or("x").ltExpression("y").then("2").whenOr();
+        caseWhenBuilder.whenOr().or("x").ltExpression("y").thenExpression("2").whenOr();
 
         verifyException(caseWhenBuilder, BuilderChainingException.class).whenAnd();
         verifyException(caseWhenBuilder, BuilderChainingException.class).whenOr();
@@ -121,7 +121,7 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testGeneralCaseWhenAndThenBuilderNotEnded() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         CaseWhenStarterBuilder<?> caseWhenBuilder = criteria.selectCase();
-        caseWhenBuilder.whenAnd().and("x").ltExpression("y").then("2").whenAnd();
+        caseWhenBuilder.whenAnd().and("x").ltExpression("y").thenExpression("2").whenAnd();
 
         verifyException(caseWhenBuilder, BuilderChainingException.class).whenAnd();
         verifyException(caseWhenBuilder, BuilderChainingException.class).whenOr();
@@ -145,7 +145,7 @@ public class CaseWhenTest extends AbstractCoreTest {
         verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orNotExists();
         verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orSubquery();
         verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).orSubquery("test", "test");
-        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).then("2");
+        verifyException(caseWhenOrThenBuilder, BuilderChainingException.class).thenExpression("2");
         verifyException(criteria, BuilderChainingException.class).getQueryString();
     }
 
@@ -161,7 +161,7 @@ public class CaseWhenTest extends AbstractCoreTest {
         verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andNotExists();
         verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andSubquery();
         verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).andSubquery("test", "test");
-        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).then("2");
+        verifyException(caseWhenAndThenBuilder, BuilderChainingException.class).thenExpression("2");
         verifyException(criteria, BuilderChainingException.class).getQueryString();
     }
 
@@ -199,11 +199,20 @@ public class CaseWhenTest extends AbstractCoreTest {
 
     @Test
     public void testSelectCaseWhenSizeAsSubexpression() {
-        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").then("2").otherwise("0").where("d.partners.name").like().expression("'%onny'").noEscape();
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").thenExpression("2").otherwiseExpression("0").where("d.partners.name").like().expression("'%onny'").noEscape();
 
         String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") +  ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
         String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
+    }
+    
+    @Test
+    public void testThenParameterValue(){
+        CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").then(1).otherwise(0).where("d.partners.name").like().expression("'%onny'").noEscape();
+
+        String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") +  ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
+        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN :param_0 ELSE :param_1 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
+        assertEquals(expected, criteria.getQueryString());
     }
 }

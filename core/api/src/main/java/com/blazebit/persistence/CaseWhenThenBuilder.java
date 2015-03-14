@@ -30,5 +30,13 @@ public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> {
      * @param expression The then expression
      * @return This case when builder
      */
-    public T then(String expression);
+    public T thenExpression(String expression);
+
+    /**
+     * Adds the constructed when expression with the then parameter value to the case when builder.
+     *
+     * @param value The then parameter value
+     * @return This case when builder
+     */
+    public T then(Object value);
 }

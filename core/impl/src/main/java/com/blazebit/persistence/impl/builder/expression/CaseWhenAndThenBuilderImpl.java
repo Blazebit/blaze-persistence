@@ -30,6 +30,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -105,12 +106,23 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     }
 
     @Override
-    public T then(String expression) {
+    public T thenExpression(String expression) {
         verifyBuilderEnded();
         if(predicate.getChildren().isEmpty()){
             throw new IllegalStateException("No and clauses specified!");
         }
         whenClause = new WhenClauseExpression(predicate, expressionFactory.createScalarExpression(expression));
+        listener.onBuilderEnded(this);
+        return result;
+    }
+    
+    @Override
+    public T then(Object value) {
+        verifyBuilderEnded();
+        if(predicate.getChildren().isEmpty()){
+            throw new IllegalStateException("No and clauses specified!");
+        }
+        whenClause = new WhenClauseExpression(predicate, new ParameterExpression(value));
         listener.onBuilderEnded(this);
         return result;
     }
