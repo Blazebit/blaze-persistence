@@ -15,13 +15,18 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -82,7 +87,23 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             return null;
         }
 
-        Class<?> attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
+        Type parameterType = constructor.getJavaConstructor().getGenericParameterTypes()[index];
+        Class<?> attributeType;
+        
+        if (parameterType instanceof TypeVariable<?>) {
+            attributeType = ReflectionUtils.resolveTypeVariable(constructor.getDeclaringType().getJavaType(), (TypeVariable<?>) parameterType);
+        } else {
+            attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
+        }
+        
+        Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
+        
+        for (Annotation a : annotations) {
+            // Force singular mapping
+            if (MappingSingular.class == a.annotationType()) {
+                return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            }
+        }
 
         if (Collection.class == attributeType) {
             return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);

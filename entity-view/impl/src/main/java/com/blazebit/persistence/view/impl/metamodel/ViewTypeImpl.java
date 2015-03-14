@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
@@ -27,6 +28,7 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -185,7 +187,12 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             return null;
         }
 
-        Class<?> attributeType = method.getReturnType();
+        Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
+        
+        // Force singular mapping
+        if (AnnotationUtils.findAnnotation(method, MappingSingular.class) != null) {
+            return new MethodMappingSingularAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
+        }
 
         if (Collection.class == attributeType) {
             return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
