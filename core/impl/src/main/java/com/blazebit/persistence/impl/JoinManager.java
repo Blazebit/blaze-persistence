@@ -587,7 +587,7 @@ public class JoinManager extends AbstractManager {
                 } else {
                     resultFields.add(elementExpr.toString());
                     
-                    if (!validPath(current, resultFields)) {
+                    if (!validPath(current.getPropertyClass(), resultFields)) {
                         throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part [" + StringUtils.join(".", resultFields) + "]");
                     }
                     
@@ -599,7 +599,7 @@ public class JoinManager extends AbstractManager {
                 } else {
                     resultFields.add(elementExpr.toString());
                     
-                    if (!validPath(current, resultFields)) {
+                    if (!validPath(current.getPropertyClass(), resultFields)) {
                         throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part [" + StringUtils.join(".", resultFields) + "]");
                     }
                     
@@ -629,18 +629,26 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean validPath(JoinNode current, List<String> pathElements) {
-        Class<?> currentClass = current.getPropertyClass();
-        
-        for (String element : pathElements) {
+    private boolean validPath(Class<?> currentClass, List<String> pathElements) {
+        for (int i = 0; i < pathElements.size(); i++) {
+            String element = pathElements.get(i);
             ManagedType<?> t = metamodel.managedType(currentClass);
-            Attribute<?, ?> attr = t.getAttribute(element);
+            Set<Attribute<?, ?>> attributes = JpaUtils.getAttributesPolymorphic(metamodel, t, element);
             
-            if (attr == null) {
+            if (attributes.isEmpty()) {
                 return false;
+            } else if (attributes.size() == 1) {
+                currentClass = attributes.iterator().next().getJavaType();
+            } else {
+                // Only consider a path valid when all possible paths along the polymorphic hierarchy are valid
+                for (Attribute<?, ?> attr : attributes) {
+                    if (!validPath(attr.getJavaType(), pathElements.subList(i, pathElements.size() - 1))) {
+                        return false;
+                    }
+                }
+                
+                return true;
             }
-            
-            currentClass = attr.getJavaType();
         }
         
         return true;
@@ -650,7 +658,7 @@ public class JoinManager extends AbstractManager {
         int maybeSingularAssociationIndex = pathElements.size() - 2;
         int maybeSingularAssociationIdIndex = pathElements.size() - 1;
         ManagedType<?> baseType;
-        Attribute<?, ?> maybeSingularAssociation;
+        Set<Attribute<?, ?>> maybeSingularAssociationAttributes;
         String maybeSingularAssociationName = getSimpleName(pathElements.get(maybeSingularAssociationIndex));
 
         if (parent == null) {
@@ -660,7 +668,7 @@ public class JoinManager extends AbstractManager {
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
                 baseType = metamodel.managedType(rootNode.getPropertyClass());
-                maybeSingularAssociation = baseType.getAttribute(maybeSingularAssociationName);
+                maybeSingularAssociationAttributes = JpaUtils.getAttributesPolymorphic(metamodel, baseType, maybeSingularAssociationName);
             } else if (!(a instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("Can't dereference select alias in the expression!");
             } else {
@@ -674,29 +682,51 @@ public class JoinManager extends AbstractManager {
 
         } else {
             baseType = metamodel.managedType(parent.getPropertyClass());
-            maybeSingularAssociation = baseType.getAttribute(maybeSingularAssociationName);
+            maybeSingularAssociationAttributes = JpaUtils.getAttributesPolymorphic(metamodel, baseType, maybeSingularAssociationName);
         }
 
-        if (maybeSingularAssociation == null) {
+        if (maybeSingularAssociationAttributes.isEmpty()) {
             return false;
         }
 
-        if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
-                //                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
-                ) {
-            return false;
+        for (Attribute<?, ?> maybeSingularAssociation : maybeSingularAssociationAttributes) {
+            if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
+                    //                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
+                    ) {
+                return false;
+            }
+
+            Class<?> maybeSingularAssociationClass = resolveFieldClass(baseType.getJavaType(), maybeSingularAssociation);
+            ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociationClass);
+            String maybeSingularAssociationIdName = getSimpleName(pathElements.get(maybeSingularAssociationIdIndex));
+            Set<Attribute<?, ?>> maybeSingularAssociationIdAttributes = JpaUtils.getAttributesPolymorphic(metamodel, maybeSingularAssociationType, maybeSingularAssociationIdName);
+
+            if (maybeSingularAssociationIdAttributes.isEmpty()) {
+                return false;
+            }
+            
+            for (Attribute<?, ?> maybeSingularAssociationId : maybeSingularAssociationIdAttributes) {
+                if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
+                    return false;
+                }
+
+                if (!((SingularAttribute<?, ?>) maybeSingularAssociationId).isId()) {
+                    return false;
+                }
+            }
         }
-
-        Class<?> maybeSingularAssociationClass = resolveFieldClass(baseType.getJavaType(), maybeSingularAssociation);
-        ManagedType<?> maybeSingularAssociationType = metamodel.managedType(maybeSingularAssociationClass);
-        String maybeSingularAssociationIdName = getSimpleName(pathElements.get(maybeSingularAssociationIdIndex));
-        Attribute<?, ?> maybeSingularAssociationId = maybeSingularAssociationType.getAttribute(maybeSingularAssociationIdName);
-
-        if (!(maybeSingularAssociationId instanceof SingularAttribute<?, ?>)) {
-            return false;
+        
+        return true;
+    }
+    
+    private Class<?> getConcreterClass(Class<?> class1, Class<?> class2) {
+        if (class1.isAssignableFrom(class2)) {
+            return class2;
+        } else if (class2.isAssignableFrom(class1)) {
+            return class1;
+        } else {
+            throw new IllegalArgumentException("The classes [" + class1.getName() + ", " + class2.getName() + "] are not in a inheritance relationship, so there is no concreter class!");
         }
-
-        return ((SingularAttribute<?, ?>) maybeSingularAssociationId).isId();
     }
     
     private String getSimpleName(PathElementExpression element) {
@@ -866,7 +896,7 @@ public class JoinManager extends AbstractManager {
             }
         } else {
             Class baseNodeType = baseNode.getPropertyClass();
-            Attribute attr = metamodel.managedType(baseNodeType).getAttribute(attributeName);
+            Attribute attr = getSimpleAttributeForImplicitJoining(metamodel.managedType(baseNodeType), attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
                         + attributeName + " was not found within class "
@@ -879,6 +909,39 @@ public class JoinManager extends AbstractManager {
             field = attributeName;
         }
         return new JoinResult(newBaseNode, field);
+    }
+    
+    private Attribute<?, ?> getSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
+        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
+        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
+        
+        if (resolvedAttributes.size() > 1) {
+            // If there is more than one resolved attribute we can still save the user some trouble
+            Attribute<?, ?> simpleAttribute = null;
+            Set<Attribute<?, ?>> amiguousAttributes = new HashSet<Attribute<?, ?>>();
+            
+            for (Attribute<?, ?> attr : resolvedAttributes) {
+                if (isJoinable(attr)) {
+                    amiguousAttributes.add(attr);
+                } else {
+                    simpleAttribute = attr;
+                }
+            }
+            
+            if (simpleAttribute == null) {
+                return null;
+            } else {
+                for (Attribute<?, ?> a : amiguousAttributes) {
+                    LOG.warning("The attribute [" + attributeName + "] of the class [" + a.getDeclaringType().getJavaType().getName() + "] is ambiguous for polymorphic implicit joining on the type [" + type.getJavaType().getName() + "]");
+                }
+                
+                return simpleAttribute;
+            }
+        } else if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
+        }
     }
 
     private void updateClauseDependencies(JoinNode baseNode, ClauseType clauseDependency) {
@@ -901,6 +964,7 @@ public class JoinManager extends AbstractManager {
     }
 
     private Class<?> resolveFieldClass(Class<?> baseClass, Attribute attr) {
+        Class<?> resolverBaseClass = getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
         Class<?> fieldClass;
         
         if (attr.isCollection()) {
@@ -909,44 +973,44 @@ public class JoinManager extends AbstractManager {
             if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
                 if (attr.getJavaMember() instanceof Method) {
                     Method method = (Method) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, method)[1];
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[1];
                     if (fieldClass == null) {
-                        fieldClass = resolveType(baseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
                     }
                 } else {
                     Field field = (Field) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(baseClass, field)[1];
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[1];
                     if (fieldClass == null) {
-                        fieldClass = resolveType(baseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
                     }
                 }
             } else {
                 if (attr.getJavaMember() instanceof Method) {
                     Method method = (Method) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(baseClass, method)[0];
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[0];
                     if (fieldClass == null) {
-                        fieldClass = resolveType(baseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
                     }
                 } else {
                     Field field = (Field) attr.getJavaMember();
-                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(baseClass, field)[0];
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[0];
                     if (fieldClass == null) {
-                        fieldClass = resolveType(baseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
                     }
                 }
             }
         } else {
             if (attr.getJavaMember() instanceof Method) {
                 Method method = (Method) attr.getJavaMember();
-                fieldClass = ReflectionUtils.getResolvedMethodReturnType(baseClass, method);
+                fieldClass = ReflectionUtils.getResolvedMethodReturnType(resolverBaseClass, method);
                 if (fieldClass == null) {
-                    fieldClass = resolveType(baseClass, method.getGenericReturnType());
+                    fieldClass = resolveType(resolverBaseClass, method.getGenericReturnType());
                 }
             } else {
                 Field field = (Field) attr.getJavaMember();
-                fieldClass = ReflectionUtils.getResolvedFieldType(baseClass, field);
+                fieldClass = ReflectionUtils.getResolvedFieldType(resolverBaseClass, field);
                 if (fieldClass == null) {
-                    fieldClass = resolveType(baseClass, field.getGenericType());
+                    fieldClass = resolveType(resolverBaseClass, field.getGenericType());
                 }
             }
         }
@@ -981,59 +1045,40 @@ public class JoinManager extends AbstractManager {
     }
     
     private Attribute<?, ?> getAttributeForJoining(ManagedType<?> type, String attributeName) {
-        Attribute attr = type.getAttribute(attributeName);
+        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
+        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
         
-        if (attr == null) {
-            // Try again polymorphic
-            Class<?> javaType = type.getJavaType();
-            Set<ManagedType<?>> possibleSubTypes = new HashSet<ManagedType<?>>();
-            
-            // Collect all possible subtypes of the given type
-            for (ManagedType<?> subType : metamodel.getManagedTypes()) {
-                if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
-                    possibleSubTypes.add(subType);
-                }
-            }
-            
-            Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
-            
-            // Collect all the attributes that resolve on every possible subtype
-            for (ManagedType<?> subType : possibleSubTypes) {
-                attr = subType.getAttribute(attributeName);
-                
-                if (attr != null) {
-                    resolvedAttributes.add(attr);
-                }
-            }
-            
-            if (resolvedAttributes.size() > 1) {
-                // If there is more than one resolved attribute we can still save the user some trouble
-                Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
-                Attribute<?, ?> joinableAttribute = null;
-                
-                // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
-                // Multiple joinable attributes are only fine if they all have the same type
-                while (iter.hasNext()) {
-                    attr = iter.next();
-                    if (isJoinable(attr)) {
-                        if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
-                            throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName + "] but different java types in the types ["
-                                    + joinableAttribute.getDeclaringType().getJavaType().getName() + "] and ["
-                                    + attr.getDeclaringType().getJavaType().getName() + "] found!");
-                        } else {
-                            joinableAttribute = attr;
-                        }
+        if (resolvedAttributes.size() > 1) {
+            // If there is more than one resolved attribute we can still save the user some trouble
+            Attribute<?, ?> joinableAttribute = null;
+            Attribute<?, ?> attr = null;
+
+            // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
+            // Multiple joinable attributes are only fine if they all have the same type
+            while (iter.hasNext()) {
+                attr = iter.next();
+                if (isJoinable(attr)) {
+                    if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
+                        throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName + "] but different java types in the types ["
+                                + joinableAttribute.getDeclaringType().getJavaType().getName() + "] and ["
+                                + attr.getDeclaringType().getJavaType().getName() + "] found!");
+                    } else {
+                        joinableAttribute = attr;
                     }
                 }
-                
-                // We return the joinable attribute because OUR join manager needs it's type for further joining
-                if (joinableAttribute != null) {
-                    attr = joinableAttribute;
-                }
             }
+
+            // We return the joinable attribute because OUR join manager needs it's type for further joining
+            if (joinableAttribute != null) {
+                return joinableAttribute;
+            }
+            
+            return attr;
+        } else if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
         }
-        
-        return attr;
     }
     
     private JoinResult createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
