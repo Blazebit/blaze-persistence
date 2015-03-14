@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
@@ -42,7 +43,9 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -977,10 +980,66 @@ public class JoinManager extends AbstractManager {
         }
     }
     
+    private Attribute<?, ?> getAttributeForJoining(ManagedType<?> type, String attributeName) {
+        Attribute attr = type.getAttribute(attributeName);
+        
+        if (attr == null) {
+            // Try again polymorphic
+            Class<?> javaType = type.getJavaType();
+            Set<ManagedType<?>> possibleSubTypes = new HashSet<ManagedType<?>>();
+            
+            // Collect all possible subtypes of the given type
+            for (ManagedType<?> subType : metamodel.getManagedTypes()) {
+                if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
+                    possibleSubTypes.add(subType);
+                }
+            }
+            
+            Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
+            
+            // Collect all the attributes that resolve on every possible subtype
+            for (ManagedType<?> subType : possibleSubTypes) {
+                attr = subType.getAttribute(attributeName);
+                
+                if (attr != null) {
+                    resolvedAttributes.add(attr);
+                }
+            }
+            
+            if (resolvedAttributes.size() > 1) {
+                // If there is more than one resolved attribute we can still save the user some trouble
+                Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
+                Attribute<?, ?> joinableAttribute = null;
+                
+                // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
+                // Multiple joinable attributes are only fine if they all have the same type
+                while (iter.hasNext()) {
+                    attr = iter.next();
+                    if (isJoinable(attr)) {
+                        if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
+                            throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName + "] but different java types in the types ["
+                                    + joinableAttribute.getDeclaringType().getJavaType().getName() + "] and ["
+                                    + attr.getDeclaringType().getJavaType().getName() + "] found!");
+                        } else {
+                            joinableAttribute = attr;
+                        }
+                    }
+                }
+                
+                // We return the joinable attribute because OUR join manager needs it's type for further joining
+                if (joinableAttribute != null) {
+                    attr = joinableAttribute;
+                }
+            }
+        }
+        
+        return attr;
+    }
+    
     private JoinResult createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Class<?> baseNodeType = baseNode.getPropertyClass();
         ManagedType type = metamodel.managedType(baseNodeType);
-        Attribute attr = type.getAttribute(joinRelationName);
+        Attribute attr = getAttributeForJoining(type, joinRelationName);
         if (attr == null) {
             throw new IllegalArgumentException("Field with name "
                     + joinRelationName + " was not found within class "
