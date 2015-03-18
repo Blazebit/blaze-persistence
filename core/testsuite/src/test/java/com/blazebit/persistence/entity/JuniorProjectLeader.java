@@ -15,10 +15,8 @@
  */
 package com.blazebit.persistence.entity;
 
-import java.util.Set;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
 
 /**
  *
@@ -28,17 +26,5 @@ import javax.persistence.OneToMany;
 @Entity
 @DiscriminatorValue("J")
 public class JuniorProjectLeader extends ProjectLeader<SmallProject> {
-
-    @Override
-    @OneToMany(mappedBy = "leader", targetEntity = SmallProject.class)
-    public Set<SmallProject> getLeadedProjects() {
-        return super.getLeadedProjects();
-    }
-
-    // Needed for DataNucleus
-    @Override
-    public void setLeadedProjects(Set<SmallProject> leadedProjects) {
-        super.setLeadedProjects(leadedProjects);
-    }
     
 }

@@ -17,7 +17,6 @@ package com.blazebit.persistence.entity;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
 
 /**
  *
@@ -27,11 +26,5 @@ import javax.persistence.ManyToOne;
 @Entity
 @DiscriminatorValue("L")
 public class LargeProject extends Project<SeniorProjectLeader> {
-
-    @Override
-    public SeniorProjectLeader getLeader() {
-        // The verifier does not allow that without casting?!?
-        return (SeniorProjectLeader) super.getLeader();
-    }
     
 }

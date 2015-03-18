@@ -13,6 +13,14 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration DataNucleus</name>
+    
+    <repositories>
+        <repository>
+            <id>DataNucleus Nightly</id>
+            <name>DataNucleus Repository Nightly</name>
+            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -38,10 +46,30 @@
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-accessplatform-jpa-rdbms</artifactId>
-            <version>4.0.5</version>
-            <type>pom</type>
+            <artifactId>datanucleus-core</artifactId>
+            <version>4.1.0-m3-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-api-jpa</artifactId>
+            <version>4.1.0-m3-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-jpa-query</artifactId>
+            <version>4.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-rdbms</artifactId>
+            <version>4.1.0-m3-SNAPSHOT</version>
+        </dependency>
+<!--        <dependency>
+            <groupId>org.datanucleus</groupId>
+            <artifactId>datanucleus-accessplatform-jpa-rdbms</artifactId>
+            <version>4.1.0-m3-SNAPSHOT</version>
+            <type>pom</type>
+        </dependency>-->
     </dependencies>
     
     <build>

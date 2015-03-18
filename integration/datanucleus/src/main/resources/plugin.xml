@@ -15,8 +15,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <plugin>
-    <extension point="org.datanucleus.store.rdbms.datastore_mapping">
+<!--    <extension point="org.datanucleus.store.rdbms.datastore_mapping">
         <mapping java-type="java.sql.Timestamp" rdbms-mapping-class="org.datanucleus.store.rdbms.mapping.datastore.DateRDBMSMapping" 
             jdbc-type="DATE" sql-type="DATE" default="false"/>
-    </extension>
+    </extension>-->
 </plugin>
