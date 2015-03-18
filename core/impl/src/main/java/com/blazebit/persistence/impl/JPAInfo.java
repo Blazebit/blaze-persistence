@@ -28,11 +28,13 @@ public class JPAInfo {
     public final boolean isJPA21;
     public final boolean isHibernate;
     public final boolean isEclipseLink24;
+    public final boolean isDataNucleus;
 
     public JPAInfo(EntityManager em) {
         boolean jpa21 = false;
         boolean hibernate = false;
         boolean eclipseLink24 = false;
+        boolean datanucleus = false;
 
         try {
             em.getClass()
@@ -64,9 +66,17 @@ public class JPAInfo {
         } catch (Exception e) {
         }
 
+        try {
+            Class<?> jpaEMClass = Class.forName("org.datanucleus.ExecutionContext");
+            Object o = em.unwrap(jpaEMClass);
+            datanucleus = o != null;
+        } catch (Exception e) {
+        }
+
         this.isJPA21 = jpa21;
         this.isHibernate = hibernate;
         this.isEclipseLink24 = eclipseLink24;
+        this.isDataNucleus = datanucleus;
     }
 
     public String getOnClause() {
@@ -84,5 +94,13 @@ public class JPAInfo {
             return "VALUE";
         }
         return null;
+    }
+    
+    public Class<?> getDefaultQueryResultType() {
+        if (isDataNucleus) {
+            return null;
+        }
+        
+        return Object.class;
     }
 }

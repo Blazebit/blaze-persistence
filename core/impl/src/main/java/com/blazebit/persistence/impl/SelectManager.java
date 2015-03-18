@@ -80,12 +80,14 @@ public class SelectManager<T> extends AbstractManager {
     private final AliasManager aliasManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final JPAInfo jpaInfo;
 
-    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.jpaInfo = jpaInfo;
         if (resultClazz.equals(Tuple.class)) {
             objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
         }
@@ -243,6 +245,15 @@ public class SelectManager<T> extends AbstractManager {
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias
     ) {
         handleSelect(expr, selectAlias);
+    }
+    
+    Class<?> getExpectedQueryResultType() {
+        // Tuple case
+        if (selectInfos.size() > 1) {
+            return Object[].class;
+        }
+        
+        return jpaInfo.getDefaultQueryResultType();
     }
 
     private void handleSelect(Expression expr, String selectAlias) {

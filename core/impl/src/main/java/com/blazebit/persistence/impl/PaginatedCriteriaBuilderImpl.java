@@ -227,7 +227,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     private PagedList<T> getResultListViaObjectQuery(long totalSize) {
         String queryString = getQueryString0();
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, Object[].class)
+        Class<?> expectedResultType;
+        
+        // When the keyset is included the query obviously produces an array
+        if (extractKeySet) {
+            expectedResultType = Object[].class;
+        } else {
+            expectedResultType = selectManager.getExpectedQueryResultType();
+        }
+        
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType)
                 .setMaxResults(pageSize);
 
         if (keySetMode == KeySetMode.NONE) {
@@ -334,7 +343,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     private List<T> getQueryResultList() {
-        TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString0(), Object[].class);
+        TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString0(), selectManager.getExpectedQueryResultType());
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
