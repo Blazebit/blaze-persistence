@@ -362,7 +362,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
         int[] subviewIdPositions = new int[idPositions.length + 1];
         System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-        subviewIdPositions[idPositions.length] = mappingList.size();
+        subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
         int startIndex = tupleOffset + mappingList.size();
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
                                                                                                        startIndex, metamodel, evm, subviewType, null, proxyFactory);
