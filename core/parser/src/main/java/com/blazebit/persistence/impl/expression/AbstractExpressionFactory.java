@@ -88,7 +88,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseOrderByClause();
             }
-        }, expression);
+        }, expression, false);
     }
     
     @Override
