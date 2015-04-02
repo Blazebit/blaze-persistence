@@ -97,6 +97,21 @@
             </dependencies>
         </profile>
         <profile>
+            <id>hibernate-5.0</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.hibernate</groupId>
+                    <artifactId>hibernate-entitymanager</artifactId>
+                    <version>5.0.0.Beta1</version>
+                </dependency>
+                <dependency>
+                    <groupId>${project.groupId}</groupId>
+                    <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
             <id>eclipselink</id>
             <dependencies>
                 <dependency>
