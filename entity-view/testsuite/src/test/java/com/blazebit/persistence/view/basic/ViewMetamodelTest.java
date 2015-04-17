@@ -15,16 +15,17 @@
  */
 package com.blazebit.persistence.view.basic;
 
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.basic.model.CircularDocument;
 import com.blazebit.persistence.view.basic.model.CircularPerson;
 import com.blazebit.persistence.view.basic.model.CountSubqueryProvider;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.IdHolderView;
-import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.basic.model.PersonView;
+import com.blazebit.persistence.view.basic.model.PersonViewWithSingularMapping;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -32,6 +33,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -49,16 +51,16 @@ import org.junit.Test;
 public class ViewMetamodelTest {
 
     private ViewMetamodel getViewMetamodel() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
-        cfg.addEntityView(PersonView1.class);
+        cfg.addEntityView(PersonView.class);
         return cfg.createEntityViewManager().getMetamodel();
     }
 
     @Test
     public void testCircularViews() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(CircularDocument.class);
         cfg.addEntityView(CircularPerson.class);
         verifyException(cfg, IllegalArgumentException.class).createEntityViewManager();
@@ -66,16 +68,30 @@ public class ViewMetamodelTest {
 
     @Test
     public void testGetViewsContainsViews() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
-        cfg.addEntityView(PersonView1.class);
+        cfg.addEntityView(PersonView.class);
         ViewMetamodel viewMetamodel = cfg.createEntityViewManager().getMetamodel();
 
         assertEquals(3, viewMetamodel.getViews().size());
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewInterface.class)));
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewAbstractClass.class)));
-        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(PersonView1.class)));
+        assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(PersonView.class)));
+    }
+
+    @Test
+    public void testMappingSingularView() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PersonViewWithSingularMapping.class);
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager().getMetamodel();
+
+        ViewType<?> viewType = viewMetamodel.view(PersonViewWithSingularMapping.class);
+        assertNotNull(viewType);
+        MethodAttribute<?, ?> attribute = viewType.getAttribute("ownedDocuments");
+        assertNotNull(attribute);
+        assertFalse(attribute.isCollection());
+        assertTrue(attribute instanceof SingularAttribute);
     }
 
     @Test
@@ -84,7 +100,7 @@ public class ViewMetamodelTest {
 
         assertNotNull(viewMetamodel.view(DocumentViewInterface.class));
         assertNotNull(viewMetamodel.view(DocumentViewAbstractClass.class));
-        assertNotNull(viewMetamodel.view(PersonView1.class));
+        assertNotNull(viewMetamodel.view(PersonView.class));
         assertNull(viewMetamodel.view(IdHolderView.class));
     }
 
@@ -104,7 +120,7 @@ public class ViewMetamodelTest {
     @Test
     public void testViewTypeOverrides() {
         ViewMetamodel viewMetamodel = getViewMetamodel();
-        Class<?> expectedViewClass = PersonView1.class;
+        Class<?> expectedViewClass = PersonView.class;
         Class<?> expectedEntityClass = Person.class;
         String expectedViewName = "PersView";
         ViewType<?> docView = viewMetamodel.view(expectedViewClass);

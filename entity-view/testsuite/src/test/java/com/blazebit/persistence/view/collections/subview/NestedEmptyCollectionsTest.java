@@ -19,6 +19,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
@@ -38,6 +39,7 @@ import com.blazebit.persistence.view.collections.subview.model.variations.Person
 import com.blazebit.persistence.view.collections.subview.model.variations.PersonForCollectionsSetListMapMasterView;
 import com.blazebit.persistence.view.collections.subview.model.variations.PersonForCollectionsSetMapListMasterView;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -130,7 +132,7 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
 
     @Test
     public void testCollections() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
         cfg.addEntityView(subviewType);
         cfg.addEntityView(SubviewPersonForCollectionsView.class);

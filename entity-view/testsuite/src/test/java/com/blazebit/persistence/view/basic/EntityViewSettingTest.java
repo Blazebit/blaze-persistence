@@ -21,12 +21,14 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.basic.model.DocumentWithEntityView;
 import com.blazebit.persistence.view.basic.model.FilteredDocument;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
 import org.junit.Assert;
@@ -87,7 +89,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSetting() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(FilteredDocument.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
@@ -114,7 +116,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
 
     @Test
     public void testEntityViewSettingWithEntityAttribute() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
@@ -137,7 +139,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     
     @Test
     public void testEntityViewSettingNotExistingFilterAttribute() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 

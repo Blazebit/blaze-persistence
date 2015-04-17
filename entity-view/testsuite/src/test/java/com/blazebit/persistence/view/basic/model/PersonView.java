@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.entity.Person;
  * @since 1.0
  */
 @EntityView(name = "PersView", value = Person.class)
-public interface PersonView1 extends IdHolderView<Long> {
+public interface PersonView extends IdHolderView<Long> {
 
     public String getName();
 }

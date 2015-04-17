@@ -19,6 +19,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListSetMapView;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetMap
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -133,7 +135,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
 
     @Test
     public void testCollections() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
         EntityViewManager evm = cfg.createEntityViewManager();
 

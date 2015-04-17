@@ -19,13 +19,15 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
 import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
 import com.blazebit.persistence.view.basic.model.DocumentViewWithMissingMappingParameter;
-import com.blazebit.persistence.view.basic.model.PersonView1;
+import com.blazebit.persistence.view.basic.model.PersonView;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.List;
 import javax.persistence.EntityTransaction;
 import org.junit.Assert;
@@ -43,7 +45,7 @@ public class ViewConstructorTest extends AbstractEntityViewTest {
 
     @Test
     public void testAbstractClass() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewWithMissingMappingParameter.class);
         
         try {

@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.view.proxy;
 
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
@@ -22,6 +23,7 @@ import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.proxy.model.DocumentClassView;
 import com.blazebit.persistence.view.proxy.model.DocumentInterfaceView;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -45,7 +47,7 @@ public class ProxyFactoryTest {
     private final ProxyFactory proxyFactory = new ProxyFactory();
 
     private ViewMetamodel getViewMetamodel() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentInterfaceView.class);
         cfg.addEntityView(DocumentClassView.class);
         return cfg.createEntityViewManager().getMetamodel();

@@ -21,10 +21,12 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
+import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.subquery.model.DocumentWithExpressionSubqueryView;
 import com.blazebit.persistence.view.subquery.model.DocumentWithSubquery;
 import java.util.List;
@@ -93,7 +95,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubquery() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
@@ -109,7 +111,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryWithExpression() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithExpressionSubqueryView.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
@@ -137,7 +139,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryEntityViewSettings() {
-        EntityViewConfigurationImpl cfg = new EntityViewConfigurationImpl();
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
         EntityViewManager evm = cfg.createEntityViewManager();
 
