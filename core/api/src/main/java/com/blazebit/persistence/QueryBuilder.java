@@ -184,46 +184,33 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     /**
      * Like {@link QueryBuilder#page(int, int)} but additionally uses key set pagination when possible.
      * 
-     * <p>
-     * Key set pagination is possible if and only if the following condition is met:
-     * <ul>
-     * <li>This query builder and the one with which the key set was obtained are equal AND</li>
+     * Beware that keyset pagination should not be used as a direct replacement for offset pagination.
+     * Since entries that have a lower rank than some keyset might be added or removed, the calculations
+     * for the firstResult might be wrong. If strict pagination is required, then a keyset should
+     * be thrown away when the count of lower ranked items changes to make use of offset pagination again.
      * 
-     * <li>{@link KeySet#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
+     * <p>
+     * Key set pagination is possible if and only if the following conditions are met:
+     * <ul>
+     * <li>This keyset reference values fit the order by expressions of this query builder AND</li>
+     * 
+     * <li>{@link KeysetPage#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
      * <li>One of the following conditions is met:
      *  <ul>
-     *      <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is 0</li>
-     *      <li>The absolute value of {@link KeySet#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
+     *      <li>The absolute value of {@link KeysetPage#getFirstResults()}<code> - firstResult</code> is 0</li>
+     *      <li>The absolute value of {@link KeysetPage#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
      *  </ul>
      * </li>
      * </ul>
      * </p>
      *
-     * @param keySet      The key set from a previous result
+     * @param keysetPage  The key set from a previous result, may be null
      * @param firstResult The position of the first result to retrieve, numbered from 0
      * @param maxResults  The maximum number of results to retrieve
      * @return This query builder as paginated query builder
-     * @see PagedList#getKeySet()
+     * @see PagedList#getKeysetPage()
      */
-    public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstResult, int maxResults);
-    
-    /**
-     * Like {@link QueryBuilder#page(java.lang.Object, int)} but additionally uses key set pagination when possible.
-     * 
-     * Beware that the same limitations like for {@link QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)} apply.
-     * If the entity with the given entity id does not exist in the result list:
-     * <ul>
-     *  <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
-     *  <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
-     * </ul>
-     * 
-     * @param keySet     The key set from a previous result
-     * @param entityId   The id of the entity which should be located on the page
-     * @param maxResults The maximum number of results to retrieve
-     * @return This query builder as paginated query builder
-     * @see PagedList#getKeySet()
-     */
-    public PaginatedCriteriaBuilder<T> page(KeySet keySet, Object entityId, int maxResults);
+    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstResult, int maxResults);
 
     /*
      * Join methods

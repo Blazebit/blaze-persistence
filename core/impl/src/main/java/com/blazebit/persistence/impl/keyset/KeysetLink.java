@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence;
 
-import java.io.Serializable;
+package com.blazebit.persistence.impl.keyset;
+
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.impl.OrderByExpression;
+import java.util.List;
 
 /**
- * An interface that represents the key set of a row.
- * Instances of this interface can be used for key set pagination.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public interface Keyset extends Serializable {
+public interface KeysetLink {
+    
+    public void initialize(List<OrderByExpression> orderByExpressions);
 
-    /**
-     * Returns the key set tuple ordered by the respective order by expressions.
-     *
-     * @return The key set tuple for this keyset
-     */
-    public Serializable[] getTuple();
+    public Keyset getKeyset();
+
+    public KeysetMode getKeysetMode();
 }

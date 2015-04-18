@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.KeySet;
+import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PagedList;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,15 +29,15 @@ import java.util.Collection;
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
 
-    private final KeySet keySet;
+    private final KeysetPage keyset;
     private final long totalSize;
     private final int page;
     private final int totalPages;
     private final int firstResult;
     private final int maxResults;
 
-    public PagedListImpl(KeySet keySet, long totalSize, int firstResult, int maxResults) {
-        this.keySet = keySet;
+    public PagedListImpl(KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
+        this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
         this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
@@ -45,9 +45,9 @@ public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
         this.maxResults = maxResults;
     }
 
-    PagedListImpl(Collection<? extends T> collection, KeySet keySet, long totalSize, int firstResult, int maxResults) {
+    PagedListImpl(Collection<? extends T> collection, KeysetPage keyset, long totalSize, int firstResult, int maxResults) {
         super(collection);
-        this.keySet = keySet;
+        this.keyset = keyset;
         this.totalSize = totalSize;
         this.page = (int) Math.floor((firstResult == -1 ? 0 : firstResult) * 1d / maxResults) + 1;
         this.totalPages = (int) Math.ceil(totalSize * 1d / maxResults);
@@ -86,8 +86,8 @@ public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
     }
 
     @Override
-    public KeySet getKeySet() {
-        return keySet;
+    public KeysetPage getKeysetPage() {
+        return keyset;
     }
 
 }

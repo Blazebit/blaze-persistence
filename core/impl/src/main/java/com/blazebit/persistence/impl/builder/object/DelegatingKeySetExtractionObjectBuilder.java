@@ -24,12 +24,12 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.0
  */
-public class DelegatingKeySetExtractionObjectBuilder<T> extends KeySetExtractionObjectBuilder<T> {
+public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtractionObjectBuilder<T> {
 
     private final ObjectBuilder<T> objectBuilder;
 
-    public DelegatingKeySetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int keySetSize) {
-        super(keySetSize);
+    public DelegatingKeysetExtractionObjectBuilder(ObjectBuilder<T> objectBuilder, int keysetSize) {
+        super(keysetSize);
         this.objectBuilder = objectBuilder;
     }
 

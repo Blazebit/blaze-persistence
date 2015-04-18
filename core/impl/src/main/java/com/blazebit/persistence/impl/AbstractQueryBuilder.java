@@ -17,7 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.KeySet;
+import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -108,7 +108,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> page(KeySet keySet, int firstRow, int pageSize) {
+    public PaginatedCriteriaBuilder<T> page(KeysetPage keysetPage, int firstRow, int pageSize) {
         clearCache();
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
@@ -116,28 +116,8 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (!groupByManager.getGroupByInfos().isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
-        if (keySet != null && !(keySet instanceof KeySetImpl)) {
-            throw new IllegalArgumentException("Invalid key set given. Only key sets of paged lists are allowed.");
-        }
         createdPaginatedBuilder = true;
-        return new PaginatedCriteriaBuilderImpl<T>(this, true, (KeySetImpl) keySet, firstRow, pageSize);
-    }
-
-    @Override
-    public PaginatedCriteriaBuilder<T> page(KeySet keySet, Object entityId, int pageSize) {
-        clearCache();
-        if (selectManager.isDistinct()) {
-            throw new IllegalStateException("Cannot paginate a DISTINCT query");
-        }
-        if (!groupByManager.getGroupByInfos().isEmpty()) {
-            throw new IllegalStateException("Cannot paginate a GROUP BY query");
-        }
-        if (keySet != null && !(keySet instanceof KeySetImpl)) {
-            throw new IllegalArgumentException("Invalid key set given. Only key sets of paged lists are allowed.");
-        }
-        checkEntityId(entityId);
-        createdPaginatedBuilder = true;
-        return new PaginatedCriteriaBuilderImpl<T>(this, true, (KeySetImpl) keySet, entityId, pageSize);
+        return new PaginatedCriteriaBuilderImpl<T>(this, true, keysetPage, firstRow, pageSize);
     }
     
     private void checkEntityId(Object entityId) {

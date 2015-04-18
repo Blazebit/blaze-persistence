@@ -20,7 +20,7 @@ limitations under the License.
         <class>com.blazebit.persistence.entity.DocumentType</class>
         <class>com.blazebit.persistence.entity.IntIdEntity</class>
         <class>com.blazebit.persistence.entity.JuniorProjectLeader</class>
-        <class>com.blazebit.persistence.entity.KeySetEntity</class>
+        <class>com.blazebit.persistence.entity.KeysetEntity</class>
         <class>com.blazebit.persistence.entity.LargeProject</class>
         <class>com.blazebit.persistence.entity.LocalizedEntity</class>
         <class>com.blazebit.persistence.entity.Order</class>

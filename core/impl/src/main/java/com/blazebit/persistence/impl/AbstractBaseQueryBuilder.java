@@ -20,6 +20,8 @@ import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.KeysetBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -28,8 +30,15 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.keyset.KeysetManager;
+import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
+import com.blazebit.persistence.impl.keyset.KeysetImpl;
+import com.blazebit.persistence.impl.keyset.KeysetLink;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
+import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import com.blazebit.persistence.spi.QueryTransformer;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
@@ -40,6 +49,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -65,6 +75,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
+    protected final KeysetManager keysetManager;
     protected final ResolvingQueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
@@ -102,6 +113,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.whereManager = (WhereManager<X>) builder.whereManager;
         this.havingManager = (HavingManager<X>) builder.havingManager;
         this.groupByManager = builder.groupByManager;
+        this.keysetManager = builder.keysetManager;
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
@@ -158,6 +170,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaInfo, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
+        this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies
         this.em = em;
@@ -690,6 +703,44 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         return getQueryString0();
     }
 
+    @Override
+    public KeysetBuilder<X> beforeKeyset() {
+        clearCache();
+        return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.PREVIOUS));
+    }
+
+    @Override
+    public X beforeKeyset(Serializable... values) {
+        return beforeKeyset(new KeysetImpl(values));
+    }
+
+    @Override
+    public X beforeKeyset(Keyset keyset) {
+        clearCache();
+        keysetManager.verifyBuilderEnded();
+        keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.PREVIOUS));
+        return (X) this;
+    }
+
+    @Override
+    public KeysetBuilder<X> afterKeyset() {
+        clearCache();
+        return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.NEXT));
+    }
+
+    @Override
+    public X afterKeyset(Serializable... values) {
+        return afterKeyset(new KeysetImpl(values));
+    }
+
+    @Override
+    public X afterKeyset(Keyset keyset) {
+        clearCache();
+        keysetManager.verifyBuilderEnded();
+        keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.NEXT));
+        return (X) this;
+    }
+
     private String getQueryString0() {
         if (cachedQueryString == null) {
             cachedQueryString = getQueryString1();
@@ -704,7 +755,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         implicitJoinsApplied = false;
     }
 
-    private void prepareAndCheck() {
+    protected void prepareAndCheck() {
         if (!needsCheck) {
             return;
         }
@@ -721,6 +772,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         // in the first case
         applyImplicitJoins();
         applyExpressionTransformers();
+        
+        if (keysetManager.hasKeyset()) {
+            // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
+            Metamodel m = em.getMetamodel();
+            List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(m);
+            if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
+                throw new IllegalStateException("The last order by item must be unique!");
+            }
+            keysetManager.initialize(orderByExpressions);
+        }
 
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
@@ -736,7 +797,20 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
                 .append(joinManager.getRootAlias());
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
-        whereManager.buildClause(sbSelectFrom);
+        
+        KeysetLink keysetLink = keysetManager.getKeysetLink();
+        if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
+            whereManager.buildClause(sbSelectFrom);
+        } else {
+            sbSelectFrom.append(" WHERE ");
+
+            keysetManager.buildKeysetPredicate(sbSelectFrom);
+
+            if (whereManager.hasPredicates()) {
+                sbSelectFrom.append(" AND ");
+                whereManager.buildClausePredicate(sbSelectFrom);
+            }
+        }
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());

@@ -86,6 +86,10 @@ public class OrderByManager extends AbstractManager {
         return orderByInfos.size() > 0;
     }
 
+    int getOrderByCount() {
+        return orderByInfos.size();
+    }
+
     boolean hasComplexOrderBys() {
         if (orderByInfos.isEmpty()) {
             return false;

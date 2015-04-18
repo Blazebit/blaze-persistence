@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.KeySetEntity;
+import com.blazebit.persistence.entity.KeysetEntity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,11 +37,11 @@ import org.junit.runners.Parameterized;
  * @since 1.0
  */
 @RunWith(Parameterized.class)
-public class KeySetPaginationNullsTest extends AbstractCoreTest {
+public class KeysetPaginationNullsTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[] { KeySetEntity.class };
+        return new Class<?>[] { KeysetEntity.class };
     }
 
     @Before
@@ -49,24 +49,24 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            KeySetEntity k01 = new KeySetEntity(1, null, null);
-            KeySetEntity k02 = new KeySetEntity(2, null, null);
-            KeySetEntity k03 = new KeySetEntity(3, 0, null);
-            KeySetEntity k04 = new KeySetEntity(4, 1, null);
-            KeySetEntity k05 = new KeySetEntity(5, 1, null);
-            KeySetEntity k06 = new KeySetEntity(6, 2, null);
-            KeySetEntity k07 = new KeySetEntity(7, null, 0);
-            KeySetEntity k08 = new KeySetEntity(8, null, 1);
-            KeySetEntity k09 = new KeySetEntity(9, null, 1);
-            KeySetEntity k10 = new KeySetEntity(10, null, 2);
-            KeySetEntity k11 = new KeySetEntity(11, 0, 0);
-            KeySetEntity k12 = new KeySetEntity(12, 0, 1);
-            KeySetEntity k13 = new KeySetEntity(13, 1, 0);
-            KeySetEntity k14 = new KeySetEntity(14, 1, 1);
-            KeySetEntity k15 = new KeySetEntity(15, 1, 1);
-            KeySetEntity k16 = new KeySetEntity(16, 1, 2);
-            KeySetEntity k17 = new KeySetEntity(17, 2, 1);
-            KeySetEntity k18 = new KeySetEntity(18, 2, 2);
+            KeysetEntity k01 = new KeysetEntity(1, null, null);
+            KeysetEntity k02 = new KeysetEntity(2, null, null);
+            KeysetEntity k03 = new KeysetEntity(3, 0, null);
+            KeysetEntity k04 = new KeysetEntity(4, 1, null);
+            KeysetEntity k05 = new KeysetEntity(5, 1, null);
+            KeysetEntity k06 = new KeysetEntity(6, 2, null);
+            KeysetEntity k07 = new KeysetEntity(7, null, 0);
+            KeysetEntity k08 = new KeysetEntity(8, null, 1);
+            KeysetEntity k09 = new KeysetEntity(9, null, 1);
+            KeysetEntity k10 = new KeysetEntity(10, null, 2);
+            KeysetEntity k11 = new KeysetEntity(11, 0, 0);
+            KeysetEntity k12 = new KeysetEntity(12, 0, 1);
+            KeysetEntity k13 = new KeysetEntity(13, 1, 0);
+            KeysetEntity k14 = new KeysetEntity(14, 1, 1);
+            KeysetEntity k15 = new KeysetEntity(15, 1, 1);
+            KeysetEntity k16 = new KeysetEntity(16, 1, 2);
+            KeysetEntity k17 = new KeysetEntity(17, 2, 1);
+            KeysetEntity k18 = new KeysetEntity(18, 2, 2);
             
             em.persist(k01);
             em.persist(k02);
@@ -104,9 +104,9 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
     private final PageNavigation navigation;
     private final Integer id1;
     private final Integer id2;
-    private final String keySetCondition;
+    private final String keysetCondition;
 
-    public KeySetPaginationNullsTest(boolean aAsc, boolean aNullsFirst, boolean bAsc, boolean bNullsFirst, boolean idAsc, boolean idNullsFirst, PageNavigation navigation, Integer id1, Integer id2, String keySetCondition) {
+    public KeysetPaginationNullsTest(boolean aAsc, boolean aNullsFirst, boolean bAsc, boolean bNullsFirst, boolean idAsc, boolean idNullsFirst, PageNavigation navigation, Integer id1, Integer id2, String keysetCondition) {
         this.aAsc = aAsc;
         this.aNullsFirst = aNullsFirst;
         this.bAsc = bAsc;
@@ -116,12 +116,12 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         this.navigation = navigation;
         this.id1 = id1;
         this.id2 = id2;
-        this.keySetCondition = keySetCondition;
+        this.keysetCondition = keysetCondition;
     }
     
     // This is a little helper to generate the sorted table
     public static void main(String[] args) {
-        KeySetPaginationNullsTest test = new KeySetPaginationNullsTest(true, false, true, false, true, true, null, null, null, null);
+        KeysetPaginationNullsTest test = new KeysetPaginationNullsTest(true, false, true, false, true, true, null, null, null, null);
         test.init();
         test.setUp();
         List<Tuple> tuples = test.getTableCriteriaBuilder().getResultList();
@@ -138,7 +138,7 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
     }
     
     private CriteriaBuilder<Tuple> getTableCriteriaBuilder() {
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeySetEntity.class, "k")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeysetEntity.class, "k")
             .select("a").select("b").select("id");
         crit.orderBy("a", aAsc, aNullsFirst)
             .orderBy("b", bAsc, bNullsFirst)
@@ -309,17 +309,17 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
             idNullsFirst = this.idNullsFirst;
         }
         
-        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeySetEntity k WHERE ";
+        String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
         String expectedIdQueryEnd = " GROUP BY k.id, k.a, k.b ORDER BY "
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
-        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeySetEntity k WHERE ";
+        String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
         String expectedObjectQueryEnd = " ORDER BY "
             + "k.a " + clause(aAsc, aNullsFirst) + ", "
             + "k.b " + clause(bAsc, bNullsFirst) + ", "
             + "k.id " + clause(idAsc, idNullsFirst);
-        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeySetEntity.class, "k")
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeysetEntity.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)
             .orderBy("b", this.bAsc, this.bNullsFirst)
@@ -332,12 +332,12 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         Serializable[] key;
         
         if (navigation.from < navigation.to) {
-            key = result.getKeySet().getHighest();
+            key = result.getKeysetPage().getHighest().getTuple();
         } else {
-            key = result.getKeySet().getLowest();
+            key = result.getKeysetPage().getLowest().getTuple();
         }
         
-        pcb = crit.page(result.getKeySet(), navigation.to, 1);
+        pcb = crit.page(result.getKeysetPage(), navigation.to, 1);
         result = pcb.getResultList();
         assertEquals(id2, result.get(0).get(0));
         
@@ -345,21 +345,21 @@ public class KeySetPaginationNullsTest extends AbstractCoreTest {
         String actualQueryString = pcb.getPageIdQueryString();
         for (int i = 0; i < key.length; i++) {
             if (key[i] != null) {
-                actualQueryString = actualQueryString.replaceAll(Pattern.quote(":_keySetParameter_" + i), key[i].toString());
+                actualQueryString = actualQueryString.replaceAll(Pattern.quote(":_keysetParameter_" + i), key[i].toString());
             }
         }
         
-        assertEquals(expectedIdQueryStart + keySetCondition + expectedIdQueryEnd, actualQueryString);
+        assertEquals(expectedIdQueryStart + keysetCondition + expectedIdQueryEnd, actualQueryString);
 
         // Optimized object query test
         String actualObjectQueryString = pcb.getQueryString();
         for (int i = 0; i < key.length; i++) {
             if (key[i] != null) {
-                actualObjectQueryString = actualObjectQueryString.replaceAll(Pattern.quote(":_keySetParameter_" + i), key[i].toString());
+                actualObjectQueryString = actualObjectQueryString.replaceAll(Pattern.quote(":_keysetParameter_" + i), key[i].toString());
             }
         }
         
-        assertEquals(expectedObjectQueryStart + keySetCondition + expectedObjectQueryEnd, actualObjectQueryString);
+        assertEquals(expectedObjectQueryStart + keysetCondition + expectedObjectQueryEnd, actualObjectQueryString);
     }
     
     private String clause(boolean asc, boolean nullsFirst) {

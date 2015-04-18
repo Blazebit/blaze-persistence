@@ -17,7 +17,7 @@ package com.blazebit.persistence.impl.builder.object;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.KeySetPaginationHelper;
+import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import java.io.Serializable;
 import java.util.List;
 
@@ -26,19 +26,19 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.0
  */
-public class KeySetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
+public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
 
-    private final int keySetSize;
+    private final int keysetSize;
     private Object[] first;
     private Object[] last;
 
-    public KeySetExtractionObjectBuilder(int keySetSize) {
-        this.keySetSize = keySetSize;
+    public KeysetExtractionObjectBuilder(int keysetSize) {
+        this.keysetSize = keysetSize;
     }
 
     @Override
     public T build(Object[] tuple) {
-        Object[] newTuple = new Object[tuple.length - keySetSize];
+        Object[] newTuple = new Object[tuple.length - keysetSize];
         System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
         
         if (first == null) {
@@ -52,11 +52,11 @@ public class KeySetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     public Serializable[] getLowest() {
-        return KeySetPaginationHelper.extractKey(first, first.length - keySetSize);
+        return KeysetPaginationHelper.extractKey(first, first.length - keysetSize);
     }
 
     public Serializable[] getHighest() {
-        return KeySetPaginationHelper.extractKey(last, last.length - keySetSize);
+        return KeysetPaginationHelper.extractKey(last, last.length - keysetSize);
     }
 
     @Override

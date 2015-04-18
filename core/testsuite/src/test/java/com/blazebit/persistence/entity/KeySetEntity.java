@@ -25,17 +25,17 @@ import javax.persistence.Id;
  * @since 1.0
  */
 @Entity
-public class KeySetEntity implements Serializable {
+public class KeysetEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Integer id;
     private Integer a;
     private Integer b;
 
-    public KeySetEntity() {
+    public KeysetEntity() {
     }
 
-    public KeySetEntity(Integer id, Integer a, Integer b) {
+    public KeysetEntity(Integer id, Integer a, Integer b) {
         this.id = id;
         this.a = a;
         this.b = b;

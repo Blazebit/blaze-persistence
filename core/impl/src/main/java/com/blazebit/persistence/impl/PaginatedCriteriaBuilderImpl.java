@@ -15,8 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
+import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.CaseWhenBuilder;
-import com.blazebit.persistence.KeySet;
+import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
@@ -24,14 +27,13 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.builder.object.DelegatingKeySetExtractionObjectBuilder;
-import com.blazebit.persistence.impl.builder.object.KeySetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,29 +50,27 @@ import javax.persistence.metamodel.Metamodel;
  */
 public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
 
-    private static final String KEY_SET_PARAMETER_NAME = "_keySetParameter";
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
 
-    private final boolean extractKeySet;
-    private final KeySetImpl keySet;
+    private boolean keysetExtraction;
+    private final KeysetPage keysetPage;
 
     // Mutable state
     private boolean needsCheck = true;
 
-    private Object entityId;
+    private final Object entityId;
     private int firstResult;
     private int firstRow;
-    private int pageSize;
+    private final int pageSize;
     private boolean needsNewIdList;
-    private KeySetMode keySetMode;
-    private List<OrderByExpression> orderByExpressions;
+    private final KeysetMode keysetMode;
 
     // Cache
     private String cachedCountQueryString;
     private String cachedIdQueryString;
 
-    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, Object entityId, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, Object entityId, int pageSize) {
         super(baseBuilder);
         if (firstRow < 0) {
             throw new IllegalArgumentException("firstRow may not be negative");
@@ -78,15 +78,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         if (pageSize <= 0) {
             throw new IllegalArgumentException("pageSize may not be zero or negative");
         }
-        this.extractKeySet = extractKeySet;
-        this.keySet = keySet;
+        this.keysetExtraction = keysetExtraction;
+        this.keysetPage = keysetPage;
         this.firstResult = -1;
         this.firstRow = -1;
         this.entityId = entityId;
         this.pageSize = pageSize;
+        // We do offset pagination to scroll to the page where an entity is
+        this.keysetMode = KeysetMode.NONE;
+        this.keysetManager.setKeysetLink(null);
     }
 
-    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean extractKeySet, KeySetImpl keySet, int firstRow, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, int firstRow, int pageSize) {
         super(baseBuilder);
         if (firstRow < 0) {
             throw new IllegalArgumentException("firstRow may not be negative");
@@ -94,12 +97,32 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         if (pageSize <= 0) {
             throw new IllegalArgumentException("pageSize may not be zero or negative");
         }
-        this.extractKeySet = extractKeySet;
-        this.keySet = keySet;
+        this.keysetExtraction = keysetExtraction;
+        this.keysetPage = keysetPage;
         this.firstResult = firstRow;
         this.firstRow = firstRow;
         this.entityId = null;
         this.pageSize = pageSize;
+        this.keysetMode = KeysetPaginationHelper.getKeysetMode(keysetPage, firstRow, pageSize);
+        
+        if (keysetMode == KeysetMode.NONE) {
+            this.keysetManager.setKeysetLink(null);
+        } else if (keysetMode == KeysetMode.NEXT) {
+            this.keysetManager.setKeysetLink(new SimpleKeysetLink(keysetPage.getHighest(), keysetMode));
+        } else {
+            this.keysetManager.setKeysetLink(new SimpleKeysetLink(keysetPage.getLowest(), keysetMode));
+        }
+    }
+
+    @Override
+    public PaginatedCriteriaBuilder<T> withKeysetExtraction(boolean keysetExtraction) {
+        this.keysetExtraction = keysetExtraction;
+        return this;
+    }
+
+    @Override
+    public boolean isKeysetExtraction() {
+        return keysetExtraction;
     }
 
     @Override
@@ -198,7 +221,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         cachedIdQueryString = null;
     }
 
-    private void prepareAndCheck() {
+    @Override
+    protected void prepareAndCheck() {
         if (!needsCheck) {
             return;
         }
@@ -210,17 +234,20 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         applyImplicitJoins();
         applyExpressionTransformers();
-
+        
+        // Paginated criteria builders always need the last order by expression to be unique
         Metamodel m = em.getMetamodel();
-        orderByExpressions = orderByManager.getOrderByExpressions(m);
-
+        List<OrderByExpression> orderByExpressions = orderByManager.getOrderByExpressions(m);
         if (!orderByExpressions.get(orderByExpressions.size() - 1).isUnique()) {
             throw new IllegalStateException("The last order by item must be unique!");
         }
+        
+        if (keysetManager.hasKeyset()) {
+            keysetManager.initialize(orderByExpressions);
+        }
 
-        needsNewIdList = extractKeySet || orderByManager.hasComplexOrderBys();
-        // TODO: checking the order by expressions is only partly sufficient since the result also depends on other parts of the query
-        keySetMode = KeySetPaginationHelper.getKeySetMode(extractKeySet, keySet, firstRow, pageSize, orderByExpressions);
+        needsNewIdList = keysetExtraction || orderByManager.hasComplexOrderBys();
+        
         // No need to do the check again if no mutation occurs
         needsCheck = false;
     }
@@ -230,7 +257,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         Class<?> expectedResultType;
         
         // When the keyset is included the query obviously produces an array
-        if (extractKeySet) {
+        if (keysetExtraction) {
             expectedResultType = Object[].class;
         } else {
             expectedResultType = selectManager.getExpectedQueryResultType();
@@ -239,20 +266,20 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType)
                 .setMaxResults(pageSize);
 
-        if (keySetMode == KeySetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE) {
             query.setFirstResult(firstRow);
         }
 
-        KeySetExtractionObjectBuilder<T> objectBuilder = null;
+        KeysetExtractionObjectBuilder<T> objectBuilder = null;
         ObjectBuilder<T> transformerObjectBuilder = selectManager.getSelectObjectBuilder();
 
-        if (extractKeySet) {
-            int keySetSize = orderByExpressions.size();
+        if (keysetExtraction) {
+            int keysetSize = orderByManager.getOrderByCount();
 
             if (transformerObjectBuilder == null) {
-                objectBuilder = new KeySetExtractionObjectBuilder<T>(keySetSize);
+                objectBuilder = new KeysetExtractionObjectBuilder<T>(keysetSize);
             } else {
-                objectBuilder = new DelegatingKeySetExtractionObjectBuilder<T>(transformerObjectBuilder, keySetSize);
+                objectBuilder = new DelegatingKeysetExtractionObjectBuilder<T>(transformerObjectBuilder, keysetSize);
             }
 
             transformerObjectBuilder = objectBuilder;
@@ -268,24 +295,24 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         List<T> result = query.getResultList();
 
         if (result.isEmpty()) {
-            KeySet newKeySet = null;
-            if (keySetMode == KeySetMode.NEXT) {
+            KeysetPage newKeysetPage = null;
+            if (keysetMode == KeysetMode.NEXT) {
                 // When we scroll over the last page to a non existing one, we reuse the current keyset
-                newKeySet = keySet;
+                newKeysetPage = keysetPage;
             }
 
-            return new PagedListImpl<T>(newKeySet, totalSize, firstResult, pageSize);
+            return new PagedListImpl<T>(newKeysetPage, totalSize, firstResult, pageSize);
         }
 
-        KeySet newKeySet = null;
+        KeysetPage newKeyset = null;
 
-        if (extractKeySet) {
+        if (keysetExtraction) {
             Serializable[] lowest = objectBuilder.getLowest();
             Serializable[] highest = objectBuilder.getHighest();
-            newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressions, lowest, highest);
+            newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
         }
 
-        PagedList<T> pagedResultList = new PagedListImpl<T>(result, newKeySet, totalSize, firstResult, pageSize);
+        PagedList<T> pagedResultList = new PagedListImpl<T>(result, newKeyset, totalSize, firstResult, pageSize);
         return pagedResultList;
     }
 
@@ -294,7 +321,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         Query idQuery = em.createQuery(idQueryString)
                 .setMaxResults(pageSize);
 
-        if (keySetMode == KeySetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE) {
             idQuery.setFirstResult(firstRow);
         }
 
@@ -302,22 +329,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         List ids = idQuery.getResultList();
 
         if (ids.isEmpty()) {
-            KeySet newKeySet = null;
-            if (keySetMode == KeySetMode.NEXT) {
+            KeysetPage newKeysetPage = null;
+            if (keysetMode == KeysetMode.NEXT) {
                 // When we scroll over the last page to a non existing one, we reuse the current keyset
-                newKeySet = keySet;
+                newKeysetPage = keysetPage;
             }
 
-            return new PagedListImpl<T>(newKeySet, totalSize, firstResult, pageSize);
+            return new PagedListImpl<T>(newKeysetPage, totalSize, firstResult, pageSize);
         }
 
         Serializable[] lowest = null;
         Serializable[] highest = null;
 
         if (needsNewIdList) {
-            if (extractKeySet) {
-                lowest = KeySetPaginationHelper.extractKey((Object[]) ids.get(0), 1);
-                highest = KeySetPaginationHelper.extractKey((Object[]) ids.get(ids.size() - 1), 1);
+            if (keysetExtraction) {
+                lowest = KeysetPaginationHelper.extractKey((Object[]) ids.get(0), 1);
+                highest = KeysetPaginationHelper.extractKey((Object[]) ids.get(ids.size() - 1), 1);
             }
 
             List newIds = new ArrayList(ids.size());
@@ -331,14 +358,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         parameterManager.addParameterMapping(idParamName, ids);
 
-        KeySet newKeySet = null;
+        KeysetPage newKeyset = null;
 
-        if (extractKeySet) {
-            newKeySet = new KeySetImpl(firstRow, pageSize, orderByExpressions, lowest, highest);
+        if (keysetExtraction) {
+            newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
         }
 
         List<T> queryResultList = getQueryResultList();
-        PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeySet, totalSize, firstResult, pageSize);
+        PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeyset, totalSize, firstResult, pageSize);
         return pagedResultList;
     }
 
@@ -371,16 +398,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
             
             sbSelectFrom.append(", ");
+            sbSelectFrom.append(jpaInfo.getCustomFunctionInvocation("PAGE_POSITION"));
             
-            // TODO: This is JPA Provider specific code that should be abstracted
-            if (jpaInfo.isHibernate) {
-                sbSelectFrom.append("PAGE_POSITION((");
-            } else if (jpaInfo.isEclipseLink24) {
-                sbSelectFrom.append("OPERATOR('PAGE_POSITION',(");
-            } else {
-                sbSelectFrom.append("FUNCTION('PAGE_POSITION',(");
-            }
-            
+            sbSelectFrom.append('(');
             appendSimplePageIdQueryString(sbSelectFrom);
             sbSelectFrom.append("),");
             
@@ -442,7 +462,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(idClause);
 
         if (needsNewIdList) {
-            orderByManager.buildSelectClauses(sbSelectFrom, extractKeySet);
+            orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
         }
 
         sbSelectFrom.append(" FROM ")
@@ -452,12 +472,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null);
 
-        if (keySetMode == KeySetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
         } else {
             sbSelectFrom.append(" WHERE ");
 
-            applyKeySetClause(sbSelectFrom);
+            keysetManager.buildKeysetPredicate(sbSelectFrom);
 
             if (whereManager.hasPredicates()) {
                 sbSelectFrom.append(" AND ");
@@ -470,7 +490,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         clauses.addAll(orderByManager.buildGroupByClauses());
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
-        boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
+        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
 
         // execute illegal collection access check
@@ -522,7 +542,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         StringBuilder sbSelectFrom = new StringBuilder();
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
 
-        if (extractKeySet) {
+        if (keysetExtraction) {
             orderByManager.buildSelectClauses(sbSelectFrom, true);
         }
 
@@ -533,12 +553,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
 
-        if (keySetMode == KeySetMode.NONE) {
+        if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
         } else {
             sbSelectFrom.append(" WHERE ");
 
-            applyKeySetClause(sbSelectFrom);
+            keysetManager.buildKeysetPredicate(sbSelectFrom);
 
             if (whereManager.hasPredicates()) {
                 sbSelectFrom.append(" AND ");
@@ -556,132 +576,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         havingManager.buildClause(sbSelectFrom);
 
-        boolean inverseOrder = keySetMode == KeySetMode.PREVIOUS;
+        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
 
         return sbSelectFrom.toString();
-    }
-
-    private void applyKeySetClause(StringBuilder sb) {
-        int expressionCount = orderByExpressions.size();
-        Serializable[] key;
-
-        if (keySetMode == KeySetMode.NEXT) {
-            key = keySet.getHighest();
-        } else {
-            key = keySet.getLowest();
-        }
-
-        boolean generateEqualPredicate = true;
-        int brackets = 0;
-
-        // We wrap the whole thing in brackets
-        brackets++;
-        sb.append('(');
-
-        for (int i = 0; i < expressionCount; i++) {
-            boolean isNotLast = i + 1 != expressionCount;
-
-            OrderByExpression orderByExpr = orderByExpressions.get(i);
-            Expression expr = orderByExpr.getExpression();
-
-            if (orderByExpr.isNullable()) {
-                boolean isPrevious = keySetMode == KeySetMode.PREVIOUS;
-
-                if (key[i] == null) {
-                    if (orderByExpr.isNullFirst() == isPrevious) {
-                        // Case for previous and null first or not previous and null last
-                        generateEqualPredicate = false;
-                        applyKeySetNullItem(sb, expr, false);
-                    } else {
-                        // Case for previous and null last or not previous and null first
-                        applyKeySetNullItem(sb, expr, true);
-                    }
-                } else {
-                    if (orderByExpr.isNullFirst() == isPrevious) {
-                        // Case for previous and null first or not previous and null last
-                        sb.append('(');
-                        applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
-                        sb.append(" OR ");
-                        applyKeySetNullItem(sb, expr, false);
-                        sb.append(')');
-                    } else {
-                        // Case for previous and null last or not previous and null first
-                        applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
-                    }
-                }
-            } else {
-                applyKeySetNotNullableItem(orderByExpr, sb, expr, i, key);
-            }
-
-            if (isNotLast) {
-                if (generateEqualPredicate) {
-                    brackets++;
-                    sb.append(" OR (");
-                    if (key[i] == null) {
-                        applyKeySetNullItem(sb, expr, false);
-                    } else {
-                        applyKeySetItem(sb, expr, "=", i, key[i]);
-                    }
-                }
-
-                sb.append(" AND ");
-                if (i + 2 != expressionCount) {
-                    brackets++;
-                    sb.append('(');
-                }
-
-                generateEqualPredicate = true;
-            }
-        }
-
-        for (int i = 0; i < brackets; i++) {
-            sb.append(')');
-        }
-    }
-
-    private void applyKeySetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, Expression expr, int i, Serializable[] key) {
-        String operator;
-        switch (keySetMode) {
-            case SAME:
-                operator = orderByExpr.isAscending() ? ">=" : "<=";
-                break;
-            case NEXT:
-                operator = orderByExpr.isAscending() ? ">" : "<";
-                break;
-            case PREVIOUS:
-                operator = orderByExpr.isAscending() ? "<" : ">";
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown key set mode: " + keySetMode);
-        }
-
-        applyKeySetItem(sb, expr, operator, i, key[i]);
-    }
-
-    private void applyKeySetItem(StringBuilder sb, Expression expr, String operator, int position, Serializable keyElement) {
-        queryGenerator.setQueryBuffer(sb);
-        expr.accept(queryGenerator);
-        sb.append(" ");
-        sb.append(operator);
-        sb.append(" :");
-        String parameterName = new StringBuilder(KEY_SET_PARAMETER_NAME).append('_').append(position).toString();
-        sb.append(parameterName);
-        parameterManager.addParameterMapping(parameterName, keyElement);
-    }
-
-    private void applyKeySetNullItem(StringBuilder sb, Expression expr, boolean not) {
-        queryGenerator.setQueryBuffer(sb);
-        expr.accept(queryGenerator);
-
-        if (not) {
-            sb.append(" IS NOT NULL");
-        } else {
-            sb.append(" IS NULL");
-        }
     }
 
     @Override

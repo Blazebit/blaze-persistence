@@ -103,4 +103,15 @@ public class JPAInfo {
         
         return Object.class;
     }
+    
+    public String getCustomFunctionInvocation(String functionName) {
+        if (isHibernate) {
+            return "PAGE_POSITION(";
+        } else if (isEclipseLink24) {
+            return "OPERATOR('PAGE_POSITION',";
+        } else {
+            return "FUNCTION('PAGE_POSITION',";
+        }
+        
+    }
 }

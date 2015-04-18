@@ -57,7 +57,7 @@ public interface PagedList<T> extends List<T> {
     
     /**
      * Returns the position of the first result, numbered from 0.
-     * This is the position which was actually queried. This value might be different from {@linkplain KeySet#getFirstResult()}.
+     * This is the position which was actually queried. This value might be different from {@linkplain KeysetPage#getFirstResult()}.
      * 
      * If this list was queried with an entity id which does not exist, this will return <code>-1</code>;
      *
@@ -67,18 +67,18 @@ public interface PagedList<T> extends List<T> {
 
     /**
      * Returns the maximum number of results.
-     * This is the maximum number which was actually queried. This value might be different from {@linkplain KeySet#getFirstResult()}.
+     * This is the maximum number which was actually queried. This value might be different from {@linkplain KeysetPage#getFirstResult()}.
      *
      * @return The maximum number of results
      */
     public int getMaxResults();
 
     /**
-     * Returns the key set for this paged list which can be used for key set pagination.
-     * The key set may be null if key set pagination wasn't used.
+     * Returns the key set page for this paged list which can be used for key set pagination.
+     * The key set page may be null if key set pagination wasn't used.
      *
-     * @see QueryBuilder#page(com.blazebit.persistence.KeySet, int, int)
+     * @see QueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
      * @return The key set
      */
-    public KeySet getKeySet();
+    public KeysetPage getKeysetPage();
 }
