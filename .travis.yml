@@ -15,7 +15,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-4.3
       jdk: openjdk7
     - env: JPAPROVIDER=hibernate-5.0
-      jdk: openjdk7
+      jdk: openjdk8
     - env: JPAPROVIDER=eclipselink
       jdk: openjdk7
     - env: JPAPROVIDER=openjpa
@@ -24,7 +24,7 @@ matrix:
       jdk: openjdk7
   allow_failures:
     - env: JPAPROVIDER=hibernate-5.0
-      jdk: openjdk7
+      jdk: openjdk8
     - env: JPAPROVIDER=eclipselink
       jdk: openjdk7
     - env: JPAPROVIDER=openjpa
