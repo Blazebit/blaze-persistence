@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  *
  * Example 2:
  *
- * @Mapping("UPPER(name)")
+ * {@literal @}Mapping("UPPER(name)")
  * public String getUpperName();
  *
  * </code>

@@ -68,7 +68,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
 
     /**
      * Starts a {@link SubqueryInitiator} for the select item with the given alias.
-     * When the builder finishes, the select item is added to the parent container represented by the type {@linkplain X}.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
      *
      * @param alias The select alias for the subquery
      * @return The subquery initiator for building a subquery
@@ -81,7 +81,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * <p>
      * All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the select item is added to the parent container represented by the type {@linkplain X}.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery

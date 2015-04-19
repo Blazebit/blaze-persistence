@@ -189,7 +189,7 @@ public class MutablePersistenceUnitInfo implements PersistenceUnitInfo {
     /**
      * This implementation returns the default ClassLoader.
      *
-     * @see org.springframework.util.ClassUtils#getDefaultClassLoader()
+     * From <code>org.springframework.util.ClassUtils#getDefaultClassLoader()</code>
      */
     @Override
     public ClassLoader getClassLoader() {

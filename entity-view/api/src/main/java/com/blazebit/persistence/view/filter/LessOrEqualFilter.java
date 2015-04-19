@@ -17,13 +17,11 @@ package com.blazebit.persistence.view.filter;
 
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilterProvider;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 /**
  * A placeholder for a filter implementation that implements a less or equal filter.
- * This placeholder can be used in a {@link AttributeFilter} annotation or you can retrieve an instance of this filter by invoking
- * {@link EntityViewManager#createFilter(java.lang.Class, java.lang.Class, java.lang.Object)}.
+ * This placeholder can be used in a {@link AttributeFilter} annotation.
  *
  * A less or equal filter accepts a class and an object. The class is interpreted as the expected type. This is used to convert the
  * object parameter. The following conversion are done based on the expected type in the right order.

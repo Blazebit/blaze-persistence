@@ -28,7 +28,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
     /**
      * Starts a {@link SubqueryInitiator} for the left hand side of a predicate.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -38,7 +38,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
      * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression    The expression which will be used as left hand side of a predicate
@@ -48,7 +48,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
 
     /**
      * Starts a {@link RestrictionBuilder} for a having predicate with the given expression as left hand expression.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @param expression The left hand expression for a having predicate
      * @return The restriction builder for the given expression
@@ -58,7 +58,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
     /**
      * Starts a {@link CaseWhenBuilder} for a where predicate.
      * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
-     * the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return A {@link CaseWhenBuilder}
      */
@@ -67,7 +67,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
     /**
      * Starts a {@link SimpleCaseWhenBuilder} for a where predicate.
      * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
-     * the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @param expression Case operand expression
      * @return A {@link CaseWhenBuilder}
@@ -76,7 +76,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
 
     /**
      * Starts an exists predicate for the having clause with a subquery on the right hand side.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -84,7 +84,7 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
 
     /**
      * Starts an exists predicate for the having clause with a subquery on the right hand side.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */

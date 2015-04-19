@@ -34,7 +34,7 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * <p>
      * All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * <p>
@@ -54,7 +54,7 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * <p>
      * All occurrences of
      * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * <p>

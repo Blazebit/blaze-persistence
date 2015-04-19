@@ -29,7 +29,7 @@ public interface WhereBuilder<T extends WhereBuilder<T>> extends BaseWhereBuilde
      * Starts a {@link WhereOrBuilder} which is a predicate consisting only of
      * disjunctiv connected predicates. When the builder finishes, the predicate
      * is added to the parent predicate container represented by the type
-     * {@linkplain T}.
+     * <code>T</code>.
      *
      * @return The or predicate builder for the where clause
      */

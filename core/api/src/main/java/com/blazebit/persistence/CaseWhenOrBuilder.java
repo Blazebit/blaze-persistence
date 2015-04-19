@@ -86,7 +86,7 @@ public interface CaseWhenOrBuilder<T> {
     public CaseWhenAndBuilder<CaseWhenOrBuilder<T>> and();
 
     /**
-     * Finishes the OR predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the OR predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The parent predicate container builder
      */

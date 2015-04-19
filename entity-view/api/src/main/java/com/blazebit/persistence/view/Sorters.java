@@ -64,7 +64,7 @@ public final class Sorters {
     }
 
     /**
-     * Like {@link Sorters#ascending(boolean, boolean)} but with <code>nullsFirst</code> set to false.
+     * Like {@link Sorters#ascending(boolean)} but with <code>nullsFirst</code> set to false.
      *
      * @return A new sorter
      */
@@ -73,7 +73,7 @@ public final class Sorters {
     }
 
     /**
-     * Like {@link Sorters#descending(boolean, boolean)} but with <code>nullsFirst</code> set to false.
+     * Like {@link Sorters#descending(boolean)} but with <code>nullsFirst</code> set to false.
      *
      * @return A new sorter
      */

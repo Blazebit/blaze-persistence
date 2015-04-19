@@ -311,4 +311,27 @@
             </plugin>
         </plugins>
     </build>
+    
+    <profiles>
+        <profile>
+            <!-- It disables javadoc doclint for JDK > 8 -->
+            <id>javadoc-xdoclint-disable-jdk8+</id>
+            <activation>
+                <jdk>[1.8,)</jdk>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <configuration>
+                                <additionalJOption>-Xdoclint:none</additionalJOption>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 </project>

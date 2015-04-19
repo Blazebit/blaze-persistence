@@ -327,7 +327,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Applies the given object builder to this query. The object builder provides the select clauses and is used to transform the result set tuples.
      *
      * @param <Y>     The new query result type specified by the given class
-     * @param builder The object builder which transforms the result set into objects of type {@linkplain Y}
+     * @param builder The object builder which transforms the result set into objects of type <code>Y</code>
      * @return The query builder for chaining calls
      */
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder);

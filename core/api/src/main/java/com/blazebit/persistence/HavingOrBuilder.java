@@ -25,7 +25,7 @@ package com.blazebit.persistence;
 public interface HavingOrBuilder<T> extends BaseHavingBuilder<HavingOrBuilder<T>> {
 
     /**
-     * Finishes the OR predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the OR predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The parent predicate container builder
      */

@@ -25,7 +25,7 @@ package com.blazebit.persistence;
 public interface WhereAndBuilder<T> extends BaseWhereBuilder<WhereAndBuilder<T>> {
 
     /**
-     * Finishes the AND predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the AND predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The parent predicate container builder
      */

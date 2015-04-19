@@ -113,7 +113,7 @@ public interface RestrictionBuilder<T> {
      * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -124,7 +124,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> eq(String subqueryAlias, String expression);
 
     /**
-     * Finishes the EQ predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the EQ predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is equal to the given value.
      *
      * @param value The value on the right hand side
@@ -133,7 +133,7 @@ public interface RestrictionBuilder<T> {
     public T eq(Object value);
 
     /**
-     * Finishes the EQ predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the EQ predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is equal to the given expression.
      *
      * @param expression The expression on the right hand side
@@ -186,7 +186,7 @@ public interface RestrictionBuilder<T> {
      * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -197,7 +197,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> gt(String subqueryAlias, String expression);
 
     /**
-     * Finishes the GT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the GT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is greater than the given value.
      *
      * @param value The value on the right hand side
@@ -206,7 +206,7 @@ public interface RestrictionBuilder<T> {
     public T gt(Object value);
 
     /**
-     * Finishes the GT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the GT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is greater than the given expression.
      *
      * @param expression The expression on the right hand side
@@ -227,7 +227,7 @@ public interface RestrictionBuilder<T> {
      * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -238,7 +238,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> ge(String subqueryAlias, String expression);
 
     /**
-     * Finishes the GE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the GE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is greater or equal to the given value.
      *
      * @param value The value on the right hand side
@@ -247,7 +247,7 @@ public interface RestrictionBuilder<T> {
     public T ge(Object value);
 
     /**
-     * Finishes the GE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the GE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is greater or equal to the given expression.
      *
      * @param expression The expression on the right hand side
@@ -268,7 +268,7 @@ public interface RestrictionBuilder<T> {
      * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -279,7 +279,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> lt(String subqueryAlias, String expression);
 
     /**
-     * Finishes the LT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the LT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is less than the given value.
      *
      * @param value The value on the right hand side
@@ -288,7 +288,7 @@ public interface RestrictionBuilder<T> {
     public T lt(Object value);
 
     /**
-     * Finishes the LT predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the LT predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is less than the given expression.
      *
      * @param expression The expression on the right hand side
@@ -309,7 +309,7 @@ public interface RestrictionBuilder<T> {
      * <p>
      * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type {@linkplain T}.
+     * parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
@@ -320,7 +320,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> le(String subqueryAlias, String expression);
 
     /**
-     * Finishes the LE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the LE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is less or equal to the given value.
      *
      * @param value The value on the right hand side
@@ -329,7 +329,7 @@ public interface RestrictionBuilder<T> {
     public T le(Object value);
 
     /**
-     * Finishes the LE predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the LE predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is less or equal to the given expression.
      *
      * @param expression The expression on the right hand side
@@ -339,7 +339,7 @@ public interface RestrictionBuilder<T> {
 
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of the IN predicate.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -353,7 +353,7 @@ public interface RestrictionBuilder<T> {
     public SubqueryInitiator<T> notIn();
 
     /**
-     * Finishes the IN predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the IN predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is in the list of given values.
      *
      * @param values The values on the right hand side
@@ -386,7 +386,7 @@ public interface RestrictionBuilder<T> {
     public T notIn(Object... values);
 
     /**
-     * Finishes the IS NULL predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the IS NULL predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is null.
      *
      * @return The parent predicate container builder
@@ -401,7 +401,7 @@ public interface RestrictionBuilder<T> {
     public T isNotNull();
 
     /**
-     * Finishes the IS EMPTY predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the IS EMPTY predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is empty.
      *
      * @return The parent predicate container builder
@@ -416,7 +416,7 @@ public interface RestrictionBuilder<T> {
     public T isNotEmpty();
 
     /**
-     * Finishes the MEMBER OF predicate and adds it to the parent predicate container represented by the type {@linkplain T}.
+     * Finishes the MEMBER OF predicate and adds it to the parent predicate container represented by the type <code>T</code>.
      * The predicate checks if the left hand side is of the given expression.
      *
      * @param expression The expression on the right hand side
@@ -441,7 +441,7 @@ public interface RestrictionBuilder<T> {
      * </p>
      * 
      * <p>
-     * Once the {@link LikeBuilder} is finished, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * Once the {@link LikeBuilder} is finished, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * @param caseSensitive If true, the comparison of the left hand side expression with the pattern

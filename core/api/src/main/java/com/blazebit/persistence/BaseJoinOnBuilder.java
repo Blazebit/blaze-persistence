@@ -27,7 +27,7 @@ public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> {
 
     /**
      * Starts a {@link RestrictionBuilder} for an on predicate with the given expression as left hand expression.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @param expression The left hand expression for a having predicate
      * @return The restriction builder for the given expression

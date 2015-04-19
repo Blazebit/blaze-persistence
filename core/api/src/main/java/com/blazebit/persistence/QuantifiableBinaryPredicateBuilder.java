@@ -27,7 +27,7 @@ public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBu
 
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of a predicate that uses the ALL quantor.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -35,7 +35,7 @@ public interface QuantifiableBinaryPredicateBuilder<T> extends BinaryPredicateBu
 
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of a predicate that uses the ANY quantor.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type {@linkplain T}.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return The subquery initiator for building a subquery
      */

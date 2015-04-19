@@ -26,7 +26,7 @@ import javax.persistence.EntityManager;
 public interface CriteriaBuilderFactory {
     
     /**
-     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String) 
+     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)}
      * but with the alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.
      *
      * @param entityManager The entity manager to use for the criteria builder

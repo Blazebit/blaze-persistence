@@ -18,7 +18,7 @@ package com.blazebit.persistence;
 import java.util.List;
 
 /**
- * An object build provides the select clause expressions that should be used by a {@link QueryBuilder} and provides methods for transforming tuples into the target type {@linkplain T}.
+ * An object build provides the select clause expressions that should be used by a {@link QueryBuilder} and provides methods for transforming tuples into the target type <code>T</code>.
  *
  * @param <T> The type that this builder produces
  * @author Christian Beikov
@@ -34,7 +34,7 @@ public interface ObjectBuilder<T> {
     public void applySelects(SelectBuilder<?, ?> selectBuilder);
 
     /**
-     * Builds an object of the target type {@linkplain T} from the given tuple.
+     * Builds an object of the target type <code>T</code> from the given tuple.
      *
      * @param tuple The result tuple
      * @return The target object
