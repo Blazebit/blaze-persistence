@@ -23,7 +23,13 @@ import java.util.Set;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import org.hibernate.Session;
+import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.InformixDialect;
+import org.hibernate.dialect.IngresDialect;
+import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -55,6 +61,18 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             dbms = "microsoft";
         } else if (dialect instanceof SybaseDialect) {
             dbms = "sybase";
+        } else if (dialect instanceof H2Dialect) {
+            dbms = "h2";
+        } else if (dialect instanceof CUBRIDDialect) {
+            dbms = "cubrid";
+        } else if (dialect instanceof HSQLDialect) {
+            dbms = "hsql";
+        } else if (dialect instanceof InformixDialect) {
+            dbms = "informix";
+        } else if (dialect instanceof IngresDialect) {
+            dbms = "ingres";
+        } else if (dialect instanceof InterbaseDialect) {
+            dbms = "interbase";
         } else {
             dbms = null;
         }
