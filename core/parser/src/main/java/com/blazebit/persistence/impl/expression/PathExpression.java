@@ -31,7 +31,7 @@ public class PathExpression implements Expression, Cloneable {
     private Object baseNode;
     private String field;
     private boolean usedInCollectionFunction = false;
-    private final boolean collectionKeyPath;
+    private boolean collectionKeyPath;
 
     public PathExpression() {
         this(new ArrayList<PathElementExpression>(), false);
@@ -124,6 +124,10 @@ public class PathExpression implements Expression, Cloneable {
 
     public boolean isCollectionKeyPath() {
         return collectionKeyPath;
+    }
+
+    public void setCollectionKeyPath(boolean collectionKeyPath) {
+        this.collectionKeyPath = collectionKeyPath;
     }
 
     /*

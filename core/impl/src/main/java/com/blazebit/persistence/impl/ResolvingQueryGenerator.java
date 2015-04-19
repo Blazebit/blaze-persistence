@@ -19,6 +19,7 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import java.util.List;
 import java.util.Set;
 
@@ -31,13 +32,13 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
-    private final JPAInfo jpaInfo;
+    private final JpaProvider jpaProvider;
     protected String aliasPrefix;
     private final Set<String> registeredFunctions;
     
-    public ResolvingQueryGenerator(AliasManager aliasManager, JPAInfo jpaInfo, Set<String> registeredFunctions) {
+    public ResolvingQueryGenerator(AliasManager aliasManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
         this.aliasManager = aliasManager;
-        this.jpaInfo = jpaInfo;
+        this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
     }
 
@@ -48,32 +49,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());
             if(registeredFunctions.contains(functionName.toLowerCase())) {
-                if (jpaInfo.isHibernate) {
-                    // resolve function
-                    sb.append(functionName);
-                    sb.append('(');
-                    if (expression.getExpressions().size() > 1) {
-                        expression.getExpressions().get(1).accept(this);
-                        for (int i = 2; i < expression.getExpressions().size(); i++) {
-                            sb.append(",");
-                            expression.getExpressions().get(i).accept(this);
-                        }
-                    }
-                    sb.append(')');
-                } else {
-                    // EclipseLink operator style
-                    sb.append("OPERATOR('");
-                    sb.append(functionName);
-                    sb.append('\'');
-
-                    for (int i = 1; i < expression.getExpressions().size(); i++) {
-                        sb.append(',');
+                sb.append(jpaProvider.getCustomFunctionInvocation(functionName, expression.getExpressions().size()));
+                if (expression.getExpressions().size() > 1) {
+                    expression.getExpressions().get(1).accept(this);
+                    for (int i = 2; i < expression.getExpressions().size(); i++) {
+                        sb.append(",");
                         expression.getExpressions().get(i).accept(this);
                     }
-
-                    sb.append(')');
                 }
-            } else if (jpaInfo.isJPA21) {
+                sb.append(')');
+            } else if (jpaProvider.supportsJpa21()) {
                 // Add the JPA 2.1 Function style function
                 sb.append("FUNCTION('");
                 sb.append(functionName);
@@ -115,22 +100,51 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         if (expression.getBaseNode() == null) {
             sb.append(expression.getPath());
         } else if (expression.getField() == null) {
+            boolean valueFunction = needsValueFunction(expression) && !expression.isUsedInCollectionFunction() && jpaProvider.getCollectionValueFunction() != null;
+            
+            if (valueFunction) {
+                sb.append(jpaProvider.getCollectionValueFunction());
+                sb.append('(');
+            }
+            
             if (aliasPrefix != null) {
                 sb.append(aliasPrefix);
             }
             
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
             sb.append(baseNode.getAliasInfo().getAlias());
+            
+            if (valueFunction) {
+                sb.append(')');
+            }
         } else {
+            boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
+            
+            if (valueFunction) {
+                sb.append(jpaProvider.getCollectionValueFunction());
+                sb.append('(');
+            }
+            
             if (aliasPrefix != null) {
                 sb.append(aliasPrefix);
             }
             
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            sb.append(baseNode.getAliasInfo().getAlias())
-                    .append(".")
-                    .append(expression.getField());
+            sb.append(baseNode.getAliasInfo().getAlias());
+            
+            if (valueFunction) {
+                sb.append(')');
+            }
+            
+            sb.append(".").append(expression.getField());
+            
         }
+    }
+    
+    private boolean needsValueFunction(PathExpression expression) {
+        JoinNode baseNode = (JoinNode) expression.getBaseNode();
+        return !expression.isCollectionKeyPath()
+            && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isIndexed();
     }
     
     @Override
@@ -143,7 +157,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         // Workaround for hibernate
         // TODO: Remove when HHH-7407 is fixed
-        boolean needsBrackets = jpaInfo.isHibernate && expression.getValue() instanceof List<?> && ((List<?>) expression.getValue()).size() > 1;
+        boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.getValue() instanceof List<?> && ((List<?>) expression.getValue()).size() > 1;
         
         if (needsBrackets) {
             sb.append('(');

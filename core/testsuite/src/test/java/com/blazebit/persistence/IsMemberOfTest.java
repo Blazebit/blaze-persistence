@@ -57,7 +57,7 @@ public class IsMemberOfTest extends AbstractCoreTest {
         criteria.where("d").isNotMemberOf("d.contacts.ownedDocuments");
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d NOT MEMBER OF contacts_1.ownedDocuments",
+            "SELECT d FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d NOT MEMBER OF " + joinAliasValue("contacts_1") + ".ownedDocuments",
             criteria.getQueryString());
         criteria.getResultList();
     }

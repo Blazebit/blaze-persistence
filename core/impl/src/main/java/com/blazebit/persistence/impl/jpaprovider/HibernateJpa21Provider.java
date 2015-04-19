@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence.impl;
-
-import com.blazebit.persistence.impl.predicate.Predicate;
+package com.blazebit.persistence.impl.jpaprovider;
 
 /**
  *
- * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.0
  */
-public class OnClauseJoinNodeVisitor implements JoinNodeVisitor {
+public class HibernateJpa21Provider extends HibernateJpaProvider {
 
-    private final Predicate.Visitor visitor;
-
-    public OnClauseJoinNodeVisitor(Predicate.Visitor visitor) {
-        this.visitor = visitor;
-    }
-    
     @Override
-    public void visit(JoinNode node) {
-        if (node.getOnPredicate() != null) {
-            node.getOnPredicate().accept(visitor);
-        }
+    public boolean supportsJpa21() {
+        return true;
+    }
+
+    @Override
+    public String getOnClause() {
+        return "ON";
     }
 
 }

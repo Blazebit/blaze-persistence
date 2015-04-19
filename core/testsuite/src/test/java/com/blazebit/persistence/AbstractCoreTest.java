@@ -23,14 +23,13 @@ import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.function.ConcatenateFunction;
 import com.blazebit.persistence.function.ZeroFunction;
-import com.blazebit.persistence.impl.JPAInfo;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.testsuite.base.AbstractPersistenceTest;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,14 +40,19 @@ import java.util.Set;
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
-    private JPAInfo jpaInfo;
+    private static final JpaProvider staticJpaProvider;
+    private JpaProvider jpaProvider;
     protected String ON_CLAUSE;
+    
+    static {
+        staticJpaProvider = JpaProviders.resolveJpaProvider(null);
+    }
 
     @Override
     public void init() {
         super.init();
-        jpaInfo = new JPAInfo(em);
-        ON_CLAUSE = jpaInfo.getOnClause();
+        jpaProvider = JpaProviders.resolveJpaProvider(em);
+        ON_CLAUSE = jpaProvider.getOnClause();
     }
     
     @Override
@@ -68,9 +72,15 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         ));
     }
     
+    /**
+     * Only use this for parameters that have more than 1 value!
+     * 
+     * @param name
+     * @return 
+     */
     protected String listParameter(String name) {
         // Workaround for HHH-7407
-        if (jpaInfo.isHibernate) {
+        if (jpaProvider.needsBracketsForListParamter()) {
             return "(:" + name + ")";
         } else {
             return ":" + name;
@@ -78,30 +88,21 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias) {
-        return jpaInfo.getCollectionValueFunction() != null ? jpaInfo.getCollectionValueFunction() + "(" + alias + ")" : alias;
+        return jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+    }
+
+    protected static String staticJoinAliasValue(String alias) {
+        return staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
     }
     
     protected String function(String name, String... args) {
         if (containsIgnoreCase(getRegisteredFunctions(), name)) {
-            if (jpaInfo.isHibernate) {
-                StringBuilder sb = new StringBuilder();
-                sb.append(name).append('(');
-                StringUtils.join(sb, ",", args);
-                sb.append(')');
-                return sb.toString();
-            } else {
-                StringBuilder sb = new StringBuilder();
-                sb.append("OPERATOR('").append(name).append('\'');
-
-                for (String arg : args) {
-                    sb.append(",");
-                    sb.append(arg);
-                }
-
-                sb.append(')');
-                return sb.toString();
-            }
-        } else if (jpaInfo.isJPA21) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(jpaProvider.getCustomFunctionInvocation(name, args.length));
+            StringUtils.join(sb, ",", args);
+            sb.append(')');
+            return sb.toString();
+        } else if (jpaProvider.supportsJpa21()) {
             StringBuilder sb = new StringBuilder();
             sb.append("FUNCTION('").append(name).append('\'');
             

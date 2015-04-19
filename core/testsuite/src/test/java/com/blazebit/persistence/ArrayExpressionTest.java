@@ -121,7 +121,7 @@ public class ArrayExpressionTest extends AbstractCoreTest {
 
         assertEquals(
             "SELECT p AS x FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.partnerDocument p LEFT JOIN p.contacts contacts_1_1 "
-            + ON_CLAUSE + " KEY(contacts_1_1) = 1 WHERE contacts_1_1.name IS NULL", criteria.getQueryString());
+            + ON_CLAUSE + " KEY(contacts_1_1) = 1 WHERE " + joinAliasValue("contacts_1_1") + ".name IS NULL", criteria.getQueryString());
         criteria.getResultList();
     }
 

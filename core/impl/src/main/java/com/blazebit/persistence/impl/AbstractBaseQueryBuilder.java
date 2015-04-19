@@ -30,6 +30,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
@@ -79,7 +81,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
     protected final ResolvingQueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
-    protected final JPAInfo jpaInfo;
+    protected final JpaProvider jpaProvider;
     protected final Set<String> registeredFunctions;
 
     protected final AliasManager aliasManager;
@@ -117,7 +119,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
-        this.jpaInfo = builder.jpaInfo;
+        this.jpaProvider = builder.jpaProvider;
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
         this.aliasManager = builder.aliasManager;
@@ -140,16 +142,16 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         }
 
         this.cbf = cbf;
-        this.jpaInfo = new JPAInfo(em);
+        this.jpaProvider = JpaProviders.resolveJpaProvider(em);
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
 
         this.parameterManager = parameterManager;
 
         this.registeredFunctions = registeredFunctions;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaInfo, registeredFunctions);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaProvider, registeredFunctions);
 
-        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaInfo, this.aliasManager, em.getMetamodel(),
+        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaProvider, this.aliasManager, em.getMetamodel(),
                 parentJoinManager);
 
         // set defaults
@@ -168,14 +170,14 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaInfo, resultClazz);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies
         this.em = em;
 
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new ValueExpressionTransformer(jpaInfo), new SubqueryRecursiveExpressionTransformer());
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
         this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
         this.resultType = resultClazz;

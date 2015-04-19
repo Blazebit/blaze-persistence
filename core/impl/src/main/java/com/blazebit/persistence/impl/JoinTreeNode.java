@@ -28,12 +28,14 @@ public class JoinTreeNode {
     private final String relationName;
     private JoinNode defaultNode;
     private final boolean collection;
+    private final boolean indexed;
     /* maps join aliases to join nodes */
     private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
 
-    public JoinTreeNode(String relationName, boolean collection) {
+    public JoinTreeNode(String relationName, boolean collection, boolean indexed) {
         this.relationName = relationName;
         this.collection = collection;
+        this.indexed = indexed;
     }
 
     public String getRelationName() {
@@ -73,5 +75,9 @@ public class JoinTreeNode {
 
     public boolean isCollection() {
         return collection;
+    }
+    
+    public boolean isIndexed() {
+        return indexed;
     }
 }

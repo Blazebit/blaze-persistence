@@ -41,6 +41,7 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,14 +81,14 @@ public class SelectManager<T> extends AbstractManager {
     private final AliasManager aliasManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
-    private final JPAInfo jpaInfo;
+    private final JpaProvider jpaProvider;
 
-    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
-        this.jpaInfo = jpaInfo;
+        this.jpaProvider = jpaProvider;
         if (resultClazz.equals(Tuple.class)) {
             objectBuilder = (ObjectBuilder<T>) new TupleObjectBuilder(selectInfos, selectAliasToPositionMap);
         }
@@ -253,7 +254,7 @@ public class SelectManager<T> extends AbstractManager {
             return Object[].class;
         }
         
-        return jpaInfo.getDefaultQueryResultType();
+        return jpaProvider.getDefaultQueryResultType();
     }
 
     private void handleSelect(Expression expr, String selectAlias) {

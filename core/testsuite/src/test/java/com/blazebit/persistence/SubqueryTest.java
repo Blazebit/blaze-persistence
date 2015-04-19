@@ -247,7 +247,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from(Person.class, "p").select("name").where("LENGTH(l)").gt(1).end()
                 .like().value("%dld").noEscape();
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l WHERE (SELECT p.name FROM Person p "
-                + "WHERE LENGTH(l) > :param_0) LIKE :param_1";
+                + "WHERE LENGTH(" + joinAliasValue("l") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -259,7 +259,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from(Person.class, "p").select("name").where("LENGTH(d.partners.localized[1])").gt(1).end()
                 .like().value("%dld").noEscape();
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 "
-                + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
+                + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -276,7 +276,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
                 .groupBy("id")
                 .orderByAsc("localizedCount");
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized_1) FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = c.id)) AS localizedCount "
+        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c") + ".id)) AS localizedCount "
                 + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -295,7 +295,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .groupBy("id")
                 .orderByAsc("localizedCount");
 
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(localized_1) FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = contacts_1.id)) AS localizedCount "
+        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1") + ".id)) AS localizedCount "
                 + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -310,7 +310,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .like().value("%dld").noEscape();
 
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 "
-                + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
+                + "WHERE (SELECT p.name FROM Person p WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -324,7 +324,7 @@ public class SubqueryTest extends AbstractCoreTest {
 
         String expectedQuery = "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l "
                 + "LEFT JOIN partners_1.localized localized_1_1 " + ON_CLAUSE + " KEY(localized_1_1) = 1 WHERE (SELECT p.name FROM Person p "
-                + "WHERE LENGTH(localized_1_1) > :param_0) LIKE :param_1";
+                + "WHERE LENGTH(" + joinAliasValue("localized_1_1") + ") > :param_0) LIKE :param_1";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }
@@ -358,35 +358,6 @@ public class SubqueryTest extends AbstractCoreTest {
                 .page(0, 1);
         // In a paginated query access to outer collections is disallowed in the order by clause
         verifyException(cb, IllegalStateException.class).getPageIdQueryString();
-    }
-
-    @Test
-    public void workingJPQLQueries() {
-//        em.createQuery("SELECT SIZE(owner.ownedDocuments) AS ownedSize FROM Document d LEFT JOIN d.versions versions LEFT JOIN d.owner owner WHERE d.id IN "
-//                + "(SELECT p.id FROM Person p WHERE ownedSize = p.name)").getResultList();
-        em.createQuery("FROM Document d LEFT JOIN d.versions versions JOIN d.owner owner WHERE d.id IN "
-                + "(SELECT p.id FROM Person p WHERE SIZE(d.versions) = p.age)").getResultList();
-        em.createQuery(
-                "FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document LEFT JOIN document.partners partners LEFT JOIN d.owner owner WHERE d.id IN "
-                + "(SELECT p.id FROM Person p WHERE SIZE(document.partners) = p.age)").getResultList();
-        em.createQuery(
-                "FROM Document d LEFT JOIN d.versions versions LEFT JOIN versions.document document LEFT JOIN document.partners partners LEFT JOIN d.owner owner WHERE d.id IN "
-                + "(SELECT p.id FROM Person p WHERE partners.name = p.name)").getResultList();
-        em.createQuery(
-                "FROM Person p LEFT JOIN p.partnerDocument partnerDocument LEFT JOIN partnerDocument.versions versions WHERE SIZE(partnerDocument.versions) > 0")
-                .getResultList();
-//        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
-//                + "(SELECT p.id FROM Person p WHERE p.name = n)").getResultList();
-
-        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id > 0 ORDER BY n").getResultList();
-        em.createQuery("SELECT d.name FROM Document d WHERE UPPER(d.name) = LOWER(d.name)").getResultList();
-        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d").getResultList();
-
-        em.createQuery("SELECT d.name, UPPER(d.name) FROM Document d WHERE d.age = (SELECT AVG(d.age) FROM Document d2 WHERE d.id IN (SELECT p.id FROM Person p))").getResultList();
-
-//        em.createQuery("SELECT d.name AS n FROM Document d WHERE d.id IN "
-//                + "(SELECT p.id FROM Person p WHERE p.name = 'test' ORDER BY n)").getResultList();
-//        em.createQuery("SELECT d, owner FROM Document d LEFT JOIN FETCH d.owner owner WITH owner.id < 5").getResultList();
     }
 
     @Test

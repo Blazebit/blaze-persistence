@@ -398,7 +398,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
             
             sbSelectFrom.append(", ");
-            sbSelectFrom.append(jpaInfo.getCustomFunctionInvocation("PAGE_POSITION"));
+            sbSelectFrom.append(jpaProvider.getCustomFunctionInvocation("PAGE_POSITION", 2));
             
             sbSelectFrom.append('(');
             appendSimplePageIdQueryString(sbSelectFrom);
