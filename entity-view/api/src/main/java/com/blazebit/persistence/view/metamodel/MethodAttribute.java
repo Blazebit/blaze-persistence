@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
-import com.blazebit.persistence.view.AttributeFilterProvider;
 import java.lang.reflect.Method;
 import java.util.Set;
 

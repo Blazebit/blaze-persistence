@@ -26,6 +26,7 @@ package com.blazebit.persistence;
  * terminate the building process or start a {@link SubqueryInitiator}.
  * </p>
  * 
+ * @param <T> The builder type that is returned on terminal operations
  * @author Moritz Becker
  * @since 1.0
  */

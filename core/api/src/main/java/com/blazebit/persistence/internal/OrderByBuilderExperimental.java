@@ -19,8 +19,11 @@ package com.blazebit.persistence.internal;
 import com.blazebit.persistence.OrderByBuilder;
 
 /**
+ * This interface contains experimental order by builder methods.
  *
+ * @param <T> The builder type that is returned on terminal operations
  * @author Moritz Becker
+ * @since 1.0
  */
 public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends OrderByBuilder<T> {
     /**

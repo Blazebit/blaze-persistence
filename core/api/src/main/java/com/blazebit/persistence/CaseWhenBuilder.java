@@ -35,7 +35,7 @@ public interface CaseWhenBuilder<T> extends CaseWhenStarterBuilder<T> {
     /**
      * Adds the given else parameter value to the case when builder.
      *
-     * @param elseExpression The else parameter value
+     * @param value The else parameter value
      * @return The parent builder
      */
     public T otherwise(Object value);

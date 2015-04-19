@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence.view.filter;
 
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.AttributeFilter;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.EntityViewManager;
 
 /**
  * A placeholder for a filter implementation that implements a starts with filter.

@@ -20,10 +20,11 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 
 /**
+ * This interface contains experimental restriction builder methods.
  *
+ * @param <T> The builder type that is returned on terminal operations
  * @author Moritz Becker
- * 
- * This interface contains experimental restriction builder methods
+ * @since 1.0
  */
 public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T> {
 

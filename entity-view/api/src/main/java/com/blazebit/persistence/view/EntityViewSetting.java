@@ -51,7 +51,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
     private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
     
-    private KeysetPage keyset;
+    private KeysetPage keysetPage;
     private boolean keysetPaginated;
 
     private EntityViewSetting(Class<T> entityViewClass, Object entityId, int maxRows, boolean paginate, String viewConstructorName) {
@@ -223,17 +223,17 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * @return The key set of this setting
      */
     public KeysetPage getKeysetPage() {
-        return keyset;
+        return keysetPage;
     }
 
     /**
      * Sets the key set of this setting.
      * 
-     * @param keyset the new key set
+     * @param keysetPage the new key set
      * @return this setting for chaining
      */
-    public EntityViewSetting<T, Q> withKeysetPage(KeysetPage keyset) {
-        this.keyset = keyset;
+    public EntityViewSetting<T, Q> withKeysetPage(KeysetPage keysetPage) {
+        this.keysetPage = keysetPage;
         this.keysetPaginated = true;
         return this;
     }
