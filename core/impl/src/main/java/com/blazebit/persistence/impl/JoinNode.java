@@ -50,7 +50,7 @@ public class JoinNode {
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
-    private AndPredicate withPredicate;
+    private AndPredicate onPredicate;
 
     public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass) {
         this.parent = parent;
@@ -61,8 +61,8 @@ public class JoinNode {
     }
 
     public void registerDependencies() {
-        if (withPredicate != null) {
-            withPredicate.accept(new VisitorAdapter() {
+        if (onPredicate != null) {
+            onPredicate.accept(new VisitorAdapter() {
                 @Override
                 public void visit(PathExpression pathExpr) {
                     // prevent loop dependencies to the same join node
@@ -123,11 +123,11 @@ public class JoinNode {
         return nodes;
     }
 
-    public JoinTreeNode getOrCreateTreeNode(String joinRelationName, boolean collection) {
+    public JoinTreeNode getOrCreateTreeNode(String joinRelationName, boolean collection, boolean indexed) {
         JoinTreeNode node = nodes.get(joinRelationName);
 
         if (node == null) {
-            node = new JoinTreeNode(joinRelationName, collection);
+            node = new JoinTreeNode(joinRelationName, collection, indexed);
             nodes.put(joinRelationName, node);
         }
 
@@ -138,12 +138,12 @@ public class JoinNode {
         return propertyClass;
     }
 
-    public AndPredicate getWithPredicate() {
-        return withPredicate;
+    public AndPredicate getOnPredicate() {
+        return onPredicate;
     }
 
-    public void setWithPredicate(AndPredicate withPredicate) {
-        this.withPredicate = withPredicate;
+    public void setOnPredicate(AndPredicate withPredicate) {
+        this.onPredicate = withPredicate;
     }
 
     public Set<JoinNode> getDependencies() {

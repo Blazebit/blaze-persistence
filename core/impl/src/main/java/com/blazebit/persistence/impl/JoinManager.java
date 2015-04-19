@@ -35,6 +35,7 @@ import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -52,7 +53,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -91,12 +94,12 @@ public class JoinManager extends AbstractManager {
         ID
     };
 
-    JoinManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JPAInfo jpaInfo, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
+    JoinManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
         this.metamodel = metamodel;
         this.parent = parent;
-        this.joinRestrictionKeyword = " " + jpaInfo.getOnClause() + " ";
+        this.joinRestrictionKeyword = " " + jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
@@ -192,10 +195,10 @@ public class JoinManager extends AbstractManager {
             
             sb.append(node.getAliasInfo().getAlias());
 
-            if (node.getWithPredicate() != null && !node.getWithPredicate().getChildren().isEmpty()) {
+            if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                 sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
-                node.getWithPredicate().accept(queryGenerator);
+                node.getOnPredicate().accept(queryGenerator);
             }
             renderedJoins.add(node);
         }
@@ -240,15 +243,15 @@ public class JoinManager extends AbstractManager {
     }
     
     private boolean isEmptyCondition(JoinNode node) {
-        return node.getWithPredicate() == null || node.getWithPredicate().getChildren().isEmpty();
+        return node.getOnPredicate() == null || node.getOnPredicate().getChildren().isEmpty();
     }
     
     private boolean isArrayExpressionCondition(JoinNode node) {
-        if (node.getWithPredicate() == null || node.getWithPredicate().getChildren().size() != 1) {
+        if (node.getOnPredicate() == null || node.getOnPredicate().getChildren().size() != 1) {
             return false;
         }
         
-        Predicate predicate = node.getWithPredicate().getChildren().get(0);
+        Predicate predicate = node.getOnPredicate().getChildren().get(0);
         if (!(predicate instanceof EqPredicate)) {
             return false;
         }
@@ -690,8 +693,9 @@ public class JoinManager extends AbstractManager {
         }
 
         for (Attribute<?, ?> maybeSingularAssociation : maybeSingularAssociationAttributes) {
-            if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
-                    //                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
+            if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE
+                // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
+//                && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
                     ) {
                 return false;
             }
@@ -787,8 +791,8 @@ public class JoinManager extends AbstractManager {
     private void generateAndApplyWithPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
-        if (joinNode.getWithPredicate() != null) {
-            AndPredicate currentPred = joinNode.getWithPredicate();
+        if (joinNode.getOnPredicate() != null) {
+            AndPredicate currentPred = joinNode.getOnPredicate();
 
             // Only add the predicate if it isn't contained yet
             if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
@@ -796,10 +800,10 @@ public class JoinManager extends AbstractManager {
                 registerDependencies(joinNode, currentPred);
             }
         } else {
-            AndPredicate withAndPredicate = new AndPredicate();
-            withAndPredicate.getChildren().add(valueKeyFilterPredicate);
-            joinNode.setWithPredicate(withAndPredicate);
-            registerDependencies(joinNode, withAndPredicate);
+            AndPredicate onAndPredicate = new AndPredicate();
+            onAndPredicate.getChildren().add(valueKeyFilterPredicate);
+            joinNode.setOnPredicate(onAndPredicate);
+            registerDependencies(joinNode, onAndPredicate);
         }
     }
 
@@ -1107,9 +1111,13 @@ public class JoinManager extends AbstractManager {
             joinType = getModelAwareType(baseNode, attr);
         }
 
-        JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, attr.isCollection(), defaultJoin);
+        JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, attr.isCollection(), isIndexed(attr), defaultJoin);
 
         return new JoinResult(newNode, null);
+    }
+
+    private boolean isIndexed(Attribute attr) {
+        return attr instanceof ListAttribute<?, ?> || attr instanceof MapAttribute<?, ?, ?>;
     }
 
     private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
@@ -1128,8 +1136,8 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean collection, boolean defaultJoin) {
-        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, collection);
+    private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean collection, boolean indexed, boolean defaultJoin) {
+        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, collection, indexed);
         JoinNode node = treeNode.getJoinNode(alias, defaultJoin);
         String currentJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
         if (node == null) {
@@ -1181,7 +1189,7 @@ public class JoinManager extends AbstractManager {
 
         for (JoinNode node : treeNode.getJoinNodes().values()) {
             Predicate pred = getArrayExpressionPredicate(node, arrayExpression);
-            AndPredicate andPredicate = node.getWithPredicate();
+            AndPredicate andPredicate = node.getOnPredicate();
 
             if (findPredicate(andPredicate, pred)) {
                 return node;
@@ -1245,7 +1253,27 @@ public class JoinManager extends AbstractManager {
         @Override
         public void onBuilderEnded(PredicateBuilder builder) {
             super.onBuilderEnded(builder);
-            joinNode.setWithPredicate((AndPredicate) builder.getPredicate());
+            Predicate predicate = builder.getPredicate();
+            predicate.accept(new VisitorAdapter() {
+                
+                private boolean isKeyFunction;
+
+                @Override
+                public void visit(FunctionExpression expression) {
+                    boolean old = isKeyFunction;
+                    this.isKeyFunction = "KEY".equalsIgnoreCase(expression.getFunctionName());
+                    super.visit(expression);
+                    this.isKeyFunction = old;
+                }
+
+                @Override
+                public void visit(PathExpression expression) {
+                    expression.setCollectionKeyPath(isKeyFunction);
+                    super.visit(expression);
+                }
+                
+            });
+            joinNode.setOnPredicate((AndPredicate) predicate);
         }
     }
 }
