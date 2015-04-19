@@ -52,6 +52,11 @@ import com.blazebit.persistence.impl.function.datetime.year.DerbyYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.SQLServerYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.SybaseYearFunction;
 import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
+import com.blazebit.persistence.impl.function.groupconcat.DB2GroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.OracleGroupConcatFunction;
+import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
@@ -98,6 +103,14 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctions.put("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctions.put("microsoft", new TransactSQLPagePositionFunction());
         functions.put("page_position", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put("db2", new DB2GroupConcatFunction());
+        jpqlFunctions.put("oracle", new OracleGroupConcatFunction());
+        jpqlFunctions.put("h2", new H2GroupConcatFunction());
+        jpqlFunctions.put("mysql", new MySQLGroupConcatFunction());
+        jpqlFunctions.put("postgresql", new PostgreSQLGroupConcatFunction());
+        functions.put("group_concat", jpqlFunctions);
         
         jpqlFunctions = new HashMap<String, JpqlFunction>();
         jpqlFunctions.put(null, new YearFunction());
