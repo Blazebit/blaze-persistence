@@ -120,20 +120,8 @@
                 <artifactId>blaze-common-utils</artifactId>
                 <version>${version.blazeutils}</version>
             </dependency>
-            
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-api</artifactId>
-                <version>${version.deltaspike}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-impl</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>runtime</scope>
-            </dependency>
                         
-            <!-- Moudle dependencies -->
+            <!-- Module dependencies -->
                         
             <dependency>
                 <groupId>${project.groupId}</groupId>
@@ -183,6 +171,11 @@
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>blaze-persistence-integration-openjpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-base-cdi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -248,6 +241,18 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>1.4.183</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-api</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-impl</artifactId>
+                <version>${version.deltaspike}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

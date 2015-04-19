@@ -16,10 +16,13 @@
 package com.blazebit.persistence.view.impl.cdi;
 
 import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.impl.integration.cdi.CustomBean;
+import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import java.lang.annotation.Annotation;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
@@ -27,8 +30,6 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import org.apache.deltaspike.core.api.literal.DefaultLiteral;
-import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
  *
@@ -51,14 +52,13 @@ public class EntityViewExtension implements Extension {
     void beforeBuild(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         bm.fireEvent(configuration);
         final EntityViewManager entityViewManager = configuration.createEntityViewManager();
-        Bean<EntityViewManager> bean = new BeanBuilder<EntityViewManager>(bm)
-            .beanClass(EntityViewManager.class)
-            .types(EntityViewManager.class, Object.class)
-            .passivationCapable(false)
-            .qualifiers(new DefaultLiteral())
-            .scope(ApplicationScoped.class)
-            .beanLifecycle(new EntityViewManagerLifecycle(entityViewManager))
-            .create();
+        
+        Class<?> beanClass = EntityViewManager.class;
+        Class<?>[] types = new Class[] { EntityViewManager.class, Object.class };
+        Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
+        Class<? extends Annotation> scope = ApplicationScoped.class;
+        EntityViewManager instance = entityViewManager;
+        Bean<EntityViewManager> bean = new CustomBean<EntityViewManager>(beanClass, types, qualifiers, scope, instance);
 
         abd.addBean(bean);
     }

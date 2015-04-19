@@ -18,15 +18,16 @@ package com.blazebit.persistence.impl.cdi;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.integration.cdi.CustomBean;
+import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import java.lang.annotation.Annotation;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
-import org.apache.deltaspike.core.api.literal.DefaultLiteral;
-import org.apache.deltaspike.core.util.bean.BeanBuilder;
 
 /**
  *
@@ -41,14 +42,13 @@ public class CriteriaBuilderExtension implements Extension {
     void initializeEntityViewSystem(@Observes AfterBeanDiscovery abd, BeanManager bm) {
         bm.fireEvent(configuration);
         CriteriaBuilderFactory criteriaBuilderFactory = configuration.createCriteriaBuilderFactory();
-        Bean<CriteriaBuilderFactory> bean = new BeanBuilder<CriteriaBuilderFactory>(bm)
-            .beanClass(CriteriaBuilderFactory.class)
-            .types(CriteriaBuilderFactory.class, Object.class)
-            .passivationCapable(false)
-            .qualifiers(new DefaultLiteral())
-            .scope(ApplicationScoped.class)
-            .beanLifecycle(new CriteriaBuilderFactoryLifecycle(criteriaBuilderFactory))
-            .create();
+        
+        Class<?> beanClass = CriteriaBuilderFactory.class;
+        Class<?>[] types = new Class[] { CriteriaBuilderFactory.class, Object.class };
+        Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
+        Class<? extends Annotation> scope = ApplicationScoped.class;
+        CriteriaBuilderFactory instance = criteriaBuilderFactory;
+        Bean<CriteriaBuilderFactory> bean = new CustomBean<CriteriaBuilderFactory>(beanClass, types, qualifiers, scope, instance);
 
         abd.addBean(bean);
     }

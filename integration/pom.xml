@@ -21,6 +21,7 @@
         <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>
+        <module>base-cdi</module>
         <module>core-cdi</module>
         <module>entity-view-cdi</module>
     </modules>
