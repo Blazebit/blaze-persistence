@@ -30,7 +30,7 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
         OrderByBuilder<X>, SelectBuilder<T, X> {
 
     /**
-     * Like {@link CriteriaBuilderFactory#from(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} with the
+     * Like {@link CriteriaBuilderFactory#from(java.lang.Class, java.lang.String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
      * @param entityClass   The entity class which should be the root entity

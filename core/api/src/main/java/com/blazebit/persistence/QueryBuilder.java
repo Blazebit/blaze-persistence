@@ -197,8 +197,8 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * <li>{@link KeysetPage#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
      * <li>One of the following conditions is met:
      *  <ul>
-     *      <li>The absolute value of {@link KeysetPage#getFirstResults()}<code> - firstResult</code> is 0</li>
-     *      <li>The absolute value of {@link KeysetPage#getFirstResults()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
+     *      <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is 0</li>
+     *      <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
      *  </ul>
      * </li>
      * </ul>

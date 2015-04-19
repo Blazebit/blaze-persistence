@@ -37,7 +37,7 @@ public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends
     public T orderByFunction(String expression, boolean ascending, boolean nullFirst);
 
     /**
-     * Like {@link BaseQueryBuilder#orderByFunctionAsc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
+     * Like {@link OrderByBuilderExperimental#orderByFunctionAsc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
      *
      * @param expression The expression for the order by clause
      * @return The query builder for chaining calls
@@ -45,7 +45,7 @@ public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends
     public T orderByFunctionAsc(String expression);
 
     /**
-     * Like {@link BaseQueryBuilder#orderByFunction(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to true.
+     * Like {@link OrderByBuilderExperimental#orderByFunction(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to true.
      *
      * @param expression The expression for the order by clause
      * @param nullFirst  Wether null elements should be ordered first or not.
@@ -54,7 +54,7 @@ public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends
     public T orderByFunctionAsc(String expression, boolean nullFirst);
 
     /**
-     * Like {@link BaseQueryBuilder#orderByDesc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
+     * Like {@link OrderByBuilderExperimental#orderByDesc(java.lang.String, boolean) } but with <code>nullFirst</code> set to false.
      *
      * @param expression The expression for the order by clause
      * @return The query builder for chaining calls
@@ -62,7 +62,7 @@ public interface OrderByBuilderExperimental<T extends OrderByBuilder<T>> extends
     public T orderByFunctionDesc(String expression);
 
     /**
-     * Like {@link BaseQueryBuilder#orderByFunction(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to false.
+     * Like {@link OrderByBuilderExperimental#orderByFunction(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to false.
      *
      * @param expression The expression for the order by clause
      * @param nullFirst  Wether null elements should be ordered first or not.

@@ -27,7 +27,7 @@ public interface CriteriaBuilderFactory {
     
     /**
      * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String) 
-     * but with a default alias of {@code resultClass.getSimpleName()}.
+     * but with a default alias of <code>resultClass.getSimpleName()</code> in camelcase.
      *
      * @param entityManager The entity manager to use for the criteria builder
      * @param resultClass   The result class of the query

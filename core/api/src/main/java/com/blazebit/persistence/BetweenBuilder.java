@@ -36,7 +36,7 @@ public interface BetweenBuilder<T> {
      * Constructs a between predicate with a parameter as upper bound.
      * 
      * @param end The parameter for the upper bound
-     * @return 
+     * @return The parent predicate container builder
      */
     public T and(Object end);
     
@@ -44,7 +44,7 @@ public interface BetweenBuilder<T> {
      * Constructs a between predicate with an expression as upper bound.
      * 
      * @param end The upper bound expression
-     * @return 
+     * @return The parent predicate container builder
      */
     public T andExpression(String end);
     

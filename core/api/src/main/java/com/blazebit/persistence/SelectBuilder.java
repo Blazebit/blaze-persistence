@@ -27,7 +27,7 @@ package com.blazebit.persistence;
 public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
 
     /**
-     * Like {@link Selectable#selectCase(java.lang.String)} but without an alias.
+     * Like {@link SelectBuilder#selectCase(java.lang.String)} but without an alias.
      *
      * @return The case when builder
      */
@@ -42,7 +42,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
     public CaseWhenStarterBuilder<? extends SelectBuilder<T, ?>> selectCase(String alias);
 
     /**
-     * Like {@link Selectable#selectSimpleCase(java.lang.String, java.lang.String)} but without an alias.
+     * Like {@link SelectBuilder#selectSimpleCase(java.lang.String, java.lang.String)} but without an alias.
      *
      * @param caseOperand The case operand
      * @return The simple case when builder
@@ -60,7 +60,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
     public SimpleCaseWhenStarterBuilder<? extends SelectBuilder<T, ?>> selectSimpleCase(String caseOperand, String alias);
 
     /**
-     * Like {@link Selectable#selectSubquery(java.lang.String)} but without an alias.
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String)} but without an alias.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -93,7 +93,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
     public SubqueryInitiator<? extends SelectBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
 
     /**
-     * Like {@link Selectable#selectSubquery(java.lang.String,java.lang.String,java.lang.String)} but without a select alias.
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String)} but without a select alias.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression    The expression which will be added as select item

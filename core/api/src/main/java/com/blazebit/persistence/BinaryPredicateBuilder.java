@@ -137,7 +137,7 @@ public interface BinaryPredicateBuilder<T> {
      * <p>
      * When the builder finishes, the when predicate
      * in conjunction with its then expression are added to the case when builder.
-     * <p/>
+     * </p>
      * 
      * @see CaseWhenStarterBuilder#whenOr() More details about this method
      * 
