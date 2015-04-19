@@ -11,23 +11,23 @@ matrix:
   fast_finish: true
   include:
     - env: JPAPROVIDER=hibernate
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=hibernate-4.3
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=hibernate-5.0
-      jdk: openjdk8
+      jdk: oraclejdk8
     - env: JPAPROVIDER=eclipselink
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=openjpa
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=datanucleus
-      jdk: openjdk7
+      jdk: oraclejdk7
   allow_failures:
     - env: JPAPROVIDER=hibernate-5.0
-      jdk: openjdk8
+      jdk: oraclejdk8
     - env: JPAPROVIDER=eclipselink
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=openjpa
-      jdk: openjdk7
+      jdk: oraclejdk7
     - env: JPAPROVIDER=datanucleus
-      jdk: openjdk7
+      jdk: oraclejdk7
