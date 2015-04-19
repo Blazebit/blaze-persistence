@@ -30,20 +30,20 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
         OrderByBuilder<X>, SelectBuilder<T, X> {
 
     /**
-     * Like {@link CriteriaBuilderFactory#from(java.lang.Class, java.lang.String)} with the
+     * Like {@link BaseQueryBuilder#from(java.lang.Class, java.lang.String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
      * @param entityClass   The entity class which should be the root entity
-     * @return A new criteria builder
+     * @return The query builder for chaining calls
      */
     public BaseQueryBuilder<T, ?> from(Class<?> entityClass);
 
     /**
-     * Adds a entity class to the from clause of the query with the given alias.
+     * Sets the entity class on which the query should be based on with the given alias.
      *
      * @param entityClass   The entity class which should be the root entity
      * @param alias         The alias for the root entity
-     * @return A new criteria builder
+     * @return The query builder for chaining calls
      */
     public BaseQueryBuilder<T, ?> from(Class<?> entityClass, String alias);
     

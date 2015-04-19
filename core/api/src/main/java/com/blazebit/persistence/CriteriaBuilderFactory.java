@@ -27,7 +27,7 @@ public interface CriteriaBuilderFactory {
     
     /**
      * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String) 
-     * but with a default alias of <code>resultClass.getSimpleName()</code> in camelcase.
+     * but with the alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.
      *
      * @param entityManager The entity manager to use for the criteria builder
      * @param resultClass   The result class of the query
@@ -37,7 +37,8 @@ public interface CriteriaBuilderFactory {
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass);
     
     /**
-     * Creates a new criteria builder with the given result class.
+     * Creates a new criteria builder with the given result class. The result class will be used as default from class.
+     * The alias will be used as default alias for the from class. Both can be overridden by invoking {@link BaseQueryBuilder#from(java.lang.Class, java.lang.String)}.
      *
      * @param entityManager The entity manager to use for the criteria builder
      * @param resultClass   The result class of the query
