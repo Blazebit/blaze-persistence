@@ -14,13 +14,20 @@
 
     <name>Blazebit Persistence Integration DataNucleus</name>
     
-    <repositories>
+    <properties>
+        <version.datanucleus.base>4.1.0-m3</version.datanucleus.base>
+        <version.datanucleus.jpa>4.0.4</version.datanucleus.jpa>
+<!--        <version.datanucleus.base>4.1.0-m4-SNAPSHOT</version.datanucleus.base>
+        <version.datanucleus.jpa>4.0.5-SNAPSHOT</version.datanucleus.jpa>-->
+    </properties>
+    
+<!--    <repositories>
         <repository>
             <id>DataNucleus Nightly</id>
             <name>DataNucleus Repository Nightly</name>
             <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
         </repository>
-    </repositories>
+    </repositories>-->
 
     <dependencies>
         <dependency>
@@ -47,27 +54,27 @@
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
-            <version>4.1.0-m4-SNAPSHOT</version>
+            <version>${version.datanucleus.base}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-api-jpa</artifactId>
-            <version>4.1.0-m4-SNAPSHOT</version>
+            <version>${version.datanucleus.base}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-jpa-query</artifactId>
-            <version>4.0.5-SNAPSHOT</version>
+            <version>${version.datanucleus.jpa}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-rdbms</artifactId>
-            <version>4.1.0-m4-SNAPSHOT</version>
+            <version>${version.datanucleus.base}</version>
         </dependency>
 <!--        <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-accessplatform-jpa-rdbms</artifactId>
-            <version>4.1.0-m3-SNAPSHOT</version>
+            <version>${version.datanucleus.base}</version>
             <type>pom</type>
         </dependency>-->
     </dependencies>

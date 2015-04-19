@@ -96,6 +96,7 @@
 
         <!-- Plugin versions -->
         <version.processor.plugin>2.2.1</version.processor.plugin>
+        <version.release.plugin>2.5.1</version.release.plugin>
     </properties>
 
     <repositories>
@@ -295,6 +296,17 @@
                     <target>${maven.compiler.argument.target}</target>
                     <!-- Disable annotation processing via compiler plugin. -->
                     <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <localCheckout>true</localCheckout>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+
+                    <preparationGoals>clean install</preparationGoals>
                 </configuration>
             </plugin>
         </plugins>
