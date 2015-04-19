@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence.spi;
+package com.blazebit.persistence.impl.function.datetime.month;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public interface JpqlFunction {
-    
-    public boolean hasArguments();
-    
-    public boolean hasParenthesesIfNoArguments();
-    
-    public Class<?> getReturnType(Class<?> firstArgumentType);
-    
-    public void render(FunctionRenderContext context);
-    
+public class SQLServerMonthFunction extends MonthFunction {
+
+    public SQLServerMonthFunction() {
+        super("datepart(mm, convert(date, ?1))");
+    }
 }

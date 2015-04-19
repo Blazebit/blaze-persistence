@@ -26,6 +26,21 @@ import com.blazebit.persistence.spi.JpqlFunction;
 public class ConcatenateFunction implements JpqlFunction {
 
     @Override
+    public boolean hasArguments() {
+        return true;
+    }
+
+    @Override
+    public boolean hasParenthesesIfNoArguments() {
+        return true;
+    }
+
+    @Override
+    public Class<?> getReturnType(Class<?> firstArgumentType) {
+        return firstArgumentType;
+    }
+
+    @Override
     public void render(FunctionRenderContext context) {
         context.addChunk("concat(");
         context.addArgument(0);

@@ -16,6 +16,42 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.DerbyDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.SQLServerDayFunction;
+import com.blazebit.persistence.impl.function.datetime.day.SybaseDayFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.AccessHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.DB2HourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.DerbyHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.HourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.SQLServerHourFunction;
+import com.blazebit.persistence.impl.function.datetime.hour.SybaseHourFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.AccessMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.DB2MinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.DerbyMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.MinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.SQLServerMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.minute.SybaseMinuteFunction;
+import com.blazebit.persistence.impl.function.datetime.month.AccessMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.DB2MonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.DerbyMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.MonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.SQLServerMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.month.SybaseMonthFunction;
+import com.blazebit.persistence.impl.function.datetime.second.AccessSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.DB2SecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.DerbySecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SQLServerSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SecondFunction;
+import com.blazebit.persistence.impl.function.datetime.second.SybaseSecondFunction;
+import com.blazebit.persistence.impl.function.datetime.year.AccessYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.DB2YearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.DerbyYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.SQLServerYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.SybaseYearFunction;
+import com.blazebit.persistence.impl.function.datetime.year.YearFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
@@ -53,13 +89,69 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
     
     private void loadFunctions() {
-        Map<String, JpqlFunction> jpqlFunctions = new HashMap<String, JpqlFunction>();
+        Map<String, JpqlFunction> jpqlFunctions;
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
         jpqlFunctions.put(null, new PagePositionFunction());
         jpqlFunctions.put("mysql", new MySQLPagePositionFunction());
         jpqlFunctions.put("oracle", new OraclePagePositionFunction());
         jpqlFunctions.put("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctions.put("microsoft", new TransactSQLPagePositionFunction());
         functions.put("page_position", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new YearFunction());
+        jpqlFunctions.put("access", new AccessYearFunction());
+        jpqlFunctions.put("db2", new DB2YearFunction());
+        jpqlFunctions.put("derby", new DerbyYearFunction());
+        jpqlFunctions.put("microsoft", new SQLServerYearFunction());
+        jpqlFunctions.put("sybase", new SybaseYearFunction());
+        functions.put("year", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new MonthFunction());
+        jpqlFunctions.put("access", new AccessMonthFunction());
+        jpqlFunctions.put("db2", new DB2MonthFunction());
+        jpqlFunctions.put("derby", new DerbyMonthFunction());
+        jpqlFunctions.put("microsoft", new SQLServerMonthFunction());
+        jpqlFunctions.put("sybase", new SybaseMonthFunction());
+        functions.put("month", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new DayFunction());
+        jpqlFunctions.put("access", new AccessDayFunction());
+        jpqlFunctions.put("db2", new DB2DayFunction());
+        jpqlFunctions.put("derby", new DerbyDayFunction());
+        jpqlFunctions.put("microsoft", new SQLServerDayFunction());
+        jpqlFunctions.put("sybase", new SybaseDayFunction());
+        functions.put("day", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new HourFunction());
+        jpqlFunctions.put("access", new AccessHourFunction());
+        jpqlFunctions.put("db2", new DB2HourFunction());
+        jpqlFunctions.put("derby", new DerbyHourFunction());
+        jpqlFunctions.put("microsoft", new SQLServerHourFunction());
+        jpqlFunctions.put("sybase", new SybaseHourFunction());
+        functions.put("hour", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new MinuteFunction());
+        jpqlFunctions.put("access", new AccessMinuteFunction());
+        jpqlFunctions.put("db2", new DB2MinuteFunction());
+        jpqlFunctions.put("derby", new DerbyMinuteFunction());
+        jpqlFunctions.put("microsoft", new SQLServerMinuteFunction());
+        jpqlFunctions.put("sybase", new SybaseMinuteFunction());
+        functions.put("minute", jpqlFunctions);
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new SecondFunction());
+        jpqlFunctions.put("access", new AccessSecondFunction());
+        jpqlFunctions.put("db2", new DB2SecondFunction());
+        jpqlFunctions.put("derby", new DerbySecondFunction());
+        jpqlFunctions.put("microsoft", new SQLServerSecondFunction());
+        jpqlFunctions.put("sybase", new SybaseSecondFunction());
+        functions.put("second", jpqlFunctions);
     }
 
     private void loadDefaultProperties() {

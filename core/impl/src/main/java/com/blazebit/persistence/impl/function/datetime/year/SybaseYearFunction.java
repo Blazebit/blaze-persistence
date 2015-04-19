@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package com.blazebit.persistence.spi;
+package com.blazebit.persistence.impl.function.datetime.year;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public interface JpqlFunction {
-    
-    public boolean hasArguments();
-    
-    public boolean hasParenthesesIfNoArguments();
-    
-    public Class<?> getReturnType(Class<?> firstArgumentType);
-    
-    public void render(FunctionRenderContext context);
-    
+public class SybaseYearFunction extends YearFunction {
+
+    public SybaseYearFunction() {
+        super("datepart(yy, ?1)");
+    }
 }

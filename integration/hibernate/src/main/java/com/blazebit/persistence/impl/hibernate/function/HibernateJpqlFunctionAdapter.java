@@ -21,7 +21,6 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.type.LongType;
 import org.hibernate.type.Type;
 
 /**
@@ -39,17 +38,44 @@ public class HibernateJpqlFunctionAdapter implements SQLFunction {
 
     @Override
     public boolean hasArguments() {
-        return true;
+        return function.hasArguments();
     }
 
     @Override
     public boolean hasParenthesesIfNoArguments() {
-        return true;
+        return function.hasParenthesesIfNoArguments();
     }
 
     @Override
     public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-        return LongType.INSTANCE;
+    	SessionFactoryImplementor sfi = (SessionFactoryImplementor) mapping;
+        Class<?> argumentClass;
+        
+        if (firstArgumentType == null) {
+            argumentClass = null;
+        } else { 
+            argumentClass = firstArgumentType.getReturnedClass();
+        }
+        
+        Class<?> returnType = function.getReturnType(argumentClass);
+        
+        if (returnType == null) {
+            return null;
+        } else if (argumentClass == returnType) {
+            return firstArgumentType;
+        }
+        
+        Type type = sfi.getTypeHelper().basic(returnType);
+        
+        if (type != null) {
+            return type;
+        }
+        
+        if (sfi.getClassMetadata(returnType) != null) {
+            return sfi.getTypeHelper().entity(returnType);
+        }
+        
+        return sfi.getTypeHelper().custom(returnType);
     }
 
     @Override

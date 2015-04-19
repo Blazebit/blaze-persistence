@@ -21,7 +21,8 @@ import com.blazebit.persistence.spi.JpqlFunction;
 
 /**
  *
- * @author Christian
+ * @author Christian Beikov
+ * @since 1.0
  */
 public class PagePositionFunction implements JpqlFunction {
 
@@ -37,6 +38,21 @@ public class PagePositionFunction implements JpqlFunction {
     
     protected String getRownumFunction() {
         return "row_number() over ()";
+    }
+    
+    @Override
+    public boolean hasArguments() {
+        return true;
+    }
+    
+    @Override
+    public boolean hasParenthesesIfNoArguments() {
+        return true;
+    }
+    
+    @Override
+    public Class<?> getReturnType(Class<?> firstArgumentType) {
+        return Long.class;
     }
     
     @Override
