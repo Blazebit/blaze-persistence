@@ -35,6 +35,8 @@ DISTINCT : [Dd][Ii][Ss][Tt][Ii][Nn][Cc][Tt];
 
 ENUM : [Ee][Nn][Uu][Mm];
 
+ENTITY : [Ee][Nn][Tt][Ii][Tt][Yy];
+
 TYPE : [Tt][Yy][Pp][Ee];
 
 LENGTH : [Ll][Ee][Nn][Gg][Tt][Hh];
@@ -124,6 +126,8 @@ String_literal : '\'' ~[\']* '\'';
 Input_parameter : ':'Identifier;
  
 //Enum_literal : (Identifier'.')+Identifier;
+ 
+//Entity_type_literal : Identifier;
  
 Date_literal : '(' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* ')';
 

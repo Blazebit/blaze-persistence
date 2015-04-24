@@ -757,6 +757,14 @@ public class GeneralParserTest extends AbstractParserTest {
     }
     
     @Test
+    public void testEtityTypeCompare(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = ENTITY(Document) THEN 1 ELSE 2 END");
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(function("TYPE", path("doc")), foo("Document")), foo("1"))), foo("2"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
     public void testEntityCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a = b THEN 1 ELSE 2 END");
         

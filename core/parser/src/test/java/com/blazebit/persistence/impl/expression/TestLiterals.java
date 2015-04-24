@@ -32,6 +32,12 @@ public class TestLiterals extends AbstractParserTest {
     }
     
     @Test
+    public void testEntityTypeLiteral(){
+        FooExpression result = (FooExpression) parse("ENTITY(Entity)");
+        assertEquals(new FooExpression("Entity"), result);
+    }
+    
+    @Test
     public void testStringLiteral(){
         FooExpression result = (FooExpression) parse("'abcd'");
         assertEquals(new FooExpression("'abcd'"), result);

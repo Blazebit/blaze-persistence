@@ -377,6 +377,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitEntity_type_literal(JPQLSelectExpressionParser.Entity_type_literalContext ctx) {
+        return new FooExpression(ctx.identifier().getText());
+    }
+
+    @Override
     public Expression visitComparisonExpression_string(JPQLSelectExpressionParser.ComparisonExpression_stringContext ctx) {
         return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
     }
@@ -384,6 +389,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitComparisonExpression_arithmetic(JPQLSelectExpressionParser.ComparisonExpression_arithmeticContext ctx) {
         return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_entitytype(JPQLSelectExpressionParser.ComparisonExpression_entitytypeContext ctx) {
+        return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
 
     @Override

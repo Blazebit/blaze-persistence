@@ -192,7 +192,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
 
  enum_expression : state_field_path_expression 
                  | single_element_path_expression 
-                 | enum_literal 
+                 | enum_literal // This is a custom, non JPA compliant literal 
                  | Input_parameter 
                  | case_expression 
                  ;
@@ -208,10 +208,12 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                           | Input_parameter
                           ;
 
- entity_type_expression : type_discriminator 
-                        | identifier 
+ entity_type_expression : type_discriminator
+                        | entity_type_literal // This is a custom, non JPA compliant literal 
                         | Input_parameter
                         ;
+ entity_type_literal : ENTITY '(' identifier ')'
+                     ;
 
  type_discriminator : TYPE '(' type_discriminator_arg ')';
  
@@ -350,6 +352,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                        | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
                        | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
                        | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
+                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
                        ;
  
  equality_comparison_operator : '=' # EqPredicate
@@ -389,6 +392,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
         | COUNT
         | DISTINCT
         | ENUM
+        | ENTITY
         | TYPE
         | LENGTH
         | LOCATE
