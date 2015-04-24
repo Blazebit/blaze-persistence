@@ -108,6 +108,10 @@ public class AbstractParserTest {
     protected FooExpression foo(String foo) {
         return new FooExpression(foo);
     }
+    
+    protected LiteralExpression literal(String wrapperFunction, String literal) {
+        return new LiteralExpression(wrapperFunction, literal);
+    }
 
     protected FunctionExpression function(String name, Expression... args) {
         return new FunctionExpression(name, Arrays.asList(args));

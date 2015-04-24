@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.SubviewPrefixExpressionVisitor;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
@@ -418,9 +418,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private String getMapping(List<String> prefixParts, String mapping) {
         if (prefixParts != null && prefixParts.size() > 0) {
             Expression expr = evm.getExpressionFactory().createSimpleExpression(mapping);
-            expr.accept(new SubviewPrefixExpressionVisitor(prefixParts));
-            SimpleQueryGenerator generator = new SimpleQueryGenerator();
-            // TODO: maybe cache the string builder
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(prefixParts);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);
             expr.accept(generator);

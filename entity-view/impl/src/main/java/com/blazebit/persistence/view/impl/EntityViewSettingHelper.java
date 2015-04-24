@@ -354,9 +354,7 @@ public final class EntityViewSettingHelper {
     private static String getPrefixedExpression(EntityViewManagerImpl evm, List<String> subviewPrefixParts, String mappingExpression) {
         if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
             Expression expr = evm.getExpressionFactory().createSimpleExpression(mappingExpression);
-            expr.accept(new SubviewPrefixExpressionVisitor(subviewPrefixParts));
-            SimpleQueryGenerator generator = new SimpleQueryGenerator();
-            // TODO: maybe cache the string builder
+            SimpleQueryGenerator generator = new PrefixingQueryGenerator(subviewPrefixParts);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);
             expr.accept(generator);

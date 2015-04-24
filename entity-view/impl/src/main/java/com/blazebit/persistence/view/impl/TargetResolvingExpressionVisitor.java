@@ -21,6 +21,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
@@ -149,6 +150,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     @Override
     public void visit(CompositeExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(LiteralExpression expression) {
         invalid(expression);
     }
 

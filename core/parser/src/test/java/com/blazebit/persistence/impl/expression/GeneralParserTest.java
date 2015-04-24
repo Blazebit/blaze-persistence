@@ -752,7 +752,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testEnumCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = ENUM(a.b.c) THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), foo("a.b.c")), foo("1"))), foo("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), literal("ENUM", "a.b.c")), foo("1"))), foo("2"));
         assertEquals(expected, result);
     }
     
@@ -760,7 +760,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testEtityTypeCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = ENTITY(Document) THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(function("TYPE", path("doc")), foo("Document")), foo("1"))), foo("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(function("TYPE", path("doc")), literal("ENTITY", "Document")), foo("1"))), foo("2"));
         assertEquals(expected, result);
     }
     

@@ -72,6 +72,10 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
+    public void visit(LiteralExpression expression) {
+    }
+
+    @Override
     public void visit(SubqueryExpression expression) {
     }
 

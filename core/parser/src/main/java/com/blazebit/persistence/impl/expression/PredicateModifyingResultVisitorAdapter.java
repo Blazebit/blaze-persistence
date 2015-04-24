@@ -80,6 +80,11 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
+    public Expression visit(LiteralExpression expression) {
+        return expression;
+    }
+
+    @Override
     public Expression visit(SubqueryExpression expression) {
         return expression;
     }

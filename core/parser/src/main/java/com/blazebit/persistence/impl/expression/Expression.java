@@ -51,6 +51,8 @@ public interface Expression {
 
         public void visit(CompositeExpression expression);
 
+        public void visit(LiteralExpression expression);
+
         public void visit(FooExpression expression);
 
         public void visit(SubqueryExpression expression);
@@ -106,6 +108,8 @@ public interface Expression {
         public T visit(ArrayExpression expression);
 
         public T visit(CompositeExpression expression);
+
+        public T visit(LiteralExpression expression);
 
         public T visit(FooExpression expression);
 

@@ -373,12 +373,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
-        return new FooExpression(ctx.path().accept(this).toString());
+        return new LiteralExpression("ENUM", ctx.path().accept(this).toString());
     }
 
     @Override
     public Expression visitEntity_type_literal(JPQLSelectExpressionParser.Entity_type_literalContext ctx) {
-        return new FooExpression(ctx.identifier().getText());
+        return new LiteralExpression("ENTITY", ctx.identifier().getText());
     }
 
     @Override

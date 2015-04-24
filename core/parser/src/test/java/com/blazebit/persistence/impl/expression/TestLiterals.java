@@ -27,14 +27,14 @@ public class TestLiterals extends AbstractParserTest {
 
     @Test
     public void testEnumLiteral(){
-        FooExpression result = (FooExpression) parse("ENUM(a.x.y)");
-        assertEquals(new FooExpression("a.x.y"), result);
+        LiteralExpression result = (LiteralExpression) parse("ENUM(a.x.y)");
+        assertEquals(new LiteralExpression("ENUM", "a.x.y"), result);
     }
     
     @Test
     public void testEntityTypeLiteral(){
-        FooExpression result = (FooExpression) parse("ENTITY(Entity)");
-        assertEquals(new FooExpression("Entity"), result);
+        LiteralExpression result = (LiteralExpression) parse("ENTITY(Entity)");
+        assertEquals(new LiteralExpression("ENTITY", "Entity"), result);
     }
     
     @Test

@@ -22,6 +22,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
@@ -299,6 +300,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(FooExpression expression) {
         sb.append(expression.toString());
+    }
+
+    @Override
+    public void visit(LiteralExpression expression) {
+        sb.append(expression.getLiteral());
     }
 
     @Override
