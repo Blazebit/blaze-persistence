@@ -87,7 +87,7 @@
 
     <properties>
         <version.blazecbav>0.2.0</version.blazecbav>
-        <version.blazeutils>0.1.7</version.blazeutils>
+        <version.blazeutils>0.1.8</version.blazeutils>
         <version.deltaspike>1.0.1</version.deltaspike>
         <version.junit>4.11</version.junit>
 
