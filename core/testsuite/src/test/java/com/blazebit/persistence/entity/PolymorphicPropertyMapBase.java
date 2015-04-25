@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,43 +16,38 @@
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.ManyToOne;
+import javax.persistence.MappedSuperclass;
 
 /**
  *
+ * @param <T>
  * @author Christian Beikov
  * @since 1.0
  */
-@Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class PolymorphicBase implements Serializable {
+@MappedSuperclass
+public abstract class PolymorphicPropertyMapBase<T extends PolymorphicBase> extends PolymorphicPropertyBase {
+    
     private static final long serialVersionUID = 1L;
 
-    private Long id;
-    private String name;
+    private T base;
 
-    public PolymorphicBase() {
+    public PolymorphicPropertyMapBase() {
     }
 
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    public T getBase() {
+        return base;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public void setBase(T base) {
+        this.base = base;
     }
 }

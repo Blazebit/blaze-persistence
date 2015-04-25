@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
+import javax.persistence.DiscriminatorColumn;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -28,14 +29,15 @@ import javax.persistence.InheritanceType;
  * @since 1.0
  */
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class PolymorphicBase implements Serializable {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "PROP_TYPE")
+public abstract class PolymorphicPropertyBase implements Serializable {
+    
     private static final long serialVersionUID = 1L;
 
     private Long id;
-    private String name;
 
-    public PolymorphicBase() {
+    public PolymorphicPropertyBase() {
     }
 
     @Id
@@ -46,13 +48,5 @@ public abstract class PolymorphicBase implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 }

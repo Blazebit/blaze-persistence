@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.entity;
 
-import java.io.Serializable;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
 
 /**
  *
@@ -28,31 +23,9 @@ import javax.persistence.InheritanceType;
  * @since 1.0
  */
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public abstract class PolymorphicBase implements Serializable {
+public class PolymorphicPropertySub2 extends PolymorphicPropertyMapBase<PolymorphicSub2> {
     private static final long serialVersionUID = 1L;
 
-    private Long id;
-    private String name;
-
-    public PolymorphicBase() {
-    }
-
-    @Id
-    @GeneratedValue
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public PolymorphicPropertySub2() {
     }
 }
