@@ -124,7 +124,8 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                       ;
  
  aggregate_argument : single_element_path_expression
-                    | path
+                    | path // Theoretically we could use state_field_path_expression but not sure if OUTER expression is allowed in subquery
+                    | scalar_expression // This is a custom, non JPA compliant extension
                     ;
 
  scalar_expression : arithmetic_expression

@@ -27,8 +27,8 @@ import java.util.Collections;
 public class AggregateExpression extends FunctionExpression {
     private final boolean distinct;
 
-    public AggregateExpression(boolean distinct, String functionName, PathExpression expression) {
-        super(functionName, Arrays.asList(new Expression[]{expression}));
+    public AggregateExpression(boolean distinct, String functionName, Expression expression) {
+        super(functionName, Arrays.asList(new Expression[]{ expression }));
         this.distinct = distinct;
     }
     
@@ -45,7 +45,7 @@ public class AggregateExpression extends FunctionExpression {
         if (expressions.isEmpty()) {
             return new AggregateExpression();
         } else {
-            return new AggregateExpression(distinct, functionName, (PathExpression) expressions.get(0).clone());
+            return new AggregateExpression(distinct, functionName, expressions.get(0).clone());
         }
     }
 
