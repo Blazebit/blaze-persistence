@@ -61,7 +61,7 @@ public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
                 PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
                 Class<?> collectionPropertyClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
                 String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
-                String collectionPropertyName = sizeArg.getField();
+                String collectionPropertyName = sizeArg.getField() != null ? sizeArg.getField() : baseAlias;
                 String collectionPropertyAlias = collectionPropertyName;
                 String collectionPropertyClassName = collectionPropertyClass.getSimpleName().toLowerCase();
                 String collectionPropertyClassAlias = collectionPropertyClassName;
