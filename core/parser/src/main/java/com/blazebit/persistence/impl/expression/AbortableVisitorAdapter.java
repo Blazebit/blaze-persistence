@@ -88,6 +88,11 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
+    public Boolean visit(NullExpression expression) {
+        return false;
+    }
+
+    @Override
     public Boolean visit(SubqueryExpression expression) {
         return false;
     }

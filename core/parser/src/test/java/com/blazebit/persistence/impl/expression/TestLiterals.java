@@ -26,6 +26,12 @@ import org.junit.Test;
 public class TestLiterals extends AbstractParserTest {
 
     @Test
+    public void testNullLiteral(){
+        NullExpression result = (NullExpression) parse("NULL");
+        assertEquals(new NullExpression(), result);
+    }
+    
+    @Test
     public void testEnumLiteral(){
         LiteralExpression result = (LiteralExpression) parse("ENUM(a.x.y)");
         assertEquals(new LiteralExpression("ENUM", "a.x.y"), result);

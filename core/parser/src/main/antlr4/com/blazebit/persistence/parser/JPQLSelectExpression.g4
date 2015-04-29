@@ -45,7 +45,7 @@ parseSimpleSubqueryExpression
 @init{
       allowOuter = true;
 }
-    : simple_subquery_expression EOF
+    : simple_expression EOF
     ;
 
 parseScalarExpression
@@ -60,15 +60,11 @@ parseStringExpression
 parseCaseOperandExpression
     : case_operand;
 
-simple_expression : single_valued_path_expression
+simple_expression : null_literal // This is a custom, non JPA compliant extension
+                  | single_valued_path_expression
                   | scalar_expression 
                   | aggregate_expression
                   ;
-
-simple_subquery_expression : scalar_expression
-                           | aggregate_expression
-                           | single_valued_path_expression
-                           ;
  
 key_value_expression : name=KEY '('collection_valued_path_expression')'
                      | name=VALUE '('collection_valued_path_expression')'
@@ -80,6 +76,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
 
  single_valued_path_expression 
      : qualified_identification_variable
+     // TODO: Add treat here
      | state_field_path_expression
      | single_element_path_expression
      ;
@@ -263,6 +260,8 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';
 
  nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
+
+ null_literal : NULL;
 
  literal
      : Boolean_literal

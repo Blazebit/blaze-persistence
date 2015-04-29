@@ -85,7 +85,7 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             Map<String, JpqlFunction> dbmsFunctionMap = functionEntry.getValue();
             JpqlFunction function = dbmsFunctionMap.get(dbms);
             
-            if (function == null) {
+            if (function == null && !dbmsFunctionMap.containsKey(dbms)) {
                 function = dbmsFunctionMap.get(null);
             }
             if (function == null) {

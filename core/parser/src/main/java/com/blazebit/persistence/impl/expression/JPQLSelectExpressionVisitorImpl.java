@@ -99,6 +99,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return handleFunction(ctx.getStart().getText(), ctx);
     }
 
+    @Override
+    public Expression visitNull_literal(JPQLSelectExpressionParser.Null_literalContext ctx) {
+        return new NullExpression();
+    }
+
     private FunctionExpression handleFunction(String name, ParseTree ctx) {
         List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
         for (int i = 0; i < ctx.getChildCount(); i++) {

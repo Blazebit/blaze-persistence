@@ -66,7 +66,10 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected Set<String> getRegisteredFunctions() {
         return new HashSet<String>(Arrays.asList(
                 // internal functions
+                "limit",
                 "page_position",
+                "group_concat",
+                "second", "minute", "hour", "day", "month", "year",
                 // test functions
                 "zero", "concatenate"
         ));

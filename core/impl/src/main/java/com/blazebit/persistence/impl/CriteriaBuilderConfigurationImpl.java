@@ -57,6 +57,11 @@ import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.OracleGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
+import com.blazebit.persistence.impl.function.limit.DB2LimitFunction;
+import com.blazebit.persistence.impl.function.limit.LimitFunction;
+import com.blazebit.persistence.impl.function.limit.MySQLLimitFunction;
+import com.blazebit.persistence.impl.function.limit.OracleLimitFunction;
+import com.blazebit.persistence.impl.function.limit.SQL2008LimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
@@ -95,6 +100,17 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     
     private void loadFunctions() {
         Map<String, JpqlFunction> jpqlFunctions;
+        
+        jpqlFunctions = new HashMap<String, JpqlFunction>();
+        jpqlFunctions.put(null, new LimitFunction());
+        jpqlFunctions.put("mysql", new MySQLLimitFunction());
+        jpqlFunctions.put("oracle", new OracleLimitFunction());
+        jpqlFunctions.put("derby", new SQL2008LimitFunction());
+        jpqlFunctions.put("db2", new DB2LimitFunction());
+        jpqlFunctions.put("sybase", null); // Does not support limit
+        // The function for SQLServer is hard to implement
+//        jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
+        functions.put("limit", jpqlFunctions);
         
         jpqlFunctions = new HashMap<String, JpqlFunction>();
         jpqlFunctions.put(null, new PagePositionFunction());

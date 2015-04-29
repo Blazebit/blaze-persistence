@@ -21,6 +21,8 @@ import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.LiteralExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -72,6 +74,11 @@ public class ExpressionUtils {
         } else if (expr instanceof FooExpression) {
             // TODO: Not actually sure how we could do that better
             return false;
+        } else if (expr instanceof LiteralExpression) {
+            return false;
+        } else if (expr instanceof NullExpression) {
+            // The actual semantics of NULL are, that NULL != NULL
+            return true;
         } else {
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for uniqueness!");
         }
@@ -181,6 +188,10 @@ public class ExpressionUtils {
             return isNullable(metamodel, (GeneralCaseExpression) expr);
         } else if (expr instanceof FooExpression) {
             return false;
+        } else if (expr instanceof LiteralExpression) {
+            return false;
+        } else if (expr instanceof NullExpression) {
+            return true;
         } else {
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for nullability!");
         }

@@ -55,5 +55,10 @@ public class HibernateFunctionRenderContext implements FunctionRenderContext {
     public String renderToString() {
         return sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return "HibernateFunctionRenderContext{" + "arguments=" + arguments + '}';
+    }
     
 }
