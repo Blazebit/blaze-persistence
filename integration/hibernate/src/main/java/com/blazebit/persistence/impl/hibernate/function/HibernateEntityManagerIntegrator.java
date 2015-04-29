@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import org.hibernate.Session;
 import org.hibernate.dialect.CUBRIDDialect;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -32,6 +33,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
@@ -55,6 +57,10 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
         
         if (dialect instanceof MySQLDialect) {
             dbms = "mysql";
+        } else if (dialect instanceof DB2Dialect) {
+            dbms = "db2";
+        } else if (dialect instanceof PostgreSQL81Dialect) {
+            dbms = "postgresql";
         } else if (dialect instanceof Oracle8iDialect) {
             dbms = "oracle";
         } else if (dialect instanceof SQLServerDialect) {
