@@ -50,6 +50,7 @@ public class GroupByManager extends AbstractManager {
         for(NodeInfo info : groupByInfos){
             StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
             queryGenerator.setQueryBuffer(sb);
+            queryGenerator.setConditionalContext(false);
             info.getExpression().accept(queryGenerator);
             groupByClauses.add(sb.toString());
         }
@@ -60,19 +61,6 @@ public class GroupByManager extends AbstractManager {
         if(!clauses.isEmpty()){
             sb.append(" GROUP BY ");
             build(sb, clauses);
-        }
-    }
-
-    void applyGroupBys(ResolvingQueryGenerator queryGenerator, StringBuilder sb, Set<NodeInfo> groupBys) {
-        if (groupBys.isEmpty()) {
-            return;
-        }
-        sb.append(" GROUP BY ");
-        Iterator<NodeInfo> iter = groupBys.iterator();
-        iter.next().getExpression().accept(queryGenerator);
-        while (iter.hasNext()) {
-            sb.append(", ");
-            iter.next().getExpression().accept(queryGenerator);
         }
     }
 

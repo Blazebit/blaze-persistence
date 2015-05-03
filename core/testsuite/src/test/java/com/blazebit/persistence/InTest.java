@@ -120,4 +120,11 @@ public class InTest extends AbstractCoreTest {
                 .end();
         assertEquals("SELECT d FROM Document d WHERE d.id IN (" + function("zero", "(SELECT d2 FROM Document d2)", ":elementCount") + ")", criteria.getQueryString());
     }
+    
+    @Test
+    public void testInEmptyListConditional(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
+            .where("d.id").in(new ArrayList<Object>());
+        assertEquals("SELECT d FROM Document d WHERE 1 = 0", criteria.getQueryString());
+    }
 }

@@ -61,7 +61,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
     protected final ExpressionFactory expressionFactory;
-
+    
     PredicateManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
         this.rootPredicate = new RootPredicate(parameterManager);
@@ -149,6 +149,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     void buildClausePredicate(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
+        queryGenerator.setConditionalContext(true);
         applyPredicate(queryGenerator, sb);
     }
 
@@ -157,6 +158,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     protected abstract ClauseType getClauseType();
     
     void applyPredicate(ResolvingQueryGenerator queryGenerator, StringBuilder sb) {
+        queryGenerator.setConditionalContext(true);
         rootPredicate.getPredicate().accept(queryGenerator);
     }
 

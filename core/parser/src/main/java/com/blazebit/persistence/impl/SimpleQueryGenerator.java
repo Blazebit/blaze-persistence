@@ -58,13 +58,33 @@ import java.util.List;
 public class SimpleQueryGenerator extends VisitorAdapter {
 
     protected StringBuilder sb;
+    
+     // indicates if the query generator operates in a context where it needs conditional expressions
+    private boolean conditionalContext;
+
+    public boolean isConditionalContext() {
+        return conditionalContext;
+    }
+
+    public void setConditionalContext(boolean conditionalContext) {
+        this.conditionalContext = conditionalContext;
+    }
 
     public void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
     }
+    
+    protected String getConditionalFalse(){
+        return "1 = 0";
+    }
+    
+    protected String getNonConditionalFalse(){
+        return "CASE WHEN 1 = 0 THEN true ELSE false END";
+    }
 
     @Override
     public void visit(AndPredicate predicate) {
+        conditionalContext = true;
         if (predicate.getChildren().size() == 1) {
             predicate.getChildren().get(0).accept(this);
             return;
@@ -99,6 +119,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(OrPredicate predicate) {
+        conditionalContext = true;
         if (predicate.getChildren().size() == 1) {
             predicate.getChildren().get(0).accept(this);
             return;
@@ -131,6 +152,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(NotPredicate predicate) {
+        conditionalContext = true;
         boolean requiresParanthesis = predicate.getPredicate() instanceof AndPredicate || predicate.getPredicate() instanceof OrPredicate;
         sb.append("NOT ");
         if (requiresParanthesis) {
@@ -144,6 +166,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(EqPredicate predicate) {
+        conditionalContext = true;
         if (predicate.isNegated()) {
             visitQuantifiableBinaryPredicate(predicate, " <> ");
         } else {
@@ -153,6 +176,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(IsNullPredicate predicate) {
+        conditionalContext = true;
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT NULL");
@@ -163,6 +187,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
+        conditionalContext = true;
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT EMPTY");
@@ -173,6 +198,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(MemberOfPredicate predicate) {
+        conditionalContext = true;
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT MEMBER OF ");
@@ -184,6 +210,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(LikePredicate predicate) {
+        conditionalContext = true;
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
@@ -217,6 +244,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(BetweenPredicate predicate) {
+        conditionalContext = true;
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT BETWEEN ");
@@ -230,16 +258,35 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(InPredicate predicate) {
+        // we have to render false if the parameter list for IN is empty
+        if(predicate.getRight() instanceof ParameterExpression){
+            Object list = ((ParameterExpression) predicate.getRight()).getValue();
+            if(list instanceof List){
+                if(((List)list).isEmpty()){
+                    // we have to distinguish between conditional and non conditional context since hibernate parser does not support literal 
+                    // and the workarounds like 1 = 0 or case when only work in specific contexts
+                    if(conditionalContext){
+                        sb.append(getConditionalFalse()); 
+                    }else{
+                        sb.append(getNonConditionalFalse());
+                    }
+                    return;
+                }
+            }
+        }
+        
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT");
         }
         sb.append(" IN ");
+        
         predicate.getRight().accept(this);
     }
 
     @Override
     public void visit(ExistsPredicate predicate) {
+        conditionalContext = true;
         if (predicate.isNegated()) {
             sb.append("NOT ");
         }
@@ -248,6 +295,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
+        conditionalContext = true;
         predicate.getLeft().accept(this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
@@ -360,8 +408,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(WhenClauseExpression expression) {
         sb.append("WHEN ");
+        conditionalContext = true;
         expression.getCondition().accept(this);
         sb.append(" THEN ");
+        conditionalContext = false;
         expression.getResult().accept(this);
     }
 
@@ -377,6 +427,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(" ");
         }
         sb.append("ELSE ");
+        conditionalContext = false;
         defaultExpr.accept(this);
         sb.append(" END");
     }

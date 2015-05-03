@@ -200,6 +200,7 @@ public class OrderByManager extends AbstractManager {
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
+        queryGenerator.setConditionalContext(false);
         if (resolveSelectAliases) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo && ((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {

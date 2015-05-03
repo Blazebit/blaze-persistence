@@ -317,6 +317,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
+        queryGenerator.setConditionalContext(false);
         select.getExpression().accept(queryGenerator);
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);

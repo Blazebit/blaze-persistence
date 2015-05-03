@@ -824,7 +824,7 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
 
         havingManager.buildClause(sbSelectFrom);
         queryGenerator.setResolveSelectAliases(false);
-            orderByManager.buildOrderBy(sbSelectFrom, false, false);
+        orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
         return sbSelectFrom.toString();
     }
