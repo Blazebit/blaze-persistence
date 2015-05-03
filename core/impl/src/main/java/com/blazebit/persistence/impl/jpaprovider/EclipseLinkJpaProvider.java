@@ -31,6 +31,16 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public boolean needsBracketsForListParamter() {
         return true;
     }
+    
+    @Override
+    public String getBooleanExpression(boolean value) {
+        return value ? "TRUE" : "FALSE";
+    }
+    
+    @Override
+    public String getBooleanConditionalExpression(boolean value) {
+        return value ? "TRUE" : "FALSE";
+    }
 
     @Override
     public String getOnClause() {

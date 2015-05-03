@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class MultinaryPredicate implements Predicate {
+public abstract class MultinaryPredicate extends AbstractExpression implements Predicate {
 
     protected final List<Predicate> children;
 

@@ -125,6 +125,6 @@ public class InTest extends AbstractCoreTest {
     public void testInEmptyListConditional(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .where("d.id").in(new ArrayList<Object>());
-        assertEquals("SELECT d FROM Document d WHERE 1 = 0", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE " + booleanConditionalExpression(false), criteria.getQueryString());
     }
 }

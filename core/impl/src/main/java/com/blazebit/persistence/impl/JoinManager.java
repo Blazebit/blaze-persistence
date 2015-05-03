@@ -198,8 +198,9 @@ public class JoinManager extends AbstractManager {
             if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                 sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
-                queryGenerator.setConditionalContext(true);
+                boolean conditionalContext = queryGenerator.setConditionalContext(true);
                 node.getOnPredicate().accept(queryGenerator);
+                queryGenerator.setConditionalContext(conditionalContext);
             }
             renderedJoins.add(node);
         }

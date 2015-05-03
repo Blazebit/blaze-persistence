@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -23,7 +24,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class BinaryExpressionPredicate implements Predicate {
+public abstract class BinaryExpressionPredicate extends AbstractExpression implements Predicate {
 
     protected Expression left;
     protected Expression right;

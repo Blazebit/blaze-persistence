@@ -64,6 +64,8 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
         boolean generateEqualPredicate = true;
         int brackets = 0;
+        
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
 
         // We wrap the whole thing in brackets
         brackets++;
@@ -128,6 +130,8 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         for (int i = 0; i < brackets; i++) {
             sb.append(')');
         }
+        
+        queryGenerator.setConditionalContext(conditionalContext);
     }
 
     private void applyKeysetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, Expression expr, int i, Serializable[] key, KeysetMode keysetMode) {

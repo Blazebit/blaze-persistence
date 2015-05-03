@@ -16,14 +16,12 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.predicate.Predicate;
-
 /**
  *
  * @author Moritz Becker
+ * @since 1.0
  */
-public class WhenClauseExpression implements Expression {
+public class WhenClauseExpression extends AbstractExpression {
     private final Expression condition;
     private Expression result;
 
@@ -83,14 +81,5 @@ public class WhenClauseExpression implements Expression {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
     }
 }

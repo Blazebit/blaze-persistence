@@ -15,15 +15,13 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-
 /**
  *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public class SubqueryExpression implements Expression {
+public class SubqueryExpression extends AbstractExpression {
 
     private final Subquery subquery;
 
@@ -48,15 +46,6 @@ public class SubqueryExpression implements Expression {
 
     public Subquery getSubquery() {
         return subquery;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
     }
 
     @Override

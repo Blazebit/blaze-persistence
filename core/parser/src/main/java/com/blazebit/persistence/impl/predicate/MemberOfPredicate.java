@@ -49,13 +49,4 @@ public class MemberOfPredicate extends NegatableBinaryExpressionPredicate {
         return visitor.visit(this);
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
-    }
-
 }

@@ -93,6 +93,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String joinAliasValue(String alias) {
         return jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
     }
+    
+    protected String booleanExpression(boolean value) {
+        return jpaProvider.getBooleanExpression(value);
+    }
+    
+    protected String booleanConditionalExpression(boolean value) {
+        return jpaProvider.getBooleanConditionalExpression(value);
+    }
 
     protected static String staticJoinAliasValue(String alias) {
         return staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;

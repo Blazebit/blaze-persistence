@@ -125,11 +125,13 @@ public class SelectManager<T> extends AbstractManager {
         StringBuilder sb = new StringBuilder();
         queryGenerator.setQueryBuffer(sb);
         Iterator<String> iter = selectAliases.iterator();
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
         while (iter.hasNext()) {
             sb.append(", ");
             applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
         }
+        queryGenerator.setConditionalContext(conditionalContext);
         return sb.toString();
     }
 
@@ -158,13 +160,15 @@ public class SelectManager<T> extends AbstractManager {
             selectInfo.getExpression().accept(resolveVisitor);
         }
         Set<String> groupByClauses = new LinkedHashSet<String>();
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         for (PathExpression pathExpr : resolveVisitor.getPathExpressions()) {
             StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
             queryGenerator.setQueryBuffer(sb);
             pathExpr.accept(queryGenerator);
             groupByClauses.add(sb.toString());
-
         }
+        
+        queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
 
@@ -183,11 +187,13 @@ public class SelectManager<T> extends AbstractManager {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
             Iterator<SelectInfo> iter = selectInfos.iterator();
+            boolean conditionalContext = queryGenerator.setConditionalContext(false);
             applySelect(queryGenerator, sb, iter.next());
             while (iter.hasNext()) {
                 sb.append(", ");
                 applySelect(queryGenerator, sb, iter.next());
             }
+            queryGenerator.setConditionalContext(conditionalContext);
         }
 
         return sb.toString();
@@ -317,7 +323,6 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     private void applySelect(ResolvingQueryGenerator queryGenerator, StringBuilder sb, SelectInfo select) {
-        queryGenerator.setConditionalContext(false);
         select.getExpression().accept(queryGenerator);
         if (select.alias != null) {
             sb.append(" AS ").append(select.alias);

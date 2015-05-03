@@ -13,28 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.jpaprovider;
+package com.blazebit.persistence.impl.expression;
+
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public interface JpaProvider {
+public abstract class AbstractExpression implements Expression {
     
-    public boolean supportsJpa21();
-    
-    public boolean needsBracketsForListParamter();
-    
-    public String getBooleanExpression(boolean value);
-    
-    public String getBooleanConditionalExpression(boolean value);
-    
-    public String getOnClause();
-    
-    public String getCollectionValueFunction();
-    
-    public Class<?> getDefaultQueryResultType();
-    
-    public String getCustomFunctionInvocation(String functionName, int argumentCount);
+    @Override
+    public abstract Expression clone();
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        SimpleQueryGenerator generator = new SimpleQueryGenerator();
+        generator.setQueryBuffer(sb);
+        accept(generator);
+        return sb.toString();
+    }
 }

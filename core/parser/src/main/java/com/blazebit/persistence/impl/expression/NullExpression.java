@@ -20,7 +20,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Christian Beikov
  * @since 1.0.1
  */
-public class NullExpression implements Expression {
+public class NullExpression extends AbstractExpression {
 
     @Override
     public NullExpression clone() {

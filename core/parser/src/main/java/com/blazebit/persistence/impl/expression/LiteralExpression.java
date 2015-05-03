@@ -20,7 +20,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Christian Beikov
  * @since 1.0.1
  */
-public class LiteralExpression implements Expression {
+public class LiteralExpression extends AbstractExpression {
 
     private final String wrapperFunction;
     private final String literal;

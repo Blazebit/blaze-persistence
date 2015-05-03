@@ -15,15 +15,13 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
-
 /**
  *
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public class PropertyExpression implements PathElementExpression {
+public class PropertyExpression extends AbstractExpression implements PathElementExpression {
 
     private final String property;
 

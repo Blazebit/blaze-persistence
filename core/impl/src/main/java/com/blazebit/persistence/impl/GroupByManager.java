@@ -47,13 +47,14 @@ public class GroupByManager extends AbstractManager {
         }
         
         Set<String> groupByClauses = new HashSet<String>();
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         for(NodeInfo info : groupByInfos){
             StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
             queryGenerator.setQueryBuffer(sb);
-            queryGenerator.setConditionalContext(false);
             info.getExpression().accept(queryGenerator);
             groupByClauses.add(sb.toString());
         }
+        queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
     

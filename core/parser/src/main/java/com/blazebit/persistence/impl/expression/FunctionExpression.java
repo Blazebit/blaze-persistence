@@ -25,7 +25,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class FunctionExpression implements Expression  {
+public class FunctionExpression extends AbstractExpression  {
 
     protected final String functionName;
     protected List<Expression> expressions;
@@ -67,15 +67,6 @@ public class FunctionExpression implements Expression  {
 
     public void setExpressions(List<Expression> expressions) {
         this.expressions = expressions;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
     }
 
     @Override

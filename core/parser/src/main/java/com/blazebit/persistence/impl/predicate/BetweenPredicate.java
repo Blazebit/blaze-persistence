@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -24,7 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class BetweenPredicate implements Predicate, Negatable {
+public class BetweenPredicate extends AbstractExpression implements Predicate, Negatable {
     private Expression left;
     private Expression start;
     private Expression end;
@@ -122,15 +123,6 @@ public class BetweenPredicate implements Predicate, Negatable {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
     }
     
 }

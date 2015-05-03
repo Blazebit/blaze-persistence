@@ -52,6 +52,7 @@ import java.util.List;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
@@ -59,32 +60,34 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     protected StringBuilder sb;
     
-     // indicates if the query generator operates in a context where it needs conditional expressions
+    // indicates if the query generator operates in a context where it needs conditional expressions
     private boolean conditionalContext;
 
     public boolean isConditionalContext() {
         return conditionalContext;
     }
 
-    public void setConditionalContext(boolean conditionalContext) {
+    public boolean setConditionalContext(boolean conditionalContext) {
+        boolean oldConditionalContext = this.conditionalContext;
         this.conditionalContext = conditionalContext;
+        return oldConditionalContext;
     }
 
     public void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
     }
     
-    protected String getConditionalFalse(){
-        return "1 = 0";
+    protected String getBooleanConditionalExpression(boolean value) {
+        return value ? "TRUE" : "FALSE";
     }
     
-    protected String getNonConditionalFalse(){
-        return "CASE WHEN 1 = 0 THEN true ELSE false END";
+    protected String getBooleanExpression(boolean value) {
+        return value ? "TRUE" : "FALSE";
     }
 
     @Override
     public void visit(AndPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(true);
         if (predicate.getChildren().size() == 1) {
             predicate.getChildren().get(0).accept(this);
             return;
@@ -115,11 +118,12 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         if (startLen < sb.length()) {
             sb.delete(sb.length() - and.length(), sb.length());
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(OrPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(true);
         if (predicate.getChildren().size() == 1) {
             predicate.getChildren().get(0).accept(this);
             return;
@@ -148,11 +152,12 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         if (predicate.getChildren().size() > 1) {
             sb.delete(sb.length() - or.length(), sb.length());
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(NotPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(true);
         boolean requiresParanthesis = predicate.getPredicate() instanceof AndPredicate || predicate.getPredicate() instanceof OrPredicate;
         sb.append("NOT ");
         if (requiresParanthesis) {
@@ -162,43 +167,47 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         } else {
             predicate.getPredicate().accept(this);
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(EqPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         if (predicate.isNegated()) {
             visitQuantifiableBinaryPredicate(predicate, " <> ");
         } else {
             visitQuantifiableBinaryPredicate(predicate, " = ");
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(IsNullPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT NULL");
         } else {
             sb.append(" IS NULL");
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getExpression().accept(this);
         if (predicate.isNegated()) {
             sb.append(" IS NOT EMPTY");
         } else {
             sb.append(" IS EMPTY");
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(MemberOfPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT MEMBER OF ");
@@ -206,11 +215,12 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(" MEMBER OF ");
         }
         predicate.getRight().accept(this);
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(LikePredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         if (!predicate.isCaseSensitive()) {
             sb.append("UPPER(");
         }
@@ -240,11 +250,12 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 sb.append(")");
             }
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(BetweenPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT BETWEEN ");
@@ -254,27 +265,29 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         predicate.getStart().accept(this);
         sb.append(" AND ");
         predicate.getEnd().accept(this);
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(InPredicate predicate) {
         // we have to render false if the parameter list for IN is empty
-        if(predicate.getRight() instanceof ParameterExpression){
+        if (predicate.getRight() instanceof ParameterExpression) {
             Object list = ((ParameterExpression) predicate.getRight()).getValue();
-            if(list instanceof List){
-                if(((List)list).isEmpty()){
+            if (list instanceof List<?>) {
+                if (((List<?>) list).isEmpty()) {
                     // we have to distinguish between conditional and non conditional context since hibernate parser does not support literal 
                     // and the workarounds like 1 = 0 or case when only work in specific contexts
-                    if(conditionalContext){
-                        sb.append(getConditionalFalse()); 
-                    }else{
-                        sb.append(getNonConditionalFalse());
+                    if (conditionalContext) {
+                        sb.append(getBooleanConditionalExpression(false));
+                    } else {
+                        sb.append(getBooleanExpression(false));
                     }
                     return;
                 }
             }
         }
         
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT");
@@ -282,20 +295,22 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append(" IN ");
         
         predicate.getRight().accept(this);
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(ExistsPredicate predicate) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         if (predicate.isNegated()) {
             sb.append("NOT ");
         }
         sb.append("EXISTS ");
         predicate.getExpression().accept(this);
+        setConditionalContext(oldConditionalContext);
     }
 
     private void visitQuantifiableBinaryPredicate(QuantifiableBinaryExpressionPredicate predicate, String operator) {
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(false);
         predicate.getLeft().accept(this);
         sb.append(operator);
         if (predicate.getQuantifier() != PredicateQuantifier.ONE) {
@@ -304,6 +319,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         } else {
             predicate.getRight().accept(this);
         }
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
@@ -375,6 +391,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(FunctionExpression expression) {
+        boolean oldConditionalContext = setConditionalContext(false);
         sb.append(expression.getFunctionName());
         sb.append('(');
         
@@ -393,6 +410,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             }
         }
         sb.append(')');
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override
@@ -408,14 +426,16 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(WhenClauseExpression expression) {
         sb.append("WHEN ");
-        conditionalContext = true;
+        boolean oldConditionalContext = setConditionalContext(true);
         expression.getCondition().accept(this);
         sb.append(" THEN ");
-        conditionalContext = false;
+        setConditionalContext(false);
         expression.getResult().accept(this);
+        setConditionalContext(oldConditionalContext);
     }
 
     private void handleCaseWhen(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
+        boolean oldConditionalContext = setConditionalContext(false);
         sb.append("CASE ");
         if (caseOperand != null) {
             caseOperand.accept(this);
@@ -427,9 +447,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(" ");
         }
         sb.append("ELSE ");
-        conditionalContext = false;
         defaultExpr.accept(this);
         sb.append(" END");
+        setConditionalContext(oldConditionalContext);
     }
 
     @Override

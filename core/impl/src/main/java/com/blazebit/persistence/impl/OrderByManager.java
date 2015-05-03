@@ -132,6 +132,7 @@ public class OrderByManager extends AbstractManager {
         }
 
         queryGenerator.setQueryBuffer(sb);
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         OrderByInfo orderByInfo;
 
@@ -152,6 +153,8 @@ public class OrderByManager extends AbstractManager {
                 orderByInfo.getExpression().accept(queryGenerator);
             }
         }
+        
+        queryGenerator.setConditionalContext(conditionalContext);
     }
 
     Set<String> buildGroupByClauses() {
@@ -161,6 +164,7 @@ public class OrderByManager extends AbstractManager {
 
         Set<String> groupByClauses = new LinkedHashSet<String>();
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         OrderByInfo orderByInfo;
 
         while (iter.hasNext()) {
@@ -182,6 +186,8 @@ public class OrderByManager extends AbstractManager {
                 groupByClauses.add(sb.toString());
             }
         }
+        
+        queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
 
@@ -192,15 +198,16 @@ public class OrderByManager extends AbstractManager {
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
+        boolean conditionalContext = queryGenerator.setConditionalContext(false);
         applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
         while (iter.hasNext()) {
             sb.append(", ");
             applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
         }
+        queryGenerator.setConditionalContext(conditionalContext);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
-        queryGenerator.setConditionalContext(false);
         if (resolveSelectAliases) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo && ((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {

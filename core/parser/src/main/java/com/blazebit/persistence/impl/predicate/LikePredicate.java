@@ -91,13 +91,4 @@ public class LikePredicate extends NegatableBinaryExpressionPredicate {
         return super.equals(obj);
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
-    }
-
 }

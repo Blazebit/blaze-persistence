@@ -21,7 +21,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class ParameterExpression implements Expression {
+public class ParameterExpression extends AbstractExpression {
 
     private String name;
     private final Object value;
