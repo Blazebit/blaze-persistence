@@ -99,13 +99,6 @@
         <version.release.plugin>2.5.1</version.release.plugin>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>apache-snapshot</id>
-            <url>https://repository.apache.org/content/repositories/snapshots/</url>
-        </repository>
-    </repositories>
-
     <dependencyManagement>
         <dependencies>
             <!-- Project dependencies -->
