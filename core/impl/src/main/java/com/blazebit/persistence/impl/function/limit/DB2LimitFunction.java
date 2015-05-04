@@ -24,7 +24,7 @@ public class DB2LimitFunction extends LimitFunction {
 
     public DB2LimitFunction() {
         super(
-            "?1 fetch first ?2 rows only",
+            "(?1 fetch first ?2 rows only)",
             // TODO: This is selecting the rownum too...
             "select * from ( select db2limit2_.*, rownumber() over(order by order of db2limit2_) as rownumber_ from ( ?1 fetch first ?2 rows only ) as db2limit2_ ) as db2limit1_ where rownumber_ > ?3 order by rownumber_"
         );
