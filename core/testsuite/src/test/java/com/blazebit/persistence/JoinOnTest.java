@@ -16,6 +16,7 @@
 package com.blazebit.persistence;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
@@ -77,5 +78,23 @@ public class JoinOnTest extends AbstractCoreTest {
             "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.localized l " + ON_CLAUSE + " " + joinAliasValue("l") + " LIKE :param_0 AND " + joinAliasValue("l") + " > :param_1 AND (" + joinAliasValue("l") + " = :param_2 OR (" + joinAliasValue("l") + " = :param_3 AND (" + joinAliasValue("l") + " = :param_4)))",
             crit.getQueryString());
         crit.getResultList();
+    }
+    
+    @Test
+    public void testJoinOnOuterRoot(){
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .select("d")
+                .selectSubquery()
+                    .from(Person.class, "p")
+                    .select("partnerDoc.id")
+                    .select("p.name")
+                    .innerJoinOn("p.partnerDocument", "partnerDoc")
+                        .on("p.id").eqExpression("OUTER(d.idx)")
+                    .end()
+                .end()
+                .where("d.id").eq(1);
+        
+        assertEquals("SELECT d, (SELECT partnerDoc.id, p.name FROM Person p JOIN p.partnerDocument partnerDoc " + ON_CLAUSE + " p.id = d.idx) FROM Document d WHERE d.id = :param_0", crit.getQueryString());
+        // the query causes an exception in Hibernate so we do not run it here
     }
 }

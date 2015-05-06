@@ -66,7 +66,7 @@ public class JoinNode {
                 @Override
                 public void visit(PathExpression pathExpr) {
                     // prevent loop dependencies to the same join node
-                    if (pathExpr.getBaseNode() != JoinNode.this) {
+                    if (pathExpr.getBaseNode() != JoinNode.this && pathExpr.getBaseNode() != null) {
                         dependencies.add((JoinNode) pathExpr.getBaseNode());
                     }
                 }
