@@ -87,7 +87,7 @@
 
     <properties>
         <version.blazecbav>0.2.0</version.blazecbav>
-        <version.blazeutils>0.1.8</version.blazeutils>
+        <version.blazeutils>0.1.9</version.blazeutils>
         <version.deltaspike>1.0.1</version.deltaspike>
         <version.junit>4.11</version.junit>
 
@@ -98,13 +98,6 @@
         <version.processor.plugin>2.2.1</version.processor.plugin>
         <version.release.plugin>2.5.1</version.release.plugin>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>apache-snapshot</id>
-            <url>https://repository.apache.org/content/repositories/snapshots/</url>
-        </repository>
-    </repositories>
 
     <dependencyManagement>
         <dependencies>

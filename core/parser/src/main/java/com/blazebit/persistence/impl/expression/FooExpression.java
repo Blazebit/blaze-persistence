@@ -21,7 +21,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class FooExpression implements Expression {
+public class FooExpression extends AbstractExpression {
 
     private final StringBuilder stringBuilder;
 
@@ -51,7 +51,6 @@ public class FooExpression implements Expression {
     StringBuilder getStringBuilder() {
         return stringBuilder;
     }
-    
     
     @Override
     public String toString() {

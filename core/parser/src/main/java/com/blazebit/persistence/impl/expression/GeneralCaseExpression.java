@@ -16,15 +16,15 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  *
  * @author Moritz Becker
+ * @since 1.0
  */
-public class GeneralCaseExpression implements Expression {
+public class GeneralCaseExpression extends AbstractExpression {
     protected final List<WhenClauseExpression> whenClauses;
     protected Expression defaultExpr;
 
@@ -95,15 +95,6 @@ public class GeneralCaseExpression implements Expression {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
     }
     
 }

@@ -16,7 +16,7 @@ public class LimitFunction implements JpqlFunction {
 
     public LimitFunction() {
         //LIMIT(SUBQUERY, LIMIT, OFFSET)
-        this("?1 limit ?2", "?1 limit ?2 offset ?3");
+        this("(?1 limit ?2)", "(?1 limit ?2 offset ?3)");
     }
 
     protected LimitFunction(String limitOnly, String limitOffset) {

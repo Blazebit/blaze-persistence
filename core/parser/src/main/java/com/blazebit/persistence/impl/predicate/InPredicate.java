@@ -48,13 +48,4 @@ public class InPredicate extends NegatableBinaryExpressionPredicate {
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
     }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
-    }
 }

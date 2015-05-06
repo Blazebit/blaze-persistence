@@ -31,6 +31,17 @@ public class HibernateJpaProvider implements JpaProvider {
     public boolean needsBracketsForListParamter() {
         return true;
     }
+    
+    @Override
+    public String getBooleanExpression(boolean value) {
+        return value ? "CASE WHEN 1 = 1 THEN true ELSE false END"
+                     : "CASE WHEN 1 = 1 THEN false ELSE true END";
+    }
+    
+    @Override
+    public String getBooleanConditionalExpression(boolean value) {
+        return value ? "1 = 1" : "1 = 0";
+    }
 
     @Override
     public String getOnClause() {

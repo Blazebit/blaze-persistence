@@ -24,7 +24,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class PathExpression implements Expression, Cloneable {
+public class PathExpression extends AbstractExpression implements Expression {
 
     private final List<PathElementExpression> pathProperties;
     // Although this node will always be a JoinNode we will use casting at use site to be able to reuse the parser

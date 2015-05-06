@@ -24,7 +24,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class CompositeExpression implements Expression {
+public class CompositeExpression extends AbstractExpression {
 
     private final List<Expression> expressions;
 
@@ -103,17 +103,6 @@ public class CompositeExpression implements Expression {
                 expressions.add(new FooExpression(sb));
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        for (Expression exp : expressions) {
-            sb.append(exp);
-        }
-
-        return sb.toString();
     }
 
     @Override

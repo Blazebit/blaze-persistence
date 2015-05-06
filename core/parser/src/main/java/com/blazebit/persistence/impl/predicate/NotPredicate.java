@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl.predicate;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 
 /**
  *
@@ -23,7 +24,7 @@ import com.blazebit.persistence.impl.SimpleQueryGenerator;
  * @author Moritz Becker
  * @since 1.0
  */
-public class NotPredicate implements Predicate {
+public class NotPredicate extends AbstractExpression implements Predicate {
 
     /**
      * This is an expression because we can have NOT (...) and the paranthesis
@@ -49,6 +50,16 @@ public class NotPredicate implements Predicate {
     }
 
     @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+    
+    @Override
+    public <T> T accept(ResultVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public int hashCode() {
         int hash = 5;
         hash = 47 * hash + (this.predicate != null ? this.predicate.hashCode() : 0);
@@ -68,25 +79,6 @@ public class NotPredicate implements Predicate {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        SimpleQueryGenerator generator = new SimpleQueryGenerator();
-        generator.setQueryBuffer(sb);
-        generator.visit(this);
-        return sb.toString();
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-    
-    @Override
-    public <T> T accept(ResultVisitor<T> visitor) {
-        return visitor.visit(this);
     }
 
 }

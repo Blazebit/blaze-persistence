@@ -148,6 +148,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
     
     @Override
+    protected String getBooleanConditionalExpression(boolean value) {
+        return jpaProvider.getBooleanConditionalExpression(value);
+    }
+    
+    @Override
+    protected String getBooleanExpression(boolean value) {
+        return jpaProvider.getBooleanExpression(value);
+    }
+    
+    @Override
     public void visit(ParameterExpression expression) {
         String paramName;
         if (expression.getName() == null) {

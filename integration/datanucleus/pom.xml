@@ -15,9 +15,9 @@
     <name>Blazebit Persistence Integration DataNucleus</name>
     
     <properties>
-        <version.datanucleus.base>4.1.0-m3</version.datanucleus.base>
+        <version.datanucleus.base>4.1.0-m4</version.datanucleus.base>
         <version.datanucleus.jpa>4.0.4</version.datanucleus.jpa>
-<!--        <version.datanucleus.base>4.1.0-m4-SNAPSHOT</version.datanucleus.base>
+<!--        <version.datanucleus.base>4.1.0-m5-SNAPSHOT</version.datanucleus.base>
         <version.datanucleus.jpa>4.0.5-SNAPSHOT</version.datanucleus.jpa>-->
     </properties>
     

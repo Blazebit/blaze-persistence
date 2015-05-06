@@ -26,6 +26,10 @@ public interface JpaProvider {
     
     public boolean needsBracketsForListParamter();
     
+    public String getBooleanExpression(boolean value);
+    
+    public String getBooleanConditionalExpression(boolean value);
+    
     public String getOnClause();
     
     public String getCollectionValueFunction();

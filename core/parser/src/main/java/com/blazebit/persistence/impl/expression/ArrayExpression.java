@@ -21,7 +21,7 @@ package com.blazebit.persistence.impl.expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class ArrayExpression implements PathElementExpression {
+public class ArrayExpression extends AbstractExpression implements PathElementExpression {
 
     private final PropertyExpression base;
     private final Expression index;
@@ -52,11 +52,6 @@ public class ArrayExpression implements PathElementExpression {
 
     public Expression getIndex() {
         return index;
-    }
-
-    @Override
-    public String toString() {
-        return base.toString() + "[" + index.toString() + "]";
     }
 
     @Override

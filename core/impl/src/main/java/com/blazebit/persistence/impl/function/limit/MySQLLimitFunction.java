@@ -24,8 +24,8 @@ public class MySQLLimitFunction extends LimitFunction {
 
     public MySQLLimitFunction() {
         super(
-            "?1 limit ?2",
-            "?1 limit ?3, ?2"
+            "(?1 limit ?2)",
+            "(?1 limit ?3, ?2)"
         );
     }
     
