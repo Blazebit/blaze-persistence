@@ -22,12 +22,12 @@ import com.blazebit.persistence.impl.integration.cdi.CustomBean;
 import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import java.lang.annotation.Annotation;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
+import javax.inject.Singleton;
 
 /**
  *
@@ -46,7 +46,7 @@ public class CriteriaBuilderExtension implements Extension {
         Class<?> beanClass = CriteriaBuilderFactory.class;
         Class<?>[] types = new Class[] { CriteriaBuilderFactory.class, Object.class };
         Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
-        Class<? extends Annotation> scope = ApplicationScoped.class;
+        Class<? extends Annotation> scope = Singleton.class;
         CriteriaBuilderFactory instance = criteriaBuilderFactory;
         Bean<CriteriaBuilderFactory> bean = new CustomBean<CriteriaBuilderFactory>(beanClass, types, qualifiers, scope, instance);
 

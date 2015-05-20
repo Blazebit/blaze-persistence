@@ -23,13 +23,13 @@ import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.lang.annotation.Annotation;
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.inject.Singleton;
 
 /**
  *
@@ -56,7 +56,7 @@ public class EntityViewExtension implements Extension {
         Class<?> beanClass = EntityViewManager.class;
         Class<?>[] types = new Class[] { EntityViewManager.class, Object.class };
         Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
-        Class<? extends Annotation> scope = ApplicationScoped.class;
+        Class<? extends Annotation> scope = Singleton.class;
         EntityViewManager instance = entityViewManager;
         Bean<EntityViewManager> bean = new CustomBean<EntityViewManager>(beanClass, types, qualifiers, scope, instance);
 
