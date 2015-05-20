@@ -25,17 +25,11 @@ import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import java.lang.reflect.Constructor;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -131,24 +125,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (!idType.isInstance(entityId)) {
             throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName() + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + fromClazz.getName() + "'");
         }
-    }
-
-    @Override
-    public X setParameter(String name, Object value) {
-        parameterManager.satisfyParameter(name, value);
-        return (X) this;
-    }
-
-    @Override
-    public X setParameter(String name, Calendar value, TemporalType temporalType) {
-        parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
-        return (X) this;
-    }
-
-    @Override
-    public X setParameter(String name, Date value, TemporalType temporalType) {
-        parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
-        return (X) this;
     }
 
     @Override
@@ -286,54 +262,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
 
         parameterizeQuery(query);
         return query;
-    }
-
-    void parameterizeQuery(Query q) {
-        for (Parameter<?> p : q.getParameters()) {
-            if (!isParameterSet(p.getName())) {
-                throw new IllegalStateException("Unsatisfied parameter " + p.getName());
-            }
-            Object paramValue = parameterManager.getParameterValue(p.getName());
-            if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
-                ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
-                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
-            } else if (paramValue instanceof ParameterManager.TemporalDateParameterWrapper) {
-                ParameterManager.TemporalDateParameterWrapper wrappedValue = (ParameterManager.TemporalDateParameterWrapper) paramValue;
-                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
-            } else {
-                q.setParameter(p.getName(), paramValue);
-            }
-        }
-    }
-
-    @Override
-    public boolean containsParameter(String name) {
-        return parameterManager.containsParameter(name);
-    }
-
-    @Override
-    public boolean isParameterSet(String name) {
-        return parameterManager.isParameterSet(name);
-    }
-
-    @Override
-    public Parameter<?> getParameter(String name) {
-        return parameterManager.getParameter(name);
-    }
-
-    @Override
-    public Set<? extends Parameter<?>> getParameters() {
-        return parameterManager.getParameters();
-    }
-
-    @Override
-    public Object getParameterValue(String name) {
-        return parameterManager.getParameterValue(name);
-    }
-
-    @Override
-    public Metamodel getMetamodel() {
-        return em.getMetamodel();
     }
 
     @Override

@@ -42,12 +42,17 @@ import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import com.blazebit.persistence.spi.QueryTransformer;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
@@ -61,7 +66,7 @@ import javax.persistence.metamodel.Metamodel;
  * @author Moritz Becker
  * @since 1.0
  */
-public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>, OrderByBuilderExperimental<X> {
+public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>, OrderByBuilderExperimental<X> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
@@ -201,6 +206,72 @@ public class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> imple
         this.joinManager.setRoot(fromClazz, alias);
         fromClassExplicitelySet = true;
         return this;
+    }
+
+    @Override
+    public Metamodel getMetamodel() {
+        return em.getMetamodel();
+    }
+
+    void parameterizeQuery(Query q) {
+        for (Parameter<?> p : q.getParameters()) {
+            if (!isParameterSet(p.getName())) {
+                throw new IllegalStateException("Unsatisfied parameter " + p.getName());
+            }
+            Object paramValue = parameterManager.getParameterValue(p.getName());
+            if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
+                ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
+                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
+            } else if (paramValue instanceof ParameterManager.TemporalDateParameterWrapper) {
+                ParameterManager.TemporalDateParameterWrapper wrappedValue = (ParameterManager.TemporalDateParameterWrapper) paramValue;
+                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
+            } else {
+                q.setParameter(p.getName(), paramValue);
+            }
+        }
+    }
+
+    @Override
+    public X setParameter(String name, Object value) {
+        parameterManager.satisfyParameter(name, value);
+        return (X) this;
+    }
+
+    @Override
+    public X setParameter(String name, Calendar value, TemporalType temporalType) {
+        parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
+        return (X) this;
+    }
+
+    @Override
+    public X setParameter(String name, Date value, TemporalType temporalType) {
+        parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
+        return (X) this;
+    }
+
+    @Override
+    public boolean containsParameter(String name) {
+        return parameterManager.containsParameter(name);
+    }
+
+    @Override
+    public boolean isParameterSet(String name) {
+        return parameterManager.isParameterSet(name);
+    }
+
+    @Override
+    public Parameter<?> getParameter(String name) {
+        return parameterManager.getParameter(name);
+    }
+
+    @Override
+    public Set<? extends Parameter<?>> getParameters() {
+        return parameterManager.getParameters();
+    }
+
+    @Override
+    public Object getParameterValue(String name) {
+        return parameterManager.getParameterValue(name);
     }
 
     /*
