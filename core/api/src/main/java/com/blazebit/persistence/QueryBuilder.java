@@ -247,6 +247,14 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public X fetch(String path);
+    
+    /**
+     * Adds an implicit join fetch for every given path to the query.
+     *
+     * @param paths The paths to join fetch
+     * @return The query builder for chaining calls
+     */
+    public X fetch(String... paths);
 
     /**
      * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#INNER} and fetch set to true.

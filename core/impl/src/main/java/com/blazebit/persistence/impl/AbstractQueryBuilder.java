@@ -201,6 +201,19 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public X fetch(String... paths) {
+        clearCache();
+        checkFetchJoinAllowed();
+        verifyBuilderEnded();
+        
+        for (String path : paths) {
+            joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
+        }
+        
+        return (X) this;
+    }
+
+    @Override
     public X innerJoinFetch(String path, String alias) {
         return join(path, alias, JoinType.INNER, true);
     }
