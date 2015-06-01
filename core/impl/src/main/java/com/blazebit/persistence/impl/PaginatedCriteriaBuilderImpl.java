@@ -513,6 +513,12 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 .append(' ')
                 .append(joinManager.getRootAlias());
 
+        /**
+         * we have already selected the IDs so now we only need so select the
+         * fields and apply the ordering all other clauses are not required any 
+         * more and therefore we can also omit any joins which the SELECT or the 
+         * ORDER_BY clause do not depend on
+         */
         joinManager.buildJoins(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null);
         sbSelectFrom.append(" WHERE ")
                 .append(joinManager.getRootAlias())

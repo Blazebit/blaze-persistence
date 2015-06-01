@@ -1228,6 +1228,8 @@ public class JoinManager extends AbstractManager {
         JoinNode currentNode = node;
         while (currentNode != null) {
             currentNode.setFetch(true);
+            // fetches implicitly need to be selected
+            currentNode.getClauseDependencies().add(ClauseType.SELECT);
             currentNode = currentNode.getParent();
         }
     }

@@ -326,4 +326,14 @@ public class JoinTest extends AbstractCoreTest {
             .leftJoin("partners", "p").where("p.partnerDocument.owner.name").eqExpression("'John'");
         assertEquals("SELECT d FROM Document d LEFT JOIN d.partners p LEFT JOIN p.partnerDocument partnerDocument_1 LEFT JOIN partnerDocument_1.owner owner_1 WHERE owner_1.name = 'John'", crit.getQueryString());
     }
+    
+    @Test
+    public void testPaginatedJoinFetch(){
+        PaginatedCriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .leftJoinFetch("contacts", "c")
+                .orderByAsc("d.id")
+                .page(0, 10);
+        
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST", crit.getQueryString());
+    }
 }
