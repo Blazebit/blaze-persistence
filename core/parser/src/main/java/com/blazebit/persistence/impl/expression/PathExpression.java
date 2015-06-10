@@ -105,21 +105,7 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     public String getPath() {
-        int size = pathProperties.size();
-        if (size == 0) {
-            return "";
-        } else if (size == 1) {
-            return pathProperties.get(0).toString();
-        }
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(pathProperties.get(0));
-
-        for (int i = 1; i < size; i++) {
-            sb.append(".").append(pathProperties.get(i));
-        }
-
-        return sb.toString();
+        return toString();
     }
 
     public boolean isCollectionKeyPath() {
@@ -167,10 +153,5 @@ public class PathExpression extends AbstractExpression implements Expression {
             }
         }
         return true;
-    }
-
-    @Override
-    public String toString() {
-        return getPath();
     }
 }

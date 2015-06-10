@@ -25,7 +25,9 @@ import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
 import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
@@ -379,7 +381,26 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        sb.append(expression.getPath());
+        List<PathElementExpression> pathProperties = expression.getExpressions();
+        int size = pathProperties.size();
+        if (size == 0) {
+            return;
+        } else if (size == 1) {
+            pathProperties.get(0).accept(this);
+            return;
+        }
+
+        pathProperties.get(0).accept(this);
+
+        for (int i = 1; i < size; i++) {
+            sb.append(".");
+            pathProperties.get(i).accept(this);
+        }
+    }
+
+    @Override
+    public void visit(PropertyExpression expression) {
+        sb.append(expression.getProperty());
     }
 
     @Override
@@ -454,6 +475,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(ArrayExpression expression) {
+        expression.getBase().accept(this);
+        sb.append('[');
+        expression.getIndex().accept(this);
+        sb.append(']');
     }
 
     private void wrapNonSubquery(Expression p, StringBuilder sb) {

@@ -98,7 +98,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             }
         }
         if (expression.getBaseNode() == null) {
-            sb.append(expression.getPath());
+            super.visit(expression);
         } else if (expression.getField() == null) {
             boolean valueFunction = needsValueFunction(expression) && !expression.isUsedInCollectionFunction() && jpaProvider.getCollectionValueFunction() != null;
             

@@ -36,4 +36,8 @@ public interface PersonSubView {
     @Mapping("UPPER(name)")
     @AttributeFilter(ContainsFilter.class)
     public String getName();
+    
+    // Although it might not be used, we add it to cover array expressions in subviews
+    @Mapping("localized[1]")
+    public String getFirstLocalized();
 }

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.impl;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import java.util.List;
@@ -56,4 +57,10 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
         sb.append(prefix);
         super.visit(expression);
     }
+
+//    @Override
+//    public void visit(ArrayExpression expression) {
+//        sb.append(prefix);
+//        super.visit(expression);
+//    }
 }
