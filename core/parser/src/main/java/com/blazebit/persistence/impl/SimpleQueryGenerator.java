@@ -280,9 +280,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                     // we have to distinguish between conditional and non conditional context since hibernate parser does not support literal 
                     // and the workarounds like 1 = 0 or case when only work in specific contexts
                     if (conditionalContext) {
-                        sb.append(getBooleanConditionalExpression(false));
+                        sb.append(getBooleanConditionalExpression(predicate.isNegated()));
                     } else {
-                        sb.append(getBooleanExpression(false));
+                        sb.append(getBooleanExpression(predicate.isNegated()));
                     }
                     return;
                 }
