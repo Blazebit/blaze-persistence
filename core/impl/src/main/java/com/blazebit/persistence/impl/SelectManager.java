@@ -161,8 +161,9 @@ public class SelectManager<T> extends AbstractManager {
         }
         Set<String> groupByClauses = new LinkedHashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        StringBuilder sb = new StringBuilder();
         for (PathExpression pathExpr : resolveVisitor.getPathExpressions()) {
-            StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
+            sb.setLength(0);
             queryGenerator.setQueryBuffer(sb);
             pathExpr.accept(queryGenerator);
             groupByClauses.add(sb.toString());

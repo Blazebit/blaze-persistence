@@ -166,9 +166,10 @@ public class OrderByManager extends AbstractManager {
         Iterator<OrderByInfo> iter = orderByInfos.iterator();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         OrderByInfo orderByInfo;
+        StringBuilder sb = new StringBuilder();
 
         while (iter.hasNext()) {
-            StringBuilder sb = StringBuilderProvider.getEmptyStringBuilder();
+            sb.setLength(0);
             queryGenerator.setQueryBuffer(sb);
             orderByInfo = iter.next();
             String potentialSelectAlias = orderByInfo.getExpression().toString();
