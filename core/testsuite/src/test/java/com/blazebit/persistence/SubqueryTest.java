@@ -18,10 +18,15 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.impl.BuilderChainingException;
+
 import static com.googlecode.catchexception.CatchException.verifyException;
+
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,6 +84,14 @@ public class SubqueryTest extends AbstractCoreTest {
             tx.rollback();
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void testNotEndedBuilder() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.selectSubquery("subquery", "MAX(subquery)");
+        
+        verifyException(crit, BuilderChainingException.class).getResultList();
     }
 
     @Test

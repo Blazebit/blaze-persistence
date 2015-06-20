@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
 
 /**
@@ -25,9 +26,13 @@ import com.blazebit.persistence.impl.BuilderChainingException;
  */
 public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T> {
 
+    private SubqueryInitiator<?> currentSubqueryInitiator;
     private SubqueryBuilderImpl<?> currentSubqueryBuilder;
 
     public void verifySubqueryBuilderEnded() {
+        if (currentSubqueryInitiator != null) {
+            throw new BuilderChainingException("An initiator was not ended properly.");
+        }
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("A builder was not ended properly.");
         }
@@ -47,6 +52,19 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
             throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
         }
 
+        currentSubqueryInitiator = null;
         currentSubqueryBuilder = builder;
     }
+
+	@Override
+	public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
+		if (currentSubqueryInitiator != null) {
+            throw new BuilderChainingException("There was an attempt to start an initiator but a previous initiator was not ended.");
+        }
+        if (currentSubqueryBuilder != null) {
+            throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
+        }
+
+        currentSubqueryInitiator = initiator;		
+	}
 }

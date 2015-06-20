@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryInitiator;
+
 /**
  *
  * @author Christian Beikov
@@ -26,4 +28,6 @@ public interface SubqueryBuilderListener<T> {
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder);
 
     public void onBuilderStarted(SubqueryBuilderImpl<T> builder);
+
+    public void onInitiatorStarted(SubqueryInitiator<?> initiator);
 }

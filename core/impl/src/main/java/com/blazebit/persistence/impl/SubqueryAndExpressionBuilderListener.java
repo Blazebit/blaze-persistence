@@ -16,15 +16,19 @@
 
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListenerImpl;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
+ * @version 1.0
  */
 public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderListener<T>, ExpressionBuilderEndedListener {
+	
     private final SubqueryBuilderListenerImpl<T> subqueryBuilderListener = new SubqueryBuilderListenerImpl<T>();
     private final ExpressionBuilderEndedListenerImpl expressionBuilderEndedListener = new ExpressionBuilderEndedListenerImpl();
 
@@ -37,6 +41,11 @@ public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderL
     public void onBuilderStarted(SubqueryBuilderImpl<T> builder) {
         subqueryBuilderListener.onBuilderStarted(builder);
     }
+
+    @Override
+	public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
+    	subqueryBuilderListener.onInitiatorStarted(initiator);
+	}
 
     @Override
     public void onBuilderEnded(ExpressionBuilder builder) {

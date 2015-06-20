@@ -216,38 +216,42 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    <T extends BaseQueryBuilder<?, ?>>
-            SubqueryInitiator<T> selectSubquery(T builder, final String selectAlias
+    <X extends BaseQueryBuilder<?, ?>>
+            SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias
             ) {
         verifyBuilderEnded();
 
-        subqueryBuilderListener = new SelectSubqueryBuilderListener<T>(selectAlias);
-        return subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<T>) subqueryBuilderListener);
+        subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener);
+        subqueryBuilderListener.onInitiatorStarted(initiator);
+        return initiator;
     }
 
-    <T extends BaseQueryBuilder<?, ?>>
-            SubqueryInitiator<T> selectSubquery(T builder, String subqueryAlias, Expression expression, String selectAlias
+    <X extends BaseQueryBuilder<?, ?>>
+            SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias
             ) {
         verifyBuilderEnded();
 
-        subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<T>(subqueryAlias, expression, selectAlias);
-        return subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<T>) subqueryBuilderListener);
+        subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
+        SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener);
+        subqueryBuilderListener.onInitiatorStarted(initiator);
+        return initiator;
     }
 
-    <T extends BaseQueryBuilder<?, ?>>
-            CaseWhenStarterBuilder<T> selectCase(T builder, final String selectAlias
+    <X extends BaseQueryBuilder<?, ?>>
+            CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias
             ) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
-        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
+        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
-    <T extends BaseQueryBuilder<?, ?>>
-            SimpleCaseWhenStarterBuilder<T> selectSimpleCase(T builder, final String selectAlias, Expression caseOperandExpression
+    <X extends BaseQueryBuilder<?, ?>>
+            SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression
             ) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
-        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<T>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
+        return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
 
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias
@@ -275,7 +279,7 @@ public class SelectManager<T> extends AbstractManager {
         registerParameterExpressions(expr);
     }
 
-    <Y, T extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Class<Y> clazz) {
+    <Y, X extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(X builder, Class<Y> clazz) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -289,7 +293,7 @@ public class SelectManager<T> extends AbstractManager {
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
-    <Y, T extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(T builder, Constructor<Y> constructor) {
+    <Y, X extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(X builder, Constructor<Y> constructor) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -388,7 +392,7 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
 
-        protected <T extends SelectObjectBuilder<?>> T startBuilder(T builder) {
+        protected <X extends SelectObjectBuilder<?>> X startBuilder(X builder) {
             if (currentBuilder != null) {
                 throw new IllegalStateException("There was an attempt to start a builder but a previous builder was not ended.");
             }
