@@ -55,6 +55,15 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
+    public void testSelectCountStar() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
+        criteria.select("COUNT(*)");
+
+        assertEquals("SELECT COUNT(*) FROM Document d", criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
     public void testSelectNonEntity() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
         criteria.select("d.age");

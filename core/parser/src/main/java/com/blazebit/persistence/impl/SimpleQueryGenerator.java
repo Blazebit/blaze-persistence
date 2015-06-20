@@ -416,14 +416,18 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append(expression.getFunctionName());
         sb.append('(');
         
+        boolean hasExpressions = expression.getExpressions().size() > 0;
         if (expression instanceof AggregateExpression) {
             AggregateExpression aggregateExpression = (AggregateExpression) expression;
             if (aggregateExpression.isDistinct()) {
                 sb.append("DISTINCT ");
             }
+            if (!hasExpressions && "COUNT".equals(aggregateExpression.getFunctionName().toUpperCase())) {
+                sb.append('*');
+            }
         }
         
-        if (!expression.getExpressions().isEmpty()) {
+        if (hasExpressions) {
             expression.getExpressions().get(0).accept(this);
             for (int i = 1; i < expression.getExpressions().size(); i++) {
                 sb.append(",");

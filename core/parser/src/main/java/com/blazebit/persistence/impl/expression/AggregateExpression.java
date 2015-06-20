@@ -16,13 +16,14 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.Arrays;
 import java.util.Collections;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
+ * @since 1.0
  */
 public class AggregateExpression extends FunctionExpression {
     private final boolean distinct;
