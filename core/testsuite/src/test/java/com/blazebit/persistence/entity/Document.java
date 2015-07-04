@@ -43,7 +43,7 @@ import javax.persistence.Transient;
  * @since 1.0
  */
 @Entity
-public class Document extends Ownable<Person> implements Serializable {
+public class Document extends Ownable implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long id;

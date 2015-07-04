@@ -48,9 +48,9 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqualToExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.age").eqExpression("d.versions.date + 1");
+        criteria.where("d.creationDate").eqExpression("d.versions.date");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.age = versions_1.date + 1", criteria
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.creationDate = versions_1.date", criteria
                      .getQueryString());
         criteria.getResultList();
     }
@@ -85,9 +85,9 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testNotEqualToExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.age").notEqExpression("d.versions.date + 1");
+        criteria.where("d.creationDate").notEqExpression("d.versions.date");
 
-        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.age <> versions_1.date + 1", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN d.versions versions_1 WHERE d.creationDate <> versions_1.date", criteria.getQueryString());
         criteria.getResultList();
     }
 

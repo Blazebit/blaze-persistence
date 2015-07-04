@@ -15,6 +15,18 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.RuleNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
+
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
@@ -34,16 +46,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
 
 /**
  *
@@ -79,7 +82,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return func;
     }
 
-    @Override
+	@Override
+	public Expression visitFunctions_returning_datetime(Functions_returning_datetimeContext ctx) {
+		return handleFunction(ctx.getStart().getText(), ctx);
+	}
+
+	@Override
     public Expression visitStringFunction(JPQLSelectExpressionParser.StringFunctionContext ctx) {
         return handleFunction(ctx.getStart().getText(), ctx);
     }

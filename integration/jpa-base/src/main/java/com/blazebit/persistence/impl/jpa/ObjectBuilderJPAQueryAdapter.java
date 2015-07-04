@@ -16,7 +16,10 @@
 package com.blazebit.persistence.impl.jpa;
 
 import com.blazebit.persistence.ObjectBuilder;
+
+import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.NoResultException;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.TypedQuery;
@@ -53,17 +56,19 @@ public class ObjectBuilderJPAQueryAdapter<X> extends TypedQueryWrapper<X> {
     @Override
     public List<X> getResultList() {
         List<X> list = super.getResultList();
+        int size = list.size();
+        List<X> newList = new ArrayList<X>(size);
         
-        for (int i = 0; i < list.size(); i++) {
+        for (int i = 0; i < size; i++) {
             Object tuple = list.get(i);
             
             if (tuple instanceof Object[]) {
-                list.set(i, builder.build((Object[]) tuple));
+                newList.add(builder.build((Object[]) tuple));
             } else {
-                list.set(i, builder.build(new Object[] { tuple }));
+                newList.add(builder.build(new Object[] { tuple }));
             }
         }
         
-        return builder.buildList(list);
+        return builder.buildList(newList);
     }
 }

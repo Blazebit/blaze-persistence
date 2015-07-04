@@ -52,10 +52,18 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     public Serializable[] getLowest() {
+    	if (first == null) {
+    		return null;
+    	}
+    	
         return KeysetPaginationHelper.extractKey(first, first.length - keysetSize);
     }
 
     public Serializable[] getHighest() {
+    	if (last == null) {
+    		return null;
+    	}
+    	
         return KeysetPaginationHelper.extractKey(last, last.length - keysetSize);
     }
 

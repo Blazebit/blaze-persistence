@@ -342,11 +342,11 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1.name FROM Document d JOIN d.owner owner_1 GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -354,14 +354,14 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectNestedAggregatePaginated() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner.name")
                 .orderByDesc("id")
                 .page(0, 10);
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1.name FROM Document d JOIN d.owner owner_1 "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 "
                 + "GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
 
         assertEquals(countQuery, cb.getPageCountQueryString());
@@ -374,11 +374,11 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY d.id DESC NULLS LAST";
@@ -391,14 +391,14 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectAggregateEntitySelectPaginated() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("0")
+                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner")
                 .orderByDesc("id")
                 .page(0, 10);
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY d.id DESC NULLS LAST";
@@ -425,11 +425,11 @@ public class SelectTest extends AbstractCoreTest {
 //    @Test
 //    public void testSelectAggregateEntitySelectLazyAssociation() {
 //        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-//                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwise("0")
+//                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
 //                .select("owner")
 //                .orderByDesc("id");
 //
-//        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE 0 END, owner_1 FROM Document d "
+//        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
 //                + "JOIN d.owner owner_1 "
 //                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
 //                + "ORDER BY d.id DESC NULLS LAST";

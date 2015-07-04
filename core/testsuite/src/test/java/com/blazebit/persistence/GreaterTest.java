@@ -47,9 +47,9 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGtExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.age").gtExpression("d.owner.name");
+        criteria.where("d.age").gtExpression("d.owner.age");
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age > owner_1.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age > owner_1.age", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -77,9 +77,9 @@ public class GreaterTest extends AbstractCoreTest {
     @Test
     public void testGeExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.where("d.age").geExpression("d.owner.name");
+        criteria.where("d.age").geExpression("d.owner.age");
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age >= owner_1.name", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.age >= owner_1.age", criteria.getQueryString());
         criteria.getResultList();
     }
 

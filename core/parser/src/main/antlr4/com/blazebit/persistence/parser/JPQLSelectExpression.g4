@@ -400,9 +400,15 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
         | SQRT
         | MOD
         | INDEX
+        
+ /* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
+ 
+        /*
         | CURRENT_DATE
         | CURRENT_TIME
         | CURRENT_TIMESTAMP
+        */
+        
         | CONCAT
         | SUBSTRING
         | TRIM

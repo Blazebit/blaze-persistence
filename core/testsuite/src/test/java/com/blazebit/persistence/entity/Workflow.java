@@ -42,6 +42,7 @@ public class Workflow implements Serializable {
     private Long id;
     private Locale defaultLanguage;
     private Set<Locale> supportedLocales = new HashSet<Locale>();
+    private Set<String> tags = new HashSet<String>();
     private Map<Locale, LocalizedEntity> localized = new HashMap<Locale, LocalizedEntity>();
 
     public Workflow() {
@@ -84,6 +85,15 @@ public class Workflow implements Serializable {
     }
 
     @ElementCollection
+    public Set<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(Set<String> tags) {
+		this.tags = tags;
+	}
+
+    @ElementCollection
     @CollectionTable(
         joinColumns = {
             @JoinColumn(
@@ -101,7 +111,7 @@ public class Workflow implements Serializable {
         return localized;
     }
 
-    public void setLocalized(Map<Locale, LocalizedEntity> localized) {
+	public void setLocalized(Map<Locale, LocalizedEntity> localized) {
         this.localized = localized;
     }
 

@@ -43,6 +43,7 @@ public class SelectNewTest extends AbstractCoreTest {
         try {
             tx.begin();
             Person p = new Person("Karl");
+            p.setAge(20L);
             p.getLocalized().put(1, "msg1");
             p.getLocalized().put(2, "msg2");
             em.persist(p);

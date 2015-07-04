@@ -70,9 +70,9 @@ public class JpqlFunctionTest extends AbstractCoreTest {
                 .select("subDoc.id")
                 .orderByAsc("subDoc.name")
                 .end();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (LIMIT("
-                + "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC NULLS LAST)"
-                + ",1))";
+        String expected = "SELECT d FROM Document d WHERE d.id IN (" + function("LIMIT",
+                "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC NULLS LAST)"
+                ,"1") + ")";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();
@@ -89,9 +89,9 @@ public class JpqlFunctionTest extends AbstractCoreTest {
                 .select("subDoc.id")
                 .orderByAsc("subDoc.name")
                 .end();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (LIMIT("
-                + "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC NULLS LAST)"
-                + ",1,1))";
+        String expected = "SELECT d FROM Document d WHERE d.id IN (" + function("LIMIT",
+                "(SELECT subDoc.id FROM Document subDoc ORDER BY subDoc.name ASC NULLS LAST)"
+                ,"1", "1") + ")";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();

@@ -757,7 +757,7 @@ public class GeneralParserTest extends AbstractParserTest {
     }
     
     @Test
-    public void testEtityTypeCompare(){
+    public void testEntityTypeCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = ENTITY(Document) THEN 1 ELSE 2 END");
         
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(function("TYPE", path("doc")), literal("ENTITY", "Document")), foo("1"))), foo("2"));
@@ -769,6 +769,18 @@ public class GeneralParserTest extends AbstractParserTest {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a = b THEN 1 ELSE 2 END");
         
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("a"), path("b")), foo("1"))), foo("2"));
+        assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testDateFunctions(){
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a = b THEN CURRENT_DATE WHEN a > b THEN CURRENT_TIME ELSE CURRENT_TIMESTAMP END");
+        
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
+        		new WhenClauseExpression(new EqPredicate(path("a"), path("b")), function("CURRENT_DATE")),
+        		new WhenClauseExpression(new GtPredicate(path("a"), path("b")), function("CURRENT_TIME"))
+    		), function("CURRENT_TIMESTAMP")
+		);
         assertEquals(expected, result);
     }
 }

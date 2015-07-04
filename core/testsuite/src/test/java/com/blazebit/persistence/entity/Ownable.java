@@ -24,16 +24,18 @@ import javax.persistence.MappedSuperclass;
  * @author Christian
  */
 @MappedSuperclass
-public abstract class Ownable<T extends Serializable> implements Serializable {
+public abstract class Ownable implements Serializable {
     
-    private T owner;
+	private static final long serialVersionUID = 1L;
+	
+	private Person owner;
     
     @ManyToOne(optional = false)
-    public T getOwner() {
+    public Person getOwner() {
         return owner;
     }
     
-    public void setOwner(T owner) {
+    public void setOwner(Person owner) {
         this.owner = owner;
     }
 }

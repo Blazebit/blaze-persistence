@@ -52,8 +52,8 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     @Parameterized.Parameters
     public static Collection expressionOperatorUses() {
         return Arrays.asList(new Object[][]{
-            { "localized[:locale] NOT MEMBER OF supportedLocales", staticJoinAliasValue("localized_locale_1") + " NOT MEMBER OF workflow.supportedLocales", "" },
-            { "localized[:locale] MEMBER OF supportedLocales", staticJoinAliasValue("localized_locale_1") + " MEMBER OF workflow.supportedLocales", "" },
+            { "localized[:locale].name NOT MEMBER OF tags", staticJoinAliasValue("localized_locale_1") + ".name NOT MEMBER OF workflow.tags", "" },
+            { "localized[:locale].name MEMBER OF tags", staticJoinAliasValue("localized_locale_1") + ".name MEMBER OF workflow.tags", "" },
 // TODO: IS EMPTY seems to be broken in hibernate for element collections. Also see https://hibernate.atlassian.net/browse/HHH-6686
 //            { "localized[:locale] IS NOT EMPTY", "localized IS NOT EMPTY", "" },
 //            { "localized[:locale] IS EMPTY", "localized IS EMPTY", "" },

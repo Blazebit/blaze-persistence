@@ -309,7 +309,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .setParameter("contactNr", 1)
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
-                + " KEY(contacts_contactNr_1) = :contactNr GROUP BY d.id, contacts_contactNr_1.name ORDER BY " + joinAliasValue("contacts_contactNr_1") + ".name ASC NULLS LAST, d.id ASC NULLS LAST";
+                + " KEY(contacts_contactNr_1) = :contactNr GROUP BY d.id, " + joinAliasValue("contacts_contactNr_1") + ".name ORDER BY " + joinAliasValue("contacts_contactNr_1") + ".name ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         // TODO: enable as soon as #45 is fixed
 //        cb.getResultList();

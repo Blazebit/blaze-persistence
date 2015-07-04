@@ -287,7 +287,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         if (transformerObjectBuilder != null) {
             for (QueryTransformer transformer : cbf.getQueryTransformers()) {
-                transformer.transformQuery((TypedQuery<T>) query, transformerObjectBuilder);
+            	query = transformer.transformQuery((TypedQuery<T>) query, transformerObjectBuilder);
             }
         }
 
