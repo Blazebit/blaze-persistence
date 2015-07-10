@@ -82,15 +82,15 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
                 "SELECT COUNT(DISTINCT d.id), "
-                + "PAGE_POSITION("
-                        + "(SELECT _page_position_d.id "
+                + function("PAGE_POSITION",
+                        "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "JOIN _page_position_d.owner _page_position_owner_1 "
                         + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
-                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST),"
-                        + ":_entityPagePositionParameter"
-                    + ") "
-                + "FROM Document d";
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST)", 
+                        ":_entityPagePositionParameter"
+                )
+                + " FROM Document d";
         
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
             .select("d.name").select("d.owner.name")
@@ -115,16 +115,16 @@ public class KeysetPaginationTest extends AbstractCoreTest {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
                 "SELECT COUNT(DISTINCT d.id), "
-                + "PAGE_POSITION("
-                        + "(SELECT _page_position_d.id "
+                        + function("PAGE_POSITION",
+                        "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
                         + "JOIN _page_position_d.owner _page_position_owner_1 "
                         + "WHERE _page_position_d.name <> :param_0 "
                         + "GROUP BY _page_position_d.id, _page_position_owner_1.name, _page_position_d.name "
-                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST),"
-                        + ":_entityPagePositionParameter"
-                    + ") "
-                + "FROM Document d "
+                        + "ORDER BY _page_position_owner_1.name DESC NULLS LAST, _page_position_d.name ASC NULLS LAST, _page_position_d.id ASC NULLS LAST)", 
+                        ":_entityPagePositionParameter"
+                )
+                + " FROM Document d "
                 + "WHERE d.name <> :param_0";
         
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")

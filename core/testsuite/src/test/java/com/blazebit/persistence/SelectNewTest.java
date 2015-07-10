@@ -79,7 +79,7 @@ public class SelectNewTest extends AbstractCoreTest {
         List<DocumentViewModel> actual = criteria.getQuery().getResultList();
 
         /* expected */
-        List<Document> expected = em.createQuery("FROM Document d ORDER BY d.name ASC", Document.class).getResultList();
+        List<Document> expected = em.createQuery("SELECT d FROM Document d ORDER BY d.name ASC", Document.class).getResultList();
 
         assertEquals(expected.size(), actual.size());
         for (int i = 0; i < actual.size(); i++) {
@@ -96,7 +96,7 @@ public class SelectNewTest extends AbstractCoreTest {
         List<Document> actual = criteria.getQuery().getResultList();
 
         /* expected */
-        List<Document> expected = em.createQuery("FROM Document d ORDER BY d.name ASC", Document.class).getResultList();
+        List<Document> expected = em.createQuery("SELECT d FROM Document d ORDER BY d.name ASC", Document.class).getResultList();
 
         assertEquals(expected.size(), actual.size());
         for (int i = 0; i < actual.size(); i++) {
