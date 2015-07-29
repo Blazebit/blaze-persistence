@@ -59,7 +59,11 @@ public final class EntityViewSettingHelper {
                     return (Q) normalCb.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
                 }
             } else {
-                return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
+                if (setting.getFirstResult() == -1) {
+                    return (Q) normalCb.page(0, setting.getMaxResults());
+                }else{
+                    return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
+                }
             }
         } else {
             return (Q) criteriaBuilder;
