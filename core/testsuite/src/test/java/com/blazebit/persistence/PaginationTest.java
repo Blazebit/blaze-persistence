@@ -341,7 +341,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("contactCount")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, (SELECT COUNT(" + joinAliasValue("contacts_1") + ".id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) AS contactCount FROM Document d GROUP BY d.id, (SELECT COUNT(" + joinAliasValue("contacts_1") + ".id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
+        String expectedIdQuery = "SELECT d.id, (SELECT COUNT(" + joinAliasValue("contacts_1") + ".id) FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id) AS contactCount FROM Document d GROUP BY d.id ORDER BY contactCount ASC NULLS LAST, d.id ASC NULLS LAST";
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
     }

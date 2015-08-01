@@ -17,9 +17,12 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+
 import java.util.BitSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -39,6 +42,11 @@ import org.antlr.v4.runtime.dfa.DFA;
 public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+    private final Set<String> aggregateFunctions;
+    
+    protected AbstractExpressionFactory(Set<String> aggregateFunctions) {
+    	this.aggregateFunctions = aggregateFunctions;
+    }
     
     private Expression createExpression(RuleInvoker ruleInvoker, String expression){
         return createExpression(ruleInvoker, expression, true);
@@ -62,7 +70,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             LOG.finest(ctx.toStringTree());
         }
         
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions);
         return visitor.visit(ctx);
     }
     

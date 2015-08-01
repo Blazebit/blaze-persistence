@@ -83,6 +83,26 @@ public class JoinNode {
         }
     }
 
+    public <T> T accept(AbortableResultJoinNodeVisitor<T> visitor) {
+        T result = visitor.visit(this);
+        
+        if (visitor.getStopValue().equals(result)) {
+        	return result;
+        }
+        
+        for (JoinTreeNode treeNode : nodes.values()) {
+            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+            	result = joinNode.accept(visitor);
+                
+                if (visitor.getStopValue().equals(result)) {
+                	return result;
+                }
+            }
+        }
+        
+        return null;
+    }
+
     public EnumSet<ClauseType> getClauseDependencies() {
         return clauseDependencies;
     }

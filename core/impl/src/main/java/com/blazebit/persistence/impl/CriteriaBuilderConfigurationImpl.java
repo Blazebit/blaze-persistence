@@ -15,6 +15,15 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.ServiceLoader;
+import java.util.Set;
+
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
@@ -68,16 +77,8 @@ import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.ServiceLoader;
-import java.util.Set;
 
 /**
  *
@@ -87,8 +88,8 @@ import java.util.Set;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
-    private final Map<String, Map<String, JpqlFunction>> functions = new HashMap<String, Map<String, JpqlFunction>>();
-    private final List<EntityManagerIntegrator> entityManagerEnrichers = new ArrayList<EntityManagerIntegrator>();
+    private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
+    private final List<EntityManagerIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>();
     private Properties properties = new Properties();
 
     public CriteriaBuilderConfigurationImpl() {
@@ -99,91 +100,92 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
     
     private void loadFunctions() {
-        Map<String, JpqlFunction> jpqlFunctions;
+        JpqlFunctionGroup jpqlFunctionGroup;
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new LimitFunction());
-        jpqlFunctions.put("mysql", new MySQLLimitFunction());
-        jpqlFunctions.put("oracle", new OracleLimitFunction());
-        jpqlFunctions.put("derby", new SQL2008LimitFunction());
-        jpqlFunctions.put("db2", new DB2LimitFunction());
-        jpqlFunctions.put("sybase", null); // Does not support limit
+        jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
+        jpqlFunctionGroup.add(null, new LimitFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLLimitFunction());
+        jpqlFunctionGroup.add("oracle", new OracleLimitFunction());
+        jpqlFunctionGroup.add("derby", new SQL2008LimitFunction());
+        jpqlFunctionGroup.add("db2", new DB2LimitFunction());
+        jpqlFunctionGroup.add("sybase", null); // Does not support limit
         // The function for SQLServer is hard to implement
 //        jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
-        functions.put("limit", jpqlFunctions);
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new PagePositionFunction());
-        jpqlFunctions.put("mysql", new MySQLPagePositionFunction());
-        jpqlFunctions.put("oracle", new OraclePagePositionFunction());
-        jpqlFunctions.put("sybase", new TransactSQLPagePositionFunction());
-        jpqlFunctions.put("microsoft", new TransactSQLPagePositionFunction());
-        functions.put("page_position", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("page_position", false);
+        jpqlFunctionGroup.add(null, new PagePositionFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLPagePositionFunction());
+        jpqlFunctionGroup.add("oracle", new OraclePagePositionFunction());
+        jpqlFunctionGroup.add("sybase", new TransactSQLPagePositionFunction());
+        jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put("db2", new DB2GroupConcatFunction());
-        jpqlFunctions.put("oracle", new OracleGroupConcatFunction());
-        jpqlFunctions.put("h2", new H2GroupConcatFunction());
-        jpqlFunctions.put("mysql", new MySQLGroupConcatFunction());
-        jpqlFunctions.put("postgresql", new PostgreSQLGroupConcatFunction());
-        functions.put("group_concat", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("group_concat", true);
+        jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
+        jpqlFunctionGroup.add("oracle", new OracleGroupConcatFunction());
+        jpqlFunctionGroup.add("h2", new H2GroupConcatFunction());
+        jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new YearFunction());
-        jpqlFunctions.put("access", new AccessYearFunction());
-        jpqlFunctions.put("db2", new DB2YearFunction());
-        jpqlFunctions.put("derby", new DerbyYearFunction());
-        jpqlFunctions.put("microsoft", new SQLServerYearFunction());
-        jpqlFunctions.put("sybase", new SybaseYearFunction());
-        functions.put("year", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("year", false);
+        jpqlFunctionGroup.add(null, new YearFunction());
+        jpqlFunctionGroup.add("access", new AccessYearFunction());
+        jpqlFunctionGroup.add("db2", new DB2YearFunction());
+        jpqlFunctionGroup.add("derby", new DerbyYearFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerYearFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseYearFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new MonthFunction());
-        jpqlFunctions.put("access", new AccessMonthFunction());
-        jpqlFunctions.put("db2", new DB2MonthFunction());
-        jpqlFunctions.put("derby", new DerbyMonthFunction());
-        jpqlFunctions.put("microsoft", new SQLServerMonthFunction());
-        jpqlFunctions.put("sybase", new SybaseMonthFunction());
-        functions.put("month", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("month", false);
+        jpqlFunctionGroup.add(null, new MonthFunction());
+        jpqlFunctionGroup.add("access", new AccessMonthFunction());
+        jpqlFunctionGroup.add("db2", new DB2MonthFunction());
+        jpqlFunctionGroup.add("derby", new DerbyMonthFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerMonthFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseMonthFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new DayFunction());
-        jpqlFunctions.put("access", new AccessDayFunction());
-        jpqlFunctions.put("db2", new DB2DayFunction());
-        jpqlFunctions.put("derby", new DerbyDayFunction());
-        jpqlFunctions.put("microsoft", new SQLServerDayFunction());
-        jpqlFunctions.put("sybase", new SybaseDayFunction());
-        functions.put("day", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("day", false);
+        jpqlFunctionGroup.add(null, new DayFunction());
+        jpqlFunctionGroup.add("access", new AccessDayFunction());
+        jpqlFunctionGroup.add("db2", new DB2DayFunction());
+        jpqlFunctionGroup.add("derby", new DerbyDayFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerDayFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseDayFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new HourFunction());
-        jpqlFunctions.put("access", new AccessHourFunction());
-        jpqlFunctions.put("db2", new DB2HourFunction());
-        jpqlFunctions.put("derby", new DerbyHourFunction());
-        jpqlFunctions.put("microsoft", new SQLServerHourFunction());
-        jpqlFunctions.put("sybase", new SybaseHourFunction());
-        functions.put("hour", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("hour", false);
+        jpqlFunctionGroup.add(null, new HourFunction());
+        jpqlFunctionGroup.add("access", new AccessHourFunction());
+        jpqlFunctionGroup.add("db2", new DB2HourFunction());
+        jpqlFunctionGroup.add("derby", new DerbyHourFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerHourFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseHourFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new MinuteFunction());
-        jpqlFunctions.put("access", new AccessMinuteFunction());
-        jpqlFunctions.put("db2", new DB2MinuteFunction());
-        jpqlFunctions.put("derby", new DerbyMinuteFunction());
-        jpqlFunctions.put("microsoft", new SQLServerMinuteFunction());
-        jpqlFunctions.put("sybase", new SybaseMinuteFunction());
-        functions.put("minute", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("minute", false);
+        jpqlFunctionGroup.add(null, new MinuteFunction());
+        jpqlFunctionGroup.add("access", new AccessMinuteFunction());
+        jpqlFunctionGroup.add("db2", new DB2MinuteFunction());
+        jpqlFunctionGroup.add("derby", new DerbyMinuteFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerMinuteFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseMinuteFunction());
+        registerFunction(jpqlFunctionGroup);
         
-        jpqlFunctions = new HashMap<String, JpqlFunction>();
-        jpqlFunctions.put(null, new SecondFunction());
-        jpqlFunctions.put("access", new AccessSecondFunction());
-        jpqlFunctions.put("db2", new DB2SecondFunction());
-        jpqlFunctions.put("derby", new DerbySecondFunction());
-        jpqlFunctions.put("microsoft", new SQLServerSecondFunction());
-        jpqlFunctions.put("sybase", new SybaseSecondFunction());
-        functions.put("second", jpqlFunctions);
+        jpqlFunctionGroup = new JpqlFunctionGroup("second", false);
+        jpqlFunctionGroup.add(null, new SecondFunction());
+        jpqlFunctionGroup.add("access", new AccessSecondFunction());
+        jpqlFunctionGroup.add("db2", new DB2SecondFunction());
+        jpqlFunctionGroup.add("derby", new DerbySecondFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerSecondFunction());
+        jpqlFunctionGroup.add("sybase", new SybaseSecondFunction());
+        registerFunction(jpqlFunctionGroup);
     }
 
     private void loadDefaultProperties() {
+    	properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
     }
 
     private void loadQueryTransformers() {
@@ -202,29 +204,18 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
         if (iterator.hasNext()) {
             EntityManagerIntegrator enricher = iterator.next();
-            entityManagerEnrichers.add(enricher);
+            entityManagerIntegrators.add(enricher);
         }
     }
     
     @Override
-    public CriteriaBuilderConfiguration registerFunction(String name, JpqlFunction function) {
-        return registerFunction(name, null, function);
-    }
-    
-    @Override
-    public CriteriaBuilderConfiguration registerFunction(String name, String dbms, JpqlFunction function) {
-        String functionName = name.toLowerCase();
-        Map<String, JpqlFunction> dbmsFunctions = functions.get(functionName);
-        
-        if (dbmsFunctions == null) {
-            functions.put(functionName, dbmsFunctions = new HashMap<String, JpqlFunction>());
-        }
-        
-        dbmsFunctions.put(dbms == null ? null : dbms.toLowerCase(), function);
+    public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup) {
+        String functionName = jpqlFunctionGroup.getName().toLowerCase();
+        functions.put(functionName, jpqlFunctionGroup);
         return this;
     }
     
-    public Map<String, Map<String, JpqlFunction>> getFunctions() {
+    public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
     
@@ -246,13 +237,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     @Override
     public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher) {
-        entityManagerEnrichers.add(entityManagerEnricher);
+        entityManagerIntegrators.add(entityManagerEnricher);
         return this;
     }
 
     @Override
     public List<EntityManagerIntegrator> getEntityManagerIntegrators() {
-        return entityManagerEnrichers;
+        return entityManagerIntegrators;
     }
 
     @Override
@@ -284,7 +275,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     @Override
     public CriteriaBuilderConfiguration mergeProperties(Properties properties) {
-        for (Map.Entry entry : properties.entrySet()) {
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             if (this.properties.containsKey(entry.getKey())) {
                 continue;
             }

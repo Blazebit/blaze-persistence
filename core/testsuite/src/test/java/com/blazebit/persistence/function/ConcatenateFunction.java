@@ -24,7 +24,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
  * @since 1.0
  */
 public class ConcatenateFunction implements JpqlFunction {
-
+    
     @Override
     public boolean hasArguments() {
         return true;

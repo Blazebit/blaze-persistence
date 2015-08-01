@@ -17,6 +17,8 @@ package com.blazebit.persistence;
 
 import java.util.List;
 
+import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
+
 /**
  * The builder interface for predicates.
  * The left hand side of the predicate is already known to the builder and the methods of this builder either terminate the building process or start a {@link SubqueryInitiator}.
@@ -469,4 +471,11 @@ public interface RestrictionBuilder<T> {
      * @return The {@link LikeBuilder} for building the comparison pattern.
      */
     public LikeBuilder<T> notLike();
+    
+    /**
+     * Switch to the non portable mode which might to be portable to other JPA providers.
+     * 
+     * @return this restriction builder in the non portable mode
+     */
+    public RestrictionBuilderExperimental<T> nonPortable();
 }

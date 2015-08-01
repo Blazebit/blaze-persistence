@@ -20,6 +20,7 @@ import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
@@ -55,6 +56,7 @@ import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -65,6 +67,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
@@ -90,10 +93,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final int tupleOffset;
     private final Metamodel metamodel;
     private final EntityViewManagerImpl evm;
+    private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
     private final TupleTransformator tupleTransformator = new TupleTransformator();
 
-    private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if (viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -109,6 +113,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.tupleOffset = tupleOffset;
         this.metamodel = metamodel;
         this.evm = evm;
+        this.ef = ef;
         this.proxyFactory = proxyFactory;
 
         Class<?> proxyClass = proxyFactory.getProxy(viewType);
@@ -365,7 +370,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
         int startIndex = tupleOffset + mappingList.size();
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
-                                                                                                       startIndex, metamodel, evm, subviewType, null, proxyFactory);
+                                                                                                       startIndex, metamodel, evm, ef, subviewType, null, proxyFactory);
         Collections.addAll(mappingList, template.mappers);
         // We do not copy because the subview object builder will populate the subview's parameters
         for (int i = 0; i < template.mappers.length; i++) {
@@ -417,7 +422,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private String getMapping(List<String> prefixParts, String mapping) {
         if (prefixParts != null && prefixParts.size() > 0) {
-            Expression expr = evm.getExpressionFactory().createSimpleExpression(mapping);
+            Expression expr = ef.createSimpleExpression(mapping);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(prefixParts);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);
@@ -511,22 +516,25 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     public static class Key<T> {
 
+    	private final ExpressionFactory ef;
         private final ViewType<T> viewType;
         private final MappingConstructor<T> constructor;
 
-        public Key(ViewType<T> viewType, MappingConstructor<T> constructor) {
+        public Key(ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> constructor) {
+        	this.ef = ef;
             this.viewType = viewType;
             this.constructor = constructor;
         }
 
         public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[]{ 0 };
-            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, viewType, constructor, proxyFactory);
+            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, ef, viewType, constructor, proxyFactory);
         }
 
         @Override
         public int hashCode() {
             int hash = 3;
+            hash = 83 * hash + (this.ef != null ? this.ef.hashCode() : 0);
             hash = 83 * hash + (this.viewType != null ? this.viewType.hashCode() : 0);
             hash = 83 * hash + (this.constructor != null ? this.constructor.hashCode() : 0);
             return hash;
@@ -541,6 +549,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 return false;
             }
             final Key<?> other = (Key<?>) obj;
+            if (this.ef != other.ef && (this.ef == null || !this.ef.equals(other.ef))) {
+                return false;
+            }
             if (this.viewType != other.viewType && (this.viewType == null || !this.viewType.equals(other.viewType))) {
                 return false;
             }

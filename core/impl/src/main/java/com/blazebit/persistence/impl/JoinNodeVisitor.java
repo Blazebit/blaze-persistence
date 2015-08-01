@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *

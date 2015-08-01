@@ -80,7 +80,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
-        if (!groupByManager.getGroupByInfos().isEmpty()) {
+        if (!groupByManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
         createdPaginatedBuilder = true;
@@ -93,7 +93,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
-        if (!groupByManager.getGroupByInfos().isEmpty()) {
+        if (!groupByManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
         checkEntityId(entityId);
@@ -107,7 +107,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         if (selectManager.isDistinct()) {
             throw new IllegalStateException("Cannot paginate a DISTINCT query");
         }
-        if (!groupByManager.getGroupByInfos().isEmpty()) {
+        if (!groupByManager.isEmpty()) {
             throw new IllegalStateException("Cannot paginate a GROUP BY query");
         }
         createdPaginatedBuilder = true;

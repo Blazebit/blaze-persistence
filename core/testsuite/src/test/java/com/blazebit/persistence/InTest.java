@@ -15,15 +15,17 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
 
 /**
  *
@@ -101,7 +103,7 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testInSubqueryAliasExpression1(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
+        criteria.where("d.id").nonPortable()
                 .in("alias", "(FUNCTION('zero', alias, :elementCount))")
                     .from(Document.class, "d2")
                     .select("d2.id")
@@ -114,7 +116,7 @@ public class InTest extends AbstractCoreTest {
     @Test
     public void testInSubqueryAliasExpression2(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) criteria.where("d.id"))
+        criteria.where("d.id").nonPortable()
                 .in("alias", "(FUNCTION('zero', alias, :elementCount))")
                     .from(Document.class, "d2")
                 .end();

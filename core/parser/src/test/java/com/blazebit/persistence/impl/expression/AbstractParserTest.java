@@ -18,10 +18,15 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.LogManager;
+
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
@@ -30,7 +35,15 @@ import org.junit.BeforeClass;
  */
 public class AbstractParserTest {
 
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory() {
+	private final SetDelegate<String> setDelegate = new SetDelegate<String>() {
+
+		@Override
+		protected Set<String> getDelegate() {
+			return AbstractParserTest.this.aggregateFunctions;
+		}
+		
+	};
+    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -46,7 +59,7 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory() {
+    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -62,6 +75,8 @@ public class AbstractParserTest {
         }
 
     };
+    
+    protected Set<String> aggregateFunctions;
 
     @BeforeClass
     public static void initLogging() {
@@ -71,6 +86,11 @@ public class AbstractParserTest {
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
+    }
+    
+    @Before
+    public void initTest() {
+    	aggregateFunctions = new HashSet<String>();
     }
 
     protected NotPredicate not(Predicate p) {
@@ -114,7 +134,11 @@ public class AbstractParserTest {
     }
 
     protected FunctionExpression function(String name, Expression... args) {
-        return new FunctionExpression(name, Arrays.asList(args));
+    	if (aggregateFunctions.contains(name)) {
+    		return new AggregateExpression(false, name, args[0]);
+    	} else {
+    		return new FunctionExpression(name, Arrays.asList(args));
+    	}
     }
 
     protected AggregateExpression aggregate(String name, PathExpression arg, boolean distinct) {

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.expression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -55,9 +56,11 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_retu
 public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVisitor<Expression> {
 
     private final CommonTokenStream tokens;
+    private final Set<String> aggregateFunctions;
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens) {
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions) {
         this.tokens = tokens;
+        this.aggregateFunctions = aggregateFunctions;
     }
 
     @Override
@@ -119,7 +122,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
                 funcArgs.add(ctx.getChild(i).accept(this));
             }
         }
-        return new FunctionExpression(name, funcArgs);
+        
+        if (aggregateFunctions.contains(name.toLowerCase())) {
+        	return new AggregateExpression(false, name, funcArgs.get(0));
+        } else {
+        	return new FunctionExpression(name, funcArgs);
+        }
     }
 
     @Override
@@ -129,7 +137,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         for (JPQLSelectExpressionParser.Function_argContext argCtx : ctx.args) {
             funcArgs.add(argCtx.accept(this));
         }
-        return new FunctionExpression(ctx.getStart().getText(), funcArgs);
+        
+        String name = ctx.getStart().getText();
+        if (aggregateFunctions.contains(name.toLowerCase())) {
+        	return new AggregateExpression(false, name, funcArgs.get(0));
+        } else {
+        	return new FunctionExpression(name, funcArgs);
+        }
     }
 
     @Override

@@ -162,6 +162,11 @@ public class JoinManager extends AbstractManager {
         rootNode.accept(v);
     }
 
+	public boolean acceptVisitor(AggregateDetectionVisitor aggregateDetector, boolean stopValue) {
+		Boolean value = rootNode.accept(new AbortableOnClauseJoinNodeVisitor(aggregateDetector, stopValue));
+		return Boolean.valueOf(stopValue).equals(value);
+	}
+
     void applyTransformer(ExpressionTransformer transformer) {
         rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     }

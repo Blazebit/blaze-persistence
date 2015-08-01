@@ -15,8 +15,28 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -32,31 +52,13 @@ import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
-import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
+import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
-import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -66,7 +68,7 @@ import javax.persistence.metamodel.Metamodel;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X>, OrderByBuilderExperimental<X> {
+public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
@@ -105,6 +107,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     // Cache
     protected String cachedQueryString;
+    protected boolean hasAggregateFunctions = false;
 
     /**
      * Create flat copy of builder
@@ -167,7 +170,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
             this.fromClazz = null;
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(), registeredFunctions);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -193,6 +196,11 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+	public CriteriaBuilderFactory getCriteriaBuilderFactory() {
+		return cbf;
+	}
+
+	@Override
     public BaseQueryBuilder<T, ?> from(Class<?> clazz) {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
@@ -427,7 +435,12 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     public X groupBy(String expression) {
         clearCache();
-        Expression expr = expressionFactory.createPathExpression(expression);
+        Expression expr;
+        if (cbf.isCompatibleModeEnabled()) {
+        	expr = expressionFactory.createPathExpression(expression);
+        } else {
+        	expr = expressionFactory.createSimpleExpression(expression);
+        }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
         return (X) this;
@@ -438,7 +451,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
      */
     public RestrictionBuilder<X> having(String expression) {
         clearCache();
-        if (groupByManager.getGroupByInfos().isEmpty()) {
+        if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         Expression expr = expressionFactory.createSimpleExpression(expression);
@@ -455,7 +468,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     public HavingOrBuilder<X> havingOr() {
         clearCache();
-        if (groupByManager.getGroupByInfos().isEmpty()) {
+        if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.havingOr(this);
@@ -463,7 +476,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     public SubqueryInitiator<X> havingExists() {
         clearCache();
-        if (groupByManager.getGroupByInfos().isEmpty()) {
+        if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictExists((X) this);
@@ -471,7 +484,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     public SubqueryInitiator<X> havingNotExists() {
         clearCache();
-        if (groupByManager.getGroupByInfos().isEmpty()) {
+        if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
         return havingManager.restrictNotExists((X) this);
@@ -512,37 +525,13 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     
     @Override
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
-        _orderBy(expressionFactory.createOrderByExpression(expression), ascending, nullFirst);
-        return (X) this;
-    }
-    
-    /*
-     * Experimental order by methods
-     */
-    
-    @Override
-    public X orderByFunctionDesc(String expression) {
-        return orderByFunction(expression, false, false);
-    }
-
-    @Override
-    public X orderByFunctionAsc(String expression) {
-        return orderByFunction(expression, true, false);
-    }
-
-    @Override
-    public X orderByFunctionDesc(String expression, boolean nullFirst) {
-        return orderByFunction(expression, false, nullFirst);
-    }
-
-    @Override
-    public X orderByFunctionAsc(String expression, boolean nullFirst) {
-        return orderByFunction(expression, true, nullFirst);
-    }
-    
-    @Override
-    public X orderByFunction(String expression, boolean ascending, boolean nullFirst) {
-        _orderBy(expressionFactory.createSimpleExpression(expression), ascending, nullFirst);
+    	Expression expr;
+    	if (cbf.isCompatibleModeEnabled()) {
+    		expr = expressionFactory.createOrderByExpression(expression);
+    	} else {
+    		expr = expressionFactory.createSimpleExpression(expression);
+    	}
+        _orderBy(expr, ascending, nullFirst);
         return (X) this;
     }
     
@@ -763,6 +752,15 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         }
 
         applySizeSelectTransformer();
+        
+        // After all transformations are done, we can finally check if aggregations are used
+        AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
+        hasAggregateFunctions = false;
+        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(selectManager.acceptVisitor(aggregateDetector, true));
+        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(joinManager.acceptVisitor(aggregateDetector, true));
+        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(whereManager.acceptVisitor(aggregateDetector));
+        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(orderByManager.acceptVisitor(aggregateDetector, true));
+        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
     }
 
     @Override
@@ -855,6 +853,9 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
             }
             keysetManager.initialize(orderByExpressions);
         }
+        
+        // Check if aggregate functions are used
+        
 
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
@@ -887,7 +888,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());
-        if (selectManager.hasAggregateFunctions()) {
+        if (hasAggregateFunctions) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
             clauses.addAll(orderByManager.buildGroupByClauses());
         }

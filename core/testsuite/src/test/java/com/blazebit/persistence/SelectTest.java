@@ -20,12 +20,18 @@ import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.function.ConcatenateFunction;
 import com.blazebit.persistence.function.ZeroFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+
 import static com.googlecode.catchexception.CatchException.verifyException;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Tuple;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -40,8 +46,8 @@ public class SelectTest extends AbstractCoreTest {
     @Override
     protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
         config = super.configure(config);
-        config.registerFunction("array", new ZeroFunction());
-        config.registerFunction("unnest", new ZeroFunction());
+        config.registerFunction(new JpqlFunctionGroup("array", new ZeroFunction()));
+        config.registerFunction(new JpqlFunctionGroup("unnest", new ZeroFunction()));
         return config;
     }
     
@@ -346,7 +352,10 @@ public class SelectTest extends AbstractCoreTest {
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name "
+        		+ "FROM Document d JOIN d.owner owner_1 "
+        		+ "GROUP BY owner_1.name, d.id "
+        		+ "ORDER BY d.id DESC NULLS LAST";
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -362,7 +371,7 @@ public class SelectTest extends AbstractCoreTest {
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY d.creationDate, owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+                + "GROUP BY owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
@@ -380,7 +389,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
+                + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY d.id DESC NULLS LAST";
 
         assertEquals(objectQuery, cb.getQueryString());
@@ -400,7 +409,7 @@ public class SelectTest extends AbstractCoreTest {
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
+                + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY d.id DESC NULLS LAST";
 
         assertEquals(countQuery, cb.getPageCountQueryString());

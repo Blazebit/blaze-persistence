@@ -17,6 +17,8 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -24,6 +26,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
 import javax.persistence.metamodel.Metamodel;
 
 /**
@@ -120,6 +123,16 @@ public class OrderByManager extends AbstractManager {
         }
     }
 
+    <X> X acceptVisitor(Expression.ResultVisitor<X> v, X stopValue) {
+        for (OrderByInfo orderBy : orderByInfos) {
+            if (stopValue.equals(orderBy.getExpression().accept(v))) {
+            	return stopValue;
+            }
+        }
+        
+        return null;
+    }
+
     void applyTransformer(ExpressionTransformer transformer) {
         for (OrderByInfo orderBy : orderByInfos) {
             orderBy.setExpression(transformer.transform(orderBy.getExpression(), ClauseType.ORDER_BY));
@@ -157,9 +170,15 @@ public class OrderByManager extends AbstractManager {
         queryGenerator.setConditionalContext(conditionalContext);
     }
 
+
+    /**
+     * Builds the clauses needed for the group by clause for a query that uses aggregate functions to work.
+     * 
+     * @return
+     */
     Set<String> buildGroupByClauses() {
         if (orderByInfos.isEmpty()) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
 
         Set<String> groupByClauses = new LinkedHashSet<String>();
@@ -174,18 +193,23 @@ public class OrderByManager extends AbstractManager {
             orderByInfo = iter.next();
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
+            Expression expr;
+            
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                String expressionString = selectInfo.getExpression().toString().toUpperCase();
-                if (!expressionString.startsWith("COUNT(") && !expressionString.startsWith("AVG(") && !expressionString.startsWith("SUM(") 
-                    && !expressionString.startsWith("MIN(") && !expressionString.startsWith("MAX(")) {
-                    selectInfo.getExpression().accept(queryGenerator);
-                    groupByClauses.add(sb.toString());
-                }
+                expr = selectInfo.getExpression();
             } else {
-                orderByInfo.getExpression().accept(queryGenerator);
-                groupByClauses.add(sb.toString());
+                expr = orderByInfo.getExpression();
             }
+            
+	       	 // This visitor checks if an expression is usable in a group by
+            GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+			if (!Boolean.TRUE.equals(expr.accept(groupByUsableDetectionVisitor))) {
+				sb.setLength(0);
+				queryGenerator.setQueryBuffer(sb);
+				expr.accept(queryGenerator);
+				groupByClauses.add(sb.toString());
+			}
         }
         
         queryGenerator.setConditionalContext(conditionalContext);

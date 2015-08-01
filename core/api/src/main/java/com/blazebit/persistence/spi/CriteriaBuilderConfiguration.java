@@ -44,23 +44,12 @@ public interface CriteriaBuilderConfiguration {
     public List<QueryTransformer> getQueryTransformers();
     
     /**
-     * Registers the given jpql function under the given name in the configuration.
+     * Registers the given jpql function group in the configuration.
      *
-     * @param name The name the function should have
-     * @param function The function that should be addded
+     * @param jpqlFunctionGroup The jpq function group
      * @return this for method chaining
      */
-    public CriteriaBuilderConfiguration registerFunction(String name, JpqlFunction function);
-    
-    /**
-     * Registers the given jpql function under the given name for the given dbms in the configuration.
-     *
-     * @param name The name the function should have
-     * @param dbms The dbms for which the function should be registered
-     * @param function The function that should be addded
-     * @return this for method chaining
-     */
-    public CriteriaBuilderConfiguration registerFunction(String name, String dbms, JpqlFunction function);
+    public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup);
     
     /**
      * Returns the set of registered functions.

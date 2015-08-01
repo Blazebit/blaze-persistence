@@ -73,6 +73,14 @@ public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends W
      * @return The JPA metamodel
      */
     public Metamodel getMetamodel();
+    
+    /**
+     * The criteria builder factory that created this or it's parent builder.
+     * 
+     * @return The criteria builder factory
+     * @since 1.0.5
+     */
+    public CriteriaBuilderFactory getCriteriaBuilderFactory();
 
     /**
      * Sets the given value as the value for the parameter with the given name.

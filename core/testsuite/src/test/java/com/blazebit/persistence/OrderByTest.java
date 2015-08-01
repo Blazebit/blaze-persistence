@@ -15,12 +15,15 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.internal.OrderByBuilderExperimental;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 
 /**
  *
@@ -101,7 +104,11 @@ public class OrderByTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testOrderByFunction(){
+    public void testOrderByFunctionCompatibleMode(){
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config = configure(config);
+        config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
+        cbf = config.createCriteriaBuilderFactory();
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         verifyException(criteria, SyntaxErrorException.class).orderByAsc("SIZE(d.partners)");
     }
@@ -124,7 +131,7 @@ public class OrderByTest extends AbstractCoreTest {
     @Test
     public void testOrderByFunctionExperimental(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        ((OrderByBuilderExperimental<CriteriaBuilder<Document>>) criteria).orderByFunctionDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
+        criteria.orderByDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
         assertEquals("SELECT d FROM Document d ORDER BY " + function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1") + " DESC NULLS LAST", criteria.getQueryString());
     }
 }

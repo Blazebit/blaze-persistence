@@ -15,14 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.QueryTransformer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
 import javax.persistence.EntityManager;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.QueryTransformer;
 
 /**
  *
@@ -40,33 +42,55 @@ import javax.persistence.EntityManager;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final List<QueryTransformer> queryTransformers;
-    private final Map<String, Map<String, JpqlFunction>> functions;
+    private final Map<String, JpqlFunctionGroup> functions;
+    private final Set<String> aggregateFunctions;
     private final List<EntityManagerIntegrator> entityManagerIntegrators;
     private final ExpressionFactory expressionFactory;
     private final Map<String, Object> properties;
+    private final boolean compatibleModeEnabled;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
-        this.functions = new HashMap<String, Map<String, JpqlFunction>>(config.getFunctions());
+        this.functions = new HashMap<String, JpqlFunctionGroup>(config.getFunctions());
+        this.aggregateFunctions = resolveAggregateFunctions(functions);
         this.entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>(config.getEntityManagerIntegrators());
-        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
+        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions));
         this.properties = copyProperties(config.getProperties());
+        this.compatibleModeEnabled = Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.COMPATIBLE_MODE)));
+    }
+    
+    private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {
+    	Set<String> aggregateFunctions = new HashSet<String>();
+    	for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
+    		if (entry.getValue().isAggregate()) {
+    			aggregateFunctions.add(entry.getKey().toLowerCase());
+    		}
+    	}
+    	return aggregateFunctions;
     }
 
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
     }
     
-    public Map<String, Map<String, JpqlFunction>> getFunctions() {
+    public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
 
-    public ExpressionFactory getExpressionFactory() {
+    public Set<String> getAggregateFunctions() {
+		return aggregateFunctions;
+	}
+
+	public ExpressionFactory getExpressionFactory() {
         return expressionFactory;
     }
 
     public Map<String, Object> getProperties() {
         return properties;
+    }
+    
+    public boolean isCompatibleModeEnabled() {
+    	return compatibleModeEnabled;
     }
 
     @Override
@@ -88,7 +112,17 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return cb;
     }
 
-    private Map<String, Object> copyProperties(Properties properties) {
+	@Override
+    @SuppressWarnings("unchecked")
+	public <T> T getService(Class<T> serviceClass) {
+		if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
+			return (T) expressionFactory;
+		}
+		
+		return null;
+	}
+
+	private Map<String, Object> copyProperties(Properties properties) {
         Map<String, Object> newProperties = new HashMap<String, Object>();
 
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

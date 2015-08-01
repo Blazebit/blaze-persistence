@@ -15,15 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.Expression.Visitor;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
+
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.Expression.Visitor;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
@@ -43,7 +44,7 @@ public class GroupByManager extends AbstractManager {
 
     Set<String> buildGroupByClauses() {
         if (groupByInfos.isEmpty()) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
         
         Set<String> groupByClauses = new HashSet<String>();
@@ -78,9 +79,13 @@ public class GroupByManager extends AbstractManager {
             groupBy.getExpression().accept(v);
         }
     }
+    
+    boolean hasGroupBys() {
+    	return groupByInfos.size() > 0;
+    }
 
-    Set<NodeInfo> getGroupByInfos() {
-        return groupByInfos;
+    boolean isEmpty() {
+        return groupByInfos.isEmpty();
     }
 
     @Override

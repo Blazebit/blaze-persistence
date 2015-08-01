@@ -15,8 +15,11 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.HashSet;
+
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -32,7 +35,7 @@ public class SimpleCachingExpressionFactoryTest {
 
     @Test
     public void testCreateSimpleExpressionCache() {
-        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
+        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         
         Expression expr1 = ef.createSimpleExpression(expressionString);

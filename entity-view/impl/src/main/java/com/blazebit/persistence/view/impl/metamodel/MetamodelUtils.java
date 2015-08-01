@@ -27,12 +27,14 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.TargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.persistence.OrderColumn;
 
 /**
@@ -49,7 +52,7 @@ import javax.persistence.OrderColumn;
  */
 public final class MetamodelUtils {
     
-    private static final ExpressionFactory expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
+    private static final ExpressionFactory expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
     
     public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
         return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));

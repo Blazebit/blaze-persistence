@@ -35,13 +35,14 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
-import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -55,6 +56,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
 import javax.persistence.FetchType;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Attribute;
@@ -118,6 +120,16 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
+    <X> X acceptVisitor(ResultVisitor<X> v, X stopValue) {
+        for (SelectInfo selectInfo : selectInfos) {
+            if (stopValue.equals(selectInfo.getExpression().accept(v))) {
+            	return stopValue;
+            }
+        }
+        
+        return null;
+    }
+
     String buildClausesForAliases(List<String> selectAliases) {
         if (selectAliases.isEmpty()) {
             return "";
@@ -136,38 +148,48 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     /**
-     * Used for generating group bys for all selects if a aggregate is used in
-     * the select clause. This is required for DB2.
-     *
+     * Builds the clauses needed for the group by clause for a query that uses aggregate functions to work.
+     * 
+     * @param m
      * @return
      */
-    boolean hasAggregateFunctions() {
-        AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
-        for (SelectInfo info : selectInfos) {
-            if (info.getExpression().accept(aggregateDetector)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     Set<String> buildGroupByClauses(final Metamodel m) {
         if (selectInfos.isEmpty()) {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
-        EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m);
-        for (SelectInfo selectInfo : selectInfos) {
-            selectInfo.getExpression().accept(resolveVisitor);
-        }
+
         Set<String> groupByClauses = new LinkedHashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
-        for (PathExpression pathExpr : resolveVisitor.getPathExpressions()) {
-            sb.setLength(0);
-            queryGenerator.setQueryBuffer(sb);
-            pathExpr.accept(queryGenerator);
-            groupByClauses.add(sb.toString());
+        
+        Set<PathExpression> componentPaths = new LinkedHashSet<PathExpression>();
+        EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, componentPaths);
+        for (SelectInfo selectInfo : selectInfos) {
+            selectInfo.getExpression().accept(resolveVisitor);
+            
+            // The select info can only either an entity select or any other expression
+            // but entity selects can't be nested in other expressions, therefore we can differentiate here
+            if (componentPaths.size() > 0) {
+                for (PathExpression pathExpr : componentPaths) {
+                    sb.setLength(0);
+                    queryGenerator.setQueryBuffer(sb);
+                    pathExpr.accept(queryGenerator);
+                    groupByClauses.add(sb.toString());
+                }
+            	
+            	componentPaths.clear();
+            } else {
+            	// This visitor checks if an expression is usable in a group by
+                GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+    			if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
+                	sb.setLength(0);
+                	queryGenerator.setQueryBuffer(sb);
+                	selectInfo.getExpression().accept(queryGenerator);
+                	groupByClauses.add(sb.toString());
+                }
+            }
         }
+        
         
         queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
@@ -421,83 +443,4 @@ public class SelectManager<T> extends AbstractManager {
 
     }
 
-    private class AggregateDetectionVisitor extends AbortableVisitorAdapter {
-
-        @Override
-        public Boolean visit(FunctionExpression expression) {
-            if (expression instanceof AggregateExpression) {
-                return true;
-            }
-            return super.visit(expression);
-        }
-    }
-
-    private class EntitySelectResolveVisitor extends VisitorAdapter {
-
-        private final Set<PathExpression> pathExpressions = new LinkedHashSet<PathExpression>();
-        private final Metamodel m;
-
-        public EntitySelectResolveVisitor(Metamodel m) {
-            this.m = m;
-        }
-
-        public Set<PathExpression> getPathExpressions() {
-            return pathExpressions;
-        }
-
-        @Override
-        public void visit(FunctionExpression expression) {
-            if (!(expression instanceof AggregateExpression)) {
-                super.visit(expression);
-            }
-        }
-
-        @Override
-        public void visit(PathExpression expression) {
-            if (expression.getField() == null) {
-                /**
-                 * We need to resolve entity selects because hibernate will
-                 * select every entity attribute. Since we need every select in
-                 * the group by (because of DB2) we need to resolve such entity
-                 * selects here
-                 */
-                JoinNode baseNode = ((JoinNode) expression.getBaseNode());
-                try {
-                    EntityType<?> entityType = m.entity(baseNode.getPropertyClass());
-                    // we need to ensure a deterministic order for testing
-                    SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
-
-                        @Override
-                        public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
-                            return o1.getName().compareTo(o2.getName());
-                        }
-
-                    });
-                    sortedAttributes.addAll(entityType.getAttributes());
-                    for (Attribute<?, ?> attr : sortedAttributes) {
-                        boolean resolve = false;
-                        if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
-                            resolve = true;
-                        } else if (ExpressionUtils.getFetchType(attr) == FetchType.EAGER) {
-                            if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                                throw new UnsupportedOperationException("Eager element collections are not supported");
-                            }
-                            resolve = true;
-                        }
-
-                        if (resolve) {
-                            PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                            attrPath.setBaseNode(baseNode);
-                            attrPath.setField(attr.getName());
-                            pathExpressions.add(attrPath);
-                        }
-                    }
-                    return;
-                } catch (IllegalArgumentException e) {
-                    // ignore if the expression is not an entity
-                }
-            }
-            pathExpressions.add(expression);
-        }
-    }
 }

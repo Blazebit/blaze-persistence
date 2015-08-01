@@ -17,8 +17,11 @@ package com.blazebit.persistence.impl.expression;
 
 import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
 import com.carrotsearch.junitbenchmarks.BenchmarkRule;
+
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,8 +59,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     
     @Before
     public void before() {
-        cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
-        nonCachingExpressionFactory = new ExpressionFactoryImpl();
+        cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
+        nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>());
     }
 
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 1000, concurrency = 4)

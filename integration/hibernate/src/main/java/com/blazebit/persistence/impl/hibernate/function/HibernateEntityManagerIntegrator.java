@@ -15,13 +15,12 @@
  */
 package com.blazebit.persistence.impl.hibernate.function;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+
 import javax.persistence.EntityManager;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -39,6 +38,11 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+
 /**
  *
  * @author Christian Beikov
@@ -50,7 +54,7 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
     private static final Logger LOG = Logger.getLogger(EntityManagerIntegrator.class.getName());
     
     @Override
-    public EntityManager registerFunctions(EntityManager em, Map<String, Map<String, JpqlFunction>> dbmsFunctions) {
+    public EntityManager registerFunctions(EntityManager em, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         Dialect dialect = getDialect(em);
 
         String dbms;
@@ -86,12 +90,12 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
         // Implementation detail: Hibernate uses a mutable map, so we can do this
         Map<String, SQLFunction> functions = dialect.getFunctions();
         
-        for (Map.Entry<String, Map<String, JpqlFunction>> functionEntry : dbmsFunctions.entrySet()) {
+        for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
-            Map<String, JpqlFunction> dbmsFunctionMap = functionEntry.getValue();
+            JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
             JpqlFunction function = dbmsFunctionMap.get(dbms);
             
-            if (function == null && !dbmsFunctionMap.containsKey(dbms)) {
+            if (function == null && !dbmsFunctionMap.contains(dbms)) {
                 function = dbmsFunctionMap.get(null);
             }
             if (function == null) {

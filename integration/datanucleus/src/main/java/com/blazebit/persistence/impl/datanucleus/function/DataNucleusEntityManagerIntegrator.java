@@ -15,18 +15,21 @@
  */
 package com.blazebit.persistence.impl.datanucleus.function;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.EntityManager;
+
 import org.datanucleus.NucleusContext;
 import org.datanucleus.plugin.Bundle;
 import org.datanucleus.plugin.ConfigurationElement;
 import org.datanucleus.plugin.Extension;
 import org.datanucleus.plugin.ExtensionPoint;
+
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 /**
  *
@@ -36,7 +39,7 @@ import org.datanucleus.plugin.ExtensionPoint;
 public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrator {
 
     @Override
-    public EntityManager registerFunctions(EntityManager entityManager, Map<String, Map<String, JpqlFunction>> dbmsFunctions) {
+    public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         NucleusContext context = entityManager.unwrap(NucleusContext.class);
         ExtensionPoint point = context.getPluginManager().getExtensionPoint("org.datanucleus.store.rdbms.sql_method");
         Bundle bundle = new Bundle("blaze-persistence", "blaze-persistence", "blazebit", "1.0", null);

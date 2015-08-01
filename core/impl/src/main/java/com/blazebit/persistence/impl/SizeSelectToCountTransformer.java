@@ -81,7 +81,7 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
                 List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
                 pathElementExpr.add(new PropertyExpression(joinManager.getRootAlias()));
                 pathElementExpr.add(new PropertyExpression(joinManager.getRootId()));
-                groupByManager.getGroupByInfos().add(new NodeInfo(new PathExpression(pathElementExpr)));
+                groupByManager.groupBy(new PathExpression(pathElementExpr));
                 super.visit(expression);
 
                 return countExpr;

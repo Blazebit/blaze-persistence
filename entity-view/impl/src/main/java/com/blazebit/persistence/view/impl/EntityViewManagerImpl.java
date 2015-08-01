@@ -15,14 +15,21 @@
  */
 package com.blazebit.persistence.view.impl;
 
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.AttributeFilterProvider;
+import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.filter.ContainsFilter;
@@ -55,13 +62,6 @@ import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -72,15 +72,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private final ViewMetamodel metamodel;
     private final ProxyFactory proxyFactory;
-    private final ExpressionFactory expressionFactory;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
-        // TODO: Would be nice if we could reuse the expression factory of
-        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
@@ -96,10 +93,6 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
     }
 
-    public ExpressionFactory getExpressionFactory() {
-        return expressionFactory;
-    }
-    
     /**
      * Creates a new filter instance of the given filter class.
      *
@@ -200,15 +193,17 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
 
-        criteriaBuilder.selectNew(getTemplate(criteriaBuilder.getMetamodel(), viewType, mappingConstructor).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
+        criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 
-    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(Metamodel metamodel, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
-        ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(viewType, mappingConstructor);
+    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(QueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
+    	ExpressionFactory ef = cb.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
+    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
-            value = key.createValue(metamodel, this, proxyFactory);
+        	Metamodel jpaMetamodel = cb.getMetamodel();
+            value = key.createValue(jpaMetamodel, this, proxyFactory);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
 
             if (oldValue != null) {

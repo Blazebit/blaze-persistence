@@ -20,21 +20,30 @@ import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *
- * @author Moritz Becker
+ * @author Christian Beikov
+ * @since 1.0.5
  */
-public class OnClauseJoinNodeVisitor implements JoinNodeVisitor {
+public class AbortableOnClauseJoinNodeVisitor implements AbortableResultJoinNodeVisitor<Boolean> {
 
-    private final Expression.Visitor visitor;
+    private final Expression.ResultVisitor<Boolean> visitor;
+    private final Boolean stopValue;
 
-    public OnClauseJoinNodeVisitor(Expression.Visitor visitor) {
+    public AbortableOnClauseJoinNodeVisitor(Expression.ResultVisitor<Boolean> visitor, Boolean stopValue) {
         this.visitor = visitor;
+        this.stopValue = stopValue;
     }
     
     @Override
-    public void visit(JoinNode node) {
+    public Boolean visit(JoinNode node) {
         if (node.getOnPredicate() != null) {
-            node.getOnPredicate().accept(visitor);
+            return node.getOnPredicate().accept(visitor);
         }
+        
+        return null;
     }
+
+	public Boolean getStopValue() {
+		return stopValue;
+	}
 
 }

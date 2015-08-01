@@ -429,6 +429,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+	public RestrictionBuilderExperimental<T> nonPortable() {
+		return this;
+	}
+
+	@Override
     protected <T extends PredicateBuilder> T startBuilder(T builder) {
         betweenStartSubqueryBuilderListener.verifySubqueryBuilderEnded();
         return super.startBuilder(builder);

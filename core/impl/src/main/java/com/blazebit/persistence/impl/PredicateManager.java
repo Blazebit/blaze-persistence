@@ -130,8 +130,12 @@ public abstract class PredicateManager<T> extends AbstractManager {
         }
     }
 
-    void acceptVisitor(Predicate.Visitor v) {
+    void acceptVisitor(Expression.Visitor v) {
         rootPredicate.getPredicate().accept(v);
+    }
+
+    <X> X acceptVisitor(Expression.ResultVisitor<X> v) {
+        return rootPredicate.getPredicate().accept(v);
     }
 
     boolean hasPredicates() {

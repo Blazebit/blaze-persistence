@@ -47,4 +47,13 @@ public interface CriteriaBuilderFactory {
      * @return A new criteria builder
      */
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias);
+    
+    /**
+     * Returns the service provided by this criteria builder factory or null if none is available.
+     * 
+     * @param serviceClass The type of the service
+     * @return The service or null
+     * @since 1.0.5
+     */
+    public <T> T getService(Class<T> serviceClass);
 }

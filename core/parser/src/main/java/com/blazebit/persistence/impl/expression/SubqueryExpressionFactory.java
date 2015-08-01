@@ -15,7 +15,10 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.Set;
+
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+
 import org.antlr.v4.runtime.ParserRuleContext;
 
 /**
@@ -34,7 +37,11 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
-    @Override
+    public SubqueryExpressionFactory(Set<String> aggregateFunctions) {
+		super(aggregateFunctions);
+	}
+
+	@Override
     protected RuleInvoker getSimpleExpressionRuleInvoker() {
         return simpleExpressionRuleInvoker;
     }

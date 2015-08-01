@@ -15,19 +15,23 @@
  */
 package com.blazebit.persistence.impl.eclipselink.function;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+
 import javax.persistence.EntityManager;
+
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
+
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 /**
  *
@@ -65,7 +69,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     }
 
     @Override
-    public EntityManager registerFunctions(EntityManager entityManager, Map<String, Map<String, JpqlFunction>> dbmsFunctions) {
+    public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
         DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();
         Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
@@ -83,9 +87,9 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
             dbms = null;
         }
         
-        for (Map.Entry<String, Map<String, JpqlFunction>> functionEntry : dbmsFunctions.entrySet()) {
+        for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
-            Map<String, JpqlFunction> dbmsFunctionMap = functionEntry.getValue();
+            JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
             JpqlFunction function = dbmsFunctionMap.get(dbms);
             
             if (function == null) {

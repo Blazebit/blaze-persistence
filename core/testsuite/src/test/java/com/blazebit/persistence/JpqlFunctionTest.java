@@ -16,15 +16,17 @@
 
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.DocumentType;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
-import java.util.List;
-import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 
 /**
  *
@@ -64,7 +66,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     @Test
     public void testLimit(){
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
-        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) cb.where("d.id"))
+        cb.where("d.id").nonPortable()
             .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1))")
                 .from(Document.class, "subDoc")
                 .select("subDoc.id")
@@ -83,7 +85,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     @Test
     public void testLimitOffset(){
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
-        ((RestrictionBuilderExperimental<CriteriaBuilder<Document>>) cb.where("d.id"))
+        cb.where("d.id").nonPortable()
             .in("subqueryAlias", "(FUNCTION('LIMIT', subqueryAlias, 1, 1))")
                 .from(Document.class, "subDoc")
                 .select("subDoc.id")
@@ -97,5 +99,26 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         List<Document> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("D2", resultList.get(0).getName());
+    }
+    
+    @Test
+    public void testGroupByFunction(){
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
+        cb.select("SUM(d.id)")
+        	.select("FUNCTION('YEAR', d.creationDate)", "years")
+        	.where("FUNCTION('YEAR', d.creationDate)").in(2013,2014,2015)
+        	.groupBy("d.age")
+        	.orderByAsc("years");
+        String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
+        		+ "FROM Document d "
+        		+ "WHERE " + function("YEAR", "d.creationDate") + " IN (:param_0) "
+				+ "GROUP BY d.age, YEAR(d.creationDate) "
+				+ "ORDER BY years ASC NULLS LAST";
+        
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+//        List<Document> resultList = cb.getResultList();
+//        assertEquals(1, resultList.size());
+//        assertEquals("D2", resultList.get(0).getName());
     }
 }
