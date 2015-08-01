@@ -6,7 +6,7 @@ cache:
 addons:
   postgresql: "9.3"
 before_script:
-  - sh -c "if [ '$RDBMS' = 'mysql' ]; then mysql -e 'create database test; fi'"
+  - sh -c "if [ '$RDBMS' = 'mysql' ]; then mysql -e 'create database test;' fi"
   - sh -c "if [ '$RDBMS' = 'postgresql' ]; then psql -c 'create database test;' -U postgres; fi"
 script:
   - mvn -P ${JPAPROVIDER},${RDBMS} install
