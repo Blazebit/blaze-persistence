@@ -63,8 +63,8 @@ public abstract class AbstractJpaPersistenceTest {
     public void init() {
         Properties properties = new Properties();
         properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
-        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user"));
-        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password"));
+        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", ""));
+        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", ""));
         properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
 
