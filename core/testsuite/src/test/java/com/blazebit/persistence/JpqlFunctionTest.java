@@ -112,7 +112,7 @@ public class JpqlFunctionTest extends AbstractCoreTest {
         String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
         		+ "FROM Document d "
         		+ "WHERE " + function("YEAR", "d.creationDate") + " IN (:param_0) "
-				+ "GROUP BY d.age, YEAR(d.creationDate) "
+				+ "GROUP BY d.age, " + function("YEAR", "d.creationDate") + " "
 				+ "ORDER BY years ASC NULLS LAST";
         
         assertEquals(expected, cb.getQueryString());

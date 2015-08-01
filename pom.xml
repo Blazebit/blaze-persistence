@@ -1,363 +1,385 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.blazebit</groupId>
-        <artifactId>blazebit-parent</artifactId>
-        <version>8</version>
-    </parent>
+	<parent>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blazebit-parent</artifactId>
+		<version>8</version>
+	</parent>
 
-    <artifactId>blaze-persistence</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
-    <packaging>pom</packaging>
+	<artifactId>blaze-persistence</artifactId>
+	<version>1.0.5-SNAPSHOT</version>
+	<packaging>pom</packaging>
 
-    <name>Blazebit Persistence</name>
-    <url>http://blazebit.com/persistence</url>
-    <description>Persistence Utilities for Blazebit Projects</description>
+	<name>Blazebit Persistence</name>
+	<url>http://blazebit.com/persistence</url>
+	<description>Persistence Utilities for Blazebit Projects</description>
 
-    <modules>
-        <module>core</module>
-        <module>entity-view</module>
-        <module>integration</module>
-        <module>testsuite-base</module>
-        <module>documentation</module>
-    </modules>
+	<modules>
+		<module>core</module>
+		<module>entity-view</module>
+		<module>integration</module>
+		<module>testsuite-base</module>
+		<module>documentation</module>
+	</modules>
 
-    <issueManagement>
-        <system>github</system>
-        <url>https://github.com/Blazebit/blaze-persistence/issues</url>
-    </issueManagement>
+	<issueManagement>
+		<system>github</system>
+		<url>https://github.com/Blazebit/blaze-persistence/issues</url>
+	</issueManagement>
 
-    <licenses>
-        <license>
-            <name>Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        </license>
-    </licenses>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
 
-    <organization>
-        <name>Blazebit</name>
-        <url>http://www.blazebit.com</url>
-    </organization>
+	<organization>
+		<name>Blazebit</name>
+		<url>http://www.blazebit.com</url>
+	</organization>
 
-    <scm>
-        <connection>scm:git:git@github.com:Blazebit/blaze-persistence.git</connection>
-        <developerConnection>scm:git:git@github.com:Blazebit/blaze-persistence.git</developerConnection>
-        <url>git@github.com:Blazebit/blaze-persistence.git</url>
-      <tag>HEAD</tag>
-  </scm>
+	<scm>
+		<connection>scm:git:git@github.com:Blazebit/blaze-persistence.git</connection>
+		<developerConnection>scm:git:git@github.com:Blazebit/blaze-persistence.git</developerConnection>
+		<url>git@github.com:Blazebit/blaze-persistence.git</url>
+		<tag>HEAD</tag>
+	</scm>
 
-    <developers>
-        <developer>
-            <id>christian</id>
-            <name>Christian Beikov</name>
-            <email>christian@blazebit.com</email>
-            <organization>Blazebit</organization>
-            <organizationUrl>http://www.blazebit.com</organizationUrl>
-            <timezone>UTC+1</timezone>
-            <roles>
-                <role>Project Owner</role>
-                <role>Committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>cchet</id>
-            <name>Thomas Herzog</name>
-            <email>t.herzog@curecomp.com</email>
-            <organization>Curecomp</organization>
-            <organizationUrl>http://www.curecomp.com</organizationUrl>
-            <timezone>UTC+1</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-        </developer>
-        <developer>
-            <id>Mobe91</id>
-            <name>Moritz Becker</name>
-            <email>m.becker@curecomp.com</email>
-            <organization>Curecomp</organization>
-            <organizationUrl>http://www.curecomp.com</organizationUrl>
-            <timezone>UTC+1</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-        </developer>
-    </developers>
+	<developers>
+		<developer>
+			<id>christian</id>
+			<name>Christian Beikov</name>
+			<email>christian@blazebit.com</email>
+			<organization>Blazebit</organization>
+			<organizationUrl>http://www.blazebit.com</organizationUrl>
+			<timezone>UTC+1</timezone>
+			<roles>
+				<role>Project Owner</role>
+				<role>Committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>cchet</id>
+			<name>Thomas Herzog</name>
+			<email>t.herzog@curecomp.com</email>
+			<organization>Curecomp</organization>
+			<organizationUrl>http://www.curecomp.com</organizationUrl>
+			<timezone>UTC+1</timezone>
+			<roles>
+				<role>Committer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>Mobe91</id>
+			<name>Moritz Becker</name>
+			<email>m.becker@curecomp.com</email>
+			<organization>Curecomp</organization>
+			<organizationUrl>http://www.curecomp.com</organizationUrl>
+			<timezone>UTC+1</timezone>
+			<roles>
+				<role>Committer</role>
+			</roles>
+		</developer>
+	</developers>
 
-    <properties>
-        <version.blazecbav>0.2.0</version.blazecbav>
-        <version.blazeutils>0.1.10</version.blazeutils>
-        <version.deltaspike>1.0.1</version.deltaspike>
-        <version.junit>4.11</version.junit>
+	<properties>
+		<version.blazecbav>0.2.0</version.blazecbav>
+		<version.blazeutils>0.1.10</version.blazeutils>
+		<version.deltaspike>1.0.1</version.deltaspike>
+		<version.junit>4.11</version.junit>
 
-        <version.openejb>4.6.0</version.openejb>
-        <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
+		<version.openejb>4.6.0</version.openejb>
+		<version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
 
-        <!-- Plugin versions -->
-        <version.processor.plugin>2.2.1</version.processor.plugin>
-        <version.release.plugin>2.5.1</version.release.plugin>
-    </properties>
+		<!-- Plugin versions -->
+		<version.processor.plugin>2.2.1</version.processor.plugin>
+		<version.release.plugin>2.5.1</version.release.plugin>
+	</properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <!-- Project dependencies -->
-            
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-apt-utils</artifactId>
-                <version>${version.blazeutils}</version>
-                <scope>provided</scope>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-common-utils</artifactId>
-                <version>${version.blazeutils}</version>
-            </dependency>
-                        
-            <!-- Module dependencies -->
-                        
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-core-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-core-parser</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-core-impl</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-entity-view-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-entity-view-impl</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-jpa-base</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-hibernate</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-datanucleus</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-eclipselink</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-openjpa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-base-cdi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-core-cdi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${project.groupId}</groupId>
-                <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-                        
-            <!-- Platform dependencies -->
-                        
-            <dependency>
-                <groupId>org.apache.openejb</groupId>
-                <artifactId>javaee-api</artifactId>
-                <version>${version.openejb.javaee-api}</version>
-                <scope>provided</scope>
-            </dependency>
+	<dependencyManagement>
+		<dependencies>
+			<!-- Project dependencies -->
 
-            <!-- Test -->
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.googlecode.catch-exception</groupId>
-                <artifactId>catch-exception</artifactId>
-                <version>1.2.0</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>1.4.183</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-api</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.core</groupId>
-                <artifactId>deltaspike-core-impl</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.cdictrl</groupId>
-                <artifactId>deltaspike-cdictrl-api</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.deltaspike.cdictrl</groupId>
-                <artifactId>deltaspike-cdictrl-openejb</artifactId>
-                <version>${version.deltaspike}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.openejb</groupId>
-                <artifactId>openejb-core</artifactId>
-                <version>${version.openejb}</version>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-apt-utils</artifactId>
+				<version>${version.blazeutils}</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-common-utils</artifactId>
+				<version>${version.blazeutils}</version>
+			</dependency>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.bsc.maven</groupId>
-                    <artifactId>maven-processor-plugin</artifactId>
-                    <version>${version.processor.plugin}</version>
-                </plugin>
-                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-                <plugin>
-                	<groupId>org.eclipse.m2e</groupId>
-                	<artifactId>lifecycle-mapping</artifactId>
-                	<version>1.0.0</version>
-                	<configuration>
-                		<lifecycleMappingMetadata>
-                			<pluginExecutions>
-                				<pluginExecution>
-                					<pluginExecutionFilter>
-                						<groupId>
-                							org.asciidoctor
-                						</groupId>
-                						<artifactId>
-                							asciidoctor-maven-plugin
-                						</artifactId>
-                						<versionRange>
-                							[1.5.0,)
-                						</versionRange>
-                						<goals>
-                							<goal>
-                								process-asciidoc
-                							</goal>
-                						</goals>
-                					</pluginExecutionFilter>
-                					<action>
-                						<ignore />
-                					</action>
-                				</pluginExecution>
-                			</pluginExecutions>
-                		</lifecycleMappingMetadata>
-                	</configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+			<!-- Module dependencies -->
 
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${maven.compiler.argument.source}</source>
-                    <target>${maven.compiler.argument.target}</target>
-                    <!-- Disable annotation processing via compiler plugin. -->
-                    <compilerArgument>-proc:none</compilerArgument>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <pushChanges>false</pushChanges>
-                    <localCheckout>true</localCheckout>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-core-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-core-parser</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-core-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-entity-view-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-entity-view-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-jpa-base</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-hibernate</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-datanucleus</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-eclipselink</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-openjpa</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-base-cdi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-core-cdi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
-                    <preparationGoals>clean install</preparationGoals>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-    
-    <profiles>
-        <profile>
-            <!-- It disables javadoc doclint for JDK > 8 -->
-            <id>javadoc-xdoclint-disable-jdk8+</id>
-            <activation>
-                <jdk>[1.8,)</jdk>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-javadoc-plugin</artifactId>
-                            <configuration>
-                                <additionalJOption>-Xdoclint:none</additionalJOption>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+
+			<!-- Platform dependencies -->
+
+			<dependency>
+				<groupId>org.apache.openejb</groupId>
+				<artifactId>javaee-api</artifactId>
+				<version>${version.openejb.javaee-api}</version>
+				<scope>provided</scope>
+			</dependency>
+
+			<!-- Test -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${version.junit}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.googlecode.catch-exception</groupId>
+				<artifactId>catch-exception</artifactId>
+				<version>1.2.0</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.deltaspike.core</groupId>
+				<artifactId>deltaspike-core-api</artifactId>
+				<version>${version.deltaspike}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.deltaspike.core</groupId>
+				<artifactId>deltaspike-core-impl</artifactId>
+				<version>${version.deltaspike}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.deltaspike.cdictrl</groupId>
+				<artifactId>deltaspike-cdictrl-api</artifactId>
+				<version>${version.deltaspike}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.deltaspike.cdictrl</groupId>
+				<artifactId>deltaspike-cdictrl-openejb</artifactId>
+				<version>${version.deltaspike}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.openejb</groupId>
+				<artifactId>openejb-core</artifactId>
+				<version>${version.openejb}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<!-- RDBMS driver versions -->
+			<dependency>
+				<groupId>com.h2database</groupId>
+				<artifactId>h2</artifactId>
+				<version>1.4.183</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>mysql</groupId>
+				<artifactId>mysql-connector-java</artifactId>
+				<version>5.1.36</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.postgresql</groupId>
+				<artifactId>postgresql</artifactId>
+				<version>9.4-1201-jdbc41</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.xerial</groupId>
+				<artifactId>sqlite-jdbc</artifactId>
+				<version>3.8.11</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.bsc.maven</groupId>
+					<artifactId>maven-processor-plugin</artifactId>
+					<version>${version.processor.plugin}</version>
+				</plugin>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.asciidoctor
+										</groupId>
+										<artifactId>
+											asciidoctor-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.5.0,)
+										</versionRange>
+										<goals>
+											<goal>
+												process-asciidoc
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${maven.compiler.argument.source}</source>
+					<target>${maven.compiler.argument.target}</target>
+					<!-- Disable annotation processing via compiler plugin. -->
+					<compilerArgument>-proc:none</compilerArgument>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<pushChanges>false</pushChanges>
+					<localCheckout>true</localCheckout>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+
+					<preparationGoals>clean install</preparationGoals>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<!-- It disables javadoc doclint for JDK > 8 -->
+			<id>javadoc-xdoclint-disable-jdk8+</id>
+			<activation>
+				<jdk>[1.8,)</jdk>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-javadoc-plugin</artifactId>
+							<configuration>
+								<additionalJOption>-Xdoclint:none</additionalJOption>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+	</profiles>
 </project>

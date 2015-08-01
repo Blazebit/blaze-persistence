@@ -62,10 +62,10 @@ public abstract class AbstractJpaPersistenceTest {
     @Before
     public void init() {
         Properties properties = new Properties();
-        properties.put("javax.persistence.jdbc.url", "jdbc:h2:mem:test;INIT=CREATE SCHEMA IF NOT EXISTS TEST");
-        properties.put("javax.persistence.jdbc.user", "admin");
-        properties.put("javax.persistence.jdbc.password", "admin");
-        properties.put("javax.persistence.jdbc.driver", "org.h2.Driver");
+        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
+        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user"));
+        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password"));
+        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
 
         EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", applyProperties(properties));
