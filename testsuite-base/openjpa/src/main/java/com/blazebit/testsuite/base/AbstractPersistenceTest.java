@@ -27,7 +27,6 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected Properties applyProperties(Properties properties) {
         properties.put("openjpa.RuntimeUnenhancedClasses", "supported");
-        properties.put("openjpa.jdbc.DBDictionary", "h2");
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)");
         properties.put("openjpa.Log", "DefaultLevel=WARN, Tool=INFO, SQL=TRACE");
         properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=restrict,JoinForeignKeyDeleteAction=restrict");

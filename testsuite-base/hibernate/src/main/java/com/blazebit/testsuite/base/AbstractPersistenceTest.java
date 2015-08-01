@@ -30,7 +30,6 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
         properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
         properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
-        properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
