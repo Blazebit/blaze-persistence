@@ -302,9 +302,9 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereAndSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
+        crit.where("d.name").eq("test").whereOr().whereAnd().whereSubquery("alias", "SQRT(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endAnd().endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -325,9 +325,9 @@ public class WhereTest extends AbstractCoreTest {
     @Test
     public void testWhereOrSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SUM(alias)").from(Person.class, "p").select("id").where("name")
+        crit.whereOr().where("d.name").eq("test").whereSubquery("alias", "SQRT(alias)").from(Person.class, "p").select("id").where("name")
             .eqExpression("d.name").end().eqExpression("d.owner.id").endOr();
-        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this

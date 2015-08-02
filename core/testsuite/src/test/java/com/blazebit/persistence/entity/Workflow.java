@@ -104,6 +104,7 @@ public class Workflow implements Serializable {
                 updatable = false) })
     @MapKeyColumn(
         name = "LANGUAGE_CODE",
+        length = 10,
         nullable = false,
         insertable = false,
         updatable = false)

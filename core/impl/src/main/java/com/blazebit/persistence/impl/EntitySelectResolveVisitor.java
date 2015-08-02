@@ -61,40 +61,47 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              * selects here
              */
             JoinNode baseNode = ((JoinNode) expression.getBaseNode());
+            EntityType<?> entityType;
+            
             try {
-                EntityType<?> entityType = m.entity(baseNode.getPropertyClass());
-                // we need to ensure a deterministic order for testing
-                SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
-
-                    @Override
-                    public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
-                        return o1.getName().compareTo(o2.getName());
-                    }
-
-                });
-                sortedAttributes.addAll(entityType.getAttributes());
-                for (Attribute<?, ?> attr : sortedAttributes) {
-                    boolean resolve = false;
-                    if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
-                        resolve = true;
-                    } else if (ExpressionUtils.getFetchType(attr) == FetchType.EAGER) {
-                        if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                            throw new UnsupportedOperationException("Eager element collections are not supported");
-                        }
-                        resolve = true;
-                    }
-
-                    if (resolve) {
-                        PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                        attrPath.setBaseNode(baseNode);
-                        attrPath.setField(attr.getName());
-                        pathExpressions.add(attrPath);
-                    }
-                }
-                return;
+                entityType = m.entity(baseNode.getPropertyClass());
             } catch (IllegalArgumentException e) {
                 // ignore if the expression is not an entity
+            	return;
+            }
+            
+            // we need to ensure a deterministic order for testing
+            SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
+
+                @Override
+                public int compare(Attribute<?, ?> o1, Attribute<?, ?> o2) {
+                    return o1.getName().compareTo(o2.getName());
+                }
+
+            });
+            sortedAttributes.addAll(entityType.getAttributes());
+            for (Attribute<?, ?> attr : sortedAttributes) {
+                boolean resolve = false;
+                if (ExpressionUtils.isAssociation(attr) && !attr.isCollection()) {
+                    resolve = true;
+                } else if (ExpressionUtils.getFetchType(attr) == FetchType.EAGER) {
+                    if (attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                        throw new UnsupportedOperationException("Eager element collections are not supported");
+                    }
+                    resolve = true;
+                }
+
+                if (resolve) {
+                    PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
+                    attrPath.setBaseNode(baseNode);
+                    attrPath.setField(attr.getName());
+                    pathExpressions.add(attrPath);
+                }
             }
         }
+    }
+    
+    public void resolve(JoinNode baseNode) {
+    	
     }
 }

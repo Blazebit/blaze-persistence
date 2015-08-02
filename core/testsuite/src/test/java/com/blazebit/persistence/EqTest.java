@@ -106,8 +106,8 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqAll() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").eq().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").eq().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id = ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -116,8 +116,8 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqAny() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").eq().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").eq().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id = ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         Assert.assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -126,8 +126,8 @@ public class EqTest extends AbstractCoreTest {
     @Test
     public void testEqOne() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").eq().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name = (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").eq().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id = (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         Assert.assertEquals(expected, crit.getQueryString());
     }

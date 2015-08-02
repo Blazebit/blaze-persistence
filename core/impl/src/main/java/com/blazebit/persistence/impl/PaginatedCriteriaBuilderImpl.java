@@ -534,7 +534,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());
-        if (hasAggregateFunctions) {
+        if (hasGroupBy) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
             clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());
@@ -579,7 +579,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());
-        if (hasAggregateFunctions) {
+        if (hasGroupBy) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
             clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());

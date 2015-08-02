@@ -107,7 +107,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     // Cache
     protected String cachedQueryString;
-    protected boolean hasAggregateFunctions = false;
+    protected boolean hasGroupBy = false;
 
     /**
      * Create flat copy of builder
@@ -178,7 +178,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
+        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
@@ -755,12 +755,12 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         
         // After all transformations are done, we can finally check if aggregations are used
         AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
-        hasAggregateFunctions = false;
-        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(selectManager.acceptVisitor(aggregateDetector, true));
-        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(joinManager.acceptVisitor(aggregateDetector, true));
-        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(whereManager.acceptVisitor(aggregateDetector));
-        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(orderByManager.acceptVisitor(aggregateDetector, true));
-        hasAggregateFunctions = hasAggregateFunctions || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
+        hasGroupBy = groupByManager.hasGroupBys();
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(selectManager.acceptVisitor(aggregateDetector, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(joinManager.acceptVisitor(aggregateDetector, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(whereManager.acceptVisitor(aggregateDetector));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(orderByManager.acceptVisitor(aggregateDetector, true));
+        hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
     }
 
     @Override
@@ -888,7 +888,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());
-        if (hasAggregateFunctions) {
+        if (hasGroupBy) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
             clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());

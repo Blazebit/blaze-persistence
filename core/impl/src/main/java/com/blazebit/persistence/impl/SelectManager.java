@@ -40,11 +40,13 @@ import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -80,13 +82,15 @@ public class SelectManager<T> extends AbstractManager {
     private final Map<String, Integer> selectAliasToPositionMap = new HashMap<String, Integer>();
     private final SelectObjectBuilderEndedListenerImpl selectObjectBuilderEndedListener = new SelectObjectBuilderEndedListenerImpl();
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
+    private final JoinManager joinManager;
     private final AliasManager aliasManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
 
-    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
+        this.joinManager = joinManager;
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
@@ -130,23 +134,6 @@ public class SelectManager<T> extends AbstractManager {
         return null;
     }
 
-    String buildClausesForAliases(List<String> selectAliases) {
-        if (selectAliases.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        queryGenerator.setQueryBuffer(sb);
-        Iterator<String> iter = selectAliases.iterator();
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
-        applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
-        while (iter.hasNext()) {
-            sb.append(", ");
-            applySelect(queryGenerator, sb, (SelectInfo) aliasManager.getAliasInfo(iter.next()));
-        }
-        queryGenerator.setConditionalContext(conditionalContext);
-        return sb.toString();
-    }
-
     /**
      * Builds the clauses needed for the group by clause for a query that uses aggregate functions to work.
      * 
@@ -154,40 +141,52 @@ public class SelectManager<T> extends AbstractManager {
      * @return
      */
     Set<String> buildGroupByClauses(final Metamodel m) {
-        if (selectInfos.isEmpty()) {
-            return Collections.emptySet();
-        }
-
         Set<String> groupByClauses = new LinkedHashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
         
         Set<PathExpression> componentPaths = new LinkedHashSet<PathExpression>();
         EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, componentPaths);
-        for (SelectInfo selectInfo : selectInfos) {
-            selectInfo.getExpression().accept(resolveVisitor);
+        
+        // When no select infos are available, it can only be a root entity select
+        if (selectInfos.isEmpty()) {
+            List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(joinManager.getRootAlias()));
+            resolveVisitor.visit(new PathExpression(path, joinManager.getRoot(), null, false, false));
             
-            // The select info can only either an entity select or any other expression
-            // but entity selects can't be nested in other expressions, therefore we can differentiate here
-            if (componentPaths.size() > 0) {
-                for (PathExpression pathExpr : componentPaths) {
-                    sb.setLength(0);
-                    queryGenerator.setQueryBuffer(sb);
-                    pathExpr.accept(queryGenerator);
-                    groupByClauses.add(sb.toString());
-                }
-            	
-            	componentPaths.clear();
-            } else {
-            	// This visitor checks if an expression is usable in a group by
-                GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
-    			if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
-                	sb.setLength(0);
-                	queryGenerator.setQueryBuffer(sb);
-                	selectInfo.getExpression().accept(queryGenerator);
-                	groupByClauses.add(sb.toString());
-                }
+            for (PathExpression pathExpr : componentPaths) {
+                sb.setLength(0);
+                queryGenerator.setQueryBuffer(sb);
+                pathExpr.accept(queryGenerator);
+                groupByClauses.add(sb.toString());
             }
+        	
+        	componentPaths.clear();
+        } else {
+	        for (SelectInfo selectInfo : selectInfos) {
+	            selectInfo.getExpression().accept(resolveVisitor);
+	            
+	            // The select info can only either an entity select or any other expression
+	            // but entity selects can't be nested in other expressions, therefore we can differentiate here
+	            if (componentPaths.size() > 0) {
+	                for (PathExpression pathExpr : componentPaths) {
+	                    sb.setLength(0);
+	                    queryGenerator.setQueryBuffer(sb);
+	                    pathExpr.accept(queryGenerator);
+	                    groupByClauses.add(sb.toString());
+	                }
+	            	
+	            	componentPaths.clear();
+	            } else {
+	            	// This visitor checks if an expression is usable in a group by
+	                GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+	    			if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
+	                	sb.setLength(0);
+	                	queryGenerator.setQueryBuffer(sb);
+	                	selectInfo.getExpression().accept(queryGenerator);
+	                	groupByClauses.add(sb.toString());
+	                }
+	            }
+	        }
         }
         
         
@@ -195,8 +194,7 @@ public class SelectManager<T> extends AbstractManager {
         return groupByClauses;
     }
 
-    String buildSelect(String rootAlias
-    ) {
+    String buildSelect(String rootAlias) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
 
@@ -222,8 +220,7 @@ public class SelectManager<T> extends AbstractManager {
         return sb.toString();
     }
 
-    void applyTransformer(ExpressionTransformer transformer
-    ) {
+    void applyTransformer(ExpressionTransformer transformer) {
         // carry out transformations
         for (SelectInfo selectInfo : selectInfos) {
             Expression transformed = transformer.transform(selectInfo.getExpression(), ClauseType.SELECT);
@@ -231,16 +228,13 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer
-    ) {
+    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
         for (SelectInfo selectInfo : selectInfos) {
             selectInfoTransformer.transform(selectInfo);
         }
     }
 
-    <X extends BaseQueryBuilder<?, ?>>
-            SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias
-            ) {
+    <X extends BaseQueryBuilder<?, ?>> SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
@@ -249,9 +243,7 @@ public class SelectManager<T> extends AbstractManager {
         return initiator;
     }
 
-    <X extends BaseQueryBuilder<?, ?>>
-            SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias
-            ) {
+    <X extends BaseQueryBuilder<?, ?>> SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
@@ -260,24 +252,19 @@ public class SelectManager<T> extends AbstractManager {
         return initiator;
     }
 
-    <X extends BaseQueryBuilder<?, ?>>
-            CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias
-            ) {
+    <X extends BaseQueryBuilder<?, ?>> CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
-    <X extends BaseQueryBuilder<?, ?>>
-            SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression
-            ) {
+    <X extends BaseQueryBuilder<?, ?>> SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
 
-    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias
-    ) {
+    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         handleSelect(expr, selectAlias);
     }
     

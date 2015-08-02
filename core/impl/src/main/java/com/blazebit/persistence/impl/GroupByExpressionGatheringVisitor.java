@@ -1,6 +1,5 @@
 package com.blazebit.persistence.impl;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.AggregateExpression;
@@ -79,7 +78,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(FooExpression expression) {
-    	handleExpression(expression);
+    	// We skip this, because foo expressions as part of a predicate is not grouping relevant
     }
 
     @Override
@@ -89,7 +88,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(NullExpression expression) {
-    	handleExpression(expression);
+    	// We skip this, because grouping by null does not make sense
     }
 
     @Override
@@ -106,11 +105,13 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(GeneralCaseExpression expression) {
+    	super.visit(expression);
     	handleExpression(expression);
     }
 
     @Override
     public void visit(SimpleCaseExpression expression) {
+    	super.visit(expression);
     	handleExpression(expression);
     }
 }

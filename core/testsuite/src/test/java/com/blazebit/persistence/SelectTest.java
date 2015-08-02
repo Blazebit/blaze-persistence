@@ -185,10 +185,10 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectAliasJoin4() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d").select("C.name", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X")
+        criteria.select("d").select("C.id", "X").innerJoin("d.versions", "B").innerJoin("B.document", "C").where("X")
                 .eqExpression("B.id");
 
-        assertEquals("SELECT d, C.name AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.name = B.id", criteria.getQueryString());
+        assertEquals("SELECT d, C.id AS X FROM Document d JOIN d.versions B JOIN B.document C WHERE C.id = B.id", criteria.getQueryString());
         criteria.getResultList();
     }
 

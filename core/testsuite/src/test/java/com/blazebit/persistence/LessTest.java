@@ -92,8 +92,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLeAll() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").le().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name <= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").le().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id <= ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -102,8 +102,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLeAny() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").le().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name <= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").le().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id <= ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -112,8 +112,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLeOne() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").le().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name <= (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").le().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id <= (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -122,8 +122,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLtAll() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").lt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name < ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").lt().all().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id < ALL(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -132,8 +132,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLtAny() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").lt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").lt().any().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id < ANY(SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -142,8 +142,8 @@ public class LessTest extends AbstractCoreTest {
     @Test
     public void testLtOne() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("name").lt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
-        String expected = "SELECT d FROM Document d WHERE d.name < (SELECT p.id FROM Person p WHERE p.name = d.name)";
+        crit.where("id").lt().from(Person.class, "p").select("id").where("name").eqExpression("d.name").end();
+        String expected = "SELECT d FROM Document d WHERE d.id < (SELECT p.id FROM Person p WHERE p.name = d.name)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();

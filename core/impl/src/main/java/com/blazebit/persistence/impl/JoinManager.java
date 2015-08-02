@@ -124,6 +124,10 @@ public class JoinManager extends AbstractManager {
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
     }
+    
+    JoinNode getRoot() {
+    	return rootNode;
+    }
 
     String getRootAlias() {
         return rootNode.getAliasInfo().getAlias();

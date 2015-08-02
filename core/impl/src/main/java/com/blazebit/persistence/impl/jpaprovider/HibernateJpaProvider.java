@@ -81,7 +81,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
 	public String escapeCharacter(char character) {
-		if (character == '\\') {
+		if (character == '\\' && isMySQL) {
 			return "\\\\";
 		} else {
 			return Character.toString(character);
