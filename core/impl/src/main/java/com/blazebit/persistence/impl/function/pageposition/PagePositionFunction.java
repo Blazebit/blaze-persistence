@@ -26,7 +26,7 @@ import com.blazebit.persistence.spi.JpqlFunction;
  */
 public class PagePositionFunction implements JpqlFunction {
 
-    private final TemplateRenderer renderer;
+    protected final TemplateRenderer renderer;
 
     public PagePositionFunction() {
         this.renderer = new TemplateRenderer("(select base1_.rownumber_ from (select " + getRownumFunction() + " as rownumber_, base_.* from ?1 as base_) as base1_ where ?2 = base1_.?3)");
@@ -84,7 +84,11 @@ public class PagePositionFunction implements JpqlFunction {
         }
         
         String idName = id.substring(dotIndex + 1);
-        renderer.start(context)
+        renderPagePosition(context, idName);
+    }
+
+    protected void renderPagePosition(FunctionRenderContext functionRenderContext, String idName) {
+        renderer.start(functionRenderContext)
                 .addArgument(0)
                 .addArgument(1)
                 .addParameter(idName)

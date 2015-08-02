@@ -37,4 +37,10 @@ public interface JpaProvider {
     public Class<?> getDefaultQueryResultType();
     
     public String getCustomFunctionInvocation(String functionName, int argumentCount);
+
+	public String escapeCharacter(char character);
+	
+	public boolean supportsNullPrecedenceExpression();
+
+	public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls);
 }

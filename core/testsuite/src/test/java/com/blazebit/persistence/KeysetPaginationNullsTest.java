@@ -311,14 +311,14 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         
         String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
         String expectedIdQueryEnd = " GROUP BY k.id, k.a, k.b ORDER BY "
-            + "k.a " + clause(aAsc, aNullsFirst) + ", "
-            + "k.b " + clause(bAsc, bNullsFirst) + ", "
-            + "k.id " + clause(idAsc, idNullsFirst);
+            + clause("k.a", aAsc, aNullsFirst) + ", "
+            + clause("k.b", bAsc, bNullsFirst) + ", "
+            + clause("k.id", idAsc, idNullsFirst);
         String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
         String expectedObjectQueryEnd = " ORDER BY "
-            + "k.a " + clause(aAsc, aNullsFirst) + ", "
-            + "k.b " + clause(bAsc, bNullsFirst) + ", "
-            + "k.id " + clause(idAsc, idNullsFirst);
+            + clause("k.a", aAsc, aNullsFirst) + ", "
+            + clause("k.b", bAsc, bNullsFirst) + ", "
+            + clause("k.id", idAsc, idNullsFirst);
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeysetEntity.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)
@@ -362,18 +362,18 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         assertEquals(expectedObjectQueryStart + keysetCondition + expectedObjectQueryEnd, actualObjectQueryString);
     }
     
-    private String clause(boolean asc, boolean nullsFirst) {
+    private String clause(String expression, boolean asc, boolean nullsFirst) {
         if (asc) {
             if (nullsFirst) {
-                return "ASC NULLS FIRST";
+                return renderNullPrecedence(expression, "ASC", "FIRST");
             } else {
-                return "ASC NULLS LAST";
+            	return renderNullPrecedence(expression, "ASC", "LAST");
             }
         } else {
             if (nullsFirst) {
-                return "DESC NULLS FIRST";
+            	return renderNullPrecedence(expression, "DESC", "FIRST");
             } else {
-                return "DESC NULLS LAST";
+            	return renderNullPrecedence(expression, "DESC", "LAST");
             }
         }
     }

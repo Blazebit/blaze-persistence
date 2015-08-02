@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.jpaprovider;
 
+import javax.persistence.EntityManager;
+
 /**
  *
  * @author Christian Beikov
@@ -22,6 +24,10 @@ package com.blazebit.persistence.impl.jpaprovider;
  */
 public class EclipseLinkJpaProvider implements JpaProvider {
 
+	public EclipseLinkJpaProvider(EntityManager em) {
+		
+	}
+	
     @Override
     public boolean supportsJpa21() {
         return true;
@@ -41,6 +47,25 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     public String getBooleanConditionalExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }
+
+    @Override
+	public String escapeCharacter(char character) {
+		return Character.toString(character);
+	}
+
+    @Override
+    public boolean supportsNullPrecedenceExpression() {
+    	return true;
+    }
+
+    @Override
+	public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
+		if (nulls == null) {
+			return expression + " " + order;
+		} else {
+			return expression + " " + order + " NULLS " + nulls;
+		}
+	}
 
     @Override
     public String getOnClause() {

@@ -38,7 +38,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", true, true);
 
-        assertEquals("SELECT d FROM Document d ORDER BY d.age ASC NULLS FIRST", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "ASC", "FIRST"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -47,7 +47,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", true, false);
 
-        assertEquals("SELECT d FROM Document d ORDER BY d.age ASC NULLS LAST", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "ASC", "LAST"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -56,7 +56,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", false, true);
 
-        assertEquals("SELECT d FROM Document d ORDER BY d.age DESC NULLS FIRST", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "DESC", "FIRST"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -65,7 +65,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderBy("d.age", false, false);
 
-        assertEquals("SELECT d FROM Document d ORDER BY d.age DESC NULLS LAST", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence("d.age", "DESC", "LAST"), criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -75,7 +75,7 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.orderBy("d.versions.document.age", false, false);
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.versions versions_1 LEFT JOIN versions_1.document document_1 ORDER BY document_1.age DESC NULLS LAST",
+            "SELECT d FROM Document d LEFT JOIN d.versions versions_1 LEFT JOIN versions_1.document document_1 ORDER BY " + renderNullPrecedence("document_1.age", "DESC", "LAST"),
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -86,7 +86,7 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.orderBy("d.partners.ownedDocuments.age", false, false).orderBy("d.partners.partnerDocument.age", true, true);
 
         assertEquals(
-            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.ownedDocuments ownedDocuments_1 LEFT JOIN partners_1.partnerDocument partnerDocument_1 ORDER BY ownedDocuments_1.age DESC NULLS LAST, partnerDocument_1.age ASC NULLS FIRST",
+            "SELECT d FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN partners_1.ownedDocuments ownedDocuments_1 LEFT JOIN partners_1.partnerDocument partnerDocument_1 ORDER BY " + renderNullPrecedence("ownedDocuments_1.age", "DESC", "LAST") + ", " + renderNullPrecedence("partnerDocument_1.age", "ASC", "FIRST"),
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -124,7 +124,7 @@ public class OrderByTest extends AbstractCoreTest {
         String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY d.id, COALESCE(owner_1.name,'a') "
-                + "ORDER BY asd ASC NULLS LAST, d.id ASC NULLS LAST";
+                + "ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }
     
@@ -132,6 +132,6 @@ public class OrderByTest extends AbstractCoreTest {
     public void testOrderByFunctionExperimental(){
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderByDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
-        assertEquals("SELECT d FROM Document d ORDER BY " + function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1") + " DESC NULLS LAST", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence(function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1"), "DESC", "LAST"), criteria.getQueryString());
     }
 }

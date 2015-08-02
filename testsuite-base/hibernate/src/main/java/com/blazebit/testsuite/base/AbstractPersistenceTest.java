@@ -30,6 +30,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
         properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
         properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
+        if (System.getProperty("hibernate.dialect") != null) {
+        	properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
+        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
+        	// MySQL is drunk, it does stuff case insensitive by default...
+        	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
+        }
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI

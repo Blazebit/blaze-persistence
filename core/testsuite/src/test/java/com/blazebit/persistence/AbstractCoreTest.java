@@ -104,6 +104,18 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return jpaProvider.getBooleanConditionalExpression(value);
     }
 
+    protected String escapeCharacter(char character) {
+    	return jpaProvider.escapeCharacter(character);
+    }
+
+    protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
+    	return jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls);
+    }
+
+    protected String renderNullPrecedence(String expression, String order, String nulls) {
+    	return renderNullPrecedence(expression, expression, order, nulls);
+    }
+
     protected static String staticJoinAliasValue(String alias) {
         return staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
     }

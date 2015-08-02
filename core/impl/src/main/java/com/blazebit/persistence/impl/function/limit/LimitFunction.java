@@ -11,8 +11,8 @@ import com.blazebit.persistence.spi.JpqlFunction;
  */
 public class LimitFunction implements JpqlFunction {
 
-    private final TemplateRenderer limitOnlyRenderer;
-    private final TemplateRenderer limitOffsetRenderer;
+    protected final TemplateRenderer limitOnlyRenderer;
+    protected final TemplateRenderer limitOffsetRenderer;
 
     public LimitFunction() {
         //LIMIT(SUBQUERY, LIMIT, OFFSET)
@@ -81,7 +81,7 @@ public class LimitFunction implements JpqlFunction {
         return argument != null && !"NULL".equalsIgnoreCase(argument);
     }
 
-    private static TemplateRenderer.Context adapt(FunctionRenderContext functionRenderContext, TemplateRenderer renderer) {
+    protected static TemplateRenderer.Context adapt(FunctionRenderContext functionRenderContext, TemplateRenderer renderer) {
         TemplateRenderer.Context context = renderer.start(functionRenderContext);
         String subquery = functionRenderContext.getArgument(0);
         if (startsWithIgnoreCase(subquery, "(select")) {

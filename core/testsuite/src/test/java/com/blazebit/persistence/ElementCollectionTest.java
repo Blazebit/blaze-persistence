@@ -65,7 +65,7 @@ public class ElementCollectionTest extends AbstractCoreTest {
             .orderByAsc("localized[:locale].name");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-            + " ORDER BY " + joinAliasValue("localized_locale_1") + ".name ASC NULLS LAST";
+            + " ORDER BY " + renderNullPrecedence(joinAliasValue("localized_locale_1") + ".name", "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();

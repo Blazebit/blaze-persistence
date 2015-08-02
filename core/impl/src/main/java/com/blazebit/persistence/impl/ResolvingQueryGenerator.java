@@ -20,6 +20,7 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+
 import java.util.List;
 import java.util.Set;
 
@@ -158,6 +159,11 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
     
     @Override
+	protected String escapeCharacter(char character) {
+    	return jpaProvider.escapeCharacter(character);
+	}
+
+	@Override
     public void visit(ParameterExpression expression) {
         String paramName;
         if (expression.getName() == null) {

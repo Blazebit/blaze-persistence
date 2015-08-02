@@ -103,7 +103,7 @@
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
 							<systemPropertyVariables>
-								<jdbc.url>jdbc:mysql://localhost:3306/test</jdbc.url>
+								<jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
 								<jdbc.user>root</jdbc.user>
 								<jdbc.password></jdbc.password>
 								<jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>

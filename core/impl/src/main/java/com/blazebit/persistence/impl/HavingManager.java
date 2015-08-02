@@ -15,6 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import com.blazebit.persistence.impl.builder.predicate.HavingOrBuilderImpl;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
@@ -41,5 +45,20 @@ public class HavingManager<T> extends PredicateManager<T> {
 
     HavingOrBuilderImpl<T> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+    }
+
+    Set<String> buildGroupByClauses() {
+        if (rootPredicate.getPredicate().getChildren().isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        Set<String> groupByClauses = new LinkedHashSet<String>();
+        // TODO: No idea yet how to actually handle this
+		boolean conditionalContext = queryGenerator.isConditionalContext();
+        GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor(groupByClauses, queryGenerator);
+        rootPredicate.getPredicate().accept(visitor);
+		queryGenerator.setConditionalContext(conditionalContext);
+        
+        return groupByClauses;
     }
 }

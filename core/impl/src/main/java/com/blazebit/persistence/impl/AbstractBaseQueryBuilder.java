@@ -179,7 +179,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
-        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager);
+        this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
         //resolve cyclic dependencies
@@ -890,6 +890,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         clauses.addAll(groupByManager.buildGroupByClauses());
         if (hasAggregateFunctions) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
+            clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);

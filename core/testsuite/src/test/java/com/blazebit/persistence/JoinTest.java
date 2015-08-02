@@ -334,6 +334,6 @@ public class JoinTest extends AbstractCoreTest {
                 .orderByAsc("d.id")
                 .page(0, 10);
         
-        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY d.id ASC NULLS LAST", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST"), crit.getQueryString());
     }
 }

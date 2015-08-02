@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,10 +39,12 @@ public class OrderByManager extends AbstractManager {
 
     private final List<OrderByInfo> orderByInfos = new ArrayList<OrderByInfo>();
     private final AliasManager aliasManager;
+    private final JpaProvider jpaProvider;
 
-    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager) {
+    OrderByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, AliasManager aliasManager, JpaProvider jpaProvider) {
         super(queryGenerator, parameterManager);
         this.aliasManager = aliasManager;
+        this.jpaProvider = jpaProvider;
     }
 
     Set<String> getOrderBySelectAliases(){
@@ -233,26 +236,68 @@ public class OrderByManager extends AbstractManager {
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
-        if (resolveSelectAliases) {
-            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-            if (aliasInfo != null && aliasInfo instanceof SelectInfo && ((SelectInfo) aliasInfo).getExpression() instanceof PathExpression) {
-                ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+    	if (jpaProvider.supportsNullPrecedenceExpression()) {
+            if (resolveSelectAliases) {
+                AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
+                // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed it
+                if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                    ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+                } else {
+                    orderBy.getExpression().accept(queryGenerator);
+                }
             } else {
                 orderBy.getExpression().accept(queryGenerator);
             }
-        } else {
-            orderBy.getExpression().accept(queryGenerator);
-        }
-        if (orderBy.ascending == inverseOrder) {
-            sb.append(" DESC");
-        } else {
-            sb.append(" ASC");
-        }
-        if (orderBy.nullFirst == inverseOrder) {
-            sb.append(" NULLS LAST");
-        } else {
-            sb.append(" NULLS FIRST");
-        }
+
+            if (orderBy.ascending == inverseOrder) {
+                sb.append(" DESC");
+            } else {
+                sb.append(" ASC");
+            }
+            if (orderBy.nullFirst == inverseOrder) {
+                sb.append(" NULLS LAST");
+            } else {
+                sb.append(" NULLS FIRST");
+            }
+    	} else {
+            String expression;
+            String resolvedExpression;
+            String order;
+            String nulls;
+        	StringBuilder expressionSb = new StringBuilder();
+        	
+        	queryGenerator.setQueryBuffer(expressionSb);
+            
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
+            // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed it
+            if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
+                ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
+            	resolvedExpression = expressionSb.toString();
+            } else {
+            	resolvedExpression = null;
+            }
+            
+            if (resolveSelectAliases && resolvedExpression != null) {
+                expression = resolvedExpression;
+            } else {
+                expressionSb.setLength(0);
+                orderBy.getExpression().accept(queryGenerator);
+                expression = expressionSb.toString();
+            }
+
+            if (orderBy.ascending == inverseOrder) {
+                order = "DESC";
+            } else {
+            	order = "ASC";
+            }
+            if (orderBy.nullFirst == inverseOrder) {
+                nulls = "LAST";
+            } else {
+            	nulls = "FIRST";
+            }
+            
+            sb.append(jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls));
+    	}
     }
     
     // TODO: needs equals-hashCode implementation

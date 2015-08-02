@@ -38,9 +38,9 @@ public class JpaProviders {
             Class<?> sessionClass = Class.forName("org.hibernate.Session");
             if (em == null || em.unwrap(sessionClass) != null) {
                 if (jpa21) {
-                    return new HibernateJpa21Provider();
+                    return new HibernateJpa21Provider(em);
                 } else {
-                    return new HibernateJpaProvider();
+                    return new HibernateJpaProvider(em);
                 }
             }
         } catch (ClassNotFoundException e) {
@@ -62,7 +62,7 @@ public class JpaProviders {
                     throw new IllegalArgumentException("Unsupported EclipseLink version " + version + "!");
                 }
                 
-                return new EclipseLinkJpaProvider();
+                return new EclipseLinkJpaProvider(em);
             }
         } catch (Exception e) {
         }
@@ -70,7 +70,7 @@ public class JpaProviders {
         try {
             Class<?> jpaEMClass = Class.forName("org.datanucleus.ExecutionContext");
             if (em == null || em.unwrap(jpaEMClass) != null) {
-                return new DataNucleusJpaProvider();
+                return new DataNucleusJpaProvider(em);
             }
         } catch (Exception e) {
         }

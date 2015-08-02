@@ -429,6 +429,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
         sbSelectFrom.append("SELECT ")
                 .append(idClause);
+        // TODO: actually we should add the select clauses needed for order bys
+        // TODO: if we do so, the page position function has to omit select items other than the first
         
         sbSelectFrom.append(" FROM ")
                 .append(fromClazz.getName())
@@ -445,6 +447,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         boolean inverseOrder = false;
+        // Resolve select aliases because we might omit the select items
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
 
         queryGenerator.setAliasPrefix(null);
@@ -491,7 +494,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
-        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
+        // Resolve select aliases to their actual expressions only if the select items aren't included
+        orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList);
 
         // execute illegal collection access check
         orderByManager.acceptVisitor(new IllegalSubqueryDetector(aliasManager));
@@ -532,6 +536,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         clauses.addAll(groupByManager.buildGroupByClauses());
         if (hasAggregateFunctions) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
+            clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
@@ -576,6 +581,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         clauses.addAll(groupByManager.buildGroupByClauses());
         if (hasAggregateFunctions) {
             clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
+            clauses.addAll(havingManager.buildGroupByClauses());
             clauses.addAll(orderByManager.buildGroupByClauses());
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);

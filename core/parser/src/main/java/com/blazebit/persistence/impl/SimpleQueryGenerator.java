@@ -86,6 +86,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     protected String getBooleanExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }
+    
+    protected String escapeCharacter(char character) {
+    	return Character.toString(character);
+    }
 
     @Override
     public void visit(AndPredicate predicate) {
@@ -247,7 +251,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             if (!predicate.isCaseSensitive()) {
                 sb.append("UPPER(");
             }
-            sb.append("'").append(predicate.getEscapeCharacter()).append("'");
+            sb.append("'").append(escapeCharacter(predicate.getEscapeCharacter())).append("'");
             if (!predicate.isCaseSensitive()) {
                 sb.append(")");
             }

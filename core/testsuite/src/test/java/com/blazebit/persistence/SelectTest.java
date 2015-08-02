@@ -321,7 +321,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, owner_1.name ORDER BY d.id DESC NULLS LAST";
+        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -335,8 +335,8 @@ public class SelectTest extends AbstractCoreTest {
                 .page(0, 10);
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
-        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
-        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY d.id, owner_1.name ORDER BY d.id DESC NULLS LAST";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
@@ -355,7 +355,7 @@ public class SelectTest extends AbstractCoreTest {
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name "
         		+ "FROM Document d JOIN d.owner owner_1 "
         		+ "GROUP BY owner_1.name, d.id "
-        		+ "ORDER BY d.id DESC NULLS LAST";
+        		+ "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -369,9 +369,9 @@ public class SelectTest extends AbstractCoreTest {
                 .page(0, 10);
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
-        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 "
-                + "GROUP BY owner_1.name, d.id ORDER BY d.id DESC NULLS LAST";
+                + "GROUP BY owner_1.name, d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());
@@ -390,7 +390,7 @@ public class SelectTest extends AbstractCoreTest {
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
-                + "ORDER BY d.id DESC NULLS LAST";
+                + "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(objectQuery, cb.getQueryString());
         
@@ -406,11 +406,11 @@ public class SelectTest extends AbstractCoreTest {
                 .page(0, 10);
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
-        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY d.id DESC NULLS LAST";
+        String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
-                + "ORDER BY d.id DESC NULLS LAST";
+                + "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());

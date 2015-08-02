@@ -162,7 +162,7 @@ public class SubqueryTest extends AbstractCoreTest {
         String expected = "SELECT d.name AS n FROM Document d WHERE d.id IN "
                 + "(SELECT person.id FROM Person person WHERE person.name = d.name) AND d.id NOT IN "
                 + "(SELECT person.id FROM Person person WHERE d.name LIKE person.name) "
-                + "ORDER BY n ASC NULLS LAST";
+                + "ORDER BY " + renderNullPrecedence("n", "d.name", "ASC", "LAST");
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -289,8 +289,10 @@ public class SubqueryTest extends AbstractCoreTest {
                 .end()
                 .groupBy("id")
                 .orderByAsc("localizedCount");
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c") + ".id)) AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
+        
+        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c") + ".id))";
+        String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
+                + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
 //        cb.getResultList(); 
@@ -308,8 +310,9 @@ public class SubqueryTest extends AbstractCoreTest {
                 .groupBy("id")
                 .orderByAsc("localizedCount");
 
-        String expectedQuery = "SELECT d.id, SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1") + ".id)) AS localizedCount "
-                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY localizedCount ASC NULLS LAST";
+        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1") + ".id))";
+        String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
+                + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
 //        TODO: restore as soon as hibernate supports this
 //        cb.getResultList(); 
@@ -385,9 +388,9 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) GROUP BY document.id ORDER BY document.id ASC NULLS LAST";
+        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) GROUP BY document.id ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0)";
-        String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) ORDER BY document.id ASC NULLS LAST";
+        String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());
@@ -403,9 +406,9 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("version.document.id").eqExpression("OUTER(id)") // we have to fully qualify version.document.id
                 .end().orderByAsc("id").page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY document.id ORDER BY document.id ASC NULLS LAST";
+        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY document.id ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document";
-        String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version WHERE version.document.id = document.id) FROM Document document ORDER BY document.id ASC NULLS LAST";
+        String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version WHERE version.document.id = document.id) FROM Document document ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());

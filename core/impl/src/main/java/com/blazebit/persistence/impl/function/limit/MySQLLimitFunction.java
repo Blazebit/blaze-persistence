@@ -15,18 +15,49 @@
  */
 package com.blazebit.persistence.impl.function.limit;
 
+import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
+import com.blazebit.persistence.spi.FunctionRenderContext;
+
 /**
+ * Uses a workaround for limit in IN predicates because of an limitation of MySQL.
+ * See http://dev.mysql.com/doc/refman/5.0/en/subquery-restrictions.html for reference.
  *
  * @author Christian Beikov
  * @since 1.0.1
  */
 public class MySQLLimitFunction extends LimitFunction {
+	
+	private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
+
+		@Override
+		protected CyclicUnsignedCounter initialValue() {
+			return new CyclicUnsignedCounter(-1);
+		}
+		
+	};
 
     public MySQLLimitFunction() {
         super(
-            "(?1 limit ?2)",
-            "(?1 limit ?3, ?2)"
+            "(SELECT * FROM (?1 limit ?2) as ?3)",
+            "(SELECT * FROM (?1 limit ?3, ?2) as ?4)"
         );
+    }
+    
+    @Override
+    protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
+        adapt(functionRenderContext, limitOffsetRenderer)
+            .addArgument(1)
+            .addArgument(2)
+            .addParameter("_tmp_" + threadLocalCounter.get().incrementAndGet())
+            .build();
+    }
+
+    @Override
+    protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
+        adapt(functionRenderContext, limitOnlyRenderer)
+            .addArgument(1)
+            .addParameter("_tmp_" + threadLocalCounter.get().incrementAndGet())
+            .build();
     }
     
 }

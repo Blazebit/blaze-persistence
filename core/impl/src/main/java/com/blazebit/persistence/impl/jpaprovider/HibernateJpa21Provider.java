@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.jpaprovider;
 
+import javax.persistence.EntityManager;
+
 /**
  *
  * @author Christian Beikov
@@ -22,7 +24,11 @@ package com.blazebit.persistence.impl.jpaprovider;
  */
 public class HibernateJpa21Provider extends HibernateJpaProvider {
 
-    @Override
+    public HibernateJpa21Provider(EntityManager em) {
+		super(em);
+	}
+
+	@Override
     public boolean supportsJpa21() {
         return true;
     }

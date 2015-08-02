@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.function.pageposition;
 
+
 /**
  *
  * @author Christian Beikov
@@ -23,7 +24,7 @@ package com.blazebit.persistence.impl.function.pageposition;
 public class MySQLPagePositionFunction extends PagePositionFunction {
 
     public MySQLPagePositionFunction() {
-        super("(select rownumber_ from (select @i:=@i+1 as rownumber_, base_.* from (?2) as base_, (SELECT @i:=1) as iter_) where ?1)");
+        super("(select rownumber_ from (select @i:=@i+1 as rownumber_, base_.* from (?1) as base_, (SELECT @i:=0) as iter_) as base1_ where ?2 = base1_.?3)");
     }
     
 }

@@ -15,6 +15,16 @@
  */
 package com.blazebit.persistence.impl.jpaprovider;
 
+import java.lang.ref.WeakReference;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import javax.persistence.EntityManager;
+
+import com.blazebit.reflection.ExpressionUtils;
+import com.blazebit.reflection.ReflectionUtils;
+
 /**
  *
  * @author Christian Beikov
@@ -22,6 +32,32 @@ package com.blazebit.persistence.impl.jpaprovider;
  */
 public class HibernateJpaProvider implements JpaProvider {
 
+	private static final ConcurrentMap<WeakReference<Class<?>>, Boolean> isMySQLDialectCache = new ConcurrentHashMap<WeakReference<Class<?>>, Boolean>();
+	private final boolean isMySQL;
+
+	public HibernateJpaProvider(EntityManager em) {
+		try {
+			if (em == null) {
+				isMySQL = false;
+			} else {
+				Object session = em.unwrap(Class.forName("org.hibernate.Session"));
+				Class<?> dialectClass = ExpressionUtils.getValue(session, "sessionFactory.dialect").getClass();
+				WeakReference<Class<?>> key = new WeakReference<Class<?>>(dialectClass);
+				Boolean cacheValue = isMySQLDialectCache.get(key);
+				
+				if (cacheValue == null) {
+					Set<Class<?>> types = ReflectionUtils.getSuperTypes(dialectClass);
+					cacheValue = types.contains(Class.forName("org.hibernate.dialect.MySQLDialect"));
+					isMySQLDialectCache.put(key, cacheValue);
+				}
+				
+				isMySQL = cacheValue;
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
     @Override
     public boolean supportsJpa21() {
         return false;
@@ -42,6 +78,43 @@ public class HibernateJpaProvider implements JpaProvider {
     public String getBooleanConditionalExpression(boolean value) {
         return value ? "1 = 1" : "1 = 0";
     }
+
+    @Override
+	public String escapeCharacter(char character) {
+		if (character == '\\') {
+			return "\\\\";
+		} else {
+			return Character.toString(character);
+		}
+	}
+
+    @Override
+    public boolean supportsNullPrecedenceExpression() {
+    	return !isMySQL;
+    }
+    
+    @Override
+	public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
+		if (nulls == null) {
+			return expression + " " + order;
+		} else {
+	    	if (isMySQL) {
+	    		// Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL
+	    		StringBuilder sb = new StringBuilder();
+	    		sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
+	    		if ("FIRST".equals(nulls)) {
+					sb.append( "0 ELSE 1" );
+				} else {
+					sb.append( "1 ELSE 0" );
+				}
+				sb.append( " END, " );
+				sb.append(expression).append(" ").append(order);
+				return sb.toString();
+	    	} else {
+				return expression + " " + order + " NULLS " + nulls;
+			}
+    	}
+	}
 
     @Override
     public String getOnClause() {

@@ -54,10 +54,10 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingPath() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
-            .having("LENGTH(d.partners.name)").gt(0);
+            .having("MIN(SQRT(d.partners.age))").gt(0d);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING MIN(SQRT(partners_1.age)) > :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -66,10 +66,10 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingPathExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
-            .having("LENGTH(d.partners.name) + 1").gt(0);
+            .having("MIN(SQRT(d.partners.age)) + 1").gt(0d);
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) + 1 > :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING MIN(SQRT(partners_1.age)) + 1 > :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -78,11 +78,11 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingAnd() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
-            .having("LENGTH(d.partners.name)").gt(0)
-            .having("d.versions.url").like().value("http://%").noEscape();
+            .having("MIN(SQRT(d.partners.age))").gt(0d)
+            .having("d.owner.name").like().value("http://%").noEscape();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0 AND versions_1.url LIKE :param_1",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1, owner_1.name HAVING MIN(SQRT(partners_1.age)) > :param_0 AND owner_1.name LIKE :param_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -92,12 +92,12 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
-                .having("LENGTH(d.partners.name)").gt(0)
-                .having("d.versions.url").like().value("http://%").noEscape()
+                .having("MIN(SQRT(d.partners.age))").gt(0d)
+                .having("d.owner.name").like().value("http://%").noEscape()
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0 OR versions_1.url LIKE :param_1",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1, owner_1.name HAVING MIN(SQRT(partners_1.age)) > :param_0 OR owner_1.name LIKE :param_1",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -108,17 +108,17 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.owner")
             .havingOr()
                 .havingAnd()
-                    .having("LENGTH(d.partners.name)").gt(0)
-                    .having("d.versions.url").like().value("http://%").noEscape()
+                    .having("MIN(SQRT(d.partners.age))").gt(0d)
+                    .having("d.owner.name").like().value("http://%").noEscape()
                 .endAnd()
                 .havingAnd()
-                    .having("d.versions.date").lt(Calendar.getInstance())
-                    .having("d.versions.url").like().value("ftp://%").noEscape()
+                    .having("d.owner.age").lt(10L)
+                    .having("d.owner.name").like().value("ftp://%").noEscape()
                 .endAnd()
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY owner_1 HAVING (LENGTH(partners_1.name) > :param_0 AND versions_1.url LIKE :param_1) OR (versions_1.date < :param_2 AND versions_1.url LIKE :param_3)",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1, owner_1.name, owner_1.age HAVING (MIN(SQRT(partners_1.age)) > :param_0 AND owner_1.name LIKE :param_1) OR (owner_1.age < :param_2 AND owner_1.name LIKE :param_3)",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -128,16 +128,16 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
-                .having("LENGTH(d.partners.name)").gt(0)
-                .having("d.versions.url").like().value("http://%").noEscape()
+                .having("MIN(SQRT(d.partners.age))").gt(0d)
+                .having("d.owner.name").like().value("http://%").noEscape()
             .endOr()
             .havingOr()
-                .having("d.versions.date").lt(Calendar.getInstance())
-                .having("d.versions.url").like().value("ftp://%").noEscape()
+                .having("d.owner.age").lt(10L)
+                .having("d.owner.name").like().value("ftp://%").noEscape()
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY owner_1 HAVING (LENGTH(partners_1.name) > :param_0 OR versions_1.url LIKE :param_1) AND (versions_1.date < :param_2 OR versions_1.url LIKE :param_3)",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1, owner_1.name, owner_1.age HAVING (MIN(SQRT(partners_1.age)) > :param_0 OR owner_1.name LIKE :param_1) AND (owner_1.age < :param_2 OR owner_1.name LIKE :param_3)",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -147,11 +147,11 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.groupBy("d.owner")
             .havingOr()
-                .having("LENGTH(d.partners.name)").gt(0)
+                .having("MIN(SQRT(d.partners.age))").gt(0d)
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING MIN(SQRT(partners_1.age)) > :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -162,12 +162,12 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("d.owner")
             .havingOr()
                 .havingAnd()
-                    .having("LENGTH(d.partners.name)").gt(0)
+                    .having("MIN(SQRT(d.partners.age))").gt(0d)
                 .endAnd()
             .endOr();
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING LENGTH(partners_1.name) > :param_0",
+            "SELECT d FROM Document d JOIN d.owner owner_1 LEFT JOIN d.partners partners_1 GROUP BY owner_1 HAVING MIN(SQRT(partners_1.age)) > :param_0",
             criteria.getQueryString());
         criteria.getResultList();
     }
@@ -367,7 +367,7 @@ public class HavingTest extends AbstractCoreTest {
                 .select("id")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name, d.owner.id HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -404,7 +404,7 @@ public class HavingTest extends AbstractCoreTest {
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
+        String expected = "SELECT d FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -444,7 +444,7 @@ public class HavingTest extends AbstractCoreTest {
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();        
-        String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT d FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());
 //        TODO: restore as soon as hibernate supports this
@@ -462,7 +462,7 @@ public class HavingTest extends AbstractCoreTest {
                     .select("id")
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
-            .endOr();        
+            .endOr();
         String expected = "SELECT d FROM Document d GROUP BY d.name HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
         
         assertEquals(expected, crit.getQueryString());

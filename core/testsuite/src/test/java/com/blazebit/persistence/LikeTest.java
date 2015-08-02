@@ -55,7 +55,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.name").like().value(pattern).escape('\\');
 
-        assertEquals("SELECT d FROM Document d WHERE d.name LIKE :param_0 ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.name LIKE :param_0 ESCAPE '" + escapeCharacter('\\') + "'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -89,7 +89,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.name").like(true).expression("d.owner.name").escape('\\');
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name LIKE owner_1.name ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name LIKE owner_1.name ESCAPE '" + escapeCharacter('\\') + "'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -126,7 +126,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.name").notLike().value(pattern).escape('\\');
 
-        assertEquals("SELECT d FROM Document d WHERE d.name NOT LIKE :param_0 ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.name NOT LIKE :param_0 ESCAPE '" + escapeCharacter('\\') + "'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -180,7 +180,7 @@ public class LikeTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.where("d.name").notLike().expression("d.owner.name").escape('\\');
 
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name NOT LIKE owner_1.name ESCAPE '\\'", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 WHERE d.name NOT LIKE owner_1.name ESCAPE '" + escapeCharacter('\\') + "'", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -197,7 +197,7 @@ public class LikeTest extends AbstractCoreTest {
     private String getCaseInsensitiveLike(String property, String likeParam, Character escape, boolean negated) {
         String res = "UPPER(" + property + ")" + (negated ? " NOT": "") + " LIKE UPPER(" + likeParam + ")";
         if (escape != null) {
-            res += " ESCAPE UPPER('" + escape + "')";
+            res += " ESCAPE UPPER('" + escapeCharacter(escape) + "')";
         }
         return res;
     }
