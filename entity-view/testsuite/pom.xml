@@ -75,7 +75,9 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
+	                    <version>2.17</version>
 						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoH2</excludedGroups>
 							<systemPropertyVariables>
 								<jdbc.url>jdbc:h2:mem:test</jdbc.url>
 								<jdbc.user>admin</jdbc.user>
@@ -83,6 +85,13 @@
 								<jdbc.driver>org.h2.Driver</jdbc.driver>
 							</systemPropertyVariables>
 						</configuration>
+						<dependencies>
+			                <dependency>
+			                    <groupId>org.apache.maven.surefire</groupId>
+			                    <artifactId>surefire-junit47</artifactId>
+			                    <version>2.17</version>
+			                </dependency>
+			            </dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -101,7 +110,9 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
+	                    <version>2.17</version>
 						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoMySQL</excludedGroups>
 							<systemPropertyVariables>
 								<jdbc.url>jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8</jdbc.url>
 								<jdbc.user>root</jdbc.user>
@@ -109,6 +120,13 @@
 								<jdbc.driver>com.mysql.jdbc.Driver</jdbc.driver>
 							</systemPropertyVariables>
 						</configuration>
+						<dependencies>
+			                <dependency>
+			                    <groupId>org.apache.maven.surefire</groupId>
+			                    <artifactId>surefire-junit47</artifactId>
+			                    <version>2.17</version>
+			                </dependency>
+			            </dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -127,7 +145,9 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
+	                    <version>2.17</version>
 						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoPostgreSQL</excludedGroups>
 							<systemPropertyVariables>
 								<jdbc.url>jdbc:postgresql://localhost:5432/test</jdbc.url>
 								<jdbc.user>postgres</jdbc.user>
@@ -135,6 +155,13 @@
 								<jdbc.driver>org.postgresql.Driver</jdbc.driver>
 							</systemPropertyVariables>
 						</configuration>
+						<dependencies>
+			                <dependency>
+			                    <groupId>org.apache.maven.surefire</groupId>
+			                    <artifactId>surefire-junit47</artifactId>
+			                    <version>2.17</version>
+			                </dependency>
+			            </dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -153,7 +180,9 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
+	                    <version>2.17</version>
 						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoSQLite</excludedGroups>
 							<systemPropertyVariables>
 								<jdbc.url>jdbc:sqlite::memory:</jdbc.url>
 								<jdbc.user></jdbc.user>
@@ -161,6 +190,13 @@
 								<jdbc.driver>org.sqlite.JDBC</jdbc.driver>
 							</systemPropertyVariables>
 						</configuration>
+						<dependencies>
+			                <dependency>
+			                    <groupId>org.apache.maven.surefire</groupId>
+			                    <artifactId>surefire-junit47</artifactId>
+			                    <version>2.17</version>
+			                </dependency>
+			            </dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -168,6 +204,53 @@
 				<dependency>
 					<groupId>org.xerial</groupId>
 					<artifactId>sqlite-jdbc</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+		</profile>
+		<profile>
+			<id>db2</id>
+			<!-- 
+			In order to use this profile, you have to install the db2 driver jars via:
+				mvn -q install:install-file -Dfile=/PATH/TO/db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true 
+				mvn -q install:install-file -Dfile=/PATH/TO/db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
+			-->
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+	                    <version>2.17</version>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDB2</excludedGroups>
+							<systemPropertyVariables>
+								<jdbc.url>jdbc:db2://localhost:50000/test</jdbc.url>
+								<jdbc.user>db2admin</jdbc.user>
+								<jdbc.password>db2admin</jdbc.password>
+								<jdbc.driver>com.ibm.db2.jcc.DB2Driver</jdbc.driver>
+							</systemPropertyVariables>
+						</configuration>
+						<dependencies>
+			                <dependency>
+			                    <groupId>org.apache.maven.surefire</groupId>
+			                    <artifactId>surefire-junit47</artifactId>
+			                    <version>2.17</version>
+			                </dependency>
+			            </dependencies>
+					</plugin>
+				</plugins>
+			</build>
+			<dependencies>
+				<dependency>
+					<groupId>com.ibm.db2</groupId>
+					<artifactId>db2jcc4</artifactId>
+					<version>9.7</version>
+					<scope>test</scope>
+				</dependency>
+				<dependency>
+					<groupId>com.ibm.db2</groupId>
+					<artifactId>db2jcc_license_cu</artifactId>
+					<version>9.7</version>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>

@@ -21,6 +21,7 @@ import com.blazebit.persistence.function.ConcatenateFunction;
 import com.blazebit.persistence.function.ZeroFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -346,12 +348,14 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoDB2.class)
     public void testSelectNestedAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner.name")
                 .orderByDesc("id");
 
+        // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name "
         		+ "FROM Document d JOIN d.owner owner_1 "
         		+ "GROUP BY owner_1.name, d.id "
@@ -381,12 +385,14 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category(NoDB2.class)
     public void testSelectAggregateEntitySelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .selectCase().when("MIN(lastModified)").gtExpression("creationDate").thenExpression("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
                 .select("owner")
                 .orderByDesc("id");
 
+        // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "

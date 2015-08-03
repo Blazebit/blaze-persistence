@@ -22,26 +22,31 @@ jdk:
 env:
 # hibernate
   - JPAPROVIDER=hibernate RDBMS=h2
+  - JPAPROVIDER=hibernate RDBMS=db2
   - JPAPROVIDER=hibernate RDBMS=mysql
   - JPAPROVIDER=hibernate RDBMS=postgresql
 #  - JPAPROVIDER=hibernate RDBMS=sqlite
 # hibernate-4.3
   - JPAPROVIDER=hibernate-4.3 RDBMS=h2
+  - JPAPROVIDER=hibernate-4.3 RDBMS=db2
   - JPAPROVIDER=hibernate-4.3 RDBMS=mysql
   - JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
 #  - JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 # datanucleus
   - JPAPROVIDER=datanucleus RDBMS=h2
+#  - JPAPROVIDER=datanucleus RDBMS=db2
 #  - JPAPROVIDER=datanucleus RDBMS=mysql
 #  - JPAPROVIDER=datanucleus RDBMS=postgresql
 #  - JPAPROVIDER=datanucleus RDBMS=sqlite
 # eclipselink
   - JPAPROVIDER=eclipselink RDBMS=h2
+#  - JPAPROVIDER=eclipselink RDBMS=db2
 #  - JPAPROVIDER=eclipselink RDBMS=mysql
 #  - JPAPROVIDER=eclipselink RDBMS=postgresql
 #  - JPAPROVIDER=eclipselink RDBMS=sqlite
 # openjpa
 #  - JPAPROVIDER=openjpa RDBMS=h2
+#  - JPAPROVIDER=openjpa RDBMS=db2
 #  - JPAPROVIDER=openjpa RDBMS=mysql
 #  - JPAPROVIDER=openjpa RDBMS=postgresql
 #  - JPAPROVIDER=openjpa RDBMS=sqlite
@@ -50,6 +55,8 @@ matrix:
   include:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
       jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
+      jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
@@ -57,6 +64,6 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
   allow_failures:
-    - env: JPAPROVIDER=datanucleus
-    - env: JPAPROVIDER=eclipselink
+    - JPAPROVIDER=datanucleus RDBMS=h2
+    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa

@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.testsuite.base;
+package com.blazebit.persistence.testsuite.base;
 
 import java.util.Properties;
+
+import com.blazebit.persistence.testsuite.base.AbstractJpaPersistenceTest;
 
 /**
  *

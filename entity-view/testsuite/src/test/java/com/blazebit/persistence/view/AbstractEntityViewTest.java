@@ -17,10 +17,10 @@ package com.blazebit.persistence.view;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.entity.Version;
-import com.blazebit.testsuite.base.AbstractPersistenceTest;
 
 /**
  *

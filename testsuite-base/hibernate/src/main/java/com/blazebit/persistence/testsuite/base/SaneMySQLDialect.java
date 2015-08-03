@@ -1,4 +1,4 @@
-package com.blazebit.testsuite.base;
+package com.blazebit.persistence.testsuite.base;
 
 import org.hibernate.dialect.MySQL5InnoDBDialect;
 

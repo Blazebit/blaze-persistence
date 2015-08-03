@@ -22,11 +22,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
@@ -89,6 +91,7 @@ public class DocumentForCollections implements Serializable {
     }
 
     @OneToMany
+    @MapKeyColumn(nullable = false)
     public Map<Integer, PersonForCollections> getContacts() {
         return contacts;
     }
@@ -97,7 +100,7 @@ public class DocumentForCollections implements Serializable {
         this.contacts = contacts;
     }
 
-    @OrderColumn(name = "position")
+    @OrderColumn(name = "position", nullable = false)
     @OneToMany
     @CollectionTable(name = "personlist")
     public List<PersonForCollections> getPersonList() {

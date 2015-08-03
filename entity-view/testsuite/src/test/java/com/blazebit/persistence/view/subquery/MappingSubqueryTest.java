@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.subquery;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -29,11 +30,16 @@ import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.subquery.model.DocumentWithExpressionSubqueryView;
 import com.blazebit.persistence.view.subquery.model.DocumentWithSubquery;
+
 import java.util.List;
+
 import javax.persistence.EntityTransaction;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -110,6 +116,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category(NoDB2.class)
     public void testSubqueryWithExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithExpressionSubqueryView.class);
@@ -125,6 +132,9 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         setting.addAttributeSorter("id", Sorters.descending());
 
         PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView> paginatedCb = evm.applySetting(setting, cb);
+        // TODO: Since case when statements in order bys use the resolved expression, because hibernate does not resolve
+        // the select alias in nested expressions, we can't run this on DB2
+        // The fix is to use the select alias
         PagedList<DocumentWithExpressionSubqueryView> result = paginatedCb.getResultList();
 
         assertEquals(2, result.size());

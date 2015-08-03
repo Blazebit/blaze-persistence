@@ -20,11 +20,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 
 /**
@@ -86,6 +88,7 @@ public class Person implements Serializable {
     }
 
     @ElementCollection
+    @MapKeyColumn(nullable = false)
     public Map<Integer, String> getLocalized() {
         return localized;
     }

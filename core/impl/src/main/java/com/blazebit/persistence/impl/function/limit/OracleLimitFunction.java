@@ -26,6 +26,9 @@ public class OracleLimitFunction extends LimitFunction {
         super(
             "select * from ( ?1 ) where rownum <= ?2",
             // TODO: This is selecting the rownum too...
+            // TODO: See the following
+            // https://groups.google.com/forum/#!topic/jooq-user/G9Op6cQwMkY/discussion
+            // http://www.inf.unideb.hu/~gabora/pagination/results.html
             "select * from ( select row_.*, rownum rownum_ from ( ?1 ) row_ ) where rownum_ <= ?2 and rownum_ > ?3"
         );
     }

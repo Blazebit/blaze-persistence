@@ -27,7 +27,7 @@ import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.testsuite.base.AbstractPersistenceTest;
+import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 
 import java.util.Arrays;
 import java.util.Collection;

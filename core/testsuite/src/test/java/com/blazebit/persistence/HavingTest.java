@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.category.NoMySQL;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 
@@ -315,7 +316,7 @@ public class HavingTest extends AbstractCoreTest {
     }
 
     @Test
-    @Category(NoMySQL.class)
+    @Category({NoMySQL.class, NoDB2.class})
     public void testHavingLeftSubquery() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(d.id)");
         criteria.groupBy("id")
