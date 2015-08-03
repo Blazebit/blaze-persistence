@@ -69,8 +69,8 @@ public abstract class AbstractJpaPersistenceTest {
         properties.put("javax.persistence.sharedCache.mode", "NONE");
 		properties = applyProperties(properties);
 		
-		System.out.println("Using the following properties:");
-		System.out.println(properties);
+		//System.out.println("Using the following properties:");
+		//System.out.println(properties);
 
         EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", properties);
         em = factory.createEntityManager();
