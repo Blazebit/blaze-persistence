@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.hibernate.function;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -36,6 +37,7 @@ import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -55,7 +57,9 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
     
     @Override
     public EntityManager registerFunctions(EntityManager em, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        Dialect dialect = getDialect(em);
+        Session s = em.unwrap(Session.class);
+        Map<String, SQLFunction> functions = getFunctions(s);
+        Dialect dialect = getDialect(s);
 
         String dbms;
         
@@ -87,9 +91,6 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             dbms = null;
         }
         
-        // Implementation detail: Hibernate uses a mutable map, so we can do this
-        Map<String, SQLFunction> functions = dialect.getFunctions();
-        
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey();
             JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
@@ -110,11 +111,47 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
 
     @Override
     public Set<String> getRegisteredFunctions(EntityManager em) {
-        return getDialect(em).getFunctions().keySet();
+        Session s = em.unwrap(Session.class);
+        return getFunctions(s).keySet();
     }
     
-    private Dialect getDialect(EntityManager em) {
-        Session s = em.unwrap(Session.class);
+    @SuppressWarnings("unchecked")
+	private Map<String, SQLFunction> getFunctions(Session s) {
+        String version = s.getClass().getPackage().getImplementationVersion();
+
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        int fix = Integer.parseInt(versionParts[2]);
+        String type = versionParts[3];
+
+        if (major < 5 || (major == 5 && minor == 0 && fix == 0 && "Beta1".equals(type))) {
+	        // Implementation detail: Hibernate uses a mutable map, so we can do this
+	        return getDialect(s).getFunctions();
+        } else {
+            SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
+            SQLFunctionRegistry registry = sf.getSqlFunctionRegistry();
+            Exception ex;
+            
+            // We have to retrieve the functionMap the old fashioned way via reflection :(
+            try {
+            	Field f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
+            	f.setAccessible(true);
+            	return (Map<String, SQLFunction>) f.get(registry);
+            } catch (NoSuchFieldException e) {
+    			throw new RuntimeException("Incompatible hibernate version: " + version, e);
+            } catch (IllegalArgumentException e) {
+            	// This can never happen
+				ex = e;
+			} catch (IllegalAccessException e) {
+				ex = e;
+			}
+            
+			throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
+        }
+    }
+    
+    private Dialect getDialect(Session s) {
         SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
         return sf.getDialect();
     }
