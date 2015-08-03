@@ -64,6 +64,6 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
   allow_failures:
-    - JPAPROVIDER=datanucleus RDBMS=h2
+    - env: JPAPROVIDER=datanucleus RDBMS=h2
     - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa
