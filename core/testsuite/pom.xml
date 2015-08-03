@@ -253,7 +253,7 @@
 				<dependency>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-entitymanager</artifactId>
-					<version>4.3.8.Final</version>
+					<version>4.3.10.Final</version>
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -268,7 +268,7 @@
 				<dependency>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-entitymanager</artifactId>
-					<version>5.0.0.Beta1</version>
+					<version>5.0.0.CR3</version>
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
