@@ -14,7 +14,7 @@ before_script:
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
-  - echo "Using following properties: "${ADDITIONAL_PROPERTIES}
+  - echo "Using following properties: " ${ADDITIONAL_PROPERTIES}
   - mvn -P ${JPAPROVIDER},${RDBMS} install ${ADDITIONAL_PROPERTIES}
 #after_success:
 #  - "bash ./.travis-deploy.sh"
