@@ -57,7 +57,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-	                    <version>2.17</version>
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoH2</excludedGroups>
 							<systemPropertyVariables>
@@ -71,7 +70,7 @@
 			                <dependency>
 			                    <groupId>org.apache.maven.surefire</groupId>
 			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>2.17</version>
+			                    <version>${version.surefire.plugin}</version>
 			                </dependency>
 			            </dependencies>
 					</plugin>
@@ -92,7 +91,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-	                    <version>2.17</version>
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoMySQL</excludedGroups>
 							<systemPropertyVariables>
@@ -106,7 +104,7 @@
 			                <dependency>
 			                    <groupId>org.apache.maven.surefire</groupId>
 			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>2.17</version>
+			                    <version>${version.surefire.plugin}</version>
 			                </dependency>
 			            </dependencies>
 					</plugin>
@@ -127,7 +125,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-	                    <version>2.17</version>
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoPostgreSQL</excludedGroups>
 							<systemPropertyVariables>
@@ -141,7 +138,7 @@
 			                <dependency>
 			                    <groupId>org.apache.maven.surefire</groupId>
 			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>2.17</version>
+			                    <version>${version.surefire.plugin}</version>
 			                </dependency>
 			            </dependencies>
 					</plugin>
@@ -162,7 +159,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-	                    <version>2.17</version>
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoSQLite</excludedGroups>
 							<systemPropertyVariables>
@@ -176,7 +172,7 @@
 			                <dependency>
 			                    <groupId>org.apache.maven.surefire</groupId>
 			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>2.17</version>
+			                    <version>${version.surefire.plugin}</version>
 			                </dependency>
 			            </dependencies>
 					</plugin>
@@ -202,7 +198,6 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
-	                    <version>2.17</version>
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDB2</excludedGroups>
 							<systemPropertyVariables>
@@ -216,7 +211,7 @@
 			                <dependency>
 			                    <groupId>org.apache.maven.surefire</groupId>
 			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>2.17</version>
+			                    <version>${version.surefire.plugin}</version>
 			                </dependency>
 			            </dependencies>
 					</plugin>

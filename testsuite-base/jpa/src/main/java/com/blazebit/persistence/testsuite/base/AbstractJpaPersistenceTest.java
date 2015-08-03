@@ -78,8 +78,11 @@ public abstract class AbstractJpaPersistenceTest {
 
     @After
     public void destruct() {
-        em.getEntityManagerFactory()
-            .close();
+    	EntityManagerFactory factory = em.getEntityManagerFactory();
+    	// NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
+    	// I am looking at you MySQL..
+    	em.close();
+        factory.close();
     }
 
     protected abstract Class<?>[] getEntityClasses();

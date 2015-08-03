@@ -98,6 +98,7 @@
 		<!-- Plugin versions -->
 		<version.processor.plugin>2.2.1</version.processor.plugin>
 		<version.release.plugin>2.5.1</version.release.plugin>
+		<version.surefire.plugin>2.18.1</version.surefire.plugin>
 	</properties>
 
 	<dependencyManagement>
