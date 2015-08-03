@@ -17,8 +17,10 @@ script:
   - mvn -P ${JPAPROVIDER},${RDBMS} install
 #after_success:
 #  - "bash ./.travis-deploy.sh"
-jdk:
-  - oraclejdk7
+# Leave out jdk switch because on the legacy infrastructure this won't work
+# No big deal because oraclejdk7 is the default anyways
+#jdk:
+#  - oraclejdk7
 env:
 # hibernate
   - JPAPROVIDER=hibernate RDBMS=h2
