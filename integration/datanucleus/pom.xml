@@ -15,19 +15,19 @@
     <name>Blazebit Persistence Integration DataNucleus</name>
     
     <properties>
-<!--         <version.datanucleus.base>4.1.0-RELEASE</version.datanucleus.base> -->
-<!--         <version.datanucleus.jpa>4.0.4</version.datanucleus.jpa> -->
-		<version.datanucleus.base>4.1.2-SNAPSHOT</version.datanucleus.base>
-        <version.datanucleus.jpa>4.0.5-SNAPSHOT</version.datanucleus.jpa>
+        <version.datanucleus.base>4.1.2</version.datanucleus.base>
+        <version.datanucleus.jpa>4.0.4</version.datanucleus.jpa>
+<!-- 		<version.datanucleus.base>4.1.2-SNAPSHOT</version.datanucleus.base> -->
+<!--         <version.datanucleus.jpa>4.0.5-SNAPSHOT</version.datanucleus.jpa> -->
     </properties>
     
-   <repositories>
-        <repository>
-            <id>DataNucleus Nightly</id>
-            <name>DataNucleus Repository Nightly</name>
-            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-        </repository>
-    </repositories>
+<!--    <repositories> -->
+<!--         <repository> -->
+<!--             <id>DataNucleus Nightly</id> -->
+<!--             <name>DataNucleus Repository Nightly</name> -->
+<!--             <url>http://www.datanucleus.org/downloads/maven2-nightly</url> -->
+<!--         </repository> -->
+<!--     </repositories> -->
 
     <dependencies>
         <dependency>
