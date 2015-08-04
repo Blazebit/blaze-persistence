@@ -15,8 +15,10 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import java.util.Map;
+
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
+import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 
 /**
@@ -24,27 +26,18 @@ import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTem
  * @author Christian Beikov
  * @since 1.0
  */
-public class SubviewTupleTransformer implements TupleTransformer {
+public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     private final ViewTypeObjectBuilderTemplate<Object[]> template;
-    private final int consumeStartIndex;
-    private final int consumeEndIndex;
-    private final ObjectBuilder<Object[]> objectBuilder;
 
-    public SubviewTupleTransformer(ViewTypeObjectBuilderTemplate<Object[]> template, ObjectBuilder<Object[]> objectBuilder) {
+    public SubviewTupleTransformerFactory(ViewTypeObjectBuilderTemplate<Object[]> template) {
         this.template = template;
-        this.consumeStartIndex = template.getTupleOffset() + 1;
-        this.consumeEndIndex = template.getTupleOffset() + template.getMappers().length;
-        this.objectBuilder = objectBuilder;
     }
 
     @Override
-    public Object[] transform(Object[] tuple) {
-        tuple[template.getTupleOffset()] = objectBuilder.build(tuple);
-        for (int i = consumeStartIndex; i < consumeEndIndex; i++) {
-            tuple[i] = TupleReuse.CONSUMED;
-        }
-        return tuple;
+    public TupleTransformer create(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, true);
+        return new SubviewTupleTransformer(template, objectBuilder);
     }
 
 }

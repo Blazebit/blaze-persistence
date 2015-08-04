@@ -15,13 +15,15 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
+import com.blazebit.persistence.QueryBuilder;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public interface TupleTransformer {
+public interface TupleTransformerFactory {
 
-    public Object[] transform(Object[] tuple);
+    public TupleTransformer create(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters);
 }

@@ -15,13 +15,23 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.lang.StringUtils;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
@@ -33,6 +43,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleEl
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedListTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedListTupleListTransformer;
@@ -41,7 +52,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedSetTu
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedMapTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTupleListTransformer;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
@@ -51,25 +62,10 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.persistence.view.metamodel.SetAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -95,7 +91,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final EntityViewManagerImpl evm;
     private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
-    private final TupleTransformator tupleTransformator = new TupleTransformator();
+    private final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
 
     private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
@@ -301,15 +297,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformator.add(new IndexedListTupleListTransformer(idPositions, startIndex));
+                        tupleTransformatorFactory.add(new IndexedListTupleListTransformer(idPositions, startIndex));
                     }
                 } else if (mapKey) {
                     if (pluralAttribute.isSorted()) {
-                        tupleTransformator.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                        tupleTransformatorFactory.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                     } else if (pluralAttribute.isOrdered()) {
-                        tupleTransformator.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
+                        tupleTransformatorFactory.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
                     } else {
-                        tupleTransformator.add(new MapTupleListTransformer(idPositions, startIndex));
+                        tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex));
                     }
                 } else {
                     switch (pluralAttribute.getCollectionType()) {
@@ -317,23 +313,23 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                tupleTransformator.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
                             }
                             break;
                         case LIST:
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                tupleTransformator.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
                             }
                             break;
                         case SET:
                             if (pluralAttribute.isSorted()) {
-                                tupleTransformator.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                tupleTransformatorFactory.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                             } else if (pluralAttribute.isOrdered()) {
-                                tupleTransformator.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
+                                tupleTransformatorFactory.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
                             } else {
-                                tupleTransformator.add(new SetTupleListTransformer(idPositions, startIndex));
+                                tupleTransformatorFactory.add(new SetTupleListTransformer(idPositions, startIndex));
                             }
                             break;
                         case MAP:
@@ -376,8 +372,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         for (int i = 0; i < template.mappers.length; i++) {
             parameterMappingList.add(null);
         }
-        tupleTransformator.add(template.tupleTransformator);
-        tupleTransformator.add(new SubviewTupleTransformer(template));
+        tupleTransformatorFactory.add(template.tupleTransformatorFactory);
+        tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
     }
 
     private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {
@@ -483,8 +479,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, optionalParameters, tupleOffset);
         }
 
-        if (tupleTransformator.hasTransformers() && !isSubview) {
-            result = new ChainingObjectBuilder<T>(tupleTransformator, result, queryBuilder, optionalParameters, tupleOffset);
+        if (tupleTransformatorFactory.hasTransformers() && !isSubview) {
+            result = new ChainingObjectBuilder<T>(tupleTransformatorFactory, result, queryBuilder, optionalParameters, tupleOffset);
         }
 
         return result;

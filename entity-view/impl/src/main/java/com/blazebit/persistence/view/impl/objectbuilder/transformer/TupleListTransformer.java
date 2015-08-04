@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.QueryBuilder;
 import java.util.List;
 
 /**
@@ -32,8 +31,4 @@ public abstract class TupleListTransformer {
     }
 
     public abstract List<Object[]> transform(List<Object[]> tuples);
-
-    public TupleListTransformer init(QueryBuilder<?, ?> queryBuilder) {
-        return this;
-    }
 }

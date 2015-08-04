@@ -15,12 +15,15 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
-import com.blazebit.persistence.SelectBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
+import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 
 /**
  *
@@ -32,10 +35,9 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 
-    public ChainingObjectBuilder(TupleTransformator transformator, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, int startIndex) {
-        this.transformator = transformator;
+    public ChainingObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, int startIndex) {
+        this.transformator = transformatorFactory.create(queryBuilder, optionalParameters);
         this.objectBuilder = objectBuilder;
-        transformator.init(queryBuilder, optionalParameters);
     }
 
     @Override

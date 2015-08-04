@@ -13,17 +13,11 @@ sudo usermod --password $(echo "db2fenc1" | openssl passwd -1 -stdin) db2fenc1
 sudo usermod --password $(echo "dasusr1" | openssl passwd -1 -stdin) dasusr1
 
 echo "Enable MySQL compatibility"
-sudo /opt/IBM/db2/V9.7/instance/db2set DB2_COMPATIBILITY_VECTOR=MYS
-sudo /opt/IBM/db2/V9.7/instance/db2stop
-sudo /opt/IBM/db2/V9.7/instance/db2start
-
-sudo /opt/IBM/db2/V9.7/bin/db2set DB2_COMPATIBILITY_VECTOR=MYS
-sudo /opt/IBM/db2/V9.7/bin/db2stop
-sudo /opt/IBM/db2/V9.7/bin/db2start
-
-sudo ~db2inst1/sqllib/bin/db2set DB2_COMPATIBILITY_VECTOR=MYS
-sudo ~db2inst1/sqllib/bin/db2stop
-sudo ~db2inst1/sqllib/bin/db2start
+sudo -u db2inst1 -i /opt/ibm/db2/V9.7/adm/db2set DB2_COMPATIBILITY_VECTOR=MYS
+sudo chmod +x /opt/ibm/db2/V9.7/adm/db2stop
+sudo -u db2inst1 -i /opt/ibm/db2/V9.7/adm/db2stop
+sudo chmod +x /opt/ibm/db2/V9.7/adm/db2start
+sudo -u db2inst1 -i /opt/ibm/db2/V9.7/adm/db2start
 
 
 mvn -q install:install-file -Dfile=/opt/ibm/db2/V9.7/java/db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true 
