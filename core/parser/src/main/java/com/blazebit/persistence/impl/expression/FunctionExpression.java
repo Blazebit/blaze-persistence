@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +60,7 @@ public class FunctionExpression extends AbstractExpression  {
         return functionName;
     }
 
-    public List<? extends Expression> getExpressions() {
+    public List<Expression> getExpressions() {
         return expressions;
     }
 

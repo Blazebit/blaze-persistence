@@ -105,6 +105,9 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         if(predicate.getChildren().isEmpty()){
             throw new IllegalStateException("No or clauses specified!");
         }
+        if (whenClause != null) {
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
+        }
         whenClause = new WhenClauseExpression(predicate, expressionFactory.createScalarExpression(expression));
         listener.onBuilderEnded(this);
         return result;
@@ -114,6 +117,9 @@ public class CaseWhenOrThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pre
         verifyBuilderEnded();
         if(predicate.getChildren().isEmpty()){
             throw new IllegalStateException("No or clauses specified!");
+        }
+        if (whenClause != null) {
+            throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
         whenClause = new WhenClauseExpression(predicate, new ParameterExpression(value));
         listener.onBuilderEnded(this);

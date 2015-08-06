@@ -135,18 +135,18 @@ public class AbstractParserTest {
 
     protected FunctionExpression function(String name, Expression... args) {
     	if (aggregateFunctions.contains(name)) {
-    		return new AggregateExpression(false, name, args[0]);
+    		return new AggregateExpression(false, name, Arrays.asList(args));
     	} else {
     		return new FunctionExpression(name, Arrays.asList(args));
     	}
     }
 
     protected AggregateExpression aggregate(String name, PathExpression arg, boolean distinct) {
-        return new AggregateExpression(distinct, name, arg);
+        return new AggregateExpression(distinct, name, Arrays.asList((Expression) arg));
     }
 
     protected AggregateExpression aggregate(String name, PathExpression arg) {
-        return new AggregateExpression(false, name, arg);
+        return new AggregateExpression(false, name, Arrays.asList((Expression) arg));
     }
 
     protected PathExpression path(String... properties) {

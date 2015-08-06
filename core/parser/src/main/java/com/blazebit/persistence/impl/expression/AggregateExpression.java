@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.impl.expression;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -28,8 +30,8 @@ import java.util.Collections;
 public class AggregateExpression extends FunctionExpression {
     private final boolean distinct;
 
-    public AggregateExpression(boolean distinct, String functionName, Expression expression) {
-        super(functionName, Arrays.asList(new Expression[]{ expression }));
+    public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions) {
+        super(functionName, expressions);
         this.distinct = distinct;
     }
     
@@ -46,7 +48,13 @@ public class AggregateExpression extends FunctionExpression {
         if (expressions.isEmpty()) {
             return new AggregateExpression();
         } else {
-            return new AggregateExpression(distinct, functionName, expressions.get(0).clone());
+            int size = expressions.size();
+            List<Expression> newExpressions = new ArrayList<Expression>(size);
+            
+            for (int i = 0; i < size; i++) {
+                newExpressions.add(expressions.get(i).clone());
+            }
+            return new AggregateExpression(distinct, functionName, newExpressions);
         }
     }
 

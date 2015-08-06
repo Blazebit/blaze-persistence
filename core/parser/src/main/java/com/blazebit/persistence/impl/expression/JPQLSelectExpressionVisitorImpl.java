@@ -97,7 +97,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitAggregateExpression(JPQLSelectExpressionParser.AggregateExpressionContext ctx) {
-        return new AggregateExpression(ctx.distinct != null, ctx.funcname.getText(), ctx.aggregate_argument().accept(this));
+        return new AggregateExpression(ctx.distinct != null, ctx.funcname.getText(), Arrays.asList((Expression) ctx.aggregate_argument().accept(this)));
     }
 
     @Override
@@ -123,8 +123,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
         }
         
-        if (aggregateFunctions.contains(name.toLowerCase())) {
-        	return new AggregateExpression(false, name, funcArgs.get(0));
+        if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
+        		&& aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
+        	return new AggregateExpression(false, name, funcArgs);
         } else {
         	return new FunctionExpression(name, funcArgs);
         }
@@ -139,11 +140,17 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         }
         
         String name = ctx.getStart().getText();
-        if (aggregateFunctions.contains(name.toLowerCase())) {
-        	return new AggregateExpression(false, name, funcArgs.get(0));
+        if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
+        		&& aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
+        	return new AggregateExpression(false, name, funcArgs);
         } else {
         	return new FunctionExpression(name, funcArgs);
         }
+    }
+    
+    private String getLiteralString(Expression expr) {
+    	String str = expr.toString();
+    	return str.substring(1, str.length() - 1);
     }
 
     @Override
@@ -563,24 +570,5 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
         }
         return expr;
-    }
-
-    /**
-     *
-     * @param start (exclusive)
-     * @param end (exclusive)
-     * @return
-     */
-    private StringBuilder getText(Token start, Token end) {
-        int startIndex = start.getTokenIndex() + 1;
-        int endIndex = end.getTokenIndex();
-        if (startIndex < endIndex) {
-            StringBuilder sb = new StringBuilder();
-            for (int i = startIndex; i < endIndex; i++) {
-                sb.append(tokens.get(i).getText());
-            }
-            return sb;
-        }
-        return null;
     }
 }

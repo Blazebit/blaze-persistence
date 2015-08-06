@@ -150,6 +150,9 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if(whenClauses.isEmpty()){
             throw new IllegalStateException("No when clauses specified");
         }
+        if(expression != null){
+            throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
+        }
         expression = new GeneralCaseExpression(whenClauses, expressionFactory.createScalarExpression(elseExpression));
         listener.onBuilderEnded(this);
         return result;
@@ -161,6 +164,9 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
         if(whenClauses.isEmpty()){
             throw new IllegalStateException("No when clauses specified");
         }
+        if(expression != null){
+            throw new IllegalStateException("Method otherwise/otherwiseExpression called multiple times");
+        }
         expression = new GeneralCaseExpression(whenClauses, new ParameterExpression(value));
         listener.onBuilderEnded(this);
         return result;
@@ -170,6 +176,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     public void onBuilderEnded(PredicateBuilder o) {
         super.onBuilderEnded(o);
         this.whenPredicate = o.getPredicate();
+        this.thenExpression = null;
     }    
 
     @Override
