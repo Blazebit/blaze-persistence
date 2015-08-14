@@ -417,28 +417,35 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(FunctionExpression expression) {
         boolean oldConditionalContext = setConditionalContext(false);
-        sb.append(expression.getFunctionName());
-        sb.append('(');
-        
         boolean hasExpressions = expression.getExpressions().size() > 0;
-        if (expression instanceof AggregateExpression) {
-            AggregateExpression aggregateExpression = (AggregateExpression) expression;
-            if (aggregateExpression.isDistinct()) {
-                sb.append("DISTINCT ");
-            }
-            if (!hasExpressions && "COUNT".equals(aggregateExpression.getFunctionName().toUpperCase())) {
-                sb.append('*');
-            }
+        String functionName = expression.getFunctionName();
+        sb.append(functionName);
+        
+        if (!"CURRENT_TIME".equalsIgnoreCase(functionName)
+    		 && !"CURRENT_DATE".equalsIgnoreCase(functionName) 
+    		 && !"CURRENT_TIMESTAMP".equalsIgnoreCase(functionName)) {
+	        sb.append('(');
+	        
+	        if (expression instanceof AggregateExpression) {
+	            AggregateExpression aggregateExpression = (AggregateExpression) expression;
+	            if (aggregateExpression.isDistinct()) {
+	                sb.append("DISTINCT ");
+	            }
+	            if (!hasExpressions && "COUNT".equalsIgnoreCase(aggregateExpression.getFunctionName())) {
+	                sb.append('*');
+	            }
+	        }
+	        
+	        if (hasExpressions) {
+	            expression.getExpressions().get(0).accept(this);
+	            for (int i = 1; i < expression.getExpressions().size(); i++) {
+	                sb.append(",");
+	                expression.getExpressions().get(i).accept(this);
+	            }
+	        }
+	        sb.append(')');
         }
         
-        if (hasExpressions) {
-            expression.getExpressions().get(0).accept(this);
-            for (int i = 1; i < expression.getExpressions().size(); i++) {
-                sb.append(",");
-                expression.getExpressions().get(i).accept(this);
-            }
-        }
-        sb.append(')');
         setConditionalContext(oldConditionalContext);
     }
 

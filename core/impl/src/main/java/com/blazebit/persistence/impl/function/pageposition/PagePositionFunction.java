@@ -67,7 +67,7 @@ public class PagePositionFunction implements JpqlFunction {
         
         if (!startsWithIgnoreCase(subquery, subqueryStart)) {
             throw new IllegalArgumentException("Expected a subquery as the second parameter but was: " + subquery);
-        } else if ((fromIndex = subquery.indexOf(" from ")) < 1) {
+        } else if ((fromIndex = subquery.toLowerCase().indexOf(" from ")) < 1) {
             throw new IllegalArgumentException("Expected a subquery as the second parameter but was: " + subquery);
         }
         

@@ -170,7 +170,7 @@ public class ExpressionUtils {
     }
     
     public static boolean isFunctionFunctionExpression(FunctionExpression func){
-        return "FUNCTION".equals(func.getFunctionName());
+        return "FUNCTION".equalsIgnoreCase(func.getFunctionName());
     }
 
     public static boolean isNullable(Metamodel metamodel, Expression expr) {
@@ -225,9 +225,9 @@ public class ExpressionUtils {
     }
 
     private static boolean isNullable(Metamodel metamodel, FunctionExpression expr) {
-        if ("NULLIF".equals(expr.getFunctionName())) {
+        if ("NULLIF".equalsIgnoreCase(expr.getFunctionName())) {
             return true;
-        } else if ("COALESCE".equals(expr.getFunctionName())) {
+        } else if ("COALESCE".equalsIgnoreCase(expr.getFunctionName())) {
             boolean nullable;
             for (Expression subExpr : expr.getExpressions()) {
                 nullable = isNullable(metamodel, subExpr);
@@ -400,11 +400,11 @@ public class ExpressionUtils {
     }
 
     public static boolean isSizeFunction(FunctionExpression expression) {
-        return "SIZE".equals(expression.getFunctionName());
+        return "SIZE".equalsIgnoreCase(expression.getFunctionName());
     }
 
     public static boolean isOuterFunction(FunctionExpression e) {
-        return "OUTER".equals(e.getFunctionName());
+        return "OUTER".equalsIgnoreCase(e.getFunctionName());
     }
 
     private static class SubqueryExpressionDetector extends VisitorAdapter {

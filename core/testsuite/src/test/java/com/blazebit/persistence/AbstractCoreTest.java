@@ -23,6 +23,7 @@ import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.function.ConcatenateFunction;
 import com.blazebit.persistence.function.ZeroFunction;
+import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
@@ -68,6 +69,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected Set<String> getRegisteredFunctions() {
         return new HashSet<String>(Arrays.asList(
                 // internal functions
+        		"count_star",
                 "limit",
                 "page_position",
                 "group_concat",
@@ -110,6 +112,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
     	return jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls);
+    }
+    
+    protected String countStar() {
+    	if (jpaProvider instanceof HibernateJpaProvider) {
+    		return "COUNT(*)";
+    	} else {
+    		return function("COUNT_STAR");
+    	}
     }
 
     protected String renderNullPrecedence(String expression, String order, String nulls) {

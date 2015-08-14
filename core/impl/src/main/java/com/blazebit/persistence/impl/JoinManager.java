@@ -274,7 +274,7 @@ public class JoinManager extends AbstractManager {
         }
         
         FunctionExpression keyExpression = (FunctionExpression) left;
-        if (!"KEY".equals(keyExpression.getFunctionName())) {
+        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName())) {
             return false;
         }
         

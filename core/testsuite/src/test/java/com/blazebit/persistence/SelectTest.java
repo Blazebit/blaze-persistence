@@ -67,7 +67,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class).from(Document.class, "d");
         criteria.select("COUNT(*)");
 
-        assertEquals("SELECT COUNT(*) FROM Document d", criteria.getQueryString());
+        assertEquals("SELECT " + countStar() + " FROM Document d", criteria.getQueryString());
         criteria.getResultList();
     }
     
@@ -356,7 +356,7 @@ public class SelectTest extends AbstractCoreTest {
                 .orderByDesc("id");
 
         // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name "
         		+ "FROM Document d JOIN d.owner owner_1 "
         		+ "GROUP BY owner_1.name, d.id "
         		+ "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
@@ -374,7 +374,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1.name FROM Document d JOIN d.owner owner_1 "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name FROM Document d JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.name, d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
@@ -393,7 +393,7 @@ public class SelectTest extends AbstractCoreTest {
                 .orderByDesc("id");
 
         // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
@@ -413,7 +413,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
-        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
+        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1 FROM Document d "
                 + "JOIN d.owner owner_1 "
                 + "GROUP BY owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
                 + "ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");

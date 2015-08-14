@@ -19,13 +19,20 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Workflow;
 import com.blazebit.persistence.model.DocumentViewModel;
+
 import static com.googlecode.catchexception.CatchException.verifyException;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
+
 import org.junit.Assert;
+
 import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -198,6 +205,8 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("name")
                 .orderByAsc("id")
                 .getResultList();
+        // Apparently Datanucleus doesn't implement all java.util.List methods properly 
+        originalList = new ArrayList<Document>(originalList);
         
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());
         PagedList<Document> list = cb.getResultList();

@@ -15,12 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -49,34 +53,53 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());
-            if(registeredFunctions.contains(functionName.toLowerCase())) {
-                sb.append(jpaProvider.getCustomFunctionInvocation(functionName, expression.getExpressions().size()));
-                if (expression.getExpressions().size() > 1) {
-                    expression.getExpressions().get(1).accept(this);
-                    for (int i = 2; i < expression.getExpressions().size(); i++) {
-                        sb.append(",");
-                        expression.getExpressions().get(i).accept(this);
-                    }
-                }
-                sb.append(')');
-            } else if (jpaProvider.supportsJpa21()) {
-                // Add the JPA 2.1 Function style function
-                sb.append("FUNCTION('");
-                sb.append(functionName);
-                sb.append('\'');
-                
-                for (int i = 1; i < expression.getExpressions().size(); i++) {
-                    sb.append(',');
-                    expression.getExpressions().get(i).accept(this);
-                }
-                
-                sb.append(')');
-            } else {
-                throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
-            }
+            renderFunctionFunction(functionName, expression.getExpressions());
+        } else if (isCountStarFunction(expression)) {
+        	renderCountStar();
         } else {
             super.visit(expression);
         }
+    }
+    
+    @SuppressWarnings("unchecked")
+	protected void renderCountStar() {
+    	if (jpaProvider instanceof HibernateJpaProvider) {
+    		sb.append("COUNT(*)");
+    	} else {
+        	renderFunctionFunction("COUNT_STAR", (List<Expression>) (List<?>) Collections.emptyList());
+    	}
+    }
+    
+    protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+    	if (registeredFunctions.contains(functionName.toLowerCase())) {
+            sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
+            if (arguments.size() > 1) {
+            	arguments.get(1).accept(this);
+                for (int i = 2; i < arguments.size(); i++) {
+                    sb.append(",");
+                    arguments.get(i).accept(this);
+                }
+            }
+            sb.append(')');
+        } else if (jpaProvider.supportsJpa21()) {
+            // Add the JPA 2.1 Function style function
+            sb.append("FUNCTION('");
+            sb.append(functionName);
+            sb.append('\'');
+            
+            for (int i = 1; i < arguments.size(); i++) {
+                sb.append(',');
+                arguments.get(i).accept(this);
+            }
+            
+            sb.append(')');
+        } else {
+            throw new IllegalArgumentException("Unknown function [" + functionName + "] is used!");
+        }
+    }
+    
+    private boolean isCountStarFunction(FunctionExpression expression) {
+    	return expression instanceof AggregateExpression && expression.getExpressions().isEmpty() && "COUNT".equalsIgnoreCase(expression.getFunctionName());
     }
 
     @Override

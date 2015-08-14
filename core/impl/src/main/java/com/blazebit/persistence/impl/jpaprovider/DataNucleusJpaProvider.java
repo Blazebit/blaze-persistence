@@ -84,11 +84,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
-        if (argumentCount == 0) {
-            return "FUNCTION('" + functionName + "'";
-        }
-        
-        return "FUNCTION('" + functionName + "',";
+        return functionName + "(";
     }
 
 }

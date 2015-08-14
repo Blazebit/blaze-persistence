@@ -139,7 +139,7 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             	f.setAccessible(true);
             	return (Map<String, SQLFunction>) f.get(registry);
             } catch (NoSuchFieldException e) {
-    			throw new RuntimeException("Incompatible hibernate version: " + version, e);
+    			ex = e;
             } catch (IllegalArgumentException e) {
             	// This can never happen
 				ex = e;

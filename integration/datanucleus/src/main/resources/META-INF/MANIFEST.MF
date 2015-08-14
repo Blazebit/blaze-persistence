@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Bundle-ManifestVersion: 2
-Bundle-Name: Blaze-Persistence DataNucleus Integration
-Bundle-SymbolicName: com.blazebit.persistence.integration.datanucleus;singleton:=true
-Bundle-Vendor: Blazebit
-Bundle-Version: 1.0.0
-Require-Bundle: org.datanucleus, org.datanucleus.store.rdbms
