@@ -1,58 +1,38 @@
+/*
+ * Copyright 2014 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.blazebit.persistence.view.impl.proxy;
-
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-public class UnsafeInstantiator<T> implements ObjectInstantiator<T> {
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.0.6
+ */
+public class UnsafeInstantiator<T> extends ReflectionInstantiator<T> {
 
-	private final Constructor<? extends T> constructor;
-
+	
 	public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ViewType<T> viewType, Class<?>[] parameterTypes) {
-		Class<T> clazz = (Class<T>) proxyFactory.getProxy(viewType);
-		Constructor<T> javaConstructor = null;
-        
-        try {
-            javaConstructor = (Constructor<T>) clazz.getDeclaredConstructor(parameterTypes);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + clazz
-                .getName(), ex);
-        } catch (SecurityException ex) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + clazz
-                .getName(), ex);
-        }
-        
-        if (javaConstructor == null) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + clazz
-                .getName());
-        }
-        
-        Class<?> unsafeProxy = proxyFactory.getUnsafeProxy(viewType);
-        Constructor<?> unsafeConstructor = null;
-        
-        try {
-	        unsafeConstructor = unsafeProxy.getDeclaredConstructor(parameterTypes);
-	    } catch (NoSuchMethodException ex) {
-	        throw new IllegalArgumentException("Could not retrieve the unsafe proxy constructor for the proxy class: " + clazz
-	            .getName(), ex);
-	    } catch (SecurityException ex) {
-	        throw new IllegalArgumentException("Could not retrieve the unsafe proxy constructor for the proxy class: " + clazz
-		            .getName(), ex);
-	    }
-        
-        this.constructor = SunReflectionFactoryHelper.newConstructorForSerialization(clazz, unsafeConstructor);
-        this.constructor.setAccessible(true);
+		super(mappingConstructor, proxyFactory, viewType, parameterTypes);
 	}
 
-	@Override
-	public T newInstance(Object[] tuple) {
-        try {
-            return constructor.newInstance(tuple);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
-        }
+	@SuppressWarnings("unchecked")
+	protected Class<T> getProxyClass(ProxyFactory proxyFactory, ViewType<T> viewType) {
+		return (Class<T>) proxyFactory.getUnsafeProxy(viewType);
 	}
 	
 }

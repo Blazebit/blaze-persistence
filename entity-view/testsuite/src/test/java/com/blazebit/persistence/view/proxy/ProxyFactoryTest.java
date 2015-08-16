@@ -63,7 +63,6 @@ public class ProxyFactoryTest {
     @Test
     public void testUnsafeClassProxy() throws Exception {
         ViewType<UnsafeDocumentClassView> viewType = getViewMetamodel().view(UnsafeDocumentClassView.class);
-        Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
 
         // The parameter order is _id, contacts, firstContactPerson, id, name
         Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
