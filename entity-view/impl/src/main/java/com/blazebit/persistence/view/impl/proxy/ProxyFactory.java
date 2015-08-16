@@ -17,7 +17,9 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -35,7 +37,10 @@ import javassist.CtNewMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
+import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
+import javassist.bytecode.CodeAttribute;
+import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
@@ -57,35 +62,60 @@ public class ProxyFactory {
 
     private static final AtomicInteger classCounter = new AtomicInteger();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ClassPool pool;
-    private final CtClass objectCc;
-
+    private final Object proxyLock = new Object();
+    
     public ProxyFactory() {
         this.pool = new ClassPool(ClassPool.getDefault());
-        try {
-            this.objectCc = pool.getCtClass("java.lang.Object");
-        } catch (NotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
     }
-
+    
+    @SuppressWarnings("unchecked")
     public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
         Class<T> clazz = viewType.getJavaType();
-        Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
+		Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
 
         if (proxyClass == null) {
-            proxyClass = createProxyClass(viewType);
-            Class<? extends T> oldProxyClass = (Class<? extends T>) proxyClasses.putIfAbsent(clazz, proxyClass);
-
-            if (oldProxyClass != null) {
-                proxyClass = oldProxyClass;
-            }
+        	synchronized (proxyLock) {
+        		proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
+                if (proxyClass == null) {
+		            proxyClass = createProxyClass(viewType);
+		            Class<? extends T> oldProxyClass = (Class<? extends T>) proxyClasses.putIfAbsent(clazz, proxyClass);
+		
+		            if (oldProxyClass != null) {
+		                proxyClass = oldProxyClass;
+		            }
+                }
+        	}
         }
 
         return proxyClass;
     }
 
-    private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
+    @SuppressWarnings("unchecked")
+    public <T> Class<? extends T> getUnsafeProxy(ViewType<T> viewType) {
+        Class<T> proxyClass = (Class<T>) getProxy(viewType);
+		Class<? extends T> unsafeProxyClass = (Class<? extends T>) unsafeProxyClasses.get(proxyClass);
+
+        if (unsafeProxyClass == null) {
+        	synchronized (proxyLock) {
+	        	unsafeProxyClass = (Class<? extends T>) unsafeProxyClasses.get(proxyClass);
+	        	if (unsafeProxyClass == null) {
+		        	unsafeProxyClass = createUnsafeProxyClass(viewType, proxyClass);
+		            Class<? extends T> oldUnsafeProxyClass = (Class<? extends T>) unsafeProxyClasses.putIfAbsent(proxyClass, unsafeProxyClass);
+		
+		            if (oldUnsafeProxyClass != null) {
+		            	unsafeProxyClass = oldUnsafeProxyClass;
+		            }
+	        	}
+        	}
+        }
+
+        return unsafeProxyClass;
+    }
+
+    @SuppressWarnings("unchecked")
+	private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
         Class<?> clazz = viewType.getJavaType();
         CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + classCounter.getAndIncrement());
         CtClass superCc;
@@ -124,15 +154,15 @@ public class ProxyFactory {
                 attributeTypes[i] = attributeField.getType();
                 i++;
             }
-
+            
             CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
-            if (equalsDeclaringClass != objectCc) {
+            if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
                 throw new IllegalArgumentException("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)' but is not allowed to!");
             }
             cc.addMethod(createEquals(cc, idField));
 
             CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
-            if (hashCodeDeclaringClass != objectCc) {
+            if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
                 throw new IllegalArgumentException("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()' but is not allowed to!");
             }
             cc.addMethod(createHashCode(cc, idField));
@@ -157,6 +187,339 @@ public class ProxyFactory {
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes));
             }
 
+//            cc.debugWriteFile("D:\\");
+            return cc.toClass();
+        } catch (Exception ex) {
+            throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
+        } finally {
+            pool.removeClassPath(classPath);
+        }
+    }
+    
+    private void addFields(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException {
+    	Map<String, String> fieldClassMappings = new HashMap<String, String>();
+    	CtClass current = cc;
+    	
+    	do {
+    		for (CtField field : current.getDeclaredFields()) {
+    			String oldClassMapping = fieldClassMappings.put(field.getName(), current.getName());
+    			if (oldClassMapping != null) {
+    				throw new IllegalArgumentException("Can not use unsafe instantiator because field name '" + field.getName() + "' appears in both classes which are on the same hierarchy [" + oldClassMapping + ", " + current.getName() + "]");
+    			}
+    			
+    			newClass.addField(new CtField(field, newClass));
+    		}
+    	} while (!"java.lang.Object".equals((current = current.getSuperclass()).getName()));
+    }
+    
+    private void addMethods(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException {
+    	Map<String, String> methodClassMappings = new HashMap<String, String>();
+    	CtClass current = cc;
+    	
+    	do {
+    		for (CtMethod method : current.getDeclaredMethods()) {
+    			String name = method.getName() + Descriptor.toString(method.getSignature()) + Descriptor.of(method.getReturnType());
+    			String oldClassMapping = methodClassMappings.put(name, current.getName());
+    			if (oldClassMapping != null) {
+    				throw new IllegalArgumentException("Can not use unsafe instantiator because method name '" + method.getName() + "' appears in both classes which are on the same hierarchy [" + oldClassMapping + ", " + current.getName() + "]");
+    			}
+    			
+    			newClass.addMethod(new CtMethod(method, newClass, null));
+    		}
+    	} while (!"java.lang.Object".equals((current = current.getSuperclass()).getName()));
+    }
+    
+    private void addConstructors(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException, BadBytecode {
+    	ConstPool cp = cc.getClassFile2().getConstPool();
+    	
+		for (CtConstructor constructor : cc.getDeclaredConstructors()) {
+			CtConstructor newConstructor = new CtConstructor(constructor.getParameterTypes(), newClass);
+			CodeAttribute codeAttribute = constructor.getMethodInfo2().getCodeAttribute();
+			Bytecode newBytecode = new Bytecode(newClass.getClassFile2().getConstPool(), 3, constructor.getParameterTypes().length + 1);
+			
+		    CodeIterator ci = codeAttribute.iterator();
+	    	int superConstructorIndex = ci.skipSuperConstructor();
+	    	int superConstructorRef = ci.u16bitAt(superConstructorIndex + 1);
+	    	String superConstructorType = cp.getMethodrefType(superConstructorRef);
+	    	CtClass[] superConstructorArgumentTypes = Descriptor.getParameterTypes(superConstructorType, pool);
+	    	int[] argumentPositions = new int[superConstructorArgumentTypes.length];
+	    	
+	    	// Simple translation from proxy to base class
+	    	final int offset = (constructor.getParameterTypes().length - argumentPositions.length) + 1;
+	    	for (int i = 0; i < argumentPositions.length; i++) {
+	    		argumentPositions[i] = offset + i;
+	    	}
+	    	
+	    	newBytecode.addAload(0);
+	    	newBytecode.addInvokespecial("java.lang.Object", "<init>", "()V");
+
+	    	copyBytecode(newClass, newBytecode, cp, ci);
+	    	
+	    	int newStartIndex = newBytecode.getSize();
+	    	
+	    	// Inline super class constructor with line table adaption
+		    addConstructorCode(newClass, newBytecode, cc.getSuperclass(), superConstructorArgumentTypes, argumentPositions);
+	    	newBytecode.add(Bytecode.RETURN);
+	    	newConstructor.getMethodInfo2().setCodeAttribute(newBytecode.toCodeAttribute());
+			newClass.addConstructor(newConstructor);
+		}
+    }
+
+    private void addConstructorCode(CtClass newClass, Bytecode newBytecode, CtClass cc, CtClass[] constructorTypes, int[] argumentPositions) throws NotFoundException, BadBytecode {
+    	ConstPool cp = cc.getClassFile2().getConstPool();
+		CtConstructor constructor = cc.getDeclaredConstructor(constructorTypes);
+		CodeAttribute codeAttribute = constructor.getMethodInfo2().getCodeAttribute();
+
+	    CodeIterator ci = codeAttribute.iterator();
+    	int superConstructorIndex = ci.skipSuperConstructor();
+    	int superConstructorRef = ci.u16bitAt(superConstructorIndex + 1);
+    	String superConstructorType = cp.getMethodrefType(superConstructorRef);
+    	
+    	// TODO: need remapping of arguments
+    	if (!"java.lang.Object".equals(cc.getSuperclass().getName())) {
+    		throw new UnsupportedOperationException("Not yet implemented");
+//    		addConstructorCode(newBytecode, cc.getSuperclass(), Descriptor.getParameterTypes(superConstructorType, pool));
+    	}
+
+    	newBytecode.setMaxStack(Math.max(newBytecode.getMaxStack(), codeAttribute.getMaxStack()));
+    	copyBytecode(newClass, newBytecode, cc.getName(), cp, ci, argumentPositions);
+	}
+    
+    private void copyBytecode(CtClass newClass, Bytecode newBytecode, ConstPool cp, CodeIterator ci) throws BadBytecode {
+    	while (ci.hasNext()) {
+	        int address = ci.next();
+    		int op = ci.byteAt(address);
+    		
+	        switch (op) {
+	        case Bytecode.RETURN:
+	        	// Skip returns
+	        	break;
+        	default:
+        		copySingleBytecode(newClass, newBytecode, null, cp, ci, address);
+	        }
+    	}
+    }
+    
+    private void copyBytecode(CtClass newClass, Bytecode newBytecode, String oldClass, ConstPool cp, CodeIterator ci, int[] argumentPositions) throws BadBytecode {
+    	while (ci.hasNext()) {
+	        int address = ci.next();
+    		int op = ci.byteAt(address);
+    		
+	        switch (op) {
+	        case Bytecode.RETURN:
+	        	// Skip returns
+	        	break;
+	        case Bytecode.ALOAD_1:
+	        	newBytecode.addAload(argumentPositions[0]);
+	        	break;
+	        case Bytecode.ALOAD_2:
+	        	newBytecode.addAload(argumentPositions[1]);
+	        	break;
+	        case Bytecode.ALOAD_3:
+	        	newBytecode.addAload(argumentPositions[2]);
+	        	break;
+	        case Bytecode.ALOAD:
+	        	newBytecode.addAload(argumentPositions[ci.byteAt(address + 1) - 1]);
+	        	break;
+        	default:
+        		copySingleBytecode(newClass, newBytecode, oldClass, cp, ci, address);
+	        }
+    	}
+    }
+    
+    private void copySingleBytecode(CtClass newClass, Bytecode newBytecode, String oldClass, ConstPool cp, CodeIterator ci, int address) {
+    	ConstPool newCp = newBytecode.getConstPool();
+		int op = ci.byteAt(address);
+
+		String className;
+		String name;
+		String type;
+		int count;
+		Object ldcValue;
+		
+        switch (op) {
+        case Bytecode.ANEWARRAY:
+        	className = cp.getClassInfo(ci.u16bitAt(address + 1));
+        	newBytecode.addAnewarray(className);
+        	break;
+        case Bytecode.CHECKCAST:
+        	className = cp.getClassInfo(ci.u16bitAt(address + 1));
+        	newBytecode.addCheckcast(className);
+        	break;
+        case Bytecode.GETFIELD:
+        	name = cp.getFieldrefName(ci.u16bitAt(address + 1));
+        	type = cp.getFieldrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addGetfield(newClass, name, type);
+        	break;
+        case Bytecode.GETSTATIC:
+        	className = cp.getFieldrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getFieldrefName(ci.u16bitAt(address + 1));
+        	type = cp.getFieldrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addGetstatic(className, name, type);
+        	break;
+        case Bytecode.GOTO:
+        case Bytecode.GOTO_W:
+            // TODO: Rewrite branches?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.IF_ACMPEQ:
+        case Bytecode.IF_ACMPNE:
+        case Bytecode.IF_ICMPEQ:
+        case Bytecode.IF_ICMPGE:
+        case Bytecode.IF_ICMPGT:
+        case Bytecode.IF_ICMPLE:
+        case Bytecode.IF_ICMPLT:
+        case Bytecode.IF_ICMPNE:
+        case Bytecode.IFEQ:
+        case Bytecode.IFGE:
+        case Bytecode.IFGT:
+        case Bytecode.IFLE:
+        case Bytecode.IFLT:
+        case Bytecode.IFNE:
+        case Bytecode.IFNONNULL:
+        case Bytecode.IFNULL:
+            // TODO: Rewrite branches?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.INSTANCEOF:
+        	className = cp.getClassInfo(ci.u16bitAt(address + 1));
+        	newBytecode.addInstanceof(className);
+        	break;
+        case 186: // Invoke-dynamic
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.INVOKEINTERFACE:
+        	className = cp.getInterfaceMethodrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getInterfaceMethodrefName(ci.u16bitAt(address + 1));
+        	type = cp.getInterfaceMethodrefType(ci.u16bitAt(address + 1));
+        	count = ci.byteAt(address + 3);
+        	newBytecode.addInvokeinterface(className, name, type, count);
+        	break;
+        case Bytecode.INVOKESPECIAL:
+        	className = cp.getMethodrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getMethodrefName(ci.u16bitAt(address + 1));
+        	type = cp.getMethodrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addInvokespecial(className, name, type);
+        	break;
+        case Bytecode.INVOKESTATIC:
+        	className = cp.getMethodrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getMethodrefName(ci.u16bitAt(address + 1));
+        	type = cp.getMethodrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addInvokestatic(className, name, type);
+        	break;
+        case Bytecode.INVOKEVIRTUAL:
+        	className = cp.getMethodrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getMethodrefName(ci.u16bitAt(address + 1));
+        	type = cp.getMethodrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addInvokevirtual(resolveCopyName(className, newClass.getName(), oldClass), name, type);
+        	break;
+        case Bytecode.JSR:
+        case Bytecode.JSR_W:
+            // TODO: Rewrite branches?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.LDC:
+        	ldcValue = cp.getLdcValue(ci.byteAt(address + 1));
+        	count = addLdcValue(newCp, ldcValue);
+        	newBytecode.addLdc(count);
+        	break;
+        case Bytecode.LDC2_W:
+        	ldcValue = cp.getLdcValue(ci.u16bitAt(address + 1));
+            if (ldcValue instanceof Long) {
+            	newBytecode.addLdc2w((Long) ldcValue);
+            } else if (ldcValue instanceof Double) {
+            	newBytecode.addLdc2w((Double) ldcValue);
+            } else {
+            	throw new IllegalArgumentException("Unsupported ldc2w value: " + ldcValue);
+            }
+        	break;
+        case Bytecode.LDC_W:
+        	ldcValue = cp.getLdcValue(ci.u16bitAt(address + 1));
+        	count = addLdcValue(newCp, ldcValue);
+        	newBytecode.addLdc(count);
+        	break;
+        case Bytecode.LOOKUPSWITCH:
+            // TODO: Switch?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.MULTIANEWARRAY:
+        	className = cp.getClassInfo(ci.u16bitAt(address + 1));
+        	count = ci.byteAt(address + 3);
+        	newBytecode.addMultiNewarray(className, count);
+        	break;
+        case Bytecode.NEW:
+        	className = cp.getClassInfo(ci.u16bitAt(address + 1));
+        	newBytecode.addNew(className);
+        	break;
+        case Bytecode.NEWARRAY:
+        	int atype = ci.byteAt(address + 1);
+        	newBytecode.addOpcode(Bytecode.NEWARRAY);
+        	newBytecode.add(atype);
+        	break;
+        case Bytecode.PUTFIELD:
+        	name = cp.getFieldrefName(ci.u16bitAt(address + 1));
+        	type = cp.getFieldrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addPutfield(newClass, name, type);
+        	break;
+        case Bytecode.PUTSTATIC:
+        	className = cp.getFieldrefClassName(ci.u16bitAt(address + 1));
+        	name = cp.getFieldrefName(ci.u16bitAt(address + 1));
+        	type = cp.getFieldrefType(ci.u16bitAt(address + 1));
+        	newBytecode.addPutstatic(className, name, type);
+        	break;
+        case Bytecode.TABLESWITCH:
+            // TODO: Switch?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+        case Bytecode.WIDE:
+            // TODO: Wide?
+        	throw new IllegalArgumentException("Unsupported byte code op: " + op);
+    	default:
+        	for (int i = address; i < ci.lookAhead(); i++) {
+        		newBytecode.add(ci.byteAt(i));
+        	}
+        }
+    }
+    
+    private String resolveCopyName(String className, String newClassName, String oldClassName) {
+		if (className.equals(oldClassName)) {
+			return newClassName;
+		}
+		
+		return className;
+	}
+
+	private int addLdcValue(ConstPool newCp, Object ldcValue) {
+        if (ldcValue instanceof String) {
+        	return newCp.addStringInfo((String) ldcValue);
+        } else if (ldcValue instanceof Float) {
+        	return newCp.addFloatInfo((Float) ldcValue);
+        } else if (ldcValue instanceof Integer) {
+        	return newCp.addIntegerInfo((Integer) ldcValue);
+        } else if (ldcValue instanceof Long) {
+        	return newCp.addLongInfo((Long) ldcValue);
+        } else if (ldcValue instanceof Double) {
+        	return newCp.addDoubleInfo((Double) ldcValue);
+        } else {
+        	throw new IllegalArgumentException("Unsupported ldc value: " + ldcValue);
+        }
+    }
+
+	@SuppressWarnings("unchecked")
+	private <T> Class<? extends T> createUnsafeProxyClass(ViewType<T> viewType, Class<?> proxyClass) {
+        CtClass cc = pool.makeClass(proxyClass.getName() + "_unsafe");
+        CtClass superCc;
+        CtClass proxyCc;
+
+        ClassPath classPath = new ClassClassPath(proxyClass);
+        pool.insertClassPath(classPath);
+
+        try {
+            proxyCc = pool.get(proxyClass.getName());
+            superCc = proxyCc.getSuperclass();
+
+            if ("java.lang.Object".equals(superCc.getName())) {
+                throw new IllegalArgumentException("Invalid entity view class that does not use a custom constructor!");
+            }
+            
+            addFields(cc, proxyCc);
+            addMethods(cc, proxyCc);
+            addConstructors(cc, proxyCc);
+//            cc.debugWriteFile("D:\\");
             return cc.toClass();
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
@@ -178,7 +541,14 @@ public class ProxyFactory {
         }
         cc.addField(attributeField);
         
-        List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
+        createGettersAndSetters(attribute, clazz, cc, getter, setter, attributeField);
+        
+        return attributeField;
+    }
+
+	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField attributeField) throws CannotCompileException, NotFoundException {
+		String genericSignature = attributeField.getGenericSignature();
+		List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
         
         CtMethod attributeGetter = CtNewMethod.getter(getter.getName(), attributeField);
         
@@ -208,9 +578,7 @@ public class ProxyFactory {
             }
             cc.addMethod(attributeSetter);
         }
-        
-        return attributeField;
-    }
+	}
     
     private List<Method> getBridgeGetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method getter) {
 		List<Method> bridges = new ArrayList<Method>();
@@ -267,8 +635,7 @@ public class ProxyFactory {
 
     private String getEqualsDesc() throws NotFoundException {
         CtClass returnType = CtClass.booleanType;
-        CtClass parameterType = objectCc;
-        return "(" + Descriptor.of(parameterType) + ")" + Descriptor.of(returnType);
+        return "(" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of(returnType);
     }
 
     private CtMethod createEquals(CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {
@@ -405,7 +772,7 @@ public class ProxyFactory {
     }
 
     private String getGenericSignature(MethodAttribute<?, ?> attribute, CtField attributeField) throws NotFoundException {
-        Class[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(attribute.getDeclaringType().getJavaType(), attribute.getJavaMethod());
+        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(attribute.getDeclaringType().getJavaType(), attribute.getJavaMethod());
         if (typeArguments.length == 0) {
             return null;
         }

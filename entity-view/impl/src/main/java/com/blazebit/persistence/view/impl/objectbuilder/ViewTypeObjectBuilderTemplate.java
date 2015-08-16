@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -53,7 +52,9 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleList
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedMapTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
+import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
@@ -74,7 +75,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class ViewTypeObjectBuilderTemplate<T> {
 
-    private final Constructor<? extends T> proxyConstructor;
+    private final ObjectInstantiator<T> objectInstantiator;
     private final TupleElementMapper[] mappers;
     private final TupleParameterMapper parameterMapper;
     private final int effectiveTupleSize;
@@ -93,7 +94,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final ProxyFactory proxyFactory;
     private final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
 
-    private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    @SuppressWarnings("unchecked")
+	private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if (viewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -112,8 +114,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.ef = ef;
         this.proxyFactory = proxyFactory;
 
-        Class<?> proxyClass = proxyFactory.getProxy(viewType);
-        Constructor<?>[] constructors = proxyClass.getDeclaredConstructors();
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
         // We have special handling for the id attribute since we need to know it's position in advance
         // Therefore we have to remove it so that it doesn't get processed as normal attribute
@@ -129,7 +129,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         int length = 1 + attributes.length + parameterAttributes.length;
-        Constructor<? extends T> javaConstructor = null;
 
         // First we add the id attribute
         EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
@@ -148,7 +147,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         
         String idAttributeName = jpaIdAttr.getName();
         MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
-        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute) idAttribute;
+        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
         
         if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
             throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
@@ -172,20 +171,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             parameterTypes[i + attributes.length + 1] = parameterAttributes[i].getJavaType();
         }
         
-        try {
-            javaConstructor = (Constructor<? extends T>) proxyClass.getDeclaredConstructor(parameterTypes);
-        } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
-                .getName(), ex);
-        } catch (SecurityException ex) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
-                .getName(), ex);
-        }
-        
-        if (javaConstructor == null) {
-            throw new IllegalArgumentException("The given mapping constructor '" + mappingConstructor + "' does not map to a constructor of the proxy class: " + proxyClass
-                .getName());
-        }
+//        this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, parameterTypes);
+        this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
         
         for (int i = 0; i < attributes.length; i++) {
             applyMapping(attributes[i], mappingList, parameterMappingList, featuresFound);
@@ -198,7 +185,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.hasIndexedCollections = featuresFound[1];
         this.hasSubviews = featuresFound[2];
         this.effectiveTupleSize = length;
-        this.proxyConstructor = javaConstructor;
         this.mappers = getMappers(mappingList);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
     }
@@ -217,7 +203,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
             Object[] mapping = (Object[]) mappingElement;
 
             if (mapping[0] instanceof Class) {
-                Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
+                @SuppressWarnings("unchecked")
+				Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
                 SubqueryProvider provider;
 
                 try {
@@ -254,7 +241,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mappers;
     }
 
-    private void applyMapping(Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
+    @SuppressWarnings("unchecked")
+	private void applyMapping(Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
         if (attribute.isSubquery()) {
             applySubqueryMapping((SubqueryAttribute<? super T, ?>) attribute, mappingList, parameterMappingList);
         } else {
@@ -336,7 +324,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             throw new IllegalArgumentException("Ignoring the index on the attribute '" + pluralAttribute + "' is not possible!");
                     }
                 }
-            } else if (((SingularAttribute) attribute).isQueryParameter()) {
+            } else if (((SingularAttribute<?, ?>) attribute).isQueryParameter()) {
                 featuresFound[0] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
             } else if (attribute.isSubview()) {
@@ -357,7 +345,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
-        ViewType<Object[]> subviewType = (ViewType<Object[]>) evm.getMetamodel().view(subviewClass);
+        @SuppressWarnings("unchecked")
+		ViewType<Object[]> subviewType = (ViewType<Object[]>) evm.getMetamodel().view(subviewClass);
         String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
         List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
         String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
@@ -412,7 +401,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return subviewMappingPrefix;
     }
 
-    private <T> List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+    private List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
         return createSubviewMappingPrefix(prefixParts, mappingAttribute.getMapping());
     }
 
@@ -429,7 +418,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mapping;
     }
 
-    private <T> String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+    private String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefixParts, mappingAttribute.getMapping());
     }
 
@@ -441,7 +430,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mapping;
     }
     
-    private <T> String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
+    private String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefix, mappingAttribute.getMapping());
     }
 
@@ -476,7 +465,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (hasParameters) {
-            result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, optionalParameters, tupleOffset);
+            result = new ParameterViewTypeObjectBuilder<T>(result, this, queryBuilder, optionalParameters, tupleOffset);
         }
 
         if (tupleTransformatorFactory.hasTransformers() && !isSubview) {
@@ -486,8 +475,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return result;
     }
 
-    public Constructor<? extends T> getProxyConstructor() {
-        return proxyConstructor;
+    public ObjectInstantiator<T> getObjectInstantiator() {
+        return objectInstantiator;
     }
 
     public TupleElementMapper[] getMappers() {
