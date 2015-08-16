@@ -40,14 +40,17 @@ import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
 import javassist.bytecode.BadBytecode;
+import javassist.bytecode.ByteArray;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.CodeAttribute;
 import javassist.bytecode.CodeIterator;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
+import javassist.bytecode.LineNumberAttribute;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
+import javassist.bytecode.SourceFileAttribute;
 
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -223,6 +226,7 @@ public class ProxyFactory {
     
     private void addConstructors(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException, BadBytecode {
     	ConstPool cp = cc.getClassFile2().getConstPool();
+    	ConstPool newCp = newClass.getClassFile().getConstPool();
     	
 		for (CtConstructor constructor : cc.getDeclaredConstructors()) {
 			CtConstructor newConstructor = new CtConstructor(constructor.getParameterTypes(), newClass);
@@ -247,21 +251,25 @@ public class ProxyFactory {
 
 	    	copyBytecode(newClass, newBytecode, cp, ci);
 	    	
-	    	int newStartIndex = newBytecode.getSize();
-	    	
 	    	// Inline super class constructor with line table adaption
-		    addConstructorCode(newClass, newBytecode, cc.getSuperclass(), superConstructorArgumentTypes, argumentPositions);
+	    	CustomLineNumberAttribute lineNumberAttribute = addConstructorCode(newClass, newBytecode, cc.getSuperclass(), superConstructorArgumentTypes, argumentPositions);
+	    	newClass.getClassFile().addAttribute(new SourceFileAttribute(newCp, cc.getSuperclass().getClassFile2().getSourceFile()));
+	    	
 	    	newBytecode.add(Bytecode.RETURN);
-	    	newConstructor.getMethodInfo2().setCodeAttribute(newBytecode.toCodeAttribute());
+	    	
+	    	CodeAttribute newCodeAttribute = newBytecode.toCodeAttribute();
+	    	newCodeAttribute.getAttributes().add(lineNumberAttribute);
+	    	
+	    	newConstructor.getMethodInfo().setCodeAttribute(newCodeAttribute);
 			newClass.addConstructor(newConstructor);
 		}
     }
 
-    private void addConstructorCode(CtClass newClass, Bytecode newBytecode, CtClass cc, CtClass[] constructorTypes, int[] argumentPositions) throws NotFoundException, BadBytecode {
+    private CustomLineNumberAttribute addConstructorCode(CtClass newClass, Bytecode newBytecode, CtClass cc, CtClass[] constructorTypes, int[] argumentPositions) throws NotFoundException, BadBytecode {
     	ConstPool cp = cc.getClassFile2().getConstPool();
 		CtConstructor constructor = cc.getDeclaredConstructor(constructorTypes);
 		CodeAttribute codeAttribute = constructor.getMethodInfo2().getCodeAttribute();
-
+		
 	    CodeIterator ci = codeAttribute.iterator();
     	int superConstructorIndex = ci.skipSuperConstructor();
     	int superConstructorRef = ci.u16bitAt(superConstructorIndex + 1);
@@ -272,10 +280,34 @@ public class ProxyFactory {
     		throw new UnsupportedOperationException("Not yet implemented");
 //    		addConstructorCode(newBytecode, cc.getSuperclass(), Descriptor.getParameterTypes(superConstructorType, pool));
     	}
+    	
+		ConstPool newCp = newClass.getClassFile().getConstPool();
+		LineNumberAttribute lineNumbers = (LineNumberAttribute) codeAttribute.getAttribute(LineNumberAttribute.tag);
+		List<PC> newLineNumberEntries = new ArrayList<PC>();
 
     	newBytecode.setMaxStack(Math.max(newBytecode.getMaxStack(), codeAttribute.getMaxStack()));
-    	copyBytecode(newClass, newBytecode, cc.getName(), cp, ci, argumentPositions);
+    	copyBytecode(newClass, newBytecode, cc.getName(), cp, ci, argumentPositions, lineNumbers, newLineNumberEntries);
+    	
+		CustomLineNumberAttribute newLineNumbers = new CustomLineNumberAttribute(newCp, new byte[newLineNumberEntries.size() * 4 + 2]);
+		ByteArray.write16bit(newLineNumberEntries.size(), newLineNumbers.get(), 0);
+		
+		for (int i = 0; i < newLineNumberEntries.size(); i++) {
+			PC pc = newLineNumberEntries.get(i);
+    		ByteArray.write16bit(pc.pc, newLineNumbers.get(), i * 4 + 2);
+    		ByteArray.write16bit(pc.line, newLineNumbers.get(), i * 4 + 4);
+		}
+		
+    	return newLineNumbers;
 	}
+    
+    static class PC {
+    	int pc;
+    	int line;
+		public PC(int pc, int line) {
+			this.pc = pc;
+			this.line = line;
+		}
+    }
     
     private void copyBytecode(CtClass newClass, Bytecode newBytecode, ConstPool cp, CodeIterator ci) throws BadBytecode {
     	while (ci.hasNext()) {
@@ -292,10 +324,17 @@ public class ProxyFactory {
     	}
     }
     
-    private void copyBytecode(CtClass newClass, Bytecode newBytecode, String oldClass, ConstPool cp, CodeIterator ci, int[] argumentPositions) throws BadBytecode {
+    private void copyBytecode(CtClass newClass, Bytecode newBytecode, String oldClass, ConstPool cp, CodeIterator ci, int[] argumentPositions, LineNumberAttribute lineNumbers, List<PC> newLineNumberEntries) throws BadBytecode {
     	while (ci.hasNext()) {
 	        int address = ci.next();
     		int op = ci.byteAt(address);
+
+    		int pc = newBytecode.currentPc();
+    		int line = lineNumbers.toLineNumber(address);
+    		
+    		if (newLineNumberEntries.isEmpty() || newLineNumberEntries.get(newLineNumberEntries.size() - 1).line != line) {
+    			newLineNumberEntries.add(new PC(pc, line));
+    		}
     		
 	        switch (op) {
 	        case Bytecode.RETURN:
