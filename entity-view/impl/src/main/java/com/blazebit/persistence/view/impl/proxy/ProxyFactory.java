@@ -15,12 +15,14 @@
  */
 package com.blazebit.persistence.view.impl.proxy;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -61,6 +63,7 @@ import com.blazebit.reflection.ReflectionUtils;
 public class ProxyFactory {
 
     private static final AtomicInteger classCounter = new AtomicInteger();
+    private static final AtomicInteger unsafeClassCounter = new AtomicInteger();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ClassPool pool;
@@ -197,36 +200,25 @@ public class ProxyFactory {
     }
     
     private void addFields(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException {
-    	Map<String, String> fieldClassMappings = new HashMap<String, String>();
-    	CtClass current = cc;
-    	
-    	do {
-    		for (CtField field : current.getDeclaredFields()) {
-    			String oldClassMapping = fieldClassMappings.put(field.getName(), current.getName());
-    			if (oldClassMapping != null) {
-    				throw new IllegalArgumentException("Can not use unsafe instantiator because field name '" + field.getName() + "' appears in both classes which are on the same hierarchy [" + oldClassMapping + ", " + current.getName() + "]");
-    			}
-    			
-    			newClass.addField(new CtField(field, newClass));
-    		}
-    	} while (!"java.lang.Object".equals((current = current.getSuperclass()).getName()));
+    	for (CtField field : cc.getDeclaredFields()) {
+			CtField newField = new CtField(field, newClass);
+			int modifier = newField.getModifiers();
+			// Remove final modifier
+			modifier = modifier & ~Modifier.FINAL;
+			// Replace private with protected
+			if ((modifier & Modifier.PRIVATE) != 0) {
+				modifier = modifier & ~Modifier.PRIVATE;
+				modifier = modifier | Modifier.PROTECTED;
+			}
+			newField.setModifiers(modifier);
+			newClass.addField(newField);
+		}
     }
     
     private void addMethods(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException {
-    	Map<String, String> methodClassMappings = new HashMap<String, String>();
-    	CtClass current = cc;
-    	
-    	do {
-    		for (CtMethod method : current.getDeclaredMethods()) {
-    			String name = method.getName() + Descriptor.toString(method.getSignature()) + Descriptor.of(method.getReturnType());
-    			String oldClassMapping = methodClassMappings.put(name, current.getName());
-    			if (oldClassMapping != null) {
-    				throw new IllegalArgumentException("Can not use unsafe instantiator because method name '" + method.getName() + "' appears in both classes which are on the same hierarchy [" + oldClassMapping + ", " + current.getName() + "]");
-    			}
-    			
-    			newClass.addMethod(new CtMethod(method, newClass, null));
-    		}
-    	} while (!"java.lang.Object".equals((current = current.getSuperclass()).getName()));
+		for (CtMethod method : cc.getDeclaredMethods()) {
+			newClass.addMethod(new CtMethod(method, newClass, null));
+		}
     }
     
     private void addConstructors(CtClass newClass, CtClass cc) throws NotFoundException, CannotCompileException, BadBytecode {
@@ -251,7 +243,7 @@ public class ProxyFactory {
 	    	}
 	    	
 	    	newBytecode.addAload(0);
-	    	newBytecode.addInvokespecial("java.lang.Object", "<init>", "()V");
+	    	newBytecode.addInvokespecial(newClass.getSuperclass(), "<init>", "()V");
 
 	    	copyBytecode(newClass, newBytecode, cp, ci);
 	    	
@@ -501,26 +493,62 @@ public class ProxyFactory {
 
 	@SuppressWarnings("unchecked")
 	private <T> Class<? extends T> createUnsafeProxyClass(ViewType<T> viewType, Class<?> proxyClass) {
-        CtClass cc = pool.makeClass(proxyClass.getName() + "_unsafe");
+		String newCcName;
+		Class<?> newClass;
+        CtClass newCc;
         CtClass superCc;
-        CtClass proxyCc;
+        CtClass existingCc;
+
+        if (viewType.getConstructors().isEmpty()) {
+            throw new IllegalArgumentException("Invalid entity view class " + viewType.getJavaType().getName() + " that does not use a mapping constructor!");
+        }
 
         ClassPath classPath = new ClassClassPath(proxyClass);
         pool.insertClassPath(classPath);
+        Stack<Class<?>> classStack = new Stack<Class<?>>();
+        Class<?> current = proxyClass;
 
         try {
-            proxyCc = pool.get(proxyClass.getName());
-            superCc = proxyCc.getSuperclass();
-
-            if ("java.lang.Object".equals(superCc.getName())) {
-                throw new IllegalArgumentException("Invalid entity view class that does not use a custom constructor!");
-            }
+        	// Begin with object
+        	superCc = pool.get("java.lang.Object");
+        	
+            do {
+            	classStack.add(current);
+            } while ((current = current.getSuperclass()) != Object.class);
             
-            addFields(cc, proxyCc);
-            addMethods(cc, proxyCc);
-            addConstructors(cc, proxyCc);
-//            cc.debugWriteFile("D:\\");
-            return cc.toClass();
+            while (classStack.size() > 1) {
+            	current = classStack.pop();
+            	newClass = unsafeProxyClasses.get(current);
+            	
+            	if (newClass == null) {
+                	newCcName = current.getName() + "_unsafe" + unsafeClassCounter.getAndIncrement();
+	            	newCc = pool.makeClass(newCcName, superCc);
+	                existingCc = pool.get(current.getName());
+	
+	                addFields(newCc, existingCc);
+	                addMethods(newCc, existingCc);
+	                
+	                newClass = newCc.toClass();
+	                unsafeProxyClasses.put(current, newClass);
+	                verifyFieldOffsets(newClass, current);
+            	} else {
+                	newCc = pool.get(newClass.getName());
+            	}
+            	
+                // We are going top down
+                superCc = newCc;
+            }
+
+        	current = classStack.pop();
+        	newCcName = current.getName() + "_unsafe" + unsafeClassCounter.getAndIncrement();
+        	newCc = pool.makeClass(newCcName, superCc);
+            existingCc = pool.get(current.getName());
+            
+            addFields(newCc, existingCc);
+            addMethods(newCc, existingCc);
+            addConstructors(newCc, existingCc);
+
+            return newCc.toClass();
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
@@ -528,7 +556,25 @@ public class ProxyFactory {
         }
     }
 
-    private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
+    private void verifyFieldOffsets(Class<?> newClass, Class<?> current) {
+		Map<String, Long> newClassFields = new HashMap<String, Long>();
+		for (Field f : newClass.getDeclaredFields()) {
+			// Only use non static fields
+			if ((f.getModifiers() & Modifier.STATIC) == 0) {
+				newClassFields.put(f.getName(), UnsafeHelper.getOffset(f));
+			}
+		}
+		
+		for (Field f : current.getDeclaredFields()) {
+			if ((f.getModifiers() & Modifier.STATIC) == 0) {
+				if (UnsafeHelper.getOffset(f) != newClassFields.get(f.getName()).longValue()) {
+					throw new RuntimeException("Field offsets of field '" + f.getName() + "' did not match in the classes [" + newClass.getName() + ", " + current.getName() + "]");
+				}
+			}
+		}
+	}
+
+	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
         Method getter = attribute.getJavaMethod();
         Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
         

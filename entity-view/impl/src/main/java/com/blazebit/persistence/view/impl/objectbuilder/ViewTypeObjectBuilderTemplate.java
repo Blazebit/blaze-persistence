@@ -54,6 +54,7 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTup
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
@@ -171,8 +172,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
             parameterTypes[i + attributes.length + 1] = parameterAttributes[i].getJavaType();
         }
         
-//        this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, parameterTypes);
-        this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
+        if (viewType.getConstructors().isEmpty()) {
+        	this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
+        } else {
+        	this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
+        }
         
         for (int i = 0; i < attributes.length; i++) {
             applyMapping(attributes[i], mappingList, parameterMappingList, featuresFound);

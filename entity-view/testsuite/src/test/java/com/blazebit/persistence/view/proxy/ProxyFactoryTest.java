@@ -61,7 +61,7 @@ public class ProxyFactoryTest {
     }
 
     @Test
-    public void testInterfaceProxy1() throws Exception {
+    public void testUnsafeClassProxy() throws Exception {
         ViewType<UnsafeDocumentClassView> viewType = getViewMetamodel().view(UnsafeDocumentClassView.class);
         Class<? extends DocumentInterfaceView> proxyClass = proxyFactory.getProxy(viewType);
 
@@ -78,7 +78,6 @@ public class ProxyFactoryTest {
 
         UnsafeDocumentClassView instance = instantiator.newInstance(new Object[] {expectedId, expectedContacts, expectedFirstContactPerson,
                 expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber});
-        System.out.println(instance);
     }
 
     @Test
