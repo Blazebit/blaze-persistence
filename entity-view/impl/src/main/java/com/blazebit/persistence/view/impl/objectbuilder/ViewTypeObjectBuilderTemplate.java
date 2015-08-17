@@ -92,6 +92,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
     private final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
+    
+    private static final int FEATURE_PARAMETERS = 0;
+    private static final int FEATURE_INDEXED_COLLECTIONS = 1;
+    private static final int FEATURE_SUBVIEWS = 2;
 
     private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
@@ -194,9 +198,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
             applyMapping(parameterAttributes[i], mappingList, parameterMappingList, featuresFound);
         }
 
-        this.hasParameters = featuresFound[0];
-        this.hasIndexedCollections = featuresFound[1];
-        this.hasSubviews = featuresFound[2];
+        this.hasParameters = featuresFound[FEATURE_PARAMETERS];
+        this.hasIndexedCollections = featuresFound[FEATURE_INDEXED_COLLECTIONS];
+        this.hasSubviews = featuresFound[FEATURE_SUBVIEWS];
         this.effectiveTupleSize = length;
         this.proxyConstructor = javaConstructor;
         this.mappers = getMappers(mappingList);
@@ -266,17 +270,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 int startIndex = tupleOffset + mappingList.size();
 
                 if (listKey) {
-                    featuresFound[1] = true;
-                    applyCollectionKeyMapping("INDEX", mappingAttribute, attribute, mappingList);
-                    parameterMappingList.add(null);
+                    featuresFound[FEATURE_INDEXED_COLLECTIONS] = true;
+                    applyCollectionFunctionMapping("INDEX", "_KEY", mappingAttribute, attribute, mappingList, parameterMappingList);
                 } else if (mapKey) {
-                    featuresFound[1] = true;
-                    applyCollectionKeyMapping("KEY", mappingAttribute, attribute, mappingList);
-                    parameterMappingList.add(null);
+                    featuresFound[FEATURE_INDEXED_COLLECTIONS] = true;
+                    applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, attribute, mappingList, parameterMappingList);
                 }
 
                 if (attribute.isSubview()) {
-                    featuresFound[2] = true;
+                    featuresFound[FEATURE_SUBVIEWS] = true;
 
                     int[] newIdPositions;
 
@@ -289,6 +291,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
 
                     applySubviewMapping(attribute, newIdPositions, pluralAttribute.getElementType(), mappingAttribute, mappingList, parameterMappingList);
+                } else if (mapKey) {
+                    applyCollectionFunctionMapping("VALUE", "", mappingAttribute, attribute, mappingList, parameterMappingList);
+//                    applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
                 } else {
                     applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
                 }
@@ -337,10 +342,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
                 }
             } else if (((SingularAttribute) attribute).isQueryParameter()) {
-                featuresFound[0] = true;
+                featuresFound[FEATURE_PARAMETERS] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
             } else if (attribute.isSubview()) {
-                featuresFound[2] = true;
+                featuresFound[FEATURE_SUBVIEWS] = true;
                 applySubviewMapping(attribute, idPositions, attribute.getJavaType(), mappingAttribute, mappingList, parameterMappingList);
             } else {
                 applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
@@ -348,12 +353,13 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    private void applyCollectionKeyMapping(String keyFunction, MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList) {
+    private void applyCollectionFunctionMapping(String function, String aliasSuffix, MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {
         Object[] mapping = new Object[2];
-        mapping[0] = keyFunction + "(" + getMapping(mappingPrefix, mappingAttribute) + ")";
+        mapping[0] = function + "(" + getMapping(mappingPrefix, mappingAttribute) + ")";
         String alias = getAlias(aliasPrefix, attribute);
-        mapping[1] = alias == null ? null : alias + "_KEY";
+        mapping[1] = alias == null ? null : alias + aliasSuffix;
         mappingList.add(mapping);
+        parameterMappingList.add(null);
     }
 
     private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {

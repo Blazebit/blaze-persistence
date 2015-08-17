@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.basic;
+package com.blazebit.persistence.view.collections.embeddable;
 
+import com.blazebit.persistence.view.collections.basic.*;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListSetMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapListSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapSetListView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetListMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetMapListView;
-import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
-import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentCollectionsView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentListMapSetView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentListSetMapView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentMapListSetView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentMapSetListView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentSetListMapView;
+import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentSetMapListView;
+import com.blazebit.persistence.view.collections.entity.DocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.PersonForElementCollections;
 import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.Arrays;
@@ -38,31 +40,33 @@ import javax.persistence.EntityTransaction;
 import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.6
  */
 @RunWith(Parameterized.class)
-public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> extends AbstractEntityViewTest {
+public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsView> extends AbstractEntityViewTest {
 
     private final Class<T> viewType;
 
-    private DocumentForCollections doc1;
-    private DocumentForCollections doc2;
+    private DocumentForElementCollections doc1;
+    private DocumentForElementCollections doc2;
+    private DocumentForElementCollections doc0;
 
-    public SimpleCollectionsTest(Class<T> viewType) {
+    public EmbeddableCollectionsTest(Class<T> viewType) {
         this.viewType = viewType;
     }
 
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
-            DocumentForCollections.class,
-            PersonForCollections.class
+            DocumentForElementCollections.class,
+            PersonForElementCollections.class
         };
     }
 
@@ -71,17 +75,18 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            doc1 = new DocumentForCollections("doc1");
-            doc2 = new DocumentForCollections("doc2");
+            doc0 = new DocumentForElementCollections("doc0");
+            doc1 = new DocumentForElementCollections("doc1");
+            doc2 = new DocumentForElementCollections("doc2");
 
-            PersonForCollections o1 = new PersonForCollections("pers1");
-            PersonForCollections o2 = new PersonForCollections("pers2");
-            PersonForCollections o3 = new PersonForCollections("pers3");
-            PersonForCollections o4 = new PersonForCollections("pers4");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
-            o3.setPartnerDocument(doc1);
-            o4.setPartnerDocument(doc2);
+            PersonForElementCollections o1 = new PersonForElementCollections("pers1");
+            PersonForElementCollections o2 = new PersonForElementCollections("pers2");
+            PersonForElementCollections o3 = new PersonForElementCollections("pers3");
+            PersonForElementCollections o4 = new PersonForElementCollections("pers4");
+            o1.setPartnerDocument(doc0);
+            o2.setPartnerDocument(doc0);
+            o3.setPartnerDocument(doc0);
+            o4.setPartnerDocument(doc0);
 
             doc1.setOwner(o1);
             doc2.setOwner(o2);
@@ -90,11 +95,6 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             doc2.getContacts().put(1, o2);
             doc1.getContacts().put(2, o3);
             doc2.getContacts().put(2, o4);
-
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(o3);
-            em.persist(o4);
 
             doc1.getPartners().add(o1);
             doc1.getPartners().add(o3);
@@ -106,6 +106,7 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             doc2.getPersonList().add(o3);
             doc2.getPersonList().add(o4);
 
+            em.persist(doc0);
             em.persist(doc1);
             em.persist(doc2);
 
@@ -113,8 +114,9 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
             tx.commit();
             em.clear();
 
-            doc1 = em.find(DocumentForCollections.class, doc1.getId());
-            doc2 = em.find(DocumentForCollections.class, doc2.getId());
+            doc0 = em.find(DocumentForElementCollections.class, doc0.getId());
+            doc1 = em.find(DocumentForElementCollections.class, doc1.getId());
+            doc2 = em.find(DocumentForElementCollections.class, doc2.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);
@@ -124,23 +126,24 @@ public class SimpleCollectionsTest<T extends BasicDocumentCollectionsView> exten
     @Parameterized.Parameters
     public static Collection entityViewCombinations() {
         return Arrays.asList(new Object[][]{
-            { BasicDocumentListMapSetView.class },
-            { BasicDocumentListSetMapView.class },
-            { BasicDocumentMapListSetView.class },
-            { BasicDocumentMapSetListView.class },
-            { BasicDocumentSetListMapView.class },
-            { BasicDocumentSetMapListView.class }
+            { EmbeddableDocumentListMapSetView.class },
+            { EmbeddableDocumentListSetMapView.class },
+            { EmbeddableDocumentMapListSetView.class },
+            { EmbeddableDocumentMapSetListView.class },
+            { EmbeddableDocumentSetListMapView.class },
+            { EmbeddableDocumentSetMapListView.class }
         });
     }
 
     @Test
+    @Category(NoHibernate.class)
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
-            .orderByAsc("id");
+        CriteriaBuilder<DocumentForElementCollections> criteria = cbf.create(em, DocumentForElementCollections.class, "d")
+            .orderByAsc("id").where("id").gt(doc0.getId());
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
 

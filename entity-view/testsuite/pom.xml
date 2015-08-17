@@ -263,6 +263,17 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>hibernate-4.3</id>
@@ -278,6 +289,17 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>hibernate-5.0</id>
@@ -293,6 +315,17 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>eclipselink</id>
@@ -303,9 +336,23 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>datanucleus</id>
+			<properties>
+				<jpa.provider>Datanucleus</jpa.provider>
+			</properties>
 			<dependencies>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -313,6 +360,17 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 			<!-- <build> <plugins> <plugin> <groupId>org.datanucleus</groupId> <artifactId>datanucleus-maven-plugin</artifactId> 
 				<version>4.0.0-release</version> <configuration> <api>JPA</api> <persistenceUnitName>TestPU</persistenceUnitName> 
 				<verbose>true</verbose> </configuration> <executions> <execution> <phase>process-test-classes</phase> 
@@ -321,6 +379,9 @@
 		</profile>
 		<profile>
 			<id>openjpa</id>
+			<properties>
+				<jpa.provider>OpenJPA</jpa.provider>
+			</properties>
 			<dependencies>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -328,6 +389,17 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</excludedGroups>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 </project>
