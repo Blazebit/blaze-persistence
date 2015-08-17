@@ -15,6 +15,11 @@
  */
 package com.blazebit.persistence;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.IntIdEntity;
@@ -29,11 +34,6 @@ import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  *

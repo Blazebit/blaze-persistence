@@ -15,20 +15,19 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.entity.Version;
-import com.blazebit.persistence.impl.BuilderChainingException;
-
 import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.impl.BuilderChainingException;
 
 /**
  *

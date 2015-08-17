@@ -15,10 +15,12 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import java.util.Set;
-import javax.persistence.EntityManager;
 
 /**
  *

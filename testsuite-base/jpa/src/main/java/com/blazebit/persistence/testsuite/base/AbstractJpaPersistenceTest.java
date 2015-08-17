@@ -99,7 +99,7 @@ public abstract class AbstractJpaPersistenceTest {
         return properties;
     }
 
-    private EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map properties) {
+    private EntityManagerFactory createEntityManagerFactory(String persistenceUnitName, Map<Object, Object> properties) {
         MutablePersistenceUnitInfo persistenceUnitInfo = new MutablePersistenceUnitInfo();
         persistenceUnitInfo.setPersistenceUnitName(persistenceUnitName);
         persistenceUnitInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);
@@ -120,11 +120,11 @@ public abstract class AbstractJpaPersistenceTest {
         return createEntityManagerFactory(persistenceUnitInfo, properties);
     }
 
-    private static EntityManagerFactory createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo, Map properties) {
+    private static EntityManagerFactory createEntityManagerFactory(PersistenceUnitInfo persistenceUnitInfo, Map<Object, Object> properties) {
         EntityManagerFactory factory = null;
-        Map props = properties;
+        Map<Object, Object> props = properties;
         if (props == null) {
-            props = Collections.EMPTY_MAP;
+            props = Collections.emptyMap();
         }
 
         PersistenceProviderResolver resolver = PersistenceProviderResolverHolder.getPersistenceProviderResolver();

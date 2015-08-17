@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import java.util.Iterator;
 import java.util.Set;
+
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  *

@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-
 /**
  *
  * @author Christian Beikov

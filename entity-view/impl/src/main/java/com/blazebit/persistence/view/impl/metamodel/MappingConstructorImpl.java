@@ -15,14 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.view.MappingSingular;
-import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.ViewConstructor;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.ParameterAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
@@ -37,6 +29,14 @@ import java.util.NavigableSet;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
+
+import com.blazebit.persistence.view.MappingSingular;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *

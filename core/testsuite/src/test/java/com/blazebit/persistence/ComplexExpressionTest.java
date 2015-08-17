@@ -16,15 +16,19 @@
 
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Workflow;
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
+
 import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import com.blazebit.persistence.entity.Workflow;
 
 /**
  *
@@ -50,7 +54,7 @@ public class ComplexExpressionTest extends AbstractCoreTest {
     }
 
     @Parameterized.Parameters
-    public static Collection expressionOperatorUses() {
+    public static Collection<?> expressionOperatorUses() {
         return Arrays.asList(new Object[][]{
             { "localized[:locale].name NOT MEMBER OF tags", staticJoinAliasValue("localized_locale_1") + ".name NOT MEMBER OF workflow.tags", "" },
             { "localized[:locale].name MEMBER OF tags", staticJoinAliasValue("localized_locale_1") + ".name MEMBER OF workflow.tags", "" },

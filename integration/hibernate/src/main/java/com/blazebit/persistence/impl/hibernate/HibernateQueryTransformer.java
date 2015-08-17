@@ -29,7 +29,8 @@ import org.hibernate.Query;
 @ServiceProvider(QueryTransformer.class)
 public class HibernateQueryTransformer implements QueryTransformer {
 
-    @Override
+	@Override
+    @SuppressWarnings("unchecked")
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         Query hQuery = query.unwrap(Query.class);
         hQuery.setResultTransformer(new ObjectBuilderResultTransformerAdapter(objectBuilder));

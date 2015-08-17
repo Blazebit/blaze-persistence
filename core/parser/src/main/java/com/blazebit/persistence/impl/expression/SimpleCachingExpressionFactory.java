@@ -31,7 +31,8 @@ public class SimpleCachingExpressionFactory extends AbstractCachingExpressionFac
         this.cacheManager = new ConcurrentHashMap<String, ConcurrentMap<String, Expression>>();
     }
 
-    @Override
+	@Override
+    @SuppressWarnings("unchecked")
     protected <E extends Expression> E getOrDefault(String cacheName, String cacheKey, Supplier<E> defaultSupplier) {
         ConcurrentMap<String, Expression> cache = cacheManager.get(cacheName);
         

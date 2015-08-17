@@ -16,10 +16,10 @@
 
 package com.blazebit.persistence.impl.keyset;
 
-import com.blazebit.persistence.KeysetPage;
-import com.blazebit.persistence.KeysetBuilder;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.blazebit.persistence.KeysetBuilder;
 
 /**
  *

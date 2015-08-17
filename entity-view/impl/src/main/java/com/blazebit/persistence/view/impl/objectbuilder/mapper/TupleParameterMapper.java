@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
-import com.blazebit.persistence.QueryBuilder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import com.blazebit.persistence.QueryBuilder;
 
 /**
  *

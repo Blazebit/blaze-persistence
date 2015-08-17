@@ -15,21 +15,22 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
 import static com.googlecode.catchexception.CatchException.verifyException;
-import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
 
 /**
  *
@@ -73,9 +74,9 @@ public class ParameterAPITest extends AbstractCoreTest {
         assertFalse(crit.isParameterSet("lastModifiedFilter"));
         assertTrue(crit.isParameterSet("param_0"));
 
-        Set<? extends Parameter> params = crit.getParameters();
+        Set<? extends Parameter<?>> params = crit.getParameters();
         assertTrue(params.size() == 5);
-        for (Parameter p : params) {
+        for (Parameter<?> p : params) {
             if ("param_0".equals(p.getName())) {
                 assertTrue(p.getParameterType().equals(String.class));
             } else {

@@ -23,6 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
+
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
 import javassist.ClassPath;
@@ -41,12 +47,6 @@ import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
-
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ParameterAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -69,6 +69,7 @@ public class ProxyFactory {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
         Class<T> clazz = viewType.getJavaType();
         Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
@@ -85,6 +86,7 @@ public class ProxyFactory {
         return proxyClass;
     }
 
+    @SuppressWarnings("unchecked")
     private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
         Class<?> clazz = viewType.getJavaType();
         CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + classCounter.getAndIncrement());
@@ -405,7 +407,7 @@ public class ProxyFactory {
     }
 
     private String getGenericSignature(MethodAttribute<?, ?> attribute, CtField attributeField) throws NotFoundException {
-        Class[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(attribute.getDeclaringType().getJavaType(), attribute.getJavaMethod());
+        Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(attribute.getDeclaringType().getJavaType(), attribute.getJavaMethod());
         if (typeArguments.length == 0) {
             return null;
         }

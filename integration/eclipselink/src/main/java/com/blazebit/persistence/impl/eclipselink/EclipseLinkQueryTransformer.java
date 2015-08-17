@@ -15,14 +15,14 @@
  */
 package com.blazebit.persistence.impl.eclipselink;
 
+import java.util.logging.Logger;
+
+import javax.persistence.TypedQuery;
+
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.jpa.ObjectBuilderJPAQueryAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.util.logging.Logger;
-import javax.persistence.TypedQuery;
-import org.eclipse.persistence.jpa.JpaHelper;
-import org.eclipse.persistence.queries.DatabaseQuery;
 
 /**
  *
@@ -39,10 +39,6 @@ public class EclipseLinkQueryTransformer implements QueryTransformer {
     @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
-        // The native integration sucks because it works directly on the JDBC level
-//        DatabaseQuery databaseQuery = JpaHelper.getDatabaseQuery(query);
-//        databaseQuery.setRedirector(new ObjectBuilderQueryRedirectorAdapter(objectBuilder));
-//        return (TypedQuery<X>) query;
     }
 
 }

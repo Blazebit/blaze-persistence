@@ -18,11 +18,14 @@ package com.blazebit.persistence.impl;
 
 /**
  *
- * @author ccbem
+ * @author Moritz Becker
+ * @since 1.0.5
  */
 public class BuilderChainingException extends RuntimeException {
 
-    /**
+	private static final long serialVersionUID = 1L;
+
+	/**
      * Creates a new instance of <code>BuilderNotEndedException</code> without
      * detail message.
      */

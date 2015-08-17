@@ -15,6 +15,17 @@
  */
 package com.blazebit.persistence.view.basic;
 
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.basic.model.CircularDocument;
 import com.blazebit.persistence.view.basic.model.CircularPerson;
@@ -34,14 +45,6 @@ import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Set;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static com.googlecode.catchexception.CatchException.*;
-import org.junit.Test;
 
 /**
  *
@@ -154,7 +157,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("id", ((MappingAttribute) attribute).getMapping());
+        assertEquals("id", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Long.class, attribute.getJavaType());
@@ -170,7 +173,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("id", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("id", ((MappingAttribute) attribute).getMapping());
+        assertEquals("id", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Long.class, attribute.getJavaType());
@@ -186,7 +189,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("name", ((MappingAttribute) attribute).getMapping());
+        assertEquals("name", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(String.class, attribute.getJavaType());
@@ -202,7 +205,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("name", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("name", ((MappingAttribute) attribute).getMapping());
+        assertEquals("name", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(String.class, attribute.getJavaType());
@@ -218,7 +221,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("firstContactPerson", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contacts[1]", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contacts[1]", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Person.class, attribute.getJavaType());
@@ -234,7 +237,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("firstContactPerson", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contacts[1]", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contacts[1]", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Person.class, attribute.getJavaType());
@@ -250,7 +253,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contacts2[:contactPersonNumber]", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contacts2[:contactPersonNumber]", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Person.class, attribute.getJavaType());
@@ -266,7 +269,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("myContactPerson", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contacts2[:contactPersonNumber]", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contacts2[:contactPersonNumber]", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertFalse(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Person.class, attribute.getJavaType());
@@ -282,7 +285,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("contactPersonNumber2", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contactPersonNumber", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contactPersonNumber", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertTrue(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Integer.class, attribute.getJavaType());
@@ -298,7 +301,7 @@ public class ViewMetamodelTest {
         assertNotNull(attribute);
         assertEquals("contactPersonNumber2", attribute.getName());
         assertFalse(attribute.isSubquery());
-        assertEquals("contactPersonNumber", ((MappingAttribute) attribute).getMapping());
+        assertEquals("contactPersonNumber", ((MappingAttribute<?, ?>) attribute).getMapping());
         assertFalse(attribute.isCollection());
         assertTrue(((SingularAttribute<?, ?>) attribute).isQueryParameter());
         assertEquals(Integer.class, attribute.getJavaType());
@@ -370,7 +373,7 @@ public class ViewMetamodelTest {
         assertEquals(viewType, constructor.getParameterAttributes().get(0).getDeclaringType());
         assertEquals(0, constructor.getParameterAttributes().get(0).getIndex());
         assertFalse(constructor.getParameterAttributes().get(0).isSubquery());
-        assertEquals("age + 1", ((MappingAttribute) constructor.getParameterAttributes().get(0)).getMapping());
+        assertEquals("age + 1", ((MappingAttribute<?, ?>) constructor.getParameterAttributes().get(0)).getMapping());
         assertFalse(constructor.getParameterAttributes().get(0).isCollection());
         assertFalse(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(0)).isQueryParameter());
 
@@ -379,7 +382,7 @@ public class ViewMetamodelTest {
         assertEquals(viewType, constructor.getParameterAttributes().get(1).getDeclaringType());
         assertEquals(1, constructor.getParameterAttributes().get(1).getIndex());
         assertFalse(constructor.getParameterAttributes().get(1).isSubquery());
-        assertEquals("contactPersonNumber", ((MappingAttribute) constructor.getParameterAttributes().get(1)).getMapping());
+        assertEquals("contactPersonNumber", ((MappingAttribute<?, ?>) constructor.getParameterAttributes().get(1)).getMapping());
         assertFalse(constructor.getParameterAttributes().get(1).isCollection());
         assertTrue(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(1)).isQueryParameter());
 
@@ -388,7 +391,7 @@ public class ViewMetamodelTest {
         assertEquals(viewType, constructor.getParameterAttributes().get(2).getDeclaringType());
         assertEquals(2, constructor.getParameterAttributes().get(2).getIndex());
         assertFalse(constructor.getParameterAttributes().get(2).isSubquery());
-        assertEquals("optionalParameter", ((MappingAttribute) constructor.getParameterAttributes().get(2)).getMapping());
+        assertEquals("optionalParameter", ((MappingAttribute<?, ?>) constructor.getParameterAttributes().get(2)).getMapping());
         assertFalse(constructor.getParameterAttributes().get(2).isCollection());
         assertTrue(((SingularAttribute<?, ?>) constructor.getParameterAttributes().get(2)).isQueryParameter());
 

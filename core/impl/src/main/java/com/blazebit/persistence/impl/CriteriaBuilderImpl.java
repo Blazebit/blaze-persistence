@@ -15,15 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.BaseQueryBuilder;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import java.util.Set;
-import javax.persistence.EntityManager;
 
 /**
  *
@@ -39,71 +40,85 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> from(Class<?> clazz) {
         return (CriteriaBuilder<T>) super.from(clazz);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> from(Class<?> clazz, String alias) {
         return (CriteriaBuilder<T>) super.from(clazz, alias);
     }
     
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<CriteriaBuilder<T>> selectCase() {
         return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<CriteriaBuilder<T>> selectCase(String alias) {
         return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression) {
         return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression, String alias) {
         return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<CriteriaBuilder<Y>>) super.selectNew(clazz);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> select(String expression) {
         return (CriteriaBuilder<T>) super.select(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> select(String expression, String alias) {
         return (CriteriaBuilder<T>) super.select(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery() {
         return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String alias) {
         return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
         return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }

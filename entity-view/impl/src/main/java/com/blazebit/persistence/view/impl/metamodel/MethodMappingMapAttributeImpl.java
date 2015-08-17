@@ -15,13 +15,14 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.MapAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -32,6 +33,7 @@ public class MethodMappingMapAttributeImpl<X, K, V> extends AbstractMethodMappin
 
     private final Class<K> keyType;
 
+    @SuppressWarnings("unchecked")
     public MethodMappingMapAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method));
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);

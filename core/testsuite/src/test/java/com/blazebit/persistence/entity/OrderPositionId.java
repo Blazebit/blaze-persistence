@@ -26,6 +26,8 @@ import javax.persistence.Embeddable;
  */
 @Embeddable
 public class OrderPositionId implements Serializable {
+
+	private static final long serialVersionUID = 1L;
     
     private Long orderId;
     private Integer position;

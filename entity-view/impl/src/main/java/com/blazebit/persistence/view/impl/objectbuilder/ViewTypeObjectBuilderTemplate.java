@@ -97,6 +97,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private static final int FEATURE_INDEXED_COLLECTIONS = 1;
     private static final int FEATURE_SUBVIEWS = 2;
 
+    @SuppressWarnings("unchecked")
     private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if (viewType.getConstructors().size() > 1) {
@@ -117,7 +118,6 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.proxyFactory = proxyFactory;
 
         Class<?> proxyClass = proxyFactory.getProxy(viewType);
-        Constructor<?>[] constructors = proxyClass.getDeclaredConstructors();
         Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
         // We have special handling for the id attribute since we need to know it's position in advance
         // Therefore we have to remove it so that it doesn't get processed as normal attribute
@@ -152,7 +152,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         
         String idAttributeName = jpaIdAttr.getName();
         MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
-        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute) idAttribute;
+        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
         
         if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
             throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
@@ -207,6 +207,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
     }
 
+    @SuppressWarnings("unchecked")
     private static TupleElementMapper[] getMappers(List<Object> mappingList) {
         TupleElementMapper[] mappers = new TupleElementMapper[mappingList.size()];
 
@@ -258,6 +259,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mappers;
     }
 
+    @SuppressWarnings("unchecked")
     private void applyMapping(Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
         if (attribute.isSubquery()) {
             applySubqueryMapping((SubqueryAttribute<? super T, ?>) attribute, mappingList, parameterMappingList);
@@ -341,7 +343,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             throw new IllegalArgumentException("Ignoring the index on the attribute '" + pluralAttribute + "' is not possible!");
                     }
                 }
-            } else if (((SingularAttribute) attribute).isQueryParameter()) {
+            } else if (((SingularAttribute<?, ?>) attribute).isQueryParameter()) {
                 featuresFound[FEATURE_PARAMETERS] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
             } else if (attribute.isSubview()) {
@@ -362,6 +364,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         parameterMappingList.add(null);
     }
 
+    @SuppressWarnings("unchecked")
     private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         ViewType<Object[]> subviewType = (ViewType<Object[]>) evm.getMetamodel().view(subviewClass);
         String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
@@ -418,7 +421,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return subviewMappingPrefix;
     }
 
-    private <T> List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+    private List<String> createSubviewMappingPrefix(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
         return createSubviewMappingPrefix(prefixParts, mappingAttribute.getMapping());
     }
 
@@ -435,7 +438,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mapping;
     }
 
-    private <T> String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
+    private String getMapping(List<String> prefixParts, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefixParts, mappingAttribute.getMapping());
     }
 
@@ -447,7 +450,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return mapping;
     }
     
-    private <T> String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
+    private String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefix, mappingAttribute.getMapping());
     }
 
@@ -482,7 +485,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (hasParameters) {
-            result = new ParameterViewTypeObjectBuilder(result, this, queryBuilder, optionalParameters, tupleOffset);
+            result = new ParameterViewTypeObjectBuilder<T>(result, this, queryBuilder, optionalParameters, tupleOffset);
         }
 
         if (tupleTransformatorFactory.hasTransformers() && !isSubview) {

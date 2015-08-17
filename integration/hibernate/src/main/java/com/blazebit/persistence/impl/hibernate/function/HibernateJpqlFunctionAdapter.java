@@ -79,6 +79,7 @@ public class HibernateJpqlFunctionAdapter implements SQLFunction {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public String render(Type firstArgumentType, List args, SessionFactoryImplementor factory) throws QueryException {
         HibernateFunctionRenderContext context = new HibernateFunctionRenderContext(args);
         function.render(context);

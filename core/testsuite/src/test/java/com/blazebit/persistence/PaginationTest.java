@@ -15,12 +15,8 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
-import com.blazebit.persistence.entity.Workflow;
-import com.blazebit.persistence.model.DocumentViewModel;
-
 import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +26,14 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import org.junit.Assert;
-
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.Workflow;
+import com.blazebit.persistence.model.DocumentViewModel;
 
 /**
  *

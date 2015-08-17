@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.view.impl.filter;
 
-import com.blazebit.text.FormatUtils;
 import java.io.Serializable;
 import java.text.ParseException;
+
+import com.blazebit.text.FormatUtils;
 
 /**
  *
@@ -26,6 +27,7 @@ import java.text.ParseException;
  */
 public final class FilterUtils {
 
+    @SuppressWarnings("unchecked")
     public static Object parseValue(Class<?> clazz, Object value) {
         try {
             return FormatUtils.getParsedValue((Class<? extends Serializable>) clazz, value.toString());

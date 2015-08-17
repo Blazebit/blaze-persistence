@@ -15,14 +15,15 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *

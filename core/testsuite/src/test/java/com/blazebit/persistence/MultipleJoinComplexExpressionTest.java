@@ -15,17 +15,17 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Workflow;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Locale;
 
 import javax.persistence.Tuple;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
+import com.blazebit.persistence.entity.Workflow;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
 
 /**
  *

@@ -15,16 +15,17 @@
  */
 package com.blazebit.persistence.impl.builder.object;
 
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.SelectInfo;
-import com.blazebit.persistence.impl.SelectManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
+
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.SelectInfo;
 
 /**
  *
@@ -149,7 +150,8 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
                 this.index = index;
             }
 
-            @Override
+			@Override
+            @SuppressWarnings("unchecked")
             public Class<? extends X> getJavaType() {
                 return (Class<? extends X>) tuple[index];
             }

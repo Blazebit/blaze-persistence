@@ -15,41 +15,31 @@
  */
 package com.blazebit.persistence.view.collections.ordered;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentCollectionsView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListMapSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentListSetMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapListSetView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentMapSetListView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetListMapView;
-import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetMapListView;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import com.blazebit.persistence.view.collections.ordered.model.BaseDocumentView;
 import com.blazebit.persistence.view.collections.ordered.model.DocumentWithSetAsListView;
 import com.blazebit.persistence.view.collections.ordered.model.PersonForCollectionsView;
 import com.blazebit.persistence.view.collections.ordered.model.PersonWithSetAsListView;
-import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
-import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentCollectionsView;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import javax.persistence.EntityTransaction;
-import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  *

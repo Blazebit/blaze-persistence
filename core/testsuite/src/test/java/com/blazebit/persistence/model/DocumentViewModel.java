@@ -42,4 +42,16 @@ public class DocumentViewModel {
     public String getName() {
         return name;
     }
+
+	public String getOwnerName() {
+		return ownerName;
+	}
+
+	public String getFirstLocalizedItem() {
+		return firstLocalizedItem;
+	}
+
+	public String getPartnerDocumentName() {
+		return partnerDocumentName;
+	}
 }

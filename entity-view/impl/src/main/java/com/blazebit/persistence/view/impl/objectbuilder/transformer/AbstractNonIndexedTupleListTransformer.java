@@ -15,12 +15,13 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
-import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
 
 /**
  *
@@ -68,6 +69,7 @@ public abstract class AbstractNonIndexedTupleListTransformer<C> extends TupleLis
 
     protected abstract Object createCollection();
 
+    @SuppressWarnings("unchecked")
     protected void add(Object collection, Object value) {
         if (value != null) {
             addToCollection((C) collection, value);

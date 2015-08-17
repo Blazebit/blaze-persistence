@@ -15,11 +15,12 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.CollectionAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.CollectionAttribute;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
 /**
  *

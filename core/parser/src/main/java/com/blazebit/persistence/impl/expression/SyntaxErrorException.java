@@ -23,7 +23,9 @@ package com.blazebit.persistence.impl.expression;
  */
 public class SyntaxErrorException extends RuntimeException {
 
-    public SyntaxErrorException() {
+	private static final long serialVersionUID = 1L;
+
+	public SyntaxErrorException() {
     }
 
     public SyntaxErrorException(Throwable t) {

@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.KeysetPage;
-import com.blazebit.persistence.PagedList;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.PagedList;
 
 /**
  *
@@ -29,7 +30,9 @@ import java.util.Collection;
  */
 public class PagedListImpl<T> extends ArrayList<T> implements PagedList<T> {
 
-    private final KeysetPage keyset;
+	private static final long serialVersionUID = 1L;
+	
+	private final KeysetPage keyset;
     private final long totalSize;
     private final int page;
     private final int totalPages;

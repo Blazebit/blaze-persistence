@@ -46,11 +46,13 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public T build(Object[] tuple) {
         return (T) tuple;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<T> buildList(List<T> list) {
         List<Object[]> currentTuples = transformator.transformAll((List<Object[]>) list);
         List<T> resultList = new ArrayList<T>(currentTuples.size());

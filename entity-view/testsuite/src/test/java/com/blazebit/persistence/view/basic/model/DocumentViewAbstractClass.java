@@ -23,9 +23,9 @@ import com.blazebit.persistence.view.MappingParameter;
  * @author Christian Beikov
  * @since 1.0
  */
-// Not necessary because DocumentView1 already provides this information
-//@EntityView(Document.class)
 public abstract class DocumentViewAbstractClass implements DocumentViewInterface {
+
+	private static final long serialVersionUID = 1L;
 
     private final long age;
     private final Integer contactPersonNumber;

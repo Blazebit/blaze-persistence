@@ -15,16 +15,13 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-
 import java.util.Set;
 import java.util.logging.Level;
 
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.DiagnosticErrorListener;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.atn.PredictionMode;
+
+import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 
 /**
  *

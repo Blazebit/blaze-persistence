@@ -15,6 +15,11 @@
  */
 package com.blazebit.persistence.impl.builder.object;
 
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -25,10 +30,6 @@ import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 /**
  *

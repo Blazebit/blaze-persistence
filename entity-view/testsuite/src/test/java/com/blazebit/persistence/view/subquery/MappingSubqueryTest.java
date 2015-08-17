@@ -15,6 +15,16 @@
  */
 package com.blazebit.persistence.view.subquery;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
@@ -26,20 +36,9 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.Sorters;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.subquery.model.DocumentWithExpressionSubqueryView;
 import com.blazebit.persistence.view.subquery.model.DocumentWithSubquery;
-
-import java.util.List;
-
-import javax.persistence.EntityTransaction;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  *

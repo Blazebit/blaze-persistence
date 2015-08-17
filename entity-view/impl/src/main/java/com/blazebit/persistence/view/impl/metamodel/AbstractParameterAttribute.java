@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
@@ -22,8 +25,6 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
-import java.lang.annotation.Annotation;
-import java.util.Set;
 
 /**
  *
@@ -35,6 +36,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     private final int index;
     private final MappingConstructor<X> declaringConstructor;
 
+    @SuppressWarnings("unchecked")
     public AbstractParameterAttribute(MappingConstructor<X> constructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(constructor.getDeclaringType(),
               (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index],

@@ -15,6 +15,20 @@
  */
 package com.blazebit.persistence.view.collections.subview;
 
+import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -22,20 +36,9 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
 import com.blazebit.persistence.view.collections.subview.model.SubviewClassDocumentForCollectionsView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import javax.persistence.EntityTransaction;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  *
@@ -118,7 +121,7 @@ public class SubviewClassCollectionsTest extends AbstractEntityViewTest {
     }
 
     @Parameterized.Parameters(name = "{0}")
-    public static Collection entityViewCombinations() {
+    public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
             { SubviewClassDocumentForCollectionsView.STRING_MAP_SET_LIST_CONSTRUCTOR },
             { SubviewClassDocumentForCollectionsView.STRING_MAP_LIST_SET_CONSTRUCTOR },

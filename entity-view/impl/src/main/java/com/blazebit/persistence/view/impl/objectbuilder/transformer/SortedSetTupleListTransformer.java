@@ -27,6 +27,7 @@ public class SortedSetTupleListTransformer extends SetTupleListTransformer {
     
     private final Comparator<Object> comparator;
 
+    @SuppressWarnings("unchecked")
     public SortedSetTupleListTransformer(int[] parentIdPositions, int startIndex, Comparator<?> comparator) {
         super(parentIdPositions, startIndex);
         this.comparator = (Comparator<Object>) comparator;

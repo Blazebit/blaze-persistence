@@ -15,12 +15,13 @@
  */
 package com.blazebit.persistence.view.collections.subview.model;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 
 /**
  *

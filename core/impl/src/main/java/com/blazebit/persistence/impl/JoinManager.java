@@ -15,28 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
-import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -51,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ListAttribute;
@@ -59,6 +38,28 @@ import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+
+import com.blazebit.lang.StringUtils;
+import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.CompositeExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -86,13 +87,6 @@ public class JoinManager extends AbstractManager {
     // helper collections for join rendering
     private final Set<JoinNode> renderedJoins = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
-
-    private static enum JoinClauseBuildMode {
-
-        NORMAL,
-        COUNT,
-        ID
-    };
 
     JoinManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
         super(queryGenerator, parameterManager);
@@ -238,8 +232,8 @@ public class JoinManager extends AbstractManager {
     
     private boolean isOptionalRelation(JoinNode node) {
         Class<?> baseNodeType = node.getParent().getPropertyClass();
-        ManagedType type = metamodel.managedType(baseNodeType);
-        Attribute attr = type.getAttribute(node.getParentTreeNode().getRelationName());
+        ManagedType<?> type = metamodel.managedType(baseNodeType);
+        Attribute<?, ?> attr = type.getAttribute(node.getParentTreeNode().getRelationName());
         if (attr == null) {
             throw new IllegalArgumentException("Field with name "
                     + node.getParentTreeNode().getRelationName() + " was not found within class "
@@ -910,8 +904,8 @@ public class JoinManager extends AbstractManager {
                 field = attributeName;
             }
         } else {
-            Class baseNodeType = baseNode.getPropertyClass();
-            Attribute attr = getSimpleAttributeForImplicitJoining(metamodel.managedType(baseNodeType), attributeName);
+            Class<?> baseNodeType = baseNode.getPropertyClass();
+            Attribute<?, ?> attr = getSimpleAttributeForImplicitJoining(metamodel.managedType(baseNodeType), attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name "
                         + attributeName + " was not found within class "
@@ -972,13 +966,13 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean isJoinable(Attribute attr) {
+    private boolean isJoinable(Attribute<?, ?> attr) {
         return attr.isCollection()
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
-    private Class<?> resolveFieldClass(Class<?> baseClass, Attribute attr) {
+    private Class<?> resolveFieldClass(Class<?> baseClass, Attribute<?, ?> attr) {
         Class<?> resolverBaseClass = getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
         Class<?> fieldClass;
         
@@ -1045,14 +1039,14 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private JoinType getModelAwareType(JoinNode baseNode, Attribute attr) {
+    private JoinType getModelAwareType(JoinNode baseNode, Attribute<?, ?> attr) {
         if (baseNode.getType() == JoinType.LEFT) {
             return JoinType.LEFT;
         }
         
         if ((attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
                 || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE)
-                && ((SingularAttribute) attr).isOptional() == false) {
+                && ((SingularAttribute<?, ?>) attr).isOptional() == false) {
             return JoinType.INNER;
         } else {
             return JoinType.LEFT;
@@ -1098,8 +1092,8 @@ public class JoinManager extends AbstractManager {
     
     private JoinResult createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Class<?> baseNodeType = baseNode.getPropertyClass();
-        ManagedType type = metamodel.managedType(baseNodeType);
-        Attribute attr = getAttributeForJoining(type, joinRelationName);
+        ManagedType<?> type = metamodel.managedType(baseNodeType);
+        Attribute<?, ?> attr = getAttributeForJoining(type, joinRelationName);
         if (attr == null) {
             throw new IllegalArgumentException("Field with name "
                     + joinRelationName + " was not found within class "
@@ -1127,7 +1121,7 @@ public class JoinManager extends AbstractManager {
         return new JoinResult(newNode, null);
     }
 
-    private boolean isIndexed(Attribute attr) {
+    private boolean isIndexed(Attribute<?, ?> attr) {
         return attr instanceof ListAttribute<?, ?> || attr instanceof MapAttribute<?, ?, ?>;
     }
 
@@ -1220,11 +1214,6 @@ public class JoinManager extends AbstractManager {
         }
 
         return false;
-    }
-
-    private boolean startsAtRootAlias(String path) {
-        AliasInfo rootAliasInfo = rootNode.getAliasInfo();
-        return path.startsWith(rootAliasInfo.getAlias()) && path.length() > rootAliasInfo.getAlias().length() && path.charAt(rootAliasInfo.getAlias().length()) == '.';
     }
 
     /**

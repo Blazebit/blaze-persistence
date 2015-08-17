@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.collections.entity;
 
 import java.io.Serializable;
+
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 
@@ -26,6 +27,8 @@ import javax.persistence.ManyToOne;
  */
 @Embeddable
 public class PersonForElementCollections implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
     private String fullname;
     private DocumentForElementCollections partnerDocument;

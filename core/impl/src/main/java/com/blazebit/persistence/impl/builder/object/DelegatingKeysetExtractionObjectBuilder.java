@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.impl.builder.object;
 
+import java.util.List;
+
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import java.util.List;
 
 /**
  *

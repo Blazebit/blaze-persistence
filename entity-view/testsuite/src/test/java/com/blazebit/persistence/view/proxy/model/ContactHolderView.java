@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.view.proxy.model;
 
-import com.blazebit.persistence.view.entity.Person;
 import java.io.Serializable;
 import java.util.Map;
+
+import com.blazebit.persistence.view.entity.Person;
 
 /**
  *

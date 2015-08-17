@@ -15,20 +15,17 @@
  */
 package com.blazebit.persistence;
 
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.impl.BuilderChainingException;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
-
-import static com.googlecode.catchexception.CatchException.verifyException;
-
-import java.util.Calendar;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  *

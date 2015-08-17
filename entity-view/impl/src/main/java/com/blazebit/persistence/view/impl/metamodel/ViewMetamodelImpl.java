@@ -15,15 +15,16 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.persistence.view.metamodel.ViewMetamodel;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *
@@ -71,6 +72,7 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <X> ViewType<X> view(Class<X> clazz) {
         return (ViewType<X>) views.get(clazz);
     }

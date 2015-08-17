@@ -15,37 +15,34 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
-import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
-import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
+import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
+import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
 
 /**
  *
@@ -56,9 +53,10 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     protected final RootPredicate rootPredicate;
-    private RightHandsideSubqueryPredicateBuilder rightSubqueryPredicateBuilderListener;
-    private final LeftHandsideSubqueryPredicateBuilderListener leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
-    private SuperExpressionLeftHandsideSubqueryPredicateBuilder superExprLeftSubqueryPredicateBuilderListener;
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private final SubqueryBuilderListenerImpl<RestrictionBuilder<T>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
+    private SubqueryBuilderListenerImpl<T> rightSubqueryPredicateBuilderListener;
+    private SubqueryBuilderListenerImpl<RestrictionBuilder<T>> superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
     protected final ExpressionFactory expressionFactory;
     
@@ -69,28 +67,33 @@ public abstract class PredicateManager<T> extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
-    RestrictionBuilder<T> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
+    @SuppressWarnings("unchecked")
+	RestrictionBuilder<T> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory));
     }
 
     CaseWhenStarterBuilder<RestrictionBuilder<T>> restrictCase(AbstractBaseQueryBuilder<?, ?> builder) {
+        @SuppressWarnings("unchecked")
         RestrictionBuilder<T> restrictionBuilder = rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener((RestrictionBuilderImpl<T>) restrictionBuilder);
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<T>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
     SimpleCaseWhenStarterBuilder<RestrictionBuilder<T>> restrictSimpleCase(AbstractBaseQueryBuilder<?, ?> builder, Expression caseOperand) {
+        @SuppressWarnings("unchecked")
         RestrictionBuilder<T> restrictionBuilder = rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener((RestrictionBuilderImpl<T>) restrictionBuilder);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<T>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, caseOperand));
     }
 
     SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
-        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
+        @SuppressWarnings("unchecked")
+		RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
                 new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
@@ -100,15 +103,15 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     SubqueryInitiator<T> restrictExists(T result) {
-        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder(
-                rootPredicate, new ExistsPredicate()));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(
+        		new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
-        RightHandsideSubqueryPredicateBuilder subqueryListener = rootPredicate.startBuilder(
-                new RightHandsideSubqueryPredicateBuilder(rootPredicate, new NotPredicate(new ExistsPredicate())));
-        return subqueryInitFactory.createSubqueryInitiator(result, subqueryListener);
+    	rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(
+                new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
     void applyTransformer(ExpressionTransformer transformer) {

@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.collections.entity;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.Embeddable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -29,8 +30,10 @@ import javax.persistence.OneToMany;
  */
 @Embeddable
 public class DocumentExtensionForElementCollections implements Serializable {
-    
-    private DocumentForElementCollections parent;
+	
+	private static final long serialVersionUID = 1L;
+	
+	private DocumentForElementCollections parent;
     private Set<DocumentForElementCollections> childDocuments = new HashSet<DocumentForElementCollections>();
 
     @ManyToOne

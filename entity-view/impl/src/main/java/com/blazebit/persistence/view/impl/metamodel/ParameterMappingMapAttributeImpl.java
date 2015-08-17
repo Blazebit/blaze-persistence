@@ -15,13 +15,14 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.MapAttribute;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -32,6 +33,7 @@ public class ParameterMappingMapAttributeImpl<X, K, V> extends AbstractParameter
 
     private final Class<K> keyType;
 
+    @SuppressWarnings("unchecked")
     public ParameterMappingMapAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(mappingConstructor, index, mapping, entityViews, MetamodelUtils.isSorted(mappingConstructor, index));
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];

@@ -121,20 +121,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <archive>
-                        <index>true</index>
-                        <!-- This is duplicated in META-INF/MANIFEST.MF so we can work within IDE -->
-                        <manifestEntries>
-                            <Require-Bundle>org.datanucleus, org.datanucleus.store.rdbms</Require-Bundle>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 </project>

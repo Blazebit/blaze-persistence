@@ -15,15 +15,18 @@
  */
 package com.blazebit.persistence.view.collections.subview;
 
-import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.junit.Assert;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.Assert;
+
+import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
 
 /**
  *

@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.function.limit;
 
-import com.blazebit.persistence.impl.function.TemplateRenderer;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
@@ -36,7 +35,7 @@ public class SQLServerLimitFunction extends LimitFunction {
 
     @Override
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
-        String query = getQuery(functionRenderContext);
+//        String query = getQuery(functionRenderContext);
 
         
     }

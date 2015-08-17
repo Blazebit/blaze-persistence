@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.entity;
 
 import java.io.Serializable;
 import java.util.Calendar;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -31,6 +32,8 @@ import javax.persistence.TemporalType;
  */
 @Entity
 public class Version implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
     private long id;
     private Document document;

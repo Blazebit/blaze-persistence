@@ -15,6 +15,19 @@
  */
 package com.blazebit.persistence.view.collections.basic;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -29,17 +42,7 @@ import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetLis
 import com.blazebit.persistence.view.collections.basic.model.BasicDocumentSetMapListView;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import javax.persistence.EntityTransaction;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  *
@@ -122,7 +125,7 @@ public class BasicCollectionsTest<T extends BasicDocumentCollectionsView> extend
     }
 
     @Parameterized.Parameters
-    public static Collection entityViewCombinations() {
+    public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
             { BasicDocumentListMapSetView.class },
             { BasicDocumentListSetMapView.class },

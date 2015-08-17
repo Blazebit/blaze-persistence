@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;

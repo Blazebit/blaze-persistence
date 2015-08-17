@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
 import java.util.Collection;
 import java.util.Map;
+
+import com.blazebit.persistence.impl.expression.Expression;
 
 /**
  *

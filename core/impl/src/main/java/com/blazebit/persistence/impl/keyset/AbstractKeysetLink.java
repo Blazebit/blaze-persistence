@@ -16,12 +16,12 @@
 
 package com.blazebit.persistence.impl.keyset;
 
-import com.blazebit.persistence.Keyset;
-import com.blazebit.persistence.impl.ExpressionUtils;
-import com.blazebit.persistence.impl.OrderByExpression;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.impl.OrderByExpression;
 
 /**
  *

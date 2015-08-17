@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.view.filter;
 
+import org.junit.Test;
+import org.mockito.Mockito;
+
 import com.blazebit.persistence.EscapeBuilder;
 import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
@@ -27,8 +30,6 @@ import com.blazebit.persistence.view.impl.filter.EndsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.filter.EqualFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
-import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  *
@@ -82,16 +83,18 @@ public class FilterTest {
         verifyFilter(filter, expression).eq(value);
     }
 
-    public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
-        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
+		WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder<?> rb = Mockito.mock(RestrictionBuilder.class);
         Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
         filter.apply(whereBuilder, expression);
         return Mockito.verify(rb);
     }
     
-    public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
-        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
+		WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder rb = Mockito.mock(RestrictionBuilder.class, Mockito.RETURNS_DEEP_STUBS);
         EscapeBuilder eb = Mockito.mock(EscapeBuilder.class);
         LikeBuilder lb = Mockito.mock(LikeBuilder.class);

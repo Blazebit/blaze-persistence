@@ -15,9 +15,6 @@
  */
 package com.blazebit.persistence.view.basic.model;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.entity.Person;
-
 /**
  *
  * @author Christian Beikov

@@ -17,12 +17,10 @@ package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
-import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListener;
 import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
@@ -30,7 +28,7 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
  * @author Moritz Becker
  * @since 1.0
  */
-public class RightHandsideSubqueryPredicateBuilder extends SubqueryBuilderListenerImpl implements PredicateBuilder {
+public class RightHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements PredicateBuilder {
 
     private final Predicate predicate;
     private final PredicateBuilderEndedListener listener;
@@ -41,7 +39,7 @@ public class RightHandsideSubqueryPredicateBuilder extends SubqueryBuilderListen
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl builder) {
+    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
         Predicate pred;

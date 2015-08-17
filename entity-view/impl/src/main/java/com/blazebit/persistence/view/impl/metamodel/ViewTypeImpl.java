@@ -15,20 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.AttributeFilter;
-import com.blazebit.persistence.view.MappingSingular;
-import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.ViewFilter;
-import com.blazebit.persistence.view.ViewFilters;
-import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
-import com.blazebit.persistence.view.metamodel.FilterMapping;
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -47,6 +33,20 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
+import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingSingular;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.ViewFilter;
+import com.blazebit.persistence.view.ViewFilters;
+import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.FilterMapping;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
+
 /**
  *
  * @author Christian Beikov
@@ -64,6 +64,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Map<String, AttributeFilterMapping> attributeFilters;
     private final Map<String, ViewFilterMapping> viewFilters;
 
+    @SuppressWarnings("unchecked")
     public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
         this.javaType = (Class<X>) clazz;
 

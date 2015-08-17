@@ -15,8 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.builder.predicate.WhereOrBuilderImpl;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.builder.predicate.WhereOrBuilderImpl;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
@@ -40,7 +40,8 @@ public class WhereManager<T> extends PredicateManager<T> {
         return ClauseType.WHERE;
     }
 
-    WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
+    @SuppressWarnings("unchecked")
+	WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new WhereOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 }

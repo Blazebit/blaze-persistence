@@ -15,12 +15,13 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
+
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 
 /**
  *

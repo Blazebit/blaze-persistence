@@ -15,14 +15,18 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Person;
+import static org.junit.Assert.assertEquals;
+
 import java.util.List;
+
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 
 /**
  *

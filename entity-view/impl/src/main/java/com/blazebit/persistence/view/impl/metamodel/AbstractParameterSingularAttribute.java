@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.SingularAttribute;
 import java.lang.annotation.Annotation;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.SingularAttribute;
 
 /**
  *

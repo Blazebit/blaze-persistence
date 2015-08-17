@@ -30,9 +30,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
 
 /**
@@ -42,6 +40,8 @@ import javax.persistence.OrderColumn;
  */
 @Entity
 public class DocumentForElementCollections implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;

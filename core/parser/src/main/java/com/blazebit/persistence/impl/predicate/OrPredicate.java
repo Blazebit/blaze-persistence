@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import java.util.ArrayList;
 import java.util.List;
 

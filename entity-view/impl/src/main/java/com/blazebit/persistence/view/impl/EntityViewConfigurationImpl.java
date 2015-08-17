@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.blazebit.persistence.view.EntityViewManager;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
  *

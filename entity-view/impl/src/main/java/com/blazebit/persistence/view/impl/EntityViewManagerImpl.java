@@ -121,7 +121,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
      * @return An instance of the given filter class
      */
     public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
-        Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
+        @SuppressWarnings("unchecked")
+		Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
 
         if (filterClassImpl == null) {
             return createFilterInstance(filterClass, expectedType, argument);
@@ -132,7 +133,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private <T extends AttributeFilterProvider> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
         try {
-            Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
+            @SuppressWarnings("unchecked")
+			Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
             Constructor<T> filterConstructor = findConstructor(constructors, Class.class, Object.class);
 
             if (filterConstructor != null) {
@@ -173,13 +175,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return null;
     }
 
-    public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
+    @SuppressWarnings("unchecked")
+	public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
@@ -196,6 +200,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 
+    @SuppressWarnings("unchecked")
     private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(QueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
     	ExpressionFactory ef = cb.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
     	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor);
