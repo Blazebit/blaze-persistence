@@ -23,10 +23,7 @@ package com.blazebit.persistence.impl.function.limit;
 public class SQL2008LimitFunction extends LimitFunction {
 
     public SQL2008LimitFunction() {
-        super(
-            "(?1 fetch next ?2 rows only)",
-            "(?1 offset ?3 rows fetch next ?2 rows only)"
-        );
+        super("(?1 fetch next ?2 rows only)", "(?1 offset ?3 rows fetch next ?2 rows only)");
     }
-    
+
 }

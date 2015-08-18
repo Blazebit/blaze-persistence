@@ -41,8 +41,7 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * @author Moritz Becker
  * @since 1.0
  */
-public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements
-    CaseWhenAndThenBuilder<T>, ExpressionBuilder {
+public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends PredicateBuilderEndedListenerImpl implements CaseWhenAndThenBuilder<T>, ExpressionBuilder {
 
     private final T result;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -50,7 +49,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     private final AndPredicate predicate = new AndPredicate();
     private final ExpressionBuilderEndedListener listener;
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
+    private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
     private WhenClauseExpression whenClause;
 
     public CaseWhenAndThenBuilderImpl(T result, ExpressionBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
@@ -68,29 +67,27 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubquery() {
-        RestrictionBuilder<CaseWhenAndThenBuilder<T>> restrictionBuilder = startBuilder(
-            new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<CaseWhenAndThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubquery(String subqueryAlias, String expression) {
         @SuppressWarnings({ "rawtypes", "unchecked" })
-		SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
-        RestrictionBuilder<CaseWhenAndThenBuilder<T>> restrictionBuilder = startBuilder(
-            new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        RestrictionBuilder<CaseWhenAndThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenAndThenBuilder<T>> andExists() {
-    	SubqueryBuilderListenerImpl<CaseWhenAndThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenAndThenBuilder<T>>(this, new ExistsPredicate()));
+        SubqueryBuilderListenerImpl<CaseWhenAndThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenAndThenBuilder<T>>(this, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenAndThenBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenAndThenBuilder<T>> andNotExists() {
-    	SubqueryBuilderListenerImpl<CaseWhenAndThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenAndThenBuilder<T>>(this, new ExistsPredicate(true)));
+        SubqueryBuilderListenerImpl<CaseWhenAndThenBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenAndThenBuilder<T>>(this, new ExistsPredicate(true)));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenAndThenBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
@@ -108,7 +105,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     @Override
     public T thenExpression(String expression) {
         verifyBuilderEnded();
-        if(predicate.getChildren().isEmpty()){
+        if (predicate.getChildren().isEmpty()) {
             throw new IllegalStateException("No and clauses specified!");
         }
         if (whenClause != null) {
@@ -118,11 +115,11 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
         listener.onBuilderEnded(this);
         return result;
     }
-    
+
     @Override
     public T then(Object value) {
         verifyBuilderEnded();
-        if(predicate.getChildren().isEmpty()){
+        if (predicate.getChildren().isEmpty()) {
             throw new IllegalStateException("No and clauses specified!");
         }
         if (whenClause != null) {

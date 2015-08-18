@@ -55,7 +55,7 @@ public class SimpleCaseWhenBuilderImpl<T> implements SimpleCaseWhenBuilder<T>, E
 
     @Override
     public T otherwise(String elseExpression) {
-        if(whenExpressions.isEmpty()){
+        if (whenExpressions.isEmpty()) {
             throw new IllegalStateException("No when clauses specified");
         }
         expression = new SimpleCaseExpression(caseOperandExpression, whenExpressions, expressionFactory.createScalarExpression(elseExpression));

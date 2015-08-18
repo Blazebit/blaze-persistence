@@ -34,14 +34,14 @@ public class TemplateRenderer {
         List<String> chunkList = new ArrayList<String>();
         List<Integer> parameterIndexList = new ArrayList<Integer>();
         StringBuilder sb = new StringBuilder();
-        
+
         for (int i = 0; i < template.length(); i++) {
             char c = template.charAt(i);
-            
+
             if (c == '?') {
                 chunkList.add(sb.toString());
                 sb.setLength(0);
-                
+
                 while (++i < template.length()) {
                     c = template.charAt(i);
                     if (Character.isDigit(c)) {
@@ -53,7 +53,7 @@ public class TemplateRenderer {
                         break;
                     }
                 }
-                
+
                 if (i == template.length()) {
                     parameterIndexList.add(Integer.valueOf(sb.toString()) - 1);
                     sb.setLength(0);
@@ -62,21 +62,21 @@ public class TemplateRenderer {
                 sb.append(c);
             }
         }
-        
+
         if (sb.length() > 0) {
             chunkList.add(sb.toString());
         }
-        
+
         this.chunks = chunkList.toArray(new String[chunkList.size()]);
         this.parameterIndices = parameterIndexList.toArray(new Integer[parameterIndexList.size()]);
     }
-    
+
     public Context start(FunctionRenderContext context) {
         return new Context(this, context);
     }
-    
+
     public static class Context {
-        
+
         private final TemplateRenderer template;
         private final FunctionRenderContext context;
         private final Object[] boundValues;
@@ -87,35 +87,35 @@ public class TemplateRenderer {
             this.context = context;
             this.boundValues = new Object[template.parameterIndices.length];
         }
-        
+
         public Context addArgument(int index) {
             if (boundValueIndex >= boundValues.length) {
                 throw new IllegalArgumentException("The index " + boundValueIndex + " is invalid since all parameters have already been bound.");
             }
-            
+
             boundValues[boundValueIndex++] = index;
             return this;
         }
-        
+
         public Context addParameter(String chunk) {
             if (boundValueIndex >= boundValues.length) {
                 throw new IllegalArgumentException("The index " + boundValueIndex + " is invalid since all parameters have already been bound.");
             }
-            
+
             boundValues[boundValueIndex++] = chunk;
             return this;
         }
-        
+
         public void build() {
             String[] chunks = template.chunks;
             Integer[] parameterIndices = template.parameterIndices;
             for (int i = 0; i < chunks.length; i++) {
                 context.addChunk(chunks[i]);
-                
+
                 if (i < parameterIndices.length) {
                     int parameterIndex = parameterIndices[i];
                     Object boundValue = boundValues[parameterIndex];
-                    
+
                     if (boundValue instanceof Integer) {
                         context.addArgument((Integer) boundValue);
                     } else {

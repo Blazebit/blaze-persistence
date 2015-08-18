@@ -47,6 +47,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     private final T result;
     private final PredicateBuilderEndedListener listener;
     private final EscapeBuilderImpl.EscapeBuilderImplEndedListener escapeBuilderEndedListener = new EscapeBuilderImpl.EscapeBuilderImplEndedListener() {
+
         @Override
         public void onBuilderEnded(EscapeBuilderImpl<?> builder) {
             super.onBuilderEnded(builder);
@@ -146,6 +147,5 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
         super.verifyBuilderEnded();
         escapeBuilderEndedListener.verifyBuilderEnded();
     }
-    
-    
+
 }

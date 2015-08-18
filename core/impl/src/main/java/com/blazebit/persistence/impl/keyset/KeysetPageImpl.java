@@ -27,9 +27,9 @@ import com.blazebit.persistence.KeysetPage;
  */
 public class KeysetPageImpl implements KeysetPage {
 
-	private static final long serialVersionUID = 1L;
-	
-	private final int firstResult;
+    private static final long serialVersionUID = 1L;
+
+    private final int firstResult;
     private final int maxResults;
     private final Keyset lowest;
     private final Keyset highest;

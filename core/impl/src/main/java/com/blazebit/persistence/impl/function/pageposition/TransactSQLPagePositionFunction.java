@@ -26,5 +26,5 @@ public class TransactSQLPagePositionFunction extends PagePositionFunction {
     protected String getRownumFunction() {
         return "row_number() over(order by (select 0))";
     }
-    
+
 }

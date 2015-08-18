@@ -35,18 +35,17 @@ public class SQLServerLimitFunction extends LimitFunction {
 
     @Override
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
-//        String query = getQuery(functionRenderContext);
+        // String query = getQuery(functionRenderContext);
 
-        
     }
-    
+
     private String getQuery(FunctionRenderContext functionRenderContext) {
         String query = functionRenderContext.getArgument(0);
-        
+
         if (query.charAt(query.length() - 1) == ';') {
             return query.substring(0, query.length() - 1);
         }
-        
+
         return query;
     }
 

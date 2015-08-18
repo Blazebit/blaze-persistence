@@ -33,7 +33,7 @@ public class SuperExpressionLeftHandsideSubqueryPredicateBuilder<T extends LeftH
     @Override
     public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
         super.onBuilderEnded(builder);
-        LeftHandsideSubqueryPredicateBuilder leftHandsideSubqueryPredicateBuilder =  (LeftHandsideSubqueryPredicateBuilder) builder.getResult();
+        LeftHandsideSubqueryPredicateBuilder leftHandsideSubqueryPredicateBuilder = (LeftHandsideSubqueryPredicateBuilder) builder.getResult();
         leftHandsideSubqueryPredicateBuilder.setLeftExpression(superExpression);
     }
 }

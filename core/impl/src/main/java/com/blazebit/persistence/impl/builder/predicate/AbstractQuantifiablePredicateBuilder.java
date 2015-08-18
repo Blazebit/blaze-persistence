@@ -88,8 +88,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     @Override
     public T expression(String expression) {
-        return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression),
-                PredicateQuantifier.ONE));
+        return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
     }
 
     /* case when functions */
@@ -110,7 +109,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenExists();
     }
-    
+
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));

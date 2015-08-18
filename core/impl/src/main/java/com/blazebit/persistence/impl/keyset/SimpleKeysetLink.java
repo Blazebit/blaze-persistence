@@ -26,17 +26,17 @@ import com.blazebit.persistence.impl.OrderByExpression;
  * @author Christian Beikov
  * @since 1.0
  */
-public class SimpleKeysetLink extends AbstractKeysetLink  {
-    
+public class SimpleKeysetLink extends AbstractKeysetLink {
+
     private final Keyset keyset;
 
     public SimpleKeysetLink(Keyset keyset, KeysetMode keysetMode) {
         super(keysetMode);
-        
+
         if (keyset == null) {
             throw new NullPointerException("keyset");
         }
-        
+
         this.keyset = keyset;
     }
 

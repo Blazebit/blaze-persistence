@@ -30,7 +30,7 @@ public class ParameterEmitter implements TemplateEmitter {
     public ParameterEmitter(int index) {
         this.index = index;
     }
-    
+
     @Override
     public void emit(FunctionRenderContext context, List<?> parameters) {
         Object value;
@@ -38,5 +38,5 @@ public class ParameterEmitter implements TemplateEmitter {
             context.addChunk(value.toString());
         }
     }
-    
+
 }

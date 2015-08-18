@@ -15,12 +15,12 @@ public class LimitFunction implements JpqlFunction {
     protected final TemplateRenderer limitOffsetRenderer;
 
     public LimitFunction() {
-        //LIMIT(SUBQUERY, LIMIT, OFFSET)
+        // LIMIT(SUBQUERY, LIMIT, OFFSET)
         this("(?1 limit ?2)", "(?1 limit ?2 offset ?3)");
     }
 
     protected LimitFunction(String limitOnly, String limitOffset) {
-        //LIMIT(SUBQUERY, LIMIT, OFFSET)
+        // LIMIT(SUBQUERY, LIMIT, OFFSET)
         this.limitOnlyRenderer = new TemplateRenderer(limitOnly);
         this.limitOffsetRenderer = new TemplateRenderer(limitOffset);
     }
@@ -48,35 +48,31 @@ public class LimitFunction implements JpqlFunction {
                     renderLimitOffset(functionRenderContext);
                     return;
                 }
-                
+
                 break;
             case 2:
                 if (isNotNull(functionRenderContext.getArgument(1))) {
                     renderLimitOnly(functionRenderContext);
                     return;
                 }
-                
+
                 break;
             default:
                 break;
         }
-        
-        throw new RuntimeException("The limit function needs two or three non null arguments <sub_query>, <limit> and optionally <offset>! args=" + functionRenderContext);
+
+        throw new RuntimeException("The limit function needs two or three non null arguments <sub_query>, <limit> and optionally <offset>! args="
+            + functionRenderContext);
     }
-    
+
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
-        adapt(functionRenderContext, limitOffsetRenderer)
-            .addArgument(1)
-            .addArgument(2)
-            .build();
+        adapt(functionRenderContext, limitOffsetRenderer).addArgument(1).addArgument(2).build();
     }
-    
+
     protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
-        adapt(functionRenderContext, limitOnlyRenderer)
-            .addArgument(1)
-            .build();
+        adapt(functionRenderContext, limitOnlyRenderer).addArgument(1).build();
     }
-    
+
     private static boolean isNotNull(String argument) {
         return argument != null && !"NULL".equalsIgnoreCase(argument);
     }
@@ -90,7 +86,7 @@ public class LimitFunction implements JpqlFunction {
         } else {
             context.addArgument(0);
         }
-        
+
         return context;
     }
 

@@ -32,7 +32,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
     private static final String KEY_SET_PARAMETER_NAME = "_keysetParameter";
-    
+
     private final ResolvingQueryGenerator queryGenerator;
     private final ParameterManager parameterManager;
     private List<OrderByExpression> orderByExpressions;
@@ -41,19 +41,19 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
     }
-    
+
     public boolean hasKeyset() {
         return getKeysetLink() != null;
     }
 
     public void initialize(List<OrderByExpression> orderByExpressions) {
         this.orderByExpressions = orderByExpressions;
-        
+
         KeysetLink keysetLink = getKeysetLink();
         // Checks if keyset fits for order by expressions
         keysetLink.initialize(orderByExpressions);
     }
-    
+
     public void buildKeysetPredicate(StringBuilder sb) {
         int expressionCount = orderByExpressions.size();
         KeysetLink keysetLink = getKeysetLink();
@@ -65,7 +65,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
 
         boolean generateEqualPredicate = true;
         int brackets = 0;
-        
+
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
 
         // We wrap the whole thing in brackets
@@ -131,7 +131,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         for (int i = 0; i < brackets; i++) {
             sb.append(')');
         }
-        
+
         queryGenerator.setConditionalContext(conditionalContext);
     }
 
@@ -175,5 +175,5 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
             sb.append(" IS NULL");
         }
     }
-    
+
 }

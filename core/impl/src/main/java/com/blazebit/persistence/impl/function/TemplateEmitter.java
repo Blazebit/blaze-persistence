@@ -25,6 +25,6 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * @since 1.0
  */
 public interface TemplateEmitter {
-    
+
     public void emit(FunctionRenderContext context, List<?> parameters);
 }

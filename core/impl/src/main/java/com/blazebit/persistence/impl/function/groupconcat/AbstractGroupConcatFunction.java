@@ -27,26 +27,26 @@ import com.blazebit.persistence.spi.JpqlFunction;
 public abstract class AbstractGroupConcatFunction implements JpqlFunction {
 
     protected final TemplateRenderer renderer;
-    
+
     public AbstractGroupConcatFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
-    
+
     @Override
     public boolean hasArguments() {
         return true;
     }
-    
+
     @Override
     public boolean hasParenthesesIfNoArguments() {
         return true;
     }
-    
+
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return String.class;
     }
-    
+
     protected GroupConcat getGroupConcat(FunctionRenderContext context) {
         if (context.getArgumentsSize() == 0) {
             throw new RuntimeException("The group concat function needs at least one argument! args=" + context);
@@ -100,20 +100,22 @@ public abstract class AbstractGroupConcatFunction implements JpqlFunction {
                 }
             }
         }
-        
+
         if (separator == null) {
             separator = ",";
         }
-        
+
         return new GroupConcat(distinct, expression, orderSb.toString(), separator);
     }
 
     private static boolean isOrderType(String s) {
         String type = s.trim().toUpperCase();
-        return "ASC".equals(type) || "DESC".equals(type) || "ASC NULLS FIRST".equals(type) || "ASC NULLS LAST".equals(type) || "DESC NULLS FIRST".equals(type) || "DESC NULLS LAST".equals(type);
+        return "ASC".equals(type) || "DESC".equals(type) || "ASC NULLS FIRST".equals(type) || "ASC NULLS LAST".equals(type)
+            || "DESC NULLS FIRST".equals(type) || "DESC NULLS LAST".equals(type);
     }
-    
+
     protected static final class GroupConcat {
+
         private final boolean distinct;
         private final String expression;
         private final String orderByExpression;

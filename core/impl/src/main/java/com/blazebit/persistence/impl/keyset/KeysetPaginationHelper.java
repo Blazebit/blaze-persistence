@@ -27,13 +27,13 @@ import com.blazebit.persistence.KeysetPage;
  * @since 1.0
  */
 public class KeysetPaginationHelper {
-    
+
     public static Serializable[] extractKey(Object[] tuple, int offset) {
         Serializable[] key = new Serializable[tuple.length - offset];
         System.arraycopy(tuple, offset, key, 0, key.length);
         return key;
     }
-    
+
     public static KeysetMode getKeysetMode(KeysetPage keysetPage, int firstRow, int pageSize) {
         // a keyset must be given
         if (keysetPage == null) {
@@ -77,7 +77,7 @@ public class KeysetPaginationHelper {
         if (keyset == null) {
             return false;
         }
-        
+
         Serializable[] key = keyset.getTuple();
         return key != null && key.length > 0;
     }

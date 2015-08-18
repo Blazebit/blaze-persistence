@@ -36,8 +36,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> implements
-    SelectObjectBuilder<T> {
+public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> implements SelectObjectBuilder<T> {
 
     private final T result;
     // maps positions to expressions

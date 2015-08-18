@@ -24,5 +24,6 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  * @author Moritz Becker
  */
 public interface LeftHandsideSubqueryPredicateBuilder extends PredicateBuilder {
+
     public void setLeftExpression(Expression left);
 }

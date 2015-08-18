@@ -38,34 +38,34 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @SuppressWarnings("unchecked")
-	@Override
+    @Override
     public T build(Object[] tuple) {
         Object[] newTuple = new Object[tuple.length - keysetSize];
         System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);
-        
+
         if (first == null) {
             first = tuple;
             last = tuple;
         } else {
             last = tuple;
         }
-        
+
         return (T) newTuple;
     }
 
     public Serializable[] getLowest() {
-    	if (first == null) {
-    		return null;
-    	}
-    	
+        if (first == null) {
+            return null;
+        }
+
         return KeysetPaginationHelper.extractKey(first, first.length - keysetSize);
     }
 
     public Serializable[] getHighest() {
-    	if (last == null) {
-    		return null;
-    	}
-    	
+        if (last == null) {
+            return null;
+        }
+
         return KeysetPaginationHelper.extractKey(last, last.length - keysetSize);
     }
 

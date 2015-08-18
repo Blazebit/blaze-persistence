@@ -35,6 +35,7 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
     private final ParameterManager parameterManager;
 
     private final VisitorAdapter parameterRegistrationVisitor = new VisitorAdapter() {
+
         @Override
         public void visit(ParameterExpression expression) {
             if (expression.getValue() != null) {

@@ -21,26 +21,26 @@ package com.blazebit.persistence.impl.jpaprovider;
  * @since 1.0
  */
 public interface JpaProvider {
-    
+
     public boolean supportsJpa21();
-    
+
     public boolean needsBracketsForListParamter();
-    
+
     public String getBooleanExpression(boolean value);
-    
+
     public String getBooleanConditionalExpression(boolean value);
-    
+
     public String getOnClause();
-    
+
     public String getCollectionValueFunction();
-    
+
     public Class<?> getDefaultQueryResultType();
-    
+
     public String getCustomFunctionInvocation(String functionName, int argumentCount);
 
-	public String escapeCharacter(char character);
-	
-	public boolean supportsNullPrecedenceExpression();
+    public String escapeCharacter(char character);
 
-	public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls);
+    public boolean supportsNullPrecedenceExpression();
+
+    public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls);
 }

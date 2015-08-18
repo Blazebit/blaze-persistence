@@ -48,7 +48,7 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
     private final OrPredicate predicate = new OrPredicate();
     private final PredicateBuilderEndedListener listener;
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>>  leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
+    private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
 
     public CaseWhenOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.result = result;
@@ -65,29 +65,27 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubquery() {
-        RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(
-            new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubquery(String subqueryAlias, String expression) {
-    	@SuppressWarnings({ "rawtypes", "unchecked" })
-		SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
-        RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(
-            new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenOrBuilder<T>> orExists() {
-    	SubqueryBuilderListenerImpl<CaseWhenOrBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrBuilder<T>>(this, new ExistsPredicate()));
+        SubqueryBuilderListenerImpl<CaseWhenOrBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrBuilder<T>>(this, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenOrBuilder<T>> orNotExists() {
-    	SubqueryBuilderListenerImpl<CaseWhenOrBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrBuilder<T>>(this, new ExistsPredicate(true)));
+        SubqueryBuilderListenerImpl<CaseWhenOrBuilder<T>> rightSubqueryPredicateBuilderListener = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenOrBuilder<T>>(this, new ExistsPredicate(true)));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenOrBuilder<T>) this, rightSubqueryPredicateBuilderListener);
     }
 
@@ -101,7 +99,7 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
         super.onBuilderEnded(builder);
         predicate.getChildren().add(builder.getPredicate());
     }
-    
+
     @Override
     public T endOr() {
         listener.onBuilderEnded(this);

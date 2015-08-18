@@ -27,7 +27,7 @@ import com.blazebit.persistence.impl.OrderByExpression;
  * @since 1.0
  */
 public interface KeysetLink {
-    
+
     public void initialize(List<OrderByExpression> orderByExpressions);
 
     public Keyset getKeyset();

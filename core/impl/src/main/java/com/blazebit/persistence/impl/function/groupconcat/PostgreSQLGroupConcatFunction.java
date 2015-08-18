@@ -32,20 +32,18 @@ public class PostgreSQLGroupConcatFunction extends AbstractGroupConcatFunction {
     public void render(FunctionRenderContext context) {
         GroupConcat groupConcat = getGroupConcat(context);
         StringBuilder sb = new StringBuilder();
-        
+
         if (groupConcat.isDistinct()) {
             sb.append("distinct ");
         }
-        
+
         sb.append(groupConcat.getExpression());
         sb.append(", ").append(groupConcat.getSeparator());
-        
+
         if (!groupConcat.getOrderByExpression().isEmpty()) {
             sb.append(" order by ").append(groupConcat.getOrderByExpression());
         }
-        
-        renderer.start(context)
-                .addParameter(sb.toString())
-                .build();
+
+        renderer.start(context).addParameter(sb.toString()).build();
     }
 }

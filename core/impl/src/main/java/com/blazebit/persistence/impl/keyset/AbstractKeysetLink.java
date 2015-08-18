@@ -29,28 +29,29 @@ import com.blazebit.persistence.impl.OrderByExpression;
  * @since 1.0
  */
 public abstract class AbstractKeysetLink implements KeysetLink {
-    
+
     private final KeysetMode keysetMode;
 
     public AbstractKeysetLink(KeysetMode keysetMode) {
         this.keysetMode = keysetMode;
     }
-    
+
     protected void validate(Keyset keyset, List<OrderByExpression> orderByExpressions) {
         if (keyset == null) {
             throw new IllegalArgumentException("Invalid null keyset given!");
         }
-        
+
         Serializable[] key = keyset.getTuple();
-        
+
         if (key == null || key.length == 0) {
             throw new IllegalArgumentException("Invalid empty keyset key given!");
         }
-        
+
         if (key.length != orderByExpressions.size()) {
-            throw new IllegalArgumentException("The given keyset key [" + Arrays.deepToString(key) + "] does not fit the order by expressions " + orderByExpressions + "!");
+            throw new IllegalArgumentException("The given keyset key [" + Arrays.deepToString(key) + "] does not fit the order by expressions "
+                + orderByExpressions + "!");
         }
-        
+
         // Unfortunately we can't check types here so we will have to trust the JPA provider to do that
         // Still it would be nice to give the user a more informative message if types were wrong
     }

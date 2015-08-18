@@ -32,21 +32,19 @@ public class H2GroupConcatFunction extends AbstractGroupConcatFunction {
     public void render(FunctionRenderContext context) {
         GroupConcat groupConcat = getGroupConcat(context);
         StringBuilder sb = new StringBuilder();
-        
+
         if (groupConcat.isDistinct()) {
             sb.append("distinct ");
         }
-        
+
         sb.append(groupConcat.getExpression());
-        
+
         if (!groupConcat.getOrderByExpression().isEmpty()) {
             sb.append(" order by ").append(groupConcat.getOrderByExpression());
         }
-        
+
         sb.append(" separator ").append(groupConcat.getSeparator());
-        
-        renderer.start(context)
-                .addParameter(sb.toString())
-                .build();
+
+        renderer.start(context).addParameter(sb.toString()).build();
     }
 }

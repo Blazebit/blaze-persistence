@@ -33,7 +33,7 @@ import com.blazebit.persistence.impl.predicate.BetweenPredicate;
  *
  * @author Moritz Becker
  */
-public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implements BetweenBuilder<T>, LeftHandsideSubqueryPredicateBuilder{
+public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implements BetweenBuilder<T>, LeftHandsideSubqueryPredicateBuilder {
 
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
@@ -48,7 +48,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
         this(result, left, start, expressionFactory, listener, subqueryInitFactory, false);
     }
-    
+
     public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, boolean negated) {
         this.result = result;
         this.left = left;
@@ -58,7 +58,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         this.subqueryInitFactory = subqueryInitFactory;
         this.negated = negated;
     }
-    
+
     @Override
     public T and(Object end) {
         if (end == null) {
@@ -89,7 +89,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
                 predicate = new BetweenPredicate(left, start, superExpression, negated);
                 listener.onBuilderEnded(BetweenBuilderImpl.this);
             }
-            
+
         };
         return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, superExpressionSubqueryListener));
     }
@@ -114,13 +114,13 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
 
     @Override
     public void verifySubqueryBuilderEnded() {
-        if(subqueryStartMarker != null){
+        if (subqueryStartMarker != null) {
             throw new BuilderChainingException("A builder was not ended properly.");
         }
         super.verifySubqueryBuilderEnded();
     }
-    
-    public <X> SubqueryInitiator<X> startSubqueryInitiator(SubqueryInitiator<X> subqueryInitiator){
+
+    public <X> SubqueryInitiator<X> startSubqueryInitiator(SubqueryInitiator<X> subqueryInitiator) {
         this.subqueryStartMarker = subqueryInitiator;
         return subqueryInitiator;
     }

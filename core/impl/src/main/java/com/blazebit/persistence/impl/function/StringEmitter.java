@@ -30,10 +30,10 @@ public class StringEmitter implements TemplateEmitter {
     public StringEmitter(String string) {
         this.string = string;
     }
-    
+
     @Override
     public void emit(FunctionRenderContext context, List<?> parameters) {
         context.addChunk(string);
     }
-    
+
 }

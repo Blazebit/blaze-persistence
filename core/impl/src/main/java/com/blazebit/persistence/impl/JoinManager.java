@@ -1106,7 +1106,11 @@ public class JoinManager extends AbstractManager {
         Class<?> resolvedFieldClass = resolveFieldClass(baseNodeType, attr);
 
         if (!isJoinable(attr)) {
-            LOG.fine(new StringBuilder("Field with name ").append(joinRelationName).append(" of class ").append(baseNodeType.getName()).append(" is parseable and therefore it has not to be fetched explicitly.").toString());
+            LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
+                .append(" of class ")
+                .append(baseNodeType.getName())
+                .append(" is parseable and therefore it has not to be fetched explicitly.")
+                .toString());
             return new JoinResult(baseNode, joinRelationName);
         }
 

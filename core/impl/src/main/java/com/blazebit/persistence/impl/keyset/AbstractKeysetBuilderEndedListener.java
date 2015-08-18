@@ -56,7 +56,7 @@ public class AbstractKeysetBuilderEndedListener implements KeysetBuilderEndedLis
     private KeysetLink createLink(KeysetBuilderImpl<?> builder) {
         Map<String, Object> keysetValues = builder.getKeysetValues();
         KeysetMode mode = builder.getMode();
-        
+
         return new LazyKeysetLink(keysetValues, mode);
     }
 
@@ -67,5 +67,5 @@ public class AbstractKeysetBuilderEndedListener implements KeysetBuilderEndedLis
     public void setKeysetLink(KeysetLink keysetLink) {
         this.keysetLink = keysetLink;
     }
-    
+
 }

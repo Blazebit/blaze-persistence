@@ -93,9 +93,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
                 }
             }
             if (index == null) {
-                throw new IllegalArgumentException(
-                    "Given alias [" + alias + "] did not correspond to an element in the result tuple"
-                );
+                throw new IllegalArgumentException("Given alias [" + alias + "] did not correspond to an element in the result tuple");
             }
             // index should be "in range" by nature of size check in ctor
             return tuple[index];
@@ -109,9 +107,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
         @Override
         public Object get(int i) {
             if (i >= tuple.length || i < 0) {
-                throw new IllegalArgumentException(
-                    "Given index [" + i + "] was outside the range of result tuple size [" + tuple.length + "] "
-                );
+                throw new IllegalArgumentException("Given index [" + i + "] was outside the range of result tuple size [" + tuple.length + "] ");
             }
             return tuple[i];
         }
@@ -150,7 +146,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
                 this.index = index;
             }
 
-			@Override
+            @Override
             @SuppressWarnings("unchecked")
             public Class<? extends X> getJavaType() {
                 return (Class<? extends X>) tuple[index];

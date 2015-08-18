@@ -58,7 +58,8 @@ public class ParameterManager {
         Set<Parameter<?>> result = new HashSet<Parameter<?>>();
 
         for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
-            Class<?> paramClass = paramEntry.getValue() == null || paramEntry.getValue() == REGISTERED_PLACEHOLDER ? null : paramEntry.getValue().getClass();
+            Class<?> paramClass = paramEntry.getValue() == null || paramEntry.getValue() == REGISTERED_PLACEHOLDER ? null : paramEntry.getValue()
+                .getClass();
             result.add(new ParameterImpl(paramClass, paramEntry.getKey()));
         }
         return result;

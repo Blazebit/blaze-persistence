@@ -26,5 +26,5 @@ public class OraclePagePositionFunction extends PagePositionFunction {
     protected String getRownumFunction() {
         return "rownum";
     }
-    
+
 }

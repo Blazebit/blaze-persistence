@@ -27,10 +27,10 @@ import com.blazebit.persistence.Keyset;
  * @since 1.0
  */
 public class KeysetImpl implements Keyset {
-    
-	private static final long serialVersionUID = 1L;
-	
-	private final Serializable[] tuple;
+
+    private static final long serialVersionUID = 1L;
+
+    private final Serializable[] tuple;
 
     public KeysetImpl(Serializable[] tuple) {
         this.tuple = tuple;

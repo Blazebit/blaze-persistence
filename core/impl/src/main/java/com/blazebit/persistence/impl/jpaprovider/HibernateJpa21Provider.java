@@ -25,10 +25,10 @@ import javax.persistence.EntityManager;
 public class HibernateJpa21Provider extends HibernateJpaProvider {
 
     public HibernateJpa21Provider(EntityManager em) {
-		super(em);
-	}
+        super(em);
+    }
 
-	@Override
+    @Override
     public boolean supportsJpa21() {
         return true;
     }

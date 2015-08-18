@@ -23,13 +23,12 @@ import javax.persistence.EntityManager;
  * @since 1.0
  */
 public class JpaProviders {
-    
+
     public static JpaProvider resolveJpaProvider(EntityManager em) {
         boolean jpa21 = false;
 
         try {
-            EntityManager.class
-                .getMethod("createEntityGraph", Class.class);
+            EntityManager.class.getMethod("createEntityGraph", Class.class);
             jpa21 = true;
         } catch (NoSuchMethodException e) {
         }
@@ -50,18 +49,17 @@ public class JpaProviders {
             Class<?> jpaEMClass = Class.forName("org.eclipse.persistence.jpa.JpaEntityManager");
             if (em == null || em.unwrap(jpaEMClass) != null) {
                 Class<?> versionClass = Class.forName("org.eclipse.persistence.Version");
-                String version = (String) versionClass.getMethod("getVersion")
-                    .invoke(null);
+                String version = (String) versionClass.getMethod("getVersion").invoke(null);
                 String[] versionParts = version.split("\\.");
                 int major = Integer.parseInt(versionParts[0]);
                 int minor = Integer.parseInt(versionParts[1]);
 
                 boolean eclipseLink24 = major > 2 || (major == 2 && minor >= 4);
-                
+
                 if (!eclipseLink24) {
                     throw new IllegalArgumentException("Unsupported EclipseLink version " + version + "!");
                 }
-                
+
                 return new EclipseLinkJpaProvider(em);
             }
         } catch (Exception e) {
@@ -74,7 +72,7 @@ public class JpaProviders {
             }
         } catch (Exception e) {
         }
-        
+
         throw new IllegalArgumentException("Unsupported jpa provider!");
     }
 }

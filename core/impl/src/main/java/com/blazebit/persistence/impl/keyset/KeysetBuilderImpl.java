@@ -27,7 +27,7 @@ import com.blazebit.persistence.KeysetBuilder;
  * @since 1.0
  */
 public class KeysetBuilderImpl<T> implements KeysetBuilder<T> {
-    
+
     private final Map<String, Object> keysetValues;
     private final T result;
     private final KeysetBuilderEndedListener listener;

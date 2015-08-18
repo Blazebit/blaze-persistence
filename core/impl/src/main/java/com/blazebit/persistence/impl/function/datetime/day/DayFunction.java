@@ -31,34 +31,32 @@ public class DayFunction implements JpqlFunction {
     public DayFunction() {
         this.renderer = new TemplateRenderer("extract(day from ?1)");
     }
-    
+
     public DayFunction(String template) {
         this.renderer = new TemplateRenderer(template);
     }
-    
+
     @Override
     public boolean hasArguments() {
         return true;
     }
-    
+
     @Override
     public boolean hasParenthesesIfNoArguments() {
         return true;
     }
-    
+
     @Override
     public Class<?> getReturnType(Class<?> firstArgumentType) {
         return Integer.class;
     }
-    
+
     @Override
     public void render(FunctionRenderContext context) {
         if (context.getArgumentsSize() != 1) {
             throw new RuntimeException("The day function needs exactly one argument <datetime>! args=" + context);
         }
-        
-        renderer.start(context)
-                .addArgument(0)
-                .build();
+
+        renderer.start(context).addArgument(0).build();
     }
 }

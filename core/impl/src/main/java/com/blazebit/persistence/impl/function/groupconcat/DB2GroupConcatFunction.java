@@ -32,22 +32,20 @@ public class DB2GroupConcatFunction extends AbstractGroupConcatFunction {
     public void render(FunctionRenderContext context) {
         GroupConcat groupConcat = getGroupConcat(context);
         StringBuilder sb = new StringBuilder();
-        
+
         if (groupConcat.isDistinct()) {
             sb.append("distinct ");
         }
-        
+
         sb.append(groupConcat.getExpression());
         sb.append(", ");
         sb.append(groupConcat.getSeparator());
-        
+
         if (!groupConcat.getOrderByExpression().isEmpty()) {
             sb.append(") within group (order by ");
             sb.append(groupConcat.getOrderByExpression());
         }
-        
-        renderer.start(context)
-                .addParameter(sb.toString())
-                .build();
+
+        renderer.start(context).addParameter(sb.toString()).build();
     }
 }

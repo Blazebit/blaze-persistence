@@ -23,5 +23,6 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  */
 public interface ExpressionBuilder {
+
     public Expression getExpression();
 }
