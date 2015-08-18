@@ -31,11 +31,14 @@ import org.junit.Test;
 
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.persistence.view.proxy.model.DocumentClassView;
 import com.blazebit.persistence.view.proxy.model.DocumentInterfaceView;
+import com.blazebit.persistence.view.proxy.model.UnsafeDocumentClassView;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -52,7 +55,44 @@ public class ProxyFactoryTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentInterfaceView.class);
         cfg.addEntityView(DocumentClassView.class);
+        cfg.addEntityView(UnsafeDocumentClassView.class);
         return cfg.createEntityViewManager().getMetamodel();
+    }
+
+    @Test
+    public void testUnsafeClassProxy() throws Exception {
+        ViewType<UnsafeDocumentClassView> viewType = getViewMetamodel().view(UnsafeDocumentClassView.class);
+
+        // The parameter order is _id, contacts, firstContactPerson, id, name
+        Class<?>[] parameterTypes = new Class[]{ Long.class, Map.class, Person.class, Person.class, String.class, Long.class, Integer.class};
+        ObjectInstantiator<UnsafeDocumentClassView> instantiator = new UnsafeInstantiator<UnsafeDocumentClassView>(viewType.getConstructor(parameterTypes), proxyFactory, viewType, parameterTypes);
+        Map<Integer, Person> expectedContacts = new HashMap<Integer, Person>();
+        Person expectedFirstContactPerson = new Person("pers");
+        Long expectedId = 1L;
+        String expectedName = "doc";
+        long expectedAge = 10;
+        Person expectedMyContactPerson = new Person("my-pers");
+        Integer expectedContactPersonNumber = 2;
+
+        UnsafeDocumentClassView instance = instantiator.newInstance(new Object[] {expectedId, expectedContacts, expectedFirstContactPerson,
+                expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber});
+
+        assertTrue(expectedContacts == instance.getContacts());
+        assertTrue(expectedFirstContactPerson == instance.getFirstContactPerson());
+        assertTrue(expectedId == instance.getId());
+        assertTrue(expectedMyContactPerson == instance.getMyContactPerson());
+        assertTrue(expectedName == instance.getName());
+        assertTrue(expectedAge == instance.getAge());
+        assertTrue(expectedContactPersonNumber == instance.getContactPersonNumber());
+
+        expectedContacts = new HashMap<Integer, Person>();
+        expectedId = 2L;
+
+        instance.setContacts(expectedContacts);
+        instance.setId(expectedId);
+
+        assertTrue(expectedContacts == instance.getContacts());
+        assertTrue(expectedId == instance.getId());
     }
 
     @Test

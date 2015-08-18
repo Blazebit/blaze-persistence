@@ -55,6 +55,7 @@ import com.blazebit.reflection.ReflectionUtils;
 public class ProxyFactory {
 
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final Object proxyLock = new Object();
     private final ClassPool pool;
 
@@ -62,18 +63,26 @@ public class ProxyFactory {
         this.pool = new ClassPool(ClassPool.getDefault());
     }
 
-    @SuppressWarnings("unchecked")
     public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
+        return getProxy(viewType, false);
+    }
+
+    public <T> Class<? extends T> getUnsafeProxy(ViewType<T> viewType) {
+    	return getProxy(viewType, true);
+    }
+    
+    @SuppressWarnings("unchecked")
+    private <T> Class<? extends T> getProxy(ViewType<T> viewType, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
-        Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
+        ConcurrentMap<Class<?>, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
+		Class<? extends T> proxyClass = (Class<? extends T>) classes.get(clazz);
 
         // Double checked locking since we can only define the class once
         if (proxyClass == null) {
         	synchronized (proxyLock) {
-        		proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
-        		
+        		proxyClass = (Class<? extends T>) classes.get(clazz);
                 if (proxyClass == null) {
-		            proxyClass = createProxyClass(viewType);
+		            proxyClass = createProxyClass(viewType, unsafe);
 		            proxyClasses.put(clazz, proxyClass);
                 }
         	}
@@ -83,9 +92,10 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
+	private <T> Class<? extends T> createProxyClass(ViewType<T> viewType, boolean unsafe) {
         Class<?> clazz = viewType.getJavaType();
-        String proxyClassName = clazz.getName() + "_$$_javassist_entityview";
+        String suffix = unsafe ? "unsafe_" : "";
+        String proxyClassName = clazz.getName() + "_$$_javassist_entityview_" + suffix;
         CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
 
@@ -123,7 +133,7 @@ public class ProxyFactory {
                 attributeTypes[i] = attributeField.getType();
                 i++;
             }
-
+            
             CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
             if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
                 throw new IllegalArgumentException("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)' but is not allowed to!");
@@ -138,7 +148,7 @@ public class ProxyFactory {
 
             // Add the default constructor only for interfaces since abstract classes may omit it
             if (clazz.isInterface()) {
-                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes));
+                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, unsafe));
             }
 
             Set<MappingConstructor<T>> constructors = viewType.getConstructors();
@@ -153,11 +163,15 @@ public class ProxyFactory {
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, 1 + attributes.size(), superConstructor.getParameterTypes().length);
 
-                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes));
+                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, unsafe));
             }
 
             try {
-            	return cc.toClass();
+                if (unsafe) {
+                	return (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
+                } else {
+                	return cc.toClass();
+                }
             } catch (CannotCompileException ex) {
         		// If there are multiple proxy factories for the same class loader 
             	// we could end up in defining a class multiple times, so we check if the classloader
@@ -181,7 +195,7 @@ public class ProxyFactory {
         }
     }
 
-    private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
+	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
         Method getter = attribute.getJavaMethod();
         Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
         
@@ -194,7 +208,14 @@ public class ProxyFactory {
         }
         cc.addField(attributeField);
         
-        List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
+        createGettersAndSetters(attribute, clazz, cc, getter, setter, attributeField);
+        
+        return attributeField;
+    }
+
+	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField attributeField) throws CannotCompileException, NotFoundException {
+		String genericSignature = attributeField.getGenericSignature();
+		List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
         
         CtMethod attributeGetter = CtNewMethod.getter(getter.getName(), attributeField);
         
@@ -224,9 +245,7 @@ public class ProxyFactory {
             }
             cc.addMethod(attributeSetter);
         }
-        
-        return attributeField;
-    }
+	}
     
     private List<Method> getBridgeGetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method getter) {
 		List<Method> bridges = new ArrayList<Method>();
@@ -373,28 +392,46 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes) throws CannotCompileException {
+    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, boolean unsafe) throws CannotCompileException, NotFoundException {
         CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
         ctConstructor.setModifiers(Modifier.PUBLIC);
-        StringBuilder sb = new StringBuilder();
-        sb.append("{\n\tsuper(");
-        for (int i = attributeFields.length; i < attributeTypes.length; i++) {
-            if (i != attributeFields.length) {
-                sb.append(',');
-            }
-
-            sb.append('$').append(i + 1);
-        }
-        sb.append(");\n");
-
-        for (int i = 0; i < attributeFields.length; i++) {
-            sb.append("\tthis.").append(attributeFields[i].getName()).append(" = ").append('$').append(i + 1).append(";\n");
+        Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1);
+        
+        if (unsafe) {
+	        renderFieldInitialization(attributeFields, bytecode);
+	        renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
+        } else {
+	        renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
+	        renderFieldInitialization(attributeFields, bytecode);
         }
 
-        sb.append('}');
-        ctConstructor.setBody(sb.toString());
+        bytecode.add(Bytecode.RETURN);
+        ctConstructor.getMethodInfo().setCodeAttribute(bytecode.toCodeAttribute());
         return ctConstructor;
     }
+
+	private void renderFieldInitialization(CtField[] attributeFields, Bytecode bytecode) throws NotFoundException {
+		for (int i = 0; i < attributeFields.length; i++) {
+			bytecode.addAload(0);
+			bytecode.addAload(i + 1);
+			bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
+        }
+	}
+
+	private void renderSuperCall(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, Bytecode bytecode) throws NotFoundException {
+		bytecode.addAload(0);
+		
+		CtClass[] superArguments = new CtClass[attributeTypes.length - attributeFields.length];
+		int size = 0;
+        
+		for (int i = attributeFields.length; i < attributeTypes.length; i++) {
+        	superArguments[size++] = attributeTypes[i];
+        	bytecode.addAload(i + 1);
+        }
+        
+		bytecode.addInvokespecial(cc.getSuperclass(), "<init>", Descriptor.ofConstructor(superArguments));
+	}
+    
 
     private <T> CtConstructor findConstructor(CtClass superCc, MappingConstructor<T> constructor) throws NotFoundException {
         List<ParameterAttribute<? super T, ?>> parameterAttributes = constructor.getParameterAttributes();

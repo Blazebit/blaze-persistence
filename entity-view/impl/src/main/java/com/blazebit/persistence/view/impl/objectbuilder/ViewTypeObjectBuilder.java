@@ -15,13 +15,12 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import java.lang.reflect.Constructor;
-import java.util.Arrays;
 import java.util.List;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
+import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 
 /**
  *
@@ -30,11 +29,11 @@ import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMappe
  */
 public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
-    protected final Constructor<? extends T> proxyConstructor;
+    protected final ObjectInstantiator<T> objectInstantiator;
     protected final TupleElementMapper[] mappers;
 
     public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
-        this.proxyConstructor = template.getProxyConstructor();
+        this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
     }
 
@@ -44,11 +43,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
             return null;
         }
 
-        try {
-            return proxyConstructor.newInstance(tuple);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + proxyConstructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
-        }
+        return objectInstantiator.newInstance(tuple);
     }
 
     @Override
