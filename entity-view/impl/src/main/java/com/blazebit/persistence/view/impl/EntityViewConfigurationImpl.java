@@ -16,6 +16,8 @@
 package com.blazebit.persistence.view.impl;
 
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import com.blazebit.persistence.view.EntityViewManager;
@@ -29,10 +31,20 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     private final Set<Class<?>> entityViewClasses = new HashSet<Class<?>>();
+    private Properties properties = new Properties();
 
-    @Override
-    public void addEntityView(Class<?> clazz) {
+    public EntityViewConfigurationImpl() {
+        loadDefaultProperties();
+	}
+    
+    private void loadDefaultProperties() {
+    	properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
+    }
+
+	@Override
+    public EntityViewConfiguration addEntityView(Class<?> clazz) {
         entityViewClasses.add(clazz);
+        return this;
     }
 
     @Override
@@ -43,5 +55,44 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     @Override
     public EntityViewManager createEntityViewManager() {
         return new EntityViewManagerImpl(this);
+    }
+
+    @Override
+    public Properties getProperties() {
+        return properties;
+    }
+
+    @Override
+    public String getProperty(String propertyName) {
+        return properties.getProperty(propertyName);
+    }
+
+    @Override
+    public EntityViewConfiguration setProperties(Properties properties) {
+        this.properties = properties;
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration addProperties(Properties extraProperties) {
+        this.properties.putAll(extraProperties);
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration mergeProperties(Properties properties) {
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            if (this.properties.containsKey(entry.getKey())) {
+                continue;
+            }
+            this.properties.setProperty((String) entry.getKey(), (String) entry.getValue());
+        }
+        return this;
+    }
+
+    @Override
+    public EntityViewConfiguration setProperty(String propertyName, String value) {
+        properties.setProperty(propertyName, value);
+        return this;
     }
 }

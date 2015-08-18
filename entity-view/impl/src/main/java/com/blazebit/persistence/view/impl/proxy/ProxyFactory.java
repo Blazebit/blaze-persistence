@@ -21,13 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ParameterAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
-import com.blazebit.reflection.ReflectionUtils;
 
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -48,6 +41,12 @@ import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
 
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ParameterAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.reflection.ReflectionUtils;
+
 /**
  *
  * @author Christian Beikov
@@ -55,18 +54,12 @@ import javassist.bytecode.SignatureAttribute;
  */
 public class ProxyFactory {
 
-    private static final AtomicInteger classCounter = new AtomicInteger();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
+    private final Object proxyLock = new Object();
     private final ClassPool pool;
-    private final CtClass objectCc;
 
     public ProxyFactory() {
         this.pool = new ClassPool(ClassPool.getDefault());
-        try {
-            this.objectCc = pool.getCtClass("java.lang.Object");
-        } catch (NotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -74,13 +67,16 @@ public class ProxyFactory {
         Class<T> clazz = viewType.getJavaType();
         Class<? extends T> proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
 
+        // Double checked locking since we can only define the class once
         if (proxyClass == null) {
-            proxyClass = createProxyClass(viewType);
-            Class<? extends T> oldProxyClass = (Class<? extends T>) proxyClasses.putIfAbsent(clazz, proxyClass);
-
-            if (oldProxyClass != null) {
-                proxyClass = oldProxyClass;
-            }
+        	synchronized (proxyLock) {
+        		proxyClass = (Class<? extends T>) proxyClasses.get(clazz);
+        		
+                if (proxyClass == null) {
+		            proxyClass = createProxyClass(viewType);
+		            proxyClasses.put(clazz, proxyClass);
+                }
+        	}
         }
 
         return proxyClass;
@@ -89,7 +85,8 @@ public class ProxyFactory {
     @SuppressWarnings("unchecked")
     private <T> Class<? extends T> createProxyClass(ViewType<T> viewType) {
         Class<?> clazz = viewType.getJavaType();
-        CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + classCounter.getAndIncrement());
+        String proxyClassName = clazz.getName() + "_$$_javassist_entityview";
+        CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
 
         ClassPath classPath = new ClassClassPath(clazz);
@@ -128,13 +125,13 @@ public class ProxyFactory {
             }
 
             CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
-            if (equalsDeclaringClass != objectCc) {
+            if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
                 throw new IllegalArgumentException("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)' but is not allowed to!");
             }
             cc.addMethod(createEquals(cc, idField));
 
             CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
-            if (hashCodeDeclaringClass != objectCc) {
+            if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
                 throw new IllegalArgumentException("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()' but is not allowed to!");
             }
             cc.addMethod(createHashCode(cc, idField));
@@ -159,7 +156,24 @@ public class ProxyFactory {
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes));
             }
 
-            return cc.toClass();
+            try {
+            	return cc.toClass();
+            } catch (CannotCompileException ex) {
+        		// If there are multiple proxy factories for the same class loader 
+            	// we could end up in defining a class multiple times, so we check if the classloader
+            	// actually has something to offer
+            	if (ex.getCause() instanceof LinkageError) {
+            		LinkageError error = (LinkageError) ex.getCause();
+	            	try {
+	            		return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+	            	} catch (ClassNotFoundException cnfe) {
+	            		// Something we can't handle happened
+	            		throw error;
+	            	}
+            	} else {
+            		throw ex;
+            	}
+            }
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
         } finally {
@@ -269,8 +283,7 @@ public class ProxyFactory {
 
     private String getEqualsDesc() throws NotFoundException {
         CtClass returnType = CtClass.booleanType;
-        CtClass parameterType = objectCc;
-        return "(" + Descriptor.of(parameterType) + ")" + Descriptor.of(returnType);
+        return "(" + Descriptor.of("java.lang.Object") + ")" + Descriptor.of(returnType);
     }
 
     private CtMethod createEquals(CtClass cc, CtField... fields) throws NotFoundException, CannotCompileException {

@@ -15,8 +15,10 @@
  */
 package com.blazebit.persistence.view.spi;
 
-import com.blazebit.persistence.view.EntityViewManager;
+import java.util.Properties;
 import java.util.Set;
+
+import com.blazebit.persistence.view.EntityViewManager;
 
 /**
  * This class is used to configure the entity view manager that it creates.
@@ -30,8 +32,9 @@ public interface EntityViewConfiguration {
      * Adds the given class to the set of known entity views.
      *
      * @param clazz The class to be added
+     * @return this for method chaining
      */
-    public void addEntityView(Class<?> clazz);
+    public EntityViewConfiguration addEntityView(Class<?> clazz);
 
     /**
      * Creates a new entity view manager from this configuration.
@@ -46,5 +49,54 @@ public interface EntityViewConfiguration {
      * @return The currently known entity views
      */
     public Set<Class<?>> getEntityViews();
+
+    /**
+     * Returns all properties.
+     *
+     * @return All properties
+     */
+    public Properties getProperties();
+
+    /**
+     * Returns a property value by name.
+     *
+     * @param propertyName The name of the property
+     * @return The value currently associated with that property name; may be null.
+     */
+    public String getProperty(String propertyName);
+
+    /**
+     * Replace the properties of the configuration with the given properties.
+     *
+     * @param properties The new set of properties
+     * @return this for method chaining
+     */
+    public EntityViewConfiguration setProperties(Properties properties);
+
+    /**
+     * Add the given properties to the properties of the configuration.
+     *
+     * @param extraProperties The properties to add.
+     * @return this for method chaining
+     *
+     */
+    public EntityViewConfiguration addProperties(Properties extraProperties);
+
+    /**
+     * Adds the given properties to the properties of the configuration, without overriding existing values.
+     *
+     * @param properties The properties to merge
+     * @return this for method chaining
+     */
+    public EntityViewConfiguration mergeProperties(Properties properties);
+
+    /**
+     * Set a property value by name.
+     *
+     * @param propertyName The name of the property to set
+     * @param value        The new property value
+     * @return this for method chaining
+     */
+    public EntityViewConfiguration setProperty(String propertyName, String value);
 
 }

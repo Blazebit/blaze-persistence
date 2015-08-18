@@ -19,6 +19,7 @@ import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -72,15 +73,23 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private final ViewMetamodel metamodel;
     private final ProxyFactory proxyFactory;
+    private final Map<String, Object> properties;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
         this.proxyFactory = new ProxyFactory();
+        this.properties = copyProperties(config.getProperties());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
+        
+        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
+        	for (ViewType<?> view : metamodel.getViews()) {
+        		proxyFactory.getProxy(view);
+        	}
+        }
     }
 
     @Override
@@ -232,6 +241,18 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(GreaterOrEqualFilter.class.getName(), GreaterOrEqualFilterImpl.class);
         filterMappings.put(LessThanFilter.class.getName(), LessThanFilterImpl.class);
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
+    }
+
+	private Map<String, Object> copyProperties(Properties properties) {
+        Map<String, Object> newProperties = new HashMap<String, Object>();
+
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            String key = (String) entry.getKey();
+            Object value = entry.getValue();
+            newProperties.put(key, value);
+        }
+
+        return newProperties;
     }
 
 }
