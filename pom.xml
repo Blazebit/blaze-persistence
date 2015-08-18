@@ -86,6 +86,8 @@
 	</developers>
 
 	<properties>
+		<blaze-persistence.codename>Yellow Claw</blaze-persistence.codename>
+	
 		<version.blazecbav>0.2.0</version.blazecbav>
 		<version.blazeutils>0.1.10</version.blazeutils>
 		<version.deltaspike>1.0.1</version.deltaspike>
@@ -96,6 +98,7 @@
 
 		<!-- Plugin versions -->
 		<version.processor.plugin>2.2.1</version.processor.plugin>
+		<version.injection.plugin>1.0.2</version.injection.plugin>
 		<version.release.plugin>2.5.1</version.release.plugin>
 		<version.surefire.plugin>2.18.1</version.surefire.plugin>
 	</properties>
@@ -299,6 +302,11 @@
 					<artifactId>maven-processor-plugin</artifactId>
 					<version>${version.processor.plugin}</version>
 				</plugin>
+				<plugin>
+					<groupId>org.jboss.maven.plugins</groupId>
+					<artifactId>maven-injection-plugin</artifactId>
+					<version>${version.injection.plugin}</version>
+				</plugin>
 				<!--This plugin's configuration is used to store Eclipse m2e settings 
 					only. It has no influence on the Maven build itself. -->
 				<plugin>
@@ -327,6 +335,25 @@
 									</pluginExecutionFilter>
 									<action>
 										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.jboss.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-injection-plugin
+										</artifactId>
+										<versionRange>
+											[1.0.2,)
+										</versionRange>
+										<goals>
+											<goal>bytecode</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>

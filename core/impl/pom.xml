@@ -1,41 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence-core</artifactId>
-        <version>1.0.6-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+	<parent>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-core</artifactId>
+		<version>1.0.6-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
-    <artifactId>blaze-persistence-core-impl</artifactId>
-    <packaging>jar</packaging>
+	<artifactId>blaze-persistence-core-impl</artifactId>
+	<packaging>jar</packaging>
 
-    <name>Blazebit Persistence Core Impl</name>
+	<name>Blazebit Persistence Core Impl</name>
 
-    <dependencies>
-        <!-- Project dependencies -->
-        
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-parser</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-common-utils</artifactId>
-        </dependency>
+	<dependencies>
+		<!-- Project dependencies -->
 
-        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-    
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-persistence-core-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-persistence-core-parser</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-common-utils</artifactId>
+		</dependency>
+
+		<!-- Actually we only need JPA but since there is no official artifact 
+			we rather use this than provider specific apis -->
+		<dependency>
+			<groupId>org.apache.openejb</groupId>
+			<artifactId>javaee-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.maven.plugins</groupId>
+				<artifactId>maven-injection-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>compile</phase>
+						<goals>
+							<goal>bytecode</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<bytecodeInjections>
+						<bytecodeInjection>
+							<expression>${project.version}</expression>
+							<targetMembers>
+								<methodBodyReturn>
+									<className>com.blazebit.persistence.impl.Version$Injected</className>
+									<methodName>getVersion</methodName>
+								</methodBodyReturn>
+							</targetMembers>
+						</bytecodeInjection>
+						<bytecodeInjection>
+							<expression>${blaze-persistence.codename}</expression>
+							<targetMembers>
+								<methodBodyReturn>
+									<className>com.blazebit.persistence.impl.Version$Injected</className>
+									<methodName>getCodename</methodName>
+								</methodBodyReturn>
+							</targetMembers>
+						</bytecodeInjection>
+					</bytecodeInjections>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
