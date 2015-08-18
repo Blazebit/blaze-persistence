@@ -97,7 +97,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitAggregateExpression(JPQLSelectExpressionParser.AggregateExpressionContext ctx) {
-        return new AggregateExpression(ctx.distinct != null, ctx.funcname.getText(), Arrays.asList((Expression) ctx.aggregate_argument().accept(this)));
+        return new AggregateExpression(ctx.distinct != null, ctx.funcname.getText(), Arrays.asList((Expression) ctx.aggregate_argument()
+            .accept(this)));
     }
 
     @Override
