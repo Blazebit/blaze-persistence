@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,13 +66,43 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     private static class PathPosition {
 
-        Class<?> currentClass;
-        Method method;
+        private Class<?> currentClass;
+        private Class<?> valueClass;
+        private Method method;
 
         PathPosition(Class<?> currentClass, Method method) {
             this.currentClass = currentClass;
             this.method = method;
         }
+
+		Class<?> getRealCurrentClass() {
+			return currentClass;
+		}
+
+		Class<?> getCurrentClass() {
+			if (valueClass != null) {
+				return valueClass;
+			}
+			
+			return currentClass;
+		}
+
+		void setCurrentClass(Class<?> currentClass) {
+			this.currentClass = currentClass;
+			this.valueClass = null;
+		}
+
+		Method getMethod() {
+			return method;
+		}
+
+		void setMethod(Method method) {
+			this.method = method;
+		}
+
+		void setValueClass(Class<?> valueClass) {
+			this.valueClass = valueClass;
+		}
     }
 
     public TargetResolvingExpressionVisitor(Class<?> startClass) {
@@ -91,7 +122,7 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
         Map<Method, Class<?>> possibleTargets = new HashMap<Method, Class<?>>();
         
         for (PathPosition position : pathPositions) {
-            possibleTargets.put(position.method, position.currentClass);
+            possibleTargets.put(position.getMethod(), position.getRealCurrentClass());
         }
         
         return possibleTargets;
@@ -99,11 +130,22 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     
     @Override
     public void visit(PropertyExpression expression) {
-        currentPosition.method = resolve(currentPosition.currentClass, expression.getProperty());
-        if (currentPosition.method == null) {
-            currentPosition.currentClass = null;
+        currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), expression.getProperty()));
+        if (currentPosition.getMethod() == null) {
+            currentPosition.setCurrentClass(null);
         } else {
-            currentPosition.currentClass = getType(currentPosition.currentClass, currentPosition.method);
+            Class<?> type = getType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            Class<?> valueType = null;
+            
+            if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+            	Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            	valueType = typeArguments[typeArguments.length - 1];
+            } else {
+            	valueType = type;
+            }
+            
+            currentPosition.setCurrentClass(type);
+            currentPosition.setValueClass(valueType);
         }
     }
 
@@ -175,7 +217,58 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     @Override
     public void visit(FunctionExpression expression) {
-        invalid(expression);
+    	String name = expression.getFunctionName();
+    	if ("KEY".equalsIgnoreCase(name)) {
+    		PropertyExpression property = resolveBase(expression);
+    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+    		if (!Map.class.isAssignableFrom(type)) {
+            	invalid(expression, "Does not resolve to java.util.Map!");
+            } else {
+            	currentPosition.setCurrentClass(type);
+            	currentPosition.setValueClass(typeArguments[0]);
+            }
+    	} else if ("INDEX".equalsIgnoreCase(name)) {
+    		PropertyExpression property = resolveBase(expression);
+    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+    		
+    		if (!List.class.isAssignableFrom(type)) {
+    			invalid(expression, "Does not resolve to java.util.List!");
+    		} else {
+            	currentPosition.setCurrentClass(type);
+            	currentPosition.setValueClass(Integer.class);
+    		}
+    	} else if ("VALUE".equalsIgnoreCase(name)) {
+    		PropertyExpression property = resolveBase(expression);
+    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+
+    		if (!Map.class.isAssignableFrom(type)) {
+            	invalid(expression, "Does not resolve to java.util.Map!");
+            } else {
+            	currentPosition.setCurrentClass(type);
+            	currentPosition.setValueClass(typeArguments[1]);
+            }
+    	} else {
+    		invalid(expression);
+    	}
+    }
+    
+    private PropertyExpression resolveBase(FunctionExpression expression) {
+		// According to our grammar, we can only get a path here
+		PathExpression path = (PathExpression) expression.getExpressions().get(0);
+		int lastIndex = path.getExpressions().size() - 1;
+		
+		for (int i = 0; i < lastIndex; i++) {
+			path.getExpressions().get(i).accept(this);
+		}
+		
+		// According to our grammar, the last element must be a property
+		return (PropertyExpression) path.getExpressions().get(lastIndex);
     }
 
     @Override
@@ -264,7 +357,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     private void invalid(Object o) {
-        throw new IllegalArgumentException("Illegal occurenc of [" + o + "] in path chain resolver!");
+        throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver!");
+    }
+
+    private void invalid(Object o, String reason) {
+        throw new IllegalArgumentException("Illegal occurence of [" + o + "] in path chain resolver! " + reason);
     }
 
 }
