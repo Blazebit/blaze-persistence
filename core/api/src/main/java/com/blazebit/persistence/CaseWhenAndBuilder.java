@@ -43,27 +43,27 @@ public interface CaseWhenAndBuilder<T> {
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery();
 
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate. 
+     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
      * 
      * <p>
-     * All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the when predicate in conjunction with it's then
+     * expression are added to this predicate container as conjunct.
      * </p>
      * 
-     * @see  CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method 
+     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery(String subqueryAlias, String expression);
 
     /**
      * Starts an exists predicate for the when clause with a subquery on the right hand side.
-     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as
+     * conjunct.
      *
      * @return The subquery initiator for building a subquery
      */
@@ -71,7 +71,8 @@ public interface CaseWhenAndBuilder<T> {
 
     /**
      * Starts an exists predicate for the when clause with a subquery on the right hand side.
-     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as conjunct.
+     * When the builder finishes, the when predicate in conjunction with it's then expression are added to this predicate container as
+     * conjunct.
      *
      * @return The subquery initiator for building a subquery
      */

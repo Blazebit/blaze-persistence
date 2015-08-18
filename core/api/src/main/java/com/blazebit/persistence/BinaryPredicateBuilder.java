@@ -43,7 +43,7 @@ public interface BinaryPredicateBuilder<T> {
      * @return The parent predicate container builder
      */
     public T expression(String expression);
-    
+
     /**
      * Starts a {@link RestrictionBuilder} to create a when expression with a single predicate
      * in which {@code expression} will be on the left hand side of the predicate.
@@ -60,8 +60,8 @@ public interface BinaryPredicateBuilder<T> {
      * in which the left hand side will be a subquery.
      * 
      * <p>
-     * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with its then expression are added to the case when builder.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the when predicate in conjunction
+     * with its then expression are added to the case when builder.
      * </p>
      * 
      * @see CaseWhenStarterBuilder#whenSubquery() More details about this method
@@ -75,15 +75,15 @@ public interface BinaryPredicateBuilder<T> {
      * in which the left hand side will be a subquery.
      * 
      * <p>
-     * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with its then expression are added to the case when builder.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the when predicate in conjunction
+     * with its then expression are added to the case when builder.
      * </p>
      * 
      * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression);
@@ -115,12 +115,11 @@ public interface BinaryPredicateBuilder<T> {
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists();
 
     /**
-     * Starts a {@link CaseWhenAndThenBuilder} for building a when expression 
+     * Starts a {@link CaseWhenAndThenBuilder} for building a when expression
      * with conjunctively connected predicates.
      * 
      * <p>
-     * When the builder finishes, the when predicate
-     * in conjunction with its then expression are added to the case when builder.
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
      * </p>
      * 
      * @see CaseWhenStarterBuilder#whenAnd() More details about this method
@@ -130,13 +129,12 @@ public interface BinaryPredicateBuilder<T> {
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> caseWhenAnd();
 
     /**
-     * Starts a {@link CaseWhenOrThenBuilder} for building a when expression 
+     * Starts a {@link CaseWhenOrThenBuilder} for building a when expression
      * with disjunctively connected predicates.
      * 
      * 
      * <p>
-     * When the builder finishes, the when predicate
-     * in conjunction with its then expression are added to the case when builder.
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
      * </p>
      * 
      * @see CaseWhenStarterBuilder#whenOr() More details about this method
@@ -144,13 +142,12 @@ public interface BinaryPredicateBuilder<T> {
      * @return The or predicate builder for the when expression
      */
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> caseWhenOr();
-    
+
     /**
      * Starts a {@link SimpleCaseWhenBuilder} for building a simple case when expression.
      * 
      * <p>
-     * When the builder finishes, the when predicate
-     * in conjunction with its then expression are added to the case when builder.
+     * When the builder finishes, the when predicate in conjunction with its then expression are added to the case when builder.
      * </p>
      * 
      * @see SimpleCaseWhenStarterBuilder#when(java.lang.String, java.lang.String) More details about this method

@@ -25,5 +25,5 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface LikeBuilder<T> extends BinaryPredicateBuilder<EscapeBuilder<T>> {
-   
+
 }

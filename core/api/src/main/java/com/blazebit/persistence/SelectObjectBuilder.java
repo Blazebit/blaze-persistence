@@ -52,7 +52,7 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
      * Adds the given expression to the arguments for the select new select clause.
      *
      * @param expression The expression to add
-     * @param alias      The alias for the expression
+     * @param alias The alias for the expression
      * @return This select object builder
      * @throws IllegalStateException Is thrown when the argument position is already taken
      */
@@ -61,7 +61,7 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
     /**
      * Like {@link SelectObjectBuilder#with(int, java.lang.String, java.lang.String)} but without an alias.
      *
-     * @param position   The position at which the expression should be added
+     * @param position The position at which the expression should be added
      * @param expression The expression to add
      * @return A starting point for the subquery specification
      */
@@ -70,9 +70,9 @@ public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
     /**
      * Adds the given expression at the given position to the arguments for the select new select clause.
      *
-     * @param position   The position at which the expression should be added
+     * @param position The position at which the expression should be added
      * @param expression The expression to add
-     * @param alias      The alias for the expression
+     * @param alias The alias for the expression
      * @return This select object builder
      * @throws IllegalStateException Is thrown when the argument position is already taken
      */

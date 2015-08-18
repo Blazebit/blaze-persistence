@@ -34,7 +34,7 @@ public interface KeysetBuilder<T> {
      * @return This keyset builder
      */
     public KeysetBuilder<T> with(String expression, Object value);
-    
+
     /**
      * Finishes the keyset builder.
      *

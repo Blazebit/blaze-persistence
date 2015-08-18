@@ -51,10 +51,11 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
 
     /**
      * Starts a {@link SimpleCaseWhenBuilder} with the given alias as select alias.
-     * The expression is the case operand which will be compared to the when expressions defined in the subsequent {@linkplain SimpleCaseWhenBuilder}.
+     * The expression is the case operand which will be compared to the when expressions defined in the subsequent
+     * {@linkplain SimpleCaseWhenBuilder}.
      *
      * @param caseOperand The case operand
-     * @param alias      The select alias for the simple case when expression
+     * @param alias The select alias for the simple case when expression
      * @return The simple case when builder
      */
     public SimpleCaseWhenStarterBuilder<? extends SelectBuilder<T, ?>> selectSimpleCase(String caseOperand, String alias);
@@ -79,15 +80,14 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * Starts a {@link SubqueryInitiator} for a new select item with the given select alias.
      * 
      * <p>
-     * All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the select item is added to the parent container represented by the type <code>X</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be added as select item.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
-     * @param selectAlias   The select alias for the expression
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param selectAlias The select alias for the expression
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<? extends SelectBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
@@ -96,7 +96,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String)} but without a select alias.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be added as select item
+     * @param expression The expression which will be added as select item
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<? extends SelectBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression);
@@ -113,7 +113,7 @@ public interface SelectBuilder<T, X extends SelectBuilder<T, X>> {
      * Adds a select clause with the given expression and alias to the query.
      *
      * @param expression The expression for the select clause
-     * @param alias      The alias for the expression
+     * @param alias The alias for the expression
      * @return The query builder for chaining calls
      */
     public SelectBuilder<T, ?> select(String expression, String alias);

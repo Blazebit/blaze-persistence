@@ -24,30 +24,31 @@ import javax.persistence.EntityManager;
  * @since 1.0
  */
 public interface CriteriaBuilderFactory {
-    
+
     /**
-     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)}
-     * but with the alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.
+     * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.
      *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param resultClass   The result class of the query
-     * @param <T>           The type of the result class
+     * @param resultClass The result class of the query
+     * @param <T> The type of the result class
      * @return A new criteria builder
      */
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass);
-    
+
     /**
      * Creates a new criteria builder with the given result class. The result class will be used as default from class.
-     * The alias will be used as default alias for the from class. Both can be overridden by invoking {@link BaseQueryBuilder#from(java.lang.Class, java.lang.String)}.
+     * The alias will be used as default alias for the from class. Both can be overridden by invoking
+     * {@link BaseQueryBuilder#from(java.lang.Class, java.lang.String)}.
      *
      * @param entityManager The entity manager to use for the criteria builder
-     * @param resultClass   The result class of the query
-     * @param <T>           The type of the result class
-     * @param alias         The alias that should be used for the result class from clause
+     * @param resultClass The result class of the query
+     * @param <T> The type of the result class
+     * @param alias The alias that should be used for the result class from clause
      * @return A new criteria builder
      */
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias);
-    
+
     /**
      * Returns the service provided by this criteria builder factory or null if none is available.
      * 

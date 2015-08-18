@@ -17,7 +17,8 @@ package com.blazebit.persistence;
 
 /**
  * The interface for quantifiable binary predicate builders.
- * The left hand side and the operator are already known to the builder and the methods of this builder either terminate the building process or start a {@link SubqueryInitiator}.
+ * The left hand side and the operator are already known to the builder and the methods of this builder either terminate the building
+ * process or start a {@link SubqueryInitiator}.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov

@@ -25,7 +25,7 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface EscapeBuilder<T> {
-    
+
     /**
      * Sets the given character as the escape character.
      *
@@ -33,7 +33,7 @@ public interface EscapeBuilder<T> {
      * @return The parent builder
      */
     public T escape(char c);
-    
+
     /**
      * Specifies that no escape character should be used.
      * 

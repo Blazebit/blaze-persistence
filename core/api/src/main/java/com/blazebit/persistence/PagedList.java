@@ -29,32 +29,32 @@ public interface PagedList<T> extends List<T> {
     /**
      * Returns the actual size of this page.
      * 
-     * @see List#size() 
+     * @see List#size()
      * @return The actual size
      */
     public int getSize();
-    
+
     /**
      * Returns the total size of the list.
      *
      * @return The total size
      */
     public long getTotalSize();
-    
+
     /**
      * Returns the number of this page, numbered from 1.
      * 
      * @return The number of this page
      */
     public int getPage();
-    
+
     /**
      * Returns the number of total pages.
      * 
      * @return The number of total pages
      */
     public int getTotalPages();
-    
+
     /**
      * Returns the position of the first result, numbered from 0.
      * This is the position which was actually queried. This value might be different from {@linkplain KeysetPage#getFirstResult()}.
@@ -67,7 +67,8 @@ public interface PagedList<T> extends List<T> {
 
     /**
      * Returns the maximum number of results.
-     * This is the maximum number which was actually queried. This value might be different from {@linkplain KeysetPage#getFirstResult()}.
+     * This is the maximum number which was actually queried. This value might be different from
+     * {@linkplain KeysetPage#getFirstResult()}.
      *
      * @return The maximum number of results
      */

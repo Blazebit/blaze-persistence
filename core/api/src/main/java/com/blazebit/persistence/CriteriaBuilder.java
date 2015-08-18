@@ -22,8 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<T, CriteriaBuilder<T>>,
-    DistinctBuilder<T, CriteriaBuilder<T>> {
+public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<T, CriteriaBuilder<T>>, DistinctBuilder<T, CriteriaBuilder<T>> {
 
     /*
      * Covariant overrides.
@@ -33,7 +32,7 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
 
     @Override
     public CriteriaBuilder<T> from(Class<?> entityClass, String alias);
-    
+
     @Override
     public SimpleCaseWhenStarterBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression);
 

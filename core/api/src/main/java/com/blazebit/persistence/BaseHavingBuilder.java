@@ -35,13 +35,13 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
     public SubqueryInitiator<RestrictionBuilder<T>> havingSubquery();
 
     /**
-     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
+     * Starts a {@link SubqueryInitiator} for the left hand side of a predicate. All occurrences of <code>subqueryAlias</code> in
+     * <code>expression</code> will be replaced by the subquery.
      * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
      * parent predicate container represented by the type <code>T</code>.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression The expression which will be used as left hand side of a predicate
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<T>> havingSubquery(String subqueryAlias, String expression);
@@ -54,19 +54,19 @@ public interface BaseHavingBuilder<T extends BaseHavingBuilder<T>> {
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<T> having(String expression);
-    
+
     /**
      * Starts a {@link CaseWhenBuilder} for a where predicate.
-     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
+     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished,
      * the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @return A {@link CaseWhenBuilder}
      */
     public CaseWhenStarterBuilder<RestrictionBuilder<T>> havingCase();
-    
+
     /**
      * Starts a {@link SimpleCaseWhenBuilder} for a where predicate.
-     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished, 
+     * When the {@link CaseWhenBuilder} and the restriction builder for the right hand side are finished,
      * the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *
      * @param expression Case operand expression

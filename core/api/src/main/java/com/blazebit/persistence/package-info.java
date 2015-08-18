@@ -18,3 +18,4 @@
  * Blaze-Persistence is a rich Criteria API for JPA.
  */
 package com.blazebit.persistence;
+

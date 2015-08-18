@@ -34,25 +34,23 @@ public class Criteria {
      * @return The first {@linkplain CriteriaBuilderConfigurationProvider} that is found
      */
     public static CriteriaBuilderConfigurationProvider getDefaultProvider() {
-        ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(
-            CriteriaBuilderConfigurationProvider.class);
+        ServiceLoader<CriteriaBuilderConfigurationProvider> serviceLoader = ServiceLoader.load(CriteriaBuilderConfigurationProvider.class);
         Iterator<CriteriaBuilderConfigurationProvider> iterator = serviceLoader.iterator();
 
         if (iterator.hasNext()) {
             return iterator.next();
         }
 
-        throw new IllegalStateException(
-            "No CriteriaBuilderConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
+        throw new IllegalStateException("No CriteriaBuilderConfigurationProvider found on the class path. Please check if a valid implementation is on the class path.");
     }
 
     /**
-     * Uses the default {@linkplain CriteriaBuilderConfigurationProvider} and invokes {@link CriteriaBuilderConfigurationProvider#createConfiguration() }.
+     * Uses the default {@linkplain CriteriaBuilderConfigurationProvider} and invokes
+     * {@link CriteriaBuilderConfigurationProvider#createConfiguration() }.
      *
      * @return A new criteria builder configuration
      */
     public static CriteriaBuilderConfiguration getDefault() {
-        return getDefaultProvider()
-            .createConfiguration();
+        return getDefaultProvider().createConfiguration();
     }
 }

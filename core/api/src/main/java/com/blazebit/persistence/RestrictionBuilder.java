@@ -21,14 +21,15 @@ import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 
 /**
  * The builder interface for predicates.
- * The left hand side of the predicate is already known to the builder and the methods of this builder either terminate the building process or start a {@link SubqueryInitiator}.
+ * The left hand side of the predicate is already known to the builder and the methods of this builder either terminate the building
+ * process or start a {@link SubqueryInitiator}.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
  * @since 1.0
  */
 public interface RestrictionBuilder<T> {
-    
+
     /**
      * Starts a builder for a between predicate with lower bound expression.
      * 
@@ -36,7 +37,7 @@ public interface RestrictionBuilder<T> {
      * @return The {@link BetweenBuilder}
      */
     public BetweenBuilder<T> betweenExpression(String start);
-    
+
     /**
      * Starts a builder for a between predicate with parameterized lower bound.
      * 
@@ -44,31 +45,30 @@ public interface RestrictionBuilder<T> {
      * @return The {@link BetweenBuilder}
      */
     public BetweenBuilder<T> between(Object start);
-    
+
     /**
      * Starts a builder for a between predicate with a subquery as lower bound.
      * 
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery();
-    
+
     /**
      * Starts a builder for a between predicate with a subquery as lower bound.
      * 
      * <p>
-     * All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished,
-     * the when predicate in conjunction with it's then expression are added to this predicate container as disjunct.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the when predicate in conjunction with it's then
+     * expression are added to this predicate container as disjunct.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression);
-    
+
     /**
      * Like {@link RestrictionBuilder#betweenExpression(java.lang.String)} but the resulting predicate is negated.
      * 
@@ -76,7 +76,7 @@ public interface RestrictionBuilder<T> {
      * @return The {@link BetweenBuilder}
      */
     public BetweenBuilder<T> notBetweenExpression(String start);
-    
+
     /**
      * Like {@link RestrictionBuilder#notBetween(java.lang.Object)} but the resulting predicate is negated.
      * 
@@ -84,20 +84,20 @@ public interface RestrictionBuilder<T> {
      * @return The {@link BetweenBuilder}
      */
     public BetweenBuilder<T> notBetween(Object start);
-    
+
     /**
      * Like {@link RestrictionBuilder#betweenSubquery()} but the resulting predicate is negated.
      * 
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery();
-    
+
     /**
      * Like {@link RestrictionBuilder#betweenSubquery(java.lang.String, java.lang.String)} but the resulting predicate is negated.
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The {@link SubqueryInitiator}
      */
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression);
@@ -113,14 +113,14 @@ public interface RestrictionBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the EQ predicate that can be used to apply quantors.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> eq(String subqueryAlias, String expression);
@@ -154,7 +154,7 @@ public interface RestrictionBuilder<T> {
      * Like {@link RestrictionBuilder#eq(java.lang.String,java.lang.String) } but the result is wrapped in a NOT predicate.
      *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate
+     * @param expression The expression which will be used as left hand side of a predicate
      * @return The quantifiable binary predicate builder
      */
     public SubqueryInitiator<T> notEq(String subqueryAlias, String expression);
@@ -186,14 +186,14 @@ public interface RestrictionBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the GT predicate that can be used to apply quantors.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> gt(String subqueryAlias, String expression);
@@ -227,14 +227,14 @@ public interface RestrictionBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the GE predicate that can be used to apply quantors.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> ge(String subqueryAlias, String expression);
@@ -268,14 +268,14 @@ public interface RestrictionBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the LT predicate that can be used to apply quantors.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> lt(String subqueryAlias, String expression);
@@ -309,14 +309,14 @@ public interface RestrictionBuilder<T> {
      * Starts a {@link SubqueryInitiator} for the LE predicate that can be used to apply quantors.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the
-     * parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the subquery
+     * builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be used as left hand side of a predicate.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be used as left hand side of a predicate.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The quantifiable subquery initiator
      */
     public SubqueryInitiator<T> le(String subqueryAlias, String expression);
@@ -438,40 +438,44 @@ public interface RestrictionBuilder<T> {
      * Creates a {@link LikeBuilder} for building a like predicate.
      * 
      * <p>
-     * The predicate checks if the left hand side is like the pattern delivered by the {@link LikeBuilder}
-     * while respecting the case sensitivity according to the {@code caseSensitive} parameter.
+     * The predicate checks if the left hand side is like the pattern delivered by the {@link LikeBuilder} while respecting the case
+     * sensitivity according to the {@code caseSensitive} parameter.
      * </p>
      * 
      * <p>
-     * Once the {@link LikeBuilder} is finished, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * Once the {@link LikeBuilder} is finished, the predicate is added to the parent predicate container represented by the type
+     * <code>T</code>.
      * </p>
      * 
      * @param caseSensitive If true, the comparison of the left hand side expression with the pattern
-     * respects is performed case sensitive, else it is performed case insensitive.
+     *            respects is performed case sensitive, else it is performed case insensitive.
      * @return The {@link LikeBuilder} for building the comparison pattern.
      */
     public LikeBuilder<T> like(boolean caseSensitive);
-    
+
     /**
      * Like {@link RestrictionBuilder#like(boolean)} with {@code caseSensitive = true}.
+     * 
      * @return The {@link LikeBuilder} for building the comparison pattern.
      */
     public LikeBuilder<T> like();
+
     /**
      * Like {@link RestrictionBuilder#like(boolean)} but the resulting like predicate is negated.
      * 
      * @param caseSensitive If true, the comparison of the left hand side expression with the pattern
-     * respects is performed case sensitive, else it is performed case insensitive.
+     *            respects is performed case sensitive, else it is performed case insensitive.
      * @return The {@link LikeBuilder} for building the comparison pattern.
      */
     public LikeBuilder<T> notLike(boolean caseSensitive);
-    
+
     /**
      * Like {@link RestrictionBuilder#notLike(boolean)} with {@code caseSensitive = true}.
+     * 
      * @return The {@link LikeBuilder} for building the comparison pattern.
      */
     public LikeBuilder<T> notLike();
-    
+
     /**
      * Switch to the non portable mode which might to be portable to other JPA providers.
      * 

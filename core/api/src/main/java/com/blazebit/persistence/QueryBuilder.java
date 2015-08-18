@@ -44,7 +44,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The list of the results
      */
     public List<T> getResultList();
-    
+
     /**
      * Execute the query expecting a single result.
      *
@@ -56,33 +56,28 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Paginates the results of this query.
      *
      * <p>
-     * Please note:
-     * The pagination only works on entity level and NOT on row level. This means
-     * that for queries which yield multiple result set rows per entity (i.e. rows with
-     * the same entity id), the multiple rows are treated as 1 page entry during
-     * the pagination process. Hence, the result size of such paginated queries
-     * might be greater than the specified page size.
+     * Please note: The pagination only works on entity level and NOT on row level. This means that for queries which yield multiple
+     * result set rows per entity (i.e. rows with the same entity id), the multiple rows are treated as 1 page entry during the
+     * pagination process. Hence, the result size of such paginated queries might be greater than the specified page size.
      * </p>
      * 
      * <p>
-     * An example for such queries would be a query that joins a collection:
-     * SELECT d.id, contacts.name FROM Document d LEFT JOIN d.contacts contacts
-     * If one Document has associated multiple contacts, the above query will produce
-     * multiple result set rows for this document.
+     * An example for such queries would be a query that joins a collection: SELECT d.id, contacts.name FROM Document d LEFT JOIN
+     * d.contacts contacts If one Document has associated multiple contacts, the above query will produce multiple result set rows for
+     * this document.
      * </p>
      * 
      * <p>
-     * Since the pagination works on entity id level, the results are implicitely
-     * grouped by id and distinct. Therefore calling distinct() or groupBy() on a
-     * PaginatedCriteriaBuilder is not allowed.
+     * Since the pagination works on entity id level, the results are implicitely grouped by id and distinct. Therefore calling
+     * distinct() or groupBy() on a PaginatedCriteriaBuilder is not allowed.
      * </p>
      * 
      * @param firstResult The position of the first result to retrieve, numbered from 0
-     * @param maxResults  The maximum number of results to retrieve
+     * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      */
     public PaginatedCriteriaBuilder<T> page(int firstResult, int maxResults);
-    
+
     /**
      * Paginates the results of this query and navigates to the page on which
      * the entity with the given entity id is located.
@@ -90,11 +85,11 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Beware that the same limitations like for {@link QueryBuilder#page(int, int)} apply.
      * If the entity with the given entity id does not exist in the result list:
      * <ul>
-     *  <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
-     *  <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
+     * <li>The result of {@link PaginatedCriteriaBuilder#getResultList()} will contain the first page</li>
+     * <li>{@link PagedList#getFirstResult()} will return <code>-1</code></li>
      * </ul>
      * 
-     * @param entityId   The id of the entity which should be located on the page
+     * @param entityId The id of the entity which should be located on the page
      * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      */
@@ -115,17 +110,18 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * 
      * <li>{@link KeysetPage#getMaxResults()} and <code>maxResults</code> evaluate to the same value AND</li>
      * <li>One of the following conditions is met:
-     *  <ul>
-     *      <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is 0</li>
-     *      <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is equal to the value of <code>maxResults</code></li>
-     *  </ul>
+     * <ul>
+     * <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is 0</li>
+     * <li>The absolute value of {@link KeysetPage#getFirstResult()}<code> - firstResult</code> is equal to the value of
+     * <code>maxResults</code></li>
+     * </ul>
      * </li>
      * </ul>
      * </p>
      *
-     * @param keysetPage  The key set from a previous result, may be null
+     * @param keysetPage The key set from a previous result, may be null
      * @param firstResult The position of the first result to retrieve, numbered from 0
-     * @param maxResults  The maximum number of results to retrieve
+     * @param maxResults The maximum number of results to retrieve
      * @return This query builder as paginated query builder
      * @see PagedList#getKeysetPage()
      */
@@ -138,9 +134,9 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Adds a join to the query, possibly specializing implicit joins, and giving the joined element an alias.
      * If fetch is set to true, a join fetch will be added.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
-     * @param type  The join type
+     * @param type The join type
      * @param fetch True if a join fetch should be added
      * @return The query builder for chaining calls
      */
@@ -151,9 +147,9 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * The resulting join will be the default join meaning that expressions which use the absolute path will refer to this join.
      * If fetch is set to true, a join fetch will be added.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
-     * @param type  The join type
+     * @param type The join type
      * @param fetch True if a join fetch should be added
      * @return The query builder for chaining calls
      */
@@ -166,7 +162,7 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * @return The query builder for chaining calls
      */
     public X fetch(String path);
-    
+
     /**
      * Adds an implicit join fetch for every given path to the query.
      *
@@ -176,54 +172,60 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
     public X fetch(String... paths);
 
     /**
-     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#INNER} and fetch set to true.
+     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#INNER} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X innerJoinFetch(String path, String alias);
 
     /**
-     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#INNER} and fetch set to true.
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#INNER} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X innerJoinFetchDefault(String path, String alias);
 
     /**
-     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#LEFT} and fetch set to true.
+     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#LEFT} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X leftJoinFetch(String path, String alias);
 
     /**
-     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#LEFT} and fetch set to true.
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#LEFT} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X leftJoinFetchDefault(String path, String alias);
 
     /**
-     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#RIGHT} and fetch set to true.
+     * Like {@link QueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#RIGHT} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
     public X rightJoinFetch(String path, String alias);
 
     /**
-     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with {@link JoinType#RIGHT} and fetch set to true.
+     * Like {@link QueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType, boolean) } but with
+     * {@link JoinType#RIGHT} and fetch set to true.
      *
-     * @param path  The path to join
+     * @param path The path to join
      * @param alias The alias for the joined element
      * @return The query builder for chaining calls
      */
@@ -233,27 +235,30 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      * Select methods
      */
     /**
-     * Starts a {@link SelectObjectBuilder} for the given class. The types of the parameter arguments used in the {@link SelectObjectBuilder} must match a constructor of the given class.
+     * Starts a {@link SelectObjectBuilder} for the given class. The types of the parameter arguments used in the
+     * {@link SelectObjectBuilder} must match a constructor of the given class.
      *
-     * @param <Y>   The new query result type specified by the given class
+     * @param <Y> The new query result type specified by the given class
      * @param clazz The class which should be used for the select new select clause
      * @return The select object builder for the given class
      */
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Class<Y> clazz);
 
     /**
-     * Starts a {@link SelectObjectBuilder} for the given constructor. The types of the parameter arguments used in the {@link SelectObjectBuilder} must match the given constructor.
+     * Starts a {@link SelectObjectBuilder} for the given constructor. The types of the parameter arguments used in the
+     * {@link SelectObjectBuilder} must match the given constructor.
      *
-     * @param <Y>         The new query result type specified by the given class
+     * @param <Y> The new query result type specified by the given class
      * @param constructor The constructor which should be used for the select new select clause
      * @return The select object builder for the given class
      */
     public <Y> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(Constructor<Y> constructor);
 
     /**
-     * Applies the given object builder to this query. The object builder provides the select clauses and is used to transform the result set tuples.
+     * Applies the given object builder to this query. The object builder provides the select clauses and is used to transform the
+     * result set tuples.
      *
-     * @param <Y>     The new query result type specified by the given class
+     * @param <Y> The new query result type specified by the given class
      * @param builder The object builder which transforms the result set into objects of type <code>Y</code>
      * @return The query builder for chaining calls
      */

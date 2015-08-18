@@ -37,7 +37,7 @@ public interface SubqueryInitiator<T> {
      * Creates a new subquery builder with the given entity class as root entity in the FROM clause with the given alias.
      *
      * @param entityClass The entity class which should be the root entity
-     * @param alias       The alias for the root entity
+     * @param alias The alias for the root entity
      * @return A new subquery builder
      */
     public SubqueryBuilder<T> from(Class<?> entityClass, String alias);

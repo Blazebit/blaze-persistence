@@ -29,8 +29,8 @@ public interface OrderByBuilder<T extends OrderByBuilder<T>> {
      * Adds an order by clause with the given expression to the query.
      *
      * @param expression The expression for the order by clause
-     * @param ascending  Wether the order should be ascending or descending.
-     * @param nullFirst  Wether null elements should be ordered first or not.
+     * @param ascending Wether the order should be ascending or descending.
+     * @param nullFirst Wether null elements should be ordered first or not.
      * @return The query builder for chaining calls
      */
     public T orderBy(String expression, boolean ascending, boolean nullFirst);
@@ -47,7 +47,7 @@ public interface OrderByBuilder<T extends OrderByBuilder<T>> {
      * Like {@link BaseQueryBuilder#orderBy(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to true.
      *
      * @param expression The expression for the order by clause
-     * @param nullFirst  Wether null elements should be ordered first or not.
+     * @param nullFirst Wether null elements should be ordered first or not.
      * @return The query builder for chaining calls
      */
     public T orderByAsc(String expression, boolean nullFirst);
@@ -64,7 +64,7 @@ public interface OrderByBuilder<T extends OrderByBuilder<T>> {
      * Like {@link BaseQueryBuilder#orderBy(java.lang.String, boolean, boolean) } but with <code>ascending</code> set to false.
      *
      * @param expression The expression for the order by clause
-     * @param nullFirst  Wether null elements should be ordered first or not.
+     * @param nullFirst Wether null elements should be ordered first or not.
      * @return The query builder for chaining calls
      */
     public T orderByDesc(String expression, boolean nullFirst);

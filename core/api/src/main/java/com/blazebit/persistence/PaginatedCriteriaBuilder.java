@@ -37,7 +37,7 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      * @return The query string
      */
     public String getPageIdQueryString();
-    
+
     /**
      * Enable or disables keyset extraction which influences whether {@link PagedList#getKeysetPage()} is available.
      * 
@@ -45,7 +45,7 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      * @return The query builder for chaining calls
      */
     public PaginatedCriteriaBuilder<T> withKeysetExtraction(boolean keysetExtraction);
-    
+
     /**
      * Returns whether keyset extraction is enabled or not.
      * 
@@ -61,7 +61,7 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
 
     @Override
     public PaginatedCriteriaBuilder<T> from(Class<?> entityClass, String alias);
-    
+
     @Override
     public PagedList<T> getResultList();
 
