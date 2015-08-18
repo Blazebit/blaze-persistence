@@ -291,6 +291,18 @@
 				<version>3.8.11</version>
 				<scope>test</scope>
 			</dependency>
+			<dependency>
+				<groupId>org.firebirdsql.jdbc</groupId>
+				<artifactId>jaybird-jdk16</artifactId>
+				<version>2.2.8</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.oracle</groupId>
+				<artifactId>ojdbc14</artifactId>
+				<version>10.2.0.4.0</version>
+				<scope>test</scope>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
