@@ -23,24 +23,24 @@ package com.blazebit.persistence.spi;
  *
  * @author Christian Beikov
  * @since 1.0
- * @see EntityManagerIntegrator#registerFunctions(javax.persistence.EntityManager, java.util.Map) 
+ * @see EntityManagerIntegrator#registerFunctions(javax.persistence.EntityManager, java.util.Map)
  */
 public interface JpqlFunction {
-    
+
     /**
      * Returns true if the function has arguments, false otherwise.
      * 
      * @return true if the function has arguments, false otherwise
      */
     public boolean hasArguments();
-    
+
     /**
      * Returns false if parentheses might be skipped if no arguments are given, true otherwise.
      * 
      * @return false if parentheses might be skipped if no arguments are given, true otherwise
      */
     public boolean hasParenthesesIfNoArguments();
-    
+
     /**
      * Returns the return type of this function.
      * 
@@ -50,12 +50,12 @@ public interface JpqlFunction {
      * @return the return type of this function, or null
      */
     public Class<?> getReturnType(Class<?> firstArgumentType);
-    
+
     /**
      * Renders the function into the given function render context
      * 
      * @param context The context into which the function should be rendered
      */
     public void render(FunctionRenderContext context);
-    
+
 }

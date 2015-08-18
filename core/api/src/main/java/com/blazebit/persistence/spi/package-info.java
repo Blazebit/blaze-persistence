@@ -18,3 +18,4 @@
  * SPI for implementers of the Blaze-Persistence API.
  */
 package com.blazebit.persistence.spi;
+

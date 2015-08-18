@@ -31,8 +31,8 @@ public interface QueryTransformer {
     /**
      * Transforms the query.
      *
-     * @param <T>           The query result type
-     * @param query         The original query
+     * @param <T> The query result type
+     * @param query The original query
      * @param objectBuilder The object build that should be used to transform the query
      * @return The transformed query
      */

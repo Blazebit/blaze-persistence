@@ -19,3 +19,4 @@
  * Beware that although the functionality won't disappear, the API might change from time to time.
  */
 package com.blazebit.persistence.internal;
+

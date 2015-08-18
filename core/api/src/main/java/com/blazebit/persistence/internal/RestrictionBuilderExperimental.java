@@ -32,9 +32,8 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * Starts a {@link SubqueryInitiator} for the right hand side of the IN predicate.
      * 
      * <p>
-     * All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * <p>
@@ -42,19 +41,18 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be added as select item.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> in(String subqueryAlias, String expression);
-    
+
     /**
      * Starts a {@link SubqueryInitiator} for the right hand side of the IN predicate.
      * 
      * <p>
-     * All occurrences of
-     * <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery.
-     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      * </p>
      * 
      * <p>
@@ -62,8 +60,8 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * </p>
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
-     * @param expression    The expression which will be added as select item.
-     * This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> notIn(String subqueryAlias, String expression);

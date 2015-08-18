@@ -42,7 +42,7 @@ public interface CriteriaBuilderConfiguration {
      * @return A list of registered query transformers
      */
     public List<QueryTransformer> getQueryTransformers();
-    
+
     /**
      * Registers the given jpql function group in the configuration.
      *
@@ -50,14 +50,14 @@ public interface CriteriaBuilderConfiguration {
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup);
-    
+
     /**
      * Returns the set of registered functions.
      * 
      * @return the set of registered functions
      */
     public Set<String> getFunctionNames();
-    
+
     /**
      * Registers the given entity manager enricher in the configuration.
      *
@@ -65,7 +65,7 @@ public interface CriteriaBuilderConfiguration {
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher);
-    
+
     /**
      * Returns a list of registered entity manager enrichers.
      *
@@ -124,7 +124,7 @@ public interface CriteriaBuilderConfiguration {
      * Set a property value by name.
      *
      * @param propertyName The name of the property to set
-     * @param value        The new property value
+     * @param value The new property value
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration setProperty(String propertyName, String value);

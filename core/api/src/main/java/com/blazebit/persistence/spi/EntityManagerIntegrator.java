@@ -40,7 +40,7 @@ public interface EntityManagerIntegrator {
      * @return The enriched entity manager
      */
     public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions);
-    
+
     /**
      * Returns the names of all registered functions.
      * 
