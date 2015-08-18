@@ -29,11 +29,16 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
  */
 public class ParameterMappingListAttributeImpl<X, Y> extends AbstractParameterMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
-    private final boolean hasIndex;
+    private final boolean isIndexed;
     
     public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
         super(mappingConstructor, index, mapping, entityViews, false);
-        this.hasIndex = MetamodelUtils.isIndexedList(mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+        
+        if (isIgnoreIndex()) {
+        	this.isIndexed = false;
+        } else {
+        	this.isIndexed = MetamodelUtils.isIndexedList(mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+        }
     }
 
     @Override
@@ -48,12 +53,12 @@ public class ParameterMappingListAttributeImpl<X, Y> extends AbstractParameterMa
 
     @Override
     public boolean isIndexed() {
-        return !isIgnoreIndex() && hasIndex;
+        return isIndexed;
     }
 
     @Override
     public boolean isOrdered() {
-        return !isIndexed();
+        return !isIndexed;
     }
 
 }

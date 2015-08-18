@@ -30,11 +30,16 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, List<Y>, Y> implements ListAttribute<X, Y> {
 
-    private final boolean hasIndex;
+    private final boolean isIndexed;
     
     public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews, false);
-        this.hasIndex = MetamodelUtils.isIndexedList(viewType.getEntityClass(), mapping);
+        
+        if (isIgnoreIndex()) {
+        	this.isIndexed = false;
+        } else {
+        	this.isIndexed = MetamodelUtils.isIndexedList(viewType.getEntityClass(), mapping);
+        }
     }
 
     @Override
@@ -49,12 +54,12 @@ public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingP
 
     @Override
     public boolean isIndexed() {
-        return !isIgnoreIndex() && hasIndex;
+        return isIndexed;
     }
 
     @Override
     public boolean isOrdered() {
-        return !isIndexed();
+        return !isIndexed;
     }
 
 }
