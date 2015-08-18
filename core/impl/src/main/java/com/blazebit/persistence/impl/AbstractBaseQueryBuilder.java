@@ -160,14 +160,13 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.registeredFunctions = registeredFunctions;
         this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaProvider, registeredFunctions);
 
-        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaProvider, this.aliasManager, em.getMetamodel(),
-                parentJoinManager);
+        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaProvider, this.aliasManager, em.getMetamodel(), parentJoinManager);
 
         // set defaults
         try {
             this.fromClazz = em.getMetamodel().entity(resultClazz);
             this.joinManager.setRoot(fromClazz, alias);
-        } catch(IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             this.fromClazz = null;
         }
 
@@ -183,7 +182,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        //resolve cyclic dependencies
+        // resolve cyclic dependencies
         this.em = em;
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
@@ -197,11 +196,11 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
-	public CriteriaBuilderFactory getCriteriaBuilderFactory() {
-		return cbf;
-	}
+    public CriteriaBuilderFactory getCriteriaBuilderFactory() {
+        return cbf;
+    }
 
-	@Override
+    @Override
     public BaseQueryBuilder<T, ?> from(Class<?> clazz) {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
@@ -447,9 +446,9 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         clearCache();
         Expression expr;
         if (cbf.isCompatibleModeEnabled()) {
-        	expr = expressionFactory.createPathExpression(expression);
+            expr = expressionFactory.createPathExpression(expression);
         } else {
-        	expr = expressionFactory.createSimpleExpression(expression);
+            expr = expressionFactory.createSimpleExpression(expression);
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
@@ -534,20 +533,20 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     public X orderByAsc(String expression, boolean nullFirst) {
         return orderBy(expression, true, nullFirst);
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
-    	Expression expr;
-    	if (cbf.isCompatibleModeEnabled()) {
-    		expr = expressionFactory.createOrderByExpression(expression);
-    	} else {
-    		expr = expressionFactory.createSimpleExpression(expression);
-    	}
+        Expression expr;
+        if (cbf.isCompatibleModeEnabled()) {
+            expr = expressionFactory.createOrderByExpression(expression);
+        } else {
+            expr = expressionFactory.createSimpleExpression(expression);
+        }
         _orderBy(expr, ascending, nullFirst);
         return (X) this;
     }
-    
+
     protected void verifyBuilderEnded() {
         whereManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
@@ -555,7 +554,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         joinManager.verifyBuilderEnded();
     }
 
-    public void _orderBy(Expression expression, boolean ascending, boolean nullFirst){
+    public void _orderBy(Expression expression, boolean ascending, boolean nullFirst) {
         clearCache();
         verifyBuilderEnded();
         orderByManager.orderBy(expression, ascending, nullFirst);
@@ -747,19 +746,23 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         // transformer has a method that returns the transformed Expression
         // the applyTransformer method will replace the transformed expression with the original one
 
-        // Problem we must have the complete (i.e. including array indices) absolute path available during array transformation of a path expression
+        // Problem we must have the complete (i.e. including array indices) absolute path available during array transformation of a
+        // path expression
         // since the path expression might not be based on the root node
         // we must track absolute paths to detect redundancies
-        // However, the absolute path in the path expression's join node does not contain information about the indices so far but it would
+        // However, the absolute path in the path expression's join node does not contain information about the indices so far but it
+        // would
         // also be a wrong match to add the indices in this structure since there can be multiple indices for the same join path element
-        // consider d.contacts[l] and d.contacts[x], the absolute join path is d.contacts but this path occurs with two different indices
+        // consider d.contacts[l] and d.contacts[x], the absolute join path is d.contacts but this path occurs with two different
+        // indices
         // So where should be store this information or from where should we retrieve it during arrayTransformation?
         // i think the answer is: we can't
         // d.contacts[1].localized[1]
         // d.contacts contacts, contacts.localized localized
         // or we remember the already transfomred path in a Set<(BaseNode, RelativePath)> - maybe this would be sufficient
         // because access to the same array with two different indices has an empty result set anyway. so if we had basePaths with
-        // two different indices for the same array we would output the two accesses for the subpath and the access for the current path just once (and not once for each distinct subpath)
+        // two different indices for the same array we would output the two accesses for the subpath and the access for the current path
+        // just once (and not once for each distinct subpath)
         for (ExpressionTransformer transformer : transformers) {
             joinManager.applyTransformer(transformer);
             selectManager.applyTransformer(transformer);
@@ -769,7 +772,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         }
 
         applySizeSelectTransformer();
-        
+
         // After all transformations are done, we can finally check if aggregations are used
         AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();
         hasGroupBy = groupByManager.hasGroupBys();
@@ -864,7 +867,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         // in the first case
         applyImplicitJoins();
         applyExpressionTransformers();
-        
+
         if (keysetManager.hasKeyset()) {
             // The last order by expression must be unique, otherwise keyset scrolling wouldn't work
             Metamodel m = em.getMetamodel();
@@ -874,9 +877,8 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
             }
             keysetManager.initialize(orderByExpressions);
         }
-        
+
         // Check if aggregate functions are used
-        
 
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
@@ -886,13 +888,15 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         StringBuilder sbSelectFrom = new StringBuilder();
 
         sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
+        // @formatter:off
         sbSelectFrom.append(" FROM ")
-                .append(fromClazz.getName())
-                .append(' ')
-                .append(joinManager.getRootAlias());
+            .append(fromClazz.getName())
+            .append(' ')
+            .append(joinManager.getRootAlias());
+        // @formatter:on
 
         joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
-        
+
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

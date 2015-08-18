@@ -59,7 +59,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     private SubqueryBuilderListenerImpl<RestrictionBuilder<T>> superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
     protected final ExpressionFactory expressionFactory;
-    
+
     PredicateManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
         this.rootPredicate = new RootPredicate(parameterManager);
@@ -68,7 +68,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings("unchecked")
-	RestrictionBuilder<T> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
+    RestrictionBuilder<T> restrict(AbstractBaseQueryBuilder<?, ?> builder, Expression expr) {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory));
     }
 
@@ -88,8 +88,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
     SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder) {
         @SuppressWarnings("unchecked")
-		RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
-                new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
@@ -97,20 +96,17 @@ public abstract class PredicateManager<T> extends AbstractManager {
     SubqueryInitiator<RestrictionBuilder<T>> restrict(AbstractBaseQueryBuilder<?, ?> builder, String subqueryAlias, String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
-        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(
-                new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<T> restrictionBuilder = (RestrictionBuilder<T>) rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<T> restrictExists(T result) {
-        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(
-        		new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate()));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
-    	rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(
-                new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotPredicate(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
@@ -128,7 +124,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
         if (superExprLeftSubqueryPredicateBuilderListener != null) {
             superExprLeftSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
-        if(caseExpressionBuilderListener != null){
+        if (caseExpressionBuilderListener != null) {
             caseExpressionBuilderListener.verifyBuilderEnded();
         }
     }
@@ -162,7 +158,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     protected abstract String getClauseName();
 
     protected abstract ClauseType getClauseType();
-    
+
     void applyPredicate(ResolvingQueryGenerator queryGenerator, StringBuilder sb) {
         boolean conditionalContext = queryGenerator.setConditionalContext(true);
         rootPredicate.getPredicate().accept(queryGenerator);

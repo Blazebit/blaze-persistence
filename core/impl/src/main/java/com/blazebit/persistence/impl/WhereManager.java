@@ -41,7 +41,7 @@ public class WhereManager<T> extends PredicateManager<T> {
     }
 
     @SuppressWarnings("unchecked")
-	WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
+    WhereOrBuilder<T> whereOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new WhereOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 }

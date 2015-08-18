@@ -26,7 +26,8 @@ import java.util.Map;
 public class AliasManager {
 
     private final AliasManager parent;
-    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of the declaring query
+    private final Map<String, AliasInfo> aliasMap = new HashMap<String, AliasInfo>(); // maps alias to absolute path and join manager of
+                                                                                      // the declaring query
     private final Map<String, Integer> aliasCounterMap = new HashMap<String, Integer>(); // maps non postfixed aliases to alias counter
 
     public AliasManager() {
@@ -106,10 +107,10 @@ public class AliasManager {
     public Map<String, AliasInfo> getAliasMapForBottomLevel() {
         return aliasMap;
     }
-    
-    public boolean isSelectAlias(String alias){
+
+    public boolean isSelectAlias(String alias) {
         AliasInfo info;
-        if((info = aliasMap.get(alias)) != null){
+        if ((info = aliasMap.get(alias)) != null) {
             return info instanceof SelectInfo;
         }
         return false;

@@ -50,7 +50,7 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     public CriteriaBuilder<T> from(Class<?> clazz, String alias) {
         return (CriteriaBuilder<T>) super.from(clazz, alias);
     }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public CaseWhenBuilder<CriteriaBuilder<T>> selectCase() {

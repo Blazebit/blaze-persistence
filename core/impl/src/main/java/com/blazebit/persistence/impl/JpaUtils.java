@@ -28,7 +28,7 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public final class JpaUtils {
-    
+
     public static <T> Attribute<? super T, ?> getAttribute(ManagedType<T> type, String attributeName) {
         try {
             return type.getAttribute(attributeName);
@@ -36,16 +36,16 @@ public final class JpaUtils {
             return null;
         }
     }
-    
+
     public static Set<Attribute<?, ?>> getAttributesPolymorphic(Metamodel metamodel, ManagedType<?> type, String attributeName) {
         Attribute<?, ?> attr = getAttribute(type, attributeName);
-        
+
         if (attr != null) {
             Set<Attribute<?, ?>> set = new HashSet<Attribute<?, ?>>(1);
             set.add(attr);
             return set;
         }
-        
+
         // Try again polymorphic
         Class<?> javaType = type.getJavaType();
         Set<ManagedType<?>> possibleSubTypes = new HashSet<ManagedType<?>>();

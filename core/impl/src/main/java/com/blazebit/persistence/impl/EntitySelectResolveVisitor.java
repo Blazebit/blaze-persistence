@@ -32,15 +32,15 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
     private final Set<PathExpression> pathExpressions;
 
     public EntitySelectResolveVisitor(Metamodel m) {
-    	this(m, new LinkedHashSet<PathExpression>());
+        this(m, new LinkedHashSet<PathExpression>());
     }
 
     public EntitySelectResolveVisitor(Metamodel m, Set<PathExpression> pathExpressions) {
-		this.m = m;
-		this.pathExpressions = pathExpressions;
-	}
+        this.m = m;
+        this.pathExpressions = pathExpressions;
+    }
 
-	public Set<PathExpression> getPathExpressions() {
+    public Set<PathExpression> getPathExpressions() {
         return pathExpressions;
     }
 
@@ -62,14 +62,14 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
              */
             JoinNode baseNode = ((JoinNode) expression.getBaseNode());
             EntityType<?> entityType;
-            
+
             try {
                 entityType = m.entity(baseNode.getPropertyClass());
             } catch (IllegalArgumentException e) {
                 // ignore if the expression is not an entity
-            	return;
+                return;
             }
-            
+
             // we need to ensure a deterministic order for testing
             SortedSet<Attribute<?, ?>> sortedAttributes = new TreeSet<Attribute<?, ?>>(new Comparator<Attribute<?, ?>>() {
 
@@ -100,8 +100,8 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
             }
         }
     }
-    
+
     public void resolve(JoinNode baseNode) {
-    	
+
     }
 }

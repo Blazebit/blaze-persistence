@@ -46,21 +46,21 @@ public class OrderByManager extends AbstractManager {
         this.jpaProvider = jpaProvider;
     }
 
-    Set<String> getOrderBySelectAliases(){
+    Set<String> getOrderBySelectAliases() {
         if (orderByInfos.isEmpty()) {
             return Collections.emptySet();
         }
-        
+
         Set<String> orderBySelectAliases = new HashSet<String>();
-        for(OrderByInfo orderByInfo : orderByInfos){
+        for (OrderByInfo orderByInfo : orderByInfos) {
             String potentialSelectAlias = orderByInfo.getExpression().toString();
-            if(aliasManager.isSelectAlias(potentialSelectAlias)){
+            if (aliasManager.isSelectAlias(potentialSelectAlias)) {
                 orderBySelectAliases.add(potentialSelectAlias);
             }
         }
         return orderBySelectAliases;
     }
-    
+
     List<OrderByExpression> getOrderByExpressions(Metamodel metamodel) {
         if (orderByInfos.isEmpty()) {
             return Collections.emptyList();
@@ -71,14 +71,14 @@ public class OrderByManager extends AbstractManager {
         for (OrderByInfo orderByInfo : orderByInfos) {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             Expression expr;
-            
+
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
             } else {
                 expr = orderByInfo.getExpression();
             }
-            
+
             boolean nullable = ExpressionUtils.isNullable(metamodel, expr);
             boolean unique = ExpressionUtils.isUnique(metamodel, expr);
             realExpressions.add(new OrderByExpression(orderByInfo.ascending, orderByInfo.nullFirst, expr, nullable, unique));
@@ -107,7 +107,7 @@ public class OrderByManager extends AbstractManager {
                 if (!(selectInfo.getExpression() instanceof PathExpression)) {
                     return true;
                 }
-            } 
+            }
             // illegal no path expressions are prevented by the parser
         }
 
@@ -128,10 +128,10 @@ public class OrderByManager extends AbstractManager {
     <X> X acceptVisitor(Expression.ResultVisitor<X> v, X stopValue) {
         for (OrderByInfo orderBy : orderByInfos) {
             if (stopValue.equals(orderBy.getExpression().accept(v))) {
-            	return stopValue;
+                return stopValue;
             }
         }
-        
+
         return null;
     }
 
@@ -157,7 +157,7 @@ public class OrderByManager extends AbstractManager {
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
-                
+
                 if (allClauses || !(selectInfo.getExpression() instanceof PathExpression)) {
                     sb.append(", ");
                     selectInfo.getExpression().accept(queryGenerator);
@@ -168,10 +168,9 @@ public class OrderByManager extends AbstractManager {
                 orderByInfo.getExpression().accept(queryGenerator);
             }
         }
-        
+
         queryGenerator.setConditionalContext(conditionalContext);
     }
-
 
     /**
      * Builds the clauses needed for the group by clause for a query that uses aggregate functions to work.
@@ -196,24 +195,24 @@ public class OrderByManager extends AbstractManager {
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             Expression expr;
-            
+
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
                 expr = selectInfo.getExpression();
             } else {
                 expr = orderByInfo.getExpression();
             }
-            
-	       	 // This visitor checks if an expression is usable in a group by
+
+            // This visitor checks if an expression is usable in a group by
             GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
-			if (!Boolean.TRUE.equals(expr.accept(groupByUsableDetectionVisitor))) {
-				sb.setLength(0);
-				queryGenerator.setQueryBuffer(sb);
-				expr.accept(queryGenerator);
-				groupByClauses.add(sb.toString());
-			}
+            if (!Boolean.TRUE.equals(expr.accept(groupByUsableDetectionVisitor))) {
+                sb.setLength(0);
+                queryGenerator.setQueryBuffer(sb);
+                expr.accept(queryGenerator);
+                groupByClauses.add(sb.toString());
+            }
         }
-        
+
         queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
@@ -235,10 +234,11 @@ public class OrderByManager extends AbstractManager {
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {
-    	if (jpaProvider.supportsNullPrecedenceExpression()) {
+        if (jpaProvider.supportsNullPrecedenceExpression()) {
             if (resolveSelectAliases) {
                 AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-                // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed it
+                // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we
+                // removed it
                 if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                     ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
                 } else {
@@ -258,24 +258,25 @@ public class OrderByManager extends AbstractManager {
             } else {
                 sb.append(" NULLS FIRST");
             }
-    	} else {
+        } else {
             String expression;
             String resolvedExpression;
             String order;
             String nulls;
-        	StringBuilder expressionSb = new StringBuilder();
-        	
-        	queryGenerator.setQueryBuffer(expressionSb);
-            
+            StringBuilder expressionSb = new StringBuilder();
+
+            queryGenerator.setQueryBuffer(expressionSb);
+
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderBy.getExpression().toString());
-            // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed it
+            // NOTE: Originally we restricted this to path expressions, but since I don't know the reason for that anymore, we removed
+            // it
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 ((SelectInfo) aliasInfo).getExpression().accept(queryGenerator);
-            	resolvedExpression = expressionSb.toString();
+                resolvedExpression = expressionSb.toString();
             } else {
-            	resolvedExpression = null;
+                resolvedExpression = null;
             }
-            
+
             if (resolveSelectAliases && resolvedExpression != null) {
                 expression = resolvedExpression;
             } else {
@@ -287,18 +288,18 @@ public class OrderByManager extends AbstractManager {
             if (orderBy.ascending == inverseOrder) {
                 order = "DESC";
             } else {
-            	order = "ASC";
+                order = "ASC";
             }
             if (orderBy.nullFirst == inverseOrder) {
                 nulls = "LAST";
             } else {
-            	nulls = "FIRST";
+                nulls = "FIRST";
             }
-            
+
             sb.append(jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls));
-    	}
+        }
     }
-    
+
     // TODO: needs equals-hashCode implementation
 
     private static class OrderByInfo extends NodeInfo {

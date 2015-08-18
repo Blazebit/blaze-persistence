@@ -58,46 +58,46 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.properties = copyProperties(config.getProperties());
         this.compatibleModeEnabled = Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.COMPATIBLE_MODE)));
     }
-    
+
     private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {
-    	Set<String> aggregateFunctions = new HashSet<String>();
-    	for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
-    		if (entry.getValue().isAggregate()) {
-    			aggregateFunctions.add(entry.getKey().toLowerCase());
-    		}
-    	}
-    	return aggregateFunctions;
+        Set<String> aggregateFunctions = new HashSet<String>();
+        for (Map.Entry<String, JpqlFunctionGroup> entry : functions.entrySet()) {
+            if (entry.getValue().isAggregate()) {
+                aggregateFunctions.add(entry.getKey().toLowerCase());
+            }
+        }
+        return aggregateFunctions;
     }
 
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
     }
-    
+
     public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
 
     public Set<String> getAggregateFunctions() {
-		return aggregateFunctions;
-	}
+        return aggregateFunctions;
+    }
 
-	public ExpressionFactory getExpressionFactory() {
+    public ExpressionFactory getExpressionFactory() {
         return expressionFactory;
     }
 
     public Map<String, Object> getProperties() {
         return properties;
     }
-    
+
     public boolean isCompatibleModeEnabled() {
-    	return compatibleModeEnabled;
+        return compatibleModeEnabled;
     }
 
     @Override
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass) {
         return create(entityManager, resultClass, resultClass.getSimpleName().toLowerCase());
     }
-    
+
     @Override
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
         Set<String> registeredFunctions = new HashSet<String>();
@@ -107,22 +107,22 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             em = integrator.registerFunctions(em, functions);
             registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
         }
-        
+
         CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, resultClass, alias, registeredFunctions);
         return cb;
     }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
-	public <T> T getService(Class<T> serviceClass) {
-		if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
-			return (T) expressionFactory;
-		}
-		
-		return null;
-	}
+    public <T> T getService(Class<T> serviceClass) {
+        if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
+            return (T) expressionFactory;
+        }
 
-	private Map<String, Object> copyProperties(Properties properties) {
+        return null;
+    }
+
+    private Map<String, Object> copyProperties(Properties properties) {
         Map<String, Object> newProperties = new HashMap<String, Object>();
 
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

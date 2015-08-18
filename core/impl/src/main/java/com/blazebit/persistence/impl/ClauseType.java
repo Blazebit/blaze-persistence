@@ -21,5 +21,9 @@ package com.blazebit.persistence.impl;
  * @author Moritz Becker
  */
 public enum ClauseType {
-    SELECT, WHERE, GROUP_BY, ORDER_BY, HAVING
+    SELECT,
+    WHERE,
+    GROUP_BY,
+    ORDER_BY,
+    HAVING
 }

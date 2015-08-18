@@ -29,7 +29,7 @@ public class OnClauseJoinNodeVisitor implements JoinNodeVisitor {
     public OnClauseJoinNodeVisitor(Expression.Visitor visitor) {
         this.visitor = visitor;
     }
-    
+
     @Override
     public void visit(JoinNode node) {
         if (node.getOnPredicate() != null) {

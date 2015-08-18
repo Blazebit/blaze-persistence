@@ -19,37 +19,37 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 class GroupByExpressionGatheringVisitor extends VisitorAdapter {
-	
-	private final GroupByUsableDetectionVisitor groupByExpressionGatheringVisitor = new GroupByUsableDetectionVisitor();
-	private final ResolvingQueryGenerator queryGenerator;
-	private final StringBuilder sb = new StringBuilder();
-	private Set<String> expressions;
-	
-	public GroupByExpressionGatheringVisitor(Set<String> expressions, ResolvingQueryGenerator queryGenerator) {
-		this.expressions = expressions;
-		this.queryGenerator = queryGenerator;
-		this.queryGenerator.setQueryBuffer(sb);
-		this.queryGenerator.setConditionalContext(true);
-	}
-	
-	public Set<String> getExpressions() {
-		return expressions;
-	}
-	
-	private boolean handleExpression(Expression expression) {
-		if (Boolean.TRUE.equals(expression.accept(groupByExpressionGatheringVisitor))) {
-			return true;
-		}
-		
-		sb.setLength(0);
-		expression.accept(queryGenerator);
-		expressions.add(sb.toString());
-		return false;
-	}
+
+    private final GroupByUsableDetectionVisitor groupByExpressionGatheringVisitor = new GroupByUsableDetectionVisitor();
+    private final ResolvingQueryGenerator queryGenerator;
+    private final StringBuilder sb = new StringBuilder();
+    private Set<String> expressions;
+
+    public GroupByExpressionGatheringVisitor(Set<String> expressions, ResolvingQueryGenerator queryGenerator) {
+        this.expressions = expressions;
+        this.queryGenerator = queryGenerator;
+        this.queryGenerator.setQueryBuffer(sb);
+        this.queryGenerator.setConditionalContext(true);
+    }
+
+    public Set<String> getExpressions() {
+        return expressions;
+    }
+
+    private boolean handleExpression(Expression expression) {
+        if (Boolean.TRUE.equals(expression.accept(groupByExpressionGatheringVisitor))) {
+            return true;
+        }
+
+        sb.setLength(0);
+        expression.accept(queryGenerator);
+        expressions.add(sb.toString());
+        return false;
+    }
 
     @Override
     public void visit(PathExpression expression) {
-    	handleExpression(expression);
+        handleExpression(expression);
     }
 
     @Override
@@ -59,7 +59,7 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PropertyExpression expression) {
-    	handleExpression(expression);
+        handleExpression(expression);
     }
 
     @Override
@@ -68,50 +68,50 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(CompositeExpression expression) {
-    	if (handleExpression(expression)) {
-    		// TODO: This is wrong, but something similar would be needed 
-//            for (Expression expr : expression.getExpressions()) {
-//                expr.accept(this);
-//            }
-    	}
+        if (handleExpression(expression)) {
+            // TODO: This is wrong, but something similar would be needed
+            // for (Expression expr : expression.getExpressions()) {
+            // expr.accept(this);
+            // }
+        }
     }
 
     @Override
     public void visit(FooExpression expression) {
-    	// We skip this, because foo expressions as part of a predicate is not grouping relevant
+        // We skip this, because foo expressions as part of a predicate is not grouping relevant
     }
 
     @Override
     public void visit(LiteralExpression expression) {
-    	handleExpression(expression);
+        handleExpression(expression);
     }
 
     @Override
     public void visit(NullExpression expression) {
-    	// We skip this, because grouping by null does not make sense
+        // We skip this, because grouping by null does not make sense
     }
 
     @Override
     public void visit(SubqueryExpression expression) {
-    	// We skip subqueries since we can't use them in group bys
+        // We skip subqueries since we can't use them in group bys
     }
 
     @Override
     public void visit(FunctionExpression expression) {
         if (!(expression instanceof AggregateExpression)) {
-        	handleExpression(expression);
+            handleExpression(expression);
         }
     }
 
     @Override
     public void visit(GeneralCaseExpression expression) {
-    	super.visit(expression);
-    	handleExpression(expression);
+        super.visit(expression);
+        handleExpression(expression);
     }
 
     @Override
     public void visit(SimpleCaseExpression expression) {
-    	super.visit(expression);
-    	handleExpression(expression);
+        super.visit(expression);
+        handleExpression(expression);
     }
 }

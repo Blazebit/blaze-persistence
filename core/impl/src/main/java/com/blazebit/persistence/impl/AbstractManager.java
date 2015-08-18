@@ -41,7 +41,7 @@ public class AbstractManager {
     protected void registerParameterExpressions(Expression expression) {
         expression.accept(parameterRegistrationVisitor);
     }
-    
+
     protected void build(StringBuilder sb, Set<String> clauses) {
         Iterator<String> iter = clauses.iterator();
         if (iter.hasNext()) {

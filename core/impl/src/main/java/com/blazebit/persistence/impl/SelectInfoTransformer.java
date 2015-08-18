@@ -21,5 +21,6 @@ package com.blazebit.persistence.impl;
  * @author Moritz Becker
  */
 public interface SelectInfoTransformer {
+
     public void transform(SelectInfo info);
 }

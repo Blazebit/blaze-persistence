@@ -54,7 +54,7 @@ public class ParameterManager {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public Set<? extends Parameter<?>> getParameters() {
+    public Set<? extends Parameter<?>> getParameters() {
         Set<Parameter<?>> result = new HashSet<Parameter<?>>();
 
         for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
@@ -124,7 +124,7 @@ public class ParameterManager {
         }
         parameters.put(parameterName, parameterValue);
     }
-    
+
     // TODO: needs equals-hashCode implementation
 
     private class ParameterImpl<T> implements Parameter<T> {

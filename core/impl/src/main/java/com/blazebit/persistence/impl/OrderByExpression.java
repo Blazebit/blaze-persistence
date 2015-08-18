@@ -24,6 +24,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public final class OrderByExpression {
+
     private final boolean ascending;
     private final boolean nullFirst;
     private final Expression expression;
@@ -53,7 +54,7 @@ public final class OrderByExpression {
     public Expression getExpression() {
         return expression;
     }
-    
+
     public boolean isNullable() {
         return nullable;
     }

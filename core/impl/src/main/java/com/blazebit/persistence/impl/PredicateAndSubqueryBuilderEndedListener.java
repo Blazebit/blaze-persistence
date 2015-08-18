@@ -46,11 +46,11 @@ public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBui
     }
 
     @Override
-	public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
-    	subqueryBuilderListener.onInitiatorStarted(initiator);
-	}
+    public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
+        subqueryBuilderListener.onInitiatorStarted(initiator);
+    }
 
-	protected void verifyBuilderEnded() {
+    protected void verifyBuilderEnded() {
         predicateBuilderListener.verifyBuilderEnded();
         subqueryBuilderListener.verifySubqueryBuilderEnded();
     }

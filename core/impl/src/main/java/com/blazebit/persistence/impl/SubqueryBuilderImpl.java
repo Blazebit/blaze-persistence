@@ -45,17 +45,17 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
         super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
         this.result = result;
         this.listener = listener;
-        
+
     }
 
     @Override
     public List<Expression> getSelectExpressions() {
         List<Expression> selectExpressions = new ArrayList<Expression>(selectManager.getSelectInfos().size());
-        
+
         for (SelectInfo info : selectManager.getSelectInfos()) {
             selectExpressions.add(info.getExpression());
         }
-        
+
         return selectExpressions;
     }
 
@@ -69,7 +69,7 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
         return result;
     }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
     public SubqueryBuilder<T> select(String expression) {
         return (SubqueryBuilder<T>) super.select(expression);

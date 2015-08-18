@@ -21,18 +21,18 @@ package com.blazebit.persistence.impl;
  * @since 1.0
  */
 public final class ConfigurationProperties {
-	
-	/**
-	 * We added a flag to enable a JPA compatible mode because we allow to make use of many vendor
-	 * specific extensions which maybe aren't portable. By enabling the compatible mode functionality
-	 * is restricted but more portable.
-	 * By default the compatible mode is disabled because most JPA providers support the same extensions.
-	 * Valid values for this property are <code>true</code> or <code>false</code>.
-	 * 
-	 * @since 1.0.5
-	 */
-	public static final String COMPATIBLE_MODE = "com.blazebit.persistence.compatible_mode";
 
-	private ConfigurationProperties() {
-	}
+    /**
+     * We added a flag to enable a JPA compatible mode because we allow to make use of many vendor
+     * specific extensions which maybe aren't portable. By enabling the compatible mode functionality
+     * is restricted but more portable.
+     * By default the compatible mode is disabled because most JPA providers support the same extensions.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * 
+     * @since 1.0.5
+     */
+    public static final String COMPATIBLE_MODE = "com.blazebit.persistence.compatible_mode";
+
+    private ConfigurationProperties() {
+    }
 }

@@ -23,6 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  */
 public class SelectInfo extends NodeInfo implements AliasInfo {
+
     final String alias;
     private final AliasManager aliasOwner;
 

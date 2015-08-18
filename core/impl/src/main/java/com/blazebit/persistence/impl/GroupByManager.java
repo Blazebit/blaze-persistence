@@ -46,12 +46,12 @@ public class GroupByManager extends AbstractManager {
         if (groupByInfos.isEmpty()) {
             return Collections.emptySet();
         }
-        
+
         Set<String> groupByClauses = new HashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
-        
-        for(NodeInfo info : groupByInfos){
+
+        for (NodeInfo info : groupByInfos) {
             sb.setLength(0);
             queryGenerator.setQueryBuffer(sb);
             info.getExpression().accept(queryGenerator);
@@ -60,9 +60,9 @@ public class GroupByManager extends AbstractManager {
         queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
-    
+
     void buildGroupBy(StringBuilder sb, Set<String> clauses) {
-        if(!clauses.isEmpty()){
+        if (!clauses.isEmpty()) {
             sb.append(" GROUP BY ");
             build(sb, clauses);
         }
@@ -79,9 +79,9 @@ public class GroupByManager extends AbstractManager {
             groupBy.getExpression().accept(v);
         }
     }
-    
+
     boolean hasGroupBys() {
-    	return groupByInfos.size() > 0;
+        return groupByInfos.size() > 0;
     }
 
     boolean isEmpty() {

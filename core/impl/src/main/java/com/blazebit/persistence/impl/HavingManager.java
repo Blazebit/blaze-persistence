@@ -44,7 +44,7 @@ public class HavingManager<T> extends PredicateManager<T> {
     }
 
     @SuppressWarnings("unchecked")
-	HavingOrBuilderImpl<T> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
+    HavingOrBuilderImpl<T> havingOr(AbstractBaseQueryBuilder<?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 
@@ -55,11 +55,11 @@ public class HavingManager<T> extends PredicateManager<T> {
 
         Set<String> groupByClauses = new LinkedHashSet<String>();
         // TODO: No idea yet how to actually handle this
-		boolean conditionalContext = queryGenerator.isConditionalContext();
+        boolean conditionalContext = queryGenerator.isConditionalContext();
         GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor(groupByClauses, queryGenerator);
         rootPredicate.getPredicate().accept(visitor);
-		queryGenerator.setConditionalContext(conditionalContext);
-        
+        queryGenerator.setConditionalContext(conditionalContext);
+
         return groupByClauses;
     }
 }

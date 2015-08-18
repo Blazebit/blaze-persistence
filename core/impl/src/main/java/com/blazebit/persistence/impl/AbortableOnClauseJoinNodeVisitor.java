@@ -32,18 +32,18 @@ public class AbortableOnClauseJoinNodeVisitor implements AbortableResultJoinNode
         this.visitor = visitor;
         this.stopValue = stopValue;
     }
-    
+
     @Override
     public Boolean visit(JoinNode node) {
         if (node.getOnPredicate() != null) {
             return node.getOnPredicate().accept(visitor);
         }
-        
+
         return null;
     }
 
-	public Boolean getStopValue() {
-		return stopValue;
-	}
+    public Boolean getStopValue() {
+        return stopValue;
+    }
 
 }

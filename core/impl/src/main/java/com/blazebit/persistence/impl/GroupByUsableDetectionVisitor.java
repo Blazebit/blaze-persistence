@@ -15,8 +15,8 @@ class GroupByUsableDetectionVisitor extends AbortableVisitorAdapter {
         return super.visit(expression);
     }
 
-	@Override
-	public Boolean visit(SubqueryExpression expression) {
-		return true;
-	}
+    @Override
+    public Boolean visit(SubqueryExpression expression) {
+        return true;
+    }
 }

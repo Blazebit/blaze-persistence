@@ -98,10 +98,10 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         loadEntityManagerIntegrator();
         loadFunctions();
     }
-    
+
     private void loadFunctions() {
         JpqlFunctionGroup jpqlFunctionGroup;
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
         jpqlFunctionGroup.add(null, new LimitFunction());
         jpqlFunctionGroup.add("mysql", new MySQLLimitFunction());
@@ -110,9 +110,9 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("db2", new DB2LimitFunction());
         jpqlFunctionGroup.add("sybase", null); // Does not support limit
         // The function for SQLServer is hard to implement
-//        jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
+        // jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("page_position", false);
         jpqlFunctionGroup.add(null, new PagePositionFunction());
         jpqlFunctionGroup.add("mysql", new MySQLPagePositionFunction());
@@ -120,7 +120,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("group_concat", true);
         jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
         jpqlFunctionGroup.add("oracle", new OracleGroupConcatFunction());
@@ -128,7 +128,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("year", false);
         jpqlFunctionGroup.add(null, new YearFunction());
         jpqlFunctionGroup.add("access", new AccessYearFunction());
@@ -137,7 +137,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerYearFunction());
         jpqlFunctionGroup.add("sybase", new SybaseYearFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("month", false);
         jpqlFunctionGroup.add(null, new MonthFunction());
         jpqlFunctionGroup.add("access", new AccessMonthFunction());
@@ -146,7 +146,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerMonthFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMonthFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("day", false);
         jpqlFunctionGroup.add(null, new DayFunction());
         jpqlFunctionGroup.add("access", new AccessDayFunction());
@@ -155,7 +155,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerDayFunction());
         jpqlFunctionGroup.add("sybase", new SybaseDayFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("hour", false);
         jpqlFunctionGroup.add(null, new HourFunction());
         jpqlFunctionGroup.add("access", new AccessHourFunction());
@@ -164,7 +164,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerHourFunction());
         jpqlFunctionGroup.add("sybase", new SybaseHourFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("minute", false);
         jpqlFunctionGroup.add(null, new MinuteFunction());
         jpqlFunctionGroup.add("access", new AccessMinuteFunction());
@@ -173,7 +173,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new SQLServerMinuteFunction());
         jpqlFunctionGroup.add("sybase", new SybaseMinuteFunction());
         registerFunction(jpqlFunctionGroup);
-        
+
         jpqlFunctionGroup = new JpqlFunctionGroup("second", false);
         jpqlFunctionGroup.add(null, new SecondFunction());
         jpqlFunctionGroup.add("access", new AccessSecondFunction());
@@ -185,7 +185,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     private void loadDefaultProperties() {
-    	properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
+        properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
     }
 
     private void loadQueryTransformers() {
@@ -207,18 +207,18 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             entityManagerIntegrators.add(enricher);
         }
     }
-    
+
     @Override
     public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup) {
         String functionName = jpqlFunctionGroup.getName().toLowerCase();
         functions.put(functionName, jpqlFunctionGroup);
         return this;
     }
-    
+
     public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
-    
+
     @Override
     public Set<String> getFunctionNames() {
         return functions.keySet();

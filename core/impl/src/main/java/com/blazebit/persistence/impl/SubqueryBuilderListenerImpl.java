@@ -55,15 +55,15 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
         currentSubqueryBuilder = builder;
     }
 
-	@Override
-	public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
-		if (currentSubqueryInitiator != null) {
+    @Override
+    public void onInitiatorStarted(SubqueryInitiator<?> initiator) {
+        if (currentSubqueryInitiator != null) {
             throw new BuilderChainingException("There was an attempt to start an initiator but a previous initiator was not ended.");
         }
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
         }
 
-        currentSubqueryInitiator = initiator;		
-	}
+        currentSubqueryInitiator = initiator;
+    }
 }

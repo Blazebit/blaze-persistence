@@ -60,8 +60,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener,
-                                                                            expressionFactory, registeredFunctions);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;

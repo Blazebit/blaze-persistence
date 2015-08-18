@@ -41,8 +41,7 @@ import com.blazebit.persistence.SubqueryInitiator;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements
-    QueryBuilder<T, X> {
+public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements QueryBuilder<T, X> {
 
     /**
      * This flag indicates whether the current builder has been used to create a
@@ -115,17 +114,18 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         createdPaginatedBuilder = true;
         return new PaginatedCriteriaBuilderImpl<T>(this, true, keysetPage, firstRow, pageSize);
     }
-    
+
     private void checkEntityId(Object entityId) {
         if (entityId == null) {
             throw new IllegalArgumentException("Invalid null entity id given");
-        } 
-        
+        }
+
         EntityType<?> entityType = fromClazz;
         Class<?> idType = entityType.getIdType().getJavaType();
-        
+
         if (!idType.isInstance(entityId)) {
-            throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName() + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + fromClazz.getName() + "'");
+            throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName()
+                + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + fromClazz.getName() + "'");
         }
     }
 
@@ -186,11 +186,11 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         clearCache();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        
+
         for (String path : paths) {
             joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
         }
-        
+
         return (X) this;
     }
 

@@ -53,10 +53,10 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
                 transformed.getExpressions().add(transform(e, fromClause));
             }
             return transformed;
-        }else if(original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)){
+        } else if (original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
             FunctionExpression func = (FunctionExpression) original;
             List<Expression> transformed = new ArrayList<Expression>();
-            for(Expression e : func.getExpressions()){
+            for (Expression e : func.getExpressions()) {
                 transformed.add(transform(e, fromClause));
             }
             func.setExpressions(transformed);

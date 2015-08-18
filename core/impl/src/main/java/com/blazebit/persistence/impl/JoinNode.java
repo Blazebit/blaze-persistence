@@ -41,13 +41,14 @@ public class JoinNode {
 
     // We need this for count and id queries where we do not need all the joins
     private final EnumSet<ClauseType> clauseDependencies = EnumSet.noneOf(ClauseType.class);
-    
+
     private final JoinNode parent;
     private final JoinTreeNode parentTreeNode;
 
     private final Class<?> propertyClass;
-    private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied alphabetically for easier testing
-    
+    private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
+                                                                                         // alphabetically for easier testing
+
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
@@ -64,6 +65,7 @@ public class JoinNode {
     public void registerDependencies() {
         if (onPredicate != null) {
             onPredicate.accept(new VisitorAdapter() {
+
                 @Override
                 public void visit(PathExpression pathExpr) {
                     // prevent loop dependencies to the same join node
@@ -86,21 +88,21 @@ public class JoinNode {
 
     public <T> T accept(AbortableResultJoinNodeVisitor<T> visitor) {
         T result = visitor.visit(this);
-        
+
         if (visitor.getStopValue().equals(result)) {
-        	return result;
+            return result;
         }
-        
+
         for (JoinTreeNode treeNode : nodes.values()) {
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
-            	result = joinNode.accept(visitor);
-                
+                result = joinNode.accept(visitor);
+
                 if (visitor.getStopValue().equals(result)) {
-                	return result;
+                    return result;
                 }
             }
         }
-        
+
         return null;
     }
 
@@ -170,23 +172,23 @@ public class JoinNode {
     public Set<JoinNode> getDependencies() {
         return dependencies;
     }
-    
+
     public boolean hasCollections() {
         Stack<JoinTreeNode> stack = new Stack<JoinTreeNode>();
         stack.addAll(nodes.values());
-        
+
         while (!stack.isEmpty()) {
             JoinTreeNode treeNode = stack.pop();
-            
+
             if (treeNode.isCollection()) {
                 return true;
             }
-            
+
             for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
                 stack.addAll(joinNode.nodes.values());
             }
         }
-        
+
         return false;
     }
 }

@@ -21,5 +21,6 @@ package com.blazebit.persistence.impl;
  * @author Moritz Becker
  */
 public interface SelectInfoVisitor {
+
     public void visit(SelectInfo selectInfo);
 }

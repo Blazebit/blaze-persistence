@@ -72,10 +72,12 @@ public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
                 if (aliasManager.getAliasInfo(collectionPropertyName) != null) {
                     collectionPropertyAlias = aliasManager.generatePostfixedAlias(collectionPropertyName);
                 }
-                Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>()).from(collectionPropertyClass, collectionPropertyClassAlias)
-                        .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
-                        .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
-                        .where(collectionPropertyClassAlias).eqExpression(baseAlias);
+                Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>())
+                    .from(collectionPropertyClass, collectionPropertyClassAlias)
+                    .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
+                    .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
+                    .where(collectionPropertyClassAlias)
+                    .eqExpression(baseAlias);
 
                 return new SubqueryExpression(countSubquery);
             }

@@ -79,7 +79,7 @@ public class SelectManager<T> extends AbstractManager {
     private final JpaProvider jpaProvider;
 
     @SuppressWarnings("unchecked")
-	public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
+    public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
         this.joinManager = joinManager;
         this.aliasManager = aliasManager;
@@ -118,10 +118,10 @@ public class SelectManager<T> extends AbstractManager {
     <X> X acceptVisitor(ResultVisitor<X> v, X stopValue) {
         for (SelectInfo selectInfo : selectInfos) {
             if (stopValue.equals(selectInfo.getExpression().accept(v))) {
-            	return stopValue;
+                return stopValue;
             }
         }
-        
+
         return null;
     }
 
@@ -135,52 +135,51 @@ public class SelectManager<T> extends AbstractManager {
         Set<String> groupByClauses = new LinkedHashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
-        
+
         Set<PathExpression> componentPaths = new LinkedHashSet<PathExpression>();
         EntitySelectResolveVisitor resolveVisitor = new EntitySelectResolveVisitor(m, componentPaths);
-        
+
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(joinManager.getRootAlias()));
             resolveVisitor.visit(new PathExpression(path, joinManager.getRoot(), null, false, false));
-            
+
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
                 queryGenerator.setQueryBuffer(sb);
                 pathExpr.accept(queryGenerator);
                 groupByClauses.add(sb.toString());
             }
-        	
-        	componentPaths.clear();
+
+            componentPaths.clear();
         } else {
-	        for (SelectInfo selectInfo : selectInfos) {
-	            selectInfo.getExpression().accept(resolveVisitor);
-	            
-	            // The select info can only either an entity select or any other expression
-	            // but entity selects can't be nested in other expressions, therefore we can differentiate here
-	            if (componentPaths.size() > 0) {
-	                for (PathExpression pathExpr : componentPaths) {
-	                    sb.setLength(0);
-	                    queryGenerator.setQueryBuffer(sb);
-	                    pathExpr.accept(queryGenerator);
-	                    groupByClauses.add(sb.toString());
-	                }
-	            	
-	            	componentPaths.clear();
-	            } else {
-	            	// This visitor checks if an expression is usable in a group by
-	                GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
-	    			if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
-	                	sb.setLength(0);
-	                	queryGenerator.setQueryBuffer(sb);
-	                	selectInfo.getExpression().accept(queryGenerator);
-	                	groupByClauses.add(sb.toString());
-	                }
-	            }
-	        }
+            for (SelectInfo selectInfo : selectInfos) {
+                selectInfo.getExpression().accept(resolveVisitor);
+
+                // The select info can only either an entity select or any other expression
+                // but entity selects can't be nested in other expressions, therefore we can differentiate here
+                if (componentPaths.size() > 0) {
+                    for (PathExpression pathExpr : componentPaths) {
+                        sb.setLength(0);
+                        queryGenerator.setQueryBuffer(sb);
+                        pathExpr.accept(queryGenerator);
+                        groupByClauses.add(sb.toString());
+                    }
+
+                    componentPaths.clear();
+                } else {
+                    // This visitor checks if an expression is usable in a group by
+                    GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+                    if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
+                        sb.setLength(0);
+                        queryGenerator.setQueryBuffer(sb);
+                        selectInfo.getExpression().accept(queryGenerator);
+                        groupByClauses.add(sb.toString());
+                    }
+                }
+            }
         }
-        
-        
+
         queryGenerator.setConditionalContext(conditionalContext);
         return groupByClauses;
     }
@@ -260,13 +259,13 @@ public class SelectManager<T> extends AbstractManager {
     void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         handleSelect(expr, selectAlias);
     }
-    
+
     Class<?> getExpectedQueryResultType() {
         // Tuple case
         if (selectInfos.size() > 1) {
             return Object[].class;
         }
-        
+
         return jpaProvider.getDefaultQueryResultType();
     }
 
@@ -290,8 +289,7 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
-                new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ClassObjectBuilder(clazz);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
@@ -305,14 +303,13 @@ public class SelectManager<T> extends AbstractManager {
             throw new IllegalStateException("No mixture of select and selectNew is allowed");
         }
 
-        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(
-                new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
+        selectObjectBuilder = selectObjectBuilderEndedListener.startBuilder(new SelectObjectBuilderImpl(builder, selectObjectBuilderEndedListener, subqueryInitFactory, expressionFactory));
         objectBuilder = new ConstructorObjectBuilder(constructor);
         return (SelectObjectBuilder) selectObjectBuilder;
     }
 
     @SuppressWarnings("unchecked")
-	void selectNew(QueryBuilder<?, ?> builder, ObjectBuilder<?> objectBuilder) {
+    void selectNew(QueryBuilder<?, ?> builder, ObjectBuilder<?> objectBuilder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -381,7 +378,7 @@ public class SelectManager<T> extends AbstractManager {
 
         @Override
         public void onBuilderEnded(ExpressionBuilder builder) {
-            super.onBuilderEnded(builder); //To change body of generated methods, choose Tools | Templates.
+            super.onBuilderEnded(builder); // To change body of generated methods, choose Tools | Templates.
             handleSelect(builder.getExpression(), selectAlias);
         }
 
@@ -414,13 +411,13 @@ public class SelectManager<T> extends AbstractManager {
             currentBuilder = null;
             for (Map.Entry<Expression, String> e : expressions) {
                 handleSelect(e.getKey(), e.getValue());
-//                SelectInfo selectInfo = new SelectInfo(e.getKey(), e.getValue(), aliasManager);
-//                if (e.getValue() != null) {
-//                    aliasManager.registerAliasInfo(selectInfo);
-//                    selectAliasToPositionMap.put(e.getValue(), selectAliasToPositionMap.size());
-//                }
-//                registerParameterExpressions(e.getKey());
-//                SelectManager.this.selectInfos.add(selectInfo);
+                // SelectInfo selectInfo = new SelectInfo(e.getKey(), e.getValue(), aliasManager);
+                // if (e.getValue() != null) {
+                // aliasManager.registerAliasInfo(selectInfo);
+                // selectAliasToPositionMap.put(e.getValue(), selectAliasToPositionMap.size());
+                // }
+                // registerParameterExpressions(e.getKey());
+                // SelectManager.this.selectInfos.add(selectInfo);
             }
         }
 

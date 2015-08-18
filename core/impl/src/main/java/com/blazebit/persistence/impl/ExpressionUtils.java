@@ -113,13 +113,13 @@ public class ExpressionUtils {
         if (!isUnique(metamodel, expr.getDefaultExpr())) {
             return false;
         }
-        
+
         for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
             if (!isUnique(metamodel, whenExpr.getResult())) {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -156,21 +156,21 @@ public class ExpressionUtils {
         // Right now we only support ids, but we actually should check for unique constraints
         return ((SingularAttribute<?, ?>) attr).isId();
     }
-    
+
     /**
      * 
      * @param stringLiteral A possibly quoted string literal
      * @return The stringLiteral without quotes
      */
-    public static String unwrapStringLiteral(String stringLiteral){
-        if(stringLiteral.length() >= 2 && stringLiteral.startsWith("'") && stringLiteral.endsWith("'")){
-            return stringLiteral.substring(1, stringLiteral.length()-1);
-        }else{
+    public static String unwrapStringLiteral(String stringLiteral) {
+        if (stringLiteral.length() >= 2 && stringLiteral.startsWith("'") && stringLiteral.endsWith("'")) {
+            return stringLiteral.substring(1, stringLiteral.length() - 1);
+        } else {
             return stringLiteral;
         }
     }
-    
-    public static boolean isFunctionFunctionExpression(FunctionExpression func){
+
+    public static boolean isFunctionFunctionExpression(FunctionExpression func) {
         return "FUNCTION".equalsIgnoreCase(func.getFunctionName());
     }
 
@@ -215,13 +215,13 @@ public class ExpressionUtils {
         if (isNullable(metamodel, expr.getDefaultExpr())) {
             return true;
         }
-        
+
         for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
             if (isNullable(metamodel, whenExpr.getResult())) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -344,10 +344,10 @@ public class ExpressionUtils {
         return FetchType.EAGER;
 
     }
-    
-    public static boolean isAssociation(Attribute<?,?> attr){
+
+    public static boolean isAssociation(Attribute<?, ?> attr) {
         return attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
-                || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
     }
 
     public static boolean containsSubqueryExpression(Expression e) {

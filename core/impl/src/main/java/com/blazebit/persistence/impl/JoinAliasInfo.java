@@ -45,11 +45,11 @@ public class JoinAliasInfo implements AliasInfo {
     public void setAlias(String alias) {
         this.alias = alias;
     }
-    
+
     public JoinNode getJoinNode() {
         return joinNode;
     }
-    
+
     public void setJoinNode(JoinNode joinNode) {
         this.joinNode = joinNode;
     }

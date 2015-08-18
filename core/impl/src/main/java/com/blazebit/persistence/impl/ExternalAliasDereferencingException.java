@@ -22,9 +22,9 @@ package com.blazebit.persistence.impl;
  */
 public class ExternalAliasDereferencingException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public ExternalAliasDereferencingException() {
+    public ExternalAliasDereferencingException() {
     }
 
     public ExternalAliasDereferencingException(String msg) {

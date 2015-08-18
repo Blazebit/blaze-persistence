@@ -76,7 +76,7 @@ public class JoinTreeNode {
     public boolean isCollection() {
         return collection;
     }
-    
+
     public boolean isIndexed() {
         return indexed;
     }

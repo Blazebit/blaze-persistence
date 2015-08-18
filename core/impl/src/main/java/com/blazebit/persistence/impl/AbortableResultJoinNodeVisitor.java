@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl;
 
-
 /**
  *
  * @author Christian Beikov
