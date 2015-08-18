@@ -22,13 +22,13 @@
 #
 # Utilities
 #
-function free_backup() {
+free_backup() {
     # Multiple copies to be on safe side
     sudo cp /usr/bin/free /root
     sudo mv /usr/bin/free /usr/bin/free.original
 }
 
-function free_restore() {
+free_restore() {
     sudo cp /usr/bin/free.original /usr/bin/free
 }
 

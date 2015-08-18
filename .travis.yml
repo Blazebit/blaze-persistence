@@ -19,8 +19,8 @@ after_failure:
   - sh travis/print_surefire_reports.sh
 script:
   - mvn -P ${JPAPROVIDER},${RDBMS} install
-#after_success:
-#  - "bash ./.travis-deploy.sh"
+after_success:
+  - "bash ./.travis-deploy.sh"
 # Leave out jdk switch because on the legacy infrastructure this won't work
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
