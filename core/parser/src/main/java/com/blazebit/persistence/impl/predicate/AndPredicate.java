@@ -25,14 +25,14 @@ import java.util.List;
  * @since 1.0
  */
 public final class AndPredicate extends MultinaryPredicate {
-    
+
     public AndPredicate() {
     }
-    
+
     public AndPredicate(Predicate... children) {
         super(children);
     }
-    
+
     private AndPredicate(List<Predicate> children) {
         super(children);
     }
@@ -41,11 +41,11 @@ public final class AndPredicate extends MultinaryPredicate {
     public AndPredicate clone() {
         int size = children.size();
         List<Predicate> newChildren = new ArrayList<Predicate>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newChildren.add(children.get(i).clone());
         }
-        
+
         return new AndPredicate(newChildren);
     }
 
@@ -53,7 +53,7 @@ public final class AndPredicate extends MultinaryPredicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);

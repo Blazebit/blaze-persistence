@@ -33,7 +33,7 @@ public abstract class BinaryExpressionPredicate extends AbstractExpression imple
         this.left = left;
         this.right = right;
     }
-    
+
     @Override
     public abstract BinaryExpressionPredicate clone();
 

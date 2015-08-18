@@ -36,11 +36,11 @@ public class CompositeExpression extends AbstractExpression {
     public CompositeExpression clone() {
         int size = expressions.size();
         List<Expression> newExpressions = new ArrayList<Expression>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newExpressions.add(expressions.get(i).clone());
         }
-        
+
         return new CompositeExpression(newExpressions);
     }
 
@@ -65,7 +65,8 @@ public class CompositeExpression extends AbstractExpression {
             for (Expression subexpr : composite.getExpressions()) {
                 append(subexpr);
             }
-        } else if (!expressions.isEmpty() && expr instanceof FooExpression && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression) {
+        } else if (!expressions.isEmpty() && expr instanceof FooExpression
+            && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression) {
             ((FooExpression) lastExpr).getStringBuilder().append(((FooExpression) expr).getStringBuilder());
         } else {
             expressions.add(expr);

@@ -32,7 +32,7 @@ public final class OrPredicate extends MultinaryPredicate {
     public OrPredicate(Predicate... children) {
         super(children);
     }
-    
+
     private OrPredicate(List<Predicate> children) {
         super(children);
     }
@@ -41,11 +41,11 @@ public final class OrPredicate extends MultinaryPredicate {
     public OrPredicate clone() {
         int size = children.size();
         List<Predicate> newChildren = new ArrayList<Predicate>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newChildren.add(children.get(i).clone());
         }
-        
+
         return new OrPredicate(newChildren);
     }
 

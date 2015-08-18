@@ -75,5 +75,5 @@ public class PropertyExpression extends AbstractExpression implements PathElemen
         }
         return true;
     }
-    
+
 }

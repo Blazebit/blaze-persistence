@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public abstract class UnaryExpressionPredicate extends AbstractExpression implements Predicate, Negatable {
+
     protected boolean negated;
     protected Expression expression;
 
@@ -32,7 +33,7 @@ public abstract class UnaryExpressionPredicate extends AbstractExpression implem
         this.expression = expression;
         this.negated = negated;
     }
-    
+
     public UnaryExpressionPredicate(Expression expression) {
         this(expression, false);
     }

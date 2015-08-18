@@ -22,6 +22,7 @@ package com.blazebit.persistence.impl.expression;
  * @since 1.0
  */
 public class WhenClauseExpression extends AbstractExpression {
+
     private final Expression condition;
     private Expression result;
 

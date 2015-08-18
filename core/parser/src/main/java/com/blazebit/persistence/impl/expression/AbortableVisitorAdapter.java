@@ -42,7 +42,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     @Override
     public Boolean visit(PathExpression expression) {
         for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            if(pathElementExpression.accept(this)){
+            if (pathElementExpression.accept(this)) {
                 return true;
             }
         }
@@ -51,7 +51,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(ArrayExpression expression) {
-        if(expression.getBase().accept(this)){
+        if (expression.getBase().accept(this)) {
             return true;
         }
         return expression.getIndex().accept(this);
@@ -70,7 +70,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     @Override
     public Boolean visit(CompositeExpression expression) {
         for (Expression expr : expression.getExpressions()) {
-            if(expr.accept(this)){
+            if (expr.accept(this)) {
                 return true;
             }
         }
@@ -100,7 +100,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     @Override
     public Boolean visit(FunctionExpression expression) {
         for (Expression expr : expression.getExpressions()) {
-            if(expr.accept(this)){
+            if (expr.accept(this)) {
                 return true;
             }
         }
@@ -109,8 +109,8 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(GeneralCaseExpression expression) {
-        for(WhenClauseExpression whenClause : expression.getWhenClauses()){
-            if(whenClause.accept(this)){
+        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
+            if (whenClause.accept(this)) {
                 return true;
             }
         }
@@ -119,7 +119,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(SimpleCaseExpression expression) {
-        if(expression.getCaseOperand().accept(this)){
+        if (expression.getCaseOperand().accept(this)) {
             return true;
         }
         return visit((GeneralCaseExpression) expression);
@@ -127,16 +127,16 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(WhenClauseExpression expression) {
-        if(expression.getCondition().accept(this)){
+        if (expression.getCondition().accept(this)) {
             return true;
         }
         return expression.getResult().accept(this);
     }
-    
+
     @Override
     public Boolean visit(AndPredicate predicate) {
         for (Predicate p : predicate.getChildren()) {
-            if(p.accept(this)){
+            if (p.accept(this)) {
                 return true;
             }
         }
@@ -146,7 +146,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     @Override
     public Boolean visit(OrPredicate predicate) {
         for (Predicate p : predicate.getChildren()) {
-            if(p.accept(this)){
+            if (p.accept(this)) {
                 return true;
             }
         }
@@ -160,7 +160,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(EqPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -178,7 +178,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(MemberOfPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -186,7 +186,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(LikePredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -194,10 +194,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(BetweenPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
-        if(predicate.getStart().accept(this)){
+        if (predicate.getStart().accept(this)) {
             return true;
         }
         return predicate.getEnd().accept(this);
@@ -205,7 +205,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(InPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -213,7 +213,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(GtPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -221,7 +221,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(GePredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -229,7 +229,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(LtPredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);
@@ -237,7 +237,7 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(LePredicate predicate) {
-        if(predicate.getLeft().accept(this)){
+        if (predicate.getLeft().accept(this)) {
             return true;
         }
         return predicate.getRight().accept(this);

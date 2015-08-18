@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.predicate.OrPredicate;
 public interface Expression {
 
     public static interface Visitor {
+
         // Expressions
         public void visit(PathExpression expression);
 
@@ -60,13 +61,13 @@ public interface Expression {
         public void visit(SubqueryExpression expression);
 
         public void visit(FunctionExpression expression);
-                
+
         public void visit(WhenClauseExpression expression);
-        
+
         public void visit(GeneralCaseExpression expression);
-        
+
         public void visit(SimpleCaseExpression expression);
-        
+
         // Predicates
         public void visit(AndPredicate predicate);
 
@@ -98,8 +99,9 @@ public interface Expression {
 
         public void visit(ExistsPredicate predicate);
     }
-    
+
     public static interface ResultVisitor<T> {
+
         // Expressions
         public T visit(PathExpression expression);
 
@@ -120,13 +122,13 @@ public interface Expression {
         public T visit(SubqueryExpression expression);
 
         public T visit(FunctionExpression expression);
-                
+
         public T visit(WhenClauseExpression expression);
-        
+
         public T visit(GeneralCaseExpression expression);
-        
+
         public T visit(SimpleCaseExpression expression);
-        
+
         // Predicates
         public T visit(AndPredicate predicate);
 
@@ -158,16 +160,16 @@ public interface Expression {
 
         public T visit(ExistsPredicate predicate);
     }
-    
+
     public Expression clone();
-    
+
     /**
      * The expression tree is traversed in pre-order.
      *
      * @param visitor
      */
     public void accept(Visitor visitor);
-    
+
     public <T> T accept(ResultVisitor<T> visitor);
 
     /**

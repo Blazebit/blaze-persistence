@@ -21,7 +21,7 @@ package com.blazebit.persistence.impl.predicate;
  * @author Moritz Becker
  * @since 1.0
  */
-public interface PredicateBuilder{
+public interface PredicateBuilder {
 
     public Predicate getPredicate();
 }

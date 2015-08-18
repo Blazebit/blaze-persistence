@@ -43,16 +43,16 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     private final Set<String> aggregateFunctions;
-    
+
     protected AbstractExpressionFactory(Set<String> aggregateFunctions) {
-    	this.aggregateFunctions = aggregateFunctions;
+        this.aggregateFunctions = aggregateFunctions;
     }
-    
-    private Expression createExpression(RuleInvoker ruleInvoker, String expression){
+
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression) {
         return createExpression(ruleInvoker, expression, true);
     }
-    
-    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen){
+
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -65,17 +65,17 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
         configureParser(p);
         ParserRuleContext ctx = ruleInvoker.invokeRule(p);
-        
+
         if (LOG.isLoggable(Level.FINEST)) {
             LOG.finest(ctx.toStringTree());
         }
-        
+
         JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions);
         return visitor.visit(ctx);
     }
-    
+
     protected abstract RuleInvoker getSimpleExpressionRuleInvoker();
-    
+
     @Override
     public PathExpression createPathExpression(String expression) {
         CompositeExpression comp = (CompositeExpression) createExpression(new RuleInvoker() {
@@ -84,10 +84,10 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePath();
             }
-        } , expression);
+        }, expression);
         return (PathExpression) comp.getExpressions().get(0);
     }
-    
+
     @Override
     public Expression createOrderByExpression(String expression) {
         return createExpression(new RuleInvoker() {
@@ -98,7 +98,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             }
         }, expression, false);
     }
-    
+
     @Override
     public Expression createSimpleExpression(String expression) {
         return createExpression(getSimpleExpressionRuleInvoker(), expression);
@@ -147,13 +147,13 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             }
         }, expression, false);
     }
-    
-    protected void configureLexer(JPQLSelectExpressionLexer lexer){
+
+    protected void configureLexer(JPQLSelectExpressionLexer lexer) {
         lexer.removeErrorListeners();
         lexer.addErrorListener(ERR_LISTENER);
     }
-    
-    protected void configureParser(JPQLSelectExpressionParser parser){
+
+    protected void configureParser(JPQLSelectExpressionParser parser) {
         parser.removeErrorListeners();
         parser.addErrorListener(ERR_LISTENER);
     }
@@ -177,8 +177,9 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
         }
     };
-    
+
     protected interface RuleInvoker {
+
         public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser);
     }
 }

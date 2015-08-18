@@ -25,6 +25,7 @@ import java.util.List;
  * @author Moritz Becker
  */
 public class SimpleCaseExpression extends GeneralCaseExpression {
+
     private final Expression caseOperand;
 
     public SimpleCaseExpression(Expression caseOperand, List<WhenClauseExpression> whenClauses, Expression defaultExpr) {
@@ -36,11 +37,11 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
     public SimpleCaseExpression clone() {
         int size = whenClauses.size();
         List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newWhenClauses.add(whenClauses.get(i).clone());
         }
-        
+
         if (defaultExpr == null) {
             return new SimpleCaseExpression(caseOperand.clone(), whenClauses, null);
         } else {
@@ -51,12 +52,12 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
     public Expression getCaseOperand() {
         return caseOperand;
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
@@ -78,7 +79,7 @@ public class SimpleCaseExpression extends GeneralCaseExpression {
             return false;
         }
         final SimpleCaseExpression other = (SimpleCaseExpression) obj;
-        if(!super.equals(other)){
+        if (!super.equals(other)) {
             return false;
         } else if (this.caseOperand != other.caseOperand && (this.caseOperand == null || !this.caseOperand.equals(other.caseOperand))) {
             return false;

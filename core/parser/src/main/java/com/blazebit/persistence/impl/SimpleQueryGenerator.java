@@ -61,7 +61,7 @@ import java.util.List;
 public class SimpleQueryGenerator extends VisitorAdapter {
 
     protected StringBuilder sb;
-    
+
     // indicates if the query generator operates in a context where it needs conditional expressions
     private boolean conditionalContext;
 
@@ -78,17 +78,17 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     public void setQueryBuffer(StringBuilder sb) {
         this.sb = sb;
     }
-    
+
     protected String getBooleanConditionalExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }
-    
+
     protected String getBooleanExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }
-    
+
     protected String escapeCharacter(char character) {
-    	return Character.toString(character);
+        return Character.toString(character);
     }
 
     @Override
@@ -281,7 +281,8 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             Object list = ((ParameterExpression) predicate.getRight()).getValue();
             if (list instanceof List<?>) {
                 if (((List<?>) list).isEmpty()) {
-                    // we have to distinguish between conditional and non conditional context since hibernate parser does not support literal 
+                    // we have to distinguish between conditional and non conditional context since hibernate parser does not support
+                    // literal
                     // and the workarounds like 1 = 0 or case when only work in specific contexts
                     if (conditionalContext) {
                         sb.append(getBooleanConditionalExpression(predicate.isNegated()));
@@ -292,14 +293,14 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 }
             }
         }
-        
+
         boolean oldConditionalContext = setConditionalContext(false);
         predicate.getLeft().accept(this);
         if (predicate.isNegated()) {
             sb.append(" NOT");
         }
         sb.append(" IN ");
-        
+
         predicate.getRight().accept(this);
         setConditionalContext(oldConditionalContext);
     }
@@ -356,7 +357,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         } else {
             paramName = expression.getName();
         }
-        
+
         sb.append(":");
         sb.append(paramName);
     }
@@ -420,32 +421,34 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         boolean hasExpressions = expression.getExpressions().size() > 0;
         String functionName = expression.getFunctionName();
         sb.append(functionName);
-        
+
+        // @formatter:off
         if (!"CURRENT_TIME".equalsIgnoreCase(functionName)
     		 && !"CURRENT_DATE".equalsIgnoreCase(functionName) 
     		 && !"CURRENT_TIMESTAMP".equalsIgnoreCase(functionName)) {
-	        sb.append('(');
-	        
-	        if (expression instanceof AggregateExpression) {
-	            AggregateExpression aggregateExpression = (AggregateExpression) expression;
-	            if (aggregateExpression.isDistinct()) {
-	                sb.append("DISTINCT ");
-	            }
-	            if (!hasExpressions && "COUNT".equalsIgnoreCase(aggregateExpression.getFunctionName())) {
-	                sb.append('*');
-	            }
-	        }
-	        
-	        if (hasExpressions) {
-	            expression.getExpressions().get(0).accept(this);
-	            for (int i = 1; i < expression.getExpressions().size(); i++) {
-	                sb.append(",");
-	                expression.getExpressions().get(i).accept(this);
-	            }
-	        }
-	        sb.append(')');
+            // @formatter:on
+            sb.append('(');
+
+            if (expression instanceof AggregateExpression) {
+                AggregateExpression aggregateExpression = (AggregateExpression) expression;
+                if (aggregateExpression.isDistinct()) {
+                    sb.append("DISTINCT ");
+                }
+                if (!hasExpressions && "COUNT".equalsIgnoreCase(aggregateExpression.getFunctionName())) {
+                    sb.append('*');
+                }
+            }
+
+            if (hasExpressions) {
+                expression.getExpressions().get(0).accept(this);
+                for (int i = 1; i < expression.getExpressions().size(); i++) {
+                    sb.append(",");
+                    expression.getExpressions().get(i).accept(this);
+                }
+            }
+            sb.append(')');
         }
-        
+
         setConditionalContext(oldConditionalContext);
     }
 

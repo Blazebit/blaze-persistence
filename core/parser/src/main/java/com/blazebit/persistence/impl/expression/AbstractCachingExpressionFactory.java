@@ -21,17 +21,18 @@ package com.blazebit.persistence.impl.expression;
  * @since 1.0
  */
 public abstract class AbstractCachingExpressionFactory implements ExpressionFactory {
-    
+
     private final ExpressionFactory delegate;
 
     public AbstractCachingExpressionFactory(ExpressionFactory delegate) {
         this.delegate = delegate;
     }
-    
+
     protected static interface Supplier<T> {
+
         public T get();
     }
-    
+
     protected abstract <E extends Expression> E getOrDefault(String cacheName, String cacheKey, Supplier<E> defaultSupplier);
 
     @Override
@@ -42,7 +43,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public PathExpression get() {
                 return delegate.createPathExpression(expression);
             }
-            
+
         });
     }
 
@@ -54,7 +55,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createSimpleExpression(expression);
             }
-            
+
         });
     }
 
@@ -66,7 +67,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createCaseOperandExpression(expression);
             }
-            
+
         });
     }
 
@@ -78,7 +79,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createScalarExpression(expression);
             }
-            
+
         });
     }
 
@@ -90,7 +91,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createArithmeticExpression(expression);
             }
-            
+
         });
     }
 
@@ -102,7 +103,7 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createStringExpression(expression);
             }
-            
+
         });
     }
 
@@ -114,8 +115,8 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             public Expression get() {
                 return delegate.createOrderByExpression(expression);
             }
-            
+
         });
     }
-    
+
 }

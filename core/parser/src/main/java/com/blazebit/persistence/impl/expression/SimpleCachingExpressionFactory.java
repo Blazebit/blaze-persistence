@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author cpbec
  */
 public class SimpleCachingExpressionFactory extends AbstractCachingExpressionFactory {
-    
+
     private final ConcurrentMap<String, ConcurrentMap<String, Expression>> cacheManager;
 
     public SimpleCachingExpressionFactory(ExpressionFactory delegate) {
@@ -31,32 +31,32 @@ public class SimpleCachingExpressionFactory extends AbstractCachingExpressionFac
         this.cacheManager = new ConcurrentHashMap<String, ConcurrentMap<String, Expression>>();
     }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
     protected <E extends Expression> E getOrDefault(String cacheName, String cacheKey, Supplier<E> defaultSupplier) {
         ConcurrentMap<String, Expression> cache = cacheManager.get(cacheName);
-        
+
         if (cache == null) {
             cache = new ConcurrentHashMap<String, Expression>();
             ConcurrentMap<String, Expression> oldCache = cacheManager.putIfAbsent(cacheKey, cache);
-            
+
             if (oldCache != null) {
                 cache = oldCache;
             }
         }
-        
+
         E expr = (E) cache.get(cacheKey);
-        
+
         if (expr == null) {
             expr = defaultSupplier.get();
             E oldExpr = (E) cache.putIfAbsent(cacheKey, expr);
-            
+
             if (oldExpr != null) {
                 expr = oldExpr;
             }
         }
-        
+
         return (E) expr.clone();
     }
-    
+
 }

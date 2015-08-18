@@ -44,15 +44,15 @@ public class LiteralExpression extends AbstractExpression {
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
     }
-    
+
     public String getWrapperFunction() {
         return wrapperFunction;
     }
-    
+
     public String getLiteral() {
         return literal;
     }
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

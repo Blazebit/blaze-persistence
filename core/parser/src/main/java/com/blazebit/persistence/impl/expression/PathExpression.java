@@ -58,11 +58,11 @@ public class PathExpression extends AbstractExpression implements Expression {
     public Expression clone() {
         int size = pathProperties.size();
         List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newPathProperties.add(pathProperties.get(i).clone());
         }
-        
+
         return new PathExpression(newPathProperties, baseNode, field, usedInCollectionFunction, collectionKeyPath);
     }
 
@@ -117,7 +117,8 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     /*
-     * The following equals and hashCode implementation makes it possible that expressions which have different path properties but reference the same object, are equal.
+     * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
+     * reference the same object, are equal.
      */
     @Override
     public int hashCode() {

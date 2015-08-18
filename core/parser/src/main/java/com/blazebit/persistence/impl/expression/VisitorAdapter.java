@@ -92,7 +92,7 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(GeneralCaseExpression expression) {
-        for(WhenClauseExpression whenClause : expression.getWhenClauses()){
+        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
             whenClause.accept(this);
         }
         expression.getDefaultExpr().accept(this);
@@ -109,7 +109,7 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         expression.getCondition().accept(this);
         expression.getResult().accept(this);
     }
-    
+
     @Override
     public void visit(AndPredicate predicate) {
         for (Predicate p : predicate.getChildren()) {

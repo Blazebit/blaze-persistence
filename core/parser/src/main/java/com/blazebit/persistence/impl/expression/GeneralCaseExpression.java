@@ -25,6 +25,7 @@ import java.util.List;
  * @since 1.0
  */
 public class GeneralCaseExpression extends AbstractExpression {
+
     protected final List<WhenClauseExpression> whenClauses;
     protected Expression defaultExpr;
 
@@ -37,11 +38,11 @@ public class GeneralCaseExpression extends AbstractExpression {
     public GeneralCaseExpression clone() {
         int size = whenClauses.size();
         List<WhenClauseExpression> newWhenClauses = new ArrayList<WhenClauseExpression>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newWhenClauses.add(whenClauses.get(i).clone());
         }
-        
+
         if (defaultExpr == null) {
             return new GeneralCaseExpression(whenClauses, null);
         } else {
@@ -60,7 +61,7 @@ public class GeneralCaseExpression extends AbstractExpression {
     public void setDefaultExpr(Expression defaultExpr) {
         this.defaultExpr = defaultExpr;
     }
-    
+
     @Override
     public void accept(Expression.Visitor visitor) {
         visitor.visit(this);
@@ -96,5 +97,5 @@ public class GeneralCaseExpression extends AbstractExpression {
         }
         return true;
     }
-    
+
 }

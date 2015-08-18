@@ -36,7 +36,7 @@ public class NullExpression extends AbstractExpression {
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
     }
-    
+
     @Override
     public String toString() {
         return "NULL";

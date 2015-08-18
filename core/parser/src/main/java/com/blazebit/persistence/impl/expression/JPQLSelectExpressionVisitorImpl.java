@@ -85,12 +85,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return func;
     }
 
-	@Override
-	public Expression visitFunctions_returning_datetime(Functions_returning_datetimeContext ctx) {
-		return handleFunction(ctx.getStart().getText(), ctx);
-	}
+    @Override
+    public Expression visitFunctions_returning_datetime(Functions_returning_datetimeContext ctx) {
+        return handleFunction(ctx.getStart().getText(), ctx);
+    }
 
-	@Override
+    @Override
     public Expression visitStringFunction(JPQLSelectExpressionParser.StringFunctionContext ctx) {
         return handleFunction(ctx.getStart().getText(), ctx);
     }
@@ -122,12 +122,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
                 funcArgs.add(ctx.getChild(i).accept(this));
             }
         }
-        
+
         if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
-        		&& aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
-        	return new AggregateExpression(false, name, funcArgs);
+            && aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
+            return new AggregateExpression(false, name, funcArgs);
         } else {
-        	return new FunctionExpression(name, funcArgs);
+            return new FunctionExpression(name, funcArgs);
         }
     }
 
@@ -138,19 +138,19 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         for (JPQLSelectExpressionParser.Function_argContext argCtx : ctx.args) {
             funcArgs.add(argCtx.accept(this));
         }
-        
+
         String name = ctx.getStart().getText();
         if ("FUNCTION".equalsIgnoreCase(name) && funcArgs.size() > 0
-        		&& aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
-        	return new AggregateExpression(false, name, funcArgs);
+            && aggregateFunctions.contains(getLiteralString(funcArgs.get(0)).toLowerCase())) {
+            return new AggregateExpression(false, name, funcArgs);
         } else {
-        	return new FunctionExpression(name, funcArgs);
+            return new FunctionExpression(name, funcArgs);
         }
     }
-    
+
     private String getLiteralString(Expression expr) {
-    	String str = expr.toString();
-    	return str.substring(1, str.length() - 1);
+        String str = expr.toString();
+        return str.substring(1, str.length() - 1);
     }
 
     @Override
@@ -314,12 +314,14 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitLike_expression(JPQLSelectExpressionParser.Like_expressionContext ctx) {
+        // @formatter:off
         return new LikePredicate(
                 ctx.string_expression().accept(this),
                 ctx.pattern_value().accept(this),
                 true,
                 ctx.escape_character() != null ? ctx.escape_character().accept(this).toString().charAt(1) : null,
                 ctx.not != null);
+        // @formatter:on
     }
 
     @Override
@@ -444,7 +446,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitComparisonExpression_entity(JPQLSelectExpressionParser.ComparisonExpression_entityContext ctx) {
         return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
-    
+
     @Override
     public Expression visitComparisonExpression_enum(JPQLSelectExpressionParser.ComparisonExpression_enumContext ctx) {
         return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);

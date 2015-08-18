@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.SimpleQueryGenerator;
  * @since 1.0
  */
 public abstract class AbstractExpression implements Expression {
-    
+
     @Override
     public abstract Expression clone();
 

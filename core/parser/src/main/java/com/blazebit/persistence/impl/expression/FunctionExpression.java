@@ -24,7 +24,7 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.0
  */
-public class FunctionExpression extends AbstractExpression  {
+public class FunctionExpression extends AbstractExpression {
 
     protected final String functionName;
     protected List<Expression> expressions;
@@ -38,11 +38,11 @@ public class FunctionExpression extends AbstractExpression  {
     public FunctionExpression clone() {
         int size = expressions.size();
         List<Expression> newExpressions = new ArrayList<Expression>(size);
-        
+
         for (int i = 0; i < size; i++) {
             newExpressions.add(expressions.get(i).clone());
         }
-        
+
         return new FunctionExpression(functionName, newExpressions);
     }
 
@@ -55,7 +55,7 @@ public class FunctionExpression extends AbstractExpression  {
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
     }
-    
+
     public String getFunctionName() {
         return functionName;
     }

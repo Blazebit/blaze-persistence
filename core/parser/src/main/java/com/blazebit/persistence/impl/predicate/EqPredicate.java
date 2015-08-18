@@ -24,16 +24,17 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public class EqPredicate extends QuantifiableBinaryExpressionPredicate implements Negatable {
+
     private boolean negated;
 
     public EqPredicate(boolean negated) {
         this.negated = negated;
     }
-    
+
     public EqPredicate(Expression left, Expression right) {
         this(left, right, PredicateQuantifier.ONE, false);
     }
-    
+
     public EqPredicate(Expression left, Expression right, boolean negated) {
         super(left, right, PredicateQuantifier.ONE);
         this.negated = negated;
@@ -42,7 +43,7 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     public EqPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
         this(left, right, quantifier, false);
     }
-    
+
     public EqPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
         super(left, right, quantifier);
         this.negated = negated;
@@ -62,12 +63,12 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     public void setNegated(boolean negated) {
         this.negated = negated;
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
@@ -82,7 +83,7 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
 
     @Override
     public boolean equals(Object obj) {
-        if(!super.equals(obj)){
+        if (!super.equals(obj)) {
             return false;
         }
         final EqPredicate other = (EqPredicate) obj;
@@ -91,5 +92,5 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
         }
         return true;
     }
-    
+
 }

@@ -24,16 +24,16 @@ package com.blazebit.persistence.impl.expression;
 public interface ExpressionFactory {
 
     public PathExpression createPathExpression(String expression);
-    
+
     public Expression createSimpleExpression(String expression);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);
 
     public Expression createScalarExpression(String expression);
-    
+
     public Expression createArithmeticExpression(String expression);
-    
+
     public Expression createStringExpression(String expression);
-    
+
     public Expression createOrderByExpression(String expression);
 }

@@ -28,7 +28,7 @@ public class FooExpression extends AbstractExpression {
     public FooExpression(CharSequence string) {
         this.stringBuilder = new StringBuilder(string);
     }
-    
+
     public FooExpression(StringBuilder sb) {
         this.stringBuilder = sb;
     }
@@ -51,7 +51,7 @@ public class FooExpression extends AbstractExpression {
     StringBuilder getStringBuilder() {
         return stringBuilder;
     }
-    
+
     @Override
     public String toString() {
         return stringBuilder.toString();
@@ -73,7 +73,8 @@ public class FooExpression extends AbstractExpression {
             return false;
         }
         final FooExpression other = (FooExpression) obj;
-        if (this.stringBuilder != other.stringBuilder && (this.stringBuilder == null || !this.stringBuilder.toString().equals(other.stringBuilder.toString()))) {
+        if (this.stringBuilder != other.stringBuilder
+            && (this.stringBuilder == null || !this.stringBuilder.toString().equals(other.stringBuilder.toString()))) {
             return false;
         }
         return true;

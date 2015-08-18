@@ -38,10 +38,10 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     };
 
     public SubqueryExpressionFactory(Set<String> aggregateFunctions) {
-		super(aggregateFunctions);
-	}
+        super(aggregateFunctions);
+    }
 
-	@Override
+    @Override
     protected RuleInvoker getSimpleExpressionRuleInvoker() {
         return simpleExpressionRuleInvoker;
     }

@@ -104,7 +104,7 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(GeneralCaseExpression expression) {
-        for(WhenClauseExpression whenClause : expression.getWhenClauses()){
+        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
             whenClause.accept(this);
         }
         expression.getDefaultExpr().accept(this);
@@ -124,7 +124,7 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         expression.getResult().accept(this);
         return expression;
     }
-    
+
     @Override
     public Expression visit(AndPredicate predicate) {
         return visit((MultinaryPredicate) predicate);
@@ -206,15 +206,15 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         predicate.setExpression(predicate.getExpression().accept(this));
         return predicate;
     }
-    
-    private BinaryExpressionPredicate visit(BinaryExpressionPredicate predicate){
+
+    private BinaryExpressionPredicate visit(BinaryExpressionPredicate predicate) {
         predicate.setLeft(predicate.getLeft().accept(this));
         predicate.setRight(predicate.getRight().accept(this));
         return predicate;
     }
-    
+
     private MultinaryPredicate visit(MultinaryPredicate predicate) {
-        for (int i = 0; i < predicate.getChildren().size(); i++){
+        for (int i = 0; i < predicate.getChildren().size(); i++) {
             Predicate p = predicate.getChildren().get(i);
             predicate.getChildren().set(i, (Predicate) p.accept(this));
         }

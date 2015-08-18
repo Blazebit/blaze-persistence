@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @since 1.0
  */
 public class BetweenPredicate extends AbstractExpression implements Predicate, Negatable {
+
     private Expression left;
     private Expression start;
     private Expression end;
@@ -123,5 +124,5 @@ public class BetweenPredicate extends AbstractExpression implements Predicate, N
         }
         return true;
     }
-    
+
 }

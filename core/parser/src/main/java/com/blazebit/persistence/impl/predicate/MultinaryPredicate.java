@@ -39,18 +39,18 @@ public abstract class MultinaryPredicate extends AbstractExpression implements P
         this.children = new ArrayList<Predicate>();
         this.children.addAll(Arrays.asList(children));
     }
-    
+
     protected MultinaryPredicate(List<Predicate> children) {
         this.children = children;
     }
-    
+
     @Override
     public abstract MultinaryPredicate clone();
-    
+
     public List<Predicate> getChildren() {
         return children;
     }
-    
+
     @Override
     public int hashCode() {
         int hash = 5;

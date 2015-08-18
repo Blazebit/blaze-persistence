@@ -25,9 +25,9 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
 
-    public GtPredicate(){
+    public GtPredicate() {
     }
-    
+
     public GtPredicate(Expression left, Expression right) {
         super(left, right, PredicateQuantifier.ONE);
     }
@@ -45,7 +45,7 @@ public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
-    
+
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);

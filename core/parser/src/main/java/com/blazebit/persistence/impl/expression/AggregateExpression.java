@@ -27,13 +27,14 @@ import java.util.List;
  * @since 1.0
  */
 public class AggregateExpression extends FunctionExpression {
+
     private final boolean distinct;
 
     public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions) {
         super(functionName, expressions);
         this.distinct = distinct;
     }
-    
+
     /**
      * Constructor for COUNT(*)
      */
@@ -41,7 +42,7 @@ public class AggregateExpression extends FunctionExpression {
         super("COUNT", Collections.<Expression>emptyList());
         this.distinct = false;
     }
-    
+
     @Override
     public AggregateExpression clone() {
         if (expressions.isEmpty()) {
@@ -49,7 +50,7 @@ public class AggregateExpression extends FunctionExpression {
         } else {
             int size = expressions.size();
             List<Expression> newExpressions = new ArrayList<Expression>(size);
-            
+
             for (int i = 0; i < size; i++) {
                 newExpressions.add(expressions.get(i).clone());
             }
@@ -60,7 +61,7 @@ public class AggregateExpression extends FunctionExpression {
     public boolean isDistinct() {
         return distinct;
     }
-    
+
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
