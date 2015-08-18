@@ -15,6 +15,22 @@
  */
 package com.blazebit.persistence.view.collections.subview;
 
+import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -22,7 +38,6 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentCollectionsView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentListMapSetView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentListSetMapView;
@@ -38,19 +53,7 @@ import com.blazebit.persistence.view.collections.subview.model.variations.Person
 import com.blazebit.persistence.view.collections.subview.model.variations.PersonForCollectionsMasterView;
 import com.blazebit.persistence.view.collections.subview.model.variations.PersonForCollectionsSetListMapMasterView;
 import com.blazebit.persistence.view.collections.subview.model.variations.PersonForCollectionsSetMapListMasterView;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.EntityTransaction;
-import org.junit.Assert;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  *
@@ -119,7 +122,7 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
     }
 
     @Parameterized.Parameters
-    public static Collection entityViewCombinations() {
+    public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
             { PersonForCollectionsListMapSetMasterView.class, SubviewDocumentListMapSetView.class },
             { PersonForCollectionsListSetMapMasterView.class, SubviewDocumentListSetMapView.class },

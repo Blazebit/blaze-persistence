@@ -15,12 +15,13 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.CollectionAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.CollectionAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *

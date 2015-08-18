@@ -6,6 +6,7 @@ import java.util.logging.Logger;
 
 import org.datanucleus.store.rdbms.mapping.java.JavaTypeMapping;
 import org.datanucleus.store.rdbms.mapping.java.TemporalMapping;
+import org.datanucleus.store.rdbms.sql.SQLText;
 import org.datanucleus.store.rdbms.sql.expression.AggregateNumericExpression;
 import org.datanucleus.store.rdbms.sql.expression.AggregateTemporalExpression;
 import org.datanucleus.store.rdbms.sql.expression.BooleanExpression;
@@ -45,9 +46,6 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
 	        }
         }
         
-        final DataNucleusFunctionRenderContext context = new DataNucleusFunctionRenderContext(newArgs);
-        function.render(context);
-        
         Class<?> returnType = function.getReturnType(firstArgumentType);
         JavaTypeMapping returnTypeMapping;
         
@@ -61,62 +59,82 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
         	throw new IllegalArgumentException("Invalid return type null returned from function: " + function);
         }
         
+        final DataNucleusFunctionRenderContext context = new DataNucleusFunctionRenderContext(newArgs);
+        function.render(context);
+        
+        final SQLText sqlText = new CustomSQLText(context.renderToString(), args);
+        
         if (aggregate) {
         	if (returnTypeMapping instanceof TemporalMapping) {
         		return new AggregateTemporalExpression(stmt, returnTypeMapping, "", null) {
-        			{
-                        st.clearStatement();
-                        st.append(context.renderToString());
-        			}
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
         		};
         	} else if (Number.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
-        		return new AggregateNumericExpression(stmt, returnTypeMapping, context.renderToString());
+        		return new AggregateNumericExpression(stmt, returnTypeMapping, "") {
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
+	    		};
         	} else {
         		LOG.warning("Aggregate type [" + returnType + "] could not be represented as aggregate. Please report this so we can support the type! Falling back to normal expression.");
         	}
         } else {
 	        if (returnTypeMapping instanceof TemporalMapping) {
 	    		return new TemporalExpression(stmt, returnTypeMapping, "", null) {
-	    			{
-	                    st.clearStatement();
-	                    st.append(context.renderToString());
-	    			}
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
 	    		};
 	    	} else if (Byte.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
 	    		return new ByteExpression(stmt, null, returnTypeMapping) {
-	    			{
-	                    st.clearStatement();
-	                    st.append(context.renderToString());
-	    			}
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
 	    		};
 	    	} else if (Number.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
-	    		return new NumericExpression(stmt, returnTypeMapping, context.renderToString());
+	    		return new NumericExpression(stmt, returnTypeMapping, "") {
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
+	    		};
 	    	} else if (String.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
 	    		return new StringExpression(stmt, null, returnTypeMapping) {
-	    			{
-	                    st.clearStatement();
-	                    st.append(context.renderToString());
-	    			}
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
 	    		};
 	    	} else if (Character.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
 	    		return new CharacterExpression(stmt, null, returnTypeMapping) {
-	    			{
-	                    st.clearStatement();
-	                    st.append(context.renderToString());
-	    			}
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
 	    		};
 	    	} else if (Boolean.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
-	    		return new BooleanExpression(stmt, returnTypeMapping, context.renderToString());
+	    		return new BooleanExpression(stmt, returnTypeMapping, "") {
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
+	    		};
 	    	} else {
-	    		LOG.warning("Aggregate type [" + returnType + "] could not be represented as aggregate. Please report this so we can support the type! Falling back to normal expression.");
+	    		LOG.warning("Type [" + returnType + "] could not be represented as aggregate. Please report this so we can support the type! Falling back to normal expression.");
 	    	}
         }
         
         return new SQLExpression(stmt, null, returnTypeMapping) {
-        	{
-                st.clearStatement();
-                st.append(context.renderToString());
-        	}
+			@Override
+			public SQLText toSQLText() {
+				return sqlText;
+			}
 		};
 	}
 

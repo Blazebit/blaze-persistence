@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.view.proxy.model;
 
-import com.blazebit.persistence.view.IdMapping;
 import java.io.Serializable;
+
+import com.blazebit.persistence.view.IdMapping;
 
 /**
  *

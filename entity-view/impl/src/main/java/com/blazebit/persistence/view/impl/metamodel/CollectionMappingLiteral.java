@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.CollectionMapping;
 import java.lang.annotation.Annotation;
 import java.util.Comparator;
+
+import com.blazebit.persistence.view.CollectionMapping;
 
 /**
  *
@@ -26,10 +27,12 @@ import java.util.Comparator;
  */
 public class CollectionMappingLiteral implements CollectionMapping {
 
-    private final Class<? extends Comparator> comparator;
+    @SuppressWarnings("rawtypes")
+	private final Class<? extends Comparator> comparator;
     private final boolean ordered;
     private final boolean ignoreIndex;
 
+    @SuppressWarnings("rawtypes")
     public CollectionMappingLiteral(Class<? extends Comparator> comparator, boolean ordered, boolean ignoreIndex) {
         this.comparator = comparator;
         this.ordered = ordered;
@@ -37,6 +40,7 @@ public class CollectionMappingLiteral implements CollectionMapping {
     }
 
     @Override
+    @SuppressWarnings("rawtypes")
     public Class<? extends Comparator> comparator() {
         return comparator;
     }

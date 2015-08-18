@@ -15,11 +15,12 @@
  */
 package com.blazebit.persistence.impl.builder.object;
 
+import java.io.Serializable;
+import java.util.List;
+
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
-import java.io.Serializable;
-import java.util.List;
 
 /**
  *
@@ -36,7 +37,8 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
         this.keysetSize = keysetSize;
     }
 
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public T build(Object[] tuple) {
         Object[] newTuple = new Object[tuple.length - keysetSize];
         System.arraycopy(tuple, 0, newTuple, 0, newTuple.length);

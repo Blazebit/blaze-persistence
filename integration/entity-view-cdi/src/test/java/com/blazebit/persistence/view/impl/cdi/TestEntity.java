@@ -28,7 +28,9 @@ import javax.persistence.Id;
 @Entity
 public class TestEntity implements Serializable {
 
-    private Long id;
+	private static final long serialVersionUID = 1L;
+	
+	private Long id;
 
     @Id
     @GeneratedValue

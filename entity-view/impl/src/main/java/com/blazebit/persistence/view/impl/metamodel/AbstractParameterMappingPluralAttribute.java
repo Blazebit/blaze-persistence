@@ -15,16 +15,17 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Comparator;
+import java.util.Set;
+
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
-import java.util.Comparator;
-import java.util.Set;
 
 /**
  *
@@ -41,6 +42,7 @@ public abstract class AbstractParameterMappingPluralAttribute<X, C, Y> extends A
     private final Class<Comparator<Y>> comparatorClass;
     private final Comparator<Y> comparator;
 
+    @SuppressWarnings("unchecked")
     public AbstractParameterMappingPluralAttribute(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
         super(mappingConstructor, index, mapping, entityViews);
         Type parameterType = mappingConstructor.getJavaConstructor().getGenericParameterTypes()[index];

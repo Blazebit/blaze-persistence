@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.impl.keyset;
 
-import com.blazebit.persistence.Keyset;
 import java.io.Serializable;
 import java.util.Arrays;
+
+import com.blazebit.persistence.Keyset;
 
 /**
  *
@@ -27,7 +28,9 @@ import java.util.Arrays;
  */
 public class KeysetImpl implements Keyset {
     
-    private final Serializable[] tuple;
+	private static final long serialVersionUID = 1L;
+	
+	private final Serializable[] tuple;
 
     public KeysetImpl(Serializable[] tuple) {
         this.tuple = tuple;

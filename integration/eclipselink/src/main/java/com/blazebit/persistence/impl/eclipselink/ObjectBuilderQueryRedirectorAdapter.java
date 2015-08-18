@@ -32,14 +32,16 @@ import org.eclipse.persistence.sessions.Session;
  */
 public class ObjectBuilderQueryRedirectorAdapter implements QueryRedirector {
 
-    private final ObjectBuilder<?> builder;
+	private static final long serialVersionUID = 1L;
+	
+	private final ObjectBuilder<?> builder;
 
     public ObjectBuilderQueryRedirectorAdapter(ObjectBuilder<?> builder) {
         this.builder = builder;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Object invokeQuery(DatabaseQuery query, Record arguments, Session session) {
         List<Object> tupleList = (List<Object>) query.execute((AbstractSession) session, (AbstractRecord) arguments);
         List<Object> results = new ArrayList<Object>(tupleList.size());

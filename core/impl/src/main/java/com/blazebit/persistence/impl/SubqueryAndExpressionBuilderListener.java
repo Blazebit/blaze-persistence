@@ -57,7 +57,7 @@ public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderL
         subqueryBuilderListener.verifySubqueryBuilderEnded();
     }
 
-    protected <T extends ExpressionBuilder> T startBuilder(T builder) {
+    protected <X extends ExpressionBuilder> X startBuilder(X builder) {
         return expressionBuilderEndedListener.startBuilder(builder);
     }
 }

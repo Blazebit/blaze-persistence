@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.impl.keyset;
 
-import com.blazebit.persistence.impl.BuilderChainingException;
 import java.util.Map;
+
+import com.blazebit.persistence.impl.BuilderChainingException;
 
 /**
  *

@@ -16,12 +16,10 @@
 package com.blazebit.persistence.entity;
 
 import java.io.Serializable;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
+
 import javax.persistence.AttributeOverride;
 import javax.persistence.AttributeOverrides;
 import javax.persistence.Column;
-import javax.persistence.Embeddable;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 
@@ -33,6 +31,8 @@ import javax.persistence.Entity;
  */
 @Entity
 public class OrderPositionHead implements Serializable {
+
+	private static final long serialVersionUID = 1L;
     
     private OrderPositionHeadId id;
     private Integer number;

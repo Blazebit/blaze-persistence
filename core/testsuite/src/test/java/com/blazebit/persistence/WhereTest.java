@@ -15,13 +15,16 @@
  */
 package com.blazebit.persistence;
 
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Calendar;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import static com.googlecode.catchexception.CatchException.verifyException;
-import java.util.Calendar;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 
 /**
  *

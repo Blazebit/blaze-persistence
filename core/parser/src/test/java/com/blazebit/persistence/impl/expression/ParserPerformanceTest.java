@@ -15,21 +15,21 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
-import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+
+import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.carrotsearch.junitbenchmarks.BenchmarkOptions;
+import com.carrotsearch.junitbenchmarks.BenchmarkRule;
 
 /**
  *
@@ -73,6 +73,6 @@ public class ParserPerformanceTest {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, true);
-        ParserRuleContext ctx = p.parseSimpleExpression();
+        p.parseSimpleExpression();
     }
 }

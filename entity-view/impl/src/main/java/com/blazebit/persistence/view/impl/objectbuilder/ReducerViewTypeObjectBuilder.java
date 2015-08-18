@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
-import com.blazebit.persistence.ObjectBuilder;
 import java.util.Arrays;
+
+import com.blazebit.persistence.ObjectBuilder;
 
 /**
  *

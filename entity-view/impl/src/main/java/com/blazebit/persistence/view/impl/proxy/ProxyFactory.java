@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -55,17 +54,15 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class ProxyFactory {
 
-    private static final AtomicInteger classCounter = new AtomicInteger();
-    private static final AtomicInteger unsafeClassCounter = new AtomicInteger();
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
-    private final ClassPool pool;
     private final Object proxyLock = new Object();
-    
+    private final ClassPool pool;
+
     public ProxyFactory() {
         this.pool = new ClassPool(ClassPool.getDefault());
     }
-    
+
     public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
         return getProxy(viewType, false);
     }
@@ -80,16 +77,13 @@ public class ProxyFactory {
         ConcurrentMap<Class<?>, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
 		Class<? extends T> proxyClass = (Class<? extends T>) classes.get(clazz);
 
+        // Double checked locking since we can only define the class once
         if (proxyClass == null) {
         	synchronized (proxyLock) {
         		proxyClass = (Class<? extends T>) classes.get(clazz);
                 if (proxyClass == null) {
 		            proxyClass = createProxyClass(viewType, unsafe);
-		            Class<? extends T> oldProxyClass = (Class<? extends T>) classes.putIfAbsent(clazz, proxyClass);
-		
-		            if (oldProxyClass != null) {
-		                proxyClass = oldProxyClass;
-		            }
+		            proxyClasses.put(clazz, proxyClass);
                 }
         	}
         }
@@ -100,9 +94,9 @@ public class ProxyFactory {
     @SuppressWarnings("unchecked")
 	private <T> Class<? extends T> createProxyClass(ViewType<T> viewType, boolean unsafe) {
         Class<?> clazz = viewType.getJavaType();
-        AtomicInteger counter = unsafe ? unsafeClassCounter : classCounter;
         String suffix = unsafe ? "unsafe_" : "";
-        CtClass cc = pool.makeClass(clazz.getName() + "_$$_javassist_entityview_" + suffix + counter.getAndIncrement());
+        String proxyClassName = clazz.getName() + "_$$_javassist_entityview_" + suffix;
+        CtClass cc = pool.makeClass(proxyClassName);
         CtClass superCc;
 
         ClassPath classPath = new ClassClassPath(clazz);
@@ -172,10 +166,27 @@ public class ProxyFactory {
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, unsafe));
             }
 
-            if (unsafe) {
-            	return (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
-            } else {
-            	return cc.toClass();
+            try {
+                if (unsafe) {
+                	return (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
+                } else {
+                	return cc.toClass();
+                }
+            } catch (CannotCompileException ex) {
+        		// If there are multiple proxy factories for the same class loader 
+            	// we could end up in defining a class multiple times, so we check if the classloader
+            	// actually has something to offer
+            	if (ex.getCause() instanceof LinkageError) {
+            		LinkageError error = (LinkageError) ex.getCause();
+	            	try {
+	            		return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+	            	} catch (ClassNotFoundException cnfe) {
+	            		// Something we can't handle happened
+	            		throw error;
+	            	}
+            	} else {
+            		throw ex;
+            	}
             }
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);

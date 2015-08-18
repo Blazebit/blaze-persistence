@@ -15,19 +15,23 @@
  */
 package com.blazebit.persistence;
 
+import static com.googlecode.catchexception.CatchException.verifyException;
+import static org.junit.Assert.assertEquals;
+
+import java.lang.reflect.Constructor;
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.model.DocumentCount;
 import com.blazebit.persistence.model.DocumentPartnerView;
 import com.blazebit.persistence.model.DocumentViewModel;
-import static com.googlecode.catchexception.CatchException.verifyException;
-import java.lang.reflect.Constructor;
-import java.util.List;
-import javax.persistence.EntityTransaction;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  *

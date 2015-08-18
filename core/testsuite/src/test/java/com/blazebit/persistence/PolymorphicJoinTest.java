@@ -16,13 +16,16 @@
 
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
+import javax.persistence.Tuple;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.PolymorphicBase;
 import com.blazebit.persistence.entity.PolymorphicSub1;
 import com.blazebit.persistence.entity.PolymorphicSub2;
-import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 
 /**
  *

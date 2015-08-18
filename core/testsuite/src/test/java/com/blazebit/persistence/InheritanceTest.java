@@ -16,14 +16,16 @@
 
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.JuniorProjectLeader;
 import com.blazebit.persistence.entity.LargeProject;
 import com.blazebit.persistence.entity.Project;
 import com.blazebit.persistence.entity.ProjectLeader;
 import com.blazebit.persistence.entity.SeniorProjectLeader;
 import com.blazebit.persistence.entity.SmallProject;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 
 /**
  *
@@ -44,8 +46,9 @@ public class InheritanceTest extends AbstractCoreTest {
         };
     }
     
-    @Test
+	@Test
     public void testInheritanceWithEntityName() {
+	    @SuppressWarnings("rawtypes")
         CriteriaBuilder<Project> cb = cbf.create(em, Project.class, "p");
         String expectedQuery = "SELECT p FROM Projects p";
         assertEquals(expectedQuery, cb.getQueryString());
@@ -54,6 +57,7 @@ public class InheritanceTest extends AbstractCoreTest {
     
     @Test
     public void testJoinPolymorphicEntity() {
+        @SuppressWarnings("rawtypes")
         CriteriaBuilder<Project> cb = cbf.create(em, Project.class, "p")
                 .leftJoinFetch("leader", "l");
         String expectedQuery = "SELECT p FROM Projects p LEFT JOIN FETCH p.leader l";

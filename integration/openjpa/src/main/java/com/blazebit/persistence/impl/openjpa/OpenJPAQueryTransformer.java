@@ -34,9 +34,10 @@ public class OpenJPAQueryTransformer implements QueryTransformer {
         Logger.getLogger(OpenJPAQueryTransformer.class.getName()).warning("The OpenJPA integration is experimental and should not be used in production yet!");
     }
 
-    @Override
+	@Override
+    @SuppressWarnings("unchecked")
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
-        OpenJPAQuerySPI nativeQuery = query.unwrap(OpenJPAQuerySPI.class);
+        OpenJPAQuerySPI<?> nativeQuery = query.unwrap(OpenJPAQuerySPI.class);
         nativeQuery.addAggregateListener(new ObjectBuilderAggregateListenerAdapter(objectBuilder));
         return (TypedQuery<X>) query;
     }

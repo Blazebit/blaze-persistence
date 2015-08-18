@@ -15,11 +15,12 @@
  */
 package com.blazebit.persistence.view.basic;
 
+import org.junit.Test;
+import org.mockito.Mockito;
+
 import com.blazebit.persistence.OrderByBuilder;
 import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.Sorters;
-import org.junit.Test;
-import org.mockito.Mockito;
 
 /**
  *
@@ -54,7 +55,8 @@ public class SorterTest {
         verifySorter(sorter).orderBy(expression, false, false);
     }
 
-    public OrderByBuilder<?> verifySorter(Sorter sorter) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public OrderByBuilder<?> verifySorter(Sorter sorter) {
         OrderByBuilder<?> sortable = Mockito.mock(OrderByBuilder.class);
         sorter.apply((OrderByBuilder) sortable, expression);
         return Mockito.verify(sortable);

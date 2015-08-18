@@ -54,7 +54,8 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     public Set<String> getRegisteredFunctions(EntityManager entityManager) {
         JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
         DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();
-        Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
+        @SuppressWarnings("unchecked")
+		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         Set<String> functions = new HashSet<String>(platformOperators.size());
         
         for (ExpressionOperator op : platformOperators.values()) {
@@ -72,7 +73,8 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
         DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();
-        Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
+        @SuppressWarnings("unchecked")
+		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;
         
         if (platform.isMySQL()) {
@@ -105,7 +107,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
         return entityManager;
     }
     
-    private void addFunction(Map platformOperators, String name, JpqlFunction function) {
+    private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function) {
         ExpressionOperator operator = createOperator(name, function);
         ExpressionOperator.registerOperator(operator.getSelector(), name);
         ExpressionOperator.addOperator(operator);

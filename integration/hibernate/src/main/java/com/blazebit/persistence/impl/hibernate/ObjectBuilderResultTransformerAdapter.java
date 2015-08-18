@@ -26,7 +26,9 @@ import org.hibernate.transform.ResultTransformer;
  */
 public class ObjectBuilderResultTransformerAdapter implements ResultTransformer {
 
-    private final ObjectBuilder<?> builder;
+	private static final long serialVersionUID = 1L;
+	
+	private final ObjectBuilder<?> builder;
 
     public ObjectBuilderResultTransformerAdapter(ObjectBuilder<?> builder) {
         this.builder = builder;
@@ -38,6 +40,7 @@ public class ObjectBuilderResultTransformerAdapter implements ResultTransformer 
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public List transformList(List list) {
         return builder.buildList(list);
     }

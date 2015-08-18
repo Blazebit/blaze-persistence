@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.AbstractExpression;
 
 /**

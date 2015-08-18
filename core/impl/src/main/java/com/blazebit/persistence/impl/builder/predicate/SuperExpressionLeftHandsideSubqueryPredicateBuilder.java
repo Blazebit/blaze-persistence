@@ -15,9 +15,8 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderImpl;
-import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**

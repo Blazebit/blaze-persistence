@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.impl.builder.object;
 
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.SelectBuilder;
 import java.lang.reflect.Constructor;
 import java.util.List;
+
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.SelectBuilder;
 
 /**
  *
@@ -34,7 +35,8 @@ public class ClassObjectBuilder<T> implements ObjectBuilder<T> {
         this.clazz = clazz;
     }
 
-    private Constructor<T> getConstructor(Object[] tuple) {
+    @SuppressWarnings("unchecked")
+	private Constructor<T> getConstructor(Object[] tuple) {
         Constructor<?>[] constructors = clazz.getConstructors();
         Constructor<T> matchingConstr = null;
         for (Constructor<?> constr : constructors) {

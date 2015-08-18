@@ -15,6 +15,14 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.AttributeFilter;
@@ -27,13 +35,6 @@ import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -46,6 +47,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
+    @SuppressWarnings("unchecked")
     protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),

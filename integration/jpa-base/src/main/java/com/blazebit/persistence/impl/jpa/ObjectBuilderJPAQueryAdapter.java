@@ -34,7 +34,8 @@ public class ObjectBuilderJPAQueryAdapter<X> extends TypedQueryWrapper<X> {
 
     private final ObjectBuilder<X> builder;
 
-    public ObjectBuilderJPAQueryAdapter(TypedQuery<?> delegate, ObjectBuilder<X> builder) {
+    @SuppressWarnings("unchecked")
+	public ObjectBuilderJPAQueryAdapter(TypedQuery<?> delegate, ObjectBuilder<X> builder) {
         super((TypedQuery<X>) delegate);
         this.builder = builder;
     }

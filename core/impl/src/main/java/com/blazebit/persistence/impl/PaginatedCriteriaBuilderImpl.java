@@ -15,9 +15,18 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
-import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
-import com.blazebit.persistence.impl.keyset.KeysetMode;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
@@ -29,18 +38,11 @@ import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
+import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
+import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  *
@@ -252,7 +254,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         needsCheck = false;
     }
 
-    private PagedList<T> getResultListViaObjectQuery(long totalSize) {
+    @SuppressWarnings("unchecked")
+	private PagedList<T> getResultListViaObjectQuery(long totalSize) {
         String queryString = getQueryString0();
         Class<?> expectedResultType;
         
@@ -326,7 +329,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         }
 
         parameterizeQuery(idQuery);
-        List ids = idQuery.getResultList();
+        List<?> ids = idQuery.getResultList();
 
         if (ids.isEmpty()) {
             KeysetPage newKeysetPage = null;
@@ -347,7 +350,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
                 highest = KeysetPaginationHelper.extractKey((Object[]) ids.get(ids.size() - 1), 1);
             }
 
-            List newIds = new ArrayList(ids.size());
+            List<Object> newIds = new ArrayList<Object>(ids.size());
 
             for (int i = 0; i < ids.size(); i++) {
                 newIds.add(((Object[]) ids.get(i))[0]);
@@ -369,8 +372,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return pagedResultList;
     }
 
-    private List<T> getQueryResultList() {
-        TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString0(), selectManager.getExpectedQueryResultType());
+    @SuppressWarnings("unchecked")
+	private List<T> getQueryResultList() {
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString0(), selectManager.getExpectedQueryResultType());
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
@@ -381,7 +385,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     private String getPageCountQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
-        Metamodel m = em.getMetamodel();
         EntityType<?> entityType = fromClazz;
         String idName = entityType.getId(entityType.getIdType()
                 .getJavaType())
@@ -505,7 +508,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
 
     private String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
-        Metamodel m = em.getMetamodel();
         EntityType<?> entityType = fromClazz;
         String idName = entityType.getId(entityType.getIdType()
                 .getJavaType())
@@ -597,12 +599,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return sbSelectFrom.toString();
     }
 
-    @Override
+	@Override
+    @SuppressWarnings("unchecked")
     public PaginatedCriteriaBuilder<T> from(Class<?> clazz) {
         return (PaginatedCriteriaBuilder<T>) super.from(clazz);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public PaginatedCriteriaBuilder<T> from(Class<?> clazz, String alias) {
         return (PaginatedCriteriaBuilder<T>) super.from(clazz, alias);
     }
@@ -623,61 +627,73 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz) {
         return (SelectObjectBuilder<PaginatedCriteriaBuilder<Y>>) super.selectNew(clazz);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (PaginatedCriteriaBuilder<Y>) super.selectNew(builder);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public PaginatedCriteriaBuilder<T> select(String expression) {
         return (PaginatedCriteriaBuilder<T>) super.select(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public PaginatedCriteriaBuilder<T> select(String expression, String alias) {
         return (PaginatedCriteriaBuilder<T>) super.select(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase() {
         return (CaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectCase();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase(String alias) {
         return (CaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectCase(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression) {
         return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectSimpleCase(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression, String alias) {
         return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectSimpleCase(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery() {
         return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String alias) {
         return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
         return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }

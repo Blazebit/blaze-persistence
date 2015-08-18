@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.impl.keyset;
 
+import java.io.Serializable;
+
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
-import java.io.Serializable;
 
 /**
  *

@@ -15,7 +15,8 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.KeysetEntity;
+import static org.junit.Assert.assertEquals;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,13 +24,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import com.blazebit.persistence.entity.KeysetEntity;
 
 /**
  *
@@ -147,7 +151,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
     }
     
     @Parameterized.Parameters
-    public static Collection orderingPossibilities() {
+    public static Collection<?> orderingPossibilities() {
         Map<Object[], Object[][]> cases = new LinkedHashMap<Object[], Object[][]>();
         cases.put(new Object[] { true, true, true, true, true, true }, new Object[][] {
 //            | PAGE |  A   |  B   | ID |

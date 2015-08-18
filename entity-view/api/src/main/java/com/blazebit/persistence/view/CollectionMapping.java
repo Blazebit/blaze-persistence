@@ -43,7 +43,8 @@ public @interface CollectionMapping {
      *
      * @return the comparator used for sorting
      */
-    Class<? extends Comparator> comparator() default Comparator.class;
+    @SuppressWarnings("rawtypes")
+	Class<? extends Comparator> comparator() default Comparator.class;
     
     /**
      * Specifies whether entries in the collection should be ordered.

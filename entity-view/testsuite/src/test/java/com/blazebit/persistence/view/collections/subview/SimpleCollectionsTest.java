@@ -15,6 +15,20 @@
  */
 package com.blazebit.persistence.view.collections.subview;
 
+import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
+import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -22,7 +36,6 @@ import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.collections.entity.DocumentForCollections;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import static com.blazebit.persistence.view.collections.subview.SubviewAssert.assertSubviewEquals;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentCollectionsView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentListMapSetView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentListSetMapView;
@@ -31,17 +44,7 @@ import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentMa
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentSetListMapView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentSetMapListView;
 import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
-import com.blazebit.persistence.view.impl.EntityViewConfigurationImpl;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import javax.persistence.EntityTransaction;
-import static org.junit.Assert.assertEquals;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  *
@@ -124,7 +127,7 @@ public class SimpleCollectionsTest<T extends SubviewDocumentCollectionsView> ext
     }
 
     @Parameterized.Parameters
-    public static Collection entityViewCombinations() {
+    public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
             { SubviewDocumentListMapSetView.class },
             { SubviewDocumentListSetMapView.class },

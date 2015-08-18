@@ -15,6 +15,14 @@
  */
 package com.blazebit.persistence.view.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
@@ -34,20 +42,13 @@ import com.blazebit.persistence.view.metamodel.ViewFilterMapping;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
-
 /**
  * @author Christian Beikov
  * @since 1.0
  */
 public final class EntityViewSettingHelper {
 
+    @SuppressWarnings("unchecked")
     public static <T, Q extends QueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
     	applyAttributeFilters(setting, evm, criteriaBuilder, ef);
@@ -375,14 +376,14 @@ public final class EntityViewSettingHelper {
     private static class AttributeInfo {
 
         private final MethodAttribute<?, ?> attribute;
-        private final Attribute<?, ?> jpaAttribute;
+//        private final Attribute<?, ?> jpaAttribute;
         private final Object mapping;
         private final List<String> subviewPrefixParts;
         private final boolean entityAttribute;
 
         public AttributeInfo(MethodAttribute<?, ?> attribute, Attribute<?, ?> jpaAttribute, Object mapping, List<String> subviewPrefixParts, boolean entityAttribute) {
             this.attribute = attribute;
-            this.jpaAttribute = jpaAttribute;
+//            this.jpaAttribute = jpaAttribute;
             this.mapping = mapping;
             this.subviewPrefixParts = subviewPrefixParts;
             this.entityAttribute = entityAttribute;

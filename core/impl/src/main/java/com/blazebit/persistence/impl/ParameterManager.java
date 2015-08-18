@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
@@ -38,6 +39,7 @@ public class ParameterManager {
     private final Map<String, Object> parameters = new HashMap<String, Object>();
     private static final Object REGISTERED_PLACEHOLDER = new Object();
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public Parameter<?> getParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
@@ -51,7 +53,8 @@ public class ParameterManager {
         return new ParameterImpl(value == null ? null : value.getClass(), parameterName);
     }
 
-    public Set<? extends Parameter<?>> getParameters() {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	public Set<? extends Parameter<?>> getParameters() {
         Set<Parameter<?>> result = new HashSet<Parameter<?>>();
 
         for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {

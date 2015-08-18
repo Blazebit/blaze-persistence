@@ -15,10 +15,12 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.LikeBuilder;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
-import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
@@ -39,15 +41,14 @@ import com.blazebit.persistence.impl.predicate.GePredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import java.util.Arrays;
-import java.util.List;
+import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 
 /**
  *
@@ -63,10 +64,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     private final ExpressionFactory expressionFactory;
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	private final SubqueryBuilderListenerImpl<BetweenBuilder<T>> betweenStartSubqueryBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
+    private SubqueryBuilderListenerImpl<T> rightSuperExprSubqueryBuilderListener;
+    private SubqueryBuilderListenerImpl<BetweenBuilder<T>> leftSuperExprSubqueryPredicateBuilderListener;
     private SuperExpressionRightHandsideSubqueryPredicateBuilder rightSuperExprSubqueryPredicateBuilderListener;
-    private SuperExpressionLeftHandsideSubqueryPredicateBuilder leftSuperExprSubqueryPredicateBuilderListener;
-    private final SubqueryBuilderListenerImpl<?> betweenStartSubqueryBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener<BetweenBuilderImpl<T>>();
-    private SuperExpressionSubqueryBuilderListener<T> rightSuperExprSubqueryBuilderListener;
     
     public RestrictionBuilderImpl(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         this.leftExpression = leftExpression;
@@ -120,8 +122,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression) {
-        leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder<BetweenBuilderImpl<T>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, this, subqueryInitFactory));
         return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener);
     }
@@ -146,8 +149,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public SubqueryInitiator<BetweenBuilder<T>> notBetweenSubquery(String subqueryAlias, String expression) {
-        leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder<BetweenBuilderImpl<T>>(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, null, expressionFactory, this, subqueryInitFactory, true));
         return subqueryInitFactory.createSubqueryInitiator(betweenBuilder, (SubqueryBuilderListener<BetweenBuilder<T>>) leftSuperExprSubqueryPredicateBuilderListener);
     }
@@ -434,7 +438,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 	}
 
 	@Override
-    protected <T extends PredicateBuilder> T startBuilder(T builder) {
+    protected <X extends PredicateBuilder> X startBuilder(X builder) {
         betweenStartSubqueryBuilderListener.verifySubqueryBuilderEnded();
         return super.startBuilder(builder);
     }
@@ -467,6 +471,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         betweenStartSubqueryBuilderListener.verifySubqueryBuilderEnded();
         if(rightSuperExprSubqueryBuilderListener != null){
             rightSuperExprSubqueryBuilderListener.verifySubqueryBuilderEnded();
+        }
+        if (leftSuperExprSubqueryPredicateBuilderListener != null) {
+        	leftSuperExprSubqueryPredicateBuilderListener.verifySubqueryBuilderEnded();
         }
     }
 

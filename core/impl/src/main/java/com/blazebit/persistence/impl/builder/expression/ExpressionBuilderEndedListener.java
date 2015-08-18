@@ -15,10 +15,6 @@
  */
 package com.blazebit.persistence.impl.builder.expression;
 
-import com.blazebit.persistence.impl.builder.predicate.*;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-
 /**
  *
  * @author Christian Beikov

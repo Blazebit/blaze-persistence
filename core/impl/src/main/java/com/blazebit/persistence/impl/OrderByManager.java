@@ -15,11 +15,6 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,6 +24,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.metamodel.Metamodel;
+
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
 /**
  *

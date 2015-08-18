@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.QueryBuilder;
 import java.util.Map;
+
+import com.blazebit.persistence.QueryBuilder;
 
 /**
  *

@@ -15,10 +15,12 @@
  */
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
 
 /**
  *

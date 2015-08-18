@@ -15,11 +15,12 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
-import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Set;
+
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *

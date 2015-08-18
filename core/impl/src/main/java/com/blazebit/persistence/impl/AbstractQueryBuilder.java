@@ -15,6 +15,14 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.lang.reflect.Constructor;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
+
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.KeysetPage;
@@ -24,12 +32,6 @@ import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
-import java.lang.reflect.Constructor;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.EntityType;
 
 /**
  *
@@ -150,6 +152,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> objectBuilder) {
         clearCache();
         if (objectBuilder == null) {
@@ -168,6 +171,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X fetch(String path) {
         clearCache();
         checkFetchJoinAllowed();
@@ -177,6 +181,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X fetch(String... paths) {
         clearCache();
         checkFetchJoinAllowed();
@@ -229,6 +234,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         return join(path, alias, type, fetch, true);
     }
 
+    @SuppressWarnings("unchecked")
     private X join(String path, String alias, JoinType type, boolean fetch, boolean defaultJoin) {
         clearCache();
         if (path == null) {
@@ -254,8 +260,9 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public TypedQuery<T> getQuery() {
-        TypedQuery<T> query = (TypedQuery) em.createQuery(getQueryString(), selectManager.getExpectedQueryResultType());
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString(), selectManager.getExpectedQueryResultType());
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
@@ -289,21 +296,25 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase() {
         return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase(String alias) {
         return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression) {
         return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression, String alias) {
         return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression, alias);
     }
@@ -319,21 +330,25 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery() {
         return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String alias) {
         return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression) {
         return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }

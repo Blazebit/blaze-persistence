@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder;
 
+import java.util.Map;
+
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
-import java.util.Map;
 
 /**
  *

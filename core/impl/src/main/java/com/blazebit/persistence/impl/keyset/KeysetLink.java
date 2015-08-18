@@ -16,9 +16,10 @@
 
 package com.blazebit.persistence.impl.keyset;
 
+import java.util.List;
+
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.impl.OrderByExpression;
-import java.util.List;
 
 /**
  *

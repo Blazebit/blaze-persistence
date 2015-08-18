@@ -15,11 +15,12 @@
  */
 package com.blazebit.persistence.view.collections.ordered.model;
 
+import java.util.List;
+
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
-import java.util.List;
 
 /**
  *

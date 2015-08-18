@@ -81,10 +81,10 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     @Override
     public SubqueryInitiator<T> andSubqery(String subqueryAlias, String expression) {
         verifySubqueryBuilderEnded();
-        SuperExpressionSubqueryBuilderListener superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener(subqueryAlias, expressionFactory.createArithmeticExpression(expression)){
+        SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
 
             @Override
-            public void onBuilderEnded(SubqueryBuilderImpl builder) {
+            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
                 super.onBuilderEnded(builder);
                 predicate = new BetweenPredicate(left, start, superExpression, negated);
                 listener.onBuilderEnded(BetweenBuilderImpl.this);
@@ -120,7 +120,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         super.verifySubqueryBuilderEnded();
     }
     
-    public <T> SubqueryInitiator<T> startSubqueryInitiator(SubqueryInitiator<T> subqueryInitiator){
+    public <X> SubqueryInitiator<X> startSubqueryInitiator(SubqueryInitiator<X> subqueryInitiator){
         this.subqueryStartMarker = subqueryInitiator;
         return subqueryInitiator;
     }

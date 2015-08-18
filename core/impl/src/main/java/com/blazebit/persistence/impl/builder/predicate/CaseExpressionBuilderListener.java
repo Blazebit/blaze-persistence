@@ -24,9 +24,9 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedLi
  * @author Moritz Becker
  */
 public class CaseExpressionBuilderListener extends ExpressionBuilderEndedListenerImpl {
-    private final RestrictionBuilderImpl<?> restrictionBuilder;
+    private final LeftHandsideSubqueryPredicateBuilder restrictionBuilder;
 
-    public CaseExpressionBuilderListener(RestrictionBuilderImpl<?> restrictionBuilder) {
+    public CaseExpressionBuilderListener(LeftHandsideSubqueryPredicateBuilder restrictionBuilder) {
         this.restrictionBuilder = restrictionBuilder;
     }
 

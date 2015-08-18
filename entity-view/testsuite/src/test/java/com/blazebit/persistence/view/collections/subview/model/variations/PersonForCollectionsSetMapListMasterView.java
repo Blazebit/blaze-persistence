@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.view.collections.subview.model.variations;
 
+import java.util.Set;
+
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.collections.entity.PersonForCollections;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentSetMapListView;
-import java.util.Set;
 
 /**
  *

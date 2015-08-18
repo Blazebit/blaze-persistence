@@ -15,6 +15,13 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Tuple;
+
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
@@ -22,11 +29,6 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.Subquery;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
 
 /**
  *
@@ -37,9 +39,9 @@ import javax.persistence.Tuple;
 public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T>, Subquery {
 
     private final T result;
-    private final SubqueryBuilderListener listener;
+    private final SubqueryBuilderListener<T> listener;
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<T> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
         this.result = result;
         this.listener = listener;
@@ -67,52 +69,62 @@ public class SubqueryBuilderImpl<T> extends AbstractBaseQueryBuilder<Tuple, Subq
         return result;
     }
 
-    @Override
+	@Override
+    @SuppressWarnings("unchecked")
     public SubqueryBuilder<T> select(String expression) {
         return (SubqueryBuilder<T>) super.select(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryBuilder<T> select(String expression, String alias) {
         return (SubqueryBuilder<T>) super.select(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<SubqueryBuilder<T>> selectCase() {
         return (CaseWhenBuilder<SubqueryBuilder<T>>) super.selectCase();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public CaseWhenBuilder<SubqueryBuilder<T>> selectCase(String alias) {
         return (CaseWhenBuilder<SubqueryBuilder<T>>) super.selectCase(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression) {
         return (SimpleCaseWhenBuilder<SubqueryBuilder<T>>) super.selectSimpleCase(expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression, String alias) {
         return (SimpleCaseWhenBuilder<SubqueryBuilder<T>>) super.selectSimpleCase(expression, alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery() {
         return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery();
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String alias) {
         return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(alias);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
         return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         return (SubqueryInitiator<SubqueryBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }

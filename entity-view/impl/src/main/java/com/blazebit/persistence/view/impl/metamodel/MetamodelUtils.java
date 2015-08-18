@@ -15,6 +15,20 @@
  */
 package com.blazebit.persistence.view.impl.metamodel;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
+
+import javax.persistence.OrderColumn;
+
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
@@ -27,23 +41,6 @@ import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.TargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.persistence.OrderColumn;
 
 /**
  *
@@ -89,7 +86,8 @@ public final class MetamodelUtils {
         }
     }
     
-    public static <T> Class<Comparator<T>> getComparatorClass(CollectionMapping mapping) {
+    @SuppressWarnings("unchecked")
+	public static <T> Class<Comparator<T>> getComparatorClass(CollectionMapping mapping) {
         if (Comparator.class == mapping.comparator()) {
             return null;
         }
@@ -155,7 +153,8 @@ public final class MetamodelUtils {
     private static <A extends Annotation> A findAnnotation(MappingConstructor<?> mappingConstructor, int index, Class<A> annotationClass) {
         return findAnnotation(mappingConstructor.getJavaConstructor().getParameterAnnotations()[index], annotationClass);
     }
-    
+
+    @SuppressWarnings("unchecked")
     private static <A extends Annotation> A findAnnotation(Annotation[] annotations, Class<A> annotationClass) {
         for (int i = 0; i < annotations.length; i++) {
             if (annotationClass.isAssignableFrom(annotations[i].annotationType())) {

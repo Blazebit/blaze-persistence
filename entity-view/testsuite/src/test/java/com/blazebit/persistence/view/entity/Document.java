@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -45,6 +46,8 @@ import javax.persistence.Transient;
  */
 @Entity
 public class Document implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;

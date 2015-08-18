@@ -15,10 +15,11 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.AbstractExpression;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 
 /**
  *

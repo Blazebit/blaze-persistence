@@ -15,13 +15,14 @@
  */
 package com.blazebit.persistence.impl.keyset;
 
+import java.io.Serializable;
+import java.util.List;
+
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvingQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
-import java.io.Serializable;
-import java.util.List;
 
 /**
  *

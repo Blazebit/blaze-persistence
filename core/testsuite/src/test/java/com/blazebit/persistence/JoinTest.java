@@ -15,11 +15,14 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
 import static com.googlecode.catchexception.CatchException.verifyException;
-import javax.persistence.Tuple;
 import static org.junit.Assert.assertEquals;
+
+import javax.persistence.Tuple;
+
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
 
 /**
  *

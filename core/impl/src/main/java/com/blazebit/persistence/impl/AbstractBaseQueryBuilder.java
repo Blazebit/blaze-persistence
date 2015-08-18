@@ -114,6 +114,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
      *
      * @param builder
      */
+    @SuppressWarnings("unchecked")
     protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
         this.cbf = builder.cbf;
         this.fromClazz = builder.fromClazz;
@@ -240,18 +241,21 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X setParameter(String name, Object value) {
         parameterManager.satisfyParameter(name, value);
         return (X) this;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X setParameter(String name, Calendar value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
         return (X) this;
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X setParameter(String name, Date value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
         return (X) this;
@@ -285,6 +289,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     /*
      * Select methods
      */
+    @SuppressWarnings("unchecked")
     public X distinct() {
         clearCache();
         selectManager.distinct();
@@ -325,6 +330,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public BaseQueryBuilder<T, ?> select(String expression, String selectAlias) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         if (selectAlias != null && selectAlias.isEmpty()) {
@@ -404,11 +410,13 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> whereExists() {
         return whereManager.restrictExists((X) this);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> whereNotExists() {
         return whereManager.restrictNotExists((X) this);
     }
@@ -426,6 +434,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     /*
      * Group by methods
      */
+    @SuppressWarnings("unchecked")
     public X groupBy(String... paths) {
         for (String path : paths) {
             groupBy(path);
@@ -433,6 +442,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
+    @SuppressWarnings("unchecked")
     public X groupBy(String expression) {
         clearCache();
         Expression expr;
@@ -474,6 +484,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return havingManager.havingOr(this);
     }
 
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> havingExists() {
         clearCache();
         if (groupByManager.isEmpty()) {
@@ -482,6 +493,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return havingManager.restrictExists((X) this);
     }
 
+    @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> havingNotExists() {
         clearCache();
         if (groupByManager.isEmpty()) {
@@ -524,6 +536,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
     
     @Override
+    @SuppressWarnings("unchecked")
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
     	Expression expr;
     	if (cbf.isCompatibleModeEnabled()) {
@@ -582,6 +595,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X join(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
@@ -590,6 +604,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X joinDefault(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
@@ -598,6 +613,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
@@ -605,6 +621,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
@@ -775,6 +792,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public KeysetBuilder<X> beforeKeyset() {
         clearCache();
         return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.PREVIOUS));
@@ -786,6 +804,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X beforeKeyset(Keyset keyset) {
         clearCache();
         keysetManager.verifyBuilderEnded();
@@ -794,6 +813,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public KeysetBuilder<X> afterKeyset() {
         clearCache();
         return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.NEXT));
@@ -805,6 +825,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public X afterKeyset(Keyset keyset) {
         clearCache();
         keysetManager.verifyBuilderEnded();
@@ -902,10 +923,11 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return sbSelectFrom.toString();
     }
 
-    protected <T> TypedQuery<T> transformQuery(TypedQuery<T> query) {
-        TypedQuery<T> currentQuery = query;
+    @SuppressWarnings("unchecked")
+    protected <Y> TypedQuery<Y> transformQuery(TypedQuery<Y> query) {
+        TypedQuery<Y> currentQuery = query;
         for (QueryTransformer transformer : cbf.getQueryTransformers()) {
-            currentQuery = (TypedQuery<T>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
+            currentQuery = (TypedQuery<Y>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
         return currentQuery;
     }

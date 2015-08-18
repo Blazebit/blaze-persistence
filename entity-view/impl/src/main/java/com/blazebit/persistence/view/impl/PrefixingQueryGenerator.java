@@ -15,11 +15,11 @@
  */
 package com.blazebit.persistence.view.impl;
 
+import java.util.List;
+
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import java.util.List;
 
 /**
  *

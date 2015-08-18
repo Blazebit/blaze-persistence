@@ -25,7 +25,9 @@ import com.blazebit.persistence.view.MappingParameter;
  */
 public abstract class UnsafeDocumentClassView implements DocumentInterfaceView {
 
-    private final long age;
+	private static final long serialVersionUID = 1L;
+	
+	private final long age;
     private final Integer contactPersonNumber;
 
     public UnsafeDocumentClassView(

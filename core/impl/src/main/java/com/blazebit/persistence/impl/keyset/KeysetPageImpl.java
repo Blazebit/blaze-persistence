@@ -15,9 +15,10 @@
  */
 package com.blazebit.persistence.impl.keyset;
 
+import java.io.Serializable;
+
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetPage;
-import java.io.Serializable;
 
 /**
  *
@@ -26,7 +27,9 @@ import java.io.Serializable;
  */
 public class KeysetPageImpl implements KeysetPage {
 
-    private final int firstResult;
+	private static final long serialVersionUID = 1L;
+	
+	private final int firstResult;
     private final int maxResults;
     private final Keyset lowest;
     private final Keyset highest;

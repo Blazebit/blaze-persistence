@@ -33,7 +33,6 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -77,6 +76,23 @@ public class ProxyFactoryTest {
 
         UnsafeDocumentClassView instance = instantiator.newInstance(new Object[] {expectedId, expectedContacts, expectedFirstContactPerson,
                 expectedMyContactPerson, expectedName, expectedAge, expectedContactPersonNumber});
+
+        assertTrue(expectedContacts == instance.getContacts());
+        assertTrue(expectedFirstContactPerson == instance.getFirstContactPerson());
+        assertTrue(expectedId == instance.getId());
+        assertTrue(expectedMyContactPerson == instance.getMyContactPerson());
+        assertTrue(expectedName == instance.getName());
+        assertTrue(expectedAge == instance.getAge());
+        assertTrue(expectedContactPersonNumber == instance.getContactPersonNumber());
+
+        expectedContacts = new HashMap<Integer, Person>();
+        expectedId = 2L;
+
+        instance.setContacts(expectedContacts);
+        instance.setId(expectedId);
+
+        assertTrue(expectedContacts == instance.getContacts());
+        assertTrue(expectedId == instance.getId());
     }
 
     @Test

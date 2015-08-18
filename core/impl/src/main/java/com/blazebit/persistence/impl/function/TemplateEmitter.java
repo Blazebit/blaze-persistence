@@ -15,8 +15,9 @@
  */
 package com.blazebit.persistence.impl.function;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
 import java.util.List;
+
+import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
  *

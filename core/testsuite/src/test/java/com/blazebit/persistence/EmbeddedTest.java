@@ -15,17 +15,14 @@
  */
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
+import javax.persistence.Tuple;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.Order;
 import com.blazebit.persistence.entity.OrderPosition;
 import com.blazebit.persistence.entity.OrderPositionHead;
-import com.blazebit.persistence.entity.OrderPositionId;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import static com.googlecode.catchexception.CatchException.verifyException;
-import javax.persistence.Tuple;
-import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  *

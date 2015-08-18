@@ -16,11 +16,12 @@
 
 package com.blazebit.persistence;
 
-import com.blazebit.persistence.entity.Document;
 import javax.persistence.Tuple;
+
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import com.blazebit.persistence.entity.Document;
 
 /**
  *

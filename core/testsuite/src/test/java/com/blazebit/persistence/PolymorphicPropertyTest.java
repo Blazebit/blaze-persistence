@@ -16,6 +16,11 @@
 
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.PolymorphicBase;
 import com.blazebit.persistence.entity.PolymorphicPropertyBase;
@@ -23,9 +28,6 @@ import com.blazebit.persistence.entity.PolymorphicPropertySub1;
 import com.blazebit.persistence.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.entity.PolymorphicSub1;
 import com.blazebit.persistence.entity.PolymorphicSub2;
-import static org.junit.Assert.assertEquals;
-import org.junit.Ignore;
-import org.junit.Test;
 
 /**
  *
