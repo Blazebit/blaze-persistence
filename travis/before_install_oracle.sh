@@ -18,20 +18,17 @@
 # - Add oracle-xe-client so we can use the jdbc driver of the package
 # 
 # set -ex
-source ${TRAVIS_BUILD_DIR}/bin/ci/common.sh
 
 #
 # Utilities
 #
-function free_backup()
-{
+function free_backup() {
     # Multiple copies to be on safe side
     sudo cp /usr/bin/free /root
     sudo mv /usr/bin/free /usr/bin/free.original
 }
 
-function free_restore()
-{
+function free_restore() {
     sudo cp /usr/bin/free.original /usr/bin/free
 }
 
