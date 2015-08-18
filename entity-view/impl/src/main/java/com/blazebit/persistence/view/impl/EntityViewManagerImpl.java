@@ -76,6 +76,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final Map<String, Object> properties;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
+    
+    private final boolean unsafeDisabled;
 
     public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
@@ -85,9 +87,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
         
+        this.unsafeDisabled = !Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
+        
         if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
         	for (ViewType<?> view : metamodel.getViews()) {
-        		proxyFactory.getProxy(view);
+        		if (view.getConstructors().isEmpty() || unsafeDisabled) {
+        			proxyFactory.getProxy(view);
+        		} else {
+        			proxyFactory.getUnsafeProxy(view);
+        		}
         	}
         }
     }
@@ -101,6 +109,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public <T, Q extends QueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
         return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
     }
+
+	public boolean isUnsafeDisabled() {
+		return unsafeDisabled;
+	}
 
     /**
      * Creates a new filter instance of the given filter class.

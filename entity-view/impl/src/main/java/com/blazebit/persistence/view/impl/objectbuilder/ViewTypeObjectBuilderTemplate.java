@@ -176,7 +176,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             parameterTypes[i + attributes.length + 1] = parameterAttributes[i].getJavaType();
         }
         
-        if (viewType.getConstructors().isEmpty()) {
+        if (viewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
         	this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
         } else {
         	this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);

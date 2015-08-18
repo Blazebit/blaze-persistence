@@ -39,6 +39,7 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     
     private void loadDefaultProperties() {
     	properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
+    	properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
     }
 
 	@Override

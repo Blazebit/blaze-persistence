@@ -32,6 +32,14 @@ public final class ConfigurationProperties {
 	 * @since 1.0.6
 	 */
 	public static final String PROXY_EAGER_LOADING = "com.blazebit.persistence.view.proxy.eager_loading";
+	/**
+	 * We added a flag to make it possible to disable unsafe proxy generation.
+	 * By default the unsafe proxies are allowed to be able to make use of the features.
+	 * Valid values for this property are <code>true</code> or <code>false</code>.
+	 * 
+	 * @since 1.0.6
+	 */
+	public static final String PROXY_UNSAFE_ALLOWED = "com.blazebit.persistence.view.proxy.unsafe_allowed";
 
 	private ConfigurationProperties() {
 	}
