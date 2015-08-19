@@ -65,7 +65,7 @@ sudo apt-get update -qq -y
 
 # only download the package, to manually install afterwards
 sudo apt-get install -qq -y --force-yes -d oracle-xe-universal:i386
-sudo apt-get install -qq -y --force-yes oracle-xe-client:i386
+sudo apt-get install -qq -y --force-yes -d oracle-xe-client:i386
 sudo apt-get install -qq -y --force-yes libaio:i386
 
 # remove key + repo (to prevent failures on next updates)
@@ -73,6 +73,18 @@ sudo apt-key del B38A8516
 sudo bash -c 'rm -rf /etc/apt/sources.list.d/oracle.list'
 sudo apt-get update -qq -y
 sudo apt-get autoremove -qq
+
+# remove bc from the dependencies of the oracle-xe-client package (to keep 64bit one installed)
+mkdir /tmp/oracle_unpack
+dpkg-deb -x /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
+cd /tmp/oracle_unpack
+dpkg-deb --control /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.1_i386.deb 
+sed -i "s/,\ bc//g" /tmp/oracle_unpack/DEBIAN/control
+mkdir /tmp/oracle_repack
+dpkg -b /tmp/oracle_unpack /tmp/oracle_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
+
+# install Oracle 10g client with the fixed dependencies, to prevent i386/amd64 conflicts on bc package
+sudo dpkg -i --force-architecture /tmp/oracle_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
 
 # remove bc from the dependencies of the oracle-xe-universal package (to keep 64bit one installed)
 mkdir /tmp/oracle_unpack
