@@ -25,7 +25,7 @@ script:
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
 #  - oraclejdk7
-env:
+#env:
 # hibernate
 #  - JPAPROVIDER=hibernate RDBMS=h2
 #  - JPAPROVIDER=hibernate RDBMS=mysql
