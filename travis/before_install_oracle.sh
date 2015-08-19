@@ -83,9 +83,9 @@ sudo apt-get autoremove -qq
 
 # remove bc from the dependencies of the oracle-xe-client package (to keep 64bit one installed)
 mkdir /tmp/oracle_client_unpack
-dpkg-deb -x /var/cache/apt/archives/apt-fast/oracle-xe-client_10.2.0.1-1.2_i386.deb /tmp/oracle_client_unpack
+dpkg-deb -x /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.2_i386.deb /tmp/oracle_client_unpack
 cd /tmp/oracle_client_unpack
-dpkg-deb --control /var/cache/apt/archives/apt-fast/oracle-xe-client_10.2.0.1-1.2_i386.deb 
+dpkg-deb --control /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.2_i386.deb 
 sed -i "s/,\ bc//g" /tmp/oracle_client_unpack/DEBIAN/control
 mkdir /tmp/oracle_client_repack
 dpkg -b /tmp/oracle_client_unpack /tmp/oracle_client_repack/oracle-xe-client_fixed_10.2.0.1-1.2_i386.deb
@@ -95,9 +95,9 @@ sudo dpkg -i --force-architecture /tmp/oracle_client_repack/oracle-xe-client_fix
 
 # remove bc from the dependencies of the oracle-xe-universal package (to keep 64bit one installed)
 mkdir /tmp/oracle_unpack
-dpkg-deb -x /var/cache/apt/archives/apt-fast/oracle-xe-universal_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
+dpkg-deb -x /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
 cd /tmp/oracle_unpack
-dpkg-deb --control /var/cache/apt/archives/apt-fast/oracle-xe-universal_10.2.0.1-1.1_i386.deb 
+dpkg-deb --control /var/cache/apt/archives/oracle-xe-universal_10.2.0.1-1.1_i386.deb 
 sed -i "s/,\ bc//g" /tmp/oracle_unpack/DEBIAN/control
 mkdir /tmp/oracle_repack
 dpkg -b /tmp/oracle_unpack /tmp/oracle_repack/oracle-xe-universal_fixed_10.2.0.1-1.1_i386.deb
