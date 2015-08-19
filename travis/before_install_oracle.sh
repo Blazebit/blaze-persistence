@@ -122,4 +122,4 @@ sudo /etc/init.d/oracle-xe restart
 free_restore
 
 # Install development toolset for 32-bit for Travis CI 64-bit
-sudo apt-fast install -qq -y g++-multilib
+sudo apt-get install -qq -y g++-multilib
