@@ -19,30 +19,30 @@ after_failure:
   - sh travis/print_surefire_reports.sh
 script:
   - mvn -P ${JPAPROVIDER},${RDBMS} install
-#after_success:
-#  - "bash ./.travis-deploy.sh"
+after_success:
+  - "bash ./.travis-deploy.sh"
 # Leave out jdk switch because on the legacy infrastructure this won't work
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
 #  - oraclejdk7
-#env:
-# hibernate
-#  - JPAPROVIDER=hibernate RDBMS=h2
-#  - JPAPROVIDER=hibernate RDBMS=mysql
-#  - JPAPROVIDER=hibernate RDBMS=postgresql
+env:
+ hibernate
+  - JPAPROVIDER=hibernate RDBMS=h2
+  - JPAPROVIDER=hibernate RDBMS=mysql
+  - JPAPROVIDER=hibernate RDBMS=postgresql
 #  - JPAPROVIDER=hibernate RDBMS=sqlite
 # hibernate-4.3
-#  - JPAPROVIDER=hibernate-4.3 RDBMS=h2
-#  - JPAPROVIDER=hibernate-4.3 RDBMS=mysql
-#  - JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
+  - JPAPROVIDER=hibernate-4.3 RDBMS=h2
+  - JPAPROVIDER=hibernate-4.3 RDBMS=mysql
+  - JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
 #  - JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
 # datanucleus
-#  - JPAPROVIDER=datanucleus RDBMS=h2
+  - JPAPROVIDER=datanucleus RDBMS=h2
 #  - JPAPROVIDER=datanucleus RDBMS=mysql
 #  - JPAPROVIDER=datanucleus RDBMS=postgresql
 #  - JPAPROVIDER=datanucleus RDBMS=sqlite
 # eclipselink
-#  - JPAPROVIDER=eclipselink RDBMS=h2
+  - JPAPROVIDER=eclipselink RDBMS=h2
 #  - JPAPROVIDER=eclipselink RDBMS=mysql
 #  - JPAPROVIDER=eclipselink RDBMS=postgresql
 #  - JPAPROVIDER=eclipselink RDBMS=sqlite
@@ -54,22 +54,22 @@ script:
 matrix:
   fast_finish: true
   include:
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
-#      jdk: oraclejdk8
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
-#      jdk: oraclejdk8
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
-#      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=postgresql
+      jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=sqlite
 #      jdk: oraclejdk8
 # DB2
-#    - env: JPAPROVIDER=hibernate RDBMS=db2
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
-#      jdk: oraclejdk8
-#      sudo: true
+    - env: JPAPROVIDER=hibernate RDBMS=db2
+      sudo: true
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
+      sudo: true
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
 #    - env: JPAPROVIDER=datanucleus RDBMS=db2
 #      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=db2
@@ -77,16 +77,38 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=db2
 #      sudo: true
 # Firebird
-#    - env: JPAPROVIDER=hibernate RDBMS=firebird
+    - env: JPAPROVIDER=hibernate RDBMS=firebird
+      sudo: true
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus RDBMS=firebird
+#      sudo: true
+#    - env: JPAPROVIDER=eclipselink RDBMS=firebird
+#      sudo: true
+#    - env: JPAPROVIDER=openjpa RDBMS=firebird
 #      sudo: true
 # Oracle
     - env: JPAPROVIDER=hibernate RDBMS=oracle
       sudo: true
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus RDBMS=oracle
+#      sudo: true
+#    - env: JPAPROVIDER=eclipselink RDBMS=oracle
+#      sudo: true
+#    - env: JPAPROVIDER=openjpa RDBMS=oracle
+#      sudo: true
   allow_failures:
-#    - env: JPAPROVIDER=datanucleus RDBMS=h2
-#    - env: JPAPROVIDER=eclipselink RDBMS=h2
+    - env: JPAPROVIDER=datanucleus RDBMS=h2
+    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa RDBMS=h2
-#    - env: JPAPROVIDER=hibernate RDBMS=firebird
-#      sudo: true
-#    - env: JPAPROVIDER=hibernate RDBMS=oracle
-#      sudo: true
+    - env: JPAPROVIDER=hibernate RDBMS=firebird
+      sudo: true
+    - env: JPAPROVIDER=hibernate RDBMS=oracle
+      sudo: true
