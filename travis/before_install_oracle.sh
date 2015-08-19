@@ -19,6 +19,12 @@
 # 
 # set -ex
 
+sudo apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 16126D3A3E5C1192
+sudo add-apt-repository -y ppa:apt-fast/stable
+sudo apt-get update -qq -y
+sudo apt-get install -qq -y apt-fast
+sudo apt-fast update -qq -y
+
 #
 # Utilities
 #
@@ -53,38 +59,39 @@ sudo chmod 755 /usr/bin/free
 # ok, bc, is the dependency that is required by DB2 as well => let's remove it from oracle xe dependencies and provide 64bit one only
 #
 
+
 # Install the Oracle 10g dependant packages
-sudo apt-get install -qq -y --force-yes libc6:i386
+sudo apt-fast install -qq -y --force-yes libc6:i386
 # travis needs the "apt-transport-https" to enable https transport
-sudo apt-get install -qq -y bc apt-transport-https
+sudo apt-fast install -qq -y bc apt-transport-https
 
 # add Oracle repo + key (please note https is a must here, otherwise "apt-get update" fails for this repo with the "Undetermined error")
 sudo bash -c 'echo "deb https://oss.oracle.com/debian/ unstable main non-free" >/etc/apt/sources.list.d/oracle.list'
 wget -q https://oss.oracle.com/el4/RPM-GPG-KEY-oracle -O- | sudo apt-key add -
-sudo apt-get update -qq -y
+sudo apt-fast update -qq -y
 
 # only download the package, to manually install afterwards
-sudo apt-get install -qq -y --force-yes -d oracle-xe-universal:i386
-sudo apt-get install -qq -y --force-yes -d oracle-xe-client:i386
-sudo apt-get install -qq -y --force-yes libaio:i386
+sudo apt-fast install -qq -y --force-yes -d oracle-xe-client:i386
+sudo apt-fast install -qq -y --force-yes -d oracle-xe-universal:i386
+sudo apt-fast install -qq -y --force-yes libaio:i386
 
 # remove key + repo (to prevent failures on next updates)
 sudo apt-key del B38A8516
 sudo bash -c 'rm -rf /etc/apt/sources.list.d/oracle.list'
-sudo apt-get update -qq -y
+sudo apt-fast update -qq -y
 sudo apt-get autoremove -qq
 
 # remove bc from the dependencies of the oracle-xe-client package (to keep 64bit one installed)
-mkdir /tmp/oracle_unpack
-dpkg-deb -x /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.1_i386.deb /tmp/oracle_unpack
-cd /tmp/oracle_unpack
+mkdir /tmp/oracle_client_unpack
+dpkg-deb -x /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.1_i386.deb /tmp/oracle_client_unpack
+cd /tmp/oracle_client_unpack
 dpkg-deb --control /var/cache/apt/archives/oracle-xe-client_10.2.0.1-1.1_i386.deb 
-sed -i "s/,\ bc//g" /tmp/oracle_unpack/DEBIAN/control
-mkdir /tmp/oracle_repack
-dpkg -b /tmp/oracle_unpack /tmp/oracle_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
+sed -i "s/,\ bc//g" /tmp/oracle_client_unpack/DEBIAN/control
+mkdir /tmp/oracle_client_repack
+dpkg -b /tmp/oracle_client_unpack /tmp/oracle_client_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
 
-# install Oracle 10g client with the fixed dependencies, to prevent i386/amd64 conflicts on bc package
-sudo dpkg -i --force-architecture /tmp/oracle_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
+# install Oracle 10g with the fixed dependencies, to prevent i386/amd64 conflicts on bc package
+sudo dpkg -i --force-architecture /tmp/oracle_client_repack/oracle-xe-client_fixed_10.2.0.1-1.1_i386.deb
 
 # remove bc from the dependencies of the oracle-xe-universal package (to keep 64bit one installed)
 mkdir /tmp/oracle_unpack
@@ -134,4 +141,4 @@ sudo /etc/init.d/oracle-xe restart
 free_restore
 
 # Install development toolset for 32-bit for Travis CI 64-bit
-sudo apt-get install -qq -y g++-multilib
+sudo apt-fast install -qq -y g++-multilib

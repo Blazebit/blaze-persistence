@@ -27,7 +27,7 @@ script:
 #  - oraclejdk7
 env:
 # hibernate
-  - JPAPROVIDER=hibernate RDBMS=h2
+#  - JPAPROVIDER=hibernate RDBMS=h2
 #  - JPAPROVIDER=hibernate RDBMS=mysql
 #  - JPAPROVIDER=hibernate RDBMS=postgresql
 #  - JPAPROVIDER=hibernate RDBMS=sqlite
