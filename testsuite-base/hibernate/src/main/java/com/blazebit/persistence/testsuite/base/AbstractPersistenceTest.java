@@ -39,6 +39,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
         }
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
+        
+        properties.put("hibernate.c3p0.min_size", 0);
+        properties.put("hibernate.c3p0.max_size", 5);
+        properties.put("hibernate.c3p0.timeout", 300);
+        properties.put("hibernate.c3p0.max_statements", 50);
+        properties.put("hibernate.c3p0.idle_test_period", 3000);
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");

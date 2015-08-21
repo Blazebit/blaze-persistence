@@ -310,6 +310,18 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<dependencies>
+		        <dependency>
+		            <groupId>org.hibernate</groupId>
+		            <artifactId>hibernate-entitymanager</artifactId>
+		            <!-- Minimum version is 4.2.8.Final -->
+		            <!-- 4.2.15.Final has a bug regarding naming strategies -->
+		            <version>4.2.14.Final</version>
+		        </dependency>
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-c3p0</artifactId>
+					<version>4.2.14.Final</version>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -329,6 +341,11 @@
 					<version>4.3.10.Final</version>
 				</dependency>
 				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-c3p0</artifactId>
+					<version>4.3.10.Final</version>
+				</dependency>
+				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
 					<scope>test</scope>
@@ -344,6 +361,11 @@
 				<dependency>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-entitymanager</artifactId>
+					<version>5.0.0.Final</version>
+				</dependency>
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-c3p0</artifactId>
 					<version>5.0.0.Final</version>
 				</dependency>
 				<dependency>
