@@ -85,7 +85,7 @@ public class ProxyFactory {
         		proxyClass = (Class<? extends T>) classes.get(clazz);
                 if (proxyClass == null) {
 		            proxyClass = createProxyClass(viewType, unsafe);
-		            proxyClasses.put(clazz, proxyClass);
+		            classes.put(clazz, proxyClass);
                 }
         	}
         }
