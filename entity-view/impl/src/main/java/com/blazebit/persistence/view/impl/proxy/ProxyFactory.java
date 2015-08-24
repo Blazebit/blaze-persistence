@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Logger;
 
 import javassist.CannotCompileException;
 import javassist.ClassClassPath;
@@ -54,6 +55,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class ProxyFactory {
 
+	private static final Logger LOG = Logger.getLogger(ProxyFactory.class.getName());
     private final ConcurrentMap<Class<?>, Class<?>> proxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final ConcurrentMap<Class<?>, Class<?>> unsafeProxyClasses = new ConcurrentHashMap<Class<?>, Class<?>>();
     private final Object proxyLock = new Object();
@@ -135,16 +137,22 @@ public class ProxyFactory {
             }
             
             CtClass equalsDeclaringClass = superCc.getMethod("equals", getEqualsDesc()).getDeclaringClass();
-            if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
-                throw new IllegalArgumentException("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)' but is not allowed to!");
-            }
-            cc.addMethod(createEquals(cc, idField));
-
             CtClass hashCodeDeclaringClass = superCc.getMethod("hashCode", getHashCodeDesc()).getDeclaringClass();
-            if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
-                throw new IllegalArgumentException("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()' but is not allowed to!");
+            boolean hasCustomEqualsHashCode = false;
+            
+            if (!"java.lang.Object".equals(equalsDeclaringClass.getName())) {
+            	hasCustomEqualsHashCode = true;
+                LOG.warning("The class '" + equalsDeclaringClass.getName() + "' declares 'boolean equals(java.lang.Object)'! Hopefully you implemented it based on a unique key!");
             }
-            cc.addMethod(createHashCode(cc, idField));
+            if (!"java.lang.Object".equals(hashCodeDeclaringClass.getName())) {
+            	hasCustomEqualsHashCode = true;
+            	LOG.warning("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()'! Hopefully you implemented it based on a unique key!");
+            }
+            
+            if (!hasCustomEqualsHashCode) {
+	            cc.addMethod(createEquals(cc, idField));
+	            cc.addMethod(createHashCode(cc, idField));
+            }
 
             // Add the default constructor only for interfaces since abstract classes may omit it
             if (clazz.isInterface()) {
