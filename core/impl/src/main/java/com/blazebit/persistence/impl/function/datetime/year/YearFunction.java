@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence.impl.function.datetime.year;
 
-import com.blazebit.persistence.impl.function.TemplateRenderer;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
  *
