@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.persistence.metamodel.Attribute;
+
 /**
  *
  * @author Christian Beikov
@@ -26,20 +28,28 @@ import java.util.TreeMap;
 public class JoinTreeNode {
 
     private final String relationName;
+    private final Attribute<?, ?> attribute;
     private JoinNode defaultNode;
     private final boolean collection;
     private final boolean indexed;
+    private final boolean optional;
     /* maps join aliases to join nodes */
     private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
 
-    public JoinTreeNode(String relationName, boolean collection, boolean indexed) {
+    public JoinTreeNode(String relationName, Attribute<?, ?> attribute) {
         this.relationName = relationName;
-        this.collection = collection;
-        this.indexed = indexed;
+        this.attribute = attribute;
+        this.collection = attribute.isCollection();
+        this.indexed = JpaUtils.isIndexed(attribute);
+        this.optional = JpaUtils.isOptional(attribute);
     }
 
     public String getRelationName() {
         return relationName;
+    }
+
+    public Attribute<?, ?> getAttribute() {
+        return attribute;
     }
 
     public JoinNode getDefaultNode() {
@@ -79,5 +89,9 @@ public class JoinTreeNode {
 
     public boolean isIndexed() {
         return indexed;
+    }
+
+    public boolean isOptional() {
+        return optional;
     }
 }

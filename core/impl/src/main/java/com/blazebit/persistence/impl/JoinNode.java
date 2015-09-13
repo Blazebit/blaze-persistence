@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import javax.persistence.metamodel.Attribute;
+
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
@@ -146,11 +148,11 @@ public class JoinNode {
         return nodes;
     }
 
-    public JoinTreeNode getOrCreateTreeNode(String joinRelationName, boolean collection, boolean indexed) {
+    public JoinTreeNode getOrCreateTreeNode(String joinRelationName, Attribute<?, ?> attribute) {
         JoinTreeNode node = nodes.get(joinRelationName);
 
         if (node == null) {
-            node = new JoinTreeNode(joinRelationName, collection, indexed);
+            node = new JoinTreeNode(joinRelationName, attribute);
             nodes.put(joinRelationName, node);
         }
 

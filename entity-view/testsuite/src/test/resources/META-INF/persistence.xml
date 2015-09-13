@@ -22,6 +22,8 @@ limitations under the License.
 		<class>com.blazebit.persistence.view.collections.entity.PersonForCollections</class>
 		<class>com.blazebit.persistence.view.collections.entity.PersonForElementCollections</class>
 		<class>com.blazebit.persistence.view.entity.Document</class>
+		<class>com.blazebit.persistence.view.entity.EmbeddableTestEntity</class>
+		<class>com.blazebit.persistence.view.entity.IntIdEntity</class>
 		<class>com.blazebit.persistence.view.entity.Person</class>
 		<class>com.blazebit.persistence.view.entity.Version</class>
     </persistence-unit>

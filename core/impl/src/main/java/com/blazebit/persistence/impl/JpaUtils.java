@@ -19,8 +19,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.SingularAttribute;
 
 /**
  *
@@ -69,5 +72,17 @@ public final class JpaUtils {
         }
 
         return resolvedAttributes;
+    }
+
+    public static boolean isIndexed(Attribute<?, ?> attr) {
+        return attr instanceof ListAttribute<?, ?> || attr instanceof MapAttribute<?, ?, ?>;
+    }
+
+    public static boolean isOptional(Attribute<?, ?> attribute) {
+        if (attribute instanceof SingularAttribute<?, ?>) {
+            return ((SingularAttribute<?, ?>) attribute).isOptional();
+        }
+
+        return true;
     }
 }

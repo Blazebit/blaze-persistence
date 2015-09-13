@@ -137,8 +137,7 @@ public class ExpressionUtils {
         }
 
         while (baseNode.getParent() != null) {
-            t = metamodel.managedType(baseNode.getParent().getPropertyClass());
-            attr = t.getAttribute(baseNode.getParentTreeNode().getRelationName());
+            attr = baseNode.getParentTreeNode().getAttribute();
             if (!isUnique(attr)) {
                 return false;
             }
@@ -277,8 +276,7 @@ public class ExpressionUtils {
         }
 
         while (baseNode.getParent() != null) {
-            t = metamodel.managedType(baseNode.getParent().getPropertyClass());
-            attr = t.getAttribute(baseNode.getParentTreeNode().getRelationName());
+            attr = baseNode.getParentTreeNode().getAttribute();
             if (isNullable(attr)) {
                 return true;
             }

@@ -30,7 +30,7 @@ import com.blazebit.persistence.entity.OrderPositionHead;
  * @author Moritz Becker
  * @since 1.0
  */
-public class EmbeddedTest extends AbstractCoreTest {
+public class EmbeddableSimpleTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {

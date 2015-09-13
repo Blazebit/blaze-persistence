@@ -32,9 +32,7 @@ import java.util.logging.Logger;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ListAttribute;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
@@ -229,22 +227,6 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean isOptionalRelation(JoinNode node) {
-        Class<?> baseNodeType = node.getParent().getPropertyClass();
-        ManagedType<?> type = metamodel.managedType(baseNodeType);
-        Attribute<?, ?> attr = type.getAttribute(node.getParentTreeNode().getRelationName());
-        if (attr == null) {
-            throw new IllegalArgumentException("Field with name " + node.getParentTreeNode().getRelationName() + " was not found within class "
-                + baseNodeType.getName());
-        }
-
-        if (attr instanceof SingularAttribute<?, ?>) {
-            return ((SingularAttribute<?, ?>) attr).isOptional();
-        }
-
-        return true;
-    }
-
     private boolean isEmptyCondition(JoinNode node) {
         return node.getOnPredicate() == null || node.getOnPredicate().getChildren().isEmpty();
     }
@@ -286,7 +268,7 @@ public class JoinManager extends AbstractManager {
     // TODO: Maybe do that more efficient in a future version
     private boolean isMandatoryJoin(JoinNode node) {
         if (node.getType() == JoinType.INNER) {
-            if (isOptionalRelation(node) || !isEmptyCondition(node)) {
+            if (node.getParentTreeNode().isOptional() || !isEmptyCondition(node)) {
                 return true;
             }
         } else if (node.getType() == JoinType.LEFT) {
@@ -489,18 +471,28 @@ public class JoinManager extends AbstractManager {
                 if (currentResult.hasField()) {
                     resultFields.addAll(Arrays.asList(currentResult.field.split("\\.")));
                 }
-                singleValuedAssociationIdExpression = isSingleValuedAssociationId(current, pathElements);
+                singleValuedAssociationIdExpression = isSingleValuedAssociationId(currentResult, pathElements);
 
                 if (singleValuedAssociationIdExpression) {
                 } else {
                     // TODO: Not sure if necessary
-                    if (!resultFields.isEmpty()) {
-                        throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
-                            + StringUtils.join(".", resultFields) + "]");
+//                    if (!resultFields.isEmpty()) {
+//                        throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
+//                            + StringUtils.join(".", resultFields) + "]");
+//                    }
+                    
+                    if (currentResult.hasField()) {
+                        // Start form the start index to respect the non joinable part
+                        currentResult = createOrUpdateNode(current, currentResult.field + "." + pathElements.get(maybeSingularAssociationIndex), null, null, true, true);
+                        current = currentResult.baseNode;
+                        currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex + 1, maybeSingularAssociationIdIndex);
+                        resultFields.clear();
+                    } else {
+                        currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex, maybeSingularAssociationIdIndex);
                     }
-                    currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex, maybeSingularAssociationIdIndex);
+                    
                     current = currentResult.baseNode;
-                    // TODO: Not sure if necessary
+
                     if (currentResult.hasField()) {
                         resultFields.addAll(Arrays.asList(currentResult.field.split("\\.")));
                     }
@@ -522,9 +514,15 @@ public class JoinManager extends AbstractManager {
 
             if (singleValuedAssociationIdExpression) {
                 String associationName = pathElements.get(pathElements.size() - 2).toString();
-                AliasInfo a = aliasManager.getAliasInfoForBottomLevel(associationName);
+                AliasInfo a = null;
                 JoinTreeNode treeNode;
 
+                if (currentResult.hasField()) {
+                    associationName = currentResult.field + "." + associationName;
+                } else {
+                    a = aliasManager.getAliasInfoForBottomLevel(associationName);
+                }
+                
                 if (a != null) {
                     result = new JoinResult(((JoinAliasInfo) a).getJoinNode(), elementExpr.toString());
                 } else {
@@ -604,7 +602,7 @@ public class JoinManager extends AbstractManager {
                             + StringUtils.join(".", resultFields) + "]");
                     }
 
-                    result = new JoinResult(current, StringUtils.join(".", resultFields));
+                    result = implicitJoinSingle(current, StringUtils.join(".", resultFields), objectLeafAllowed);
                 }
             } else {
                 if (resultFields.isEmpty()) {
@@ -668,7 +666,8 @@ public class JoinManager extends AbstractManager {
         return true;
     }
 
-    private boolean isSingleValuedAssociationId(JoinNode parent, List<PathElementExpression> pathElements) {
+    private boolean isSingleValuedAssociationId(JoinResult joinResult, List<PathElementExpression> pathElements) {
+        JoinNode parent = joinResult.baseNode;
         int maybeSingularAssociationIndex = pathElements.size() - 2;
         int maybeSingularAssociationIdIndex = pathElements.size() - 1;
         ManagedType<?> baseType;
@@ -696,7 +695,14 @@ public class JoinManager extends AbstractManager {
             }
 
         } else {
-            baseType = metamodel.managedType(parent.getPropertyClass());
+            Class<?> parentClass = parent.getPropertyClass();
+            baseType = metamodel.managedType(parentClass);
+            
+            if (joinResult.hasField()) {
+                Attribute<?, ?> fieldAttribute = JpaUtils.getAttribute(baseType, joinResult.field);
+                baseType = metamodel.managedType(fieldAttribute.getJavaType());
+            }
+            
             maybeSingularAssociationAttributes = JpaUtils.getAttributesPolymorphic(metamodel, baseType, maybeSingularAssociationName);
         }
 
@@ -864,11 +870,18 @@ public class JoinManager extends AbstractManager {
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
                 }
             } else {
-                final JoinResult result = implicitJoinSingle(current, elementExpr.toString());
-                current = result.baseNode;
-                // TODO: Not sure if necessary
-                if (result.hasField()) {
-                    resultFields.add(result.field);
+                if (!resultFields.isEmpty()) {
+                    resultFields.add(elementExpr.toString());
+                    JoinResult currentResult = createOrUpdateNode(current, StringUtils.join(".", resultFields), null, null, true, true);
+                    current = currentResult.baseNode;
+                    resultFields.clear();
+                } else {
+                    final JoinResult result = implicitJoinSingle(current, elementExpr.toString());
+                    current = result.baseNode;
+                    // TODO: Not sure if necessary
+                    if (result.hasField()) {
+                        resultFields.add(result.field);
+                    }
                 }
             }
         }
@@ -928,6 +941,24 @@ public class JoinManager extends AbstractManager {
     }
 
     private Attribute<?, ?> getSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
+        Attribute<?, ?> attr;
+        if (attributeName.indexOf('.') < 0) {
+            attr = getPolymorphicSimpleAttributeForImplicitJoining(type, attributeName);
+            return attr;
+        }
+
+        String[] attributeParts = attributeName.split("\\.");
+        attr = getPolymorphicSimpleAttributeForImplicitJoining(type, attributeParts[0]);
+        
+        for (int i = 1; i < attributeParts.length; i++) {
+            type = metamodel.managedType(resolveFieldClass(type.getJavaType(), attr));
+            attr = getPolymorphicAttributeForJoining(type, attributeParts[i]);
+        }
+
+        return attr;
+    }
+
+    private Attribute<?, ?> getPolymorphicSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
         Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
         Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
 
@@ -1058,8 +1089,36 @@ public class JoinManager extends AbstractManager {
             return JoinType.LEFT;
         }
     }
+    
+    private static class AttributeJoinResult {
+        private final Attribute<?, ?> attribute;
+        private final Class<?> containingClass;
+        
+        public AttributeJoinResult(Attribute<?, ?> attribute, Class<?> containingClass) {
+            this.attribute = attribute;
+            this.containingClass = containingClass;
+        }
+    }
 
-    private Attribute<?, ?> getAttributeForJoining(ManagedType<?> type, String attributeName) {
+    private AttributeJoinResult getAttributeForJoining(ManagedType<?> type, String attributeName) {
+        Attribute<?, ?> attr;
+        if (attributeName.indexOf('.') < 0) {
+            attr = getPolymorphicAttributeForJoining(type, attributeName);
+            return new AttributeJoinResult(attr, type.getJavaType());
+        }
+
+        String[] attributeParts = attributeName.split("\\.");
+        attr = getPolymorphicAttributeForJoining(type, attributeParts[0]);
+        
+        for (int i = 1; i < attributeParts.length; i++) {
+            type = metamodel.managedType(resolveFieldClass(type.getJavaType(), attr));
+            attr = getPolymorphicAttributeForJoining(type, attributeParts[i]);
+        }
+
+        return new AttributeJoinResult(attr, type.getJavaType());
+    }
+    
+    private Attribute<?, ?> getPolymorphicAttributeForJoining(ManagedType<?> type, String attributeName) {
         Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
         Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
 
@@ -1099,11 +1158,12 @@ public class JoinManager extends AbstractManager {
     private JoinResult createOrUpdateNode(JoinNode baseNode, String joinRelationName, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Class<?> baseNodeType = baseNode.getPropertyClass();
         ManagedType<?> type = metamodel.managedType(baseNodeType);
-        Attribute<?, ?> attr = getAttributeForJoining(type, joinRelationName);
+        AttributeJoinResult attrJoinResult = getAttributeForJoining(type, joinRelationName);
+        Attribute<?, ?> attr = attrJoinResult.attribute;
         if (attr == null) {
             throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + baseNodeType.getName());
         }
-        Class<?> resolvedFieldClass = resolveFieldClass(baseNodeType, attr);
+        Class<?> resolvedFieldClass = resolveFieldClass(attrJoinResult.containingClass, attr);
 
         if (!isJoinable(attr)) {
             LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
@@ -1115,7 +1175,7 @@ public class JoinManager extends AbstractManager {
         }
 
         if (implicit) {
-            String aliasToUse = alias == null ? joinRelationName : alias;
+            String aliasToUse = alias == null ? attr.getName() : alias;
             alias = aliasManager.generatePostfixedAlias(aliasToUse);
         }
 
@@ -1123,13 +1183,9 @@ public class JoinManager extends AbstractManager {
             joinType = getModelAwareType(baseNode, attr);
         }
 
-        JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, attr.isCollection(), isIndexed(attr), defaultJoin);
+        JoinNode newNode = getOrCreate(baseNode, joinRelationName, resolvedFieldClass, alias, joinType, "Ambiguous implicit join", implicit, defaultJoin, attr);
 
         return new JoinResult(newNode, null);
-    }
-
-    private boolean isIndexed(Attribute<?, ?> attr) {
-        return attr instanceof ListAttribute<?, ?> || attr instanceof MapAttribute<?, ?, ?>;
     }
 
     private void checkAliasIsAvailable(String alias, String currentJoinPath, String errorMessage) {
@@ -1148,8 +1204,8 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean collection, boolean indexed, boolean defaultJoin) {
-        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, collection, indexed);
+    private JoinNode getOrCreate(JoinNode baseNode, String joinRelationName, Class<?> joinRelationClass, String alias, JoinType type, String errorMessage, boolean implicit, boolean defaultJoin, Attribute<?, ?> attribute) {
+        JoinTreeNode treeNode = baseNode.getOrCreateTreeNode(joinRelationName, attribute);
         JoinNode node = treeNode.getJoinNode(alias, defaultJoin);
         String currentJoinPath = baseNode.getAliasInfo().getAbsolutePath() + "." + joinRelationName;
         if (node == null) {
