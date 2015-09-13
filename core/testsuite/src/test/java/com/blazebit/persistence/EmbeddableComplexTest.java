@@ -18,15 +18,12 @@ package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Locale;
-
 import javax.persistence.Tuple;
 
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.entity.IntIdEntity;
-import com.blazebit.persistence.entity.Workflow;
 
 /**
  *

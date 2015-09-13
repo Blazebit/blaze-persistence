@@ -2,6 +2,7 @@ package com.blazebit.persistence.view.entity;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -31,6 +32,8 @@ public class EmbeddableTestEntityId implements Serializable {
         this.intIdEntity = intIdEntity;
     }
 
+    // Rename because mysql can't handle "key"
+    @Column(name = "test_key", length = 100)
     public String getKey() {
         return key;
     }
