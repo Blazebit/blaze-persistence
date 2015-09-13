@@ -43,8 +43,9 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
         this.oneToMany = oneToMany;
     }
 
+    // Fixed size because mysql has size limitations
     @ElementCollection
-    @MapKeyColumn(nullable = false)
+    @MapKeyColumn(nullable = false, length = 20)
     public Map<String, IntIdEntity> getElementCollection() {
         return elementCollection;
     }

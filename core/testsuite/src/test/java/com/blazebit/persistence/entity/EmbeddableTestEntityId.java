@@ -33,6 +33,7 @@ public class EmbeddableTestEntityId implements Serializable {
     }
 
     // Rename because mysql can't handle "key"
+    // Fixed size because mysql has size limitations
     @Column(name = "test_key", length = 100)
     public String getKey() {
         return key;
