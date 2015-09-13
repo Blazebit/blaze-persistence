@@ -48,6 +48,7 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
 
 /**
  *
@@ -203,12 +204,23 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitEntryFunction(JPQLSelectExpressionParser.EntryFunctionContext ctx) {
-        return new FunctionExpression(ctx.name.getText(), Arrays.asList(ctx.collection_valued_path_expression().accept(this)));
+        PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
+        collectionPath.setCollectionKeyPath(true);
+        return new FunctionExpression(ctx.name.getText(), Arrays.asList(collectionPath));
     }
 
     @Override
     public Expression visitKey_value_expression(JPQLSelectExpressionParser.Key_value_expressionContext ctx) {
-        return new FunctionExpression(ctx.name.getText(), Arrays.asList(ctx.collection_valued_path_expression().accept(this)));
+        PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
+        collectionPath.setCollectionKeyPath(true);
+        return new FunctionExpression(ctx.name.getText(), Arrays.asList(collectionPath));
+    }
+
+    @Override
+    public Expression visitIndexFunction(IndexFunctionContext ctx) {
+        PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
+        collectionPath.setCollectionKeyPath(true);
+        return new FunctionExpression(ctx.getStart().getText(), Arrays.asList(collectionPath));
     }
 
     @Override

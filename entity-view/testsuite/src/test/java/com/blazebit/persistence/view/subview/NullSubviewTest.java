@@ -96,10 +96,10 @@ public class NullSubviewTest extends AbstractEntityViewTest {
         assertEquals(Integer.valueOf(2), res.getContactPersonNumber());
         assertEquals(Integer.valueOf(2), res.getTheContactPersonNumber());
         // Filtered subview
-        assertNull(results.get(0).getMyContactPerson());
+        assertNull(res.getMyContactPerson());
 
-        assertTrue(results.get(0).getContacts().isEmpty());
-        assertTrue(results.get(0).getPartners().isEmpty());
-        assertTrue(results.get(0).getPersonList().isEmpty());
+        assertTrue(res.getContacts().isEmpty());
+        assertTrue(res.getPartners().isEmpty());
+        assertTrue(res.getPersonList().isEmpty());
     }
 }

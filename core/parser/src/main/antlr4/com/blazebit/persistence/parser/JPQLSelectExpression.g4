@@ -226,7 +226,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                               | SQRT '('arithmetic_expression')' # Functions_returning_numerics_default
                               | MOD '('arithmetic_expression',' arithmetic_expression')' # Functions_returning_numerics_default
                               | SIZE '('collection_valued_path_expression')' # Functions_returning_numerics_size 
-                              | INDEX '('collection_valued_path_expression')' # Functions_returning_numerics_default
+                              | INDEX '('collection_valued_path_expression')' # IndexFunction
                               ;
 
  functions_returning_datetime : CURRENT_DATE | CURRENT_TIME | CURRENT_TIMESTAMP;

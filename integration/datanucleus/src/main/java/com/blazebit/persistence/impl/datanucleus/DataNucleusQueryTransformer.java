@@ -15,12 +15,12 @@
  */
 package com.blazebit.persistence.impl.datanucleus;
 
-import com.blazebit.persistence.impl.jpa.ObjectBuilderJPAQueryAdapter;
+import javax.persistence.TypedQuery;
+
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.impl.jpa.ObjectBuilderJPAQueryAdapter;
 import com.blazebit.persistence.spi.QueryTransformer;
-import java.util.logging.Logger;
-import javax.persistence.TypedQuery;
 
 /**
  *
@@ -31,7 +31,7 @@ import javax.persistence.TypedQuery;
 public class DataNucleusQueryTransformer implements QueryTransformer {
 
     public DataNucleusQueryTransformer() {
-        Logger.getLogger(DataNucleusQueryTransformer.class.getName()).warning("The DataNucleus integration is experimental and should not be used in production yet!");
+        java.util.logging.Logger.getLogger(DataNucleusQueryTransformer.class.getName()).warning("The DataNucleus integration is experimental and should not be used in production yet!");
     }
 
     @Override

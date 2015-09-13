@@ -29,9 +29,10 @@ public class FunctionExpression extends AbstractExpression {
     protected final String functionName;
     protected List<Expression> expressions;
 
-    public FunctionExpression(String functionName, List<Expression> expressions) {
+    @SuppressWarnings("unchecked")
+    public FunctionExpression(String functionName, List<? extends Expression> expressions) {
         this.functionName = functionName;
-        this.expressions = expressions;
+        this.expressions = (List<Expression>) expressions;
     }
 
     @Override

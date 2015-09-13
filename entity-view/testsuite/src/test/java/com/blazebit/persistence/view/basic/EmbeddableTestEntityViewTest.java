@@ -27,8 +27,12 @@ import javax.persistence.EntityTransaction;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -43,9 +47,10 @@ import com.blazebit.persistence.view.entity.IntIdEntity;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
+ * This kind of mapping is not required to be supported by a JPA implementation.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.6
  */
 public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
 
@@ -113,6 +118,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithEntityRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");
@@ -125,6 +131,7 @@ public class EmbeddableTestEntityViewTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableViewWithSubViewRelations() {
         CriteriaBuilder<EmbeddableTestEntity> criteria = cbf.create(em, EmbeddableTestEntity.class, "e")
             .orderByAsc("id");

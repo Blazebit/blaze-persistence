@@ -21,14 +21,19 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.Tuple;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.entity.IntIdEntity;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 
 /**
+ * This kind of mapping is not required to be supported by a JPA implementation.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.6
  */
 public class EmbeddableComplexTest extends AbstractCoreTest {
     
@@ -43,6 +48,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* ManyToOne */
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id");
@@ -52,6 +58,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdSingleValuedAssociationId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id.intIdEntity.id");
@@ -61,6 +68,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdJoinedProperty() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id.intIdEntity.name");
@@ -71,6 +79,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id.intIdEntity");
@@ -81,6 +90,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.manyToOne");
@@ -93,6 +103,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* OneToMany */
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableOneToManyPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .where("embeddable.oneToMany.id.key").eqExpression("''");
@@ -104,6 +115,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableOneToMany() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.oneToMany");
@@ -116,6 +128,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* ElementCollection */
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableElementCollectionPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .where("embeddable.elementCollection.name").eqExpression("''");
@@ -127,6 +140,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.elementCollection");
