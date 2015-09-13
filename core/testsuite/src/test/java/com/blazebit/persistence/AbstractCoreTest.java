@@ -95,7 +95,18 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias) {
-        return jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+        return joinAliasValue(alias, null);
+    }
+
+    protected String joinAliasValue(String alias, String field) {
+//        if (field == null) {
+            alias = jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+//        }
+//        
+        if (field == null) {
+            return alias;
+        }
+        return alias + "." + field;
     }
     
     protected String booleanExpression(boolean value) {
@@ -126,8 +137,15 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     	return renderNullPrecedence(expression, expression, order, nulls);
     }
 
-    protected static String staticJoinAliasValue(String alias) {
-        return staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+    protected static String staticJoinAliasValue(String alias, String field) {
+//        if (field == null) {
+            alias = staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+//        }
+//
+        if (field == null) {
+            return alias;
+        }
+        return alias + "." + field;
     }
     
     protected String function(String name, String... args) {

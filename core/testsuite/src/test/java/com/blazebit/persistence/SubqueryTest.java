@@ -289,7 +289,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .groupBy("id")
                 .orderByAsc("localizedCount");
         
-        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c") + ".id))";
+        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("c", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
                 + "FROM Document d LEFT JOIN d.contacts c GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
@@ -309,7 +309,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .groupBy("id")
                 .orderByAsc("localizedCount");
 
-        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1") + ".id))";
+        String expectedSubQuery = "SUM((SELECT COUNT(" + joinAliasValue("localized_1") + ") FROM Person p LEFT JOIN p.localized localized_1 WHERE p.id = " + joinAliasValue("contacts_1", "id") + "))";
         String expectedQuery = "SELECT d.id, " + expectedSubQuery + " AS localizedCount "
                 + "FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("localizedCount", expectedSubQuery, "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());

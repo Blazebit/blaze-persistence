@@ -144,8 +144,9 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 sb.append(')');
             }
         } else {
-            // Dereferencing after a value function does not seem to work
-            boolean valueFunction = false;//needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
+            // Dereferencing after a value function does not seem to work for datanucleus?
+//            boolean valueFunction = false;
+            boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
 
             if (valueFunction) {
                 sb.append(jpaProvider.getCollectionValueFunction());

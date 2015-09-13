@@ -44,7 +44,7 @@ public class ElementCollectionTest extends AbstractCoreTest {
     public void testElementCollectionSelect() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class)
             .select("localized[:locale].name");
-        String expectedQuery = "SELECT " + joinAliasValue("localized_locale_1") + ".name FROM Workflow workflow "
+        String expectedQuery = "SELECT " + joinAliasValue("localized_locale_1", "name") + " FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
@@ -57,7 +57,7 @@ public class ElementCollectionTest extends AbstractCoreTest {
             .where("localized[:locale].name").eq("bla");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-            + " WHERE " + joinAliasValue("localized_locale_1") + ".name = :param_0";
+            + " WHERE " + joinAliasValue("localized_locale_1", "name") + " = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();
@@ -69,7 +69,7 @@ public class ElementCollectionTest extends AbstractCoreTest {
             .orderByAsc("localized[:locale].name");
         String expectedQuery = "SELECT workflow FROM Workflow workflow "
             + "LEFT JOIN workflow.localized localized_locale_1 " + ON_CLAUSE + " KEY(localized_locale_1) = :locale"
-            + " ORDER BY " + renderNullPrecedence(joinAliasValue("localized_locale_1") + ".name", "ASC", "LAST");
+            + " ORDER BY " + renderNullPrecedence(joinAliasValue("localized_locale_1", "name") + "", "ASC", "LAST");
         assertEquals(expectedQuery, cb.getQueryString());
         cb.setParameter("locale", Locale.GERMAN)
             .getResultList();

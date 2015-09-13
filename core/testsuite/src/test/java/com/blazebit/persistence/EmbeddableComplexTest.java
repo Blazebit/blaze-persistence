@@ -72,7 +72,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     public void testSelectEmbeddedIdJoinedProperty() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id.intIdEntity.name");
-        String expectedQuery = "SELECT " + joinAliasValue("intIdEntity_1") + ".name FROM EmbeddableTestEntity e "
+        String expectedQuery = "SELECT intIdEntity_1.name FROM EmbeddableTestEntity e "
             + "JOIN e.id.intIdEntity intIdEntity_1";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -83,7 +83,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     public void testSelectEmbeddedIdManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("id.intIdEntity");
-        String expectedQuery = "SELECT " + joinAliasValue("intIdEntity_1") + " FROM EmbeddableTestEntity e "
+        String expectedQuery = "SELECT intIdEntity_1 FROM EmbeddableTestEntity e "
             + "JOIN e.id.intIdEntity intIdEntity_1";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -94,7 +94,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     public void testSelectEmbeddableManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.manyToOne");
-        String expectedQuery = "SELECT " + joinAliasValue("manyToOne_1") + " FROM EmbeddableTestEntity e "
+        String expectedQuery = "SELECT manyToOne_1 FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.manyToOne manyToOne_1";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -109,7 +109,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
             .where("embeddable.oneToMany.id.key").eqExpression("''");
         String expectedQuery = "SELECT e FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.oneToMany oneToMany_1 "
-            + "WHERE " + joinAliasValue("oneToMany_1") + ".id.key = ''";
+            + "WHERE oneToMany_1.id.key = ''";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -119,7 +119,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     public void testSelectEmbeddableOneToMany() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.oneToMany");
-        String expectedQuery = "SELECT " + joinAliasValue("oneToMany_1") + " FROM EmbeddableTestEntity e "
+        String expectedQuery = "SELECT oneToMany_1 FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.oneToMany oneToMany_1";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -134,7 +134,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
             .where("embeddable.elementCollection.name").eqExpression("''");
         String expectedQuery = "SELECT e FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.elementCollection elementCollection_1 "
-            + "WHERE " + joinAliasValue("elementCollection_1") + ".name = ''";
+            + "WHERE " + joinAliasValue("elementCollection_1", "name") + " = ''";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
