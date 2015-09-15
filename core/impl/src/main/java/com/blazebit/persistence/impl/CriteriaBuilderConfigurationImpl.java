@@ -25,6 +25,30 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.PostgreSQLDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.day.SQLServerDayDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.AccessHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.DB2HourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.PostgreSQLHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.hour.SQLServerHourDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.AccessMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.DB2MinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.PostgreSQLMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.minute.SQLServerMinuteDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.AccessMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.DB2MonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.PostgreSQLMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.month.SQLServerMonthDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.AccessSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.DB2SecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.PostgreSQLSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.second.SQLServerSecondDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.AccessYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.DB2YearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.PostgreSQLYearDiffFunction;
+import com.blazebit.persistence.impl.function.datediff.year.SQLServerYearDiffFunction;
 import com.blazebit.persistence.impl.function.datetime.day.AccessDayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DB2DayFunction;
 import com.blazebit.persistence.impl.function.datetime.day.DayFunction;
@@ -121,6 +145,8 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
         registerFunction(jpqlFunctionGroup);
 
+        // group_concat
+        
         jpqlFunctionGroup = new JpqlFunctionGroup("group_concat", true);
         jpqlFunctionGroup.add("db2", new DB2GroupConcatFunction());
         jpqlFunctionGroup.add("oracle", new OracleGroupConcatFunction());
@@ -128,6 +154,8 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLGroupConcatFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLGroupConcatFunction());
         registerFunction(jpqlFunctionGroup);
+        
+        // datetime
 
         jpqlFunctionGroup = new JpqlFunctionGroup("year", false);
         jpqlFunctionGroup.add(null, new YearFunction());
@@ -181,6 +209,56 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("derby", new DerbySecondFunction());
         jpqlFunctionGroup.add("microsoft", new SQLServerSecondFunction());
         jpqlFunctionGroup.add("sybase", new SybaseSecondFunction());
+        registerFunction(jpqlFunctionGroup);
+        
+        // datediff
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("year_diff", false);
+        jpqlFunctionGroup.add("access", new AccessYearDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2YearDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerYearDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerYearDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLYearDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("month_diff", false);
+        jpqlFunctionGroup.add("access", new AccessMonthDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2MonthDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerMonthDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerMonthDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMonthDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("day_diff", false);
+        jpqlFunctionGroup.add("access", new AccessDayDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2DayDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerDayDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerDayDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLDayDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("hour_diff", false);
+        jpqlFunctionGroup.add("access", new AccessHourDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2HourDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerHourDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerHourDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLHourDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("minute_diff", false);
+        jpqlFunctionGroup.add("access", new AccessMinuteDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2MinuteDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerMinuteDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerMinuteDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLMinuteDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup("second_diff", false);
+        jpqlFunctionGroup.add("access", new AccessSecondDiffFunction());
+        jpqlFunctionGroup.add("db2", new DB2SecondDiffFunction());
+        jpqlFunctionGroup.add("microsoft", new SQLServerSecondDiffFunction());
+        jpqlFunctionGroup.add("sybase", new SQLServerSecondDiffFunction());
+        jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
     }
 
