@@ -171,7 +171,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     private boolean needsValueFunction(PathExpression expression) {
         JoinNode baseNode = (JoinNode) expression.getBaseNode();
-        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isIndexed();
+        return !expression.isCollectionKeyPath() && baseNode.getParentTreeNode() != null && baseNode.getParentTreeNode().isMap();
     }
 
     @Override

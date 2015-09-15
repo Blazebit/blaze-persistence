@@ -31,7 +31,7 @@ public class JoinTreeNode {
     private final Attribute<?, ?> attribute;
     private JoinNode defaultNode;
     private final boolean collection;
-    private final boolean indexed;
+    private final boolean map;
     private final boolean optional;
     /* maps join aliases to join nodes */
     private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
@@ -40,7 +40,7 @@ public class JoinTreeNode {
         this.relationName = relationName;
         this.attribute = attribute;
         this.collection = attribute.isCollection();
-        this.indexed = JpaUtils.isIndexed(attribute);
+        this.map = JpaUtils.isMap(attribute);
         this.optional = JpaUtils.isOptional(attribute);
     }
 
@@ -87,8 +87,8 @@ public class JoinTreeNode {
         return collection;
     }
 
-    public boolean isIndexed() {
-        return indexed;
+    public boolean isMap() {
+        return map;
     }
 
     public boolean isOptional() {

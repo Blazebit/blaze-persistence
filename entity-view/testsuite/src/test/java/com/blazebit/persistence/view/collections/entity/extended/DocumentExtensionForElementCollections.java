@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.entity;
+package com.blazebit.persistence.view.collections.entity.extended;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -30,27 +30,27 @@ import javax.persistence.OneToMany;
  */
 @Embeddable
 public class DocumentExtensionForElementCollections implements Serializable {
-	
-	private static final long serialVersionUID = 1L;
-	
-	private DocumentForElementCollections parent;
-    private Set<DocumentForElementCollections> childDocuments = new HashSet<DocumentForElementCollections>();
+    
+    private static final long serialVersionUID = 1L;
+    
+    private ExtendedDocumentForElementCollections parent;
+    private Set<ExtendedDocumentForElementCollections> childDocuments = new HashSet<ExtendedDocumentForElementCollections>();
 
     @ManyToOne
-    public DocumentForElementCollections getParent() {
+    public ExtendedDocumentForElementCollections getParent() {
         return parent;
     }
 
-    public void setParent(DocumentForElementCollections parent) {
+    public void setParent(ExtendedDocumentForElementCollections parent) {
         this.parent = parent;
     }
 
     @OneToMany(mappedBy = "extension.parent")
-    public Set<DocumentForElementCollections> getChildDocuments() {
+    public Set<ExtendedDocumentForElementCollections> getChildDocuments() {
         return childDocuments;
     }
 
-    public void setChildDocuments(Set<DocumentForElementCollections> childDocuments) {
+    public void setChildDocuments(Set<ExtendedDocumentForElementCollections> childDocuments) {
         this.childDocuments = childDocuments;
     }
     

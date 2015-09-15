@@ -64,9 +64,6 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
             o1.getLocalized().put(1, "localized1");
             o2.getLocalized().put(1, "localized2");
             o3.getLocalized().put(1, "localized3");
-            o1.setPartnerDocument(doc1);
-            o2.setPartnerDocument(doc2);
-            o3.setPartnerDocument(doc2);
 
             doc1.setAge(10);
             doc1.setOwner(o1);
@@ -83,10 +80,17 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
             em.persist(o2);
             em.persist(o3);
 
+            // Flush doc1 before so we get the ids we would expect
             em.persist(doc1);
-            em.persist(doc2);
-
             em.flush();
+            
+            em.persist(doc2);
+            em.flush();
+            
+            o1.setPartnerDocument(doc1);
+            o2.setPartnerDocument(doc2);
+            o3.setPartnerDocument(doc2);
+            
             tx.commit();
             em.clear();
 

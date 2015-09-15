@@ -25,7 +25,7 @@ import java.util.Set;
 
 import org.junit.Assert;
 
-import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.entity.simple.PersonForCollections;
 import com.blazebit.persistence.view.collections.subview.model.SubviewPersonForCollectionsView;
 
 /**

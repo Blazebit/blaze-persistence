@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.entity;
+package com.blazebit.persistence.view.collections.entity.simple;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -24,13 +24,16 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
+import javax.persistence.ElementCollection;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
 import javax.persistence.OrderColumn;
+
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections;
 
 /**
  *
@@ -38,21 +41,21 @@ import javax.persistence.OrderColumn;
  * @since 1.0
  */
 @Entity
-public class DocumentForCollections implements Serializable {
+public class DocumentForElementCollections implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;
-    private PersonForCollections owner;
-    private Set<PersonForCollections> partners = new HashSet<PersonForCollections>();
-    private Map<Integer, PersonForCollections> contacts = new HashMap<Integer, PersonForCollections>();
-    private List<PersonForCollections> personList = new ArrayList<PersonForCollections>();
+    private PersonForElementCollections owner;
+    private Set<PersonForElementCollections> partners = new HashSet<PersonForElementCollections>();
+    private Map<Integer, PersonForElementCollections> contacts = new HashMap<Integer, PersonForElementCollections>();
+    private List<PersonForElementCollections> personList = new ArrayList<PersonForElementCollections>();
 
-    public DocumentForCollections() {
+    public DocumentForElementCollections() {
     }
 
-    public DocumentForCollections(String name) {
+    public DocumentForElementCollections(String name) {
         this.name = name;
     }
 
@@ -74,42 +77,46 @@ public class DocumentForCollections implements Serializable {
         this.name = name;
     }
 
-    @ManyToOne(optional = false)
-    public PersonForCollections getOwner() {
+    @Embedded
+    public PersonForElementCollections getOwner() {
         return owner;
     }
 
-    public void setOwner(PersonForCollections owner) {
+    public void setOwner(PersonForElementCollections owner) {
         this.owner = owner;
     }
 
-    @OneToMany(mappedBy = "partnerDocument")
-    public Set<PersonForCollections> getPartners() {
+    // NOTE: If we don't specify the join column, hibernate will generate a wrong column
+    @ElementCollection
+    @CollectionTable(name = "embeddable_partners", joinColumns = @JoinColumn(name = "id"))
+    public Set<PersonForElementCollections> getPartners() {
         return partners;
     }
 
-    public void setPartners(Set<PersonForCollections> partners) {
+    public void setPartners(Set<PersonForElementCollections> partners) {
         this.partners = partners;
     }
 
-    @OneToMany
+    @ElementCollection
     @MapKeyColumn(nullable = false)
-    public Map<Integer, PersonForCollections> getContacts() {
+    @CollectionTable(name = "embeddable_contacts")
+    public Map<Integer, PersonForElementCollections> getContacts() {
         return contacts;
     }
 
-    public void setContacts(Map<Integer, PersonForCollections> contacts) {
+    public void setContacts(Map<Integer, PersonForElementCollections> contacts) {
         this.contacts = contacts;
     }
 
+    // NOTE: If we don't specify the join column, hibernate will generate a wrong column
+    @ElementCollection
     @OrderColumn(name = "position", nullable = false)
-    @OneToMany
-    @CollectionTable(name = "personlist")
-    public List<PersonForCollections> getPersonList() {
+    @CollectionTable(name = "embeddable_personlist", joinColumns = @JoinColumn(name = "id"))
+    public List<PersonForElementCollections> getPersonList() {
         return personList;
     }
 
-    public void setPersonList(List<PersonForCollections> personList) {
+    public void setPersonList(List<PersonForElementCollections> personList) {
         this.personList = personList;
     }
 
@@ -129,7 +136,7 @@ public class DocumentForCollections implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		DocumentForCollections other = (DocumentForCollections) obj;
+		DocumentForElementCollections other = (DocumentForElementCollections) obj;
 		if (id == null) {
 			if (other.id != null)
 				return false;

@@ -104,9 +104,9 @@ public class InterfaceViewTest extends AbstractEntityViewTest {
     public void testInterface() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
             .orderByAsc("id");
-        List<DocumentViewInterface> results = evm.applySetting(EntityViewSetting.create(DocumentViewInterface.class), criteria)
-            .setParameter("contactPersonNumber", 2)
-            .getResultList();
+        CriteriaBuilder<DocumentViewInterface> cb = evm.applySetting(EntityViewSetting.create(DocumentViewInterface.class), criteria)
+            .setParameter("contactPersonNumber", 2);
+        List<DocumentViewInterface> results = cb.getResultList();
 
         assertEquals(2, results.size());
         // Doc1

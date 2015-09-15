@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.basic.model;
+package com.blazebit.persistence.view.collections.embeddable.extended.model;
 
 import java.util.List;
 import java.util.Map;
@@ -21,38 +21,38 @@ import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.simple.DocumentForCollections;
-import com.blazebit.persistence.view.collections.entity.simple.PersonForCollections;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(DocumentForCollections.class)
-public abstract class BasicDocumentMapListSetView implements BasicDocumentCollectionsView {
+@EntityView(ExtendedDocumentForElementCollections.class)
+public abstract class ExtendedEmbeddableDocumentMapListSetView implements ExtendedEmbeddableDocumentCollectionsView {
 
     @Mapping("contacts")
-    public abstract Map<Integer, PersonForCollections> getA();
+    public abstract Map<Integer, ExtendedPersonForElementCollections> getA();
 
     @Mapping("personList")
-    public abstract List<PersonForCollections> getB();
+    public abstract List<ExtendedPersonForElementCollections> getB();
 
     @Mapping("partners")
-    public abstract Set<PersonForCollections> getC();
+    public abstract Set<ExtendedPersonForElementCollections> getC();
 
     @Override
-    public Map<Integer, PersonForCollections> getContacts() {
+    public Map<Integer, ExtendedPersonForElementCollections> getContacts() {
         return getA();
     }
 
     @Override
-    public Set<PersonForCollections> getPartners() {
+    public Set<ExtendedPersonForElementCollections> getPartners() {
         return getC();
     }
 
     @Override
-    public List<PersonForCollections> getPersonList() {
+    public List<ExtendedPersonForElementCollections> getPersonList() {
         return getB();
     }
 }

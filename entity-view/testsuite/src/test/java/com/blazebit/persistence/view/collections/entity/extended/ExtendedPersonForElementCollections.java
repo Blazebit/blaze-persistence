@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.entity;
+package com.blazebit.persistence.view.collections.entity.extended;
 
 import java.io.Serializable;
 
@@ -26,17 +26,17 @@ import javax.persistence.ManyToOne;
  * @since 1.0
  */
 @Embeddable
-public class PersonForElementCollections implements Serializable {
+public class ExtendedPersonForElementCollections implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
     private String fullname;
-    private DocumentForElementCollections partnerDocument;
+    private ExtendedDocumentForElementCollections partnerDocument;
 
-    public PersonForElementCollections() {
+    public ExtendedPersonForElementCollections() {
     }
 
-    public PersonForElementCollections(String fullname) {
+    public ExtendedPersonForElementCollections(String fullname) {
         this.fullname = fullname;
     }
 
@@ -49,11 +49,11 @@ public class PersonForElementCollections implements Serializable {
     }
 
     @ManyToOne
-    public DocumentForElementCollections getPartnerDocument() {
+    public ExtendedDocumentForElementCollections getPartnerDocument() {
         return partnerDocument;
     }
 
-    public void setPartnerDocument(DocumentForElementCollections partnerDocument) {
+    public void setPartnerDocument(ExtendedDocumentForElementCollections partnerDocument) {
         this.partnerDocument = partnerDocument;
     }
 
@@ -74,7 +74,7 @@ public class PersonForElementCollections implements Serializable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PersonForElementCollections other = (PersonForElementCollections) obj;
+		ExtendedPersonForElementCollections other = (ExtendedPersonForElementCollections) obj;
 		if (fullname == null) {
 			if (other.fullname != null)
 				return false;

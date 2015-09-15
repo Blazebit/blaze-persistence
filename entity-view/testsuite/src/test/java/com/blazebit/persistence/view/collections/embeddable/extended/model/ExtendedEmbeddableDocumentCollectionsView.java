@@ -13,45 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.subview.model;
+package com.blazebit.persistence.view.collections.embeddable.extended.model;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(DocumentForCollections.class)
-public abstract class SubviewDocumentMapSetListView implements SubviewDocumentCollectionsView {
+@EntityView(ExtendedDocumentForElementCollections.class)
+public interface ExtendedEmbeddableDocumentCollectionsView {
+    
+    @IdMapping("id")
+    public Long getId();
+
+    public String getName();
 
     @Mapping("contacts")
-    public abstract Map<Integer, SubviewPersonForCollectionsView> getA();
+    public Map<Integer, ExtendedPersonForElementCollections> getContacts();
 
     @Mapping("partners")
-    public abstract Set<SubviewPersonForCollectionsView> getB();
+    public Set<ExtendedPersonForElementCollections> getPartners();
 
-    @Mapping("personList")
-    public abstract List<SubviewPersonForCollectionsView> getC();
-
-    @Override
-    public Map<Integer, SubviewPersonForCollectionsView> getContacts() {
-        return getA();
-    }
-
-    @Override
-    public Set<SubviewPersonForCollectionsView> getPartners() {
-        return getB();
-    }
-
-    @Override
-    public List<SubviewPersonForCollectionsView> getPersonList() {
-        return getC();
-    }
+    public List<ExtendedPersonForElementCollections> getPersonList();
 }

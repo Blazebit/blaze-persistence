@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.subview.model;
+package com.blazebit.persistence.view.collections.embeddable.simple.model;
 
 import java.util.List;
 import java.util.Map;
@@ -21,37 +21,38 @@ import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.simple.DocumentForCollections;
+import com.blazebit.persistence.view.collections.entity.simple.DocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.simple.PersonForElementCollections;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-@EntityView(DocumentForCollections.class)
-public abstract class SubviewDocumentMapSetListView implements SubviewDocumentCollectionsView {
+@EntityView(DocumentForElementCollections.class)
+public abstract class EmbeddableDocumentMapListSetView implements EmbeddableDocumentCollectionsView {
 
     @Mapping("contacts")
-    public abstract Map<Integer, SubviewPersonForCollectionsView> getA();
-
-    @Mapping("partners")
-    public abstract Set<SubviewPersonForCollectionsView> getB();
+    public abstract Map<Integer, PersonForElementCollections> getA();
 
     @Mapping("personList")
-    public abstract List<SubviewPersonForCollectionsView> getC();
+    public abstract List<PersonForElementCollections> getB();
+
+    @Mapping("partners")
+    public abstract Set<PersonForElementCollections> getC();
 
     @Override
-    public Map<Integer, SubviewPersonForCollectionsView> getContacts() {
+    public Map<Integer, PersonForElementCollections> getContacts() {
         return getA();
     }
 
     @Override
-    public Set<SubviewPersonForCollectionsView> getPartners() {
-        return getB();
+    public Set<PersonForElementCollections> getPartners() {
+        return getC();
     }
 
     @Override
-    public List<SubviewPersonForCollectionsView> getPersonList() {
-        return getC();
+    public List<PersonForElementCollections> getPersonList() {
+        return getB();
     }
 }

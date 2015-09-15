@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.entity;
+package com.blazebit.persistence.view.collections.entity.extended;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -39,22 +39,23 @@ import javax.persistence.OrderColumn;
  * @since 1.0
  */
 @Entity
-public class DocumentForElementCollections implements Serializable {
+public class ExtendedDocumentForElementCollections implements Serializable {
 	
 	private static final long serialVersionUID = 1L;
 
     private Long id;
     private String name;
-    private DocumentExtensionForElementCollections extension;
-    private PersonForElementCollections owner;
-    private Set<PersonForElementCollections> partners = new HashSet<PersonForElementCollections>();
-    private Map<Integer, PersonForElementCollections> contacts = new HashMap<Integer, PersonForElementCollections>();
-    private List<PersonForElementCollections> personList = new ArrayList<PersonForElementCollections>();
+    private ExtendedPersonForElementCollections owner;
+    private Set<ExtendedPersonForElementCollections> partners = new HashSet<ExtendedPersonForElementCollections>();
+    private Map<Integer, ExtendedPersonForElementCollections> contacts = new HashMap<Integer, ExtendedPersonForElementCollections>();
+    private List<ExtendedPersonForElementCollections> personList = new ArrayList<ExtendedPersonForElementCollections>();
 
-    public DocumentForElementCollections() {
+    private ExtendedDocumentForElementCollections extension;
+
+    public ExtendedDocumentForElementCollections() {
     }
 
-    public DocumentForElementCollections(String name) {
+    public ExtendedDocumentForElementCollections(String name) {
         this.name = name;
     }
 
@@ -77,42 +78,42 @@ public class DocumentForElementCollections implements Serializable {
     }
 
     @Embedded
-    public DocumentExtensionForElementCollections getExtension() {
+    public ExtendedDocumentForElementCollections getExtension() {
         return extension;
     }
 
-    public void setExtension(DocumentExtensionForElementCollections extension) {
+    public void setExtension(ExtendedDocumentForElementCollections extension) {
         this.extension = extension;
     }
 
     @Embedded
-    public PersonForElementCollections getOwner() {
+    public ExtendedPersonForElementCollections getOwner() {
         return owner;
     }
 
-    public void setOwner(PersonForElementCollections owner) {
+    public void setOwner(ExtendedPersonForElementCollections owner) {
         this.owner = owner;
     }
 
     // NOTE: If we don't specify the join column, hibernate will generate a wrong column
     @ElementCollection
     @CollectionTable(name = "embeddable_partners", joinColumns = @JoinColumn(name = "id"))
-    public Set<PersonForElementCollections> getPartners() {
+    public Set<ExtendedPersonForElementCollections> getPartners() {
         return partners;
     }
 
-    public void setPartners(Set<PersonForElementCollections> partners) {
+    public void setPartners(Set<ExtendedPersonForElementCollections> partners) {
         this.partners = partners;
     }
 
     @ElementCollection
     @MapKeyColumn(nullable = false)
     @CollectionTable(name = "embeddable_contacts")
-    public Map<Integer, PersonForElementCollections> getContacts() {
+    public Map<Integer, ExtendedPersonForElementCollections> getContacts() {
         return contacts;
     }
 
-    public void setContacts(Map<Integer, PersonForElementCollections> contacts) {
+    public void setContacts(Map<Integer, ExtendedPersonForElementCollections> contacts) {
         this.contacts = contacts;
     }
 
@@ -120,37 +121,11 @@ public class DocumentForElementCollections implements Serializable {
     @ElementCollection
     @OrderColumn(name = "position", nullable = false)
     @CollectionTable(name = "embeddable_personlist", joinColumns = @JoinColumn(name = "id"))
-    public List<PersonForElementCollections> getPersonList() {
+    public List<ExtendedPersonForElementCollections> getPersonList() {
         return personList;
     }
 
-    public void setPersonList(List<PersonForElementCollections> personList) {
+    public void setPersonList(List<ExtendedPersonForElementCollections> personList) {
         this.personList = personList;
     }
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((id == null) ? 0 : id.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DocumentForElementCollections other = (DocumentForElementCollections) obj;
-		if (id == null) {
-			if (other.id != null)
-				return false;
-		} else if (!id.equals(other.id))
-			return false;
-		return true;
-	}
-
 }

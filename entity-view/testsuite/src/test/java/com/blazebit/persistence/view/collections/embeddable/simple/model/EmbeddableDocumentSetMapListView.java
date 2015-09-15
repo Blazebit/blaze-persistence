@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.embeddable.model;
+package com.blazebit.persistence.view.collections.embeddable.simple.model;
 
 import java.util.List;
 import java.util.Map;
@@ -21,8 +21,8 @@ import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.DocumentForElementCollections;
-import com.blazebit.persistence.view.collections.entity.PersonForElementCollections;
+import com.blazebit.persistence.view.collections.entity.simple.DocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.simple.PersonForElementCollections;
 
 /**
  *
@@ -30,29 +30,29 @@ import com.blazebit.persistence.view.collections.entity.PersonForElementCollecti
  * @since 1.0
  */
 @EntityView(DocumentForElementCollections.class)
-public abstract class EmbeddableDocumentMapListSetView implements EmbeddableDocumentCollectionsView {
-
-    @Mapping("contacts")
-    public abstract Map<Integer, PersonForElementCollections> getA();
-
-    @Mapping("personList")
-    public abstract List<PersonForElementCollections> getB();
+public abstract class EmbeddableDocumentSetMapListView implements EmbeddableDocumentCollectionsView {
 
     @Mapping("partners")
-    public abstract Set<PersonForElementCollections> getC();
+    public abstract Set<PersonForElementCollections> getA();
+
+    @Mapping("contacts")
+    public abstract Map<Integer, PersonForElementCollections> getB();
+
+    @Mapping("personList")
+    public abstract List<PersonForElementCollections> getC();
 
     @Override
     public Map<Integer, PersonForElementCollections> getContacts() {
-        return getA();
+        return getB();
     }
 
     @Override
     public Set<PersonForElementCollections> getPartners() {
-        return getC();
+        return getA();
     }
 
     @Override
     public List<PersonForElementCollections> getPersonList() {
-        return getB();
+        return getC();
     }
 }

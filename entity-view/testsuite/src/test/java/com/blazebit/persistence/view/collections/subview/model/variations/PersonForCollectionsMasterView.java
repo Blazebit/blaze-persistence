@@ -19,7 +19,7 @@ import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.collections.entity.PersonForCollections;
+import com.blazebit.persistence.view.collections.entity.simple.PersonForCollections;
 import com.blazebit.persistence.view.collections.subview.model.SubviewDocumentCollectionsView;
 
 /**

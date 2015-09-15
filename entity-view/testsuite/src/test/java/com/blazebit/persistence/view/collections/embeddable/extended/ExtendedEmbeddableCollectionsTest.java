@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.embeddable;
+package com.blazebit.persistence.view.collections.embeddable.extended;
 
 import static org.junit.Assert.assertEquals;
 
@@ -30,20 +30,21 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentCollectionsView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentListMapSetView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentListSetMapView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentMapListSetView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentMapSetListView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentSetListMapView;
-import com.blazebit.persistence.view.collections.embeddable.model.EmbeddableDocumentSetMapListView;
-import com.blazebit.persistence.view.collections.entity.DocumentForElementCollections;
-import com.blazebit.persistence.view.collections.entity.PersonForElementCollections;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentListMapSetView;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentListSetMapView;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentMapListSetView;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentMapSetListView;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentSetListMapView;
+import com.blazebit.persistence.view.collections.embeddable.extended.model.ExtendedEmbeddableDocumentSetMapListView;
+import com.blazebit.persistence.view.collections.embeddable.simple.model.EmbeddableDocumentCollectionsView;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
@@ -52,23 +53,23 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
  * @since 1.0.6
  */
 @RunWith(Parameterized.class)
-public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsView> extends AbstractEntityViewTest {
+public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsView> extends AbstractEntityViewTest {
 
     private final Class<T> viewType;
 
-    private DocumentForElementCollections doc1;
-    private DocumentForElementCollections doc2;
-    private DocumentForElementCollections doc0;
+    private ExtendedDocumentForElementCollections doc1;
+    private ExtendedDocumentForElementCollections doc2;
+    private ExtendedDocumentForElementCollections doc0;
 
-    public EmbeddableCollectionsTest(Class<T> viewType) {
+    public ExtendedEmbeddableCollectionsTest(Class<T> viewType) {
         this.viewType = viewType;
     }
 
     @Override
     protected Class<?>[] getEntityClasses() {
-        return new Class<?>[]{
-            DocumentForElementCollections.class,
-            PersonForElementCollections.class
+        return new Class<?>[] {
+            ExtendedDocumentForElementCollections.class,
+            ExtendedPersonForElementCollections.class
         };
     }
 
@@ -77,14 +78,14 @@ public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsVi
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-            doc0 = new DocumentForElementCollections("doc0");
-            doc1 = new DocumentForElementCollections("doc1");
-            doc2 = new DocumentForElementCollections("doc2");
+            doc0 = new ExtendedDocumentForElementCollections("doc0");
+            doc1 = new ExtendedDocumentForElementCollections("doc1");
+            doc2 = new ExtendedDocumentForElementCollections("doc2");
 
-            PersonForElementCollections o1 = new PersonForElementCollections("pers1");
-            PersonForElementCollections o2 = new PersonForElementCollections("pers2");
-            PersonForElementCollections o3 = new PersonForElementCollections("pers3");
-            PersonForElementCollections o4 = new PersonForElementCollections("pers4");
+            ExtendedPersonForElementCollections o1 = new ExtendedPersonForElementCollections("pers1");
+            ExtendedPersonForElementCollections o2 = new ExtendedPersonForElementCollections("pers2");
+            ExtendedPersonForElementCollections o3 = new ExtendedPersonForElementCollections("pers3");
+            ExtendedPersonForElementCollections o4 = new ExtendedPersonForElementCollections("pers4");
             o1.setPartnerDocument(doc0);
             o2.setPartnerDocument(doc0);
             o3.setPartnerDocument(doc0);
@@ -116,9 +117,9 @@ public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsVi
             tx.commit();
             em.clear();
 
-            doc0 = em.find(DocumentForElementCollections.class, doc0.getId());
-            doc1 = em.find(DocumentForElementCollections.class, doc1.getId());
-            doc2 = em.find(DocumentForElementCollections.class, doc2.getId());
+            doc0 = em.find(ExtendedDocumentForElementCollections.class, doc0.getId());
+            doc1 = em.find(ExtendedDocumentForElementCollections.class, doc1.getId());
+            doc2 = em.find(ExtendedDocumentForElementCollections.class, doc2.getId());
         } catch (Exception e) {
             tx.rollback();
             throw new RuntimeException(e);
@@ -128,23 +129,23 @@ public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsVi
     @Parameterized.Parameters
     public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
-            { EmbeddableDocumentListMapSetView.class },
-            { EmbeddableDocumentListSetMapView.class },
-            { EmbeddableDocumentMapListSetView.class },
-            { EmbeddableDocumentMapSetListView.class },
-            { EmbeddableDocumentSetListMapView.class },
-            { EmbeddableDocumentSetMapListView.class }
+            { ExtendedEmbeddableDocumentListMapSetView.class },
+            { ExtendedEmbeddableDocumentListSetMapView.class },
+            { ExtendedEmbeddableDocumentMapListSetView.class },
+            { ExtendedEmbeddableDocumentMapSetListView.class },
+            { ExtendedEmbeddableDocumentSetListMapView.class },
+            { ExtendedEmbeddableDocumentSetMapListView.class }
         });
     }
 
     @Test
-    @Category(NoHibernate.class)
+    @Category({NoHibernate.class, NoDatanucleus.class})
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
         EntityViewManager evm = cfg.createEntityViewManager();
 
-        CriteriaBuilder<DocumentForElementCollections> criteria = cbf.create(em, DocumentForElementCollections.class, "d")
+        CriteriaBuilder<ExtendedDocumentForElementCollections> criteria = cbf.create(em, ExtendedDocumentForElementCollections.class, "d")
             .orderByAsc("id").where("id").gt(doc0.getId());
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();

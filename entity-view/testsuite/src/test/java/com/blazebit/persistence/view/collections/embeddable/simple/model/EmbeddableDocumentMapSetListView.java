@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.collections.embeddable.model;
+package com.blazebit.persistence.view.collections.embeddable.simple.model;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.collections.entity.DocumentForElementCollections;
-import com.blazebit.persistence.view.collections.entity.PersonForElementCollections;
+import com.blazebit.persistence.view.collections.entity.simple.DocumentForElementCollections;
+import com.blazebit.persistence.view.collections.entity.simple.PersonForElementCollections;
 
 /**
  *
@@ -31,18 +30,29 @@ import com.blazebit.persistence.view.collections.entity.PersonForElementCollecti
  * @since 1.0
  */
 @EntityView(DocumentForElementCollections.class)
-public interface EmbeddableDocumentCollectionsView {
-    
-    @IdMapping("id")
-    public Long getId();
-
-    public String getName();
+public abstract class EmbeddableDocumentMapSetListView implements EmbeddableDocumentCollectionsView {
 
     @Mapping("contacts")
-    public Map<Integer, PersonForElementCollections> getContacts();
+    public abstract Map<Integer, PersonForElementCollections> getA();
 
     @Mapping("partners")
-    public Set<PersonForElementCollections> getPartners();
+    public abstract Set<PersonForElementCollections> getB();
 
-    public List<PersonForElementCollections> getPersonList();
+    @Mapping("personList")
+    public abstract List<PersonForElementCollections> getC();
+
+    @Override
+    public Map<Integer, PersonForElementCollections> getContacts() {
+        return getA();
+    }
+
+    @Override
+    public Set<PersonForElementCollections> getPartners() {
+        return getB();
+    }
+
+    @Override
+    public List<PersonForElementCollections> getPersonList() {
+        return getC();
+    }
 }
