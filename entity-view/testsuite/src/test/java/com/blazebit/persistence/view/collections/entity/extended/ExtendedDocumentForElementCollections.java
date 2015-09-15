@@ -50,7 +50,7 @@ public class ExtendedDocumentForElementCollections implements Serializable {
     private Map<Integer, ExtendedPersonForElementCollections> contacts = new HashMap<Integer, ExtendedPersonForElementCollections>();
     private List<ExtendedPersonForElementCollections> personList = new ArrayList<ExtendedPersonForElementCollections>();
 
-    private ExtendedDocumentForElementCollections extension;
+    private DocumentExtensionForElementCollections extension;
 
     public ExtendedDocumentForElementCollections() {
     }
@@ -78,11 +78,11 @@ public class ExtendedDocumentForElementCollections implements Serializable {
     }
 
     @Embedded
-    public ExtendedDocumentForElementCollections getExtension() {
+    public DocumentExtensionForElementCollections getExtension() {
         return extension;
     }
 
-    public void setExtension(ExtendedDocumentForElementCollections extension) {
+    public void setExtension(DocumentExtensionForElementCollections extension) {
         this.extension = extension;
     }
 

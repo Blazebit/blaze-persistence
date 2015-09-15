@@ -33,8 +33,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OrderColumn;
 
-import com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections;
-
 /**
  *
  * @author Christian Beikov
