@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.datediff.second;
+package com.blazebit.persistence.impl.function.datediff.minute;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
@@ -22,10 +22,10 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * @author Christian Beikov
  * @since 1.0
  */
-public class SQLServerSecondDiffFunction extends SecondDiffFunction {
+public class DefaultMinuteDiffFunction extends MinuteDiffFunction {
 
-    public SQLServerSecondDiffFunction() {
-        super("datediff(ss, ?1, ?2)");
+    public DefaultMinuteDiffFunction() {
+        super("datediff(mi, ?1, ?2)");
     }
 
     @Override

@@ -22,9 +22,9 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * @author Christian Beikov
  * @since 1.0
  */
-public class SQLServerMonthDiffFunction extends MonthDiffFunction {
+public class DefaultMonthDiffFunction extends MonthDiffFunction {
 
-    public SQLServerMonthDiffFunction() {
+    public DefaultMonthDiffFunction() {
         super("datediff(mm, ?1, ?2)");
     }
 

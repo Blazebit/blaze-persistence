@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.datediff.year;
+package com.blazebit.persistence.impl.function.datediff.hour;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
@@ -22,10 +22,10 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  * @author Christian Beikov
  * @since 1.0
  */
-public class SQLServerYearDiffFunction extends YearDiffFunction {
+public class DefaultHourDiffFunction extends HourDiffFunction {
 
-    public SQLServerYearDiffFunction() {
-        super("datediff(yy, ?1, ?2)");
+    public DefaultHourDiffFunction() {
+        super("datediff(hh, ?1, ?2)");
     }
 
     @Override
