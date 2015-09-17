@@ -13,14 +13,7 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration DataNucleus</name>
-    
-    <properties>
-<!--         <version.datanucleus.base>4.1.4</version.datanucleus.base> -->
-<!--         <version.datanucleus.jpa>4.0.4</version.datanucleus.jpa> -->
-		<version.datanucleus.base>4.1.5-SNAPSHOT</version.datanucleus.base>
-        <version.datanucleus.jpa>4.0.5-SNAPSHOT</version.datanucleus.jpa>
-    </properties>
-    
+        
    <repositories>
         <repository>
             <id>DataNucleus Nightly</id>
@@ -54,29 +47,23 @@
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-core</artifactId>
-            <version>${version.datanucleus.base}</version>
+            <version>${version.datanucleus.base-4}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-api-jpa</artifactId>
-            <version>${version.datanucleus.base}</version>
+            <version>${version.datanucleus.base-4}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-jpa-query</artifactId>
-            <version>${version.datanucleus.jpa}</version>
+            <version>${version.datanucleus.jpa-4}</version>
         </dependency>
         <dependency>
             <groupId>org.datanucleus</groupId>
             <artifactId>datanucleus-rdbms</artifactId>
-            <version>${version.datanucleus.base}</version>
+            <version>${version.datanucleus.base-4}</version>
         </dependency>
-<!--        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-accessplatform-jpa-rdbms</artifactId>
-            <version>${version.datanucleus.base}</version>
-            <type>pom</type>
-        </dependency>-->
     </dependencies>
     
     <build>

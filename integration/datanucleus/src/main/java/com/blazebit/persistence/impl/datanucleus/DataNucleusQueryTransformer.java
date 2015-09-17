@@ -30,10 +30,6 @@ import com.blazebit.persistence.spi.QueryTransformer;
 @ServiceProvider(QueryTransformer.class)
 public class DataNucleusQueryTransformer implements QueryTransformer {
 
-    public DataNucleusQueryTransformer() {
-        java.util.logging.Logger.getLogger(DataNucleusQueryTransformer.class.getName()).warning("The DataNucleus integration is experimental and should not be used in production yet!");
-    }
-
     @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
         return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);

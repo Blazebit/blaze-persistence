@@ -313,15 +313,8 @@
 		        <dependency>
 		            <groupId>org.hibernate</groupId>
 		            <artifactId>hibernate-entitymanager</artifactId>
-		            <!-- Minimum version is 4.2.8.Final -->
-		            <!-- 4.2.15.Final has a bug regarding naming strategies -->
-		            <version>4.2.14.Final</version>
+		            <version>${version.hibernate-4.2}</version>
 		        </dependency>
-				<dependency>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-c3p0</artifactId>
-					<version>4.2.14.Final</version>
-				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -338,12 +331,7 @@
 				<dependency>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-entitymanager</artifactId>
-					<version>4.3.10.Final</version>
-				</dependency>
-				<dependency>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-c3p0</artifactId>
-					<version>4.3.10.Final</version>
+					<version>${version.hibernate-4.3}</version>
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -361,12 +349,7 @@
 				<dependency>
 					<groupId>org.hibernate</groupId>
 					<artifactId>hibernate-entitymanager</artifactId>
-					<version>5.0.0.Final</version>
-				</dependency>
-				<dependency>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-c3p0</artifactId>
-					<version>5.0.0.Final</version>
+					<version>${version.hibernate-5}</version>
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -389,11 +372,107 @@
 			</dependencies>
 		</profile>
 		<profile>
-			<id>datanucleus</id>
+			<id>datanucleus-4</id>
 			<properties>
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
 			</properties>
 			<dependencies>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>javax.persistence</artifactId>
+                                    <version>2.1.0</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-core</artifactId>
+                                    <version>${version.datanucleus.base-4}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-api-jpa</artifactId>
+                                    <version>${version.datanucleus.base-4}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-jpa-query</artifactId>
+                                    <version>${version.datanucleus.jpa-4}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-rdbms</artifactId>
+                                    <version>${version.datanucleus.base-4}</version>
+                                </dependency>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+					<scope>test</scope>
+				</dependency>
+			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.datanucleus</groupId>
+						<artifactId>datanucleus-maven-plugin</artifactId>
+						<version>4.0.0-release</version>
+						<configuration>
+							<api>JPA</api>
+							<persistenceUnitName>TestsuiteBase</persistenceUnitName>
+							<verbose>false</verbose>
+							<fork>true</fork>
+							<log4jConfiguration>${basedir}/log4j.properties</log4jConfiguration>
+							<metadataDirectory>${project.build.testOutputDirectory}</metadataDirectory>
+							<useFileListFile>true</useFileListFile>
+						</configuration>
+						<executions>
+							<execution>
+								<phase>process-test-classes</phase>
+								<goals>
+									<goal>enhance</goal>
+								</goals>
+							</execution>
+						</executions>
+						<dependencies>
+							<dependency>
+								<groupId>${project.groupId}</groupId>
+								<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+								<version>${project.version}</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>datanucleus-5</id>
+			<properties>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
+			</properties>
+			<dependencies>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>javax.persistence</artifactId>
+                                    <version>2.1.0</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-core</artifactId>
+                                    <version>${version.datanucleus.base-5}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-api-jpa</artifactId>
+                                    <version>${version.datanucleus.base-5}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-jpa-query</artifactId>
+                                    <version>${version.datanucleus.jpa-5}</version>
+                                </dependency>
+                                <dependency>
+                                    <groupId>org.datanucleus</groupId>
+                                    <artifactId>datanucleus-rdbms</artifactId>
+                                    <version>${version.datanucleus.base-5}</version>
+                                </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>

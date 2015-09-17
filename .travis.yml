@@ -36,11 +36,16 @@ env:
   - JPAPROVIDER=hibernate-4.3 RDBMS=mysql
   - JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
 #  - JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
-# datanucleus
-  - JPAPROVIDER=datanucleus RDBMS=h2
-#  - JPAPROVIDER=datanucleus RDBMS=mysql
-#  - JPAPROVIDER=datanucleus RDBMS=postgresql
-#  - JPAPROVIDER=datanucleus RDBMS=sqlite
+# datanucleus-4
+  - JPAPROVIDER=datanucleus-4 RDBMS=h2
+  - JPAPROVIDER=datanucleus-4 RDBMS=mysql
+  - JPAPROVIDER=datanucleus-4 RDBMS=postgresql
+  - JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+# datanucleus-5
+  - JPAPROVIDER=datanucleus-5 RDBMS=h2
+  - JPAPROVIDER=datanucleus-5 RDBMS=mysql
+  - JPAPROVIDER=datanucleus-5 RDBMS=postgresql
+  - JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 # eclipselink
   - JPAPROVIDER=eclipselink RDBMS=h2
 #  - JPAPROVIDER=eclipselink RDBMS=mysql
@@ -70,7 +75,9 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
-#    - env: JPAPROVIDER=datanucleus RDBMS=db2
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
+      sudo: true
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=db2
 #      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=db2
 #      sudo: true
@@ -84,7 +91,9 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
 #      jdk: oraclejdk8
 #      sudo: true
-#    - env: JPAPROVIDER=datanucleus RDBMS=firebird
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
+      sudo: true
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=firebird
 #      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=firebird
 #      sudo: true
@@ -98,14 +107,21 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
-#    - env: JPAPROVIDER=datanucleus RDBMS=oracle
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
+      sudo: true
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=oracle
 #      sudo: true
 #    - env: JPAPROVIDER=eclipselink RDBMS=oracle
 #      sudo: true
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
   allow_failures:
-    - env: JPAPROVIDER=datanucleus RDBMS=h2
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
+      sudo: true
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
+      sudo: true
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
+      sudo: true
     - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa RDBMS=h2
     - env: JPAPROVIDER=hibernate RDBMS=firebird

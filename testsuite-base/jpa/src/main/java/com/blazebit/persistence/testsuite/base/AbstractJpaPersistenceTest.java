@@ -67,6 +67,7 @@ public abstract class AbstractJpaPersistenceTest {
         properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", ""));
         properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
+        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
 		properties = applyProperties(properties);
 		
 		//System.out.println("Using the following properties:");

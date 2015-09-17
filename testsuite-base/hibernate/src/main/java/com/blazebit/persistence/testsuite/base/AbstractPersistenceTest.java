@@ -17,7 +17,6 @@ package com.blazebit.persistence.testsuite.base;
 
 import java.util.Properties;
 
-import com.blazebit.persistence.testsuite.base.AbstractJpaPersistenceTest;
 
 /**
  *
@@ -37,19 +36,23 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
         	// MySQL is drunk, it does stuff case insensitive by default...
         	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
-        	// Somethings not right with MySQL, we need c3p0...
-            properties.put("hibernate.c3p0.min_size", 0);
-            properties.put("hibernate.c3p0.max_size", 5);
-            properties.put("hibernate.c3p0.timeout", 300);
-            properties.put("hibernate.c3p0.max_statements", 50);
-            properties.put("hibernate.c3p0.idle_test_period", 3000);
         }
-        properties.put("hibernate.hbm2ddl.auto", "create-drop");
+        if (isHibernate42()) {
+            properties.put("hibernate.hbm2ddl.auto", "create-drop");
+        }
         
         // We use the following only for debugging purposes
         // Normally these settings should be disabled since the output would be too big TravisCI
 //        properties.put("hibernate.show_sql", "true");
 //        properties.put("hibernate.format_sql", "true");
         return properties;
+    }
+
+    private boolean isHibernate42() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        int minor = Integer.parseInt(versionParts[1]);
+        return major == 4 && minor == 2;
     }
 }
