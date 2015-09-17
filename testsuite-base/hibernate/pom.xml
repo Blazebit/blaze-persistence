@@ -28,6 +28,14 @@
             <artifactId>blaze-persistence-integration-hibernate</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-entitymanager</artifactId>
+            <!-- Minimum version is 4.2.8.Final -->
+            <!-- 4.2.15.Final has a bug regarding naming strategies -->
+            <version>4.2.14.Final</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>compile</scope>

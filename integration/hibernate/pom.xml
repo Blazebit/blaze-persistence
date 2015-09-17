@@ -37,6 +37,7 @@
             <!-- Minimum version is 4.2.8.Final -->
             <!-- 4.2.15.Final has a bug regarding naming strategies -->
             <version>4.2.14.Final</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
     
