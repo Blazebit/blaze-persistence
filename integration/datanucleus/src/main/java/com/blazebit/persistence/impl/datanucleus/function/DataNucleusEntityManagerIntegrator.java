@@ -51,8 +51,10 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
 		vendorToDbmsMapping.put("h2", "h2");
 		vendorToDbmsMapping.put("mysql", "mysql");
 		vendorToDbmsMapping.put("db2", "db2");
+		vendorToDbmsMapping.put("firebird", "firebird");
 		vendorToDbmsMapping.put("postgresql", "postgresql");
 		vendorToDbmsMapping.put("oracle", "oracle");
+		vendorToDbmsMapping.put("sqlite", "sqlite");
 		vendorToDbmsMapping.put("sqlserver", "microsoft");
 		vendorToDbmsMapping.put("sybase", "sybase");
 //		vendorToDbmsMapping.put("", "cubrid");

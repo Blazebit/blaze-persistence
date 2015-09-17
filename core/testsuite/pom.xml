@@ -376,6 +376,13 @@
 			<properties>
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
 			</properties>
+                        <repositories>
+                             <repository>
+                                 <id>DataNucleus Nightly</id>
+                                 <name>DataNucleus Repository Nightly</name>
+                                 <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+                             </repository>
+                         </repositories>
 			<dependencies>
                                 <dependency>
                                     <groupId>org.datanucleus</groupId>
@@ -447,6 +454,13 @@
 			<properties>
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
 			</properties>
+                        <repositories>
+                             <repository>
+                                 <id>DataNucleus Nightly</id>
+                                 <name>DataNucleus Repository Nightly</name>
+                                 <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+                             </repository>
+                         </repositories>
 			<dependencies>
                                 <dependency>
                                     <groupId>org.datanucleus</groupId>

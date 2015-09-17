@@ -18,7 +18,7 @@ before_script:
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
-  - mvn -P ${JPAPROVIDER},${RDBMS} install
+  - mvn -P ${JPAPROVIDER},${RDBMS} install -U
 after_success:
   - "bash ./.travis-deploy.sh"
 # Leave out jdk switch because on the legacy infrastructure this won't work
@@ -116,6 +116,8 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
   allow_failures:
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
     - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
       sudo: true
     - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
