@@ -27,17 +27,22 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        properties.put("hibernate.connection.url", properties.get("javax.persistence.jdbc.url"));
-        properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
-        properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
-        properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
         if (System.getProperty("hibernate.dialect") != null) {
         	properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
         	// MySQL is drunk, it does stuff case insensitive by default...
         	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
         }
+        
+        // Apparently there is a hibernate bug in the JPA schemageneration
+        properties.remove("javax.persistence.schema-generation.database.action");
+        properties.put("hibernate.hbm2ddl.auto", "create-drop");
+        
         if (isHibernate42()) {
+            properties.put("hibernate.connection.url", properties.get("javax.persistence.jdbc.url"));
+            properties.put("hibernate.connection.password", properties.get("javax.persistence.jdbc.password"));
+            properties.put("hibernate.connection.username", properties.get("javax.persistence.jdbc.user"));
+            properties.put("hibernate.connection.driver_class", properties.get("javax.persistence.jdbc.driver"));
             properties.put("hibernate.hbm2ddl.auto", "create-drop");
         }
         

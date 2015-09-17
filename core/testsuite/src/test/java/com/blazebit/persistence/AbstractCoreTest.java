@@ -73,6 +73,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
                 "limit",
                 "page_position",
                 "group_concat",
+                "second_diff", "minute_diff", "hour_diff", "day_diff", "month_diff", "year_diff",
                 "second", "minute", "hour", "day", "month", "year",
                 // test functions
                 "zero", "concatenate"
