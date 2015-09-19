@@ -22,50 +22,27 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<T, CriteriaBuilder<T>>, DistinctBuilder<T, CriteriaBuilder<T>> {
+public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>> {
 
-    /*
-     * Covariant overrides.
-     */
-    @Override
-    public CriteriaBuilder<T> from(Class<?> entityClass);
+	/**
+	 * 
+	 * @param cteClass
+	 * @return
+	 * @since 1.1.0
+	 */
+    public <X> CTECriteriaBuilder<X, T> with(Class<X> cteClass);
 
-    @Override
-    public CriteriaBuilder<T> from(Class<?> entityClass, String alias);
-
-    @Override
-    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression);
-
-    @Override
-    public SimpleCaseWhenStarterBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression, String alias);
-
-    @Override
-    public CaseWhenStarterBuilder<CriteriaBuilder<T>> selectCase();
-
-    @Override
-    public CaseWhenStarterBuilder<CriteriaBuilder<T>> selectCase(String alias);
+	/**
+	 * 
+	 * @param cteClass
+	 * @return
+	 * @since 1.1.0
+	 */
+    public <X> RecursiveCTECriteriaBuilder<X, T> withRecursive(Class<X> cteClass);
 
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
     @Override
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
-
-    @Override
-    public CriteriaBuilder<T> select(String expression);
-
-    @Override
-    public CriteriaBuilder<T> select(String expression, String alias);
-
-    @Override
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery();
-
-    @Override
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String alias);
-
-    @Override
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-
-    @Override
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression);
 }

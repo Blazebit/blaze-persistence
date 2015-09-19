@@ -22,17 +22,13 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SimpleCaseWhenBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 
 /**
  *
@@ -42,7 +38,7 @@ import com.blazebit.persistence.SubqueryInitiator;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractBaseQueryBuilder<T, X> implements QueryBuilder<T, X> {
+public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractCommonQueryBuilder<T, X> implements QueryBuilder<T, X> {
 
     /**
      * This flag indicates whether the current builder has been used to create a
@@ -161,7 +157,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         }
 
         verifyBuilderEnded();
-        selectManager.selectNew(this, objectBuilder);
+        selectManager.selectNew((X) this, objectBuilder);
         return (QueryBuilder<Y, ?>) this;
     }
 
@@ -294,64 +290,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
         }
         return super.distinct();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase() {
-        return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<? extends QueryBuilder<T, ?>> selectCase(String alias) {
-        return (CaseWhenBuilder<QueryBuilder<T, ?>>) super.selectCase(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression) {
-        return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression, String alias) {
-        return (SimpleCaseWhenBuilder<QueryBuilder<T, ?>>) super.selectSimpleCase(expression, alias);
-    }
-
-    @Override
-    public QueryBuilder<T, ?> select(String expression) {
-        return (QueryBuilder<T, ?>) super.select(expression);
-    }
-
-    @Override
-    public QueryBuilder<T, ?> select(String expression, String alias) {
-        return (QueryBuilder<T, ?>) super.select(expression, alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery() {
-        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String alias) {
-        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression) {
-        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        return (SubqueryInitiator<? extends QueryBuilder<T, ?>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
 
 }

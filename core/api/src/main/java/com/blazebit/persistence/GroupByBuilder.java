@@ -19,12 +19,11 @@ package com.blazebit.persistence;
  * An interface for builders that support groupy by.
  * This is related to the fact, that a query builder supports group by clauses.
  *
- * @param <T> The result type
  * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface GroupByBuilder<T, X extends GroupByBuilder<T, X>> extends HavingBuilder<X> {
+public interface GroupByBuilder<X extends GroupByBuilder<X>> extends HavingBuilder<X> {
 
     /**
      * Adds a multiple group by clause with the given expressions to the query.

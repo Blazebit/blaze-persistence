@@ -75,7 +75,7 @@ public class KeysetExtractionObjectBuilder<T> implements ObjectBuilder<T> {
     }
 
     @Override
-    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
+    public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
     }
 
 }

@@ -29,7 +29,6 @@ import java.util.Set;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -240,7 +239,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings("unchecked")
-    <X extends BaseQueryBuilder<?, ?>> SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias) {
+    <X> SubqueryInitiator<X> selectSubquery(X builder, final String selectAlias) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SelectSubqueryBuilderListener<X>(selectAlias);
@@ -250,7 +249,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings("unchecked")
-    <X extends BaseQueryBuilder<?, ?>> SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias) {
+    <X> SubqueryInitiator<X> selectSubquery(X builder, String subqueryAlias, Expression expression, String selectAlias) {
         verifyBuilderEnded();
 
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
@@ -259,19 +258,19 @@ public class SelectManager<T> extends AbstractManager {
         return initiator;
     }
 
-    <X extends BaseQueryBuilder<?, ?>> CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias) {
+    <X> CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
     }
 
-    <X extends BaseQueryBuilder<?, ?>> SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression) {
+    <X> SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
 
-    void select(AbstractBaseQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
+    void select(AbstractCommonQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
         handleSelect(expr, selectAlias);
     }
 
@@ -324,7 +323,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings("unchecked")
-    void selectNew(QueryBuilder<?, ?> builder, ObjectBuilder<?> objectBuilder) {
+    <X extends QueryBuilder<?, X>> void selectNew(X builder, ObjectBuilder<?> objectBuilder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }

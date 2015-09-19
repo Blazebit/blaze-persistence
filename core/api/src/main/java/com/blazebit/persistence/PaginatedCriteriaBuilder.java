@@ -53,52 +53,18 @@ public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCr
      */
     public boolean isKeysetExtraction();
 
-    /*
-     * Covariant overrides
+    /**
+     * Execute the query and return the result as a type PagedList.
+     *
+     * @return The paged list of the results
      */
     @Override
-    public PaginatedCriteriaBuilder<T> from(Class<?> entityClass);
-
-    @Override
-    public PaginatedCriteriaBuilder<T> from(Class<?> entityClass, String alias);
-
-    @Override
     public PagedList<T> getResultList();
-
-    @Override
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression);
-
-    @Override
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression, String alias);
-
-    @Override
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase();
-
-    @Override
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase(String alias);
 
     @Override
     public <Y> SelectObjectBuilder<PaginatedCriteriaBuilder<Y>> selectNew(Class<Y> clazz);
 
     @Override
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
-
-    @Override
-    public PaginatedCriteriaBuilder<T> select(String expression);
-
-    @Override
-    public PaginatedCriteriaBuilder<T> select(String expression, String alias);
-
-    @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery();
-
-    @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String alias);
-
-    @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-
-    @Override
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression);
 
 }

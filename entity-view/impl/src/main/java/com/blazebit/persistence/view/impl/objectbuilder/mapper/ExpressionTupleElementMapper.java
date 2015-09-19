@@ -31,7 +31,7 @@ public class ExpressionTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
+    public void applyMapping(SelectBuilder<?> queryBuilder) {
         queryBuilder.select(expression);
     }
 

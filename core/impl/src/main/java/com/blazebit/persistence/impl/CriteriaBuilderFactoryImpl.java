@@ -95,7 +95,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     @Override
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass) {
-        return create(entityManager, resultClass, resultClass.getSimpleName().toLowerCase());
+        return create(entityManager, resultClass, null);
     }
 
     @Override

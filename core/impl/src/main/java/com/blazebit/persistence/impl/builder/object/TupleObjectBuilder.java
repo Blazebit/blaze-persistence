@@ -55,7 +55,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
     }
 
     @Override
-    public void applySelects(SelectBuilder<?, ?> queryBuilder) {
+    public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
     }
 
     private String[] getSelectAliases() {

@@ -45,7 +45,7 @@ public class DelegatingKeysetExtractionObjectBuilder<T> extends KeysetExtraction
     }
 
     @Override
-    public void applySelects(SelectBuilder<?, ?> selectBuilder) {
+    public <X extends SelectBuilder<X>> void applySelects(X selectBuilder) {
         objectBuilder.applySelects(selectBuilder);
     }
 

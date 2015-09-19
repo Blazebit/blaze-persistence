@@ -67,13 +67,12 @@ import com.blazebit.persistence.spi.QueryTransformer;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> implements BaseQueryBuilder<T, X> {
+public abstract class AbstractCommonQueryBuilder<T, X> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
 
     protected final CriteriaBuilderFactoryImpl cbf;
-//    protected EntityType<?> fromClazz;
     protected final EntityManager em;
 
     protected final ParameterManager parameterManager;
@@ -114,7 +113,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
      * @param builder
      */
     @SuppressWarnings("unchecked")
-    protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
         this.cbf = builder.cbf;
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
@@ -137,7 +136,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
-    protected AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -161,10 +160,21 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaProvider, this.aliasManager, em.getMetamodel(), parentJoinManager);
 
         // set defaults
+        if (alias == null) {
+        	alias = resultClazz.getSimpleName().toLowerCase();
+        } else {
+        	// If the user supplies an alias, the intention is clear
+        	fromClassExplicitelySet = true;
+        }
+        
         try {
             this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
         } catch (IllegalArgumentException ex) {
         	// the result class might not be an entity
+        	if (fromClassExplicitelySet) {
+        		// If the intention was to use that as from clause, we have to throw an exception
+        		throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
+        	}
         }
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
@@ -188,22 +198,20 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.resultType = resultClazz;
     }
 
-    public AbstractBaseQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
         this(cbf, em, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
-    @Override
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
     }
 
-    @Override
-    public BaseQueryBuilder<T, ?> from(Class<?> clazz) {
+    public X from(Class<?> clazz) {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
 
-    @Override
-    public BaseQueryBuilder<T, ?> from(Class<?> clazz, String alias) {
+    @SuppressWarnings("unchecked")
+    public X from(Class<?> clazz, String alias) {
     	if (!fromClassExplicitelySet) {
     		// When from is explicitly called we have to revert the implicit root
     		if (joinManager.getRoots().size() > 0) {
@@ -213,10 +221,9 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     	
         joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
         fromClassExplicitelySet = true;
-        return this;
+        return (X) this;
     }
 
-    @Override
     public Metamodel getMetamodel() {
         return em.getMetamodel();
     }
@@ -239,48 +246,40 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         }
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X setParameter(String name, Object value) {
         parameterManager.satisfyParameter(name, value);
         return (X) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X setParameter(String name, Calendar value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
         return (X) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X setParameter(String name, Date value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
         return (X) this;
     }
 
-    @Override
     public boolean containsParameter(String name) {
         return parameterManager.containsParameter(name);
     }
 
-    @Override
     public boolean isParameterSet(String name) {
         return parameterManager.isParameterSet(name);
     }
 
-    @Override
     public Parameter<?> getParameter(String name) {
         return parameterManager.getParameter(name);
     }
 
-    @Override
     public Set<? extends Parameter<?>> getParameters() {
         return parameterManager.getParameters();
     }
 
-    @Override
     public Object getParameterValue(String name) {
         return parameterManager.getParameterValue(name);
     }
@@ -295,42 +294,38 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
-    @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase() {
+    public CaseWhenStarterBuilder<X> selectCase() {
         return selectCase(null);
     }
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
-    @Override
-    public CaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectCase(String selectAlias) {
+    @SuppressWarnings("unchecked")
+    public CaseWhenStarterBuilder<X> selectCase(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        return selectManager.selectCase((BaseQueryBuilder<T, ?>) this, selectAlias);
+        return selectManager.selectCase((X) this, selectAlias);
     }
 
-    @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<X> selectSimpleCase(String expression) {
         return selectSimpleCase(expression, null);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
-    @Override
-    public SimpleCaseWhenStarterBuilder<? extends BaseQueryBuilder<T, ?>> selectSimpleCase(String caseOperandExpression, String selectAlias) {
+    @SuppressWarnings("unchecked")
+    public SimpleCaseWhenStarterBuilder<X> selectSimpleCase(String caseOperandExpression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        return selectManager.selectSimpleCase((BaseQueryBuilder<T, ?>) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
+        return selectManager.selectSimpleCase((X) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
-    @Override
-    public BaseQueryBuilder<T, ?> select(String expression) {
+    public X select(String expression) {
         return select(expression, null);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
-    public BaseQueryBuilder<T, ?> select(String expression, String selectAlias) {
+    public X select(String expression, String selectAlias) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
@@ -338,30 +333,28 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         verifyBuilderEnded();
         selectManager.select(this, expr, selectAlias);
         resultType = (Class<T>) Tuple.class;
-        return (BaseQueryBuilder<T, ?>) this;
+        return (X) this;
     }
 
-    @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery() {
+    public SubqueryInitiator<X> selectSubquery() {
         return selectSubquery(null);
     }
 
-    @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String selectAlias) {
+    @SuppressWarnings("unchecked")
+    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((BaseQueryBuilder<T, ?>) this, selectAlias);
+        return selectManager.selectSubquery((X) this, selectAlias);
     }
 
-    @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression) {
+    public SubqueryInitiator<X> selectSubquery(String subqueryAlias, String expression) {
         return selectSubquery(subqueryAlias, expression, null);
     }
 
-    @Override
-    public SubqueryInitiator<? extends BaseQueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+    @SuppressWarnings("unchecked")
+    public SubqueryInitiator<X> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -378,13 +371,12 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((BaseQueryBuilder<T, ?>) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
+        return selectManager.selectSubquery((X) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
     }
 
     /*
      * Where methods
      */
-    @Override
     public RestrictionBuilder<X> where(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return whereManager.restrict(this, expr);
@@ -393,39 +385,32 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     /*
      * Where methods
      */
-    @Override
     public CaseWhenStarterBuilder<RestrictionBuilder<X>> whereCase() {
         return whereManager.restrictCase(this);
     }
 
-    @Override
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> whereSimpleCase(String expression) {
         return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
-    @Override
     public WhereOrBuilder<X> whereOr() {
         return whereManager.whereOr(this);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> whereExists() {
         return whereManager.restrictExists((X) this);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public SubqueryInitiator<X> whereNotExists() {
         return whereManager.restrictNotExists((X) this);
     }
 
-    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery() {
         return whereManager.restrict(this);
     }
 
-    @Override
     public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
         return whereManager.restrict(this, subqueryAlias, expression);
     }
@@ -514,27 +499,22 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     /*
      * Order by methods
      */
-    @Override
     public X orderByDesc(String expression) {
         return orderBy(expression, false, false);
     }
 
-    @Override
     public X orderByAsc(String expression) {
         return orderBy(expression, true, false);
     }
 
-    @Override
     public X orderByDesc(String expression, boolean nullFirst) {
         return orderBy(expression, false, nullFirst);
     }
 
-    @Override
     public X orderByAsc(String expression, boolean nullFirst) {
         return orderBy(expression, true, nullFirst);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;
@@ -563,37 +543,30 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     /*
      * Join methods
      */
-    @Override
     public X innerJoin(String path, String alias) {
         return join(path, alias, JoinType.INNER);
     }
 
-    @Override
     public X innerJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.INNER);
     }
 
-    @Override
     public X leftJoin(String path, String alias) {
         return join(path, alias, JoinType.LEFT);
     }
 
-    @Override
     public X leftJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.LEFT);
     }
 
-    @Override
     public X rightJoin(String path, String alias) {
         return join(path, alias, JoinType.RIGHT);
     }
 
-    @Override
     public X rightJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.RIGHT);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X join(String path, String alias, JoinType type) {
         clearCache();
@@ -602,7 +575,6 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X joinDefault(String path, String alias, JoinType type) {
         clearCache();
@@ -611,7 +583,6 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
         clearCache();
@@ -619,7 +590,6 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return joinManager.joinOn((X) this, path, alias, type, false);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type) {
         clearCache();
@@ -627,32 +597,26 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return joinManager.joinOn((X) this, path, alias, type, true);
     }
 
-    @Override
     public JoinOnBuilder<X> innerJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.INNER);
     }
 
-    @Override
     public JoinOnBuilder<X> innerJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.INNER);
     }
 
-    @Override
     public JoinOnBuilder<X> leftJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.LEFT);
     }
 
-    @Override
     public JoinOnBuilder<X> leftJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.LEFT);
     }
 
-    @Override
     public JoinOnBuilder<X> rightJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.RIGHT);
     }
 
-    @Override
     public JoinOnBuilder<X> rightJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.RIGHT);
     }
@@ -783,30 +747,25 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
     }
 
-    @Override
     public Class<T> getResultType() {
         return resultType;
     }
 
-    @Override
     public String getQueryString() {
         prepareAndCheck();
         return getQueryString0();
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public KeysetBuilder<X> beforeKeyset() {
         clearCache();
         return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.PREVIOUS));
     }
 
-    @Override
     public X beforeKeyset(Serializable... values) {
         return beforeKeyset(new KeysetImpl(values));
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X beforeKeyset(Keyset keyset) {
         clearCache();
@@ -815,19 +774,16 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public KeysetBuilder<X> afterKeyset() {
         clearCache();
         return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.NEXT));
     }
 
-    @Override
     public X afterKeyset(Serializable... values) {
         return afterKeyset(new KeysetImpl(values));
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public X afterKeyset(Keyset keyset) {
         clearCache();
@@ -836,7 +792,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         return (X) this;
     }
 
-    private String getQueryString0() {
+    protected String getQueryString0() {
         if (cachedQueryString == null) {
             cachedQueryString = getQueryString1();
         }
@@ -884,8 +840,13 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         needsCheck = false;
     }
 
-    private String getQueryString1() {
+    protected String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
+        getQueryString1(sbSelectFrom);
+        return sbSelectFrom.toString();
+    }
+
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
         sbSelectFrom.append(selectManager.buildSelect());
         joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
 
@@ -916,7 +877,6 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         queryGenerator.setResolveSelectAliases(false);
         orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
-        return sbSelectFrom.toString();
     }
 
     @SuppressWarnings("unchecked")

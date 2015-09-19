@@ -264,36 +264,4 @@ public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQuery
      */
     public <Y> QueryBuilder<Y, ?> selectNew(ObjectBuilder<Y> builder);
 
-    /*
-     * Covariant overrides
-     */
-    @Override
-    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression);
-
-    @Override
-    public SimpleCaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectSimpleCase(String expression, String alias);
-
-    @Override
-    public CaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectCase();
-
-    @Override
-    public CaseWhenStarterBuilder<? extends QueryBuilder<T, ?>> selectCase(String alias);
-
-    @Override
-    public QueryBuilder<T, ?> select(String expression);
-
-    @Override
-    public QueryBuilder<T, ?> select(String expression, String alias);
-
-    @Override
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery();
-
-    @Override
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String alias);
-
-    @Override
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-
-    @Override
-    public SubqueryInitiator<? extends QueryBuilder<T, ?>> selectSubquery(String subqueryAlias, String expression);
 }

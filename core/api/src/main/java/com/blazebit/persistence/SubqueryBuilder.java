@@ -24,7 +24,7 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>>, GroupByBuilder<T, SubqueryBuilder<T>>, DistinctBuilder<T, SubqueryBuilder<T>> {
+public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>>, GroupByBuilder<SubqueryBuilder<T>>, DistinctBuilder<SubqueryBuilder<T>> {
 
     /**
      * Finishes the subquery builder.
@@ -33,36 +33,4 @@ public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuil
      */
     public T end();
 
-    /*
-     * Covariant overrides.
-     */
-    @Override
-    public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression);
-
-    @Override
-    public SimpleCaseWhenBuilder<SubqueryBuilder<T>> selectSimpleCase(String expression, String alias);
-
-    @Override
-    public CaseWhenBuilder<SubqueryBuilder<T>> selectCase();
-
-    @Override
-    public CaseWhenBuilder<SubqueryBuilder<T>> selectCase(String alias);
-
-    @Override
-    public SubqueryBuilder<T> select(String expression);
-
-    @Override
-    public SubqueryBuilder<T> select(String expression, String alias);
-
-    @Override
-    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery();
-
-    @Override
-    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String alias);
-
-    @Override
-    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias);
-
-    @Override
-    public SubqueryInitiator<SubqueryBuilder<T>> selectSubquery(String subqueryAlias, String expression);
 }

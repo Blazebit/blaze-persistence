@@ -33,7 +33,7 @@ public class AliasSubqueryTupleElementMapper extends SubqueryTupleElementMapper 
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
+    public void applyMapping(SelectBuilder<?> queryBuilder) {
         provider.createSubquery(queryBuilder.selectSubquery(alias));
     }
 

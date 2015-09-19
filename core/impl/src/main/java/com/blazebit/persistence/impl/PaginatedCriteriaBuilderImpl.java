@@ -26,15 +26,12 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SimpleCaseWhenBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
@@ -203,7 +200,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return getQueryString0();
     }
 
-    private String getQueryString0() {
+    @Override
+    protected String getQueryString0() {
         if (cachedQueryString == null) {
             if (!joinManager.hasCollections()) {
                 cachedQueryString = getObjectQueryString1();
@@ -482,7 +480,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         return sbSelectFrom.toString();
     }
 
-    private String getQueryString1() {
+    @Override
+    protected String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
@@ -560,13 +559,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public PaginatedCriteriaBuilder<T> from(Class<?> clazz) {
-        return (PaginatedCriteriaBuilder<T>) super.from(clazz);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
     public PaginatedCriteriaBuilder<T> from(Class<?> clazz, String alias) {
         if (fromClassExplicitelySet) {
             throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
@@ -600,65 +592,5 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     @SuppressWarnings("unchecked")
     public <Y> PaginatedCriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (PaginatedCriteriaBuilder<Y>) super.selectNew(builder);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public PaginatedCriteriaBuilder<T> select(String expression) {
-        return (PaginatedCriteriaBuilder<T>) super.select(expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public PaginatedCriteriaBuilder<T> select(String expression, String alias) {
-        return (PaginatedCriteriaBuilder<T>) super.select(expression, alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase() {
-        return (CaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectCase();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectCase(String alias) {
-        return (CaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectCase(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression) {
-        return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectSimpleCase(expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>> selectSimpleCase(String expression, String alias) {
-        return (SimpleCaseWhenBuilder<PaginatedCriteriaBuilder<T>>) super.selectSimpleCase(expression, alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery() {
-        return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String alias) {
-        return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
-        return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<PaginatedCriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        return (SubqueryInitiator<PaginatedCriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
     }
 }

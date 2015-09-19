@@ -215,7 +215,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
             .selectNew(new ObjectBuilder<String>() {
 
                 @Override
-                public void applySelects(SelectBuilder<?, ?> selectBuilder) {
+                public <X extends SelectBuilder<X>> void applySelects(X selectBuilder) {
                     selectBuilder
                         .select("d.name")
                         .select("d.owner.name");

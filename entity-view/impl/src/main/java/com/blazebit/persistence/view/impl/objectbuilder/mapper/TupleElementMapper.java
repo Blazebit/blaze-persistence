@@ -24,5 +24,5 @@ import com.blazebit.persistence.SelectBuilder;
  */
 public interface TupleElementMapper {
 
-    public void applyMapping(SelectBuilder<?, ?> queryBuilder);
+    public void applyMapping(SelectBuilder<?> queryBuilder);
 }

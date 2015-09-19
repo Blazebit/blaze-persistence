@@ -32,7 +32,7 @@ public interface ObjectBuilder<T> {
      *
      * @param selectBuilder The selectBuilder on which to apply the selects
      */
-    public void applySelects(SelectBuilder<?, ?> selectBuilder);
+    public <X extends SelectBuilder<X>> void applySelects(X selectBuilder);
 
     /**
      * Builds an object of the target type <code>T</code> from the given tuple.

@@ -18,13 +18,13 @@ package com.blazebit.persistence.impl;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 
-import com.blazebit.persistence.CaseWhenBuilder;
+import com.blazebit.persistence.CTECriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.RecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.SimpleCaseWhenBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
 
 /**
  *
@@ -34,45 +34,22 @@ import com.blazebit.persistence.SubqueryInitiator;
  * @since 1.0
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
+	
+	private final CTEManager<T> cteManager;
 
     public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
         super(cbf, em, clazz, alias, registeredFunctions);
+        this.cteManager = new CTEManager<T>(cbf, em, registeredFunctions);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> from(Class<?> clazz) {
-        return (CriteriaBuilder<T>) super.from(clazz);
+        return super.from(clazz);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public CriteriaBuilder<T> from(Class<?> clazz, String alias) {
-        return (CriteriaBuilder<T>) super.from(clazz, alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<CriteriaBuilder<T>> selectCase() {
-        return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public CaseWhenBuilder<CriteriaBuilder<T>> selectCase(String alias) {
-        return (CaseWhenBuilder<CriteriaBuilder<T>>) super.selectCase(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression) {
-        return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SimpleCaseWhenBuilder<CriteriaBuilder<T>> selectSimpleCase(String expression, String alias) {
-        return (SimpleCaseWhenBuilder<CriteriaBuilder<T>>) super.selectSimpleCase(expression, alias);
+        return super.from(clazz, alias);
     }
 
     @Override
@@ -86,41 +63,48 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
     }
+    
+    public <Y> CTECriteriaBuilder<Y, T> with(Class<Y> cteClass) {
+    	return cteManager.with(cteClass, this);
+    }
 
+    public <Y> RecursiveCTECriteriaBuilder<Y, T> withRecursive(Class<Y> cteClass) {
+    	return cteManager.withRecursive(cteClass, this);
+    }
+    
     @Override
     @SuppressWarnings("unchecked")
-    public CriteriaBuilder<T> select(String expression) {
-        return (CriteriaBuilder<T>) super.select(expression);
+    public TypedQuery<T> getQuery() {
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString(), selectManager.getExpectedQueryResultType());
+        if (selectManager.getSelectObjectBuilder() != null) {
+            query = transformQuery(query);
+        }
+
+        parameterizeQuery(query);
+        return query;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public CriteriaBuilder<T> select(String expression, String alias) {
-        return (CriteriaBuilder<T>) super.select(expression, alias);
+    public String getQueryString() {
+        prepareAndCheck();
+        return getQueryString0();
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery() {
-        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery();
+    protected String getQueryString0() {
+        if (cachedQueryString == null) {
+            cachedQueryString = getQueryString1();
+        }
+
+        return cachedQueryString;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String alias) {
-        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(alias);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression) {
-        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public SubqueryInitiator<CriteriaBuilder<T>> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
-        return (SubqueryInitiator<CriteriaBuilder<T>>) super.selectSubquery(subqueryAlias, expression, selectAlias);
+    protected String getQueryString1() {
+        StringBuilder sbSelectFrom = new StringBuilder();
+        cteManager.buildClause(sbSelectFrom);
+        getQueryString1(sbSelectFrom);
+        return sbSelectFrom.toString();
     }
 
 }

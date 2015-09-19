@@ -32,7 +32,7 @@ public class SubqueryTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?, ?> queryBuilder) {
+    public void applyMapping(SelectBuilder<?> queryBuilder) {
         provider.createSubquery(queryBuilder.selectSubquery());
     }
 
