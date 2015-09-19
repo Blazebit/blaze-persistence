@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
@@ -84,4 +85,8 @@ public final class JpaUtils {
 
         return true;
     }
+
+	public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
+		return entityType.getId(entityType.getIdType().getJavaType());
+	}
 }

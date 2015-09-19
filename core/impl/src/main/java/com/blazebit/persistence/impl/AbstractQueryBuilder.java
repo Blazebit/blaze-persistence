@@ -22,6 +22,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.JoinType;
@@ -120,12 +121,12 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
             throw new IllegalArgumentException("Invalid null entity id given");
         }
 
-        EntityType<?> entityType = fromClazz;
+        EntityType<?> entityType = em.getMetamodel().entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getPropertyClass());
         Class<?> idType = entityType.getIdType().getJavaType();
 
         if (!idType.isInstance(entityId)) {
             throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName()
-                + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + fromClazz.getName() + "'");
+                + "' is not an instance of the expected id type '" + idType.getName() + "' of the entity class '" + entityType.getJavaType().getName() + "'");
         }
     }
 

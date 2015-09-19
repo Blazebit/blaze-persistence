@@ -31,7 +31,6 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
@@ -74,7 +73,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     public static final String idParamName = "ids";
 
     protected final CriteriaBuilderFactoryImpl cbf;
-    protected EntityType<?> fromClazz;
+//    protected EntityType<?> fromClazz;
     protected final EntityManager em;
 
     protected final ParameterManager parameterManager;
@@ -97,10 +96,10 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     private final List<ExpressionTransformer> transformers;
     private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
     private final SizeSelectToSubqueryTransformer sizeSelectToSubqueryTransformer;
-    private boolean fromClassExplicitelySet = false;
 
     // Mutable state
     protected Class<T> resultType;
+    protected boolean fromClassExplicitelySet = false;
 
     private boolean needsCheck = true;
     private boolean implicitJoinsApplied = false;
@@ -117,7 +116,6 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
     @SuppressWarnings("unchecked")
     protected AbstractBaseQueryBuilder(AbstractBaseQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
         this.cbf = builder.cbf;
-        this.fromClazz = builder.fromClazz;
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
@@ -164,10 +162,9 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
         // set defaults
         try {
-            this.fromClazz = em.getMetamodel().entity(resultClazz);
-            this.joinManager.setRoot(fromClazz, alias);
+            this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
         } catch (IllegalArgumentException ex) {
-            this.fromClazz = null;
+        	// the result class might not be an entity
         }
 
         this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
@@ -186,7 +183,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         this.em = em;
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
-        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager);
+        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager, em.getMetamodel());
         this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
         this.resultType = resultClazz;
     }
@@ -207,11 +204,14 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     @Override
     public BaseQueryBuilder<T, ?> from(Class<?> clazz, String alias) {
-        if (fromClassExplicitelySet) {
-            throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
-        }
-        this.fromClazz = em.getMetamodel().entity(clazz);
-        this.joinManager.setRoot(fromClazz, alias);
+    	if (!fromClassExplicitelySet) {
+    		// When from is explicitly called we have to revert the implicit root
+    		if (joinManager.getRoots().size() > 0) {
+    			joinManager.removeRoot();
+    		}
+    	}
+    	
+        joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
         fromClassExplicitelySet = true;
         return this;
     }
@@ -729,7 +729,7 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
         }
 
         if (containsSizeSelect) {
-            if (joinManager.hasCollections()) {
+            if (joinManager.hasCollections() || joinManager.getRoots().size() > 1) {
                 selectManager.applySelectInfoTransformer(sizeSelectToSubqueryTransformer);
             } else {
                 selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
@@ -886,16 +886,8 @@ public abstract class AbstractBaseQueryBuilder<T, X extends BaseQueryBuilder<T, 
 
     private String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
-
-        sbSelectFrom.append(selectManager.buildSelect(joinManager.getRootAlias()));
-        // @formatter:off
-        sbSelectFrom.append(" FROM ")
-            .append(fromClazz.getName())
-            .append(' ')
-            .append(joinManager.getRootAlias());
-        // @formatter:on
-
-        joinManager.buildJoins(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+        sbSelectFrom.append(selectManager.buildSelect());
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
 
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {

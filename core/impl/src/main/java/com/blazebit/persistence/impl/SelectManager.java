@@ -141,8 +141,17 @@ public class SelectManager<T> extends AbstractManager {
 
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
-            List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(joinManager.getRootAlias()));
-            resolveVisitor.visit(new PathExpression(path, joinManager.getRoot(), null, false, false));
+            List<JoinNode> roots = joinManager.getRoots();
+            
+            if (roots.size() > 1) {
+            	throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
+            }
+            
+        	JoinNode rootNode = roots.get(0);
+        	String rootAlias = rootNode.getAliasInfo().getAlias();
+        	
+            List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
+            resolveVisitor.visit(new PathExpression(path, rootNode, null, false, false));
 
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);
@@ -184,7 +193,7 @@ public class SelectManager<T> extends AbstractManager {
         return groupByClauses;
     }
 
-    String buildSelect(String rootAlias) {
+    String buildSelect() {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
 
@@ -193,7 +202,13 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         if (selectInfos.isEmpty()) {
-            sb.append(rootAlias);
+            List<JoinNode> roots = joinManager.getRoots();
+            
+            if (roots.size() > 1) {
+            	throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
+            }
+            
+            sb.append(roots.get(0).getAliasInfo().getAlias());
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);

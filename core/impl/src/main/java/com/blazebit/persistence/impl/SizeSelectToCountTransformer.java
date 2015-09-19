@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
@@ -34,12 +36,14 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
     private final OrderByManager orderByManager;
+    private final Metamodel metamodel;
     private final DeepSizeSelectToCountTransformer deepTransformer = new DeepSizeSelectToCountTransformer();
 
-    public SizeSelectToCountTransformer(JoinManager joinManager, GroupByManager groupByManager, OrderByManager orderByManager) {
+    public SizeSelectToCountTransformer(JoinManager joinManager, GroupByManager groupByManager, OrderByManager orderByManager, Metamodel metamodel) {
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
         this.orderByManager = orderByManager;
+        this.metamodel = metamodel;
     }
 
     @Override
@@ -80,8 +84,16 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
 
                 // build group by id clause
                 List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
-                pathElementExpr.add(new PropertyExpression(joinManager.getRootAlias()));
-                pathElementExpr.add(new PropertyExpression(joinManager.getRootId()));
+                List<JoinNode> roots = joinManager.getRoots();
+                
+                if (roots.size() > 1) {
+                	throw new IllegalArgumentException("Can't transform size function to count when having multiple roots!");
+                }
+                
+                String rootAlias = roots.get(0).getAliasInfo().getAlias();
+                String rootId = JpaUtils.getIdAttribute(metamodel.entity(roots.get(0).getPropertyClass())).getName();
+                pathElementExpr.add(new PropertyExpression(rootAlias));
+                pathElementExpr.add(new PropertyExpression(rootId));
                 groupByManager.groupBy(new PathExpression(pathElementExpr));
                 super.visit(expression);
 

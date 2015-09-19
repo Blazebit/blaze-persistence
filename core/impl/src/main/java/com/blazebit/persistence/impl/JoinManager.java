@@ -72,7 +72,7 @@ public class JoinManager extends AbstractManager {
     // hence we need a List of NodeInfos.
     // e.g. SELECT a.X, a.Y FROM A a
     // a is unresolved for both X and Y
-    private JoinNode rootNode;
+    private List<JoinNode> rootNodes = new ArrayList<JoinNode>(1);
     // root entity class
     private final String joinRestrictionKeyword;
     private final AliasManager aliasManager;
@@ -97,7 +97,7 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
-    void setRoot(EntityType<?> clazz, String rootAlias) {
+    void addRoot(EntityType<?> clazz, String rootAlias) {
         if (rootAlias == null) {
             // TODO: not sure if other JPA providers support case sensitive queries like hibernate
             StringBuilder sb = new StringBuilder(clazz.getName());
@@ -111,27 +111,49 @@ public class JoinManager extends AbstractManager {
             }
         }
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
-        rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz.getJavaType());
+        JoinNode rootNode = new JoinNode(null, null, rootAliasInfo, null, clazz.getJavaType());
         rootAliasInfo.setJoinNode(rootNode);
+        rootNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
     }
 
-    JoinNode getRoot() {
-        return rootNode;
-    }
+	void removeRoot() {
+		// We only use this to remove implicit root nodes
+		JoinNode rootNode = rootNodes.remove(0);
+		aliasManager.unregisterAliasInfoForBottomLevel(rootNode.getAliasInfo());
+	}
 
-    String getRootAlias() {
-        return rootNode.getAliasInfo().getAlias();
+    JoinNode getRootNodeOrFail(String string) {
+    	if (rootNodes.size() > 1) {
+    		throw new IllegalArgumentException(string);
+    	}
+    	
+		return rootNodes.get(0);
+	}
+
+    private JoinNode getRootNode(String alias) {
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		if (alias.equals(rootNodes.get(i).getAliasInfo().getAlias())) {
+    			return rootNodes.get(i);
+    		}
+    	}
+    	
+    	return null;
+	}
+
+    List<JoinNode> getRoots() {
+        return rootNodes;
     }
 
     boolean hasCollections() {
-        return rootNode.hasCollections();
-    }
-
-    String getRootId() {
-        EntityType<?> entityType = metamodel.entity(rootNode.getPropertyClass());
-        return entityType.getId(entityType.getIdType().getJavaType()).getName();
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		if (rootNodes.get(i).hasCollections()) {
+    			return true;
+    		}
+    	}
+    	
+        return false;
     }
 
     JoinManager getParent() {
@@ -142,10 +164,29 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    void buildJoins(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix) {
-        rootNode.registerDependencies();
+    void buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix) {
         renderedJoins.clear();
-        applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix);
+        sb.append(" FROM ");
+        
+        // TODO: we might have dependencies to other from clause elements which should also be accounted for
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		if (i != 0) {
+    			sb.append(", ");
+    		}
+    		
+    		JoinNode rootNode = rootNodes.get(i);
+    		EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
+	        sb.append(type.getName()).append(' ');
+	        
+	        if (aliasPrefix != null) {
+	        	sb.append(aliasPrefix);
+	        }
+	        
+	        sb.append(rootNode.getAliasInfo().getAlias());
+	        
+    		rootNode.registerDependencies();
+    		applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix);
+    	}
     }
 
     void verifyBuilderEnded() {
@@ -153,16 +194,27 @@ public class JoinManager extends AbstractManager {
     }
 
     void acceptVisitor(JoinNodeVisitor v) {
-        rootNode.accept(v);
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		rootNodes.get(i).accept(v);
+    	}
     }
 
     public boolean acceptVisitor(AggregateDetectionVisitor aggregateDetector, boolean stopValue) {
-        Boolean value = rootNode.accept(new AbortableOnClauseJoinNodeVisitor(aggregateDetector, stopValue));
-        return Boolean.valueOf(stopValue).equals(value);
+    	Boolean stop = Boolean.valueOf(stopValue);
+
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		if (stop.equals(rootNodes.get(i).accept(new AbortableOnClauseJoinNodeVisitor(aggregateDetector, stopValue)))) {
+    			return true;
+    		}
+    	}
+    	
+        return false;
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
-        rootNode.accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
+    	for (int i = 0; i < rootNodes.size(); i++) {
+    		rootNodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
+    	}
     }
 
     private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix) {
@@ -398,7 +450,7 @@ public class JoinManager extends AbstractManager {
         if (elementExpr instanceof ArrayExpression) {
             throw new IllegalArgumentException("Array expressions are not allowed!");
         } else {
-            current = current == null ? rootNode : current;
+            current = current == null ? getRootNodeOrFail("Could not join path [" + path + "] because it did not use an absolute path but multiple root nodes are available!") : current;
             result = createOrUpdateNode(current, elementExpr.toString(), alias, type, false, defaultJoin);
         }
 
@@ -414,7 +466,7 @@ public class JoinManager extends AbstractManager {
         return result.baseNode;
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias) {
+	void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias) {
         implicitJoin(expression, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, false);
     }
 
@@ -454,12 +506,12 @@ public class JoinManager extends AbstractManager {
             List<String> resultFields = new ArrayList<String>();
             JoinResult currentResult;
 
-            boolean explicitRootAlias = pathElements.get(0).toString().equals(rootNode.getAliasInfo().getAlias());
+            JoinNode possibleRoot = getRootNode(pathElements.get(0).toString());
             int startIndex = 0;
 
-            if (explicitRootAlias) {
+            if (possibleRoot != null) {
                 startIndex = 1;
-                current = rootNode;
+                current = possibleRoot;
             }
 
             if (pathElements.size() > startIndex + 1) {
@@ -507,7 +559,13 @@ public class JoinManager extends AbstractManager {
             }
 
             // current might be null
-            current = current == null ? rootNode : current;
+            if (current == null) {
+            	if (rootNodes.size() > 1) {
+            		throw new IllegalArgumentException("Could not join path [" + expression + "] because it did not use an absolute path but multiple root nodes are available!");
+            	}
+            	
+            	current = rootNodes.get(0);
+            }
 
             JoinResult result;
             AliasInfo aliasInfo;
@@ -641,7 +699,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean validPath(Class<?> currentClass, List<String> pathElements) {
+	private boolean validPath(Class<?> currentClass, List<String> pathElements) {
         for (int i = 0; i < pathElements.size(); i++) {
             String element = pathElements.get(i);
             ManagedType<?> t = metamodel.managedType(currentClass);
@@ -680,7 +738,7 @@ public class JoinManager extends AbstractManager {
 
             if (a == null) {
                 // if the path element is no alias we can do some optimizations
-                baseType = metamodel.managedType(rootNode.getPropertyClass());
+                baseType = metamodel.managedType(getRootNodeOrFail("Ambiguous join path [" + maybeSingularAssociationName + "] because of multiple root nodes!").getPropertyClass());
                 maybeSingularAssociationAttributes = JpaUtils.getAttributesPolymorphic(metamodel, baseType, maybeSingularAssociationName);
             } else if (!(a instanceof JoinAliasInfo)) {
                 throw new IllegalArgumentException("Can't dereference select alias in the expression!");
@@ -839,7 +897,7 @@ public class JoinManager extends AbstractManager {
                 ArrayExpression arrayExpr = (ArrayExpression) elementExpr;
                 String joinRelationName = arrayExpr.getBase().toString();
 
-                current = current == null ? rootNode : current;
+                current = current == null ? getRootNodeOrFail("Ambiguous join path [" + joinRelationName + "] because of multiple root nodes!") : current;
                 // Find a node by a predicate match
                 JoinNode matchingNode = findNode(current, joinRelationName, arrayExpr);
 
@@ -905,7 +963,7 @@ public class JoinManager extends AbstractManager {
 
         // If we have no base node, root is assumed
         if (baseNode == null) {
-            baseNode = rootNode;
+            baseNode = getRootNodeOrFail("Ambiguous join path [" + attributeName + "] because of multiple root nodes!");
         }
 
         // check if the path is joinable, assuming it is relative to the root (implicit root prefix)
