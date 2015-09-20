@@ -23,6 +23,7 @@ import javax.persistence.Tuple;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -33,6 +34,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     private final CriteriaBuilderFactoryImpl cbf;
     private final EntityManager em;
+    private final DbmsDialect dbmsDialect;
     private final X result;
     private final ParameterManager parameterManager;
     private final AliasManager aliasManager;
@@ -41,9 +43,10 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     private final JoinManager parentJoinManager;
     private final Set<String> registeredFunctions;
 
-    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         this.cbf = cbf;
         this.em = em;
+        this.dbmsDialect = dbmsDialect;
         this.result = result;
         this.parameterManager = parameterManager;
         this.aliasManager = aliasManager;
@@ -60,7 +63,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, dbmsDialect, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;

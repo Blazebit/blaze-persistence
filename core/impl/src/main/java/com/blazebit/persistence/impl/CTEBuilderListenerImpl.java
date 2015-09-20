@@ -22,16 +22,16 @@ package com.blazebit.persistence.impl;
  */
 public class CTEBuilderListenerImpl implements CTEBuilderListener {
 
-    private CTECriteriaBuilderImpl<?, ?> currentCteBuilder;
+    private AbstractCTECriteriaBuilder<?, ?, ?> currentCteBuilder;
 
-    public void verifySubqueryBuilderEnded() {
+    public void verifyBuilderEnded() {
         if (currentCteBuilder != null) {
             throw new BuilderChainingException("A builder was not ended properly.");
         }
     }
 
     @Override
-    public void onBuilderEnded(CTECriteriaBuilderImpl<?, ?> builder) {
+    public void onBuilderEnded(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
         if (currentCteBuilder == null) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
         }
@@ -39,7 +39,7 @@ public class CTEBuilderListenerImpl implements CTEBuilderListener {
     }
 
     @Override
-    public void onBuilderStarted(CTECriteriaBuilderImpl<?, ?> builder) {
+    public void onBuilderStarted(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
         if (currentCteBuilder != null) {
             throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
         }

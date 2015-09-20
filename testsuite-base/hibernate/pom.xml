@@ -24,10 +24,6 @@
             <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-hibernate</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <!-- Minimum version is 4.2.8.Final -->

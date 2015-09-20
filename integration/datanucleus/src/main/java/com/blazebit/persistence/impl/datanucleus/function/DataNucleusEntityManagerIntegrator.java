@@ -65,6 +65,12 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
 	}
 
     @Override
+	public String getDbms(EntityManager entityManager) {
+        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManager.getEntityManagerFactory().unwrap(StoreManager.class);
+    	return vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
+	}
+
+	@Override
     public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManager.getEntityManagerFactory().unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();

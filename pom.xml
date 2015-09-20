@@ -164,7 +164,17 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-persistence-integration-hibernate</artifactId>
+				<artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

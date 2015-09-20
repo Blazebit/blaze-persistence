@@ -30,7 +30,9 @@ import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
 
@@ -42,6 +44,8 @@ import com.blazebit.persistence.spi.QueryTransformer;
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     private final List<QueryTransformer> queryTransformers;
+    private final ExtendedQuerySupport extendedQuerySupport;
+    private final Map<String, DbmsDialect> dbmsDialects;
     private final Map<String, JpqlFunctionGroup> functions;
     private final Set<String> aggregateFunctions;
     private final List<EntityManagerIntegrator> entityManagerIntegrators;
@@ -51,6 +55,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
+        this.extendedQuerySupport = config.getExtendedQuerySupport();
+        this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
         this.functions = new HashMap<String, JpqlFunctionGroup>(config.getFunctions());
         this.aggregateFunctions = resolveAggregateFunctions(functions);
         this.entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>(config.getEntityManagerIntegrators());
@@ -73,8 +79,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return queryTransformers;
     }
 
-    public Map<String, JpqlFunctionGroup> getFunctions() {
-        return functions;
+    public ExtendedQuerySupport getExtendedQuerySupport() {
+        return extendedQuerySupport;
     }
 
     public Set<String> getAggregateFunctions() {
@@ -102,13 +108,16 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
         Set<String> registeredFunctions = new HashSet<String>();
         EntityManager em = entityManager;
+        String dbms = null;
         for (int i = 0; i < entityManagerIntegrators.size(); i++) {
             EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
             em = integrator.registerFunctions(em, functions);
             registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
+            dbms = integrator.getDbms(em);
         }
 
-        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, resultClass, alias, registeredFunctions);
+        DbmsDialect dialect = dbmsDialects.get(dbms);
+        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, dialect, resultClass, alias, registeredFunctions);
         return cb;
     }
 

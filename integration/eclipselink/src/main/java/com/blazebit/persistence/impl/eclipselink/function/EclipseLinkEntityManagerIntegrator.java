@@ -51,6 +51,11 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     private int functionSelectorCounter = 100000;
 
     @Override
+	public String getDbms(EntityManager entityManager) {
+		return null;
+	}
+
+	@Override
     public Set<String> getRegisteredFunctions(EntityManager entityManager) {
         JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
         DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();

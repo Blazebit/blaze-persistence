@@ -57,6 +57,7 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.QueryTransformer;
 
 /**
@@ -86,6 +87,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     protected final ResolvingQueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
+    protected final DbmsDialect dbmsDialect;
     protected final JpaProvider jpaProvider;
     protected final Set<String> registeredFunctions;
 
@@ -125,6 +127,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
+        this.dbmsDialect = builder.dbmsDialect;
         this.jpaProvider = builder.jpaProvider;
         this.registeredFunctions = builder.registeredFunctions;
         this.subqueryInitFactory = builder.subqueryInitFactory;
@@ -136,7 +139,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
-    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -149,6 +152,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
         this.cbf = cbf;
         this.jpaProvider = JpaProviders.resolveJpaProvider(em);
+        this.dbmsDialect = dbmsDialect;
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
 
@@ -177,7 +181,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         	}
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, dbmsDialect, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
 
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
@@ -198,8 +202,8 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.resultType = resultClazz;
     }
 
-    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        this(cbf, em, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
+    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+        this(cbf, em, dbmsDialect, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {

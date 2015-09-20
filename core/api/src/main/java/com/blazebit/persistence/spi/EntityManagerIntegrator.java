@@ -29,6 +29,15 @@ import javax.persistence.EntityManager;
  * @since 1.0
  */
 public interface EntityManagerIntegrator {
+	
+	/**
+	 * Returns the name of dbms for which the given entity manager operates.
+	 * 
+	 * @param entityManager Then entity manager for which to retrieve the dbms from
+	 * @return The name of the dbms
+	 * @since 1.1.0
+	 */
+	public String getDbms(EntityManager entityManager);
 
     /**
      * Registers the given functions under the given names on the given entity manager.

@@ -333,6 +333,11 @@
 		            <artifactId>hibernate-entitymanager</artifactId>
 		            <version>${version.hibernate-4.2}</version>
 		        </dependency>
+		        <dependency>
+		            <groupId>${project.groupId}</groupId>
+		            <artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+					<scope>test</scope>
+		        </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -351,6 +356,11 @@
 					<artifactId>hibernate-entitymanager</artifactId>
 					<version>${version.hibernate-4.3}</version>
 				</dependency>
+		        <dependency>
+		            <groupId>${project.groupId}</groupId>
+		            <artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+					<scope>test</scope>
+		        </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -369,6 +379,11 @@
 					<artifactId>hibernate-entitymanager</artifactId>
 					<version>${version.hibernate-5}</version>
 				</dependency>
+		        <dependency>
+		            <groupId>${project.groupId}</groupId>
+		            <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+					<scope>test</scope>
+		        </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>

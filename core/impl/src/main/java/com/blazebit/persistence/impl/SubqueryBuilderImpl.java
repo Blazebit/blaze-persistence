@@ -26,6 +26,7 @@ import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -38,8 +39,8 @@ public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, Su
     private final T result;
     private final SubqueryBuilderListener<T> listener;
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<T> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
-        super(cbf, em, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
+    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<T> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+        super(cbf, em, dbmsDialect, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
         this.result = result;
         this.listener = listener;
 

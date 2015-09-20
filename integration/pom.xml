@@ -16,7 +16,9 @@
 
     <modules>
         <module>jpa-base</module>
-        <module>hibernate</module>
+        <module>hibernate-base</module>
+        <module>hibernate-4</module>
+        <module>hibernate-5</module>
         <module>datanucleus</module>
         <module>eclipselink</module>
         <module>openjpa</module>

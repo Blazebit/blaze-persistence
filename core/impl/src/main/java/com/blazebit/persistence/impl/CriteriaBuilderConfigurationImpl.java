@@ -25,6 +25,9 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
+import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
+import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.PostgreSQLDayDiffFunction;
@@ -106,7 +109,9 @@ import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFun
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
 
@@ -118,14 +123,18 @@ import com.blazebit.persistence.spi.QueryTransformer;
 public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfiguration {
 
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
+    private final Map<String, DbmsDialect> dbmsDialects = new HashMap<String, DbmsDialect>();
     private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
     private final List<EntityManagerIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>();
     private Properties properties = new Properties();
+    private ExtendedQuerySupport extendedQuerySupport;
 
     public CriteriaBuilderConfigurationImpl() {
         loadDefaultProperties();
         loadQueryTransformers();
+        loadExtendedQuerySupport();
         loadEntityManagerIntegrator();
+        loadDbmsDialects();
         loadFunctions();
     }
 
@@ -280,6 +289,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         registerFunction(jpqlFunctionGroup);
     }
 
+    private void loadDbmsDialects() {
+    	registerDialect(null, new DefaultDbmsDialect());
+    	registerDialect("mysql", new MySQLDbmsDialect());
+    	registerDialect("h2", new H2DbmsDialect());
+    }
+
     private void loadDefaultProperties() {
         properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
     }
@@ -291,6 +306,15 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         if (iterator.hasNext()) {
             QueryTransformer transformer = iterator.next();
             queryTransformers.add(transformer);
+        }
+    }
+
+    private void loadExtendedQuerySupport() {
+        ServiceLoader<ExtendedQuerySupport> serviceLoader = ServiceLoader.load(ExtendedQuerySupport.class);
+        Iterator<ExtendedQuerySupport> iterator = serviceLoader.iterator();
+
+        if (iterator.hasNext()) {
+        	extendedQuerySupport = iterator.next();
         }
     }
 
@@ -311,13 +335,23 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return this;
     }
 
-    public Map<String, JpqlFunctionGroup> getFunctions() {
+	public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
 
     @Override
     public Set<String> getFunctionNames() {
         return functions.keySet();
+    }
+
+    @Override
+	public CriteriaBuilderConfiguration registerDialect(String dbms, DbmsDialect dialect) {
+		dbmsDialects.put(dbms, dialect);
+		return this;
+	}
+    
+    public Map<String, DbmsDialect> getDbmsDialects() {
+    	return dbmsDialects;
     }
 
     @Override
@@ -329,6 +363,10 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     @Override
     public List<QueryTransformer> getQueryTransformers() {
         return queryTransformers;
+    }
+    
+    public ExtendedQuerySupport getExtendedQuerySupport() {
+    	return extendedQuerySupport;
     }
 
     @Override

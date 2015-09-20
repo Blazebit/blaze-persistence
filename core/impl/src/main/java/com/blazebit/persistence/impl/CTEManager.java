@@ -18,17 +18,12 @@ package com.blazebit.persistence.impl;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CTECriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.RecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -40,17 +35,27 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
 
 	private final CriteriaBuilderFactoryImpl cbf;
 	private final EntityManager em;
+	private final DbmsDialect dbmsDialect;
 	private final Set<String> registeredFunctions;
 
     private final Set<CTEInfo> ctes;
     private boolean recursive = false;
 
-    CTEManager(CriteriaBuilderFactoryImpl cbf, EntityManager em, Set<String> registeredFunctions) {
+    CTEManager(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
     	this.cbf = cbf;
     	this.em = em;
+    	this.dbmsDialect = dbmsDialect;
     	this.registeredFunctions = registeredFunctions;
         this.ctes = new LinkedHashSet<CTEInfo>();
     }
+    
+    Set<CTEInfo> getCtes() {
+    	return ctes;
+    }
+
+	boolean isRecursive() {
+		return recursive;
+	}
 
     void buildClause(StringBuilder sb) {
         if (ctes.isEmpty()) {
@@ -85,38 +90,30 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
         	sb.append(')');
         	
         	sb.append(" AS(\n");
-        	// TODO: need to reorder select infos first
-        	sb.append(cte.criteriaBuilder.getQueryString());
+        	sb.append(cte.nonRecursiveCriteriaBuilder.getQueryString());
         	sb.append("\n)");
         }
+        
+        sb.append("\n");
     }
 
 	<X> CTECriteriaBuilder<X, T> with(Class<X> cteClass, CriteriaBuilderImpl<T> criteriaBuilderImpl) {
-		CTECriteriaBuilderImpl<X, T> cteBuilder = new CTECriteriaBuilderImpl<X, T>(cbf, em, cteClass, registeredFunctions, criteriaBuilderImpl, this);
+		CTECriteriaBuilderImpl<X, T> cteBuilder = new CTECriteriaBuilderImpl<X, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, criteriaBuilderImpl, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
 	<X> RecursiveCTECriteriaBuilder<X, T> withRecursive(Class<X> cteClass, CriteriaBuilderImpl<T> criteriaBuilderImpl) {
-		return null;
+		recursive = true;
+		RecursiveCTECriteriaBuilderImpl<X, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, criteriaBuilderImpl, this);
+        this.onBuilderStarted(cteBuilder);
+		return cteBuilder;
 	}
 	
     @Override
-	public void onBuilderEnded(CTECriteriaBuilderImpl<?, ?> builder) {
+	public void onBuilderEnded(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
 		super.onBuilderEnded(builder);
-		ctes.add(new CTEInfo(builder.getCteName(), builder.getAttributes(), builder));
+		ctes.add(builder.createCTEInfo());
 	}
-
-	private static class CTEInfo {
-    	private final String name;
-    	private final List<String> attributes;
-    	private final CTECriteriaBuilderImpl<?, ?> criteriaBuilder;
-    	
-		public CTEInfo(String name, List<String> attributes, CTECriteriaBuilderImpl<?, ?> criteriaBuilder) {
-			this.name = name;
-			this.attributes = attributes;
-			this.criteriaBuilder = criteriaBuilder;
-		}
-    }
 
 }

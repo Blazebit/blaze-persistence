@@ -17,17 +17,14 @@ package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.CTECriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -35,54 +32,33 @@ import com.blazebit.persistence.SelectBuilder;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class CTECriteriaBuilderImpl<T, X> extends AbstractCommonQueryBuilder<T, CTECriteriaBuilder<T, X>> implements CTECriteriaBuilder<T, X>, SelectBuilder<CTECriteriaBuilder<T, X>> {
-	
-	private final CriteriaBuilder<X> result;
-	private final CTEBuilderListener listener;
-	private final String cteName;
-	private final SortedMap<String, Boolean> bindingMap;
-	
-    public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<X> result, CTEBuilderListener listener) {
-        super(cbf, em, clazz, null, registeredFunctions);
-        this.result = result;
-        this.listener = listener;
+public class CTECriteriaBuilderImpl<T, X> extends AbstractCTECriteriaBuilder<T, X, CTECriteriaBuilder<T, X>> implements CTECriteriaBuilder<T, X> {
 
-		EntityType<?> entityType = em.getMetamodel().entity(clazz);
-		this.cteName = entityType.getName();
-		this.bindingMap = new TreeMap<String, Boolean>();
-		
-		for (Attribute<?, ?> attribute : entityType.getAttributes()) {
-			bindingMap.put(attribute.getName(), Boolean.FALSE);
-		}
-    }
-
-	@Override
-	public SelectBuilder<CTECriteriaBuilder<T, X>> bind(String cteAttribute) {
-		Boolean attributeBound = bindingMap.get(cteAttribute);
-		
-		if (attributeBound == null) {
-			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
-		}
-		if (attributeBound == Boolean.TRUE) {
-			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
-		}
-		
-		bindingMap.put(cteAttribute, Boolean.TRUE);
-		return this;
-	}
-	
-	public String getCteName() {
-		return cteName;
-	}
-	
-	public List<String> getAttributes() {
-		return new ArrayList<String>(bindingMap.keySet());
+	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<X> result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
 	}
 
 	@Override
 	public CriteriaBuilder<X> end() {
 		listener.onBuilderEnded(this);
 		return result;
+	}
+	
+	public CTEInfo createCTEInfo() {
+		List<String> attributes = new ArrayList<String>(bindingMap.size());
+		List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
+		List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
+		newSelectInfos.clear();
+		
+		for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
+			Integer newPosition = attributes.size();
+			attributes.add(bindingEntry.getKey());
+			newSelectInfos.add(originalSelectInfos.get(bindingEntry.getValue()));
+			bindingEntry.setValue(newPosition);
+		}
+		
+		CTEInfo info = new CTEInfo(cteName, attributes, false, this, null);
+		return info;
 	}
 
 }

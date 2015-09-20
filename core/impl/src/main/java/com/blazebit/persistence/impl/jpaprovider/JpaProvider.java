@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.impl.jpaprovider;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+
 /**
  *
  * @author Christian Beikov

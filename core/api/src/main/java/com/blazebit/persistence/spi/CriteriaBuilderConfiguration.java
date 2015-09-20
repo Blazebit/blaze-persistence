@@ -46,10 +46,20 @@ public interface CriteriaBuilderConfiguration {
     /**
      * Registers the given jpql function group in the configuration.
      *
-     * @param jpqlFunctionGroup The jpq function group
+     * @param jpqlFunctionGroup The jpql function group
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup);
+    
+    /**
+     * Registers the given dialect for the given dbms name.
+     * 
+     * @param dbms The dbms for which the dialect should be registered
+     * @param dialect The dialect which should be registered
+     * @return this for method chaining
+     * @since 1.1.0
+     */
+    public CriteriaBuilderConfiguration registerDialect(String dbms, DbmsDialect dialect);
 
     /**
      * Returns the set of registered functions.
