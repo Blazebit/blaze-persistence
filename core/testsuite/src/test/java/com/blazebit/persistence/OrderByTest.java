@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.Document;
@@ -94,13 +94,21 @@ public class OrderByTest extends AbstractCoreTest {
     @Test
     public void testOrderByNullAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, NullPointerException.class).orderBy(null, false, false);
+        try {
+            criteria.orderBy(null, false, false);
+            Assert.fail("Expected NullPointerException");
+        } catch (NullPointerException e) {
+        }
     }
 
     @Test
     public void testOrderByEmptyAlias() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, IllegalArgumentException.class).orderBy("", false, false);
+        try {
+            criteria.orderBy("", false, false);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+        }
     }
     
     @Test
@@ -110,7 +118,11 @@ public class OrderByTest extends AbstractCoreTest {
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
         cbf = config.createCriteriaBuilderFactory();
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        verifyException(criteria, SyntaxErrorException.class).orderByAsc("SIZE(d.partners)");
+        try {
+            criteria.orderByAsc("SIZE(d.partners)");
+            Assert.fail("Expected SyntaxErrorException");
+        } catch (SyntaxErrorException ex) {
+        }
     }
     
     @Test

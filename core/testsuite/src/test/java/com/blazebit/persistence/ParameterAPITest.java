@@ -28,6 +28,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.Document;
@@ -43,19 +44,31 @@ public class ParameterAPITest extends AbstractCoreTest {
     @Test
     public void testSetParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
-        verifyException(crit, IllegalArgumentException.class).setParameter("index", 0);
+        try {
+            crit.setParameter("index", 0);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     @Test
     public void testSetDateParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
-        verifyException(crit, IllegalArgumentException.class).setParameter("index", new Date(), TemporalType.DATE);
+        try {
+            crit.setParameter("index", new Date(), TemporalType.DATE);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     @Test
     public void testSetCalendarParameter_noSuchParamter() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class);
-        verifyException(crit, IllegalArgumentException.class).setParameter("index", Calendar.getInstance(), TemporalType.DATE);
+        try {
+            crit.setParameter("index", Calendar.getInstance(), TemporalType.DATE);
+            Assert.fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+        }
     }
 
     @Test
