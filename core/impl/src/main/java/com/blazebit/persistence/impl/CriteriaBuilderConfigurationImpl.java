@@ -25,6 +25,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
@@ -293,6 +294,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     	registerDialect(null, new DefaultDbmsDialect());
     	registerDialect("mysql", new MySQLDbmsDialect());
     	registerDialect("h2", new H2DbmsDialect());
+    	registerDialect("db2", new DB2DbmsDialect());
     }
 
     private void loadDefaultProperties() {
