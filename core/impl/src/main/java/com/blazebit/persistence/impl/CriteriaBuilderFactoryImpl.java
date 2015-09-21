@@ -117,6 +117,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
 
         DbmsDialect dialect = dbmsDialects.get(dbms);
+        
+        // Use the default dialect
+        if (dialect == null) {
+            dialect = dbmsDialects.get(null);
+        }
+        
         CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, dialect, resultClass, alias, registeredFunctions);
         return cb;
     }

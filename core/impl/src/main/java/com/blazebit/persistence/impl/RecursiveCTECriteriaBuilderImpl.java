@@ -14,17 +14,19 @@ import com.blazebit.persistence.spi.DbmsDialect;
 
 public class RecursiveCTECriteriaBuilderImpl<T, X> extends AbstractCTECriteriaBuilder<T, X, RecursiveCTECriteriaBuilder<T, X>> implements RecursiveCTECriteriaBuilder<T, X>, CTEBuilderListener {
 
+    protected final Class<T> clazz;
 	protected boolean done;
 	protected CTECriteriaBuilderImpl<T, X> recursiveCteBuilder;
 
 	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<X> result, final CTEBuilderListener listener) {
 		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
+		this.clazz = clazz;
 	}
 
 	@Override
 	public CTECriteriaBuilder<T, X> unionAll() {
 		verifyBuilderEnded();
-		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, resultType, registeredFunctions, result, this);
+		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, result, this);
 		return recursiveCteBuilder;
 	}
 
