@@ -111,17 +111,19 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
 	        	sb.append(" AS(\n");
 	        	
 	        	sb.append(cteNonRecursiveSqlQuery);
-	        	
+
+	            // TODO: this is a hibernate specific integration detail
+	            final String subselect = "( select * from " + cteInfo.name + " )";
+	            sqlQuery = sqlQuery.replace(subselect, cteInfo.name);
+	            
 	        	if (cteInfo.recursive) {
 		    		String cteRecursiveQueryString = cteInfo.recursiveCriteriaBuilder.getQueryString();
 		    		Query cteRecursiveQuery = em.createQuery(cteRecursiveQueryString);
                     
                     // TODO: set parameters
                     String cteRecursiveSqlQuery = cbf.getExtendedQuerySupport().getSql(em, cteRecursiveQuery);
-		    		
-		            // TODO: this is a hibernate specific integration detail
-		            String subselect = "( select * from " + cteInfo.name + " )";
-		            sqlQuery = sqlQuery.replace(subselect, cteInfo.name);
+
+    	            // TODO: this is a hibernate specific integration detail
 		            cteRecursiveSqlQuery = cteRecursiveSqlQuery.replace(subselect, cteInfo.name);
 		    		
 		        	sb.append("\nUNION ALL\n");
