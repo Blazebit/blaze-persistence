@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.update;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityTransaction;
@@ -24,15 +25,14 @@ import javax.persistence.EntityTransaction;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.basic.model.DocumentViewAbstractClass;
-import com.blazebit.persistence.view.basic.model.DocumentViewInterface;
-import com.blazebit.persistence.view.basic.model.PersonView;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
@@ -87,6 +87,7 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
     }
 
     @Test
+    @Category({ NoDatanucleus.class })
     public void testSimpleUpdate() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
@@ -94,11 +95,89 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
         PartialDocumentView docView = results.get(0);
         
         // When
-        docView.setName("newDoc");
-        evm.update(em, docView);
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+	        docView.setName("newDoc");
+	        evm.update(em, docView);
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
 
         // Then
+        em.clear();
         doc = em.find(Document.class, doc.getId());
         assertEquals(doc.getName(), docView.getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testUpdateRollbacked() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
+        List<PartialDocumentView> results = cb.getResultList();
+        PartialDocumentView docView = results.get(0);
+        
+        // When
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+	        docView.setName("newDoc");
+	        evm.update(em, docView);
+            em.flush();
+            tx.rollback();
+
+            tx.begin();
+	        evm.update(em, docView);
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+
+        // Then
+        em.clear();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals(doc.getName(), docView.getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testModifyAndUpdateRollbacked() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
+        List<PartialDocumentView> results = cb.getResultList();
+        PartialDocumentView docView = results.get(0);
+        
+        // When
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+	        docView.setName("newDoc");
+	        evm.update(em, docView);
+            em.flush();
+            tx.rollback();
+            
+	        docView.setName("newDoc1");
+	        docView.setLastModified(new Date());
+
+            tx.begin();
+	        evm.update(em, docView);
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+
+        // Then
+        em.clear();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals(doc.getName(), docView.getName());
+        assertEquals(doc.getLastModified().getTime(), docView.getLastModified().getTime());
     }
 }

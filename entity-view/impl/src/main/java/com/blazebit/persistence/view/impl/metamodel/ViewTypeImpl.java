@@ -135,6 +135,9 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         if (foundIdAttribute == null) {
             throw new IllegalArgumentException("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
         }
+        if (foundIdAttribute.isUpdateable()) {
+        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updateable which is not allowed!");
+        }
 
         this.idAttribute = foundIdAttribute;
         this.constructors = new HashMap<ParametersKey, MappingConstructor<X>>();

@@ -24,8 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -64,6 +62,9 @@ import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.proxy.UpdateableProxy;
+import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
+import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -79,6 +80,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ProxyFactory proxyFactory;
     private final Map<String, Object> properties;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
+    private final ConcurrentMap<ViewType<?>, PartialEntityViewUpdater> partialEntityViewUpdaterCache;
+    private final ConcurrentMap<ViewType<?>, FullEntityViewUpdater> fullEntityViewUpdaterCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
     
     private final boolean unsafeDisabled;
@@ -88,6 +91,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
+        this.partialEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, PartialEntityViewUpdater>();
+        this.fullEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, FullEntityViewUpdater>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
         registerFilterMappings();
         
@@ -111,56 +116,24 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public void update(EntityManager em, Object view) {
+    	update(em, view, true);
+    }
+
+    @Override
+    public void updateFull(EntityManager em, Object view) {
+    	update(em, view, false);
+    }
+    
+    private void update(EntityManager em, Object view, boolean partial) {
         if (!(view instanceof UpdateableProxy)) {
             throw new IllegalArgumentException("Only updateable entity views can be updated!");
         }
         
         UpdateableProxy updateableProxy = (UpdateableProxy) view;
-        Class<?> entityClass = updateableProxy.getEntityClass();
-        Object id = updateableProxy.getId();
-        Map<String, Object> dirtyState = updateableProxy.getDirtyState();
-        
-        if (dirtyState.isEmpty()) {
-            return;
-        }
-        
-        EntityType<?> entityType = em.getMetamodel().entity(entityClass);
-        String idName = entityType.getId(entityType.getIdType().getJavaType()).getName();
-        StringBuilder sb = new StringBuilder(100);
-        sb.append("UPDATE ");
-        sb.append(entityType.getName());
-        sb.append(" SET ");
-
-        boolean first = true;
-        for (Map.Entry<String, Object> entry : dirtyState.entrySet()) {
-            if (first) {
-                first = false;
-            } else {
-                sb.append(", ");
-            }
-            sb.append(entry.getKey());
-            sb.append(" = :");
-            sb.append(entry.getKey());
-        }
-        
-        sb.append(" WHERE ");
-        sb.append(idName);
-        sb.append(" = :");
-        sb.append(idName);
-        
-        String finalQuery = sb.toString();
-        Query query = em.createQuery(finalQuery);
-        query.setParameter(idName, id);
-        
-        for (Map.Entry<String, Object> entry : dirtyState.entrySet()) {
-            query.setParameter(entry.getKey(), entry.getValue());
-        }
-        
-        int updatedCount = query.executeUpdate();
-        
-        if (updatedCount != 1) {
-            throw new RuntimeException("Update did not work! Expected to update 1 row but was: " + updatedCount);
-        }
+        Class<?> entityViewClass = updateableProxy.$$_getEntityViewClass();
+        ViewType<?> viewType = metamodel.view(entityViewClass);
+        EntityViewUpdater updater = getUpdater(viewType, partial);
+        updater.executeUpdate(em, updateableProxy);
     }
 
     @Override
@@ -296,6 +269,44 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
 
         return (ViewTypeObjectBuilderTemplate<T>) value;
+    }
+    
+    private EntityViewUpdater getUpdater(ViewType<?> viewType, boolean partial) {
+    	if (partial) {
+    		return getPartialUpdater(viewType);
+    	} else {
+    		return getFullUpdater(viewType);
+    	}
+    }
+    
+    private FullEntityViewUpdater getFullUpdater(ViewType<?> viewType) {
+    	FullEntityViewUpdater value = fullEntityViewUpdaterCache.get(viewType);
+
+        if (value == null) {
+            value = new FullEntityViewUpdater(viewType);
+            FullEntityViewUpdater oldValue = fullEntityViewUpdaterCache.putIfAbsent(viewType, value);
+
+            if (oldValue != null) {
+                value = oldValue;
+            }
+        }
+
+        return value;
+    }
+    
+    private PartialEntityViewUpdater getPartialUpdater(ViewType<?> viewType) {
+    	PartialEntityViewUpdater value = partialEntityViewUpdaterCache.get(viewType);
+
+        if (value == null) {
+            value = new PartialEntityViewUpdater(viewType);
+            PartialEntityViewUpdater oldValue = partialEntityViewUpdaterCache.putIfAbsent(viewType, value);
+
+            if (oldValue != null) {
+                value = oldValue;
+            }
+        }
+
+        return value;
     }
 
     private void registerFilterMappings() {

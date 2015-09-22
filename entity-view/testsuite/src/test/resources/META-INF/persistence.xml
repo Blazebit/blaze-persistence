@@ -29,5 +29,6 @@ limitations under the License.
 		<class>com.blazebit.persistence.view.entity.IntIdEntity</class>
 		<class>com.blazebit.persistence.view.entity.Person</class>
 		<class>com.blazebit.persistence.view.entity.Version</class>
+		<mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
     </persistence-unit>
 </persistence>

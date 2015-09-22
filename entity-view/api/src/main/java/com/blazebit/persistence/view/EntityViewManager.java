@@ -45,6 +45,15 @@ public interface EntityViewManager {
      * @since 1.1.0
      */
     public void update(EntityManager entityManager, Object view);
+    
+    /**
+     * Fully updates the entity which the given entity view maps to.
+     * 
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for updating
+     * @since 1.1.0
+     */
+    public void updateFull(EntityManager entityManager, Object view);
 
     /**
      * Applies the entity view setting to the given criteria builder.

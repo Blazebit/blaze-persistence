@@ -30,4 +30,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UpdateableEntityView {
 
+	// TODO: implement
+	/**
+	 * Specifies whether partial updates are allowed or not.
+	 * 
+	 * @return Whether partial updates are allowed
+	 */
+	public boolean partial() default true;
 }

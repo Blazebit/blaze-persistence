@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.update.model;
 
+import java.util.Date;
+
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.UpdateableEntityView;
@@ -35,4 +37,9 @@ public interface PartialDocumentView {
     public String getName();
 
     public void setName(String name);
+
+	public Date getLastModified();
+	
+	public void setLastModified(Date date);
+
 }

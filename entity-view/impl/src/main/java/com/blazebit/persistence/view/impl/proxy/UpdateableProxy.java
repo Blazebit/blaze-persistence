@@ -1,17 +1,16 @@
 package com.blazebit.persistence.view.impl.proxy;
 
-import java.util.Map;
-
-
 public interface UpdateableProxy {
     
-    public Class<?> getEntityClass();
+    public Class<?> $$_getEntityViewClass();
 
-    public Object getId();
+    public Object $$_getId();
     
-    public Object getVersion();
+//    public Object $$_getVersion();
     
-    public Map<String, Object> getState();
+    public Object[] $$_getInitialState();
     
-    public Map<String, Object> getDirtyState();
+    public Object[] $$_getDirtyState();
+    
+    // TODO: actually i need to know to which transaction this object is bound to so we can prevent multiple usages
 }
