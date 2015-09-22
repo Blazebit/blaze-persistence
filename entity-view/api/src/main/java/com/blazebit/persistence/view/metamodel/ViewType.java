@@ -32,6 +32,13 @@ public interface ViewType<X> {
      * @return The name of the entity view.
      */
     public String getName();
+    
+    /**
+     * Returns whether the entity view is updateable.
+     * 
+     * @return Whether the entity view is updateable
+     */
+    public boolean isUpdateable();
 
     /**
      * Returns the java type of the entity view.

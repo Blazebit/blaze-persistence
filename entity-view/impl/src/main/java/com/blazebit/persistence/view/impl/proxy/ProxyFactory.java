@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.proxy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -112,6 +113,13 @@ public class ProxyFactory {
             } else {
                 cc.setSuperclass(superCc);
             }
+            
+            CtField stateField = null;
+            if (viewType.isUpdateable()) {
+                cc.addInterface(pool.get(UpdateableProxy.class.getName()));
+                stateField = new CtField(pool.get(Map.class.getName()), "_state", cc);
+                cc.addField(stateField);
+            }
 
             Set<MethodAttribute<? super T, ?>> attributes = viewType.getAttributes();
             CtField[] attributeFields = new CtField[attributes.size()];
@@ -120,7 +128,7 @@ public class ProxyFactory {
 
             // Create the id field
             MethodAttribute<? super T, ?> idAttribute = viewType.getIdAttribute();
-            CtField idField = addMembersForAttribute(idAttribute, clazz, cc);
+            CtField idField = addMembersForAttribute(idAttribute, clazz, cc, stateField);
             attributeFields[0] = idField;
             attributeTypes[0] = idField.getType();
             attributes.remove(idAttribute);
@@ -130,7 +138,7 @@ public class ProxyFactory {
                     continue;
                 }
                 
-                CtField attributeField = addMembersForAttribute(attribute, clazz, cc);
+                CtField attributeField = addMembersForAttribute(attribute, clazz, cc, stateField);
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
                 i++;
@@ -203,7 +211,7 @@ public class ProxyFactory {
         }
     }
 
-	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc) throws CannotCompileException, NotFoundException {
+	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, CtField stateField) throws CannotCompileException, NotFoundException {
         Method getter = attribute.getJavaMethod();
         Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
         
@@ -216,12 +224,12 @@ public class ProxyFactory {
         }
         cc.addField(attributeField);
         
-        createGettersAndSetters(attribute, clazz, cc, getter, setter, attributeField);
+        createGettersAndSetters(attribute, clazz, cc, getter, setter, stateField, attributeField);
         
         return attributeField;
     }
 
-	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField attributeField) throws CannotCompileException, NotFoundException {
+	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField stateField, CtField attributeField) throws CannotCompileException, NotFoundException {
 		String genericSignature = attributeField.getGenericSignature();
 		List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
         
@@ -239,7 +247,7 @@ public class ProxyFactory {
         cc.addMethod(attributeGetter);
         
         if (setter != null) {
-            CtMethod attributeSetter = CtNewMethod.setter(setter.getName(), attributeField);
+            CtMethod attributeSetter = createSetter(attribute, setter, stateField, attributeField);
             List<Method> bridgeSetters = getBridgeSetters(clazz, attribute, setter);
             
             if (genericSignature != null) {
@@ -253,6 +261,41 @@ public class ProxyFactory {
             }
             cc.addMethod(attributeSetter);
         }
+	}
+	
+	private CtMethod createSetter(MethodAttribute<?, ?> attribute, Method setter, CtField stateField, CtField attributeField) throws CannotCompileException {
+	        FieldInfo finfo = attributeField.getFieldInfo2();
+	        String fieldType = finfo.getDescriptor();
+	        String desc = "(" + fieldType + ")V";
+	        ConstPool cp = finfo.getConstPool();
+	        MethodInfo minfo = new MethodInfo(cp, setter.getName(), desc);
+	        minfo.setAccessFlags(AccessFlag.PUBLIC);
+
+	        Bytecode code = new Bytecode(cp, 3, 3);
+	        try {
+	            String fieldName = finfo.getName();
+                
+                if (attribute.getDeclaringType().isUpdateable()) {
+                    code.addAload(0);
+                    code.addGetfield(Bytecode.THIS, fieldName, fieldType);
+                    code.addLoad(1, attributeField.getType());
+                    code.addInvokevirtual(fieldType, "equals", getEqualsDesc());
+                    // TODO: dirty state handling
+                } else {
+                    code.addAload(0);
+                    code.addLoad(1, attributeField.getType());
+                    code.addPutfield(Bytecode.THIS, fieldName, fieldType);
+                }
+                
+	            code.addReturn(null);
+	        }
+	        catch (NotFoundException e) {
+	            throw new CannotCompileException(e);
+	        }
+
+	        minfo.setCodeAttribute(code.toCodeAttribute());
+	        CtClass cc = attributeField.getDeclaringClass();
+	        return CtMethod.make(minfo, cc);
 	}
     
     private List<Method> getBridgeGetters(Class<?> clazz, MethodAttribute<?, ?> attribute, Method getter) {

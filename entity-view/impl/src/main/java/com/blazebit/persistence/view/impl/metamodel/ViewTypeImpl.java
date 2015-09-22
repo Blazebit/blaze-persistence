@@ -37,6 +37,7 @@ import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.UpdateableEntityView;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
@@ -56,6 +57,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
 
     private final Class<X> javaType;
     private final String name;
+    private final boolean updateable;
     private final Class<?> entityClass;
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, MethodAttribute<? super X, ?>> attributes;
@@ -84,6 +86,8 @@ public class ViewTypeImpl<X> implements ViewType<X> {
             this.name = entityViewAnnot.name();
         }
 
+        // TODO: updateable entity views have restrictions on the mappings
+        this.updateable = clazz.isAnnotationPresent(UpdateableEntityView.class);
         this.entityClass = entityViewAnnot.value();
         this.viewFilters = new HashMap<String, ViewFilterMapping>();
         
@@ -213,6 +217,11 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean isUpdateable() {
+        return updateable;
     }
 
     @Override

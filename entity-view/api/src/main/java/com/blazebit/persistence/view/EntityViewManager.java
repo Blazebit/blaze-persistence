@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view;
 
+import javax.persistence.EntityManager;
+
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
@@ -34,6 +36,15 @@ public interface EntityViewManager {
      * @return The metamodel for this entity view manager
      */
     public ViewMetamodel getMetamodel();
+    
+    /**
+     * Partially updates the entity which the given entity view maps to.
+     * 
+     * @param entityManager The entity manager to use for the update
+     * @param view The view to use for partial updating
+     * @since 1.1.0
+     */
+    public void update(EntityManager entityManager, Object view);
 
     /**
      * Applies the entity view setting to the given criteria builder.

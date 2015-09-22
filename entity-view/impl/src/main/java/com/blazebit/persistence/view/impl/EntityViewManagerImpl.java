@@ -23,6 +23,9 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -60,6 +63,7 @@ import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
+import com.blazebit.persistence.view.impl.proxy.UpdateableProxy;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -103,6 +107,60 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @Override
     public ViewMetamodel getMetamodel() {
         return metamodel;
+    }
+
+    @Override
+    public void update(EntityManager em, Object view) {
+        if (!(view instanceof UpdateableProxy)) {
+            throw new IllegalArgumentException("Only updateable entity views can be updated!");
+        }
+        
+        UpdateableProxy updateableProxy = (UpdateableProxy) view;
+        Class<?> entityClass = updateableProxy.getEntityClass();
+        Object id = updateableProxy.getId();
+        Map<String, Object> dirtyState = updateableProxy.getDirtyState();
+        
+        if (dirtyState.isEmpty()) {
+            return;
+        }
+        
+        EntityType<?> entityType = em.getMetamodel().entity(entityClass);
+        String idName = entityType.getId(entityType.getIdType().getJavaType()).getName();
+        StringBuilder sb = new StringBuilder(100);
+        sb.append("UPDATE ");
+        sb.append(entityType.getName());
+        sb.append(" SET ");
+
+        boolean first = true;
+        for (Map.Entry<String, Object> entry : dirtyState.entrySet()) {
+            if (first) {
+                first = false;
+            } else {
+                sb.append(", ");
+            }
+            sb.append(entry.getKey());
+            sb.append(" = :");
+            sb.append(entry.getKey());
+        }
+        
+        sb.append(" WHERE ");
+        sb.append(idName);
+        sb.append(" = :");
+        sb.append(idName);
+        
+        String finalQuery = sb.toString();
+        Query query = em.createQuery(finalQuery);
+        query.setParameter(idName, id);
+        
+        for (Map.Entry<String, Object> entry : dirtyState.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+        
+        int updatedCount = query.executeUpdate();
+        
+        if (updatedCount != 1) {
+            throw new RuntimeException("Update did not work! Expected to update 1 row but was: " + updatedCount);
+        }
     }
 
     @Override
