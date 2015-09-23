@@ -60,6 +60,7 @@ public class UpdateCriteriaBuilderImpl<T> extends AbstractModificationCriteriaBu
 		}
 		
     	appendWhereClause(sbSelectFrom);
+    	appendReturningClause(sbSelectFrom);
 	}
 
 }

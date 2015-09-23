@@ -23,6 +23,10 @@ import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.ModificationCriteriaBuilder;
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.ReturningResult;
+import com.blazebit.persistence.impl.keyset.KeysetLink;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -31,7 +35,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class AbstractModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements ModificationCriteriaBuilder<X> {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements ModificationCriteriaBuilder<X> {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
@@ -55,6 +59,41 @@ public class AbstractModificationCriteriaBuilder<T, X extends ModificationCriter
 	@Override
 	public int executeUpdate() {
 		return getQuery().executeUpdate();
+	}
+
+	@Override
+	public ReturningResult<Tuple> executeWithReturning(String... attributes) {
+//		String sql = cbf.getExtendedQuerySupport().getSql(em, query);
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <Y> ReturningResult<Y> executeWithReturning(String attribute, Class<Y> type) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <Y> ReturningResult<Y> executeWithReturning(ObjectBuilder<Y> objectBuilder) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	protected void appendReturningClause(StringBuilder sbSelectFrom) {
+		if (orderByManager.hasOrderBys()) {
+			sbSelectFrom.append(", FUNCTION('RETURNING',");
+		} else if (havingManager.hasPredicates()) {
+			sbSelectFrom.append(" AND 1=FUNCTION('RETURNING',");
+		} else if (groupByManager.hasGroupBys()) {
+			sbSelectFrom.append(", FUNCTION('RETURNING',");
+		} else if (whereManager.hasPredicates()) {
+			sbSelectFrom.append(" AND 1=FUNCTION('RETURNING',");
+		} else {
+			sbSelectFrom.append(" WHERE 1=FUNCTION('RETURNING',");
+		}
+
+		sbSelectFrom.append(")");
 	}
 
 }

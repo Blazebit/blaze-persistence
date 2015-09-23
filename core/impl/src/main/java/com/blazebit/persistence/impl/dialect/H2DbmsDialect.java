@@ -1,16 +1,14 @@
 package com.blazebit.persistence.impl.dialect;
 
-import com.blazebit.persistence.spi.DbmsDialect;
-
-public class H2DbmsDialect implements DbmsDialect {
+public class H2DbmsDialect extends DefaultDbmsDialect {
 
 	@Override
-	public boolean supportWithClause() {
+	public boolean supportsWithClause() {
 		return true;
 	}
 
 	@Override
-	public boolean supportNonRecursiveWithClause() {
+	public boolean supportsNonRecursiveWithClause() {
 		return false;
 	}
 

@@ -228,6 +228,16 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return (X) this;
     }
 
+    public X setFirstResult(int firstResult) {
+    	// TODO: implement
+        return (X) this;
+    }
+
+	public X setMaxResults(int maxResults) {
+    	// TODO: implement
+        return (X) this;
+	}
+
     public Metamodel getMetamodel() {
         return em.getMetamodel();
     }

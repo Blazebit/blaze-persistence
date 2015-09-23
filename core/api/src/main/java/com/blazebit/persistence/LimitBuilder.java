@@ -16,18 +16,19 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for insert queries.
+ * An interface for builders that support limit and offset.
+ * This is related to the fact, that a query builder supports the limit and offset clause.
  *
- * @param <T> The entity type for which this update query is
+ * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface InsertCriteriaBuilder<T> extends ModificationCriteriaBuilder<InsertCriteriaBuilder<T>>, FromBuilder<InsertCriteriaBuilder<T>>, KeysetQueryBuilder<InsertCriteriaBuilder<T>>, OrderByBuilder<InsertCriteriaBuilder<T>>, GroupByBuilder<InsertCriteriaBuilder<T>>, DistinctBuilder<InsertCriteriaBuilder<T>> {
+public interface LimitBuilder<X extends LimitBuilder<X>> {
 
 	// TODO: documentation
-	public InsertCriteriaBuilder<T> bind(String attribute, Object value);
+	public X setFirstResult(int firstResult);
 
 	// TODO: documentation
-	public SelectBuilder<InsertCriteriaBuilder<T>> bind(String attribute);
+	public X setMaxResults(int maxResults);
 	
 }

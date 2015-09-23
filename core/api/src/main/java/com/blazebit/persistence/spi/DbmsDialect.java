@@ -16,6 +16,11 @@
 
 package com.blazebit.persistence.spi;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.List;
+
+
 /**
  * Interface for implementing some dbms specifics.
  *
@@ -25,25 +30,46 @@ package com.blazebit.persistence.spi;
  */
 public interface DbmsDialect {
 	
+	/* With clause handling */
+	
 	/**
 	 * Returns true if the dbms supports the with clause, false otherwise.
 	 * 
 	 * @return Whether the with clause is supported by the dbms
 	 */
-	public boolean supportWithClause();
+	public boolean supportsWithClause();
 	
 	/**
 	 * Returns true if the dbms supports the non-recursive with clause, false otherwise.
 	 * 
 	 * @return Whether the non-recursive with clause is supported by the dbms
 	 */
-	public boolean supportNonRecursiveWithClause();
+	public boolean supportsNonRecursiveWithClause();
 
     /**
      * Returns the SQL representation for the normal or recursive with clause. 
      * 
      * @param context The context into which the function should be rendered
+     * @return The with clause name
      */
     public String getWithClause(boolean recursive);
+    
+    /* Returning clause handling */
+	
+	/**
+	 * Returns true if the dbms supports the with clause, false otherwise.
+	 * 
+	 * @return Whether the with clause is supported by the dbms
+	 */
+	public boolean supportsJdbcReturning();
 
+	public boolean supportsQueryReturning();
+
+	public void applyQueryReturning(StringBuilder sqlSb, String[] returningColumns);
+
+	public void applyQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
+
+	public List<Object[]> getQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
+	
+//	public String getLastInsertedId();
 }

@@ -128,7 +128,7 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
 		    		
 		        	sb.append("\nUNION ALL\n");
 		        	sb.append(cteRecursiveSqlQuery);
-	        	} else if (!dbmsDialect.supportNonRecursiveWithClause()) {
+	        	} else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
 		        	sb.append("\nUNION ALL\n");
 		        	sb.append("SELECT ");
 		        	

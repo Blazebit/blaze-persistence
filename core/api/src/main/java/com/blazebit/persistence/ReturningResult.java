@@ -15,41 +15,29 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Query;
-import javax.persistence.Tuple;
+import java.util.List;
 
 /**
  * A builder for modification queries.
  *
- * @param <X> The concrete builder type
+ * @param <T> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends CommonQueryBuilder<X>, WhereBuilder<X> {
+public interface ReturningResult<T> {
 
     /**
-     * Returns the JPA query for the built query.
-     * The returned query is already parameterized with all known parameters.
+     * Returns the result of the returning clause.
      *
-     * @return The typed query for the built query
+     * @return The result of the returning clause
      */
-    public Query getQuery();
+    public List<T> getResultList();
     
     /**
      * Execute this modification statement and return the number of affected entities.
      * 
      * @return The number of affected entities
      */
-    public int executeUpdate();
-    
-	// TODO: add cte support
-
-    // TODO: documentation
-    public ReturningResult<Tuple> executeWithReturning(String... attributes);
-
-    // TODO: documentation
-    public <T> ReturningResult<T> executeWithReturning(String attribute, Class<T> type);
-
-    // TODO: documentation
-    public <T> ReturningResult<T> executeWithReturning(ObjectBuilder<T> objectBuilder);
+    public int getUpdateCount();
+	
 }

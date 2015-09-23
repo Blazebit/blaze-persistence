@@ -1,16 +1,14 @@
 package com.blazebit.persistence.impl.dialect;
 
-import com.blazebit.persistence.spi.DbmsDialect;
-
-public class MySQLDbmsDialect implements DbmsDialect {
+public class MySQLDbmsDialect extends DefaultDbmsDialect {
 
 	@Override
-	public boolean supportWithClause() {
+	public boolean supportsWithClause() {
 		return false;
 	}
 
 	@Override
-	public boolean supportNonRecursiveWithClause() {
+	public boolean supportsNonRecursiveWithClause() {
 		return false;
 	}
 
