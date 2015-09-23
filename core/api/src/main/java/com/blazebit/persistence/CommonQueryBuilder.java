@@ -27,12 +27,11 @@ import javax.persistence.metamodel.Metamodel;
  * A base interface for builders that support basic query functionality.
  * This interface is shared between normal query builders and subquery builders.
  *
- * @param <T> The query result type
  * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CommonQueryBuilder<T, X extends CommonQueryBuilder<T, X>> {
+public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
 
     /**
      * Returns the query string for the built query.

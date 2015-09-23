@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface UpdateCriteriaBuilder<T> extends ModificationCriteriaBuilder<T, UpdateCriteriaBuilder<T>> {
+public interface UpdateCriteriaBuilder<T> extends ModificationCriteriaBuilder<UpdateCriteriaBuilder<T>> {
 	
 	public UpdateCriteriaBuilder<T> set(String attribute, Object value);
 	

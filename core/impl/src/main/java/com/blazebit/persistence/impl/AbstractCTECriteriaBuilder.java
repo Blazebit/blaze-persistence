@@ -34,7 +34,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<T, X>> extends AbstractCommonQueryBuilder<T, X> implements BaseCTECriteriaBuilder<T, X>, SelectBuilder<X> {
+public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X> {
 	
 	protected static final Integer EMPTY = Integer.valueOf(-1);
 	protected final CriteriaBuilder<Y> result;

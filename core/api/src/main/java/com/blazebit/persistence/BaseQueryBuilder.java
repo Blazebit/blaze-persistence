@@ -24,7 +24,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends CommonQueryBuilder<T, X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, SelectBuilder<X> {
+public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends CommonQueryBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, SelectBuilder<X> {
 
     /**
      * Returns the result type of this query.

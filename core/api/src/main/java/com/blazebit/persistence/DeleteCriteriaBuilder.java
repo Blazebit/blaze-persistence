@@ -22,6 +22,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface DeleteCriteriaBuilder<T> extends ModificationCriteriaBuilder<T, DeleteCriteriaBuilder<T>> {
+public interface DeleteCriteriaBuilder<T> extends ModificationCriteriaBuilder<DeleteCriteriaBuilder<T>> {
 	
 }

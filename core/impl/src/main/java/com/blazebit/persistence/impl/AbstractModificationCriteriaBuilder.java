@@ -19,6 +19,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.ModificationCriteriaBuilder;
@@ -30,13 +31,16 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class AbstractModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<T, X>> extends AbstractCommonQueryBuilder<T, X> implements ModificationCriteriaBuilder<T, X> {
+public class AbstractModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements ModificationCriteriaBuilder<X> {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
 
+	@SuppressWarnings("unchecked")
 	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
+		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
+		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
+		super(cbf, em, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions);
 		this.entityType = em.getMetamodel().entity(clazz);
 		this.entityAlias = alias;
 	}

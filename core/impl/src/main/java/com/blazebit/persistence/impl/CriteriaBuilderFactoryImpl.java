@@ -28,6 +28,7 @@ import javax.persistence.EntityManager;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
+import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
@@ -182,6 +183,29 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         }
         
         UpdateCriteriaBuilderImpl<T> cb = new UpdateCriteriaBuilderImpl<T>(this, em, dialect, updateClass, alias, registeredFunctions);
+        return cb;
+	}
+
+	@Override
+	public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> updateClass) {
+        Set<String> registeredFunctions = new HashSet<String>();
+        EntityManager em = entityManager;
+        String dbms = null;
+        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
+            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
+            em = integrator.registerFunctions(em, functions);
+            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
+            dbms = integrator.getDbms(em);
+        }
+
+        DbmsDialect dialect = dbmsDialects.get(dbms);
+        
+        // Use the default dialect
+        if (dialect == null) {
+            dialect = dbmsDialects.get(null);
+        }
+        
+        InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(this, em, dialect, updateClass, registeredFunctions);
         return cb;
 	}
 

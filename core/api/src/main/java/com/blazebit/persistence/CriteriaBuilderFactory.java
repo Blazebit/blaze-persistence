@@ -57,6 +57,7 @@ public interface CriteriaBuilderFactory {
      * @param deleteClass The entity class for the delete criteria
      * @param <T> The type of the entity for the delete criteria
      * @return A new delete criteria builder
+     * @since 1.1.0
      */
     public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass);
 
@@ -68,6 +69,7 @@ public interface CriteriaBuilderFactory {
      * @param alias The alias that should be used for the entity
      * @param <T> The type of the entity for the delete criteria
      * @return A new delete criteria builder
+     * @since 1.1.0
      */
     public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias);
 
@@ -79,6 +81,7 @@ public interface CriteriaBuilderFactory {
      * @param updateClass The entity class for the update criteria
      * @param <T> The type of the entity for the update criteria
      * @return A new update criteria builder
+     * @since 1.1.0
      */
     public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass);
 
@@ -90,8 +93,20 @@ public interface CriteriaBuilderFactory {
      * @param alias The alias that should be used for the entity
      * @param <T> The type of the entity for the update criteria
      * @return A new update criteria builder
+     * @since 1.1.0
      */
     public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias);
+
+    /**
+     * Creates a new insert criteria builder for the given entity class.
+     *
+     * @param entityManager The entity manager to use for the insert criteria builder
+     * @param insertClass The entity class for the insert criteria
+     * @param <T> The type of the entity for the insert criteria
+     * @return A new insert criteria builder
+     * @since 1.1.0
+     */
+    public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass);
 
     /**
      * Returns the service provided by this criteria builder factory or null if none is available.

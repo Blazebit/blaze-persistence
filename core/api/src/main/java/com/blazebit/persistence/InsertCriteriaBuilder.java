@@ -16,19 +16,16 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for CTE criteria queries. This is the entry point for building CTE queries.
+ * A builder for insert queries.
  *
- * @param <T> The query result type which is the CTE type
- * @param <X> The result type which is returned afte the CTE builder
+ * @param <T> The entity type for which this update query is
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface RecursiveCTECriteriaBuilder<T, X> extends BaseCTECriteriaBuilder<RecursiveCTECriteriaBuilder<T, X>> {
-
-    /**
-     * Finishes the CTE builder for the non-recursive part and starts the builder for the recursive part.
-     *
-     * @return The parent query builder
-     */
-	public CTECriteriaBuilder<T, X> unionAll();
+public interface InsertCriteriaBuilder<T> extends ModificationCriteriaBuilder<InsertCriteriaBuilder<T>>, FromBuilder<InsertCriteriaBuilder<T>>, KeysetQueryBuilder<InsertCriteriaBuilder<T>>, OrderByBuilder<InsertCriteriaBuilder<T>>, GroupByBuilder<InsertCriteriaBuilder<T>>, DistinctBuilder<InsertCriteriaBuilder<T>> {
+	
+	public InsertCriteriaBuilder<T> bind(String attribute, Object value);
+	
+	public SelectBuilder<InsertCriteriaBuilder<T>> bind(String attribute);
+	
 }

@@ -335,7 +335,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        selectManager.select(this, expr, selectAlias);
+        selectManager.select(expr, selectAlias);
         resultType = (Class<T>) Tuple.class;
         return (X) this;
     }

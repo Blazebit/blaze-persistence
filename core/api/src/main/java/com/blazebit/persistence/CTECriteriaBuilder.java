@@ -23,7 +23,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface CTECriteriaBuilder<T, X> extends BaseCTECriteriaBuilder<T, CTECriteriaBuilder<T, X>> {
+public interface CTECriteriaBuilder<T, X> extends BaseCTECriteriaBuilder<CTECriteriaBuilder<T, X>> {
 
     /**
      * Finishes the CTE builder.

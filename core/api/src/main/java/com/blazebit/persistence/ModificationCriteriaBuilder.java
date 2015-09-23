@@ -20,11 +20,11 @@ import javax.persistence.Query;
 /**
  * A builder for modification queries.
  *
- * @param <T> The entity type for which this modification query is
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<T, X>> extends CommonQueryBuilder<T, X>, WhereBuilder<X> {
+public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends CommonQueryBuilder<X>, WhereBuilder<X> {
 
     /**
      * Returns the JPA query for the built query.

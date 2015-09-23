@@ -270,10 +270,6 @@ public class SelectManager<T> extends AbstractManager {
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, expressionFactory, caseOperandExpression));
     }
 
-    void select(AbstractCommonQueryBuilder<?, ?> builder, Expression expr, String selectAlias) {
-        handleSelect(expr, selectAlias);
-    }
-
     Class<?> getExpectedQueryResultType() {
         // Tuple case
         if (selectInfos.size() > 1) {
@@ -283,7 +279,7 @@ public class SelectManager<T> extends AbstractManager {
         return jpaProvider.getDefaultQueryResultType();
     }
 
-    private void handleSelect(Expression expr, String selectAlias) {
+    void select(Expression expr, String selectAlias) {
         SelectInfo selectInfo = new SelectInfo(expr, selectAlias, aliasManager);
         if (selectAlias != null) {
             aliasManager.registerAliasInfo(selectInfo);
@@ -362,7 +358,7 @@ public class SelectManager<T> extends AbstractManager {
         @Override
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
-            handleSelect(new SubqueryExpression(builder), selectAlias);
+            select(new SubqueryExpression(builder), selectAlias);
         }
     }
 
@@ -378,7 +374,7 @@ public class SelectManager<T> extends AbstractManager {
         @Override
         public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
             super.onBuilderEnded(builder);
-            handleSelect(superExpression, selectAlias);
+            select(superExpression, selectAlias);
         }
     }
 
@@ -393,7 +389,7 @@ public class SelectManager<T> extends AbstractManager {
         @Override
         public void onBuilderEnded(ExpressionBuilder builder) {
             super.onBuilderEnded(builder); // To change body of generated methods, choose Tools | Templates.
-            handleSelect(builder.getExpression(), selectAlias);
+            select(builder.getExpression(), selectAlias);
         }
 
     }
@@ -424,7 +420,7 @@ public class SelectManager<T> extends AbstractManager {
             }
             currentBuilder = null;
             for (Map.Entry<Expression, String> e : expressions) {
-                handleSelect(e.getKey(), e.getValue());
+            	select(e.getKey(), e.getValue());
                 // SelectInfo selectInfo = new SelectInfo(e.getKey(), e.getValue(), aliasManager);
                 // if (e.getValue() != null) {
                 // aliasManager.registerAliasInfo(selectInfo);
