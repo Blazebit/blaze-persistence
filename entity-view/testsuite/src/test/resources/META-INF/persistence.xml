@@ -16,6 +16,7 @@ limitations under the License.
 -->
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
     <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
+		<mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
 		<class>com.blazebit.persistence.view.collections.entity.simple.DocumentForCollections</class>
 		<class>com.blazebit.persistence.view.collections.entity.simple.DocumentForElementCollections</class>
 		<class>com.blazebit.persistence.view.collections.entity.simple.PersonForCollections</class>
@@ -29,6 +30,5 @@ limitations under the License.
 		<class>com.blazebit.persistence.view.entity.IntIdEntity</class>
 		<class>com.blazebit.persistence.view.entity.Person</class>
 		<class>com.blazebit.persistence.view.entity.Version</class>
-		<mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
     </persistence-unit>
 </persistence>

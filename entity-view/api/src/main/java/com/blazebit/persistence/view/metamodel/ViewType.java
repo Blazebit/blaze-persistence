@@ -41,6 +41,13 @@ public interface ViewType<X> {
     public boolean isUpdateable();
 
     /**
+     * Returns whether the entity view is partially updateable.
+     * 
+     * @return Whether the entity view is partially updateable
+     */
+    public boolean isPartiallyUpdateable();
+
+    /**
      * Returns the java type of the entity view.
      *
      * @return The java type of the entity view

@@ -58,6 +58,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     private final Class<X> javaType;
     private final String name;
     private final boolean updateable;
+    private final boolean partiallyUpdateable;
     private final Class<?> entityClass;
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, MethodAttribute<? super X, ?>> attributes;
@@ -87,7 +88,15 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         }
 
         // TODO: updateable entity views have restrictions on the mappings
-        this.updateable = clazz.isAnnotationPresent(UpdateableEntityView.class);
+        UpdateableEntityView updateableEntityView = AnnotationUtils.findAnnotation(javaType, UpdateableEntityView.class);
+        if (updateableEntityView != null) {
+        	this.updateable = true;
+        	this.partiallyUpdateable = updateableEntityView.partial();
+        } else {
+        	this.updateable = false;
+        	this.partiallyUpdateable = false;
+        }
+        
         this.entityClass = entityViewAnnot.value();
         this.viewFilters = new HashMap<String, ViewFilterMapping>();
         
@@ -126,6 +135,11 @@ public class ViewTypeImpl<X> implements ViewType<X> {
                         }
                     }
                     
+                    // TODO: remove this as soon as we have support for collection updates
+                    if (attribute.isCollection() && updateable && attribute.isUpdateable()) {
+                    	throw new IllegalArgumentException("Collection updates are not yet implemented! Please remove the setter for the attribute [" + attributeName + "] from [" + javaType.getName() + "]");
+                    }
+                    
                     attributes.put(attribute.getName(), attribute);
                     addAttributeFilters(attribute);
                 }
@@ -135,8 +149,11 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         if (foundIdAttribute == null) {
             throw new IllegalArgumentException("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
         }
-        if (foundIdAttribute.isUpdateable()) {
-        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updateable which is not allowed!");
+        
+        if (updateable) {
+	        if (foundIdAttribute.isUpdateable()) {
+	        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updateable which is not allowed!");
+	        }
         }
 
         this.idAttribute = foundIdAttribute;
@@ -228,6 +245,11 @@ public class ViewTypeImpl<X> implements ViewType<X> {
     }
 
     @Override
+	public boolean isPartiallyUpdateable() {
+		return partiallyUpdateable;
+	}
+
+	@Override
     public Class<X> getJavaType() {
         return javaType;
     }

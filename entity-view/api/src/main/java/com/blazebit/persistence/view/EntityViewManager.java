@@ -38,10 +38,11 @@ public interface EntityViewManager {
     public ViewMetamodel getMetamodel();
     
     /**
-     * Partially updates the entity which the given entity view maps to.
+     * Updates the entity which the given entity view maps to.
+     * Issues a partial update if enabled for the given view.
      * 
      * @param entityManager The entity manager to use for the update
-     * @param view The view to use for partial updating
+     * @param view The view to use for updating
      * @since 1.1.0
      */
     public void update(EntityManager entityManager, Object view);

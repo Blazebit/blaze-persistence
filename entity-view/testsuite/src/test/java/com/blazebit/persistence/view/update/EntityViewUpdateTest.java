@@ -17,15 +17,18 @@ package com.blazebit.persistence.view.update;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
@@ -36,28 +39,40 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import com.blazebit.persistence.view.update.model.FullDocumentView;
 import com.blazebit.persistence.view.update.model.PartialDocumentView;
+import com.blazebit.persistence.view.update.model.UpdateableDocumentView;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class PartialUpdateTest extends AbstractEntityViewTest {
+@RunWith(Parameterized.class)
+public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends AbstractEntityViewTest {
 
-    protected static EntityViewManager evm;
-
-    @BeforeClass
-    public static void initEvm() {
-        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
-        cfg.addEntityView(PartialDocumentView.class);
-        evm = cfg.createEntityViewManager();
-    }
-
+    private Class<T> viewType;
+    private EntityViewManager evm;
     private Document doc;
+    
+    public EntityViewUpdateTest(Class<T> viewType) {
+    	this.viewType = viewType;
+	}
+
+    @Parameterized.Parameters
+    public static Collection<?> entityViewCombinations() {
+        return Arrays.asList(new Object[][]{
+            { PartialDocumentView.class },
+            { FullDocumentView.class }
+        });
+    }
 
     @Before
     public void setUp() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(viewType);
+        evm = cfg.createEntityViewManager();
+        
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -65,12 +80,15 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
 
             Person o1 = new Person("pers1");
             o1.getLocalized().put(1, "localized1");
+            Person o2 = new Person("pers2");
+            o2.getLocalized().put(1, "localized2");
 
             doc.setOwner(o1);
             doc.getContacts().put(1, o1);
             doc.getContacts2().put(2, o1);
 
             em.persist(o1);
+            em.persist(o2);
             em.persist(doc);
             
             o1.setPartnerDocument(doc);
@@ -88,11 +106,38 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
 
     @Test
     @Category({ NoDatanucleus.class })
+    public void testUpdateWithEntity() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        T docView = results.get(0);
+        
+        // When
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+	        docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
+	        evm.update(em, docView);
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+
+        // Then
+        em.clear();
+        doc = em.find(Document.class, doc.getId());
+        assertEquals(doc.getOwner().getId(), docView.getOwner().getId());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class })
     public void testSimpleUpdate() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
-        CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
-        List<PartialDocumentView> results = cb.getResultList();
-        PartialDocumentView docView = results.get(0);
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        T docView = results.get(0);
         
         // When
         EntityTransaction tx = em.getTransaction();
@@ -117,9 +162,9 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
     @Category({ NoDatanucleus.class })
     public void testUpdateRollbacked() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
-        CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
-        List<PartialDocumentView> results = cb.getResultList();
-        PartialDocumentView docView = results.get(0);
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        T docView = results.get(0);
         
         // When
         EntityTransaction tx = em.getTransaction();
@@ -149,9 +194,9 @@ public class PartialUpdateTest extends AbstractEntityViewTest {
     @Category({ NoDatanucleus.class })
     public void testModifyAndUpdateRollbacked() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
-        CriteriaBuilder<PartialDocumentView> cb = evm.applySetting(EntityViewSetting.create(PartialDocumentView.class), criteria);
-        List<PartialDocumentView> results = cb.getResultList();
-        PartialDocumentView docView = results.get(0);
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        T docView = results.get(0);
         
         // When
         EntityTransaction tx = em.getTransaction();

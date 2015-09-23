@@ -24,8 +24,8 @@ import com.blazebit.persistence.view.entity.Document;
  * @author Christian Beikov
  * @since 1.1.0
  */
-@UpdateableEntityView
+@UpdateableEntityView(partial = false)
 @EntityView(Document.class)
-public interface PartialDocumentView extends UpdateableDocumentView {
+public interface FullUpdateableDocumentWithCollectionsView extends UpdateableDocumentWithCollectionsView {
 
 }

@@ -132,6 +132,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         UpdateableProxy updateableProxy = (UpdateableProxy) view;
         Class<?> entityViewClass = updateableProxy.$$_getEntityViewClass();
         ViewType<?> viewType = metamodel.view(entityViewClass);
+        partial = viewType.isPartiallyUpdateable() && partial;
         EntityViewUpdater updater = getUpdater(viewType, partial);
         updater.executeUpdate(em, updateableProxy);
     }
@@ -230,6 +231,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @SuppressWarnings("unchecked")
 	public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
+        if (viewType == null) {
+        	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
+        }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
@@ -238,6 +242,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
     @SuppressWarnings("unchecked")
     public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
+        if (viewType == null) {
+        	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
+        }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (CriteriaBuilder<T>) criteriaBuilder;
