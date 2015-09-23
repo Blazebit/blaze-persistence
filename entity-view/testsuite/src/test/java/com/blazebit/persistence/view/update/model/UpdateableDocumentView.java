@@ -17,10 +17,7 @@ package com.blazebit.persistence.view.update.model;
 
 import java.util.Date;
 
-import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.UpdateableEntityView;
-import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 
 /**

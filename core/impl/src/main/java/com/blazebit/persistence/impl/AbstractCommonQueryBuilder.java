@@ -851,9 +851,22 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     }
 
     protected void getQueryString1(StringBuilder sbSelectFrom) {
-        sbSelectFrom.append(selectManager.buildSelect());
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+    	appendSelectClause(sbSelectFrom);
+    	appendFromClause(sbSelectFrom);
+    	appendWhereClause(sbSelectFrom);
+    	appendGroupByClause(sbSelectFrom);
+    	appendOrderByClause(sbSelectFrom);
+    }
 
+    protected void appendSelectClause(StringBuilder sbSelectFrom) {
+        sbSelectFrom.append(selectManager.buildSelect());
+    }
+
+    protected void appendFromClause(StringBuilder sbSelectFrom) {
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+    }
+
+    protected void appendWhereClause(StringBuilder sbSelectFrom) {
         KeysetLink keysetLink = keysetManager.getKeysetLink();
         if (keysetLink == null || keysetLink.getKeysetMode() == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -867,7 +880,9 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
                 whereManager.buildClausePredicate(sbSelectFrom);
             }
         }
+    }
 
+    protected void appendGroupByClause(StringBuilder sbSelectFrom) {
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.addAll(groupByManager.buildGroupByClauses());
         if (hasGroupBy) {
@@ -876,8 +891,10 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             clauses.addAll(orderByManager.buildGroupByClauses());
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
-
         havingManager.buildClause(sbSelectFrom);
+    }
+
+    protected void appendOrderByClause(StringBuilder sbSelectFrom) {
         queryGenerator.setResolveSelectAliases(false);
         orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);

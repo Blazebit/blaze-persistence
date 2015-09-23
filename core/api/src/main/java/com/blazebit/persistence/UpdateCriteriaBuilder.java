@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,21 +16,14 @@
 package com.blazebit.persistence;
 
 /**
- * A base interface for builders that support basic query functionality.
- * This interface is shared between normal query builders and subquery builders.
+ * A builder for update queries.
  *
- * @param <T> The query result type
- * @param <X> The concrete builder type
+ * @param <T> The entity type for which this update query is
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.1.0
  */
-public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends CommonQueryBuilder<T, X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, SelectBuilder<X> {
-
-    /**
-     * Returns the result type of this query.
-     *
-     * @return The result type of this query
-     */
-    public Class<T> getResultType();
-    
+public interface UpdateCriteriaBuilder<T> extends ModificationCriteriaBuilder<T, UpdateCriteriaBuilder<T>> {
+	
+	public UpdateCriteriaBuilder<T> set(String attribute, Object value);
+	
 }

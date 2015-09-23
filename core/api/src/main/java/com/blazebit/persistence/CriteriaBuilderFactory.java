@@ -50,6 +50,50 @@ public interface CriteriaBuilderFactory {
     public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias);
 
     /**
+     * Like {@link CriteriaBuilderFactory#delete(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the delete class returns.
+     *
+     * @param entityManager The entity manager to use for the delete criteria builder
+     * @param deleteClass The entity class for the delete criteria
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     */
+    public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass);
+
+    /**
+     * Creates a new delete criteria builder for the given entity class.
+     *
+     * @param entityManager The entity manager to use for the delete criteria builder
+     * @param deleteClass The entity class for the delete criteria
+     * @param alias The alias that should be used for the entity
+     * @param <T> The type of the entity for the delete criteria
+     * @return A new delete criteria builder
+     */
+    public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias);
+
+    /**
+     * Like {@link CriteriaBuilderFactory#update(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
+     * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the update class returns.
+     *
+     * @param entityManager The entity manager to use for the update criteria builder
+     * @param updateClass The entity class for the update criteria
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     */
+    public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass);
+
+    /**
+     * Creates a new update criteria builder for the given entity class.
+     *
+     * @param entityManager The entity manager to use for the update criteria builder
+     * @param updateClass The entity class for the update criteria
+     * @param alias The alias that should be used for the entity
+     * @param <T> The type of the entity for the update criteria
+     * @return A new update criteria builder
+     */
+    public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias);
+
+    /**
      * Returns the service provided by this criteria builder factory or null if none is available.
      * 
      * @param serviceClass The type of the service

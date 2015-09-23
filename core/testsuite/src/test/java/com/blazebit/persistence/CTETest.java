@@ -23,11 +23,9 @@ import java.util.List;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.entity.RecursiveEntity;
 import com.blazebit.persistence.entity.TestCTE;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;

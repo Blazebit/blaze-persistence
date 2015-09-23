@@ -15,10 +15,10 @@
  */
 package com.blazebit.persistence;
 
-import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
+
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 import javax.persistence.metamodel.Metamodel;
@@ -33,13 +33,6 @@ import javax.persistence.metamodel.Metamodel;
  * @since 1.0
  */
 public interface CommonQueryBuilder<T, X extends CommonQueryBuilder<T, X>> {
-
-    /**
-     * Returns the result type of this query.
-     *
-     * @return The result type of this query
-     */
-    public Class<T> getResultType();
 
     /**
      * Returns the query string for the built query.
@@ -132,58 +125,4 @@ public interface CommonQueryBuilder<T, X extends CommonQueryBuilder<T, X>> {
      * @return The value of the parameter or null if no value has been set or the parameter does not exist
      */
     public Object getParameterValue(String name);
-
-    /**
-     * Uses the keyset which the keyset builder constructed to filter out rows that come after the keyset.
-     * Based on the order by expressions, the keyset builder should receive reference values for every used expression.
-     * The constructed keyset will be filtered out so this is like a "lower than" filter.
-     * 
-     * @return The keyset builder for specifing the keyset
-     */
-    public KeysetBuilder<X> beforeKeyset();
-
-    /**
-     * Like {@link QueryBuilder#beforeKeyset()} but maps the reference values by position instead of by expression.
-     * The order of the reference values has to match the order of the order by expressions.
-     * 
-     * @param values The reference values
-     * @return The query builder for chaining calls
-     */
-    public X beforeKeyset(Serializable... values);
-
-    /**
-     * Like {@link QueryBuilder#beforeKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
-     * The order of the tuple values has to match the order of the order by expressions.
-     * 
-     * @param keyset The reference keyset
-     * @return The query builder for chaining calls
-     */
-    public X beforeKeyset(Keyset keyset);
-
-    /**
-     * Uses the keyset which the keyset builder constructed to filter out rows that come before the keyset.
-     * Based on the order by expressions, the keyset builder should receive reference values for every used expression.
-     * The constructed keyset will be filtered out so this is like a "greater than" filter.
-     * 
-     * @return The keyset builder for specifing the keyset
-     */
-    public KeysetBuilder<X> afterKeyset();
-
-    /**
-     * Like {@link QueryBuilder#afterKeyset()} but maps the reference values by position instead of by expression.
-     * The order of the reference values has to match the order of the order by expressions.
-     * 
-     * @param values The reference values
-     * @return The query builder for chaining calls
-     */
-    public X afterKeyset(Serializable... values);
-
-    /**
-     * Like {@link QueryBuilder#afterKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
-     * The order of the tuple values has to match the order of the order by expressions.
-     * 
-     * @param keyset The reference keyset
-     * @return The query builder for chaining calls
-     */
-    public X afterKeyset(Keyset keyset);
 }

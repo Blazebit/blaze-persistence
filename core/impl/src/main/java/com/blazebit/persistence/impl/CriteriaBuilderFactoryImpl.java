@@ -27,6 +27,8 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.DeleteCriteriaBuilder;
+import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
@@ -128,6 +130,62 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
+	public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass) {
+        return delete(entityManager, deleteClass, null);
+	}
+
+	@Override
+	public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias) {
+        Set<String> registeredFunctions = new HashSet<String>();
+        EntityManager em = entityManager;
+        String dbms = null;
+        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
+            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
+            em = integrator.registerFunctions(em, functions);
+            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
+            dbms = integrator.getDbms(em);
+        }
+
+        DbmsDialect dialect = dbmsDialects.get(dbms);
+        
+        // Use the default dialect
+        if (dialect == null) {
+            dialect = dbmsDialects.get(null);
+        }
+        
+        DeleteCriteriaBuilderImpl<T> cb = new DeleteCriteriaBuilderImpl<T>(this, em, dialect, deleteClass, alias, registeredFunctions);
+        return cb;
+	}
+
+    @Override
+	public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass) {
+        return update(entityManager, updateClass, null);
+	}
+
+	@Override
+	public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias) {
+        Set<String> registeredFunctions = new HashSet<String>();
+        EntityManager em = entityManager;
+        String dbms = null;
+        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
+            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
+            em = integrator.registerFunctions(em, functions);
+            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
+            dbms = integrator.getDbms(em);
+        }
+
+        DbmsDialect dialect = dbmsDialects.get(dbms);
+        
+        // Use the default dialect
+        if (dialect == null) {
+            dialect = dbmsDialects.get(null);
+        }
+        
+        UpdateCriteriaBuilderImpl<T> cb = new UpdateCriteriaBuilderImpl<T>(this, em, dialect, updateClass, alias, registeredFunctions);
+        return cb;
+	}
+
+	@Override
     @SuppressWarnings("unchecked")
     public <T> T getService(Class<T> serviceClass) {
         if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {

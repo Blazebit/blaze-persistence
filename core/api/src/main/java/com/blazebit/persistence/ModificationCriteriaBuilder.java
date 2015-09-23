@@ -1,0 +1,47 @@
+/*
+ * Copyright 2015 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.blazebit.persistence;
+
+import javax.persistence.Query;
+
+/**
+ * A builder for modification queries.
+ *
+ * @param <T> The entity type for which this modification query is
+ * @author Christian Beikov
+ * @since 1.1.0
+ */
+public interface ModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<T, X>> extends CommonQueryBuilder<T, X>, WhereBuilder<X> {
+
+    /**
+     * Returns the JPA query for the built query.
+     * The returned query is already parameterized with all known parameters.
+     *
+     * @return The typed query for the built query
+     */
+    public Query getQuery();
+    
+    /**
+     * Execute this modification statement and return the number of affected entities.
+     * 
+     * @return The number of affected entities
+     */
+    public int executeUpdate();
+    
+	// TODO: add cte support
+	// TODO: add support for returning clause
+	
+}

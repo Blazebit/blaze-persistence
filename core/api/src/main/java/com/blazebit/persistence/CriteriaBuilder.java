@@ -25,6 +25,7 @@ package com.blazebit.persistence;
 public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>> {
 
 	/**
+	 * TODO: documentation
 	 * 
 	 * @param cteClass
 	 * @return
@@ -33,6 +34,7 @@ public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>,
     public <X> CTECriteriaBuilder<X, T> with(Class<X> cteClass);
 
 	/**
+	 * TODO: documentation
 	 * 
 	 * @param cteClass
 	 * @return
