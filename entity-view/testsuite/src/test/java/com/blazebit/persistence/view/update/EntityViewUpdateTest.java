@@ -208,7 +208,10 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
             tx.rollback();
             
 	        docView.setName("newDoc1");
-	        docView.setLastModified(new Date());
+	        // Remove milliseconds because MySQL doesn't use that precision by default
+	        Date date = new Date();
+	        date.setTime(1000 * (date.getTime() / 1000));
+	        docView.setLastModified(date);
 
             tx.begin();
 	        evm.update(em, docView);
