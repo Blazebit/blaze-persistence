@@ -9,13 +9,13 @@ import javax.transaction.Synchronization;
 import com.blazebit.reflection.ExpressionUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
-public class HibernateTransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
+public class Hibernate4TransactionSynchronizationStrategy implements TransactionSynchronizationStrategy {
 	
 	private final EntityTransaction tx;
 	private final Object synchronizationRegistry;
 	private final Method registerSynchronization;
 
-	public HibernateTransactionSynchronizationStrategy(EntityManager em) {
+	public Hibernate4TransactionSynchronizationStrategy(EntityManager em) {
         try {
         	this.tx = em.getTransaction();
 		} catch (IllegalStateException e) {

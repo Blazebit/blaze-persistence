@@ -23,6 +23,19 @@ public class TransactionHelper {
 			throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
 		}
 		
-		return new HibernateTransactionSynchronizationStrategy(em);
+        try {
+        	Class<?> hibernateSessionClass = Class.forName("org.hibernate.Session");
+        	String version = em.unwrap(hibernateSessionClass).getClass().getPackage().getImplementationVersion();
+        	String[] versionParts = version.split("\\.");
+        	int major = Integer.parseInt(versionParts[0]);
+        	
+        	if (major >= 5) {
+        		return new Hibernate5TransactionSynchronizationStrategy(em);
+        	} else {
+        		return new Hibernate4TransactionSynchronizationStrategy(em);
+        	}
+        } catch (ClassNotFoundException ex) {
+        	throw new IllegalArgumentException("Unsupported jpa provider!", ex);
+        }
     }
 }
