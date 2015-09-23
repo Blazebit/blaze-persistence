@@ -95,7 +95,7 @@ public class InsertCriteriaBuilderImpl<T> extends AbstractModificationCriteriaBu
 		
 		sbSelectFrom.append(")\n");
     	super.getQueryString1(sbSelectFrom);
-    	appendReturningClause(sbSelectFrom);
+//    	appendReturningClause(sbSelectFrom);
 	}
 
 }
