@@ -537,7 +537,11 @@ public class JoinManager extends AbstractManager {
                         // Start form the start index to respect the non joinable part
                         currentResult = createOrUpdateNode(current, currentResult.field + "." + pathElements.get(maybeSingularAssociationIndex), null, null, true, true);
                         current = currentResult.baseNode;
-                        currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex + 1, maybeSingularAssociationIdIndex);
+                        if(currentResult.hasField()){
+                            currentResult = implicitJoin(current, pathExpression, startIndex, maybeSingularAssociationIdIndex);
+                        }else{
+                            currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex + 1, maybeSingularAssociationIdIndex);
+                        }
                         resultFields.clear();
                     } else {
                         currentResult = implicitJoin(current, pathExpression, maybeSingularAssociationIndex, maybeSingularAssociationIdIndex);
@@ -933,6 +937,9 @@ public class JoinManager extends AbstractManager {
                     JoinResult currentResult = createOrUpdateNode(current, StringUtils.join(".", resultFields), null, null, true, true);
                     current = currentResult.baseNode;
                     resultFields.clear();
+                    if(currentResult.hasField()){
+                        resultFields.add(currentResult.field);
+                    }
                 } else {
                     final JoinResult result = implicitJoinSingle(current, elementExpr.toString());
                     current = result.baseNode;

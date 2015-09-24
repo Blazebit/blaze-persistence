@@ -149,4 +149,13 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
+    
+    @Test
+    public void testEmbeddableInEmbeddedIdJoin(){
+        CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
+                .select("e.id.localizedEntity.name");
+        
+        assertEquals("SELECT e.id.localizedEntity.name FROM EmbeddableTestEntity e", crit.getQueryString());
+        crit.getResultList();
+    }
 }
