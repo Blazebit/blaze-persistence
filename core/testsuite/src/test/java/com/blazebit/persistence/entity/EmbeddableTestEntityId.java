@@ -14,6 +14,7 @@ public class EmbeddableTestEntityId implements Serializable {
     
     private IntIdEntity intIdEntity;
     private String key;
+    private LocalizedEntity localizedEntity;
 
     public EmbeddableTestEntityId() {
     }
@@ -41,6 +42,14 @@ public class EmbeddableTestEntityId implements Serializable {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public LocalizedEntity getLocalizedEntity() {
+        return localizedEntity;
+    }
+
+    public void setLocalizedEntity(LocalizedEntity localizedEntity) {
+        this.localizedEntity = localizedEntity;
     }
 
     @Override
