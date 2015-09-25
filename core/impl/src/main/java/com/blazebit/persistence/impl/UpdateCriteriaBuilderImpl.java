@@ -35,6 +35,20 @@ public class UpdateCriteriaBuilderImpl<T> extends AbstractModificationCriteriaBu
 
 	public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
 		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
+
+        // set defaults
+        if (alias == null) {
+        	alias = clazz.getSimpleName().toLowerCase();
+        } else {
+        	// If the user supplies an alias, the intention is clear
+        	fromClassExplicitelySet = true;
+        }
+        
+        try {
+            this.joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
+        } catch (IllegalArgumentException ex) {
+    		throw new IllegalArgumentException("The class [" + clazz.getName() + "] is not an entity!");
+        }
 	}
 
 	@Override
