@@ -179,7 +179,7 @@
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
 							<systemPropertyVariables>
-								<jdbc.url>jdbc:sqlite::memory:</jdbc.url>
+								<jdbc.url>jdbc:sqlite:test.db</jdbc.url>
 								<jdbc.user />
 								<jdbc.password />
 								<jdbc.driver>org.sqlite.JDBC</jdbc.driver>
@@ -425,7 +425,7 @@
                                 <dependency>
                                     <groupId>org.datanucleus</groupId>
                                     <artifactId>datanucleus-rdbms</artifactId>
-                                    <version>${version.datanucleus.base-4}</version>
+                                    <version>${version.datanucleus.rdbms-4}</version>
                                 </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
@@ -503,7 +503,7 @@
                                 <dependency>
                                     <groupId>org.datanucleus</groupId>
                                     <artifactId>datanucleus-rdbms</artifactId>
-                                    <version>${version.datanucleus.base-5}</version>
+                                    <version>${version.datanucleus.rdbms-5}</version>
                                 </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
