@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -87,25 +88,25 @@
 
 	<properties>
 		<blaze-persistence.codename>Loki</blaze-persistence.codename>
-	
+
 		<version.blazecbav>0.2.0</version.blazecbav>
 		<version.blazeutils>0.1.10</version.blazeutils>
 		<version.deltaspike>1.0.1</version.deltaspike>
 		<version.junit>4.11</version.junit>
-                
-                <!-- Minimum version is 4.2.8.Final -->
-                <!-- 4.2.15.Final has a bug regarding naming strategies -->
-                <version.hibernate-4.2>4.2.14.Final</version.hibernate-4.2>
-                <version.hibernate-4.3>4.3.10.Final</version.hibernate-4.3>
-                <version.hibernate-5>5.0.0.Final</version.hibernate-5>
-                
-                <version.datanucleus.base-4>4.1.4</version.datanucleus.base-4>
-                <version.datanucleus.rdbms-4>4.1.5</version.datanucleus.rdbms-4>
-                <version.datanucleus.jpa-4>4.0.4</version.datanucleus.jpa-4>
-                <version.datanucleus.base-5>5.0.0-m1-SNAPSHOT</version.datanucleus.base-5>
-                <version.datanucleus.rdbms-5>4.1.5</version.datanucleus.rdbms-5>
-                <version.datanucleus.jpa-5>4.0.4</version.datanucleus.jpa-5>
-                
+
+		<!-- Minimum version is 4.2.8.Final -->
+		<!-- 4.2.15.Final has a bug regarding naming strategies -->
+		<version.hibernate-4.2>4.2.14.Final</version.hibernate-4.2>
+		<version.hibernate-4.3>4.3.10.Final</version.hibernate-4.3>
+		<version.hibernate-5>5.0.0.Final</version.hibernate-5>
+
+		<version.datanucleus.base-4>4.1.4</version.datanucleus.base-4>
+		<version.datanucleus.rdbms-4>4.1.5</version.datanucleus.rdbms-4>
+		<version.datanucleus.jpa-4>4.0.4</version.datanucleus.jpa-4>
+		<version.datanucleus.base-5>5.0.0-m1-SNAPSHOT</version.datanucleus.base-5>
+		<version.datanucleus.rdbms-5>5.0.0-m1-SNAPSHOT</version.datanucleus.rdbms-5>
+		<version.datanucleus.jpa-5>4.0.4</version.datanucleus.jpa-5>
+
 		<version.openejb>4.6.0</version.openejb>
 		<version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
 
