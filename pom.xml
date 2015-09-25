@@ -103,7 +103,7 @@
                 <version.datanucleus.rdbms-4>4.1.5</version.datanucleus.rdbms-4>
                 <version.datanucleus.jpa-4>4.0.4</version.datanucleus.jpa-4>
                 <version.datanucleus.base-5>5.0.0-m1-SNAPSHOT</version.datanucleus.base-5>
-                <version.datanucleus.rdbms-5>4.1.5</version.datanucleus.rdbms-5>
+                <version.datanucleus.rdbms-5>5.0.0-m1-SNAPSHOT</version.datanucleus.rdbms-5>
                 <version.datanucleus.jpa-5>4.0.4</version.datanucleus.jpa-5>
                 
 		<version.openejb>4.6.0</version.openejb>
