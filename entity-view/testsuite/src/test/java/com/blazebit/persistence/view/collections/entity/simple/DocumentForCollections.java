@@ -23,10 +23,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.CollectionTable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -104,7 +104,7 @@ public class DocumentForCollections implements Serializable {
 
     @OrderColumn(name = "position", nullable = false)
     @OneToMany
-    @CollectionTable(name = "personlist")
+    @JoinTable(name = "personlist")
     public List<PersonForCollections> getPersonList() {
         return personList;
     }
