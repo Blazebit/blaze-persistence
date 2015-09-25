@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -84,12 +85,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -118,12 +119,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -152,12 +153,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -179,19 +180,19 @@
 						<configuration>
 							<excludedGroups>com.blazebit.persistence.testsuite.base.category.NoSQLite,${jpa.excludedGroups}</excludedGroups>
 							<systemPropertyVariables>
-								<jdbc.url>jdbc:sqlite::memory:</jdbc.url>
+								<jdbc.url>jdbc:sqlite:test.db</jdbc.url>
 								<jdbc.user />
 								<jdbc.password />
 								<jdbc.driver>org.sqlite.JDBC</jdbc.driver>
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -205,11 +206,11 @@
 		</profile>
 		<profile>
 			<id>db2</id>
-			<!-- 
-			In order to use this profile, you have to install the db2 driver jars via:
-				mvn -q install:install-file -Dfile=/PATH/TO/db2jcc4.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true 
-				mvn -q install:install-file -Dfile=/PATH/TO/db2jcc_license_cu.jar -DgroupId=com.ibm.db2 -DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true
-			-->
+			<!-- In order to use this profile, you have to install the db2 driver 
+				jars via: mvn -q install:install-file -Dfile=/PATH/TO/db2jcc4.jar -DgroupId=com.ibm.db2 
+				-DartifactId=db2jcc4 -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true mvn 
+				-q install:install-file -Dfile=/PATH/TO/db2jcc_license_cu.jar -DgroupId=com.ibm.db2 
+				-DartifactId=db2jcc_license_cu -Dversion=9.7 -Dpackaging=jar -DgeneratePom=true -->
 			<build>
 				<plugins>
 					<plugin>
@@ -225,12 +226,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -266,12 +267,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -300,12 +301,12 @@
 							</systemPropertyVariables>
 						</configuration>
 						<dependencies>
-			                <dependency>
-			                    <groupId>org.apache.maven.surefire</groupId>
-			                    <artifactId>surefire-junit47</artifactId>
-			                    <version>${version.surefire.plugin}</version>
-			                </dependency>
-			            </dependencies>
+							<dependency>
+								<groupId>org.apache.maven.surefire</groupId>
+								<artifactId>surefire-junit47</artifactId>
+								<version>${version.surefire.plugin}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 				</plugins>
 			</build>
@@ -328,16 +329,16 @@
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
 			</properties>
 			<dependencies>
-		        <dependency>
-		            <groupId>org.hibernate</groupId>
-		            <artifactId>hibernate-entitymanager</artifactId>
-		            <version>${version.hibernate-4.2}</version>
-		        </dependency>
-		        <dependency>
-		            <groupId>${project.groupId}</groupId>
-		            <artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-entitymanager</artifactId>
+					<version>${version.hibernate-4.2}</version>
+				</dependency>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
 					<scope>test</scope>
-		        </dependency>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -356,11 +357,11 @@
 					<artifactId>hibernate-entitymanager</artifactId>
 					<version>${version.hibernate-4.3}</version>
 				</dependency>
-		        <dependency>
-		            <groupId>${project.groupId}</groupId>
-		            <artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
 					<scope>test</scope>
-		        </dependency>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -379,11 +380,11 @@
 					<artifactId>hibernate-entitymanager</artifactId>
 					<version>${version.hibernate-5}</version>
 				</dependency>
-		        <dependency>
-		            <groupId>${project.groupId}</groupId>
-		            <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+				<dependency>
+					<groupId>${project.groupId}</groupId>
+					<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
 					<scope>test</scope>
-		        </dependency>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
@@ -409,39 +410,39 @@
 			<properties>
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
 			</properties>
-                        <repositories>
-                             <repository>
-                                 <id>DataNucleus Nightly</id>
-                                 <name>DataNucleus Repository Nightly</name>
-                                 <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-                             </repository>
-                         </repositories>
+			<repositories>
+				<repository>
+					<id>DataNucleus Nightly</id>
+					<name>DataNucleus Repository Nightly</name>
+					<url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+				</repository>
+			</repositories>
 			<dependencies>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>javax.persistence</artifactId>
-                                    <version>2.1.0</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-core</artifactId>
-                                    <version>${version.datanucleus.base-4}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-api-jpa</artifactId>
-                                    <version>${version.datanucleus.base-4}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-jpa-query</artifactId>
-                                    <version>${version.datanucleus.jpa-4}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-rdbms</artifactId>
-                                    <version>${version.datanucleus.base-4}</version>
-                                </dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>javax.persistence</artifactId>
+					<version>2.1.0</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-core</artifactId>
+					<version>${version.datanucleus.base-4}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-api-jpa</artifactId>
+					<version>${version.datanucleus.base-4}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-jpa-query</artifactId>
+					<version>${version.datanucleus.jpa-4}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-rdbms</artifactId>
+					<version>${version.datanucleus.rdbms-4}</version>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
@@ -487,39 +488,39 @@
 			<properties>
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
 			</properties>
-                        <repositories>
-                             <repository>
-                                 <id>DataNucleus Nightly</id>
-                                 <name>DataNucleus Repository Nightly</name>
-                                 <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-                             </repository>
-                         </repositories>
+			<repositories>
+				<repository>
+					<id>DataNucleus Nightly</id>
+					<name>DataNucleus Repository Nightly</name>
+					<url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+				</repository>
+			</repositories>
 			<dependencies>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>javax.persistence</artifactId>
-                                    <version>2.1.0</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-core</artifactId>
-                                    <version>${version.datanucleus.base-5}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-api-jpa</artifactId>
-                                    <version>${version.datanucleus.base-5}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-jpa-query</artifactId>
-                                    <version>${version.datanucleus.jpa-5}</version>
-                                </dependency>
-                                <dependency>
-                                    <groupId>org.datanucleus</groupId>
-                                    <artifactId>datanucleus-rdbms</artifactId>
-                                    <version>${version.datanucleus.base-5}</version>
-                                </dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>javax.persistence</artifactId>
+					<version>2.1.0</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-core</artifactId>
+					<version>${version.datanucleus.base-5}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-api-jpa</artifactId>
+					<version>${version.datanucleus.base-5}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-jpa-query</artifactId>
+					<version>${version.datanucleus.jpa-5}</version>
+				</dependency>
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-rdbms</artifactId>
+					<version>${version.datanucleus.rdbms-5}</version>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
