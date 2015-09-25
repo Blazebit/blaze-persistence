@@ -326,7 +326,7 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate4</jpa.excludedGroups>
 			</properties>
 			<dependencies>
 				<dependency>

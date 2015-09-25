@@ -28,6 +28,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate4;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 
 /**
@@ -53,8 +54,9 @@ public class InsertTest extends AbstractCoreTest {
 		}
 	}
 
+	// TODO: report that hibernate 4 does not support using the entity type in the select clause
 	@Test
-	@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+	@Category({ NoHibernate4.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 	public void testSimple() {
 		InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
 		cb.from(Person.class, "p");
