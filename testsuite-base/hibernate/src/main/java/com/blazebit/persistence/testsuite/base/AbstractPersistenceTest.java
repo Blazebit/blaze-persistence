@@ -32,11 +32,10 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
         	// MySQL is drunk, it does stuff case insensitive by default...
         	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
+        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("db2")) {
+            // The original DB2 dialect misses support for sequence retrieve in select statements
+            properties.put("hibernate.dialect", SaneDB2Dialect.class.getName());
         }
-        
-        // Apparently there is a hibernate bug in the JPA schemageneration
-        properties.remove("javax.persistence.schema-generation.database.action");
-        properties.put("hibernate.hbm2ddl.auto", "create-drop");
         
         if (isHibernate42()) {
             properties.put("hibernate.connection.url", properties.get("javax.persistence.jdbc.url"));

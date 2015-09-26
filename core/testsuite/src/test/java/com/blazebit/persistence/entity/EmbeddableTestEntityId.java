@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
@@ -14,7 +15,7 @@ public class EmbeddableTestEntityId implements Serializable {
     
     private IntIdEntity intIdEntity;
     private String key;
-    private LocalizedEntity localizedEntity;
+    private EmbeddableTestEntityIdEmbeddable localizedEntity;
 
     public EmbeddableTestEntityId() {
     }
@@ -35,7 +36,7 @@ public class EmbeddableTestEntityId implements Serializable {
 
     // Rename because mysql can't handle "key"
     // Fixed size because mysql has size limitations
-    @Column(name = "test_key", length = 100)
+    @Column(name = "test_key", nullable = false, length = 100)
     public String getKey() {
         return key;
     }
@@ -44,11 +45,12 @@ public class EmbeddableTestEntityId implements Serializable {
         this.key = key;
     }
 
-    public LocalizedEntity getLocalizedEntity() {
+    @Embedded
+    public EmbeddableTestEntityIdEmbeddable getLocalizedEntity() {
         return localizedEntity;
     }
 
-    public void setLocalizedEntity(LocalizedEntity localizedEntity) {
+    public void setLocalizedEntity(EmbeddableTestEntityIdEmbeddable localizedEntity) {
         this.localizedEntity = localizedEntity;
     }
 

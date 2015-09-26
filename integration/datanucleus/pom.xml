@@ -14,13 +14,13 @@
 
     <name>Blazebit Persistence Integration DataNucleus</name>
         
-<!--    <repositories> -->
-<!--         <repository> -->
-<!--             <id>DataNucleus Nightly</id> -->
-<!--             <name>DataNucleus Repository Nightly</name> -->
-<!--             <url>http://www.datanucleus.org/downloads/maven2-nightly</url> -->
-<!--         </repository> -->
-<!--     </repositories> -->
+   <repositories>
+        <repository>
+            <id>DataNucleus Nightly</id>
+            <name>DataNucleus Repository Nightly</name>
+            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
