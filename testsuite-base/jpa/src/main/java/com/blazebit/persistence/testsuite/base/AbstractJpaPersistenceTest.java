@@ -61,19 +61,7 @@ public abstract class AbstractJpaPersistenceTest {
 
     @Before
     public void init() {
-        Properties properties = new Properties();
-        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
-        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", ""));
-        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", ""));
-        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
-        properties.put("javax.persistence.sharedCache.mode", "NONE");
-        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
-		properties = applyProperties(properties);
-		
-		//System.out.println("Using the following properties:");
-		//System.out.println(properties);
-
-        EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", properties);
+        EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
         em = factory.createEntityManager();
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
@@ -88,6 +76,22 @@ public abstract class AbstractJpaPersistenceTest {
     	// I am looking at you MySQL..
     	em.close();
         factory.close();
+
+        // Drop the tables again with the same persistence unit
+        factory = createEntityManagerFactory("TestsuiteBase", createProperties("drop"));
+        factory.close();
+    }
+    
+    private Properties createProperties(String dbAction) {
+        Properties properties = new Properties();
+        properties.put("javax.persistence.jdbc.url", System.getProperty("jdbc.url"));
+        properties.put("javax.persistence.jdbc.user", System.getProperty("jdbc.user", ""));
+        properties.put("javax.persistence.jdbc.password", System.getProperty("jdbc.password", ""));
+        properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
+        properties.put("javax.persistence.sharedCache.mode", "NONE");
+        properties.put("javax.persistence.schema-generation.database.action", dbAction);
+		properties = applyProperties(properties);
+		return properties;
     }
 
     protected abstract Class<?>[] getEntityClasses();

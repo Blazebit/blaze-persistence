@@ -28,7 +28,6 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
 
     @Override
     protected Properties applyProperties(Properties properties) {
-        properties.put("javax.persistence.schema-generation.database.action", "drop-and-create");
         properties.put("datanucleus.rdbms.mysql.characterSet", "utf8mb4");
         properties.put("datanucleus.rdbms.mysql.collation", "utf8mb4_bin");
         return properties;
