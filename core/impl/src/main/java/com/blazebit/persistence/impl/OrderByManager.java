@@ -137,7 +137,7 @@ public class OrderByManager extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         for (OrderByInfo orderBy : orderByInfos) {
-            orderBy.setExpression(transformer.transform(orderBy.getExpression(), ClauseType.ORDER_BY));
+            orderBy.setExpression(transformer.transform(orderBy.getExpression(), ClauseType.ORDER_BY, true));
         }
     }
 

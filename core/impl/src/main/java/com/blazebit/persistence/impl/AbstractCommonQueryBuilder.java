@@ -100,6 +100,8 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     // Mutable state
     protected Class<T> resultType;
+    protected int firstResult = 0;
+    protected int maxResults = Integer.MAX_VALUE;
     protected boolean fromClassExplicitelySet = false;
 
     private boolean needsCheck = true;
@@ -228,17 +230,27 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return (X) this;
     }
 
+	@SuppressWarnings("unchecked")
     public X setFirstResult(int firstResult) {
-    	// TODO: implement
+    	this.firstResult = firstResult;
         return (X) this;
     }
 
+	@SuppressWarnings("unchecked")
 	public X setMaxResults(int maxResults) {
-    	// TODO: implement
+    	this.maxResults = maxResults;
         return (X) this;
 	}
 
-    public Metamodel getMetamodel() {
+    public int getFirstResult() {
+		return firstResult;
+	}
+
+	public int getMaxResults() {
+		return maxResults;
+	}
+
+	public Metamodel getMetamodel() {
         return em.getMetamodel();
     }
 

@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>> {
+public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>>, LimitBuilder<CriteriaBuilder<T>> {
 
 	/**
 	 * TODO: documentation

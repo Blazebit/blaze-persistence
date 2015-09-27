@@ -80,7 +80,7 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
         if (exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
         	return entityManager;
         }
-
+        
         // Register compatibility functions
     	exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
         

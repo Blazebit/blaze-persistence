@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<plugin id="com.blazebit.persistence" name="Blaze-Persistence DataNucleus plugin" provider-name="Blazebit">
+    <extension point="org.datanucleus.annotations">
+        <annotations annotation-class="com.blazebit.persistence.CTE" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Entity" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.MappedSuperclass" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Embeddable" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedQuery" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedQueries" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedNativeQuery" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedNativeQueries" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedStoredProcedureQuery" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.NamedStoredProcedureQueries" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="org.datanucleus.api.jpa.annotations.PersistenceAware" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+        <annotations annotation-class="javax.persistence.Converter" reader="com.blazebit.persistence.impl.datanucleus.CTEAnnotationReader"/>
+    </extension>
+</plugin>

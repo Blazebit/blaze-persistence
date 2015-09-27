@@ -196,6 +196,7 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(ExistsPredicate predicate) {
+    	predicate.getExpression().accept(this);
     }
 
 }

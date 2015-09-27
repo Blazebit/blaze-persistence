@@ -174,7 +174,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         clearCache();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
+        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true, true);
         return (X) this;
     }
 
@@ -186,7 +186,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         verifyBuilderEnded();
 
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true);
+            joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, false, false, true, true);
         }
 
         return (X) this;
@@ -261,6 +261,12 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     @SuppressWarnings("unchecked")
     public TypedQuery<T> getQuery() {
         TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString(), selectManager.getExpectedQueryResultType());
+        if (firstResult != 0) {
+        	query.setFirstResult(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+        	query.setMaxResults(maxResults);
+        }
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }

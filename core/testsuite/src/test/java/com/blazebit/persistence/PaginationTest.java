@@ -403,6 +403,7 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
 
+        // NOTE: This test is a bit stupid. The where clause references a different join node(d.contacts) than what is selected(d.contacts[d.owner.age]). Don't mix them up
         String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE " + joinAliasValue("contacts_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();

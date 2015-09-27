@@ -96,9 +96,9 @@ public class SubqueryTest extends AbstractCoreTest {
     @Test
     public void testRootAliasInSubquery() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
-        crit.where("id").in().from(Person.class).select("id").where("ownedDocuments").eqExpression("d").end().getQueryString();
-        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments ownedDocuments_1 WHERE "
-                + "ownedDocuments_1 = d)";
+        crit.where("id").in().from(Person.class).select("id").leftJoin("ownedDocuments", "subDoc").where("subDoc").eqExpression("d").end().getQueryString();
+        String expected = "SELECT d FROM Document d WHERE d.id IN (SELECT person.id FROM Person person LEFT JOIN person.ownedDocuments subDoc WHERE "
+                + "subDoc = d)";
 
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
@@ -229,8 +229,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .from(Person.class)
                 .where("partnerDocument").eqExpression("d")
                 .end();
-        String expectedQuery = "SELECT d FROM Document d JOIN d.owner owner_1 WHERE owner_1 IN (SELECT person FROM Person person LEFT JOIN person.partnerDocument partnerDocument_1 "
-                + "WHERE partnerDocument_1 = d)";
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM Person person WHERE person.partnerDocument = d)";
         assertEquals(expectedQuery, crit.getQueryString());
         crit.getResultList();
     }

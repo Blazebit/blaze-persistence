@@ -45,19 +45,19 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
 
     // TODO: needs to be recursive and walk into expressions
     @Override
-    public Expression transform(Expression original, ClauseType fromClause) {
+    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
         if (original instanceof CompositeExpression) {
             CompositeExpression compExpr = (CompositeExpression) original;
             CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
             for (Expression e : compExpr.getExpressions()) {
-                transformed.getExpressions().add(transform(e, fromClause));
+                transformed.getExpressions().add(transform(e, fromClause, joinRequired));
             }
             return transformed;
         } else if (original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
             FunctionExpression func = (FunctionExpression) original;
             List<Expression> transformed = new ArrayList<Expression>();
             for (Expression e : func.getExpressions()) {
-                transformed.add(transform(e, fromClause));
+                transformed.add(transform(e, fromClause, joinRequired));
             }
             func.setExpressions(transformed);
             return func;
@@ -69,7 +69,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         PathExpression path = (PathExpression) ((FunctionExpression) original).getExpressions().get(0);
 
         if (joinManager.getParent() != null) {
-            joinManager.getParent().implicitJoin(path, true, fromClause, false, true, false);
+            joinManager.getParent().implicitJoin(path, true, fromClause, false, true, joinRequired, false);
         }
 
         return original;

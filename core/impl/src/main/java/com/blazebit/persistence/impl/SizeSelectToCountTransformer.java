@@ -80,7 +80,7 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
                 sizeArg.setUsedInCollectionFunction(false);
                 AggregateExpression countExpr = new AggregateExpression(false, "COUNT", expression.getExpressions());
 
-                joinManager.implicitJoin(sizeArg, true, ClauseType.SELECT, false, false);
+                joinManager.implicitJoin(sizeArg, true, ClauseType.SELECT, false, false, true);
 
                 // build group by id clause
                 List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();

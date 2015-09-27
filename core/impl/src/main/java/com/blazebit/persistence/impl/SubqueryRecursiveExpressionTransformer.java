@@ -27,7 +27,7 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 public class SubqueryRecursiveExpressionTransformer extends VisitorAdapter implements ExpressionTransformer {
 
     @Override
-    public Expression transform(Expression original, ClauseType fromClause) {
+    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
         original.accept(this);
         return original;
     }

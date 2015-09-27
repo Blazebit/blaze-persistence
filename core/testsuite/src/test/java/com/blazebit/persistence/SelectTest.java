@@ -115,9 +115,10 @@ public class SelectTest extends AbstractCoreTest {
     @Test
     public void testSelectScalarExpression() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
-        criteria.select("d.partners + 1");
+        criteria.select("d.idx + 1");
 
-        assertEquals("SELECT partners_1 + 1 FROM Document d LEFT JOIN d.partners partners_1", criteria.getQueryString());
+        assertEquals("SELECT d.idx + 1 FROM Document d", criteria.getQueryString());
+        criteria.getResultList();
     }
 
     @Test

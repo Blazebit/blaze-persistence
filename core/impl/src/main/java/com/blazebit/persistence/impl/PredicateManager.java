@@ -170,80 +170,98 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         private final ExpressionTransformer transformer;
         private final ClauseType fromClause;
+        private boolean joinRequired;
 
         public TransformationVisitor(ExpressionTransformer transformer, ClauseType fromClause) {
             this.transformer = transformer;
             this.fromClause = fromClause;
+            // By default we require joins
+            this.joinRequired = true;
         }
 
         @Override
         public void visit(BetweenPredicate predicate) {
-            predicate.setStart(transformer.transform(predicate.getStart(), fromClause));
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setEnd(transformer.transform(predicate.getEnd(), fromClause));
+            predicate.setStart(transformer.transform(predicate.getStart(), fromClause, joinRequired));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setEnd(transformer.transform(predicate.getEnd(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(GePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(GtPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(LikePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(EqPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+    		boolean original = joinRequired;
+    		joinRequired = false;
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
+            joinRequired = original;
         }
 
         @Override
         public void visit(LePredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(LtPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(InPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+    		boolean original = joinRequired;
+    		joinRequired = false;
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
+            joinRequired = original;
         }
 
         @Override
         public void visit(ExistsPredicate predicate) {
-            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause, joinRequired));
         }
 
         @Override
         public void visit(MemberOfPredicate predicate) {
-            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause));
+    		boolean original = joinRequired;
+    		joinRequired = false;
+            predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
+            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
+            joinRequired = original;
         }
 
         @Override
         public void visit(IsEmptyPredicate predicate) {
-            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
+    		boolean original = joinRequired;
+    		joinRequired = false;
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause, joinRequired));
+            joinRequired = original;
         }
 
         @Override
         public void visit(IsNullPredicate predicate) {
-            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause));
+    		boolean original = joinRequired;
+    		joinRequired = false;
+            predicate.setExpression(transformer.transform(predicate.getExpression(), fromClause, joinRequired));
+            joinRequired = original;
         }
     }
 }

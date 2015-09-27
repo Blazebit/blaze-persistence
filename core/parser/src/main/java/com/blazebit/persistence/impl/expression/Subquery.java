@@ -28,5 +28,9 @@ public interface Subquery {
     public String getQueryString();
 
     public List<Expression> getSelectExpressions();
+    
+    public int getFirstResult();
+    
+    public int getMaxResults();
 
 }

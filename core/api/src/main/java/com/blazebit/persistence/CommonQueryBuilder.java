@@ -31,7 +31,7 @@ import javax.persistence.metamodel.Metamodel;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> extends LimitBuilder<X> {
+public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
 
     /**
      * Returns the query string for the built query.

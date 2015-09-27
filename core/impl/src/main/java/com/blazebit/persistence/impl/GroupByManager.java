@@ -70,7 +70,7 @@ public class GroupByManager extends AbstractManager {
 
     void applyTransformer(ExpressionTransformer transformer) {
         for (NodeInfo groupBy : groupByInfos) {
-            groupBy.setExpression(transformer.transform(groupBy.getExpression(), ClauseType.GROUP_BY));
+            groupBy.setExpression(transformer.transform(groupBy.getExpression(), ClauseType.GROUP_BY, true));
         }
     }
 

@@ -83,11 +83,11 @@ public class CTETest extends AbstractCoreTest {
         	.bind("id").select("e.id")
         	.bind("name").select("e.name")
         	.bind("level").select("0")
-        	.where("e.parent.id").isNull()
+        	.where("e.parent").isNull()
         .end();
         String expected = ""
         		+ "WITH " + TestCTE.class.getSimpleName() + "(id, level, name) AS(\n"
-        		+ "SELECT e.id, 0, e.name FROM RecursiveEntity e WHERE e.parent.id IS NULL"
+        		+ "SELECT e.id, 0, e.name FROM RecursiveEntity e WHERE e.parent IS NULL"
         		+ "\n)\n"
         		+ "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2";
         
@@ -106,7 +106,7 @@ public class CTETest extends AbstractCoreTest {
         	.bind("id").select("e.id")
         	.bind("name").select("e.name")
         	.bind("level").select("0")
-        	.where("e.parent.id").isNull()
+        	.where("e.parent").isNull()
         .unionAll()
         	.from(TestCTE.class, "t")
         	.from(RecursiveEntity.class, "e")
@@ -117,7 +117,7 @@ public class CTETest extends AbstractCoreTest {
     	.end();
         String expected = ""
         		+ "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, level, name) AS(\n"
-        		+ "SELECT e.id, 0, e.name FROM RecursiveEntity e WHERE e.parent.id IS NULL"
+        		+ "SELECT e.id, 0, e.name FROM RecursiveEntity e WHERE e.parent IS NULL"
         		+ "\nUNION ALL\n"
         		+ "SELECT e.id, t.level + 1, e.name FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
         		+ "\n)\n"

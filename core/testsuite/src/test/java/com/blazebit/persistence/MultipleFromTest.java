@@ -36,7 +36,7 @@ public class MultipleFromTest extends AbstractCoreTest {
         		.from(Person.class, "p");
         criteria.where("d.owner").eqExpression("p");
         criteria.select("COUNT(*)");
-        assertEquals("SELECT " + countStar() + " FROM Document d JOIN d.owner owner_1, Person p WHERE owner_1 = p", criteria.getQueryString());
+        assertEquals("SELECT " + countStar() + " FROM Document d, Person p WHERE d.owner = p", criteria.getQueryString());
         criteria.getResultList();
     }
 }

@@ -30,5 +30,11 @@ public interface LimitBuilder<X extends LimitBuilder<X>> {
 
 	// TODO: documentation
 	public X setMaxResults(int maxResults);
+
+	// TODO: documentation
+    public int getFirstResult();
+
+	// TODO: documentation
+    public int getMaxResults();
 	
 }

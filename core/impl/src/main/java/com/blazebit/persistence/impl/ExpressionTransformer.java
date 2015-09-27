@@ -24,6 +24,6 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public interface ExpressionTransformer {
 
-    public Expression transform(Expression original, ClauseType fromClause);
+    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired);
 
 }

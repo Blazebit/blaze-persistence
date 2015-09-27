@@ -36,7 +36,7 @@ public class IsMemberOfTest extends AbstractCoreTest {
         criteria.where("d.owner").isMemberOf("d.contacts");
 
         assertEquals(
-            "SELECT d FROM Document d JOIN d.owner owner_1 WHERE owner_1 MEMBER OF d.contacts",
+            "SELECT d FROM Document d WHERE d.owner MEMBER OF d.contacts",
             criteria.getQueryString());
         criteria.getResultList();
     }

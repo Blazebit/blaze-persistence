@@ -16,6 +16,8 @@
 
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.persistence.Tuple;
 
 import org.junit.Assert;
@@ -29,6 +31,15 @@ import com.blazebit.persistence.entity.Document;
  * @since 1.0
  */
 public class SingleValuedAssociationTest extends AbstractCoreTest {
+
+    @Test
+    public void testSingleValuedAssociationIsNull() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.where("d.owner").isNull();
+
+        assertEquals("SELECT d FROM Document d WHERE d.owner IS NULL", criteria.getQueryString());
+        criteria.getResultList();
+    }
     
     @Test
     public void testSingleValuedAssociationRelativeIdAccess() {

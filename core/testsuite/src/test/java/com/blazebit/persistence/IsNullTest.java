@@ -28,7 +28,7 @@ import com.blazebit.persistence.entity.Document;
  * @since 1.0
  */
 public class IsNullTest extends AbstractCoreTest {
-
+    
     @Test
     public void testIsNull() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");

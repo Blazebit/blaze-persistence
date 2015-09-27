@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -45,7 +46,10 @@ public class InsertTest extends AbstractCoreTest {
 			tx.begin();
 			Person o1 = new Person("P1");
 			em.persist(o1);
+			em.flush();
 
+			Person o2 = new Person("P2");
+			em.persist(o2);
 			em.flush();
 			tx.commit();
 		} catch (Exception e) {
@@ -63,8 +67,39 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("age").select("p.age");
         cb.bind("idx").select("1");
         cb.bind("owner").select("p");
+        cb.orderByAsc("p.id");
         String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p";
+                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
+
+        assertEquals(expected, cb.getQueryString());
+
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            int updateCount = cb.executeUpdate();
+            assertEquals(2, updateCount);
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+    
+    @Test
+    // TODO: Implement
+    @Ignore("Not yet implemented")
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testSimpleWithLimit() {
+        InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
+        cb.from(Person.class, "p");
+        cb.bind("name").select("CONCAT(p.name,'s document')");
+        cb.bind("age").select("p.age");
+        cb.bind("idx").select("1");
+        cb.bind("owner").select("p");
+        cb.orderByAsc("p.id");
+        cb.setMaxResults(1);
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
 
         assertEquals(expected, cb.getQueryString());
 
@@ -90,8 +125,9 @@ public class InsertTest extends AbstractCoreTest {
 		cb.bind("age", 1L);
 		cb.bind("idx", 1);
 		cb.bind("owner").select("p");
+        cb.orderByAsc("p.id");
 		String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-				+ "SELECT :age, :idx, CONCAT(p.name,'s document'), p FROM Person p";
+				+ "SELECT :age, :idx, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
 
 		assertEquals(expected, cb.getQueryString());
 
@@ -99,7 +135,7 @@ public class InsertTest extends AbstractCoreTest {
 		try {
 			tx.begin();
 			int updateCount = cb.executeUpdate();
-			assertEquals(1, updateCount);
+			assertEquals(2, updateCount);
 			tx.commit();
 		} catch (Exception e) {
 			tx.rollback();

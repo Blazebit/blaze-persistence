@@ -369,7 +369,7 @@ public class ExpressionUtils {
                 super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
                 for (Expression expr : expression.getExpressions()) {
-                    transformed.add(replacementTransformer.transform(expr, null));
+                    transformed.add(replacementTransformer.transform(expr, null, false));
                 }
                 expression.getExpressions().clear();
                 expression.getExpressions().addAll(transformed);
@@ -380,7 +380,7 @@ public class ExpressionUtils {
                 super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
                 for (Expression expr : expression.getExpressions()) {
-                    transformed.add(replacementTransformer.transform(expr, null));
+                    transformed.add(replacementTransformer.transform(expr, null, false));
                 }
                 expression.setExpressions(transformed);
             }

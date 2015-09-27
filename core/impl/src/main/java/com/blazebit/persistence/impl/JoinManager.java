@@ -466,11 +466,11 @@ public class JoinManager extends AbstractManager {
         return result.baseNode;
     }
 
-	void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias) {
-        implicitJoin(expression, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, false);
+	void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired) {
+        implicitJoin(expression, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired, false);
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean fetch) {
+    void implicitJoin(Expression expression, boolean objectLeafAllowed, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;
@@ -482,20 +482,20 @@ public class JoinManager extends AbstractManager {
                 // this check is necessary to prevent infinite recursion in the case of e.g. SELECT name AS name
                 if (!fromSelectAlias) {
                     // we have to do this implicit join because we might have to adjust the selectOnly flag in the referenced join nodes
-                    implicitJoin(expr, true, fromClause, fromSubquery, true);
+                    implicitJoin(expr, true, fromClause, fromSubquery, true, joinRequired);
                 }
                 return;
             } else if (isExternal(pathExpression)) {
                 // try to set base node and field for the external expression based
                 // on existing joins in the super query
-                parent.implicitJoin(pathExpression, true, fromClause, true, fromSelectAlias);
+                parent.implicitJoin(pathExpression, true, fromClause, true, fromSelectAlias, joinRequired);
                 return;
             }
 
             // First try to implicit join indices of array expressions since we will need their base nodes
             for (PathElementExpression pathElem : pathExpression.getExpressions()) {
                 if (pathElem instanceof ArrayExpression) {
-                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromClause, fromSubquery, fromSelectAlias);
+                    implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromClause, fromSubquery, fromSelectAlias, joinRequired);
                 }
             }
 
@@ -645,7 +645,7 @@ public class JoinManager extends AbstractManager {
                     }
                     // join the expression behind a select alias once when it is encountered the first time
                     if (((PathExpression) selectExpr).getBaseNode() == null) {
-                        implicitJoin(selectExpr, objectLeafAllowed, fromClause, fromSubquery, true);
+                        implicitJoin(selectExpr, objectLeafAllowed, fromClause, fromSubquery, true, joinRequired);
                     }
                     PathExpression selectPathExpr = (PathExpression) selectExpr;
                     result = new JoinResult((JoinNode) selectPathExpr.getBaseNode(), selectPathExpr.getField());
@@ -655,7 +655,7 @@ public class JoinManager extends AbstractManager {
                 }
             } else if (!pathExpression.isUsedInCollectionFunction()) {
                 if (resultFields.isEmpty()) {
-                    result = implicitJoinSingle(current, elementExpr.toString(), objectLeafAllowed);
+                    result = implicitJoinSingle(current, elementExpr.toString(), objectLeafAllowed, joinRequired);
                 } else {
                     resultFields.add(elementExpr.toString());
 
@@ -664,7 +664,7 @@ public class JoinManager extends AbstractManager {
                             + StringUtils.join(".", resultFields) + "]");
                     }
 
-                    result = implicitJoinSingle(current, StringUtils.join(".", resultFields), objectLeafAllowed);
+                    result = implicitJoinSingle(current, StringUtils.join(".", resultFields), objectLeafAllowed, joinRequired);
                 }
             } else {
                 if (resultFields.isEmpty()) {
@@ -694,11 +694,11 @@ public class JoinManager extends AbstractManager {
             pathExpression.setField(result.field);
         } else if (expression instanceof CompositeExpression) {
             for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
+                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
             }
         } else if (expression instanceof FunctionExpression) {
             for (Expression exp : ((FunctionExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias);
+                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
             }
         }
     }
@@ -977,18 +977,30 @@ public class JoinManager extends AbstractManager {
         return createOrUpdateNode(baseNode, attributeName, null, null, true, true);
     }
 
-    private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName, boolean objectLeafAllowed) {
+    private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName, boolean objectLeafAllowed, boolean joinRequired) {
         JoinNode newBaseNode;
         String field;
         // The given path may be relative to the root or it might be an alias
         if (objectLeafAllowed) {
-            final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, attributeName);
-            newBaseNode = newBaseNodeResult.baseNode;
-            // check if the last path element was also joined
-            if (newBaseNode != baseNode) {
-                field = null;
+            Class<?> baseNodeType = baseNode.getPropertyClass();
+            Attribute<?, ?> attr = getSimpleAttributeForImplicitJoining(metamodel.managedType(baseNodeType), attributeName);
+            if (attr == null) {
+                throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + baseNodeType.getName());
+            }
+            
+            if (joinRequired || attr.isCollection()) {
+	            final JoinResult newBaseNodeResult = implicitJoinSingle(baseNode, attributeName);
+	            newBaseNode = newBaseNodeResult.baseNode;
+	            // check if the last path element was also joined
+	            if (newBaseNode != baseNode) {
+	                field = null;
+	            } else {
+	                field = attributeName;
+	            }
             } else {
+            	newBaseNode = baseNode;
                 field = attributeName;
+                // TODO: maybe reuse implicitly joined nodes?
             }
         } else {
             Class<?> baseNodeType = baseNode.getPropertyClass();

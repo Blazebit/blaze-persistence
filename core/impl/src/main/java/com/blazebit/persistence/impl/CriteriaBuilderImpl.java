@@ -81,9 +81,10 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     @Override
     @SuppressWarnings("unchecked")
     public TypedQuery<T> getQuery() {
+    	TypedQuery<T> query;
     	if (cteManager.getCtes().size() > 0) {
-	        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-	        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, query);
+	        TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+	        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
 	        StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100 + sqlQuery.length() + 50);
 	        
 	        sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
@@ -149,16 +150,32 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
 	        sb.append(sqlQuery);
             
             String finalQuery = sb.toString();
-            return new CustomSQLTypedQuery<T>(query, em, cbf.getExtendedQuerySupport(), finalQuery);
+            query = new CustomSQLTypedQuery<T>(baseQuery, em, cbf.getExtendedQuerySupport(), finalQuery);
+            // TODO: parameters?
+            // TODO: object builder?
     	} else {
-	        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+	        query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+	        if (firstResult != 0) {
+	        	query.setFirstResult(firstResult);
+	        }
+	        if (maxResults != Integer.MAX_VALUE) {
+	        	query.setMaxResults(maxResults);
+	        }
 	        if (selectManager.getSelectObjectBuilder() != null) {
 	            query = transformQuery(query);
 	        }
 	
 	        parameterizeQuery(query);
-	        return query;
     	}
+    	
+        if (firstResult != 0) {
+        	query.setFirstResult(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+        	query.setMaxResults(maxResults);
+        }
+        
+        return query;
     }
 
     @Override

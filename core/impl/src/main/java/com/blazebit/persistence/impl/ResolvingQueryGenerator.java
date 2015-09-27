@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -22,9 +23,12 @@ import java.util.Set;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
@@ -70,7 +74,43 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
     }
 
-    protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+    @Override
+	public void visit(SubqueryExpression expression) {
+        sb.append('(');
+        
+        final Subquery subquery = expression.getSubquery();
+        final boolean hasFirstResult = subquery.getFirstResult() != 0;
+        final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
+        
+        if (!hasFirstResult && !hasMaxResults) {
+        	sb.append(subquery.getQueryString());
+        } else {
+        	List<Expression> arguments = new ArrayList<Expression>(3);
+        	arguments.add(new FooExpression("'LIMIT'"));
+        	String queryString = subquery.getQueryString();
+        	StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
+        	subquerySb.append('(');
+        	subquerySb.append(queryString);
+        	subquerySb.append(')');
+        	arguments.add(new FooExpression(subquerySb.toString()));
+        	
+        	if (!hasMaxResults) {
+        		throw new IllegalArgumentException("First result without max results is not supported!");
+        	} else {
+        		arguments.add(new FooExpression(Integer.toString(subquery.getMaxResults())));
+        	}
+        	
+        	if (hasFirstResult) {
+        		arguments.add(new FooExpression(Integer.toString(subquery.getFirstResult())));
+        	}
+        	
+        	renderFunctionFunction("LIMIT", arguments);
+        }
+        
+        sb.append(')');
+	}
+
+	protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 1) {

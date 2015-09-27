@@ -34,7 +34,7 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
     }
 
     @Override
-    public Expression transform(Expression original, ClauseType fromClause) {
+    public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
         if (original instanceof PathExpression) {
             PathExpression originalPathExpr = (PathExpression) original;
             if (originalPathExpr.toString().equals(alias)) {

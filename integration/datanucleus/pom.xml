@@ -1,118 +1,140 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence-integration</artifactId>
-        <version>1.1.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
+	<parent>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-integration</artifactId>
+		<version>1.1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
 
-    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
-    <packaging>jar</packaging>
+	<artifactId>blaze-persistence-integration-datanucleus</artifactId>
+	<packaging>jar</packaging>
 
-    <name>Blazebit Persistence Integration DataNucleus</name>
-        
-   <repositories>
-        <repository>
-            <id>DataNucleus Nightly</id>
-            <name>DataNucleus Repository Nightly</name>
-            <url>http://www.datanucleus.org/downloads/maven2-nightly</url>
-        </repository>
-    </repositories>
+	<name>Blazebit Persistence Integration DataNucleus</name>
 
-    <dependencies>
+	<repositories>
+		<repository>
+			<id>DataNucleus Nightly</id>
+			<name>DataNucleus Repository Nightly</name>
+			<url>http://www.datanucleus.org/downloads/maven2-nightly</url>
+		</repository>
+	</repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-persistence-core-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-apt-utils</artifactId>
+			<scope>provided</scope>
+		</dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-core-api</artifactId>
+            <artifactId>blaze-common-utils</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-apt-utils</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blaze-persistence-integration-jpa-base</artifactId>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>2.1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-core</artifactId>
-            <version>${version.datanucleus.base-4}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-api-jpa</artifactId>
-            <version>${version.datanucleus.base-4}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-jpa-query</artifactId>
-            <version>${version.datanucleus.jpa-4}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.datanucleus</groupId>
-            <artifactId>datanucleus-rdbms</artifactId>
-            <version>${version.datanucleus.rdbms-4}</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-    
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>add-resource</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>add-resource</goal>
-                        </goals>
-                        <configuration>
-                            <resources>
-                                <resource>
-                                    <directory>target/generated/resources</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.bsc.maven</groupId>
-                <artifactId>maven-processor-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>process-resouces</id>
-                        <goals>
-                            <goal>process</goal>
-                        </goals>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <outputDirectory>target/generated/resources</outputDirectory>
-                            <processors>
-                                <!-- list of processors to use -->
-                                <processor>com.blazebit.apt.service.ServiceProviderAnnotationProcessor</processor>
-                            </processors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-persistence-integration-jpa-base</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.datanucleus</groupId>
+			<artifactId>javax.persistence</artifactId>
+			<version>2.1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.datanucleus</groupId>
+			<artifactId>datanucleus-core</artifactId>
+			<version>${version.datanucleus.base-4}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.datanucleus</groupId>
+			<artifactId>datanucleus-api-jpa</artifactId>
+			<version>${version.datanucleus.base-4}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.datanucleus</groupId>
+			<artifactId>datanucleus-jpa-query</artifactId>
+			<version>${version.datanucleus.jpa-4}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.datanucleus</groupId>
+			<artifactId>datanucleus-rdbms</artifactId>
+			<version>${version.datanucleus.rdbms-4}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-resource</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>add-resource</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>target/generated/resources</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.bsc.maven</groupId>
+				<artifactId>maven-processor-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>process-resouces</id>
+						<goals>
+							<goal>process</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<outputDirectory>target/generated/resources</outputDirectory>
+							<processors>
+								<!-- list of processors to use -->
+								<processor>com.blazebit.apt.service.ServiceProviderAnnotationProcessor</processor>
+							</processors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+							<Bundle-Name>blaze-persistence-integration-datanucleus</Bundle-Name>
+							<Bundle-SymbolicName>com.blazebit.blaze-persistence-integration-datanucleus</Bundle-SymbolicName>
+							<Bundle-Version>${project.version}</Bundle-Version>
+							<Bundle-Vendor>Blazebit</Bundle-Vendor>
+							<Require-Bundle>org.datanucleus,org.datanucleus.api.jpa</Require-Bundle>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 </project>

@@ -305,7 +305,7 @@
 		<profile>
 			<id>hibernate</id>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate4</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate42</jpa.excludedGroups>
 			</properties>
 			<activation>
 				<activeByDefault>true</activeByDefault>
