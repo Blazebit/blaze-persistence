@@ -7,26 +7,25 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.CTECriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.RecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.SelectCTECriteriaBuilder;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
-public class RecursiveCTECriteriaBuilderImpl<T, X> extends AbstractCTECriteriaBuilder<T, X, RecursiveCTECriteriaBuilder<T, X>> implements RecursiveCTECriteriaBuilder<T, X>, CTEBuilderListener {
+public class RecursiveCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectRecursiveCTECriteriaBuilder<T, Y>> implements SelectRecursiveCTECriteriaBuilder<T, Y>, CTEBuilderListener {
 
     protected final Class<T> clazz;
 	protected boolean done;
-	protected CTECriteriaBuilderImpl<T, X> recursiveCteBuilder;
+	protected CTECriteriaBuilderImpl<T, Y, X> recursiveCteBuilder;
 
-	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<X> result, final CTEBuilderListener listener) {
+	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, final CTEBuilderListener listener) {
 		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
 		this.clazz = clazz;
 	}
 
 	@Override
-	public CTECriteriaBuilder<T, X> unionAll() {
+	public SelectCTECriteriaBuilder<T, Y> unionAll() {
 		verifyBuilderEnded();
-		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, result, this);
+		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, Y, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, result, this);
 		return recursiveCteBuilder;
 	}
 

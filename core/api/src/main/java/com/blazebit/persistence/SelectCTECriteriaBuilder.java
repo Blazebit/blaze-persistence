@@ -16,12 +16,19 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for delete queries.
+ * A builder for cte criteria queries. This is the entry point for building cte queries.
  *
- * @param <T> The entity type for which this delete query is
+ * @param <T> The query result type which is the CTE type
+ * @param <X> The result type which is returned after the CTE builder
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface DeleteCriteriaBuilder<T> extends ModificationCriteriaBuilder<DeleteCriteriaBuilder<T>>, BaseDeleteCriteriaBuilder<T, DeleteCriteriaBuilder<T>> {
-	
+public interface SelectCTECriteriaBuilder<T, X> extends SelectBaseCTECriteriaBuilder<SelectCTECriteriaBuilder<T, X>> {
+
+    /**
+     * Finishes the CTE builder.
+     *
+     * @return The parent query builder
+     */
+	public X end();
 }

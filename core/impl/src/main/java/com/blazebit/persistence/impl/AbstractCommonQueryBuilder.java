@@ -34,6 +34,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
+import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -41,7 +42,9 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
@@ -84,6 +87,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
     protected final KeysetManager keysetManager;
+	protected final CTEManager<T> cteManager;
     protected final ResolvingQueryGenerator queryGenerator;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
@@ -126,6 +130,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.havingManager = (HavingManager<X>) builder.havingManager;
         this.groupByManager = builder.groupByManager;
         this.keysetManager = builder.keysetManager;
+        this.cteManager = builder.cteManager;
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
@@ -194,6 +199,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
+        this.cteManager = new CTEManager<T>(cbf, em, dbmsDialect, registeredFunctions);
 
         // resolve cyclic dependencies
         this.em = em;
@@ -210,6 +216,18 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
+    }
+
+	public <Y> SelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
+		return cteManager.with(cteClass, (X) this);
+	}
+	
+	public <Y> SelectRecursiveCTECriteriaBuilder<Y, X> withRecursive(Class<Y> cteClass) {
+		return cteManager.withRecursive(cteClass, (X) this);
+	}
+
+    public <Y> ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<Y> cteClass) {
+		return cteManager.withReturning(cteClass, (X) this);
     }
 
     public X from(Class<?> clazz) {

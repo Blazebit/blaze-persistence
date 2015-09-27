@@ -22,25 +22,8 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>>, LimitBuilder<CriteriaBuilder<T>> {
+public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>>, LimitBuilder<CriteriaBuilder<T>>, CTEBuilder<CriteriaBuilder<T>> {
 
-	/**
-	 * TODO: documentation
-	 * 
-	 * @param cteClass
-	 * @return
-	 * @since 1.1.0
-	 */
-    public <X> CTECriteriaBuilder<X, T> with(Class<X> cteClass);
-
-	/**
-	 * TODO: documentation
-	 * 
-	 * @param cteClass
-	 * @return
-	 * @since 1.1.0
-	 */
-    public <X> RecursiveCTECriteriaBuilder<X, T> withRecursive(Class<X> cteClass);
 
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);

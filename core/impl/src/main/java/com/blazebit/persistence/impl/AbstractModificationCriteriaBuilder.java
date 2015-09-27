@@ -22,7 +22,7 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.EntityType;
 
-import com.blazebit.persistence.ModificationCriteriaBuilder;
+import com.blazebit.persistence.BaseModificationCriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
@@ -35,7 +35,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractModificationCriteriaBuilder<T, X extends ModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements ModificationCriteriaBuilder<X> {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements BaseModificationCriteriaBuilder<X> {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
@@ -49,32 +49,27 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends Modificat
 		this.entityAlias = alias;
 	}
 
-	@Override
 	public Query getQuery() {
         Query query = em.createQuery(getQueryString());
         parameterizeQuery(query);
         return query;
 	}
 
-	@Override
 	public int executeUpdate() {
 		return getQuery().executeUpdate();
 	}
 
-	@Override
 	public ReturningResult<Tuple> executeWithReturning(String... attributes) {
 //		String sql = cbf.getExtendedQuerySupport().getSql(em, query);
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public <Y> ReturningResult<Y> executeWithReturning(String attribute, Class<Y> type) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	@Override
 	public <Y> ReturningResult<Y> executeWithReturning(ObjectBuilder<Y> objectBuilder) {
 		// TODO Auto-generated method stub
 		return null;

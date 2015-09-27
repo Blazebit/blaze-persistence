@@ -22,12 +22,6 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface InsertCriteriaBuilder<T> extends ModificationCriteriaBuilder<InsertCriteriaBuilder<T>>, FromBuilder<InsertCriteriaBuilder<T>>, KeysetQueryBuilder<InsertCriteriaBuilder<T>>, OrderByBuilder<InsertCriteriaBuilder<T>>, GroupByBuilder<InsertCriteriaBuilder<T>>, DistinctBuilder<InsertCriteriaBuilder<T>>, LimitBuilder<InsertCriteriaBuilder<T>> {
-
-	// TODO: documentation
-	public InsertCriteriaBuilder<T> bind(String attribute, Object value);
-
-	// TODO: documentation
-	public SelectBuilder<InsertCriteriaBuilder<T>> bind(String attribute);
+public interface InsertCriteriaBuilder<T> extends ModificationCriteriaBuilder<InsertCriteriaBuilder<T>>, BaseInsertCriteriaBuilder<T, InsertCriteriaBuilder<T>> {
 	
 }

@@ -100,7 +100,7 @@
 		<version.hibernate-4.3>4.3.10.Final</version.hibernate-4.3>
 		<version.hibernate-5>5.0.1.Final</version.hibernate-5>
 
-		<version.datanucleus.base-4>4.1.4</version.datanucleus.base-4>
+		<version.datanucleus.base-4>4.1.5-SNAPSHOT</version.datanucleus.base-4>
 		<version.datanucleus.rdbms-4>4.1.6-SNAPSHOT</version.datanucleus.rdbms-4>
 		<version.datanucleus.jpa-4>4.0.4</version.datanucleus.jpa-4>
 		<version.datanucleus.base-5>5.0.0-m1-SNAPSHOT</version.datanucleus.base-5>

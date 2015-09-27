@@ -24,25 +24,26 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
  * @param <T> The query result type
+ * @param <T> The criteria builder returned after the cte builder
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
 public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X> {
 	
 	protected static final Integer EMPTY = Integer.valueOf(-1);
-	protected final CriteriaBuilder<Y> result;
+	protected final Y result;
 	protected final CTEBuilderListener listener;
 	protected final String cteName;
 	protected final SortedMap<String, Integer> bindingMap;
 	
-    public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<Y> result, CTEBuilderListener listener) {
+    public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
         super(cbf, em, dbmsDialect, clazz, null, registeredFunctions);
         this.result = result;
         this.listener = listener;
@@ -56,7 +57,6 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 		}
     }
 
-	@Override
 	public SelectBuilder<X> bind(String cteAttribute) {
 		Integer attributeBindIndex = bindingMap.get(cteAttribute);
 		

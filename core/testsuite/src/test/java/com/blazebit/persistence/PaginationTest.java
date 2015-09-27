@@ -323,8 +323,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
                 + " KEY(contacts_contactNr_1) = :contactNr GROUP BY d.id, " + joinAliasValue("contacts_contactNr_1", "name") + " ORDER BY " + renderNullPrecedence(joinAliasValue("contacts_contactNr_1", "name"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        // TODO: enable as soon as #45 is fixed
-//        cb.getResultList();
+        cb.getResultList();
     }
 
     @Test
@@ -338,8 +337,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT d.id FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
                 + " KEY(contacts_contactNr_1) = :contactNr GROUP BY d.id, " + joinAliasValue("contacts_contactNr_1", "name") + " ORDER BY " + renderNullPrecedence(joinAliasValue("contacts_contactNr_1", "name"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
-        // TODO: enable as soon as #45 is fixed
-        //cb.getResultList();
+        cb.getResultList();
     }
 
     @Test

@@ -21,8 +21,9 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.CTECriteriaBuilder;
-import com.blazebit.persistence.RecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
+import com.blazebit.persistence.SelectCTECriteriaBuilder;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -103,17 +104,22 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
         sb.append("\n");
     }
 
-	<X> CTECriteriaBuilder<X, T> with(Class<X> cteClass, CriteriaBuilderImpl<T> criteriaBuilderImpl) {
-		CTECriteriaBuilderImpl<X, T> cteBuilder = new CTECriteriaBuilderImpl<X, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, criteriaBuilderImpl, this);
+	<X, Y> SelectCTECriteriaBuilder<X, Y> with(Class<X> cteClass, Y result) {
+		CTECriteriaBuilderImpl<X, Y, T> cteBuilder = new CTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
-	<X> RecursiveCTECriteriaBuilder<X, T> withRecursive(Class<X> cteClass, CriteriaBuilderImpl<T> criteriaBuilderImpl) {
+	<X, Y> SelectRecursiveCTECriteriaBuilder<X, Y> withRecursive(Class<X> cteClass, Y result) {
 		recursive = true;
-		RecursiveCTECriteriaBuilderImpl<X, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, criteriaBuilderImpl, this);
+		RecursiveCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
+	}
+
+	<X, Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<X> cteClass, Y result) {
+		// TODO: implement
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 	
     @Override

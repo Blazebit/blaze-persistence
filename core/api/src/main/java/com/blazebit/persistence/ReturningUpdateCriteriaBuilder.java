@@ -16,19 +16,13 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for cte criteria queries. This is the entry point for building cte queries.
+ * A builder for update queries.
  *
- * @param <T> The query result type which is the CTE type
- * @param <X> The result type which is returned afte the CTE builder
+ * @param <T> The entity type for which this update query is
+ * @param <X> The parent query build type 
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface CTECriteriaBuilder<T, X> extends BaseCTECriteriaBuilder<CTECriteriaBuilder<T, X>> {
-
-    /**
-     * Finishes the CTE builder.
-     *
-     * @return The parent query builder
-     */
-	public CriteriaBuilder<X> end();
+public interface ReturningUpdateCriteriaBuilder<T, X> extends ReturningModificationCriteriaBuilder<ReturningUpdateCriteriaBuilder<T, X>, X>, BaseUpdateCriteriaBuilder<T, ReturningUpdateCriteriaBuilder<T, X>> {
+	
 }

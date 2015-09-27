@@ -16,19 +16,13 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for CTE criteria queries. This is the entry point for building CTE queries.
+ * A builder for delete queries.
  *
- * @param <T> The query result type which is the CTE type
- * @param <X> The result type which is returned afte the CTE builder
+ * @param <T> The entity type for which this delete query is
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface RecursiveCTECriteriaBuilder<T, X> extends BaseCTECriteriaBuilder<RecursiveCTECriteriaBuilder<T, X>> {
-
-    /**
-     * Finishes the CTE builder for the non-recursive part and starts the builder for the recursive part.
-     *
-     * @return The parent query builder
-     */
-	public CTECriteriaBuilder<T, X> unionAll();
+public interface BaseDeleteCriteriaBuilder<T, X extends BaseDeleteCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X> {
+	
 }

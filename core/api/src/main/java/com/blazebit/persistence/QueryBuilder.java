@@ -31,6 +31,13 @@ import javax.persistence.TypedQuery;
 public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQueryBuilder<T, X> {
 
     /**
+     * Returns the query string for the built query.
+     *
+     * @return The query string
+     */
+    public String getQueryString();
+
+    /**
      * Returns the JPA typed query for the built query.
      * The returned query is already parameterized with all known parameters.
      *

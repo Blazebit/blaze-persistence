@@ -22,8 +22,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.CTECriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -32,14 +31,14 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class CTECriteriaBuilderImpl<T, X> extends AbstractCTECriteriaBuilder<T, X, CTECriteriaBuilder<T, X>> implements CTECriteriaBuilder<T, X> {
+public class CTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectCTECriteriaBuilder<T, Y>> implements SelectCTECriteriaBuilder<T, Y> {
 
-	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, CriteriaBuilder<X> result, CTEBuilderListener listener) {
+	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
 		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
 	}
 
 	@Override
-	public CriteriaBuilder<X> end() {
+	public Y end() {
 		listener.onBuilderEnded(this);
 		return result;
 	}

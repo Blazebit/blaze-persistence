@@ -34,13 +34,6 @@ import javax.persistence.metamodel.Metamodel;
 public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
 
     /**
-     * Returns the query string for the built query.
-     *
-     * @return The query string
-     */
-    public String getQueryString();
-
-    /**
      * Returns the JPA {@link Metamodel} of the persistence unit which is used by this query builder.
      *
      * @return The JPA metamodel

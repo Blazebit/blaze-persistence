@@ -22,10 +22,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
-import com.blazebit.persistence.CTECriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.RecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
@@ -38,14 +36,11 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 	
-	private final CTEManager<T> cteManager;
-	
 	// Cache
     protected String cachedCteQueryString;
 
     public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
         super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
-        this.cteManager = new CTEManager<T>(cbf, em, dbmsDialect, registeredFunctions);
     }
 
     @Override
@@ -68,14 +63,6 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     @SuppressWarnings("unchecked")
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
-    }
-    
-    public <Y> CTECriteriaBuilder<Y, T> with(Class<Y> cteClass) {
-    	return cteManager.with(cteClass, this);
-    }
-
-    public <Y> RecursiveCTECriteriaBuilder<Y, T> withRecursive(Class<Y> cteClass) {
-    	return cteManager.withRecursive(cteClass, this);
     }
     
     @Override

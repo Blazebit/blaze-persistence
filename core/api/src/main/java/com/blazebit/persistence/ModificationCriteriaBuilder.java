@@ -25,7 +25,14 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends CommonQueryBuilder<X>, WhereBuilder<X> {
+public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X>, CTEBuilder<X> {
+
+    /**
+     * Returns the query string for the built query.
+     *
+     * @return The query string
+     */
+    public String getQueryString();
 
     /**
      * Returns the JPA query for the built query.
@@ -42,8 +49,6 @@ public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuild
      */
     public int executeUpdate();
     
-	// TODO: add cte support
-
     // TODO: documentation
     public ReturningResult<Tuple> executeWithReturning(String... attributes);
 

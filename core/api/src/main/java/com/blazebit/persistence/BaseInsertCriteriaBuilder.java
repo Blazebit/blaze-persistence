@@ -16,12 +16,19 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for delete queries.
+ * A base builder for insert queries.
  *
- * @param <T> The entity type for which this delete query is
+ * @param <T> The entity type for which this update query is
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface DeleteCriteriaBuilder<T> extends ModificationCriteriaBuilder<DeleteCriteriaBuilder<T>>, BaseDeleteCriteriaBuilder<T, DeleteCriteriaBuilder<T>> {
+public interface BaseInsertCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, OrderByBuilder<X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X> {
+
+	// TODO: documentation
+	public X bind(String attribute, Object value);
+
+	// TODO: documentation
+	public SelectBuilder<X> bind(String attribute);
 	
 }
