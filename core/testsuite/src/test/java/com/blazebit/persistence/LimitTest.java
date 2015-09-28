@@ -65,7 +65,7 @@ public class LimitTest extends AbstractCoreTest {
         	.setMaxResults(1)
         .end()
         .setMaxResults(1);
-        String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "NULLS LAST") +  ")", "1") + ")";
+        String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "LAST") +  ")", "1") + ")";
 
         assertEquals(expected, cb.getQueryString());
         List<Person> result = cb.getResultList();
@@ -84,7 +84,7 @@ public class LimitTest extends AbstractCoreTest {
         .end()
     	.orderByAsc("p.id")
         .setMaxResults(1);
-        String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "NULLS LAST") +  ")", "2") + ") ORDER BY p.id ASC NULLS LAST";
+        String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "LAST") +  ")", "2") + ") ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
 
         assertEquals(expected, cb.getQueryString());
         List<Person> result = cb.getResultList();
