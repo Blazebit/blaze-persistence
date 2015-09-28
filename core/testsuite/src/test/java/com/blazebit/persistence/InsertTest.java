@@ -69,7 +69,7 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
         String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
+                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "NULLS LAST");
 
         assertEquals(expected, cb.getQueryString());
 
@@ -99,7 +99,7 @@ public class InsertTest extends AbstractCoreTest {
         cb.orderByAsc("p.id");
         cb.setMaxResults(1);
         String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
+                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "NULLS LAST");
 
         assertEquals(expected, cb.getQueryString());
 
@@ -127,7 +127,7 @@ public class InsertTest extends AbstractCoreTest {
 		cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
 		String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-				+ "SELECT :age, :idx, CONCAT(p.name,'s document'), p FROM Person p ORDER BY p.id ASC NULLS LAST";
+				+ "SELECT :age, :idx, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "NULLS LAST");
 
 		assertEquals(expected, cb.getQueryString());
 

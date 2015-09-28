@@ -117,10 +117,8 @@ matrix:
 #      sudo: true
   allow_failures:
     - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
     - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
     - env: JPAPROVIDER=datanucleus-5 RDBMS=mysql
-    - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
     - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
     - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
       sudo: true
@@ -130,9 +128,6 @@ matrix:
       sudo: true
     - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa RDBMS=h2
-# MySQL causes a deadlock with hibernate 5
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
-      jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate RDBMS=firebird
       sudo: true
     - env: JPAPROVIDER=hibernate RDBMS=oracle
