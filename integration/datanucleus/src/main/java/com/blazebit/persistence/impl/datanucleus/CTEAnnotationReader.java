@@ -20,7 +20,8 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
         setSupportedAnnotationPackages(supportedAnnotationPacakges);
     }
 
-	@Override
+    @Override
+    @SuppressWarnings({ "unchecked", "rawtypes" })
 	public AbstractClassMetaData getMetaDataForClass(Class cls, PackageMetaData pmd, ClassLoaderResolver clr) {
 		AbstractClassMetaData cmd = super.getMetaDataForClass(cls, pmd, clr);
 		

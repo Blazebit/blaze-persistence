@@ -25,8 +25,6 @@ import javax.persistence.metamodel.EntityType;
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.impl.keyset.KeysetLink;
-import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -35,18 +33,22 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements BaseModificationCriteriaBuilder<X> {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
+	protected final Y result;
+	protected final CTEBuilderListener listener;
 
 	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
 		super(cbf, em, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions);
 		this.entityType = em.getMetamodel().entity(clazz);
 		this.entityAlias = alias;
+		this.result = result;
+		this.listener = listener;
 	}
 
 	public Query getQuery() {
@@ -65,15 +67,30 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 		return null;
 	}
 
-	public <Y> ReturningResult<Y> executeWithReturning(String attribute, Class<Y> type) {
+	public <Z> ReturningResult<Z> executeWithReturning(String attribute, Class<Z> type) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
-	public <Y> ReturningResult<Y> executeWithReturning(ObjectBuilder<Y> objectBuilder) {
+	public <Z> ReturningResult<Z> executeWithReturning(ObjectBuilder<Z> objectBuilder) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+    public Y returning(String... attributes) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Y returning(String attribute, Class<?> type) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    public Y returning(ObjectBuilder<?> objectBuilder) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 	
 	protected void appendReturningClause(StringBuilder sbSelectFrom) {
 		if (orderByManager.hasOrderBys()) {

@@ -15,17 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.InsertCriteriaBuilder;
-import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -34,69 +28,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class InsertCriteriaBuilderImpl<T> extends AbstractModificationCriteriaBuilder<T, InsertCriteriaBuilder<T>> implements InsertCriteriaBuilder<T>, SelectBuilder<InsertCriteriaBuilder<T>> {
+public class InsertCriteriaBuilderImpl<T> extends BaseInsertCriteriaBuilderImpl<T, InsertCriteriaBuilder<T>, Void> implements InsertCriteriaBuilder<T> {
 
-	
-	private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
-
-	public InsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions) {
-		super(cbf, em, dbmsDialect, clazz, null, registeredFunctions);
-	}
-
-	@Override
-	public InsertCriteriaBuilder<T> bind(String attributeName, Object value) {
-		// Just do that to assert the attribute exists
-		entityType.getAttribute(attributeName);
-		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		selectManager.select(new ParameterExpression(attributeName), null);
-		parameterManager.addParameterMapping(attributeName, value);
-		return this;
-	}
-
-	@Override
-	public SelectBuilder<InsertCriteriaBuilder<T>> bind(String attributeName) {
-		// Just do that to assert the attribute exists
-		entityType.getAttribute(attributeName);
-		Integer attributeBindIndex = bindingMap.get(attributeName);
-		
-		if (attributeBindIndex != null) {
-			throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
-		}
-		
-		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		return this;
-	}
-
-	@Override
-	protected void getQueryString1(StringBuilder sbSelectFrom) {
-		sbSelectFrom.append("INSERT INTO ");
-		sbSelectFrom.append(entityType.getName()).append('(');
-
-		List<String> attributes = new ArrayList<String>(bindingMap.size());
-		List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
-		List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
-		newSelectInfos.clear();
-		
-		boolean first = true;
-		for (Map.Entry<String, Integer> attributeEntry : bindingMap.entrySet()) {
-			// Reorder select infos to fit the attribute order
-			Integer newPosition = attributes.size();
-			attributes.add(attributeEntry.getKey());
-			newSelectInfos.add(originalSelectInfos.get(attributeEntry.getValue()));
-			attributeEntry.setValue(newPosition);
-			
-			if (first) {
-				first = false;
-			} else {
-				sbSelectFrom.append(", ");
-			}
-			sbSelectFrom.append(attributeEntry.getKey());
-		}
-		
-		sbSelectFrom.append(")\n");
-    	super.getQueryString1(sbSelectFrom);
-    	// TODO: returning_limit?
-//    	appendReturningClause(sbSelectFrom);
-	}
+    public InsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions) {
+        super(cbf, em, dbmsDialect, clazz, registeredFunctions, null, null);
+    }
 
 }

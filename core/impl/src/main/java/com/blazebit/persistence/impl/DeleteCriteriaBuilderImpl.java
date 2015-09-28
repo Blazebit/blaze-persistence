@@ -28,32 +28,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class DeleteCriteriaBuilderImpl<T> extends AbstractModificationCriteriaBuilder<T, DeleteCriteriaBuilder<T>> implements DeleteCriteriaBuilder<T> {
+public class DeleteCriteriaBuilderImpl<T> extends BaseDeleteCriteriaBuilderImpl<T, DeleteCriteriaBuilder<T>, Void> implements DeleteCriteriaBuilder<T> {
 
-	public DeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
-
-        // set defaults
-        if (alias == null) {
-        	alias = clazz.getSimpleName().toLowerCase();
-        } else {
-        	// If the user supplies an alias, the intention is clear
-        	fromClassExplicitelySet = true;
-        }
-        
-        try {
-            this.joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
-        } catch (IllegalArgumentException ex) {
-    		throw new IllegalArgumentException("The class [" + clazz.getName() + "] is not an entity!");
-        }
-	}
-
-	@Override
-	protected void getQueryString1(StringBuilder sbSelectFrom) {
-		sbSelectFrom.append("DELETE FROM ");
-		sbSelectFrom.append(entityType.getName()).append(' ');
-		sbSelectFrom.append(entityAlias);
-    	appendWhereClause(sbSelectFrom);
-	}
+    public DeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, null, null);
+    }
 
 }

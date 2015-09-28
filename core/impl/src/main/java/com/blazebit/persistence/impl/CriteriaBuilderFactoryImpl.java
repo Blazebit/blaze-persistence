@@ -187,7 +187,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 	}
 
 	@Override
-	public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> updateClass) {
+	public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass) {
         Set<String> registeredFunctions = new HashSet<String>();
         EntityManager em = entityManager;
         String dbms = null;
@@ -205,7 +205,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             dialect = dbmsDialects.get(null);
         }
         
-        InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(this, em, dialect, updateClass, registeredFunctions);
+        InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(this, em, dialect, insertClass, registeredFunctions);
         return cb;
 	}
 

@@ -218,14 +218,17 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return cbf;
     }
 
-	public <Y> SelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
+	@SuppressWarnings("unchecked")
+    public <Y> SelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
 		return cteManager.with(cteClass, (X) this);
 	}
-	
+
+    @SuppressWarnings("unchecked")
 	public <Y> SelectRecursiveCTECriteriaBuilder<Y, X> withRecursive(Class<Y> cteClass) {
 		return cteManager.withRecursive(cteClass, (X) this);
 	}
 
+    @SuppressWarnings("unchecked")
     public <Y> ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<Y> cteClass) {
 		return cteManager.withReturning(cteClass, (X) this);
     }

@@ -118,12 +118,12 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
 	}
 
 	<X, Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<X> cteClass, Y result) {
-		// TODO: implement
-		throw new UnsupportedOperationException("Not yet implemented!");
+	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, result, this);
+		return factory;
 	}
 	
     @Override
-	public void onBuilderEnded(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
+	public void onBuilderEnded(CTEInfoBuilder builder) {
 		super.onBuilderEnded(builder);
 		ctes.add(builder.createCTEInfo());
 	}

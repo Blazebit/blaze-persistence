@@ -30,12 +30,12 @@ public class RecursiveCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteri
 	}
 
 	@Override
-	public void onBuilderStarted(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
+	public void onBuilderStarted(CTEInfoBuilder builder) {
 		// Don't care about that
 	}
 
 	@Override
-	public void onBuilderEnded(AbstractCTECriteriaBuilder<?, ?, ?> builder) {
+	public void onBuilderEnded(CTEInfoBuilder builder) {
 		done = true;
 		listener.onBuilderEnded(this);
 	}

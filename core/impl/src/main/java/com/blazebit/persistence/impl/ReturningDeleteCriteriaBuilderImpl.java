@@ -19,7 +19,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.UpdateCriteriaBuilder;
+import com.blazebit.persistence.ReturningDeleteCriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -28,10 +28,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
+public class ReturningDeleteCriteriaBuilderImpl<T, Y> extends BaseDeleteCriteriaBuilderImpl<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> implements ReturningDeleteCriteriaBuilder<T, Y> {
 
-    public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, null, null);
+    public ReturningDeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, result, listener);
     }
 
 }

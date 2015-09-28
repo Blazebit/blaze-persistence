@@ -15,23 +15,13 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
-import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
-
 /**
  *
- * @param <T> The query result type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
+public interface CTEInfoBuilder {
 
-    public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, null, null);
-    }
-
+    public CTEInfo createCTEInfo();
+	
 }

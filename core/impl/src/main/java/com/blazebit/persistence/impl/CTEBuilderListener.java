@@ -22,7 +22,7 @@ package com.blazebit.persistence.impl;
  */
 public interface CTEBuilderListener {
 
-    public void onBuilderEnded(AbstractCTECriteriaBuilder<?, ?, ?> builder);
+    public void onBuilderEnded(CTEInfoBuilder builder);
 
-    public void onBuilderStarted(AbstractCTECriteriaBuilder<?, ?, ?> builder);
+    public void onBuilderStarted(CTEInfoBuilder builder);
 }
