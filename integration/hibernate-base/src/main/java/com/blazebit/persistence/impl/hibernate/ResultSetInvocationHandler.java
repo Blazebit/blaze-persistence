@@ -69,10 +69,11 @@ public class ResultSetInvocationHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         Method indexMethod;
-        if (method.getParameterCount() == 1 && (indexMethod = methods.get(method.getName())) != null) {
+        int parameterCount = method.getParameterTypes().length;
+        if (parameterCount == 1 && (indexMethod = methods.get(method.getName())) != null) {
             return indexMethod.invoke(delegate, aliasIndex.get(args[0]));
-        } else if (method.getParameterCount() > 1) {
-            if ((indexMethod = methods.get(method.getName() + method.getParameterCount())) != null) {
+        } else if (parameterCount > 1) {
+            if ((indexMethod = methods.get(method.getName() + parameterCount)) != null) {
                 Object[] newArgs = new Object[args.length];
                 System.arraycopy(args, 0, newArgs, 0, args.length);
                 newArgs[0] = aliasIndex.get(args[0]);

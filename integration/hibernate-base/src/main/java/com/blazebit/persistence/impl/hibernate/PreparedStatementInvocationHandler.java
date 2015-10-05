@@ -29,7 +29,7 @@ public class PreparedStatementInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        if ("executeQuery".equals(method.getName()) && method.getParameterCount() == 0) {
+        if ("executeQuery".equals(method.getName()) && method.getParameterTypes().length == 0) {
             returningResult.setUpdateCount(delegate.executeUpdate());
             ResultSet rs = delegate.getGeneratedKeys();
             
