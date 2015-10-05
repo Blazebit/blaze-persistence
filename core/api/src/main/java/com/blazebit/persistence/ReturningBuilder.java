@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.limit;
+package com.blazebit.persistence;
 
 /**
+ * A builder for the returning clause.
  *
+ * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.0.1
+ * @since 1.1.0
  */
-public class SQL2008LimitFunction extends LimitFunction {
+public interface ReturningBuilder<X extends ReturningBuilder<X>> {
 
-    public SQL2008LimitFunction() {
-        super("(?1 fetch next ?2 rows only)", "(?1 offset ?3 rows fetch next ?2 rows only)");
-    }
-
+    // TODO: documentation
+    public X returning(String cteAttribute, String modificationQueryAttribute);
+    
 }

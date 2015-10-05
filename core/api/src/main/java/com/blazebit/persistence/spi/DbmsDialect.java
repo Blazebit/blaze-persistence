@@ -16,9 +16,6 @@
 
 package com.blazebit.persistence.spi;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
 
 
 /**
@@ -53,23 +50,57 @@ public interface DbmsDialect {
      * @return The with clause name
      */
     public String getWithClause(boolean recursive);
+
+    /**
+     * Returns true if the dbms requires the with clause after the insert clause, false if it should be before it.
+     * 
+     * @return Whether the with clause should come after the insert clause or before it
+     */
+    public boolean usesWithClauseAfterInsert();
+
+    /**
+     * Returns true if the dbms supports the with clause in modification queries, false otherwise.
+     * 
+     * @return Whether the with clause is supported in modification queries by the dbms
+     */
+    public boolean supportsWithClauseInModificationQuery();
+
+    /**
+     * Returns true if the dbms supports modification queries in the with clause, false otherwise.
+     * 
+     * @return Whether modification queries are supported in the with clause by the dbms
+     */
+    public boolean supportsModificationQueryInWithClause();
     
     /* Returning clause handling */
-	
-	/**
-	 * Returns true if the dbms supports the with clause, false otherwise.
-	 * 
-	 * @return Whether the with clause is supported by the dbms
-	 */
-	public boolean supportsJdbcReturning();
 
-	public boolean supportsQueryReturning();
+    /**
+     * Returns true if the dbms supports returning generated keys, false otherwise.
+     * 
+     * @return Whether returning generated keys is supported by the dbms
+     */
+	public boolean supportsReturningGeneratedKeys();
+    
+    /**
+     * Returns true if the dbms supports returning all generated keys, false otherwise.
+     * 
+     * @return Whether returning all generated keys is supported by the dbms
+     */
+    public boolean supportsReturningAllGeneratedKeys();
 
-	public void applyQueryReturning(StringBuilder sqlSb, String[] returningColumns);
+    /**
+     * Returns true if the dbms supports returning columns from a modified row, false otherwise.
+     * 
+     * @return Whether returning columns from a modified row is supported by the dbms
+     */
+	public boolean supportsReturningColumns();
 
-	public void applyQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
+	// TODO: documentation
+    public boolean supportsLimit();
 
-	public List<Object[]> getQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException;
-	
-//	public String getLastInsertedId();
+    // TODO: documentation
+    public boolean supportsLimitOffset();
+
+    // TODO: documentation
+    public void appendLimit(StringBuilder sqlSb, String limit, String offset);
 }

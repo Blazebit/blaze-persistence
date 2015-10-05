@@ -10,46 +10,61 @@ import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
-public class CustomSQLTypedQuery<X> implements TypedQuery<X> {
+public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 
+    private final List<Query> participatingQueries;
 	private final TypedQuery<X> delegate;
 	private final EntityManager em;
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
 	
-	public CustomSQLTypedQuery(TypedQuery<X> delegate, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql) {
+	public CustomSQLTypedQuery(List<Query> participatingQueries, TypedQuery<X> delegate, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql) {
+	    this.participatingQueries = participatingQueries;
 		this.delegate = delegate;
 		this.em = em;
 		this.extendedQuerySupport = extendedQuerySupport;
 		this.sql = sql;
 	}
 
+    public String getSql() {
+        return sql;
+    }
+    
+    @Override
+    public List<Query> getParticipatingQueries() {
+        return participatingQueries;
+    }
+
 	private TypedQuery<X> wrapOrReturn(TypedQuery<X> q) {
 		if (q == delegate) {
 			return this;
 		}
 		
-		return new CustomSQLTypedQuery<X>(q, em, extendedQuerySupport, sql);
+		return new CustomSQLTypedQuery<X>(participatingQueries, q, em, extendedQuerySupport, sql);
 	}
 
-	@Override
+    @Override
+    @SuppressWarnings("unchecked")
 	public List<X> getResultList() {
-		return extendedQuerySupport.getResultList(em, delegate, sql);
+		return (List<X>) extendedQuerySupport.getResultList(em, participatingQueries, delegate, sql);
 	}
 
 	@Override
+    @SuppressWarnings("unchecked")
 	public X getSingleResult() {
-		return extendedQuerySupport.getSingleResult(em, delegate, sql);
+		return (X) extendedQuerySupport.getSingleResult(em, participatingQueries, delegate, sql);
 	}
 
 	@Override
 	public int executeUpdate() {
-		return delegate.executeUpdate();
+		throw new IllegalArgumentException("Can not call executeUpdate on a select query!");
 	}
 
 	@Override

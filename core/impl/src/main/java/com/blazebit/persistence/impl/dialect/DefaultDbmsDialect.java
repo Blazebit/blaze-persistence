@@ -1,9 +1,5 @@
 package com.blazebit.persistence.impl.dialect;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.List;
-
 import com.blazebit.persistence.spi.DbmsDialect;
 
 public class DefaultDbmsDialect implements DbmsDialect {
@@ -27,27 +23,53 @@ public class DefaultDbmsDialect implements DbmsDialect {
 		}
 	}
 
+    @Override
+    public boolean usesWithClauseAfterInsert() {
+        return false;
+    }
+
 	@Override
-	public boolean supportsJdbcReturning() {
+    public boolean supportsWithClauseInModificationQuery() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsModificationQueryInWithClause() {
+        return false;
+    }
+
+    @Override
+	public boolean supportsReturningGeneratedKeys() {
 		return true;
 	}
 
+    @Override
+    public boolean supportsReturningAllGeneratedKeys() {
+        return true;
+    }
+
 	@Override
-	public boolean supportsQueryReturning() {
+	public boolean supportsReturningColumns() {
 		return false;
 	}
 
-	@Override
-	public void applyQueryReturning(StringBuilder sqlSb, String[] returningColumns) {
-	}
+    @Override
+    public boolean supportsLimit() {
+        return true;
+    }
 
-	@Override
-	public void applyQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
-	}
+    @Override
+    public boolean supportsLimitOffset() {
+        return true;
+    }
 
-	@Override
-	public List<Object[]> getQueryReturning(PreparedStatement ps, int[] returningSqlTypes) throws SQLException {
-		return null;
-	}
+    @Override
+    public void appendLimit(StringBuilder sqlSb, String limit, String offset) {
+        if (offset == null) {
+            sqlSb.append(" limit ").append(limit);
+        } else {
+            sqlSb.append(" limit ").append(limit).append(" offset ").append(offset);
+        }
+    }
 
 }

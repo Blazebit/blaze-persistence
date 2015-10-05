@@ -1,8 +1,6 @@
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -49,21 +47,11 @@ public class RecursiveCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteri
 	@Override
 	public CTEInfo createCTEInfo() {
 		verifyBuilderEnded();
-		List<String> attributes = new ArrayList<String>(bindingMap.size());
-		List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
-		List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
-		newSelectInfos.clear();
-		
-		for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
-			Integer newPosition = attributes.size();
-			attributes.add(bindingEntry.getKey());
-			newSelectInfos.add(originalSelectInfos.get(bindingEntry.getValue()));
-			bindingEntry.setValue(newPosition);
-		}
+        List<String> attributes = prepareAndGetAttributes();
 		
 		// As a side effect, this will reorder selects according to attribute order
 		recursiveCteBuilder.createCTEInfo();
-		CTEInfo info = new CTEInfo(cteName, attributes, true, this, recursiveCteBuilder);
+		CTEInfo info = new CTEInfo(cteName, cteType, attributes, true, this, recursiveCteBuilder);
 		return info;
 	}
 

@@ -378,11 +378,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
         Expression inExpr;
         if (ctx.param == null) {
-            CompositeExpression compositeInExpr = accept(ctx.literal(0));
+            CompositeExpression compositeInExpr = accept(ctx.in_item(0));
             compositeInExpr.prepend("(");
-            for (int i = 1; i < ctx.literal().size(); i++) {
+            for (int i = 1; i < ctx.in_item().size(); i++) {
                 compositeInExpr.append(",");
-                acceptAndCompose(compositeInExpr, ctx.literal(i));
+                acceptAndCompose(compositeInExpr, ctx.in_item(i));
             }
             compositeInExpr.append(")");
             inExpr = unwrap(compositeInExpr);

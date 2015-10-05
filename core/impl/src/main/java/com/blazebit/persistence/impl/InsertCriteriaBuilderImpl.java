@@ -31,7 +31,7 @@ import com.blazebit.persistence.spi.DbmsDialect;
 public class InsertCriteriaBuilderImpl<T> extends BaseInsertCriteriaBuilderImpl<T, InsertCriteriaBuilder<T>, Void> implements InsertCriteriaBuilder<T> {
 
     public InsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, registeredFunctions, null, null);
+        super(cbf, em, dbmsDialect, clazz, registeredFunctions, null, null, null);
     }
 
 }

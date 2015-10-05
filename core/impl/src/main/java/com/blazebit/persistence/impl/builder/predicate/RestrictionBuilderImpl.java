@@ -307,6 +307,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T inExpressions(String... parameterOrLiteralExpressions) {
+        if (parameterOrLiteralExpressions == null) {
+            throw new NullPointerException("parameterOrLiteralExpressions");
+        }
+        if (parameterOrLiteralExpressions.length == 0) {
+            throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
+        }
+        
+        return chain(new InPredicate(leftExpression, expressionFactory.createInPredicateExpression(parameterOrLiteralExpressions)));
+    }
+
+    @Override
     public T in(List<?> values) {
         if (values == null) {
             throw new NullPointerException("values");
@@ -317,6 +329,18 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public T in(Object... values) {
         return in(Arrays.asList(values));
+    }
+
+    @Override
+    public T notInExpressions(String... parameterOrLiteralExpressions) {
+        if (parameterOrLiteralExpressions == null) {
+            throw new NullPointerException("parameterOrLiteralExpressions");
+        }
+        if (parameterOrLiteralExpressions.length == 0) {
+            throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
+        }
+        
+        return chain(new InPredicate(leftExpression, expressionFactory.createInPredicateExpression(parameterOrLiteralExpressions), true));
     }
 
     @Override

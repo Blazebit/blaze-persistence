@@ -24,6 +24,7 @@ public class Hibernate4Integrator implements Integrator {
 			
 			if (entityClass.isAnnotationPresent(CTE.class)) {
 				clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
+				// TODO: check that no collections are mapped
 			}
 		}
 	}

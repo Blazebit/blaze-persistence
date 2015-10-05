@@ -6,12 +6,13 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
 
 import org.datanucleus.store.rdbms.query.JPQLQuery;
 import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
 
 import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 @ServiceProvider(ExtendedQuerySupport.class)
@@ -36,23 +37,43 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
 	}
 
 	@Override
+    public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+    }
+
+    @Override
     public Connection getConnection(EntityManager em) {
 		return em.unwrap(Connection.class);
     }
 
-	@Override
-	public <T> List<T> getResultList(EntityManager em, TypedQuery<T> query, String sqlOverride) {
+    @Override
+    @SuppressWarnings("rawtypes")
+	public List getResultList(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getResultList();
 	}
 	
 	@Override
-	public <T> T getSingleResult(EntityManager em, TypedQuery<T> query, String sqlOverride) {
+	public Object getSingleResult(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getSingleResult();
 	}
+
+    @Override
+    public int executeUpdate(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+        applySql(query, sqlOverride);
+        return query.executeUpdate();
+    }
+
+    @Override
+    public ReturningResult<Object[]> executeReturning(EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+    }
 	
-	private void applySql(TypedQuery<?> query, String sqlOverride) {
+	private void applySql(Query query, String sqlOverride) {
+	    // TODO: parameter handling
 		org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
 		// Disable caching for these queries
 		dnQuery.addExtension("datanucleus.query.compilation.cached", Boolean.FALSE);

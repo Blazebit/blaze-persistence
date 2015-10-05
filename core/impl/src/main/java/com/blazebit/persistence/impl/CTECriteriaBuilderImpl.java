@@ -15,9 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -44,19 +42,8 @@ public class CTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<
 	}
 	
 	public CTEInfo createCTEInfo() {
-		List<String> attributes = new ArrayList<String>(bindingMap.size());
-		List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
-		List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
-		newSelectInfos.clear();
-		
-		for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
-			Integer newPosition = attributes.size();
-			attributes.add(bindingEntry.getKey());
-			newSelectInfos.add(originalSelectInfos.get(bindingEntry.getValue()));
-			bindingEntry.setValue(newPosition);
-		}
-		
-		CTEInfo info = new CTEInfo(cteName, attributes, false, this, null);
+		List<String> attributes = prepareAndGetAttributes();
+		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, this, null);
 		return info;
 	}
 

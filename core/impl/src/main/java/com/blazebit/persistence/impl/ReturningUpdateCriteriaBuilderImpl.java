@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class ReturningUpdateCriteriaBuilderImpl<T, Y> extends BaseUpdateCriteriaBuilderImpl<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> implements ReturningUpdateCriteriaBuilder<T, Y> {
 
-    public ReturningUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, result, listener);
+    public ReturningUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
     }
 
 }

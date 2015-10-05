@@ -278,18 +278,23 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     public void visit(InPredicate predicate) {
         // we have to render false if the parameter list for IN is empty
         if (predicate.getRight() instanceof ParameterExpression) {
-            Object list = ((ParameterExpression) predicate.getRight()).getValue();
-            if (list instanceof List<?>) {
-                if (((List<?>) list).isEmpty()) {
-                    // we have to distinguish between conditional and non conditional context since hibernate parser does not support
-                    // literal
-                    // and the workarounds like 1 = 0 or case when only work in specific contexts
-                    if (conditionalContext) {
-                        sb.append(getBooleanConditionalExpression(predicate.isNegated()));
-                    } else {
-                        sb.append(getBooleanExpression(predicate.isNegated()));
+            ParameterExpression parameterExpr = (ParameterExpression) predicate.getRight();
+            
+            // We might have named parameters
+            if (parameterExpr.getValue() != null) {
+                Object list = parameterExpr.getValue();
+                if (list instanceof List<?>) {
+                    if (((List<?>) list).isEmpty()) {
+                        // we have to distinguish between conditional and non conditional context since hibernate parser does not support
+                        // literal
+                        // and the workarounds like 1 = 0 or case when only work in specific contexts
+                        if (conditionalContext) {
+                            sb.append(getBooleanConditionalExpression(predicate.isNegated()));
+                        } else {
+                            sb.append(getBooleanExpression(predicate.isNegated()));
+                        }
+                        return;
                     }
-                    return;
                 }
             }
         }

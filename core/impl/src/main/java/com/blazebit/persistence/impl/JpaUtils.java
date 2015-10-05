@@ -15,6 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.TypeVariable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +27,10 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
+
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -89,4 +96,87 @@ public final class JpaUtils {
 	public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
 		return entityType.getId(entityType.getIdType().getJavaType());
 	}
+
+    public static boolean isJoinable(Attribute<?, ?> attr) {
+        return attr.isCollection() || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.MANY_TO_ONE
+            || attr.getPersistentAttributeType() == Attribute.PersistentAttributeType.ONE_TO_ONE;
+    }
+
+    public static Class<?> resolveType(Class<?> concreteClass, java.lang.reflect.Type type) {
+        if (type instanceof Class<?>) {
+            return (Class<?>) type;
+        } else if (type instanceof ParameterizedType) {
+            return (Class<?>) ((ParameterizedType) type).getRawType();
+        } else if (type instanceof TypeVariable) {
+            return resolveType(concreteClass, ((TypeVariable<?>) type).getBounds()[0]);
+        } else {
+            throw new IllegalArgumentException("Unsupported type for resolving: " + type);
+        }
+    }
+
+    private static Class<?> getConcreterClass(Class<?> class1, Class<?> class2) {
+        if (class1.isAssignableFrom(class2)) {
+            return class2;
+        } else if (class2.isAssignableFrom(class1)) {
+            return class1;
+        } else {
+            throw new IllegalArgumentException("The classes [" + class1.getName() + ", " + class2.getName()
+                + "] are not in a inheritance relationship, so there is no concreter class!");
+        }
+    }
+
+    public static Class<?> resolveFieldClass(Class<?> baseClass, Attribute<?, ?> attr) {
+        Class<?> resolverBaseClass = getConcreterClass(baseClass, attr.getDeclaringType().getJavaType());
+        Class<?> fieldClass;
+    
+        if (attr.isCollection()) {
+            PluralAttribute<?, ?, ?> collectionAttr = (PluralAttribute<?, ?, ?>) attr;
+    
+            if (collectionAttr.getCollectionType() == PluralAttribute.CollectionType.MAP) {
+                if (attr.getJavaMember() instanceof Method) {
+                    Method method = (Method) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[1];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[1]);
+                    }
+                } else {
+                    Field field = (Field) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[1];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[1]);
+                    }
+                }
+            } else {
+                if (attr.getJavaMember() instanceof Method) {
+                    Method method = (Method) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedMethodReturnTypeArguments(resolverBaseClass, method)[0];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) method.getGenericReturnType()).getActualTypeArguments()[0]);
+                    }
+                } else {
+                    Field field = (Field) attr.getJavaMember();
+                    fieldClass = ReflectionUtils.getResolvedFieldTypeArguments(resolverBaseClass, field)[0];
+                    if (fieldClass == null) {
+                        fieldClass = resolveType(resolverBaseClass, ((ParameterizedType) field.getGenericType()).getActualTypeArguments()[0]);
+                    }
+                }
+            }
+        } else {
+            if (attr.getJavaMember() instanceof Method) {
+                Method method = (Method) attr.getJavaMember();
+                fieldClass = ReflectionUtils.getResolvedMethodReturnType(resolverBaseClass, method);
+                if (fieldClass == null) {
+                    fieldClass = resolveType(resolverBaseClass, method.getGenericReturnType());
+                }
+            } else {
+                Field field = (Field) attr.getJavaMember();
+                fieldClass = ReflectionUtils.getResolvedFieldType(resolverBaseClass, field);
+                if (fieldClass == null) {
+                    fieldClass = resolveType(resolverBaseClass, field.getGenericType());
+                }
+            }
+        }
+    
+        return fieldClass;
+    }
 }

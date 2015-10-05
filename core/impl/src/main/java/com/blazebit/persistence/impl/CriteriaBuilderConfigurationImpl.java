@@ -106,7 +106,6 @@ import com.blazebit.persistence.impl.function.limit.DB2LimitFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
 import com.blazebit.persistence.impl.function.limit.MySQLLimitFunction;
 import com.blazebit.persistence.impl.function.limit.OracleLimitFunction;
-import com.blazebit.persistence.impl.function.limit.SQL2008LimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
@@ -143,12 +142,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     private void loadFunctions() {
         JpqlFunctionGroup jpqlFunctionGroup;
+        
 
         jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
         jpqlFunctionGroup.add(null, new LimitFunction());
         jpqlFunctionGroup.add("mysql", new MySQLLimitFunction());
         jpqlFunctionGroup.add("oracle", new OracleLimitFunction());
-        jpqlFunctionGroup.add("derby", new SQL2008LimitFunction());
         jpqlFunctionGroup.add("db2", new DB2LimitFunction());
         jpqlFunctionGroup.add("sybase", null); // Does not support limit
         // The function for SQLServer is hard to implement

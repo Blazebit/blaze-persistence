@@ -20,7 +20,9 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
+
+import com.blazebit.persistence.ReturningResult;
 
 /**
  * Interface implemented by the criteria provider.
@@ -34,9 +36,16 @@ public interface ExtendedQuerySupport {
 
     public String getSql(EntityManager em, Query query);
     
+    public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName);
+    
     public Connection getConnection(EntityManager em);
     
-    public <T> List<T> getResultList(EntityManager em, TypedQuery<T> query, String sqlOverride);
+    @SuppressWarnings("rawtypes")
+    public List getResultList(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public <T> T getSingleResult(EntityManager em, TypedQuery<T> query, String sqlOverride);
+    public Object getSingleResult(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    
+    public int executeUpdate(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    
+    public ReturningResult<Object[]> executeReturning(EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
 }

@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Set;
 import java.util.logging.Level;
@@ -144,6 +145,49 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseStringExpression();
+            }
+        }, expression, false);
+    }
+
+    @Override
+    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions) {
+        if (parameterOrLiteralExpressions == null) {
+            throw new NullPointerException("parameterOrLiteralExpressions");
+        }
+        if (parameterOrLiteralExpressions.length == 0) {
+            throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
+        }
+        
+        Expression expr = createInItemExpression(parameterOrLiteralExpressions[0]);
+        
+        if (parameterOrLiteralExpressions.length == 1) {
+            return expr;
+        }
+        
+        CompositeExpression composite;
+        if (expr instanceof CompositeExpression) {
+            composite = (CompositeExpression) expr;
+        } else {
+            composite = new CompositeExpression(new ArrayList<Expression>(parameterOrLiteralExpressions.length * 2));
+            composite.append("(");
+            composite.append(expr);
+        }
+        
+        for (int i = 1; i < parameterOrLiteralExpressions.length; i++) {
+            composite.append(",");
+            composite.append(createInItemExpression(parameterOrLiteralExpressions[i]));
+        }
+        
+        composite.append(")");
+        return composite;
+    }
+    
+    private Expression createInItemExpression(String expression) {
+        return createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseInItemExpression();
             }
         }, expression, false);
     }

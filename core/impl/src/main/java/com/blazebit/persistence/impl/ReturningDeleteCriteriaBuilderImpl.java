@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class ReturningDeleteCriteriaBuilderImpl<T, Y> extends BaseDeleteCriteriaBuilderImpl<T, ReturningDeleteCriteriaBuilder<T, Y>, Y> implements ReturningDeleteCriteriaBuilder<T, Y> {
 
-    public ReturningDeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, result, listener);
+    public ReturningDeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
     }
 
 }

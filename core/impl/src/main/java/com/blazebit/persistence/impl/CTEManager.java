@@ -54,6 +54,10 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
     	return ctes;
     }
 
+    public boolean hasCtes() {
+        return ctes.size() > 0;
+    }
+
 	boolean isRecursive() {
 		return recursive;
 	}
@@ -118,7 +122,7 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
 	}
 
 	<X, Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<X> cteClass, Y result) {
-	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, result, this);
+	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, cteClass, result, this);
 		return factory;
 	}
 	

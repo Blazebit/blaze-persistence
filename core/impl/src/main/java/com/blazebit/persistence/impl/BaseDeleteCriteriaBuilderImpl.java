@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseDeleteCriteriaBuilder<T, X> {
 
-	public BaseDeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, result, listener);
+	public BaseDeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
 
         // set defaults
         if (alias == null) {
@@ -55,11 +55,5 @@ public class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilde
 		sbSelectFrom.append(entityAlias);
     	appendWhereClause(sbSelectFrom);
 	}
-
-    @Override
-    public CTEInfo createCTEInfo() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
 }

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -34,7 +35,6 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -42,9 +42,10 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
-import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
+import com.blazebit.persistence.SelectCTECriteriaBuilder;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
@@ -113,6 +114,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     // Cache
     protected String cachedQueryString;
+    protected String cachedCteQueryString;
     protected boolean hasGroupBy = false;
 
     /**
@@ -220,16 +222,31 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
 	@SuppressWarnings("unchecked")
     public <Y> SelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
+        if (!dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+        
 		return cteManager.with(cteClass, (X) this);
 	}
 
     @SuppressWarnings("unchecked")
 	public <Y> SelectRecursiveCTECriteriaBuilder<Y, X> withRecursive(Class<Y> cteClass) {
+        if (!dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+        
 		return cteManager.withRecursive(cteClass, (X) this);
 	}
 
     @SuppressWarnings("unchecked")
     public <Y> ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<Y> cteClass) {
+        if (!dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+        if (!dbmsDialect.supportsModificationQueryInWithClause()) {
+            throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
+        }
+        
 		return cteManager.withReturning(cteClass, (X) this);
     }
 
@@ -800,7 +817,60 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     public String getQueryString() {
         prepareAndCheck();
+        return getCteQueryString0();
+    }
+    
+    protected String getBaseQueryString() {
+        prepareAndCheck();
         return getQueryString0();
+    }
+    
+    protected String getCteQueryString() {
+        prepareAndCheck();
+        return getCteQueryString0();
+    }
+
+    protected TypedQuery<T> getTypedQuery() {
+        // If we have no ctes, there is nothing to do
+        if (cteManager.getCtes().isEmpty()) {
+            return getTypedQuery(getBaseQueryString());
+        }
+
+        List<Query> participatingQueries = getParticipatingQueries();
+        TypedQuery<T> baseQuery = getTypedQuery(getBaseQueryString());
+        participatingQueries.add(baseQuery);
+        
+        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+        StringBuilder sqlSb = new StringBuilder(sqlQuery);
+        applyCtes(sqlSb);
+        applyLimit(sqlSb);
+        
+        String finalQuery = sqlSb.toString();
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, em, cbf.getExtendedQuerySupport(), finalQuery);
+        // TODO: object builder?
+        
+        return query;
+    }
+    
+    protected Query getQuery() {
+        return getTypedQuery();
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected TypedQuery<T> getTypedQuery(String queryString) {
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, selectManager.getExpectedQueryResultType());
+        if (firstResult != 0) {
+            query.setFirstResult(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+            query.setMaxResults(maxResults);
+        }
+        if (selectManager.getSelectObjectBuilder() != null) {
+            query = transformQuery(query);
+        }
+
+        parameterizeQuery(query);
+        return query;
     }
 
     @SuppressWarnings("unchecked")
@@ -847,9 +917,18 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return cachedQueryString;
     }
 
+    protected String getCteQueryString0() {
+        if (cachedCteQueryString == null) {
+            cachedCteQueryString = getCteQueryString1();
+        }
+
+        return cachedCteQueryString;
+    }
+
     protected void clearCache() {
         needsCheck = true;
         cachedQueryString = null;
+        cachedCteQueryString = null;
         implicitJoinsApplied = false;
     }
 
@@ -901,6 +980,13 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     	appendOrderByClause(sbSelectFrom);
     }
 
+    protected String getCteQueryString1() {
+        StringBuilder sbSelectFrom = new StringBuilder();
+        cteManager.buildClause(sbSelectFrom);
+        getQueryString1(sbSelectFrom);
+        return sbSelectFrom.toString();
+    }
+
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
         sbSelectFrom.append(selectManager.buildSelect());
     }
@@ -941,6 +1027,158 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         queryGenerator.setResolveSelectAliases(false);
         orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
+    }
+    
+    protected List<Query> getParticipatingQueries() {
+        List<Query> participatingQueries = new ArrayList<Query>();
+        
+        if (cteManager.getCtes().size() > 0) {
+            for (CTEInfo cte : cteManager.getCtes()) {
+                Query q = cte.nonRecursiveCriteriaBuilder.getQuery();
+                cte.cachedNonRecursiveQuery = q;
+                participatingQueries.add(q);
+                
+                if (cte.recursive) {
+                    q = cte.recursiveCriteriaBuilder.getQuery();
+                    cte.cachedRecursiveQuery = q;
+                    participatingQueries.add(q);
+                }
+            }
+        }
+        
+        return participatingQueries;
+    }
+    
+    protected void applyCtes(StringBuilder sqlSb) {
+        if (!cteManager.hasCtes()) {
+            return;
+        }
+        
+        StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100);
+        sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
+        sb.append(" ");
+        
+        for (CTEInfo cteInfo : cteManager.getCtes()) {
+            String cteNonRecursiveSqlQuery = getSql(cteInfo.cachedNonRecursiveQuery);
+            
+            sb.append(cteInfo.name);
+            sb.append('(');
+
+            final List<String> attributes = cteInfo.attributes;
+            boolean first = true;
+            for (int i = 0; i < attributes.size(); i++) {
+                String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
+                for (String column : columns) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(", ");
+                    }
+                    
+                    sb.append(column);
+                }
+            }
+
+            sb.append(')');
+            
+            sb.append(" AS(\n");
+            
+            sb.append(cteNonRecursiveSqlQuery);
+            
+            if (cteInfo.recursive) {
+                String cteRecursiveSqlQuery = getSql(cteInfo.cachedRecursiveQuery);
+                sb.append("\nUNION ALL\n");
+                sb.append(cteRecursiveSqlQuery);
+            } else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
+                sb.append("\nUNION ALL\n");
+                sb.append("SELECT ");
+                
+                sb.append("NULL");
+                
+                for (int i = 1; i < attributes.size(); i++) {
+                    sb.append(", ");
+                    sb.append("NULL");
+                }
+                
+                sb.append(" FROM DUAL WHERE 1=0");
+            }
+            
+            sb.append("\n)");
+
+            // TODO: this is a hibernate specific integration detail
+            final String subselect = "( select * from " + cteInfo.name + " )";
+            int subselectIndex;
+            while ((subselectIndex = sb.indexOf(subselect)) > -1) {
+                sb.replace(subselectIndex, subselectIndex + subselect.length(), cteInfo.name);
+            }
+            while ((subselectIndex = sqlSb.indexOf(subselect)) > -1) {
+                sqlSb.replace(subselectIndex, subselectIndex + subselect.length(), cteInfo.name);
+            }
+        }
+        
+        sb.append("\n");
+        
+        if (dbmsDialect.usesWithClauseAfterInsert()) {
+            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), sb);
+        } else {
+            sqlSb.insert(0, sb);
+        }
+    }
+    
+    private String getSql(Query query) {
+        if (query instanceof CustomSQLQuery) {
+            return ((CustomSQLQuery) query).getSql();
+        } else if (query instanceof CustomSQLTypedQuery<?>) {
+            return ((CustomSQLTypedQuery<?>) query).getSql();
+        }
+        return cbf.getExtendedQuerySupport().getSql(em, query);
+    }
+    
+    private static int indexOfIgnoreCase(StringBuilder haystack, String needle) {
+        final int endLimit = haystack.length() - needle.length() + 1;
+        for (int i = 0; i < endLimit; i++) {
+            if (regionMatchesIgnoreCase(haystack, i, needle, 0, needle.length())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static boolean regionMatchesIgnoreCase(StringBuilder haystack, int thisStart, String substring, int start, int length) {
+       int index1 = thisStart;
+       int index2 = start;
+       int tmpLen = length;
+
+       while (tmpLen-- > 0) {
+           final char c1 = haystack.charAt(index1++);
+           final char c2 = substring.charAt(index2++);
+
+           if (c1 != c2 && Character.toUpperCase(c1) != Character.toUpperCase(c2) && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
+               return false;
+           }
+       }
+
+       return true;
+    }
+    
+    protected boolean hasLimit() {
+        return firstResult != 0 || maxResults != Integer.MAX_VALUE;
+    }
+    
+    protected void applyLimit(StringBuilder sqlSb) {
+        String limit = null;
+        String offset = null;
+        
+        if (firstResult != 0) {
+            offset = Integer.toString(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+            limit = Integer.toString(maxResults);
+        }
+        
+        if (limit != null) {
+            dbmsDialect.appendLimit(sqlSb, limit, offset);
+        }
     }
 
     @SuppressWarnings("unchecked")

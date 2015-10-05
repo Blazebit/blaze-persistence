@@ -34,6 +34,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsInsertStatement() {
+        return false;
+    }
+
+    @Override
     public boolean needsBracketsForListParamter() {
         return true;
     }

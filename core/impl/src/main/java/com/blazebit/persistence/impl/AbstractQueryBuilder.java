@@ -64,6 +64,11 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     @Override
+    public TypedQuery<T> getQuery() {
+        return getTypedQuery();
+    }
+
+    @Override
     public List<T> getResultList() {
         return getQuery().getResultList();
     }
@@ -255,24 +260,6 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
         verifyBuilderEnded();
         joinManager.join(path, alias, type, fetch, defaultJoin);
         return (X) this;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public TypedQuery<T> getQuery() {
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString(), selectManager.getExpectedQueryResultType());
-        if (firstResult != 0) {
-        	query.setFirstResult(firstResult);
-        }
-        if (maxResults != Integer.MAX_VALUE) {
-        	query.setMaxResults(maxResults);
-        }
-        if (selectManager.getSelectObjectBuilder() != null) {
-            query = transformQuery(query);
-        }
-
-        parameterizeQuery(query);
-        return query;
     }
 
     @Override

@@ -43,7 +43,6 @@ public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, Su
         super(cbf, em, dbmsDialect, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
         this.result = result;
         this.listener = listener;
-
     }
 
     @Override

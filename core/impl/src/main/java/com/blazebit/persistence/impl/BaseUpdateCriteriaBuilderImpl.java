@@ -33,8 +33,8 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 
 	private final Set<String> setAttributes = new LinkedHashSet<String>();
 
-	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, result, listener);
+	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
 
         // set defaults
         if (alias == null) {
@@ -75,13 +75,6 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 		}
 		
     	appendWhereClause(sbSelectFrom);
-//    	appendReturningClause(sbSelectFrom);
 	}
-
-    @Override
-    public CTEInfo createCTEInfo() {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
 }

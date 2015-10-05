@@ -1,8 +1,9 @@
 package com.blazebit.persistence.impl.function.limit;
 
+import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.TemplateRenderer;
 
 /**
  *
@@ -11,18 +12,16 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  */
 public class LimitFunction implements JpqlFunction {
 
-    protected final TemplateRenderer limitOnlyRenderer;
-    protected final TemplateRenderer limitOffsetRenderer;
+    protected final DbmsDialect dbmsDialect;
 
     public LimitFunction() {
         // LIMIT(SUBQUERY, LIMIT, OFFSET)
-        this("(?1 limit ?2)", "(?1 limit ?2 offset ?3)");
+        this(new DefaultDbmsDialect());
     }
 
-    protected LimitFunction(String limitOnly, String limitOffset) {
+    protected LimitFunction(DbmsDialect dbmsDialect) {
         // LIMIT(SUBQUERY, LIMIT, OFFSET)
-        this.limitOnlyRenderer = new TemplateRenderer(limitOnly);
-        this.limitOffsetRenderer = new TemplateRenderer(limitOffset);
+        this.dbmsDialect = dbmsDialect;
     }
 
     @Override
@@ -66,28 +65,29 @@ public class LimitFunction implements JpqlFunction {
     }
 
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
-        adapt(functionRenderContext, limitOffsetRenderer).addArgument(1).addArgument(2).build();
+        StringBuilder sqlSb = getSql(functionRenderContext);
+        dbmsDialect.appendLimit(sqlSb, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2));
+        functionRenderContext.addChunk(sqlSb.toString());
     }
 
     protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
-        adapt(functionRenderContext, limitOnlyRenderer).addArgument(1).build();
+        StringBuilder sqlSb = getSql(functionRenderContext);
+        dbmsDialect.appendLimit(sqlSb, functionRenderContext.getArgument(1), null);
+        functionRenderContext.addChunk(sqlSb.toString());
     }
 
     private static boolean isNotNull(String argument) {
         return argument != null && !"NULL".equalsIgnoreCase(argument);
     }
-
-    protected static TemplateRenderer.Context adapt(FunctionRenderContext functionRenderContext, TemplateRenderer renderer) {
-        TemplateRenderer.Context context = renderer.start(functionRenderContext);
+    
+    private static StringBuilder getSql(FunctionRenderContext functionRenderContext) {
         String subquery = functionRenderContext.getArgument(0);
         if (startsWithIgnoreCase(subquery, "(select")) {
             int endIndex = subquery.length() - (subquery.charAt(subquery.length() - 1) == ')' ? 1 : 0);
-            context.addParameter(subquery.substring(1, endIndex));
-        } else {
-            context.addArgument(0);
+            return new StringBuilder(subquery.length() - 2).append(subquery, 1, endIndex);
         }
-
-        return context;
+        
+        return new StringBuilder(subquery);
     }
 
     private static boolean startsWithIgnoreCase(String s1, String s2) {

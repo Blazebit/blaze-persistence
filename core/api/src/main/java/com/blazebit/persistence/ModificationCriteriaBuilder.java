@@ -56,5 +56,5 @@ public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuild
     public <T> ReturningResult<T> executeWithReturning(String attribute, Class<T> type);
 
     // TODO: documentation
-    public <T> ReturningResult<T> executeWithReturning(ObjectBuilder<T> objectBuilder);
+    public <T> ReturningResult<T> executeWithReturning(ReturningObjectBuilder<T> objectBuilder);
 }

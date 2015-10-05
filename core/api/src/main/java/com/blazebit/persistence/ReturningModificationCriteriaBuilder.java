@@ -23,14 +23,9 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface ReturningModificationCriteriaBuilder<X extends ReturningModificationCriteriaBuilder<X, Y>, Y> extends CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X> {
+public interface ReturningModificationCriteriaBuilder<X extends ReturningModificationCriteriaBuilder<X, Y>, Y> extends CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X>, ReturningBuilder<X> {
 
     // TODO: documentation
-    public Y returning(String... attributes);
-
-    // TODO: documentation
-    public Y returning(String attribute, Class<?> type);
-
-    // TODO: documentation
-    public Y returning(ObjectBuilder<?> objectBuilder);
+    public Y end();
+    
 }

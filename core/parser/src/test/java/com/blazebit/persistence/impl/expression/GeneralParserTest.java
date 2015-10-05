@@ -552,7 +552,15 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInParameter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (:abc) THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), compose(foo("("), new ParameterExpression("abc"), foo(")"))), foo("0"))), foo("1"));
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testInMultipleParameterAndLiteral() {
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (:abc, :def, 3) THEN 0 ELSE 1 END");
+
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), compose(foo("("), new ParameterExpression("abc"), foo(","), new ParameterExpression("def"), foo(",3)"))), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
 

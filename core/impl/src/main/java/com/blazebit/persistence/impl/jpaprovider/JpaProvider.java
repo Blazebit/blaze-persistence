@@ -24,6 +24,8 @@ public interface JpaProvider {
 
     public boolean supportsJpa21();
 
+    public boolean supportsInsertStatement();
+
     public boolean needsBracketsForListParamter();
 
     public String getBooleanExpression(boolean value);

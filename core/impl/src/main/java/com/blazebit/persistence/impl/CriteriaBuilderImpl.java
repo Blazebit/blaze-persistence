@@ -15,12 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
@@ -36,9 +33,6 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
 	
-	// Cache
-    protected String cachedCteQueryString;
-
     public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
         super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
     }
@@ -63,138 +57,6 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     @SuppressWarnings("unchecked")
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
-    }
-    
-    @Override
-    @SuppressWarnings("unchecked")
-    public TypedQuery<T> getQuery() {
-    	TypedQuery<T> query;
-    	if (cteManager.getCtes().size() > 0) {
-	        TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-	        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-	        StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100 + sqlQuery.length() + 50);
-	        
-	        sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
-	        sb.append(" ");
-	        
-	        for (CTEInfo cteInfo : cteManager.getCtes()) {
-	    		String cteNonRecursiveQueryString = cteInfo.nonRecursiveCriteriaBuilder.getQueryString();
-	    		Query cteNonRecursiveQuery = em.createQuery(cteNonRecursiveQueryString);
-	    		// TODO: set parameters
-	    		String cteNonRecursiveSqlQuery = cbf.getExtendedQuerySupport().getSql(em, cteNonRecursiveQuery);
-	    		
-		        sb.append(cteInfo.name);
-		        sb.append('(');
-	
-	        	final List<String> attributes = cteInfo.attributes; 
-	    		sb.append(attributes.get(0));
-	    		
-	        	for (int i = 1; i < attributes.size(); i++) {
-	        		sb.append(", ");
-	        		sb.append(attributes.get(i));
-	        	}
-	
-	        	sb.append(')');
-	        	
-	        	sb.append(" AS(\n");
-	        	
-	        	sb.append(cteNonRecursiveSqlQuery);
-
-	            // TODO: this is a hibernate specific integration detail
-	            final String subselect = "( select * from " + cteInfo.name + " )";
-	            sqlQuery = sqlQuery.replace(subselect, cteInfo.name);
-	            
-	        	if (cteInfo.recursive) {
-		    		String cteRecursiveQueryString = cteInfo.recursiveCriteriaBuilder.getQueryString();
-		    		Query cteRecursiveQuery = em.createQuery(cteRecursiveQueryString);
-                    
-                    // TODO: set parameters
-                    String cteRecursiveSqlQuery = cbf.getExtendedQuerySupport().getSql(em, cteRecursiveQuery);
-
-    	            // TODO: this is a hibernate specific integration detail
-		            cteRecursiveSqlQuery = cteRecursiveSqlQuery.replace(subselect, cteInfo.name);
-		    		
-		        	sb.append("\nUNION ALL\n");
-		        	sb.append(cteRecursiveSqlQuery);
-	        	} else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
-		        	sb.append("\nUNION ALL\n");
-		        	sb.append("SELECT ");
-		        	
-		        	sb.append("NULL");
-		    		
-		        	for (int i = 1; i < attributes.size(); i++) {
-		        		sb.append(", ");
-		        		sb.append("NULL");
-		        	}
-		        	
-		        	sb.append(" FROM DUAL WHERE 1=0");
-	        	}
-	        	
-	        	sb.append("\n)");
-	        }
-        	
-            sb.append("\n");
-	        sb.append(sqlQuery);
-            
-            String finalQuery = sb.toString();
-            query = new CustomSQLTypedQuery<T>(baseQuery, em, cbf.getExtendedQuerySupport(), finalQuery);
-            // TODO: parameters?
-            // TODO: object builder?
-    	} else {
-	        query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-	        if (firstResult != 0) {
-	        	query.setFirstResult(firstResult);
-	        }
-	        if (maxResults != Integer.MAX_VALUE) {
-	        	query.setMaxResults(maxResults);
-	        }
-	        if (selectManager.getSelectObjectBuilder() != null) {
-	            query = transformQuery(query);
-	        }
-	
-	        parameterizeQuery(query);
-    	}
-    	
-        if (firstResult != 0) {
-        	query.setFirstResult(firstResult);
-        }
-        if (maxResults != Integer.MAX_VALUE) {
-        	query.setMaxResults(maxResults);
-        }
-        
-        return query;
-    }
-
-    @Override
-    public String getQueryString() {
-        prepareAndCheck();
-        return getCteQueryString0();
-    }
-    
-    protected String getBaseQueryString() {
-        prepareAndCheck();
-        return getQueryString0();
-    }
-    
-    @Override
-    protected void clearCache() {
-    	super.clearCache();
-    	cachedCteQueryString = null;
-    }
-
-    protected String getCteQueryString0() {
-        if (cachedCteQueryString == null) {
-            cachedCteQueryString = getCteQueryString1();
-        }
-
-        return cachedCteQueryString;
-    }
-
-    protected String getCteQueryString1() {
-        StringBuilder sbSelectFrom = new StringBuilder();
-        cteManager.buildClause(sbSelectFrom);
-        getQueryString1(sbSelectFrom);
-        return sbSelectFrom.toString();
     }
 
 }

@@ -77,6 +77,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsInsertStatement() {
+        return true;
+    }
+
+    @Override
     public boolean needsBracketsForListParamter() {
         return true;
     }

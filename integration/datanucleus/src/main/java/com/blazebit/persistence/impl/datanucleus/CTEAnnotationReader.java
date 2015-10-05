@@ -35,6 +35,7 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
 
         cmd.setIdentityType(IdentityType.NONDURABLE);
         cmd.addExtension("view-definition", "--");
+        // TODO: check that no collections are mapped
         
         for (int i = 0; i < cmd.getNoOfMembers(); i++) {
         	AbstractMemberMetaData mmd = cmd.getMetaDataForMemberAtRelativePosition(i);

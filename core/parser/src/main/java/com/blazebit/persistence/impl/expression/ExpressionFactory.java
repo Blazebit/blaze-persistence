@@ -36,4 +36,6 @@ public interface ExpressionFactory {
     public Expression createStringExpression(String expression);
 
     public Expression createOrderByExpression(String expression);
+
+    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions);
 }

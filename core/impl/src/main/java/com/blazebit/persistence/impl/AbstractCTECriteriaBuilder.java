@@ -15,9 +15,11 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
@@ -25,6 +27,8 @@ import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -41,34 +45,64 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 	protected final Y result;
 	protected final CTEBuilderListener listener;
 	protected final String cteName;
-	protected final SortedMap<String, Integer> bindingMap;
+	protected final EntityType<?> cteType;
+	protected final Map<String, Integer> bindingMap;
 	
     public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
         super(cbf, em, dbmsDialect, clazz, null, registeredFunctions);
         this.result = result;
         this.listener = listener;
 
-		EntityType<?> entityType = em.getMetamodel().entity(clazz);
-		this.cteName = entityType.getName();
-		this.bindingMap = new TreeMap<String, Integer>();
-		
-		for (Attribute<?, ?> attribute : entityType.getAttributes()) {
-			bindingMap.put(attribute.getName(), EMPTY);
-		}
+		this.cteType = em.getMetamodel().entity(clazz);
+		this.cteName = cteType.getName();
+		this.bindingMap = new LinkedHashMap<String, Integer>();
     }
 
 	public SelectBuilder<X> bind(String cteAttribute) {
-		Integer attributeBindIndex = bindingMap.get(cteAttribute);
+		Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
 		
-		if (attributeBindIndex == null) {
+		if (attribute == null) {
 			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
 		}
-		if (attributeBindIndex != EMPTY) {
+		if (bindingMap.containsKey(cteAttribute)) {
 			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
 		}
 		
 		bindingMap.put(cteAttribute, selectManager.getSelectInfos().size());
 		return this;
 	}
+    
+    protected List<String> prepareAndGetAttributes() {
+        List<String> attributes = new ArrayList<String>(bindingMap.size());
+        for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
+            final String attributeName = bindingEntry.getKey();
+            Attribute<?, ?> attribute = cteType.getAttribute(attributeName);
+            attributes.add(attributeName);
+            
+            if (JpaUtils.isJoinable(attribute)) {
+                // We have to map *-to-one relationships to their ids
+                EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(cteType.getJavaType(), attribute));
+                Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
+                // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
+                // so it is safe to just append the id to the path
+                PathExpression pathExpression = (PathExpression) selectManager.getSelectInfos().get(bindingEntry.getValue()).getExpression();
+                pathExpression.getExpressions().add(new PropertyExpression(idAttribute.getName()));
+            }
+        }
+        
+//        List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
+//        List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
+//        newSelectInfos.clear();
+//        
+//        for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
+//            Integer newPosition = attributes.size();
+//            SelectInfo selectInfo = originalSelectInfos.get(bindingEntry.getValue());
+//            
+//            newSelectInfos.add(selectInfo);
+//            bindingEntry.setValue(newPosition);
+//        }
+        
+        return attributes;
+    }
 
 }

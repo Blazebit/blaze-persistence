@@ -25,9 +25,18 @@ import java.util.List;
  * @since 1.1.0
  */
 public interface ReturningResult<T> {
+    
+    /**
+     * Returns the last element of the returning clause result. 
+     * 
+     * @return the last element of the returning clause result
+     */
+    public T getLastResult();
 
     /**
      * Returns the result of the returning clause.
+     * 
+     * Note that returning all elements might not be supported by all databases.
      *
      * @return The result of the returning clause
      */

@@ -559,15 +559,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     }
 
     @Override
-    public PaginatedCriteriaBuilder<T> from(Class<?> clazz, String alias) {
-        if (fromClassExplicitelySet) {
-            throw new UnsupportedOperationException("Multiple from clauses are not supported at the moment");
-        }
-    	
-        return (PaginatedCriteriaBuilder<T>) super.from(clazz, alias);
-    }
-
-    @Override
     public PaginatedCriteriaBuilder<T> distinct() {
         throw new IllegalStateException("Calling distinct() on a PaginatedCriteriaBuilder is not allowed.");
     }

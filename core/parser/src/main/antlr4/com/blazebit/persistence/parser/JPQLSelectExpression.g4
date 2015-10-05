@@ -59,6 +59,9 @@ parseStringExpression
 
 parseCaseOperandExpression
     : case_operand;
+    
+parseInItemExpression
+    : in_item;
 
 simple_expression : null_literal // This is a custom, non JPA compliant extension
                   | single_valued_path_expression
@@ -313,8 +316,12 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                     | expr=datetime_expression (not=NOT)? BETWEEN bound1=datetime_expression AND bound2=datetime_expression # BetweenDatetime
                     ;
 
- in_expression : (state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=literal (',' inItems+=literal)* ')' | param=Input_parameter | '(' param=Input_parameter ')' )
+ in_expression : (state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter )
                ;
+ 
+ in_item : literal 
+         | Input_parameter
+         ;
 
  like_expression : string_expression (not=NOT)? LIKE pattern_value (ESCAPE escape_character)?
                  ;

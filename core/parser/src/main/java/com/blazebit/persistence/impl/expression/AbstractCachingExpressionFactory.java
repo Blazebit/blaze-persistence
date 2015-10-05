@@ -35,6 +35,8 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
 
     protected abstract <E extends Expression> E getOrDefault(String cacheName, String cacheKey, Supplier<E> defaultSupplier);
 
+    protected abstract <E extends Expression> E getOrDefault(String cacheName, Object[] cacheKey, Supplier<E> defaultSupplier);
+
     @Override
     public PathExpression createPathExpression(final String expression) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.PathExpression", expression, new Supplier<PathExpression>() {
@@ -114,6 +116,18 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             @Override
             public Expression get() {
                 return delegate.createOrderByExpression(expression);
+            }
+
+        });
+    }
+
+    @Override
+    public Expression createInPredicateExpression(final String[] parameterOrLiteralExpressions) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpressions, new Supplier<Expression>() {
+
+            @Override
+            public Expression get() {
+                return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
             }
 
         });

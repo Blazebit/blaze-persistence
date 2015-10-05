@@ -30,8 +30,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class ReturningInsertCriteriaBuilderImpl<T, Y> extends BaseInsertCriteriaBuilderImpl<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
+    public ReturningInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, registeredFunctions, cteClass, result, listener);
     }
 
 }

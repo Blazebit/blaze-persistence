@@ -34,6 +34,9 @@ import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
+import com.blazebit.persistence.tx.TxSupport;
+import com.blazebit.persistence.tx.TxVoidWork;
+import com.blazebit.persistence.tx.TxWork;
 
 /**
  *
@@ -190,6 +193,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             Workflow.class,
             IntIdEntity.class
         };
+    }
+    
+    protected void transactional(TxVoidWork work) {
+        TxSupport.transactional(em, work);
+    }
+    
+    protected <V> V transactional(TxWork<V> work) {
+        return TxSupport.transactional(em, work);
     }
 
 }
