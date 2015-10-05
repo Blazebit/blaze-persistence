@@ -292,7 +292,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      *
      * @param attributeFilters The attribute filters to add
      */
-    public void addAttributeFilters(Map<String, String> attributeFilters) {
+    public void addAttributeFilters(Map<String, Object> attributeFilters) {
         this.attributeFilters.putAll(attributeFilters);
     }
 
@@ -302,7 +302,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * @param attributeName The name of the attribute filter
      * @param filterValue   The filter value for the attribute filter
      */
-    public void addAttributeFilter(String attributeName, String filterValue) {
+    public void addAttributeFilter(String attributeName, Object filterValue) {
         this.attributeFilters.put(attributeName, filterValue);
     }
 

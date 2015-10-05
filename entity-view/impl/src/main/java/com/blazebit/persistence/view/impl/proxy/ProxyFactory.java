@@ -222,7 +222,8 @@ public class ProxyFactory {
     }
 
 	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField attributeField) throws CannotCompileException, NotFoundException {
-		String genericSignature = attributeField.getGenericSignature();
+		SignatureAttribute sa = (SignatureAttribute)attributeField.getFieldInfo2().getAttribute(SignatureAttribute.tag);
+		String genericSignature = sa == null ? null : sa.getSignature();
 		List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
         
         CtMethod attributeGetter = CtNewMethod.getter(getter.getName(), attributeField);
