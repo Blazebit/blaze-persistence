@@ -116,9 +116,7 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
   allow_failures:
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
     - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
-    - env: JPAPROVIDER=datanucleus-5 RDBMS=mysql
     - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
     - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
       sudo: true

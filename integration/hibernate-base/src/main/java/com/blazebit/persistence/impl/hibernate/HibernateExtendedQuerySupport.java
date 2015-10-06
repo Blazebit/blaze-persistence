@@ -245,7 +245,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 results = queryLoader.list(wrapSession(session, generatedKeys, returningColumns, returningResult), queryParameters);
                 success = true;
             } finally {
-                transactionCoordinator.afterNonTransactionalQuery( success );
+                transactionCoordinator.afterNonTransactionalQuery(success);
                 transactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
             }
             /*
