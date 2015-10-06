@@ -32,6 +32,11 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
         	// MySQL is drunk, it does stuff case insensitive by default...
         	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
+        	
+        	// Since MySQL has no sequences, the native strategy is needed for batch inserts
+            if (isHibernate5()) {
+                properties.put("hibernate.id.new_generator_mapping", "false");
+            }
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("db2")) {
             // The original DB2 dialect misses support for sequence retrieve in select statements
             properties.put("hibernate.dialect", SaneDB2Dialect.class.getName());
@@ -58,5 +63,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         int major = Integer.parseInt(versionParts[0]);
         int minor = Integer.parseInt(versionParts[1]);
         return major == 4 && minor == 2;
+    }
+
+    private boolean isHibernate5() {
+        String version = org.hibernate.Version.getVersionString();
+        String[] versionParts = version.split("\\.");
+        int major = Integer.parseInt(versionParts[0]);
+        return major > 5;
     }
 }
