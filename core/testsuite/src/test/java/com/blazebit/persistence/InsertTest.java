@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -48,7 +47,6 @@ import com.blazebit.persistence.tx.TxVoidWork;
  * @author Christian Beikov
  * @since 1.1.0
  */
-// TODO: Fix MySQL for #164
 public class InsertTest extends AbstractCoreTest {
     
     private Person p1;
@@ -86,7 +84,7 @@ public class InsertTest extends AbstractCoreTest {
 	}
 	
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimple() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -110,9 +108,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    // TODO: Implement
-    @Ignore("Not yet implemented")
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimpleWithLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -138,7 +134,7 @@ public class InsertTest extends AbstractCoreTest {
 
 	// NOTE: hibernate 4.2 does not support using parameters in the select clause
 	@Test
-	@Category({ NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+	@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 	public void testSimpleWithParameters() {
 		final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
 		cb.from(Person.class, "p");
@@ -165,7 +161,7 @@ public class InsertTest extends AbstractCoreTest {
     
 	// NOTE: H2 does not support returning all generated keys
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -188,7 +184,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -209,7 +205,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithParameter() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -231,7 +227,7 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     @Test
-    @Category({ NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.from(Person.class, "p");
@@ -254,7 +250,7 @@ public class InsertTest extends AbstractCoreTest {
     
     // NOTE: H2 only supports with clause in select statement
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)
@@ -285,7 +281,7 @@ public class InsertTest extends AbstractCoreTest {
 
     // NOTE: H2 only supports with clause in select statement
     @Test
-    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCteAndLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)
