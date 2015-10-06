@@ -6,12 +6,12 @@ import java.lang.reflect.Method;
 import org.hibernate.engine.spi.SessionImplementor;
 
 
-public class SessionInvocationHandler implements InvocationHandler {
+public class Hibernate4SessionInvocationHandler implements InvocationHandler {
     
     private final SessionImplementor delegate;
     private final Object transactionCoordinatorProxy;
 
-    public SessionInvocationHandler(SessionImplementor delegate, Object transactionCoordinatorProxy) {
+    public Hibernate4SessionInvocationHandler(SessionImplementor delegate, Object transactionCoordinatorProxy) {
         this.delegate = delegate;
         this.transactionCoordinatorProxy = transactionCoordinatorProxy;
     }

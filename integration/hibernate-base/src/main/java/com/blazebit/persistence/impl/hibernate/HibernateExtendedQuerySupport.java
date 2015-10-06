@@ -3,7 +3,6 @@ package com.blazebit.persistence.impl.hibernate;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,14 +35,12 @@ import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
-import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -64,7 +61,6 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
-import com.blazebit.reflection.ExpressionUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 @SuppressWarnings("deprecation")
@@ -229,9 +225,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             /*
              * NATIVE LIST START
              */
-            TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-            transactionCoordinator.pulse();
-            transactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
+            hibernateAccess.checkTransactionSynchStatus(session);
             queryParameters.validateParameters();
             AutoFlushEvent event = new AutoFlushEvent(queryPlan.getQuerySpaces(), (EventSource) session);
             for (AutoFlushEventListener listener : listeners(sfi, EventType.AUTO_FLUSH) ) {
@@ -245,8 +239,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 results = queryLoader.list(wrapSession(session, generatedKeys, returningColumns, returningResult), queryParameters);
                 success = true;
             } finally {
-                transactionCoordinator.afterNonTransactionalQuery(success);
-                transactionCoordinator.getSynchronizationCallbackCoordinator().processAnyDelayedAfterCompletion();
+                hibernateAccess.afterTransaction(session, success);
             }
             /*
              * NATIVE LIST END
@@ -377,13 +370,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private SessionImplementor wrapSession(SessionImplementor session, boolean generatedKeys, String[][] columns, HibernateReturningResult<?> returningResult) {
         // We do all this wrapping to change the StatementPreparer that is returned by the JdbcCoordinator
         // Instead of calling executeQuery, we delegate to executeUpdate and then return the generated keys in the prepared statement wrapper that we apply
-        Object transactionCoordinator = hibernateAccess.getTransactionCoordinator(session);
-        JdbcCoordinator jdbcCoordinator = (JdbcCoordinator) ExpressionUtils.getValue(transactionCoordinator, "jdbcCoordinator");
-        
-        Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
-        Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));
-        Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new SessionInvocationHandler(session, transactionCoordinatorProxy));
-        return (SessionImplementor) sessionProxy;
+        return hibernateAccess.wrapSession(session, generatedKeys, columns, returningResult);
     }
     
     @SuppressWarnings("unchecked")

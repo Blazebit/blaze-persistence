@@ -3,13 +3,15 @@ package com.blazebit.persistence.impl.hibernate;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
+import org.hibernate.engine.spi.SessionImplementor;
 
-public class TransactionCoordinatorInvocationHandler implements InvocationHandler {
+
+public class Hibernate5SessionInvocationHandler implements InvocationHandler {
     
-    private final Object delegate;
+    private final SessionImplementor delegate;
     private final Object jdbcCoordinatorProxy;
 
-    public TransactionCoordinatorInvocationHandler(Object delegate, Object jdbcCoordinatorProxy) {
+    public Hibernate5SessionInvocationHandler(SessionImplementor delegate, Object jdbcCoordinatorProxy) {
         this.delegate = delegate;
         this.jdbcCoordinatorProxy = jdbcCoordinatorProxy;
     }
