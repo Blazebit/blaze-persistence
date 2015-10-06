@@ -13,6 +13,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
+    public boolean usesWithClauseAfterInsert() {
+        return true;
+    }
+
+    @Override
     public void appendLimit(StringBuilder sqlSb, String limit, String offset) {
         if (offset == null) {
             sqlSb.append(" fetch first ").append(limit).append(" rows only");

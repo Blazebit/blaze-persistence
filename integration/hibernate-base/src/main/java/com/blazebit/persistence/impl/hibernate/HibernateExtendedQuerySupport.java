@@ -9,10 +9,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -62,6 +64,7 @@ import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.reflection.ExpressionUtils;
 import com.blazebit.reflection.ReflectionUtils;
 
 @SuppressWarnings("deprecation")
@@ -69,8 +72,17 @@ import com.blazebit.reflection.ReflectionUtils;
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String,HQLQueryPlan>>();
+    private final HibernateAccess hibernateAccess;
     
-	@Override
+	public HibernateExtendedQuerySupport() {
+	    Iterator<HibernateAccess> serviceIter = ServiceLoader.load(HibernateAccess.class).iterator();
+	    if (!serviceIter.hasNext()) {
+	        throw new IllegalStateException("Hibernate integration was not found on the class path!");
+	    }
+	    this.hibernateAccess = serviceIter.next();
+    }
+
+    @Override
 	public String getSql(EntityManager em, Query query) {
     	SessionImplementor session = em.unwrap(SessionImplementor.class);
 		SessionFactoryImplementor sfi = session.getFactory();
@@ -365,8 +377,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private SessionImplementor wrapSession(SessionImplementor session, boolean generatedKeys, String[][] columns, HibernateReturningResult<?> returningResult) {
         // We do all this wrapping to change the StatementPreparer that is returned by the JdbcCoordinator
         // Instead of calling executeQuery, we delegate to executeUpdate and then return the generated keys in the prepared statement wrapper that we apply
-        TransactionCoordinator transactionCoordinator = session.getTransactionCoordinator();
-        JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
+        Object transactionCoordinator = hibernateAccess.getTransactionCoordinator(session);
+        JdbcCoordinator jdbcCoordinator = (JdbcCoordinator) ExpressionUtils.getValue(transactionCoordinator, "jdbcCoordinator");
         
         Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
         Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));

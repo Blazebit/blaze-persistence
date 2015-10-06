@@ -100,7 +100,7 @@ public class StatementPreparerImpl implements StatementPreparer {
                 }
             }
         }.prepareStatement();
-        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{ PreparedStatement.class }, new PreparedStatementInvocationHandler(ps, generated, columns, returningResult));
+        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{ PreparedStatement.class }, new PreparedStatementInvocationHandler(ps, columns, returningResult));
         jdbcCoordinator.registerLastQuery(ps);
         return ps;
     }

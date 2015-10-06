@@ -67,6 +67,8 @@ public class LimitFunction implements JpqlFunction {
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
         dbmsDialect.appendLimit(sqlSb, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2));
+        sqlSb.insert(0, '(');
+        sqlSb.append(')');
         functionRenderContext.addChunk(sqlSb.toString());
     }
 

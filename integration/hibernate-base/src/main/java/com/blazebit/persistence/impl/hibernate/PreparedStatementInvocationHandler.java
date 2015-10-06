@@ -12,13 +12,11 @@ import java.util.Map;
 public class PreparedStatementInvocationHandler implements InvocationHandler {
 
     private final PreparedStatement delegate;
-    private final boolean generated;
     private final Map<String, Integer> aliasIndex;
     private final HibernateReturningResult<?> returningResult;
 
-    public PreparedStatementInvocationHandler(PreparedStatement delegate, boolean generated, String[][] columns, HibernateReturningResult<?> returningResult) {
+    public PreparedStatementInvocationHandler(PreparedStatement delegate, String[][] columns, HibernateReturningResult<?> returningResult) {
         this.delegate = delegate;
-        this.generated = generated;
         this.aliasIndex = new HashMap<String, Integer>(columns.length);
         this.returningResult = returningResult;
         
@@ -33,11 +31,7 @@ public class PreparedStatementInvocationHandler implements InvocationHandler {
             returningResult.setUpdateCount(delegate.executeUpdate());
             ResultSet rs = delegate.getGeneratedKeys();
             
-            if (generated) {
-                return Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class[]{ ResultSet.class }, new ResultSetInvocationHandler(rs, aliasIndex));
-            }
-            
-            return rs;
+            return Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class[]{ ResultSet.class }, new ResultSetInvocationHandler(rs, aliasIndex));
         }
         
         return method.invoke(delegate, args);
