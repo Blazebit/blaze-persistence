@@ -49,6 +49,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
+import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
@@ -437,6 +438,17 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             Field sqlField = ReflectionUtils.getField(queryTranslator.getClass(), "sql");
             sqlField.setAccessible(true);
             sqlField.set(queryTranslator, finalSql);
+
+            // Modification queries keep the sql in the executor
+            Field statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
+            statementExectuor.setAccessible(true);
+            StatementExecutor executor = (StatementExecutor) statementExectuor.get(queryTranslator);
+            
+            if (executor != null) {
+                Field executorSqlField = ReflectionUtils.getField(executor.getClass(), "sql");
+                executorSqlField.setAccessible(true);
+                executorSqlField.set(executor, finalSql);
+            }
             
             // Prepare queryTranslator for aggregated parameters
             ParameterTranslations translations = new ParameterTranslationsImpl(queryParametersEntry.specifications);
