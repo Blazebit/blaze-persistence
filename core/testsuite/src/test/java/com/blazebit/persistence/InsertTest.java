@@ -226,6 +226,7 @@ public class InsertTest extends AbstractCoreTest {
         });
     }
     
+    // TODO: This does not work with sequences for H2 because the next value of the sequence is evaluated regardless of the limit
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithLimit() {

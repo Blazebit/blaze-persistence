@@ -35,11 +35,16 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         	
         	// Since MySQL has no sequences, the native strategy is needed for batch inserts
             if (isHibernate5()) {
-                properties.put("hibernate.id.new_generator_mapping", "false");
+                properties.put("hibernate.id.new_generator_mappings", "false");
             }
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("db2")) {
             // The original DB2 dialect misses support for sequence retrieve in select statements
             properties.put("hibernate.dialect", SaneDB2Dialect.class.getName());
+        } else if (properties.get("javax.persistence.jdbc.url").toString().contains("h2")) {
+            // Hibernate 5 uses sequences by default but h2 seems to have a bug with sequences in a limited query
+            if (isHibernate5()) {
+                properties.put("hibernate.id.new_generator_mappings", "false");
+            }
         }
         
         if (isHibernate42()) {
@@ -69,6 +74,6 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
         String version = org.hibernate.Version.getVersionString();
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);
-        return major > 5;
+        return major >= 5;
     }
 }
