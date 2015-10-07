@@ -34,14 +34,21 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
      *
      */
     @Override
-    public void appendLimit(StringBuilder sqlSb, String limit, String offset) {
-        String limitSubqueryAlias = "_tmp_" + threadLocalCounter.get().incrementAndGet();
-        sqlSb.insert(0, "SELECT * FROM (");
+    public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
+        if (isSubquery) {
+            sqlSb.insert(0, "SELECT * FROM (");
+        }
+        
         if (offset == null) {
-            sqlSb.append(" limit ").append(limit).append(") as ").append(limitSubqueryAlias);
+            sqlSb.append(" limit ").append(limit);
         } else {
             // NOTE: this requires that the parameter value is pulled into the query as literal
-            sqlSb.append(" limit ").append(offset).append(',').append(limit).append(") as ").append(limitSubqueryAlias);
+            sqlSb.append(" limit ").append(offset).append(',').append(limit);
+        }
+        
+        if (isSubquery) {
+            String limitSubqueryAlias = "_tmp_" + threadLocalCounter.get().incrementAndGet();
+            sqlSb.append(") as ").append(limitSubqueryAlias);
         }
     }
 

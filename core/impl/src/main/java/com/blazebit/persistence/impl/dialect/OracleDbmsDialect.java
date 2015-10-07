@@ -32,7 +32,7 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public void appendLimit(StringBuilder sqlSb, String limit, String offset) {
+    public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         if (offset == null) {
             sqlSb.insert(0, "select * from (");
             sqlSb.append(") where rownum <= ").append(limit);

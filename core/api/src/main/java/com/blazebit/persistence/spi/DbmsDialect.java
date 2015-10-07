@@ -102,5 +102,5 @@ public interface DbmsDialect {
     public boolean supportsLimitOffset();
 
     // TODO: documentation
-    public void appendLimit(StringBuilder sqlSb, String limit, String offset);
+    public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset);
 }

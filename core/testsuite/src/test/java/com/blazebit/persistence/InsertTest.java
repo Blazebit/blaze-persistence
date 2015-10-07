@@ -249,8 +249,9 @@ public class InsertTest extends AbstractCoreTest {
     }
     
     // NOTE: H2 only supports with clause in select statement
+    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCte() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)
@@ -280,8 +281,9 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     // NOTE: H2 only supports with clause in select statement
+    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLastWithCteAndLimit() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.with(PersonCTE.class)

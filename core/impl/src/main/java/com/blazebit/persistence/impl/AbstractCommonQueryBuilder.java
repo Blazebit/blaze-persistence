@@ -1177,7 +1177,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         }
         
         if (limit != null) {
-            dbmsDialect.appendLimit(sqlSb, limit, offset);
+            dbmsDialect.appendLimit(sqlSb, false, limit, offset);
         }
     }
 

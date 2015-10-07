@@ -64,7 +64,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public void appendLimit(StringBuilder sqlSb, String limit, String offset) {
+    public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         if (offset == null) {
             sqlSb.append(" limit ").append(limit);
         } else {
