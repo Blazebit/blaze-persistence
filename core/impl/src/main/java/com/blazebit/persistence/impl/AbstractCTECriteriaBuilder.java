@@ -16,12 +16,14 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
@@ -48,8 +50,8 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 	protected final EntityType<?> cteType;
 	protected final Map<String, Integer> bindingMap;
 	
-    public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, null, registeredFunctions);
+    public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, null, registeredFunctions, parameterManager);
         this.result = result;
         this.listener = listener;
 
@@ -58,7 +60,35 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 		this.bindingMap = new LinkedHashMap<String, Integer>();
     }
 
-	public SelectBuilder<X> bind(String cteAttribute) {
+    @Override
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
+        super.getQueryString1(sbSelectFrom);
+        applyJpaLimit(sbSelectFrom);
+    }
+
+	@Override
+    protected Query getQuery() {
+        Query query;
+        
+        if (hasLimit()) {
+            // We need to change the underlying sql when doing a limit
+            query = em.createQuery(getBaseQueryString());
+            List<Query> participatingQueries = Arrays.asList(query);
+            
+            StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
+            applyLimit(sqlSb);
+            String finalSql = sqlSb.toString();
+            
+            query = new CustomSQLQuery(participatingQueries, query, em, cbf.getExtendedQuerySupport(), finalSql);
+        } else {
+            query = em.createQuery(getBaseQueryString());
+        }
+        
+        parameterizeQuery(query);
+        return query;
+    }
+
+    public SelectBuilder<X> bind(String cteAttribute) {
 		Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
 		
 		if (attribute == null) {

@@ -15,15 +15,15 @@ public class RecursiveCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteri
 	protected boolean done;
 	protected CTECriteriaBuilderImpl<T, Y, X> recursiveCteBuilder;
 
-	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, final CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
+	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, final CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
 		this.clazz = clazz;
 	}
 
 	@Override
 	public SelectCTECriteriaBuilder<T, Y> unionAll() {
 		verifyBuilderEnded();
-		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, Y, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, result, this);
+		recursiveCteBuilder = new CTECriteriaBuilderImpl<T, Y, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, this);
 		return recursiveCteBuilder;
 	}
 

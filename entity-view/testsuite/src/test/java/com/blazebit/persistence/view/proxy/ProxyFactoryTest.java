@@ -82,6 +82,7 @@ public class ProxyFactoryTest {
         assertTrue(expectedId == instance.getId());
         assertTrue(expectedMyContactPerson == instance.getMyContactPerson());
         assertTrue(expectedName == instance.getName());
+        assertTrue(expectedName == instance.getUnsafeName());
         assertTrue(expectedAge == instance.getAge());
         assertTrue(expectedContactPersonNumber == instance.getContactPersonNumber());
 

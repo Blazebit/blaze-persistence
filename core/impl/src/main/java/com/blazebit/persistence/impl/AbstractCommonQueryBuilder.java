@@ -201,7 +201,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
-        this.cteManager = new CTEManager<T>(cbf, em, dbmsDialect, registeredFunctions);
+        this.cteManager = new CTEManager<T>(cbf, em, dbmsDialect, registeredFunctions, parameterManager);
 
         // resolve cyclic dependencies
         this.em = em;
@@ -210,6 +210,10 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager, em.getMetamodel());
         this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
         this.resultType = resultClazz;
+    }
+
+    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
+        this(cbf, em, dbmsDialect, clazz, alias, parameterManager, null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
     public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
@@ -700,6 +704,10 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         }
         verifyBuilderEnded();
     }
+    
+    protected boolean isJoinRequiredForSelect() {
+        return true;
+    }
 
     protected void applyImplicitJoins() {
         if (implicitJoinsApplied) {
@@ -720,7 +728,10 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         joinManager.acceptVisitor(joinNodeVisitor);
         // carry out implicit joins
         joinVisitor.setFromClause(ClauseType.SELECT);
+        // There might be clauses for which joins are not required
+        joinVisitor.setJoinRequired(isJoinRequiredForSelect());
         selectManager.acceptVisitor(joinVisitor);
+        joinVisitor.setJoinRequired(true);
 
         joinVisitor.setFromClause(ClauseType.WHERE);
         whereManager.acceptVisitor(joinVisitor);
@@ -1178,6 +1189,18 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         
         if (limit != null) {
             dbmsDialect.appendLimit(sqlSb, false, limit, offset);
+        }
+    }
+    
+    protected void applyJpaLimit(StringBuilder sbSelectFrom) {
+        if (hasLimit()) {
+            sbSelectFrom.append(" LIMIT ");
+            sbSelectFrom.append(maxResults);
+            
+            if (firstResult > 0) {
+                sbSelectFrom.append(" OFFSET ");
+                sbSelectFrom.append(firstResult);
+            }
         }
     }
 

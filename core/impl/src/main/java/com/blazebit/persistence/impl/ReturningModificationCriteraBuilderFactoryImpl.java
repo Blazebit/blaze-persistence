@@ -37,15 +37,17 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 	private final EntityManager em;
 	private final DbmsDialect dbmsDialect;
 	private final Set<String> registeredFunctions;
+	private final ParameterManager parameterManager;
 	private final Class<?> cteClass;
 	private final X result;
     private final CTEBuilderListener listener;
 
-    ReturningModificationCriteraBuilderFactoryImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions, Class<?> cteClass, X result, final CTEBuilderListener listener) {
+    ReturningModificationCriteraBuilderFactoryImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, X result, final CTEBuilderListener listener) {
     	this.cbf = cbf;
     	this.em = em;
     	this.dbmsDialect = dbmsDialect;
     	this.registeredFunctions = registeredFunctions;
+    	this.parameterManager = parameterManager;
     	this.cteClass = cteClass;
     	this.result = result;
     	this.listener = listener;
@@ -58,7 +60,7 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningDeleteCriteriaBuilder<T, X> delete(Class<T> deleteClass, String alias) {
-        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, deleteClass, alias, registeredFunctions, cteClass, result, listener);
+        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, deleteClass, alias, registeredFunctions, parameterManager, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
@@ -70,14 +72,14 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass, String alias) {
-        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, updateClass, alias, registeredFunctions, cteClass, result, listener);
+        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, updateClass, alias, registeredFunctions, parameterManager, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
 
     @Override
     public <T> ReturningInsertCriteriaBuilder<T, X> insert(Class<T> insertClass) {
-        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, insertClass, registeredFunctions, cteClass, result, listener);
+        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(cbf, em, dbmsDialect, insertClass, registeredFunctions, parameterManager, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }

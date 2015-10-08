@@ -55,10 +55,10 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	protected final Map<String, String> returningAttributeBindingMap;
 
 	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
-		super(cbf, em, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions);
+		super(cbf, em, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions, parameterManager);
 		this.entityType = em.getMetamodel().entity(clazz);
 		this.entityAlias = alias;
 		this.result = result;
@@ -100,6 +100,21 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         return super.withReturning(cteClass);
+    }
+    
+    protected void applyJpaReturning(StringBuilder sbSelectFrom) {
+        sbSelectFrom.append(" RETURNING ");
+        
+        boolean first = true;
+        for (String attribute : returningAttributeBindingMap.values()) {
+            if (first) {
+                first = false;
+            } else {
+                sbSelectFrom.append(", ");
+            }
+            
+            sbSelectFrom.append(attribute);
+        }
     }
 
     @Override

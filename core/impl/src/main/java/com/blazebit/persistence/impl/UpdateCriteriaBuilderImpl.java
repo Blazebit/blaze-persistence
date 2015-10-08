@@ -31,7 +31,11 @@ import com.blazebit.persistence.spi.DbmsDialect;
 public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
 
     public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, null, null, null);
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, new ParameterManager(), null, null, null);
+    }
+    
+    public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, null, null, null);
     }
 
 }

@@ -38,15 +38,17 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
 	private final EntityManager em;
 	private final DbmsDialect dbmsDialect;
 	private final Set<String> registeredFunctions;
+	private final ParameterManager parameterManager;
 
     private final Set<CTEInfo> ctes;
     private boolean recursive = false;
 
-    CTEManager(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
+    CTEManager(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager) {
     	this.cbf = cbf;
     	this.em = em;
     	this.dbmsDialect = dbmsDialect;
     	this.registeredFunctions = registeredFunctions;
+    	this.parameterManager = parameterManager;
         this.ctes = new LinkedHashSet<CTEInfo>();
     }
     
@@ -109,20 +111,20 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
     }
 
 	<X, Y> SelectCTECriteriaBuilder<X, Y> with(Class<X> cteClass, Y result) {
-		CTECriteriaBuilderImpl<X, Y, T> cteBuilder = new CTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, result, this);
+		CTECriteriaBuilderImpl<X, Y, T> cteBuilder = new CTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
 	<X, Y> SelectRecursiveCTECriteriaBuilder<X, Y> withRecursive(Class<X> cteClass, Y result) {
 		recursive = true;
-		RecursiveCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, result, this);
+		RecursiveCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
 	<X, Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<X> cteClass, Y result) {
-	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, cteClass, result, this);
+	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, parameterManager, cteClass, result, this);
 		return factory;
 	}
 	

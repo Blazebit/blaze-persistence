@@ -31,8 +31,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class CTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectCTECriteriaBuilder<T, Y>> implements SelectCTECriteriaBuilder<T, Y> {
 
-	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, registeredFunctions, result, listener);
+	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
 	}
 
 	@Override

@@ -17,14 +17,34 @@
 package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.TreeSet;
 
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.IdHolderCTE;
+import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoFirebird;
+import com.blazebit.persistence.testsuite.base.category.NoH2;
+import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
+import com.blazebit.persistence.testsuite.base.category.NoOracle;
+import com.blazebit.persistence.testsuite.base.category.NoSQLite;
+import com.blazebit.persistence.tx.TxVoidWork;
 
 /**
  *
@@ -33,14 +53,29 @@ import com.blazebit.persistence.entity.Person;
  */
 public class UpdateTest extends AbstractCoreTest {
 
+    Document doc1;
+    Document doc2;
+    Document doc3;
+
+    @Override
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[] {
+            Document.class,
+            Version.class,
+            IntIdEntity.class,
+            Person.class, 
+            IdHolderCTE.class
+        };
+    }
+    
 	@Before
 	public void setUp() {
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
-			Document doc1 = new Document("D1");
-			Document doc2 = new Document("D2");
-			Document doc3 = new Document("D3");
+			doc1 = new Document("D1");
+			doc2 = new Document("D2");
+			doc3 = new Document("D3");
 
 			Person o1 = new Person("P1");
 
@@ -64,22 +99,137 @@ public class UpdateTest extends AbstractCoreTest {
 
 	@Test
 	public void testSimple() {
-		UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+		final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
 		cb.set("name", "NewD1");
 		cb.where("name").eq("D1");
-		String expected = "UPDATE Document d SET name = :name WHERE d.name = :param_0";
+		String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
 
 		assertEquals(expected, cb.getQueryString());
 
-		EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			int updateCount = cb.executeUpdate();
-			assertEquals(1, updateCount);
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+    			int updateCount = cb.executeUpdate();
+    			assertEquals(1, updateCount);
+            }
+        });
 	}
+
+    /* Returning */
+    
+    // NOTE: H2 does not support returning all generated keys
+    @Test
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testReturningAll() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.set("name", "NewD1");
+        cb.where("id").in(doc1.getId(), doc2.getId());
+        String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
+                assertEquals(2, result.getUpdateCount());
+                assertEquals(2, result.getResultList().size());
+                List<Long> orderedList = new ArrayList<Long>(new TreeSet<Long>(result.getResultList()));
+                assertEquals(doc1.getId(), orderedList.get(0));
+                assertEquals(doc2.getId(), orderedList.get(1));
+            }
+        });
+    }
+    
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testReturningLast() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.set("name", "NewD1");
+        cb.where("id").in(doc1.getId(), doc2.getId());
+        String expected = "UPDATE Document d SET name = :param_0 WHERE d.id IN (:param_1)";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
+                assertEquals(2, result.getUpdateCount());
+                List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
+                assertTrue(list.contains(result.getLastResult()));
+            }
+        });
+    }
+
+    // NOTE: H2 only supports with clause in select statement
+    // NOTE: MySQL does not support CTEs
+    @Test
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testReturningLastWithCte() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.set("name", "NewD1");
+        cb.with(IdHolderCTE.class)
+            .from(Document.class, "subDoc")
+            .bind("id").select("subDoc.id")
+            .orderByAsc("subDoc.id")
+            .setMaxResults(2)
+        .end();
+        cb.where("id").in()
+            .from(IdHolderCTE.class, "idHolder")
+            .select("idHolder.id")
+        .end();
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+            + ")\n"
+            + "UPDATE Document d SET name = :param_0 WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
+                assertEquals(2, result.getUpdateCount());
+                List<Long> list = Arrays.asList(doc1.getId(), doc2.getId());
+                assertTrue(list.contains(result.getLastResult()));
+            }
+        });
+    }
+    
+    // NOTE: Currently only PostgreSQL supports returning from within a CTE
+    @Test
+    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testSelectUpdated() {
+        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.withReturning(IdHolderCTE.class)
+            .update(Document.class, "updateDoc")
+            .set("name", "NewD1")
+            .where("updateDoc.id").eq(doc1.getId())
+            .returning("id", "id")
+        .end();
+        cb.from(Document.class, "doc");
+        cb.from(IdHolderCTE.class, "idHolder");
+        cb.select("doc");
+        cb.where("doc.id").eqExpression("idHolder.id");
+        
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+            + ")\n"
+            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                String name = cb.getSingleResult().getName();
+                // NOTE: In PostgreSQL the select query and modification query operate on the same snapshot so we won't see the changes yet
+                assertEquals("D1", name);
+                em.clear();
+                // Of course the next statement would see the changes
+                assertEquals("NewD1", em.find(Document.class, doc1.getId()).getName());
+            }
+        });
+    }
 }

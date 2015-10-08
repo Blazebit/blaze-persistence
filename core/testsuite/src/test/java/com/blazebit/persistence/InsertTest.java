@@ -144,7 +144,7 @@ public class InsertTest extends AbstractCoreTest {
 		cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
 		String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-				+ "SELECT :age, :idx, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+				+ "SELECT :param_0, :param_1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
 
 		assertEquals(expected, cb.getQueryString());
 
@@ -170,6 +170,11 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("idx").select("1");
         cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
+        
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -193,6 +198,11 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("idx").select("1");
         cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
+        
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -215,6 +225,11 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner").select("p");
         cb.where("name").eq("P2");
         cb.orderByAsc("p.id");
+        
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -238,6 +253,11 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
         cb.setMaxResults(1);
+        
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -270,6 +290,14 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner").select("p.owner");
         cb.where("p.name").eq("P2s document");
         cb.orderByAsc("p.id");
+        
+        String expected = "WITH PersonCTE(id, name, age, idx, owner) AS(\n"
+            + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
+            + ")\n"
+            + "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p WHERE p.name = :param_0 ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -302,6 +330,14 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner").select("p.owner");
         cb.orderByAsc("p.id");
         cb.setMaxResults(1);
+        
+        String expected = "WITH PersonCTE(id, name, age, idx, owner) AS(\n"
+            + "SELECT p.id, CONCAT(p.name,'s document'), p.age, 1, p.id FROM Person p\n"
+            + ")\n"
+            + "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, p.idx, p.name, p.owner FROM PersonCTE p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
@@ -335,6 +371,14 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("nonJoinable").select("CONCAT('PersonId=',p.owner.id)");
         cb.orderByAsc("p.id");
         cb.setMaxResults(1);
+        
+        String expected = "WITH DeletePersonCTE(id, name, age, owner) AS(\n"
+            + "DELETE FROM Person p WHERE p.name = :param_0 RETURNING id, name, age, id\n"
+            + ")\n"
+            + "INSERT INTO Document(age, idx, name, nonJoinable, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), CONCAT('PersonId=',p.owner.id), :param_1 FROM DeletePersonCTE p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override

@@ -15,7 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -31,10 +32,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X> {
 
-	private final Set<String> setAttributes = new LinkedHashSet<String>();
+	private final Map<String, String> setAttributes = new LinkedHashMap<String, String>();
 
-	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
+	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, cteClass, result, listener);
 
         // set defaults
         if (alias == null) {
@@ -56,8 +57,14 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 	public X set(String attributeName, Object value) {
 		// Just do that to assert the attribute exists
 		entityType.getAttribute(attributeName);
-		setAttributes.add(attributeName);
-		parameterManager.addParameterMapping(attributeName, value);
+        String attributeValue = setAttributes.get(attributeName);
+        
+        if (attributeValue != null) {
+            throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
+        }
+        
+		String paramName = parameterManager.getParamNameForObject(value);
+		setAttributes.put(attributeName, paramName);
 		return (X) this;
 	}
 
@@ -68,10 +75,10 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 		sbSelectFrom.append(entityAlias);
 		sbSelectFrom.append(" SET ");
 		
-		for (String attribute : setAttributes) {
-			sbSelectFrom.append(attribute);
+		for (Map.Entry<String, String> attributeEntry : setAttributes.entrySet()) {
+			sbSelectFrom.append(attributeEntry.getKey());
 			sbSelectFrom.append(" = :");
-			sbSelectFrom.append(attribute);
+			sbSelectFrom.append(attributeEntry.getValue());
 		}
 		
     	appendWhereClause(sbSelectFrom);

@@ -39,8 +39,8 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
 	private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
-	public BaseInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, null, registeredFunctions, cteClass, result, listener);
+	public BaseInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(cbf, em, dbmsDialect, clazz, null, registeredFunctions, parameterManager, cteClass, result, listener);
 		
         if (!jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");
@@ -59,8 +59,9 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         }
         
 		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		selectManager.select(new ParameterExpression(attributeName), null);
-		parameterManager.addParameterMapping(attributeName, value);
+		String paramName = parameterManager.getParamNameForObject(value);
+		selectManager.select(new ParameterExpression(paramName), null);
+		
 		return (X) this;
 	}
 
@@ -94,9 +95,16 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
             newSelectInfos.add(selectInfo);
             attributeEntry.setValue(newPosition);
         }
+        super.prepareAndCheck();
     }
 
 	@Override
+    protected boolean isJoinRequiredForSelect() {
+	    // NOTE: since we aren't actually selecting properties but passing them through to the insert, we don't require joins
+        return false;
+    }
+
+    @Override
 	protected void getQueryString1(StringBuilder sbSelectFrom) {
 		sbSelectFrom.append("INSERT INTO ");
 		sbSelectFrom.append(entityType.getName()).append('(');

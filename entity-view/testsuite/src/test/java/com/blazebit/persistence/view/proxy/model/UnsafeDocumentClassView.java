@@ -29,14 +29,19 @@ public abstract class UnsafeDocumentClassView implements DocumentInterfaceView {
 	
 	private final long age;
     private final Integer contactPersonNumber;
+    private final String testName;
 
     public UnsafeDocumentClassView(
         @Mapping("age + 1") Long age,
         @MappingParameter("contactPersonNumber") Integer contactPersonNumber
     ) {
-    	System.out.println("Initializing: " + getName());
+    	this.testName = getName();
         this.age = age;
         this.contactPersonNumber = contactPersonNumber;
+    }
+    
+    public String getUnsafeName() {
+        return testName;
     }
 
     public long getAge() {

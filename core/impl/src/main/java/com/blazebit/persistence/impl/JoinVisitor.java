@@ -55,6 +55,14 @@ public class JoinVisitor extends VisitorAdapter {
     public void visit(PathExpression expression) {
         joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromClause, false, false, joinRequired);
     }
+    
+    public boolean isJoinRequired() {
+        return joinRequired;
+    }
+    
+    public void setJoinRequired(boolean joinRequired) {
+        this.joinRequired = joinRequired;
+    }
 
     @Override
     public void visit(FunctionExpression expression) {

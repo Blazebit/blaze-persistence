@@ -30,8 +30,14 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class ReturningUpdateCriteriaBuilderImpl<T, Y> extends BaseUpdateCriteriaBuilderImpl<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> implements ReturningUpdateCriteriaBuilder<T, Y> {
 
-    public ReturningUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, cteClass, result, listener);
+    public ReturningUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, cteClass, result, listener);
+    }
+
+    @Override
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
+        super.getQueryString1(sbSelectFrom);
+        applyJpaReturning(sbSelectFrom);
     }
 
 }

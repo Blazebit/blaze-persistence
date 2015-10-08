@@ -5,8 +5,10 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -17,6 +19,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -36,6 +39,7 @@ import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
+import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -50,8 +54,10 @@ import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
@@ -68,6 +74,8 @@ import com.blazebit.reflection.ReflectionUtils;
 @ServiceProvider(ExtendedQuerySupport.class)
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
+    private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
+    
     private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String,HQLQueryPlan>>();
     private final HibernateAccess hibernateAccess;
     
@@ -85,7 +93,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 		SessionFactoryImplementor sfi = session.getFactory();
 		org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
 		hibernateQuery.setResultTransformer(null);
-		String queryString = hibernateQuery.getQueryString();
+		
+		Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(hibernateQuery));
+		String queryString = expandParameterLists(session, hibernateQuery, namedParams);
 		HQLQueryPlan queryPlan = sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
 		String sql = queryPlan.getSqlStrings()[0];
 		return sql;
@@ -111,10 +121,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 			return list(em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
-		} catch( TypeMismatchException e ) {
+		} catch(TypeMismatchException e) {
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
-			throw getEntityManager(em).convert( he );
+			throw getEntityManager(em).convert(he);
 		}
 	}
 	
@@ -124,15 +134,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 		try {
 			final List result = list(em, participatingQueries, query, sqlOverride);
 
-			if ( result.size() == 0 ) {
+			if (result.size() == 0) {
 				NoResultException nre = new NoResultException("No entity found for query");
-				getEntityManager(em).handlePersistenceException( nre );
+				getEntityManager(em).handlePersistenceException(nre);
 				throw nre;
-			} else if ( result.size() > 1 ) {
+			} else if (result.size() > 1) {
 				final Set uniqueResult = new HashSet(result);
-				if ( uniqueResult.size() > 1 ) {
+				if (uniqueResult.size() > 1) {
 					NonUniqueResultException nure = new NonUniqueResultException("result returns more than one elements");
-					getEntityManager(em).handlePersistenceException( nure );
+					getEntityManager(em).handlePersistenceException(nure);
 					throw nure;
 				} else {
 					return uniqueResult.iterator().next();
@@ -142,10 +152,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 			}
 		} catch (QueryExecutionRequestException he) {
 			throw new IllegalStateException(he);
-		} catch( TypeMismatchException e ) {
+		} catch(TypeMismatchException e) {
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
-			throw getEntityManager(em).convert( he );
+			throw getEntityManager(em).convert(he);
 		}
 	}
 
@@ -164,7 +174,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
-        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql);
+        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false);
         return queryPlan.performList(queryParameters, session);
     }
 
@@ -183,7 +193,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
-        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql);
+        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
         return queryPlan.performExecuteUpdate(queryParameters, session);
     }
 
@@ -213,7 +223,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         try {
-            QueryTranslator queryTranslator = prepareQueryPlan(queryPlan, queryParametersEntry, finalSql);
+            QueryTranslator queryTranslator = prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
             
             // Extract query loader for native listing
             Field queryLoaderField = ReflectionUtils.getField(queryTranslator.getClass(), "queryLoader");
@@ -299,6 +309,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return factory.getServiceRegistry().getService(EventListenerRegistry.class).getEventListenerGroup(type).listeners();
     }
     
+    // TODO: needs to expand query params like AbstractQueryImpl and move parameters from namedParameterLists to namedParameters
     private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries) {
         List<ParameterSpecification> parameterSpecifications = new ArrayList<ParameterSpecification>();
         
@@ -393,7 +404,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             
             org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
             hibernateQuery.setResultTransformer(null);
-            String queryString = hibernateQuery.getQueryString();
+            
+            Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(hibernateQuery));
+            String queryString = expandParameterLists(session, hibernateQuery, namedParams);
             
             HQLQueryPlan queryPlan = sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
@@ -401,10 +414,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             List<ParameterSpecification> specifications;
             
             try {
-                Method getNamedParams = ReflectionUtils.getGetter(hibernateQuery.getClass(), "namedParams");
-                getNamedParams.setAccessible(true);
-                Map<String, TypedValue> namedParams = (Map<String, TypedValue>) getNamedParams.invoke(hibernateQuery);
-                
                 queryParameters = ((org.hibernate.internal.AbstractQueryImpl) hibernateQuery).getQueryParameters(namedParams);
 
                 Field collectedParameterSpecificationsField = ReflectionUtils.getField(queryTranslator.getClass(), "collectedParameterSpecifications");
@@ -431,7 +440,39 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return result;
     }
     
-    private QueryTranslator prepareQueryPlan(HQLQueryPlan queryPlan, QueryParamEntry queryParametersEntry, String finalSql) {
+    @SuppressWarnings("unchecked")
+    private Map<String, TypedValue> getNamedParams(org.hibernate.Query hibernateQuery) {
+        try {
+            Method getNamedParams = ReflectionUtils.getGetter(hibernateQuery.getClass(), "namedParams");
+            getNamedParams.setAccessible(true);
+            return (Map<String, TypedValue>) getNamedParams.invoke(hibernateQuery);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    @SuppressWarnings("unchecked")
+    private Map<String, TypedValue> getNamedParamLists(org.hibernate.Query hibernateQuery) {
+        try {
+            Method getNamedParamLists = ReflectionUtils.getGetter(hibernateQuery.getClass(), "namedParameterLists");
+            getNamedParamLists.setAccessible(true);
+            return (Map<String, TypedValue>) getNamedParamLists.invoke(hibernateQuery);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ParameterMetadata getParameterMetadata(org.hibernate.Query hibernateQuery) {
+        try {
+            Method getParameterMetadata = ReflectionUtils.getGetter(hibernateQuery.getClass(), "parameterMetadata");
+            getParameterMetadata.setAccessible(true);
+            return (ParameterMetadata) getParameterMetadata.invoke(hibernateQuery);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private QueryTranslator prepareQueryPlan(HQLQueryPlan queryPlan, QueryParamEntry queryParametersEntry, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification) {
         try {
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
             // Override the sql in the query plan
@@ -444,10 +485,30 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             statementExectuor.setAccessible(true);
             StatementExecutor executor = (StatementExecutor) statementExectuor.get(queryTranslator);
             
+            if (executor == null && isModification) {
+                // We have to set an executor
+                org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
+                lastHibernateQuery.setResultTransformer(null);
+                
+                Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(lastHibernateQuery));
+                String queryString = expandParameterLists(session, lastHibernateQuery, namedParams);
+                
+                // Extract the executor from the last query which is the actual main query
+                HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+                QueryTranslator lastQueryTranslator = lastQueryPlan.getTranslators()[0];
+                executor = (StatementExecutor) statementExectuor.get(lastQueryTranslator);
+                // Now we use this executor for our example query
+                statementExectuor.set(queryTranslator, executor);
+            }
+            
             if (executor != null) {
                 Field executorSqlField = ReflectionUtils.getField(executor.getClass(), "sql");
                 executorSqlField.setAccessible(true);
                 executorSqlField.set(executor, finalSql);
+                
+                Field parameterSpecifications = ReflectionUtils.getField(executor.getClass(), "parameterSpecifications");
+                parameterSpecifications.setAccessible(true);
+                parameterSpecifications.set(executor, queryParametersEntry.specifications);
             }
             
             // Prepare queryTranslator for aggregated parameters
@@ -464,6 +525,89 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
+    }
+    
+    private String expandParameterLists(SessionImplementor session, org.hibernate.Query hibernateQuery, Map<String, TypedValue> namedParamsCopy) {
+        String query = hibernateQuery.getQueryString();
+        ParameterMetadata parameterMetadata = getParameterMetadata(hibernateQuery);
+        Iterator<Map.Entry<String, TypedValue>> iter = getNamedParamLists(hibernateQuery).entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<String, TypedValue> me = iter.next();
+            query = expandParameterList(session, parameterMetadata, query, (String) me.getKey(), (TypedValue) me.getValue(), namedParamsCopy);
+        }
+        return query;
+    }
+
+    private String expandParameterList(SessionImplementor session, ParameterMetadata parameterMetadata, String query, String name, TypedValue typedList, Map<String, TypedValue> namedParamsCopy) {
+        Collection<?> vals = (Collection<?>) typedList.getValue();
+        
+        // HHH-1123
+        // Some DBs limit number of IN expressions.  For now, warn...
+        final Dialect dialect = session.getFactory().getDialect();
+        final int inExprLimit = dialect.getInExpressionCountLimit();
+        if (inExprLimit > 0 && vals.size() > inExprLimit) {
+            LOG.warning(String.format("Dialect [%s] limits the number of elements in an IN predicate to %s entries.  " +
+                    "However, the given parameter list [%s] contained %s entries, which will likely cause failures " +
+                    "to execute the query in the database", dialect.getClass().getName(), inExprLimit, name, vals.size()));
+        }
+
+        Type type = typedList.getType();
+
+        boolean isJpaPositionalParam = parameterMetadata.getNamedParameterDescriptor(name).isJpaStyle();
+        String paramPrefix = isJpaPositionalParam ? "?" : ParserHelper.HQL_VARIABLE_PREFIX;
+        String placeholder =
+                new StringBuilder(paramPrefix.length() + name.length())
+                        .append(paramPrefix).append(name)
+                        .toString();
+
+        if (query == null) {
+            return query;
+        }
+        int loc = query.indexOf(placeholder);
+
+        if (loc < 0) {
+            return query;
+        }
+
+        String beforePlaceholder = query.substring(0, loc);
+        String afterPlaceholder =  query.substring(loc + placeholder.length());
+
+        // check if placeholder is already immediately enclosed in parentheses
+        // (ignoring whitespace)
+        boolean isEnclosedInParens =
+                StringHelper.getLastNonWhitespaceCharacter(beforePlaceholder) == '(' &&
+                StringHelper.getFirstNonWhitespaceCharacter(afterPlaceholder) == ')';
+
+        if (vals.size() == 1  && isEnclosedInParens) {
+            // short-circuit for performance when only 1 value and the
+            // placeholder is already enclosed in parentheses...
+            namedParamsCopy.put(name, new TypedValue(type, vals.iterator().next()));
+            return query;
+        }
+
+        StringBuilder list = new StringBuilder(16);
+        Iterator<?> iter = vals.iterator();
+        int i = 0;
+        while (iter.hasNext()) {
+            // Variable 'name' can represent a number or contain digit at the end. Surrounding it with
+            // characters to avoid ambiguous definition after concatenating value of 'i' counter.
+            String alias = (isJpaPositionalParam ? 'x' + name : name) + '_' + i++ + '_';
+            if (namedParamsCopy.put(alias, new TypedValue(type, iter.next())) != null) {
+                throw new HibernateException("Repeated usage of alias '" + alias + "' while expanding list parameter.");
+            }
+            list.append(ParserHelper.HQL_VARIABLE_PREFIX).append(alias);
+            if (iter.hasNext()) {
+                list.append(", ");
+            }
+        }
+        return StringHelper.replace(
+                beforePlaceholder,
+                afterPlaceholder,
+                placeholder.toString(),
+                list.toString(),
+                true,
+                true
+        );
     }
     
     private HQLQueryPlan getQueryPlan(SessionFactoryImplementor sfi, Query query, String cacheKey) {
