@@ -413,7 +413,7 @@
 				<dependency>
 					<groupId>org.datanucleus</groupId>
 					<artifactId>datanucleus-api-jpa</artifactId>
-					<version>${version.datanucleus.base-4}</version>
+					<version>${version.datanucleus.api-jpa-4}</version>
 				</dependency>
 				<dependency>
 					<groupId>org.datanucleus</groupId>
@@ -491,7 +491,7 @@
 				<dependency>
 					<groupId>org.datanucleus</groupId>
 					<artifactId>datanucleus-api-jpa</artifactId>
-					<version>${version.datanucleus.base-5}</version>
+					<version>${version.datanucleus.api-jpa-5}</version>
 				</dependency>
 				<dependency>
 					<groupId>org.datanucleus</groupId>
