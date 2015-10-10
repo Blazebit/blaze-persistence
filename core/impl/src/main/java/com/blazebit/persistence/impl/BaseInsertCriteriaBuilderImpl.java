@@ -28,6 +28,7 @@ import com.blazebit.persistence.BaseInsertCriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
@@ -40,7 +41,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 	private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
 	public BaseInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, null, registeredFunctions, parameterManager, cteClass, result, listener);
+		super(cbf, em, DbmsStatementType.INSERT, dbmsDialect, clazz, null, registeredFunctions, parameterManager, cteClass, result, listener);
 		
         if (!jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");

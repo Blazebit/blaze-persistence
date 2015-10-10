@@ -1,7 +1,13 @@
 package com.blazebit.persistence.impl.dialect;
 
-public class DB2DbmsDialect extends DefaultDbmsDialect {
+import java.util.Collections;
+import java.util.Map;
 
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
+
+public class DB2DbmsDialect extends DefaultDbmsDialect {
+    
 	@Override
 	public String getWithClause(boolean recursive) {
 		return "with";
@@ -13,8 +19,74 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public boolean usesWithClauseAfterInsert() {
+    public boolean supportsModificationQueryInWithClause() {
         return true;
+    }
+    
+    @Override
+    public boolean usesExecuteUpdateWhenWithClauseInModificationQuery() {
+        return false;
+    }
+
+    @Override
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        // since changes in DB2 will be visible to other queries, we need to preserve the old state if required
+        boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
+        
+        if (requiresOld) {
+            StringBuilder sb = new StringBuilder(sqlSb.length() + 30);
+            sb.append("select * from old table (");
+            sb.append(sqlSb);
+            sb.append(")");
+            
+            sqlSb.setLength(0);
+            sqlSb.append("select ");
+            for (int i = 0; i < returningColumns.length; i++) {
+                if (i != 0) {
+                    sqlSb.append(',');
+                }
+                sqlSb.append(returningColumns[i]);
+            }
+            
+            sqlSb.append(" from ");
+            sqlSb.append(includedModificationStates.get(DbmsModificationState.OLD));
+            
+            return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
+        }
+        
+        boolean needsReturningWrapper = isSubquery && returningColumns != null;
+        if (needsReturningWrapper || withClause != null && (statementType != DbmsStatementType.SELECT)) {
+            // Insert might need limit
+            if (limit != null) {
+                appendLimit(sqlSb, isSubquery, limit, offset);
+            }
+            
+            if (needsReturningWrapper) {
+                applyQueryReturning(sqlSb, statementType, withClause, returningColumns);
+            } else {
+                String[] columns;
+                if (returningColumns == null) {
+                    // we will simulate the update count
+                    columns = new String[]{ "count(*)" };
+                } else {
+                    columns = returningColumns;
+                }
+                
+                applyQueryReturning(sqlSb, statementType, withClause, columns);
+            }
+            
+            return null;
+        }
+        
+        // This is a select
+        if (withClause != null) {
+            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        }
+        if (limit != null) {
+            appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+        
+        return null;
     }
 
     @Override
@@ -30,19 +102,31 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         }
     }
 
-//	@Override
-//	public void applyQueryReturning(StringBuilder sqlSb, String[] returningColumns) {
-//		StringBuilder sb = new StringBuilder(100);
-//		sb.append("SELECT ");
-//		for (int i = 0; i < returningColumns.length; i++) {
-//			if (i != 0) {
-//				sqlSb.append(',');
-//			}
-//			sqlSb.append(returningColumns[i]);
-//		}
-//		sb.append(" FROM FINAL TABLE (");
-//		sqlSb.insert(0, sb);
-//		sqlSb.append(')');
-//	}
+	private void applyQueryReturning(StringBuilder sqlSb, DbmsStatementType statementType, StringBuilder withClause, String[] returningColumns) {
+	    int initial = withClause != null ? withClause.length() : 0;
+		StringBuilder sb = new StringBuilder(initial + 25 + returningColumns.length * 20);
+		if (withClause != null) {
+		    sb.append(withClause);
+		}
+		
+		sb.append("select ");
+		for (int i = 0; i < returningColumns.length; i++) {
+			if (i != 0) {
+			    sb.append(',');
+			}
+			sb.append(returningColumns[i]);
+		}
+		sb.append(" from ");
+		
+		if (statementType == DbmsStatementType.DELETE) {
+		    sb.append("old");
+		} else {
+            sb.append("final");
+		}
+		
+		sb.append(" table (");
+		sqlSb.insert(0, sb);
+		sqlSb.append(')');
+	}
 
 }

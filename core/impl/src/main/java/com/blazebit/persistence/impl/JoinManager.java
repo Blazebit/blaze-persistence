@@ -91,7 +91,7 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
-    void addRoot(EntityType<?> clazz, String rootAlias) {
+    String addRoot(EntityType<?> clazz, String rootAlias) {
         if (rootAlias == null) {
             // TODO: not sure if other JPA providers support case sensitive queries like hibernate
             StringBuilder sb = new StringBuilder(clazz.getName());
@@ -110,6 +110,7 @@ public class JoinManager extends AbstractManager {
         rootNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
+        return rootAlias;
     }
 
 	void removeRoot() {

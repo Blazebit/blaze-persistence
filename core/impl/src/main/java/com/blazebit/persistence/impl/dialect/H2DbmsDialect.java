@@ -1,5 +1,10 @@
 package com.blazebit.persistence.impl.dialect;
 
+import java.util.Map;
+
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
+
 public class H2DbmsDialect extends DefaultDbmsDialect {
 
     @Override
@@ -23,8 +28,18 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public boolean usesWithClauseAfterInsert() {
-        return true;
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        if (isSubquery && returningColumns != null) {
+            throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
+        }
+        
+        // NOTE: this only works for insert and select statements, but H2 does not support CTEs in modification queries anyway so it's ok
+        sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        if (limit != null) {
+            appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+        
+        return null;
     }
 
     @Override

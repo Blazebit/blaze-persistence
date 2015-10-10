@@ -3,7 +3,6 @@ package com.blazebit.persistence.impl.hibernate;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,14 +28,8 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.Oracle9Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
@@ -53,7 +46,10 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.hql.internal.QueryExecutionRequestException;
 import org.hibernate.hql.internal.ast.ParameterTranslationsImpl;
 import org.hibernate.hql.internal.ast.exec.BasicExecutor;
+import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
+import org.hibernate.hql.internal.ast.tree.FromElement;
+import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
@@ -67,10 +63,10 @@ import org.hibernate.type.Type;
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.reflection.ReflectionUtils;
 
-@SuppressWarnings("deprecation")
 @ServiceProvider(ExtendedQuerySupport.class)
 public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
@@ -90,16 +86,36 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     @Override
 	public String getSql(EntityManager em, Query query) {
     	SessionImplementor session = em.unwrap(SessionImplementor.class);
-		SessionFactoryImplementor sfi = session.getFactory();
-		org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
-		hibernateQuery.setResultTransformer(null);
-		
-		Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(hibernateQuery));
-		String queryString = expandParameterLists(session, hibernateQuery, namedParams);
-		HQLQueryPlan queryPlan = sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+		HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
 		String sql = queryPlan.getSqlStrings()[0];
 		return sql;
 	}
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
+        QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
+        BasicExecutor executor = getStatementExecutor(queryTranslator);
+        
+        try {
+            Field deletesField = ReflectionUtils.getField(executor.getClass(), "deletes");
+            deletesField.setAccessible(true);
+            return (List<String>) deletesField.get(executor);
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        }
+    }
+    
+    private HQLQueryPlan getOriginalQueryPlan(SessionImplementor session, Query query) {
+        SessionFactoryImplementor sfi = session.getFactory();
+        org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
+        
+        Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(hibernateQuery));
+        String queryString = expandParameterLists(session, hibernateQuery, namedParams);
+        return sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+    }
 
     @Override
 	public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
@@ -108,15 +124,31 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	    return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
 	}
 
-	@Override
-    public Connection getConnection(EntityManager em) {
-		SessionImplementor session = em.unwrap(SessionImplementor.class);
-		return session.connection();
+    @Override
+    public String getSqlAlias(EntityManager em, Query query, String alias) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        HQLQueryPlan plan = getOriginalQueryPlan(session, query);
+        QueryTranslator translator = plan.getTranslators()[0];
+        
+        try {
+            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
+            sqlAstField.setAccessible(true);
+            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
+            FromElement fromElement = queryNode.getFromClause().getFromElement(alias);
+            
+            if (fromElement == null) {
+                throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
+            }
+            
+            return fromElement.getTableAlias();
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        }
     }
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public List getResultList(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		try {
 			return list(em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
@@ -130,7 +162,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	
 	@Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getSingleResult(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public Object getSingleResult(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		try {
 			final List result = list(em, participatingQueries, query, sqlOverride);
 
@@ -179,7 +211,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
+    public int executeUpdate(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -194,12 +226,27 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
-        return queryPlan.performExecuteUpdate(queryParameters, session);
+        
+        if (queryPlan.getReturnMetadata() == null) {
+            return queryPlan.performExecuteUpdate(queryParameters, session);
+        }
+
+        String exampleQuerySql = queryPlan.getSqlStrings()[0];
+        String[][] returningColumns = getReturningColumns(exampleQuerySql);
+        
+        @SuppressWarnings("unchecked")
+        List<Object> results = queryPlan.performList(queryParameters, wrapSession(session, true, returningColumns, null));
+        if (results.size() != 1) {
+            throw new IllegalArgumentException("Expected size 1 but was: " + results.size());
+        }
+        
+        Number count = (Number) results.get(0);
+        return count.intValue();
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -215,7 +262,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         sqlSb.append(sqlOverride);
         
         String[][] returningColumns = getReturningColumns(exampleQuerySql);
-        boolean generatedKeys = appendReturning(em, sqlSb, returningColumns);
+        boolean generatedKeys = !dialect.supportsReturningColumns();
         String finalSql = sqlSb.toString();
         
         // Create combined query parameters
@@ -263,10 +310,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
-    private String[][] getReturningColumns(String exampleQuerySql) {
+    private static String[][] getReturningColumns(String exampleQuerySql) {
         int fromIndex = exampleQuerySql.indexOf("from");
         int selectIndex = exampleQuerySql.indexOf("select");
-        String[] selectItems = exampleQuerySql.substring(selectIndex + "select".length() + 1, fromIndex).trim().split(",");
+        String[] selectItems = splitSelectItems(exampleQuerySql.subSequence(selectIndex + "select".length() + 1, fromIndex));
         String[][] returningColumns = new String[selectItems.length][2];
         
         for (int i = 0; i < selectItems.length; i++) {
@@ -278,31 +325,62 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return returningColumns;
     }
     
-    private boolean appendReturning(EntityManager em, StringBuilder sqlSb, String[][] columns) {
-        Session s = em.unwrap(Session.class);
-        SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
-        Dialect dialect = sf.getDialect();
+    private static String[] splitSelectItems(CharSequence itemsString) {
+        List<String> selectItems = new ArrayList<String>();
+        StringBuilder sb = new StringBuilder();
+        int parenthesis = 0;
+        boolean text = false;
         
-        if (dialect instanceof PostgreSQL81Dialect) {
-            // Use vendor specific syntax for postgresql
-            sqlSb.append(" returning ");
+        int i = 0;
+        int length = itemsString.length();
+        while (i < length) {
+            char c = itemsString.charAt(i);
             
-            for (int i = 0; i < columns.length; i++) {
-                if (i != 0) {
-                    sqlSb.append(',');
+            if (text) {
+                if (c == '(') {
+                    parenthesis++;
+                } else if (c == ')') {
+                    parenthesis--;
+                } else if (parenthesis == 0 && c == ',') {
+                    selectItems.add(trim(sb));
+                    sb.setLength(0);
+                    text = false;
+                    
+                    i++;
+                    continue;
                 }
                 
-                sqlSb.append(columns[i][0]);
+                sb.append(c);
+            } else {
+                if (Character.isWhitespace(c)) {
+                    // skip whitespace
+                } else {
+                    sb.append(c);
+                    text = true;
+                }
             }
             
-            sqlSb.append(";--");
-            return true;
-        } else if (dialect instanceof HSQLDialect || dialect instanceof DB2Dialect || dialect instanceof Oracle8iDialect || dialect instanceof Oracle9Dialect) {
-            // HSQL, DB2 and Oracle support the prepare variant for which one can define the return columns
-            return false;
+            i++;
         }
         
-        return true;
+        if (text) {
+            selectItems.add(trim(sb));
+        }
+        
+        return selectItems.toArray(new String[selectItems.size()]);
+    }
+
+    private static String trim(StringBuilder sb) {
+        int i = sb.length() - 1;
+        while (i >= 0) {
+            if (!Character.isWhitespace(sb.charAt(i))) {
+                break;
+            } else {
+                i--;
+            }
+        }
+        
+        return sb.substring(0, i + 1);
     }
 
     private <E> Iterable<E> listeners(SessionFactoryImplementor factory, EventType<E> type) {
@@ -422,9 +500,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 
                 // This only happens for modification queries
                 if (specifications == null) {
-                    Field statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
-                    statementExectuor.setAccessible(true);
-                    BasicExecutor executor = (BasicExecutor) statementExectuor.get(queryTranslator);
+                    BasicExecutor executor = getStatementExecutor(queryTranslator);
                     
                     Field parameterSpecifications = ReflectionUtils.getField(executor.getClass(), "parameterSpecifications");
                     parameterSpecifications.setAccessible(true);
@@ -438,6 +514,16 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         
         return result;
+    }
+    
+    private BasicExecutor getStatementExecutor(QueryTranslator queryTranslator) {
+        try {
+            Field statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
+            statementExectuor.setAccessible(true);
+            return (BasicExecutor) statementExectuor.get(queryTranslator);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
     
     @SuppressWarnings("unchecked")
@@ -509,6 +595,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 Field parameterSpecifications = ReflectionUtils.getField(executor.getClass(), "parameterSpecifications");
                 parameterSpecifications.setAccessible(true);
                 parameterSpecifications.set(executor, queryParametersEntry.specifications);
+                
+                if (executor instanceof DeleteExecutor) {
+                    Field deletesField = ReflectionUtils.getField(executor.getClass(), "deletes");
+                    deletesField.setAccessible(true);
+                    deletesField.set(executor, new ArrayList<String>());
+                }
             }
             
             // Prepare queryTranslator for aggregated parameters

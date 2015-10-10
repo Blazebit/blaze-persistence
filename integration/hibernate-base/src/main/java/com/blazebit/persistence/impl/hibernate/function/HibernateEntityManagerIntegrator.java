@@ -33,6 +33,7 @@ import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.InterbaseDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.Oracle9Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -50,6 +51,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  * @author Christian Beikov
  * @since 1.0
  */
+@SuppressWarnings("deprecation")
 @ServiceProvider(EntityManagerIntegrator.class)
 public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator {
     
@@ -69,7 +71,7 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
         	return "db2";
         } else if (dialect instanceof PostgreSQL81Dialect) {
         	return "postgresql";
-        } else if (dialect instanceof Oracle8iDialect) {
+        } else if (dialect instanceof Oracle8iDialect || dialect instanceof Oracle9Dialect) {
         	return "oracle";
         } else if (dialect instanceof SQLServerDialect) {
         	return "microsoft";

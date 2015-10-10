@@ -30,6 +30,7 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
@@ -60,7 +61,7 @@ public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> exte
     }
 
     public AbstractQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
+        super(cbf, em, DbmsStatementType.SELECT, dbmsDialect, clazz, alias, registeredFunctions);
     }
 
     @Override

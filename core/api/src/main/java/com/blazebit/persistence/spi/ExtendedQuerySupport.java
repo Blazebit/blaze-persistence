@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.spi;
 
-import java.sql.Connection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -35,17 +34,19 @@ import com.blazebit.persistence.ReturningResult;
 public interface ExtendedQuerySupport {
 
     public String getSql(EntityManager em, Query query);
+
+    public List<String> getCascadingDeleteSql(EntityManager em, Query query);
     
     public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName);
     
-    public Connection getConnection(EntityManager em);
+    public String getSqlAlias(EntityManager em, Query query, String alias);
     
     @SuppressWarnings("rawtypes")
-    public List getResultList(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public List getResultList(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public Object getSingleResult(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public Object getSingleResult(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public int executeUpdate(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public int executeUpdate(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public ReturningResult<Object[]> executeReturning(EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
+    public ReturningResult<Object[]> executeReturning(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
 }

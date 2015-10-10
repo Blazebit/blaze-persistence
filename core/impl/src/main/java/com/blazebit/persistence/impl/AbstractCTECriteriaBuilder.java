@@ -32,6 +32,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
@@ -51,7 +52,7 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 	protected final Map<String, Integer> bindingMap;
 	
     public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, null, registeredFunctions, parameterManager);
+        super(cbf, em, DbmsStatementType.SELECT, dbmsDialect, clazz, null, registeredFunctions, parameterManager);
         this.result = result;
         this.listener = listener;
 
@@ -76,10 +77,10 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
             List<Query> participatingQueries = Arrays.asList(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            applyLimit(sqlSb);
+            applyExtendedSql(sqlSb, true, null, null, null);
             String finalSql = sqlSb.toString();
             
-            query = new CustomSQLQuery(participatingQueries, query, em, cbf.getExtendedQuerySupport(), finalSql);
+            query = new CustomSQLQuery(participatingQueries, query, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, null);
         } else {
             query = em.createQuery(getBaseQueryString());
         }

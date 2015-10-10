@@ -21,8 +21,11 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -32,6 +35,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.BaseQueryBuilder;
@@ -62,6 +66,8 @@ import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.QueryTransformer;
 
 /**
@@ -79,6 +85,8 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     protected final CriteriaBuilderFactoryImpl cbf;
     protected final EntityManager em;
+    protected final DbmsStatementType statementType;
+    protected final Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities = new HashMap<Class<?>, Map<String, DbmsModificationState>>(0);
 
     protected final ParameterManager parameterManager;
     protected final SelectManager<T> selectManager;
@@ -125,6 +133,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     @SuppressWarnings("unchecked")
     protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
         this.cbf = builder.cbf;
+        this.statementType = builder.statementType;
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
@@ -148,7 +157,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
 
-    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
+    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -160,6 +169,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         }
 
         this.cbf = cbf;
+        this.statementType = statementType;
         this.jpaProvider = JpaProviders.resolveJpaProvider(em);
         this.dbmsDialect = dbmsDialect;
         this.aliasManager = new AliasManager(aliasManager);
@@ -212,12 +222,12 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         this.resultType = resultClazz;
     }
 
-    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
-        this(cbf, em, dbmsDialect, clazz, alias, parameterManager, null, null, cbf.getExpressionFactory(), registeredFunctions);
+    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
+        this(cbf, em, statementType, dbmsDialect, clazz, alias, parameterManager, null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
-    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        this(cbf, em, dbmsDialect, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
+    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
+        this(cbf, em, statementType, dbmsDialect, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
@@ -258,8 +268,28 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
 
-    @SuppressWarnings("unchecked")
     public X from(Class<?> clazz, String alias) {
+        return from(clazz, alias, null);
+    }
+
+    public X fromOld(Class<?> clazz) {
+        return fromOld(clazz, clazz.getSimpleName().toLowerCase());
+    }
+
+    public X fromOld(Class<?> clazz, String alias) {
+        return from(clazz, alias, DbmsModificationState.OLD);
+    }
+
+    public X fromNew(Class<?> clazz) {
+        return fromNew(clazz, clazz.getSimpleName().toLowerCase());
+    }
+
+    public X fromNew(Class<?> clazz, String alias) {
+        return from(clazz, alias, DbmsModificationState.NEW);
+    }
+
+    @SuppressWarnings("unchecked")
+    private X from(Class<?> clazz, String alias, DbmsModificationState state) {
     	if (!fromClassExplicitelySet) {
     		// When from is explicitly called we have to revert the implicit root
     		if (joinManager.getRoots().size() > 0) {
@@ -267,8 +297,20 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     		}
     	}
     	
-        joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
+    	EntityType<?> type = em.getMetamodel().entity(clazz);
+    	String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitelySet = true;
+        
+    	if (state != null) {
+    	    Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
+    	    if (versionEntities == null) {
+    	        versionEntities = new HashMap<String, DbmsModificationState>(1);
+    	        explicitVersionEntities.put(clazz, versionEntities);
+    	    }
+    	    
+    	    versionEntities.put(finalAlias, state);
+    	}
+    	
         return (X) this;
     }
 
@@ -847,17 +889,17 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             return getTypedQuery(getBaseQueryString());
         }
 
-        List<Query> participatingQueries = getParticipatingQueries();
         TypedQuery<T> baseQuery = getTypedQuery(getBaseQueryString());
-        participatingQueries.add(baseQuery);
+        List<Query> participatingQueries = new ArrayList<Query>();
         
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
         StringBuilder sqlSb = new StringBuilder(sqlQuery);
-        applyCtes(sqlSb);
-        applyLimit(sqlSb);
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, withClause, null, null);
         
         String finalQuery = sqlSb.toString();
-        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, em, cbf.getExtendedQuerySupport(), finalQuery);
+        participatingQueries.add(baseQuery);
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
         // TODO: object builder?
         
         return query;
@@ -865,6 +907,10 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     
     protected Query getQuery() {
         return getTypedQuery();
+    }
+    
+    protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
+        return getQuery();
     }
     
     @SuppressWarnings("unchecked")
@@ -993,9 +1039,13 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
     protected String getCteQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
+        getCteQueryString1(sbSelectFrom);
+        return sbSelectFrom.toString();
+    }
+
+    protected void getCteQueryString1(StringBuilder sbSelectFrom) {
         cteManager.buildClause(sbSelectFrom);
         getQueryString1(sbSelectFrom);
-        return sbSelectFrom.toString();
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
@@ -1040,37 +1090,85 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         queryGenerator.setResolveSelectAliases(true);
     }
     
-    protected List<Query> getParticipatingQueries() {
-        List<Query> participatingQueries = new ArrayList<Query>();
-        
-        if (cteManager.getCtes().size() > 0) {
-            for (CTEInfo cte : cteManager.getCtes()) {
-                Query q = cte.nonRecursiveCriteriaBuilder.getQuery();
-                cte.cachedNonRecursiveQuery = q;
-                participatingQueries.add(q);
-                
-                if (cte.recursive) {
-                    q = cte.recursiveCriteriaBuilder.getQuery();
-                    cte.cachedRecursiveQuery = q;
-                    participatingQueries.add(q);
+    protected Map<DbmsModificationState, String> getModificationStates(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
+        return null;
+    }
+    
+    protected Map<String, String> getModificationStateRelatedTableNameRemappings(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
+        return null;
+    }
+    
+    private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
+        if (query instanceof CustomSQLQuery) {
+            // EntityAlias -> CteName
+            Map<String, String> cteTableNameRemappings = queryBuilder.getModificationStateRelatedTableNameRemappings(explicitVersionEntities);
+            // CteName -> CteQueryString
+            Map<String, String> addedCtes = ((CustomSQLQuery) query).getAddedCtes();
+            if (addedCtes != null && addedCtes.size() > 0) {
+                for (Map.Entry<String, String> simpleCteEntry : addedCtes.entrySet()) {
+                    for (Map.Entry<String, String> cteTableNameRemapping : cteTableNameRemappings.entrySet()) {
+                        if (cteTableNameRemapping.getValue().equals(simpleCteEntry.getKey())) {
+                            tableNameRemapping.put(cteTableNameRemapping.getKey(), cteTableNameRemapping.getValue());
+                        }
+                    }
+                    
+                    if (firstCte) {
+                        firstCte = false;
+                    } else {
+                        sb.append(",\n");
+                    }
+                    
+                    sb.append(simpleCteEntry.getKey());
+                    sb.append(" AS (\n");
+                    sb.append(simpleCteEntry.getValue());
+                    sb.append("\n)");
                 }
             }
         }
         
-        return participatingQueries;
+        return firstCte;
     }
     
-    protected void applyCtes(StringBuilder sqlSb) {
-        if (!cteManager.hasCtes()) {
-            return;
+    protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {
+        // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
+        if (isSubquery || !cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
+            return null;
         }
+
+        // EntityAlias -> CteName
+        Map<String, String> tableNameRemapping = new LinkedHashMap<String, String>(0);
         
         StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100);
         sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
         sb.append(" ");
-        
+
+        boolean firstCte = true;
         for (CTEInfo cteInfo : cteManager.getCtes()) {
-            String cteNonRecursiveSqlQuery = getSql(cteInfo.cachedNonRecursiveQuery);
+            // Build queries and add as participating queries
+            Map<DbmsModificationState, String> modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
+            Query nonRecursiveQuery = cteInfo.nonRecursiveCriteriaBuilder.getQuery(modificationStates);
+            participatingQueries.add(nonRecursiveQuery);
+            
+            Query recursiveQuery = null;
+            if (cteInfo.recursive) {
+                modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
+                recursiveQuery = cteInfo.recursiveCriteriaBuilder.getQuery(modificationStates);
+                participatingQueries.add(recursiveQuery);
+            }
+
+            // add cascading delete statements as CTEs
+            firstCte = applyCascadingDelete(nonRecursiveQuery, cteInfo.nonRecursiveCriteriaBuilder, participatingQueries, sb, cteInfo.name, firstCte);
+            
+            firstCte = applyAddedCtes(nonRecursiveQuery, cteInfo.nonRecursiveCriteriaBuilder, sb, tableNameRemapping, firstCte);
+            firstCte = applyAddedCtes(recursiveQuery, cteInfo.recursiveCriteriaBuilder, sb, tableNameRemapping, firstCte);
+            
+            String cteNonRecursiveSqlQuery = getSql(nonRecursiveQuery);
+
+            if (firstCte) {
+                firstCte = false;
+            } else {
+                sb.append(",\n");
+            }
             
             sb.append(cteInfo.name);
             sb.append('(');
@@ -1097,7 +1195,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             sb.append(cteNonRecursiveSqlQuery);
             
             if (cteInfo.recursive) {
-                String cteRecursiveSqlQuery = getSql(cteInfo.cachedRecursiveQuery);
+                String cteRecursiveSqlQuery = getSql(recursiveQuery);
                 sb.append("\nUNION ALL\n");
                 sb.append(cteRecursiveSqlQuery);
             } else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
@@ -1118,22 +1216,123 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
             // TODO: this is a hibernate specific integration detail
             final String subselect = "( select * from " + cteInfo.name + " )";
-            int subselectIndex;
-            while ((subselectIndex = sb.indexOf(subselect)) > -1) {
+            int subselectIndex = 0;
+            while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
                 sb.replace(subselectIndex, subselectIndex + subselect.length(), cteInfo.name);
             }
-            while ((subselectIndex = sqlSb.indexOf(subselect)) > -1) {
+            subselectIndex = 0;
+            while ((subselectIndex = sqlSb.indexOf(subselect, subselectIndex)) > -1) {
                 sqlSb.replace(subselectIndex, subselectIndex + subselect.length(), cteInfo.name);
             }
+        }
+
+        // Add cascading delete statements from base query as CTEs
+        firstCte = applyCascadingDelete(baseQuery, this, participatingQueries, sb, "main_query", firstCte);
+        
+        // If no CTE has been added, we can just return
+        if (firstCte) {
+            return null;
         }
         
         sb.append("\n");
         
-        if (dbmsDialect.usesWithClauseAfterInsert()) {
-            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), sb);
-        } else {
-            sqlSb.insert(0, sb);
+        for (Map.Entry<String, String> tableNameRemappingEntry : tableNameRemapping.entrySet()) {
+            String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
+            String newCteName = tableNameRemappingEntry.getValue();
+
+            applyTableNameRemapping(sqlSb, sqlAlias, newCteName);
         }
+        
+        return sb;
+    }
+    
+    private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
+        if (queryBuilder.statementType == DbmsStatementType.DELETE) {
+            List<String> cascadingDeleteSqls = cbf.getExtendedQuerySupport().getCascadingDeleteSql(em, baseQuery);
+
+            int cteBaseNameCount = 0;
+            for (String cascadingDeleteSql : cascadingDeleteSqls) {
+                if (firstCte) {
+                    firstCte = false;
+                } else {
+                    sb.append(",\n");
+                }
+                
+                // Since we kind of need the parameters from the base query, it will participate for each cascade
+                participatingQueries.add(baseQuery);
+                
+                int currentSize = sb.length();
+                sb.append(cteBaseName);
+                sb.append('_').append(cteBaseNameCount);
+                sb.append(" AS (\n");
+                sb.append(cascadingDeleteSql);
+                sb.append("\n)");
+                
+                for (CTEInfo cteInfo : cteManager.getCtes()) {
+                    // TODO: this is a hibernate specific integration detail
+                    final String subselect = "( select * from " + cteInfo.name + " )";
+                    int subselectIndex = currentSize;
+                    while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
+                        sb.replace(subselectIndex, subselectIndex + subselect.length(), cteInfo.name);
+                    }
+                }
+            }
+        }
+        
+        return firstCte;
+    }
+    
+    private void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName) {
+        final String searchAs = " as";
+        final String searchAlias = " " + sqlAlias;
+        int searchIndex = 0;
+        while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
+            char c = sb.charAt(searchIndex + searchAlias.length());
+            if (c == '.') {
+                // This is a dereference of the alias, skip this
+            } else {
+                int[] indexRange;
+                if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
+                    // Uses aliasing with the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                } else {
+                    // Uses aliasing without the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                }
+                
+                int oldLength = indexRange[1] - indexRange[0];
+                // Replace table name with cte name
+                sb.replace(indexRange[0], indexRange[1], newCteName);
+                // Adjust index after replacing
+                searchIndex += newCteName.length() - oldLength;
+            }
+            
+            searchIndex = searchIndex + 1;
+        }
+    }
+    
+    private int[] rtrimBackwardsToFirstWhitespace(StringBuilder sb, int startIndex) {
+        int tableNameStartIndex;
+        int tableNameEndIndex = startIndex;
+        boolean text = false;
+        for (tableNameStartIndex = tableNameEndIndex; tableNameStartIndex >= 0; tableNameStartIndex--) {
+            if (text) {
+                final char c = sb.charAt(tableNameStartIndex);
+                if (Character.isWhitespace(c) || c == ',') {
+                    tableNameStartIndex++;
+                    break;
+                }
+            } else {
+                if (Character.isWhitespace(sb.charAt(tableNameStartIndex))) {
+                    tableNameEndIndex--;
+                } else {
+                    text = true;
+                    tableNameEndIndex++;
+                }
+            }
+        }
+        
+        return new int[]{ tableNameStartIndex, tableNameEndIndex };
     }
     
     private String getSql(Query query) {
@@ -1145,38 +1344,11 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return cbf.getExtendedQuerySupport().getSql(em, query);
     }
     
-    private static int indexOfIgnoreCase(StringBuilder haystack, String needle) {
-        final int endLimit = haystack.length() - needle.length() + 1;
-        for (int i = 0; i < endLimit; i++) {
-            if (regionMatchesIgnoreCase(haystack, i, needle, 0, needle.length())) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static boolean regionMatchesIgnoreCase(StringBuilder haystack, int thisStart, String substring, int start, int length) {
-       int index1 = thisStart;
-       int index2 = start;
-       int tmpLen = length;
-
-       while (tmpLen-- > 0) {
-           final char c1 = haystack.charAt(index1++);
-           final char c2 = substring.charAt(index2++);
-
-           if (c1 != c2 && Character.toUpperCase(c1) != Character.toUpperCase(c2) && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
-               return false;
-           }
-       }
-
-       return true;
-    }
-    
     protected boolean hasLimit() {
         return firstResult != 0 || maxResults != Integer.MAX_VALUE;
     }
     
-    protected void applyLimit(StringBuilder sqlSb) {
+    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         String limit = null;
         String offset = null;
         
@@ -1187,9 +1359,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             limit = Integer.toString(maxResults);
         }
         
-        if (limit != null) {
-            dbmsDialect.appendLimit(sqlSb, false, limit, offset);
-        }
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, withClause, limit, offset, returningColumns, includedModificationStates);
     }
     
     protected void applyJpaLimit(StringBuilder sbSelectFrom) {

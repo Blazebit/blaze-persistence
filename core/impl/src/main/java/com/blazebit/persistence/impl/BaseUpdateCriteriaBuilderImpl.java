@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.BaseUpdateCriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
@@ -35,7 +36,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 	private final Map<String, String> setAttributes = new LinkedHashMap<String, String>();
 
 	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, cteClass, result, listener);
+		super(cbf, em, DbmsStatementType.UPDATE, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, cteClass, result, listener);
 
         // set defaults
         if (alias == null) {

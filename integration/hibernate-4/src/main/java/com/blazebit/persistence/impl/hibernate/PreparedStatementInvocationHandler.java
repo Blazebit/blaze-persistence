@@ -28,10 +28,19 @@ public class PreparedStatementInvocationHandler implements InvocationHandler {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if ("executeQuery".equals(method.getName()) && method.getParameterTypes().length == 0) {
-            returningResult.setUpdateCount(delegate.executeUpdate());
-            ResultSet rs = delegate.getGeneratedKeys();
+            ResultSet rs;
+            HibernateReturningResult<?> result;
             
-            return Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class[]{ ResultSet.class }, new ResultSetInvocationHandler(rs, aliasIndex));
+            if (delegate.execute()) {
+                rs = delegate.getResultSet();
+                result = returningResult;
+            } else {
+                result = null;
+                returningResult.setUpdateCount(delegate.getUpdateCount());
+                rs = delegate.getGeneratedKeys();
+            }
+            
+            return Proxy.newProxyInstance(rs.getClass().getClassLoader(), new Class[]{ ResultSet.class }, new ResultSetInvocationHandler(rs, aliasIndex, result));
         }
         
         return method.invoke(delegate, args);

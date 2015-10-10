@@ -1,7 +1,6 @@
 package com.blazebit.persistence.impl.datanucleus;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -13,6 +12,7 @@ import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ReturningResult;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 @ServiceProvider(ExtendedQuerySupport.class)
@@ -35,6 +35,11 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
 		dnQuery.compile();
 		return (String) dnQuery.getNativeQuery();
 	}
+	
+	public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+	}
 
 	@Override
     public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
@@ -43,31 +48,31 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public Connection getConnection(EntityManager em) {
-		return em.unwrap(Connection.class);
+    public String getSqlAlias(EntityManager em, Query query, String alias) {
+        return null;
     }
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public List getResultList(DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getResultList();
 	}
 	
 	@Override
-	public Object getSingleResult(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public Object getSingleResult(DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getSingleResult();
 	}
 
     @Override
-    public int executeUpdate(EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public int executeUpdate(DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
         applySql(query, sqlOverride);
         return query.executeUpdate();
     }
 
     @Override
-    public ReturningResult<Object[]> executeReturning(EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }

@@ -18,6 +18,8 @@ package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
@@ -26,11 +28,11 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.DeletePersonCTE;
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.PersonCTE;
 import com.blazebit.persistence.entity.Version;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -60,7 +62,8 @@ public class InsertTest extends AbstractCoreTest {
             IntIdEntity.class,
             Person.class, 
             PersonCTE.class,
-            DeletePersonCTE.class
+            DeletePersonCTE.class, 
+            IdHolderCTE.class
         };
     }
 
@@ -349,10 +352,10 @@ public class InsertTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: Currently only PostgreSQL supports returning from within a CTE
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     // NOTE: hibernate 4.2 does not support using parameters in the select clause
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testDeleteReturningWithCteAndLimitInto() {
         final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
         cb.withReturning(DeletePersonCTE.class)
@@ -370,6 +373,7 @@ public class InsertTest extends AbstractCoreTest {
         cb.bind("owner", p2);
         cb.bind("nonJoinable").select("CONCAT('PersonId=',p.owner.id)");
         cb.orderByAsc("p.id");
+        // TODO: I think the limit logic is PostgreSQL specific
         cb.setMaxResults(1);
         
         String expected = "WITH DeletePersonCTE(id, name, age, owner) AS(\n"
@@ -386,6 +390,88 @@ public class InsertTest extends AbstractCoreTest {
                 ReturningResult<Long> result = cb.executeWithReturning("id", Long.class);
                 assertEquals(1, result.getUpdateCount());
                 assertEquals("PersonId=" + p1.getId(), em.find(Document.class, result.getLastResult()).getNonJoinable());
+            }
+        });
+    }
+
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    // NOTE: hibernate 4.2 does not support using parameters in the select clause
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testInsertReturningSelectOld() {
+        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.withReturning(IdHolderCTE.class)
+            .insert(Document.class)
+            .from(Person.class, "p")
+            .bind("name").select("CONCAT(p.name,'s document')")
+            .bind("age").select("p.age")
+            .bind("idx").select("1")
+            .bind("owner").select("p")
+            .where("p.name").eq(p1.getName())
+            .returning("id", "id")
+        .end();
+        cb.fromOld(Document.class, "d");
+        cb.from(IdHolderCTE.class, "idHolder");
+        cb.select("d");
+        cb.where("d.id").eqExpression("idHolder.id");
+
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 RETURNING id\n"
+            + ")\n"
+            + "SELECT d FROM Document d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                List<Document> result = cb.getResultList();
+                assertEquals(0, result.size());
+
+                em.clear();
+                // Of course the next statement would see the changes
+                assertEquals(p1.getName() + "s document", byOwner(p1).getName());
+            }
+        });
+    }
+
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    // NOTE: hibernate 4.2 does not support using parameters in the select clause
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testInsertReturningSelectNew() {
+        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.withReturning(IdHolderCTE.class)
+            .insert(Document.class)
+            .from(Person.class, "p")
+            .bind("name").select("CONCAT(p.name,'s document')")
+            .bind("age").select("p.age")
+            .bind("idx").select("1")
+            .bind("owner").select("p")
+            .where("p.name").eq(p1.getName())
+            .returning("id", "id")
+        .end();
+        cb.fromNew(Document.class, "d");
+        cb.from(IdHolderCTE.class, "idHolder");
+        cb.select("d");
+        cb.where("d.id").eqExpression("idHolder.id");
+        
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "INSERT INTO Document(age, idx, name, owner)\n"
+            + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p WHERE p.name = :param_0 RETURNING id\n"
+            + ")\n"
+            + "SELECT d FROM Document d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                em.clear();
+                List<Document> result = cb.getResultList();
+                assertEquals(1, result.size());
+                assertEquals(p1.getName() + "s document", result.get(0).getName());
             }
         });
     }

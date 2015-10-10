@@ -35,7 +35,6 @@ import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -116,10 +115,10 @@ public class UpdateTest extends AbstractCoreTest {
 	}
 
     /* Returning */
-    
-    // NOTE: H2 does not support returning all generated keys
+
+    // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
         final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
         cb.set("name", "NewD1");
@@ -140,9 +139,10 @@ public class UpdateTest extends AbstractCoreTest {
             }
         });
     }
-    
+
+    // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
         final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
         cb.set("name", "NewD1");
@@ -196,11 +196,11 @@ public class UpdateTest extends AbstractCoreTest {
             }
         });
     }
-    
-    // NOTE: Currently only PostgreSQL supports returning from within a CTE
+
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testSelectUpdated() {
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUpdateReturningSelectOld() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)
             .update(Document.class, "updateDoc")
@@ -208,7 +208,7 @@ public class UpdateTest extends AbstractCoreTest {
             .where("updateDoc.id").eq(doc1.getId())
             .returning("id", "id")
         .end();
-        cb.from(Document.class, "doc");
+        cb.fromOld(Document.class, "doc");
         cb.from(IdHolderCTE.class, "idHolder");
         cb.select("doc");
         cb.where("doc.id").eqExpression("idHolder.id");
@@ -224,8 +224,43 @@ public class UpdateTest extends AbstractCoreTest {
             @Override
             public void work() {
                 String name = cb.getSingleResult().getName();
-                // NOTE: In PostgreSQL the select query and modification query operate on the same snapshot so we won't see the changes yet
                 assertEquals("D1", name);
+                em.clear();
+                // Of course the next statement would see the changes
+                assertEquals("NewD1", em.find(Document.class, doc1.getId()).getName());
+            }
+        });
+    }
+
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUpdateReturningSelectNew() {
+        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.withReturning(IdHolderCTE.class)
+            .update(Document.class, "updateDoc")
+            .set("name", "NewD1")
+            .where("updateDoc.id").eq(doc1.getId())
+            .returning("id", "id")
+        .end();
+        cb.fromNew(Document.class, "doc");
+        cb.from(IdHolderCTE.class, "idHolder");
+        cb.select("doc");
+        cb.where("doc.id").eqExpression("idHolder.id");
+        
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "UPDATE Document updateDoc SET name = :param_0 WHERE updateDoc.id = :param_1 RETURNING id\n"
+            + ")\n"
+            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                em.clear();
+                String name = cb.getSingleResult().getName();
+                assertEquals("NewD1", name);
                 em.clear();
                 // Of course the next statement would see the changes
                 assertEquals("NewD1", em.find(Document.class, doc1.getId()).getName());

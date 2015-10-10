@@ -2,6 +2,7 @@ package com.blazebit.persistence.impl.function.limit;
 
 import com.blazebit.persistence.impl.dialect.DefaultDbmsDialect;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 
@@ -66,7 +67,7 @@ public class LimitFunction implements JpqlFunction {
 
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
-        dbmsDialect.appendLimit(sqlSb, true, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2));
+        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
         sqlSb.insert(0, '(');
         sqlSb.append(')');
         functionRenderContext.addChunk(sqlSb.toString());
@@ -74,7 +75,7 @@ public class LimitFunction implements JpqlFunction {
 
     protected void renderLimitOnly(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
-        dbmsDialect.appendLimit(sqlSb, true, functionRenderContext.getArgument(1), null);
+        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, null, functionRenderContext.getArgument(1), null, null, null);
         sqlSb.insert(0, '(');
         sqlSb.append(')');
         functionRenderContext.addChunk(sqlSb.toString());

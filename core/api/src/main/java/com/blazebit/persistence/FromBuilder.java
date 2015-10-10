@@ -25,7 +25,7 @@ package com.blazebit.persistence;
 public interface FromBuilder<X extends FromBuilder<X>> {
 
     /**
-     * Like {@link BaseQueryBuilder#from(java.lang.Class, java.lang.String)} with the
+     * Like {@link FromBuilder#from(Class, String))} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
      * @param entityClass The entity class which should be the root entity
@@ -41,6 +41,40 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @return The query builder for chaining calls
      */
     public X from(Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link FromBuilder#from(Class))} but explicitly queries the data before any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be the root entity
+     * @return The query builder for chaining calls
+     */
+    public X fromOld(Class<?> entityClass);
+
+    /**
+     * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data before any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be the root entity
+     * @param alias The alias for the root entity
+     * @return The query builder for chaining calls
+     */
+    public X fromOld(Class<?> entityClass, String alias);
+
+    /**
+     * Like {@link FromBuilder#from(Class))} but explicitly queries the data after any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be the root entity
+     * @return The query builder for chaining calls
+     */
+    public X fromNew(Class<?> entityClass);
+
+    /**
+     * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data after any side effects happen because of CTEs.
+     *
+     * @param entityClass The entity class which should be the root entity
+     * @param alias The alias for the root entity
+     * @return The query builder for chaining calls
+     */
+    public X fromNew(Class<?> entityClass, String alias);
 
     /*
      * Join methods
@@ -94,7 +128,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param path The path to join
@@ -104,7 +138,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X innerJoin(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param path The path to join
@@ -114,7 +148,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X innerJoinDefault(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param path The path to join
@@ -124,7 +158,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> innerJoinOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#INNER}.
      *
      * @param path The path to join
@@ -134,7 +168,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> innerJoinDefaultOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param path The path to join
@@ -144,7 +178,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X leftJoin(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param path The path to join
@@ -154,7 +188,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X leftJoinDefault(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param path The path to join
@@ -164,7 +198,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> leftJoinOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#LEFT}.
      *
      * @param path The path to join
@@ -174,7 +208,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> leftJoinDefaultOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#join(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param path The path to join
@@ -184,7 +218,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X rightJoin(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefault(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param path The path to join
@@ -194,7 +228,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X rightJoinDefault(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param path The path to join
@@ -204,7 +238,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public JoinOnBuilder<X> rightJoinOn(String path, String alias);
 
     /**
-     * Like {@link BaseQueryBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
+     * Like {@link FromBuilder#joinDefaultOn(java.lang.String, java.lang.String, com.blazebit.persistence.JoinType) } but with
      * {@link JoinType#RIGHT}.
      *
      * @param path The path to join

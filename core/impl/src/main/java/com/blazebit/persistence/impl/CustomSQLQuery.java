@@ -14,28 +14,37 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
 import com.blazebit.persistence.spi.CteQueryWrapper;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 public class CustomSQLQuery implements Query, CteQueryWrapper {
 
     private final List<Query> participatingQueries;
 	private final Query delegate;
+	private final DbmsDialect dbmsDialect;
 	private final EntityManager em;
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
+	private final Map<String, String> addedCtes;
 	
-	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql) {
+	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, DbmsDialect dbmsDialect, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> addedCtes) {
 	    this.participatingQueries = participatingQueries;
 		this.delegate = delegate;
+		this.dbmsDialect = dbmsDialect;
 		this.em = em;
 		this.extendedQuerySupport = extendedQuerySupport;
 		this.sql = sql;
+		this.addedCtes = addedCtes;
 	}
 
     public String getSql() {
         return sql;
     }
     
+    public Map<String, String> getAddedCtes() {
+        return addedCtes;
+    }
+
     @Override
     public List<Query> getParticipatingQueries() {
         return participatingQueries;
@@ -46,7 +55,7 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 			return this;
 		}
 		
-		return new CustomSQLQuery(participatingQueries, q, em, extendedQuerySupport, sql);
+		return new CustomSQLQuery(participatingQueries, q, dbmsDialect, em, extendedQuerySupport, sql, addedCtes);
 	}
 
     @Override
@@ -62,7 +71,7 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 
 	@Override
 	public int executeUpdate() {
-		return extendedQuerySupport.executeUpdate(em, participatingQueries, delegate, sql);
+        return extendedQuerySupport.executeUpdate(dbmsDialect, em, participatingQueries, delegate, sql);
 	}
 
 	@Override

@@ -1,5 +1,10 @@
 package com.blazebit.persistence.impl.dialect;
 
+import java.util.Map;
+
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
+
 
 public class OracleDbmsDialect extends DefaultDbmsDialect {
 	
@@ -22,8 +27,9 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 //	}
 
     @Override
-    public boolean usesWithClauseAfterInsert() {
-        return true;
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        return null;
     }
 
 	@Override

@@ -16,6 +16,8 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,10 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
+import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
@@ -52,13 +57,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	protected final String cteName;
 	protected final Y result;
 	protected final CTEBuilderListener listener;
+	protected final boolean isReturningEntityAliasAllowed;
 	protected final Map<String, String> returningAttributeBindingMap;
 
 	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
-		super(cbf, em, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions, parameterManager);
+		super(cbf, em, statementType, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions, parameterManager);
 		this.entityType = em.getMetamodel().entity(clazz);
 		this.entityAlias = alias;
 		this.result = result;
@@ -67,10 +73,13 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 		if (cteClass == null) {
 		    this.cteType = null;
 		    this.cteName = null;
+            this.isReturningEntityAliasAllowed = false;
 	        this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
 		} else {
             this.cteType = em.getMetamodel().entity(cteClass);
             this.cteName = cteType.getName();
+            // Returning the "entity" is only allowed in CTEs
+            this.isReturningEntityAliasAllowed = true;
     		this.returningAttributeBindingMap = new LinkedHashMap<String, String>(cteType.getAttributes().size());
 		}
 	}
@@ -119,23 +128,36 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @Override
 	public Query getQuery() {
+        return getQuery(null);
+    }
+
+    @Override
+    protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         Query query;
         
         if (hasLimit() || cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
-            List<Query> participatingQueries = getParticipatingQueries();
+            List<Query> participatingQueries = new ArrayList<Query>();
             
             query = em.createQuery(getBaseQueryString());
-            participatingQueries.add(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            applyCtes(sqlSb);
-            applyLimit(sqlSb);
-            applyReturning(sqlSb);
-            String finalSql = sqlSb.toString();
+            boolean isSubquery = this instanceof ReturningBuilder;
+            StringBuilder withClause = applyCtes(sqlSb, query, isSubquery, participatingQueries);
+            String[] returningColumns = getReturningColumns();
+            // NOTE: CTEs will only be added, if this is a subquery
+            Map<String, String> addedCtes = applyExtendedSql(sqlSb, isSubquery, withClause, returningColumns, includedModificationStates);
             
-            query = new CustomSQLQuery(participatingQueries, query, em, cbf.getExtendedQuerySupport(), finalSql);
+            String finalSql = sqlSb.toString();
+            participatingQueries.add(query);
+
+            // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
+            if (cteManager.hasCtes() && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
+                query = getCountExampleQuery();
+            }
+            
+            query = new CustomSQLQuery(participatingQueries, query, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
         } else {
             query = em.createQuery(getBaseQueryString());
         }
@@ -143,31 +165,6 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         parameterizeQuery(query);
         return query;
 	}
-    
-    protected void applyReturning(StringBuilder sqlSb) {
-        if (returningAttributeBindingMap.isEmpty()) {
-            return;
-        }
-        
-        // Since for now PostgreSQL seems to be the only DBMS that supports
-        // the returning clause, we will adapt the syntax and introduce a DbmsDialect method
-        // as soon as the need arises
-        sqlSb.append(" returning ");
-        
-        boolean first = true;
-        for (String returningAttributeName : returningAttributeBindingMap.values()) {
-            String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, entityType, returningAttributeName);
-            for (String column : columns) {
-                if (first) {
-                    first = false;
-                } else {
-                    sqlSb.append(", ");
-                }
-                
-                sqlSb.append(column);
-            }
-        }
-    }
 	
 	protected Query getBaseQuery() {
 	    Query query = em.createQuery(getBaseQueryString());
@@ -178,6 +175,65 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	public int executeUpdate() {
 		return getQuery().executeUpdate();
 	}
+    
+	@Override
+    protected Map<DbmsModificationState, String> getModificationStates(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
+	    Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(entityType.getJavaType());
+	    
+	    if (versionEntities == null) {
+	        return null;
+	    }
+
+	    Map<DbmsModificationState, String> includedModificationStates = new HashMap<DbmsModificationState, String>();
+	    // TODO: this needs to include the modification states based on what the dbms uses as default
+	    boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
+	    
+	    if (defaultOld) {
+	        for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
+	            if (entry.getValue() == DbmsModificationState.NEW) {
+	                includedModificationStates.put(DbmsModificationState.NEW, "new_" + entityType.getName());
+	                break;
+	            }
+	        }
+	    } else {
+            for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
+                if (entry.getValue() == DbmsModificationState.OLD) {
+                    includedModificationStates.put(DbmsModificationState.OLD, "old_" + entityType.getName());
+                    break;
+                }
+            }
+	    }
+	    
+	    return includedModificationStates;
+    }
+    
+    protected Map<String, String> getModificationStateRelatedTableNameRemappings(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
+        Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(entityType.getJavaType());
+        
+        if (versionEntities == null) {
+            return null;
+        }
+
+        Map<String, String> tableNameRemappings = new HashMap<String, String>();
+        // TODO: this needs to include the modification states based on what the dbms uses as default
+        boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
+        
+        if (defaultOld) {
+            for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
+                if (entry.getValue() == DbmsModificationState.NEW) {
+                    tableNameRemappings.put(entry.getKey(), "new_" + entityType.getName());
+                }
+            }
+        } else {
+            for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
+                if (entry.getValue() == DbmsModificationState.OLD) {
+                    tableNameRemappings.put(entry.getKey(), "old_" + entityType.getName());
+                }
+            }
+        }
+        
+        return tableNameRemappings;
+    }
 
 	public ReturningResult<Tuple> executeWithReturning(String... attributes) {
 	    if (attributes == null) {
@@ -187,9 +243,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	        throw new IllegalArgumentException("Invalid empty attributes");
 	    }
 
-        Query exampleQuery = getExampleQuery(attributes);
+	    List<Attribute<?, ?>> attributeList = getAndCheckAttributes(attributes);
+        Query exampleQuery = getExampleQuery(attributeList);
         Query baseQuery = getBaseQuery();
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery);
+        String[] returningColumns = getReturningColumns(attributeList);
+        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
         final List<Object[]> originalResultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         return new DefaultReturningResult<Tuple>(originalResultList, updateCount, dbmsDialect, new ReturningTupleObjectBuilder());
@@ -197,14 +255,28 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @SuppressWarnings("unchecked")
     public <Z> ReturningResult<Z> executeWithReturning(String attribute, Class<Z> type) {
+        if (attribute == null) {
+            throw new NullPointerException("attribute");
+        }
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
+        if (attribute.isEmpty()) {
+            throw new IllegalArgumentException("Invalid empty attribute");
+        }
+        
         Attribute<?, ?> attr = JpaUtils.getAttribute(entityType, attribute);
         if (!type.isAssignableFrom(attr.getJavaType())) {
             throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attr.getJavaType().getName());
         }
 
-        Query exampleQuery = getExampleQuery(new String[]{ attribute });
+        List<Attribute<?, ?>> attributes = new ArrayList<Attribute<?,?>>();
+        attributes.add(attr);
+        
+        Query exampleQuery = getExampleQuery(attributes);
         Query baseQuery = getBaseQuery();
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery);
+        String[] returningColumns = getReturningColumns(attributes);
+        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
         final List<Object[]> originalResultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         
@@ -216,34 +288,35 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     public <Z> ReturningResult<Z> executeWithReturning(ReturningObjectBuilder<Z> objectBuilder) {
 	    // TODO: this is not really nice, we should abstract that somehow
 	    objectBuilder.applyReturning((ReturningBuilder) this);
-	    String[] attributes = getAndCheckReturningAttributes();
+	    List<Attribute<?, ?>> attributes = getAndCheckReturningAttributes();
 	    returningAttributeBindingMap.clear();
 	    
         Query exampleQuery = getExampleQuery(attributes);
         Query baseQuery = getBaseQuery();
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery);
+        String[] returningColumns = getReturningColumns(attributes);
+        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
         final List<Object[]> originalResultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         return new DefaultReturningResult<Z>(originalResultList, updateCount, dbmsDialect, objectBuilder);
 	}
 	
-	private ReturningResult<Object[]> executeWithReturning(Query exampleQuery, Query baseQuery) {
-        List<Query> participatingQueries = getParticipatingQueries();
-        participatingQueries.add(baseQuery);
+	private ReturningResult<Object[]> executeWithReturning(Query exampleQuery, Query baseQuery, String[] returningColumns) {
+        List<Query> participatingQueries = new ArrayList<Query>();
         
         StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, baseQuery));
-        applyCtes(sqlSb);
-        applyLimit(sqlSb);
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, withClause, returningColumns, null);
         String finalSql = sqlSb.toString();
+        participatingQueries.add(baseQuery);
         
         // TODO: hibernate will return the object directly for single attribute case instead of an object array
-        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning(em, participatingQueries, exampleQuery, finalSql);
+        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning(dbmsDialect, em, participatingQueries, exampleQuery, finalSql);
         return result;
 	}
 	
-    private String[] getAndCheckReturningAttributes() {
+    private List<Attribute<?, ?>> getAndCheckReturningAttributes() {
         validateReturningAttributes();
-        return returningAttributeBindingMap.keySet().toArray(new String[returningAttributeBindingMap.size()]);
+        return getAndCheckAttributes(returningAttributeBindingMap.keySet().toArray(new String[returningAttributeBindingMap.size()]));
     }
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -271,6 +344,19 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
     @SuppressWarnings("unchecked")
     public X returning(String cteAttribute, String modificationQueryAttribute) {
+        if (cteAttribute == null) {
+            throw new NullPointerException("cteAttribute");
+        }
+        if (modificationQueryAttribute == null) {
+            throw new NullPointerException("modificationQueryAttribute");
+        }
+        if (cteAttribute.isEmpty()) {
+            throw new IllegalArgumentException("Invalid empty cteAttribute");
+        }
+        if (modificationQueryAttribute.isEmpty()) {
+            throw new IllegalArgumentException("Invalid empty modificationQueryAttribute");
+        }
+        
         Attribute<?, ?> cteAttr = JpaUtils.getAttribute(cteType, cteAttribute);
         if (cteAttr == null) {
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
@@ -279,7 +365,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         Attribute<?, ?> queryAttr = JpaUtils.getAttribute(entityType, modificationQueryAttribute);
         Class<?> queryAttrType;
         if (queryAttr == null) {
-            if (modificationQueryAttribute.equals(entityAlias)) {
+            if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
                 // Our little special case, since there would be no other way to refer to the id as the object type
                 queryAttrType = entityType.getJavaType();
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
@@ -291,6 +377,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             queryAttrType = queryAttr.getJavaType();
         }
         
+        // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
+        // but if it already supports the returning clause, it can only also support returning all columns
         if (!cteAttr.getJavaType().isAssignableFrom(queryAttrType)) {
             throw new IllegalArgumentException("The given cte attribute '" + cteAttribute + "' with the type '" + cteAttr.getJavaType().getName() + "'"
                 + " can not be assigned with a value of the type '" + queryAttr.getJavaType().getName() + "' of the query attribute '" + modificationQueryAttribute + "'!");
@@ -318,27 +406,82 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return info;
     }
     
-    private Query getExampleQuery(String[] attributes) {
+    private List<Attribute<?, ?>> getAndCheckAttributes(String[] attributes) {
+        List<Attribute<?, ?>> attrs = new ArrayList<Attribute<?,?>>(attributes.length);
+
+        for (int i = 0; i < attributes.length; i++) {
+            if (attributes[i] == null) {
+                throw new NullPointerException("attribute at position " + i);
+            }
+            if (attributes[i].isEmpty()) {
+                throw new IllegalArgumentException("empty attribute at position " + i);
+            }
+            
+            Attribute<?, ?> attribute = JpaUtils.getAttribute(entityType, attributes[i]);
+            if (attribute == null) {
+                throw new IllegalArgumentException("The query attribute [" + attributes[i] + "] does not exist!");
+            }
+            
+            attrs.add(attribute);
+        }
+        
+        return attrs;
+    }
+    
+    private String[] getReturningColumns(List<Attribute<?, ?>> attributes) {
+        List<String> columns = new ArrayList<String>(attributes.size());
+
+        for (Attribute<?, ?> returningAttribute : attributes) {
+            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, returningAttribute.getName())) {
+                columns.add(column);
+            }
+        }
+        
+        return columns.toArray(new String[columns.size()]);
+    }
+    
+    private String[] getReturningColumns() {
+        if (returningAttributeBindingMap.isEmpty()) {
+            return null;
+        }
+        
+        Collection<String> returningAttributeNames = returningAttributeBindingMap.values();
+        List<String> columns = new ArrayList<String>(returningAttributeNames.size());
+
+        for (String returningAttributeName : returningAttributeBindingMap.values()) {
+            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, returningAttributeName)) {
+                columns.add(column);
+            }
+        }
+        
+        return columns.toArray(new String[columns.size()]);
+    }
+
+    private Query getCountExampleQuery() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT COUNT(e) FROM ");
+        sb.append(entityType.getName());
+        sb.append(" e");
+        
+        String exampleQueryString = sb.toString();
+        return em.createQuery(exampleQueryString);
+    }
+    
+    private Query getExampleQuery(List<Attribute<?, ?>> attributes) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         
         boolean first = true;
-        for (int i = 0; i < attributes.length; i++) {
+        for (Attribute<?, ?> attribute : attributes) {
             if (first) {
                 first = false;
             } else {
                 sb.append(",");
             }
             
-            Attribute<?, ?> attribute = JpaUtils.getAttribute(entityType, attributes[i]);
-            if (attribute == null) {
-                if (attributes[i].equals(entityAlias)) {
-                    // Our little special case, since there would be no other way to refer to the id as the object type
-                    Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
-                    sb.append(idAttribute.getName());
-                } else {
-                    throw new IllegalArgumentException("The query attribute [" + attributes[i] + "] does not exist!");
-                }
+            // TODO: actually we should also check if the attribute is a @GeneratedValue
+            if (!dbmsDialect.supportsReturningColumns() && !JpaUtils.getIdAttribute(entityType).equals(attribute)) {
+                throw new IllegalArgumentException("Returning the query attribute [" + attribute.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
             
             if (JpaUtils.isJoinable(attribute)) {
@@ -347,9 +490,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
-                sb.append(attributes[i]).append('.').append(idAttribute.getName());
+                sb.append(attribute.getName()).append('.').append(idAttribute.getName());
             } else {
-                sb.append(attributes[i]);
+                sb.append(attribute.getName());
             }
         }
         

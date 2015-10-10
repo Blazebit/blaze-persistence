@@ -16,7 +16,9 @@
 
 package com.blazebit.persistence;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +36,6 @@ import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -114,9 +115,9 @@ public class DeleteTest extends AbstractCoreTest {
 
     /* Returning */
     
-    // NOTE: H2 does not support returning all generated keys
+    // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {
         final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
         cb.where("id").in(doc1.getId(), doc2.getId());
@@ -136,9 +137,10 @@ public class DeleteTest extends AbstractCoreTest {
             }
         });
     }
-    
+
+    // NOTE: H2 and MySQL only support returning generated keys
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningLast() {
         final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
         cb.where("id").in(doc1.getId(), doc2.getId());
@@ -190,18 +192,49 @@ public class DeleteTest extends AbstractCoreTest {
             }
         });
     }
-    
-    // NOTE: Currently only PostgreSQL supports returning from within a CTE
+
+    // NOTE: H2 only supports with clause in select statement
+    // NOTE: MySQL does not support CTEs
     @Test
-    @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testSelectDeleted() {
+    @Category({ NoH2.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testSimpleWithCte() {
+        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d");
+        cb.with(IdHolderCTE.class)
+            .from(Document.class, "subDoc")
+            .bind("id").select("subDoc.id")
+            .orderByAsc("subDoc.id")
+            .setMaxResults(2)
+        .end();
+        cb.where("id").in()
+            .from(IdHolderCTE.class, "idHolder")
+            .select("idHolder.id")
+        .end();
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "SELECT subDoc.id FROM Document subDoc ORDER BY " + renderNullPrecedence("subDoc.id", "ASC", "LAST") + " LIMIT 2\n"
+            + ")\n"
+            + "DELETE FROM Document d WHERE d.id IN (SELECT idHolder.id FROM IdHolderCTE idHolder)";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                assertEquals(2, cb.executeUpdate());
+            }
+        });
+    }
+
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testDeleteReturningSelectOld() {
         final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
         cb.withReturning(IdHolderCTE.class)
             .delete(Document.class, "deletedDoc")
             .where("deletedDoc.id").eq(doc1.getId())
             .returning("id", "id")
         .end();
-        cb.from(Document.class, "doc");
+        cb.fromOld(Document.class, "doc");
         cb.from(IdHolderCTE.class, "idHolder");
         cb.select("doc");
         cb.where("doc.id").eqExpression("idHolder.id");
@@ -217,8 +250,41 @@ public class DeleteTest extends AbstractCoreTest {
             @Override
             public void work() {
                 String name = cb.getSingleResult().getName();
-                // NOTE: In PostgreSQL the select query and modification query operate on the same snapshot so we won't see the changes yet
                 assertEquals("D1", name);
+                em.clear();
+                // Of course the next statement would see the changes
+                assertNull(em.find(Document.class, doc1.getId()));
+            }
+        });
+    }
+    
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testDeleteReturningSelectNew() {
+        final CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        cb.withReturning(IdHolderCTE.class)
+            .delete(Document.class, "deletedDoc")
+            .where("deletedDoc.id").eq(doc1.getId())
+            .returning("id", "id")
+        .end();
+        cb.fromNew(Document.class, "doc");
+        cb.from(IdHolderCTE.class, "idHolder");
+        cb.select("doc");
+        cb.where("doc.id").eqExpression("idHolder.id");
+        
+        String expected = "WITH IdHolderCTE(id) AS(\n"
+            + "DELETE FROM Document deletedDoc WHERE deletedDoc.id = :param_0 RETURNING id\n"
+            + ")\n"
+            + "SELECT doc FROM Document doc, IdHolderCTE idHolder WHERE doc.id = idHolder.id";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                List<Document> resultList = cb.getResultList();
+                assertTrue(resultList.isEmpty());
                 em.clear();
                 // Of course the next statement would see the changes
                 assertNull(em.find(Document.class, doc1.getId()));
