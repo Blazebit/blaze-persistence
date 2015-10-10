@@ -34,7 +34,9 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         }
         
         // NOTE: this only works for insert and select statements, but H2 does not support CTEs in modification queries anyway so it's ok
-        sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        if (withClause != null) {
+            sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
