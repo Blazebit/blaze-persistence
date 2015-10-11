@@ -1249,7 +1249,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
         if (queryBuilder.statementType == DbmsStatementType.DELETE) {
             List<String> cascadingDeleteSqls = cbf.getExtendedQuerySupport().getCascadingDeleteSql(em, baseQuery);
-
+            StringBuilder cascadingDeleteSqlSb = new StringBuilder();
             int cteBaseNameCount = 0;
             for (String cascadingDeleteSql : cascadingDeleteSqls) {
                 if (firstCte) {
@@ -1265,7 +1265,12 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
                 sb.append(cteBaseName);
                 sb.append('_').append(cteBaseNameCount);
                 sb.append(" AS (\n");
-                sb.append(cascadingDeleteSql);
+
+                cascadingDeleteSqlSb.setLength(0);
+                cascadingDeleteSqlSb.append(cascadingDeleteSql);
+                dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, true, null, null, null, new String[]{ "count(*)" }, null);
+                sb.append(cascadingDeleteSqlSb);
+                
                 sb.append("\n)");
                 
                 for (CTEInfo cteInfo : cteManager.getCtes()) {

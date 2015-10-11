@@ -115,6 +115,8 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 			    sb.append(',');
 			}
 			sb.append(returningColumns[i]);
+			sb.append(" as ret_col_");
+			sb.append(i);
 		}
 		sb.append(" from ");
 		
