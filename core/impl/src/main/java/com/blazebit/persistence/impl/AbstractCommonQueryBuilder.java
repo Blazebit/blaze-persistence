@@ -41,6 +41,7 @@ import javax.persistence.metamodel.Metamodel;
 import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
@@ -48,7 +49,6 @@ import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -74,11 +74,12 @@ import com.blazebit.persistence.spi.QueryTransformer;
  *
  * @param <T> The query result type
  * @param <X> The concrete builder type
+ * @param <Z> The builder type that should be returned on set operations
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractCommonQueryBuilder<T, X> {
+public abstract class AbstractCommonQueryBuilder<T, X, Z> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
@@ -98,7 +99,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     protected final KeysetManager keysetManager;
 	protected final CTEManager<T> cteManager;
     protected final ResolvingQueryGenerator queryGenerator;
-    private final SubqueryInitiatorFactory subqueryInitFactory;
+    protected final SubqueryInitiatorFactory subqueryInitFactory;
 
     protected final DbmsDialect dbmsDialect;
     protected final JpaProvider jpaProvider;
@@ -131,7 +132,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
      * @param builder
      */
     @SuppressWarnings("unchecked")
-    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>> builder) {
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>, ?> builder) {
         this.cbf = builder.cbf;
         this.statementType = builder.statementType;
         this.orderByManager = builder.orderByManager;
@@ -235,7 +236,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
     }
 
 	@SuppressWarnings("unchecked")
-    public <Y> SelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
+    public <Y> FullSelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
@@ -262,6 +263,36 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         }
         
 		return cteManager.withReturning(cteClass, (X) this);
+    }
+    
+    public Z union() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    public Z unionAll() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    public Z intersect() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    public Z intersectAll() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    public Z except() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    public Z exceptAll() {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
 
     public X from(Class<?> clazz) {
@@ -1098,7 +1129,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return null;
     }
     
-    private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
+    private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
         if (query instanceof CustomSQLQuery) {
             // EntityAlias -> CteName
             Map<String, String> cteTableNameRemappings = queryBuilder.getModificationStateRelatedTableNameRemappings(explicitVersionEntities);
@@ -1196,7 +1227,11 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
             
             if (cteInfo.recursive) {
                 String cteRecursiveSqlQuery = getSql(recursiveQuery);
-                sb.append("\nUNION ALL\n");
+                if (cteInfo.unionAll) {
+                    sb.append("\nUNION ALL\n");
+                } else {
+                    sb.append("\nUNION\n");
+                }
                 sb.append(cteRecursiveSqlQuery);
             } else if (!dbmsDialect.supportsNonRecursiveWithClause()) {
                 sb.append("\nUNION ALL\n");
@@ -1246,7 +1281,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
         return sb;
     }
     
-    private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
+    private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
         if (queryBuilder.statementType == DbmsStatementType.DELETE) {
             List<String> cascadingDeleteSqls = cbf.getExtendedQuerySupport().getCascadingDeleteSql(em, baseQuery);
             StringBuilder cascadingDeleteSqlSb = new StringBuilder();

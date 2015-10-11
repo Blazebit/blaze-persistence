@@ -44,7 +44,7 @@ public class HavingManager<T> extends PredicateManager<T> {
     }
 
     @SuppressWarnings("unchecked")
-    HavingOrBuilderImpl<T> havingOr(AbstractCommonQueryBuilder<?, ?> builder) {
+    HavingOrBuilderImpl<T> havingOr(AbstractCommonQueryBuilder<?, ?, ?> builder) {
         return rootPredicate.startBuilder(new HavingOrBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory));
     }
 

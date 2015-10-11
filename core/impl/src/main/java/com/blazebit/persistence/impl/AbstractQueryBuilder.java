@@ -40,7 +40,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractCommonQueryBuilder<T, X> implements QueryBuilder<T, X> {
+public abstract class AbstractQueryBuilder<T, X extends QueryBuilder<T, X>> extends AbstractCommonQueryBuilder<T, X, X> implements QueryBuilder<T, X> {
 
     /**
      * This flag indicates whether the current builder has been used to create a

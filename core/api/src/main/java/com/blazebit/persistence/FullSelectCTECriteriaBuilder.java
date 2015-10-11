@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2015 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,19 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for criteria queries. This is the entry point for building queries.
+ * A builder for cte criteria queries. This is the entry point for building cte queries.
  *
- * @param <T> The query result type
+ * @param <T> The query result type which is the CTE type
+ * @param <X> The result type which is returned after the CTE builder
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>>, LimitBuilder<CriteriaBuilder<T>>, CTEBuilder<CriteriaBuilder<T>>, SetOperationBuilder<CriteriaBuilder<T>> {
+public interface FullSelectCTECriteriaBuilder<T, X> extends SelectBaseCTECriteriaBuilder<FullSelectCTECriteriaBuilder<T, X>>, SetOperationBuilder<SelectCTECriteriaBuilder<T, X>> {
 
-
-    @Override
-    public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);
-
-    @Override
-    public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder);
+    /**
+     * Finishes the CTE builder.
+     *
+     * @return The parent query builder
+     */
+	public X end();
 }

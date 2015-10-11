@@ -32,7 +32,7 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
 	 * @return
 	 * @since 1.1.0
 	 */
-    public <X> SelectCTECriteriaBuilder<X, T> with(Class<X> cteClass);
+    public <X> FullSelectCTECriteriaBuilder<X, T> with(Class<X> cteClass);
 
 	/**
 	 * TODO: documentation

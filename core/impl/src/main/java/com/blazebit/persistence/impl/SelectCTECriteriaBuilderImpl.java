@@ -29,9 +29,9 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class CTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectCTECriteriaBuilder<T, Y>> implements SelectCTECriteriaBuilder<T, Y> {
+public class SelectCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectCTECriteriaBuilder<T, Y>, SelectCTECriteriaBuilder<T, Y>> implements SelectCTECriteriaBuilder<T, Y> {
 
-	public CTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
+	public SelectCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
 		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
 	}
 
@@ -43,7 +43,7 @@ public class CTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<
 	
 	public CTEInfo createCTEInfo() {
 		List<String> attributes = prepareAndGetAttributes();
-		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, this, null);
+		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
 		return info;
 	}
 

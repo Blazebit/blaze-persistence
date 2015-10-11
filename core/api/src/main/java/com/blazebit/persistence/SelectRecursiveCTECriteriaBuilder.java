@@ -27,6 +27,15 @@ public interface SelectRecursiveCTECriteriaBuilder<T, X> extends SelectBaseCTECr
 
     /**
      * Finishes the CTE builder for the non-recursive part and starts the builder for the recursive part.
+     * The union operator is used for connecting the non-recursive and recursive part, thus removing duplicates. 
+     *
+     * @return The parent query builder
+     */
+    public SelectCTECriteriaBuilder<T, X> union();
+    
+    /**
+     * Finishes the CTE builder for the non-recursive part and starts the builder for the recursive part.
+     * The union all operator is used for connecting the non-recursive and recursive part, thus not removing duplicates.
      *
      * @return The parent query builder
      */

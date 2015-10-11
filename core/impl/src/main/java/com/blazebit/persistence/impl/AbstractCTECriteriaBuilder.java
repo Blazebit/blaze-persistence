@@ -39,10 +39,11 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @param <T> The query result type
  * @param <T> The criteria builder returned after the cte builder
  * @param <X> The concrete builder type
+ * @param <Z> The builder type that should be returned on set operations
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<X>> extends AbstractCommonQueryBuilder<T, X> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<X>, Z> extends AbstractCommonQueryBuilder<T, X, Z> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
 	
 	protected static final Integer EMPTY = Integer.valueOf(-1);
 	protected final Y result;

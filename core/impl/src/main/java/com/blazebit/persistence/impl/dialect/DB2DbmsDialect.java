@@ -1,6 +1,6 @@
 package com.blazebit.persistence.impl.dialect;
 
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -34,10 +34,32 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
         
         if (requiresOld) {
+            Map<String, String> dbmsModificationStateQueries = new HashMap<String, String>();
             StringBuilder sb = new StringBuilder(sqlSb.length() + 30);
-            sb.append("select * from old table (");
-            sb.append(sqlSb);
-            sb.append(")");
+            if (statementType == DbmsStatementType.INSERT) {
+                StringBuilder newValuesSb = new StringBuilder();
+                String newValuesTableName = "new_" + includedModificationStates.get(DbmsModificationState.OLD);
+                newValuesSb.append("select * from final table (");
+                newValuesSb.append(sqlSb);
+                newValuesSb.append(")");
+                dbmsModificationStateQueries.put("new_" + includedModificationStates.get(DbmsModificationState.OLD), newValuesSb.toString());
+                
+                String needle = "into";
+                int startIndex = indexOfIgnoreCase(sqlSb, needle) + needle.length() + 1;
+                int endIndex = sqlSb.indexOf(" ", startIndex);
+                endIndex = indexOfOrEnd(sqlSb, '(', startIndex, endIndex);
+                String table = sqlSb.substring(startIndex, endIndex);
+
+                sb.append("select * from ");
+                sb.append(table);
+                sb.append("\nexcept\n");
+                sb.append("select * from ");
+                sb.append(newValuesTableName);
+            } else {
+                sb.append("select * from old table (");
+                sb.append(sqlSb);
+                sb.append(")");
+            }
             
             sqlSb.setLength(0);
             sqlSb.append("select ");
@@ -51,7 +73,8 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             sqlSb.append(" from ");
             sqlSb.append(includedModificationStates.get(DbmsModificationState.OLD));
             
-            return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
+            dbmsModificationStateQueries.put(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
+            return dbmsModificationStateQueries;
         }
         
         boolean needsReturningWrapper = isSubquery && (returningColumns != null || statementType != DbmsStatementType.SELECT);
@@ -130,5 +153,17 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 		sqlSb.insert(0, sb);
 		sqlSb.append(')');
 	}
+
+    private static int indexOfOrEnd(StringBuilder sb, char needle, int startIndex, int endIndex) {
+        while (startIndex < endIndex) {
+            if (sb.charAt(startIndex) == needle) {
+                return startIndex;
+            }
+            
+            startIndex++;
+        }
+        
+        return endIndex;
+    }
 
 }

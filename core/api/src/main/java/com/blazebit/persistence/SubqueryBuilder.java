@@ -24,7 +24,7 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>>, GroupByBuilder<SubqueryBuilder<T>>, DistinctBuilder<SubqueryBuilder<T>>, LimitBuilder<SubqueryBuilder<T>>, CTEBuilder<SubqueryBuilder<T>> {
+public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>>, GroupByBuilder<SubqueryBuilder<T>>, DistinctBuilder<SubqueryBuilder<T>>, LimitBuilder<SubqueryBuilder<T>>, CTEBuilder<SubqueryBuilder<T>>, SetOperationBuilder<SubqueryBuilder<T>> {
 
     /**
      * Finishes the subquery builder.

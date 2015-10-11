@@ -31,11 +31,11 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
@@ -49,7 +49,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, X> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
@@ -85,7 +85,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	}
 
     @Override
-    public <Z> SelectCTECriteriaBuilder<Z, X> with(Class<Z> cteClass) {
+    public <Z> FullSelectCTECriteriaBuilder<Z, X> with(Class<Z> cteClass) {
         if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
@@ -402,7 +402,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     
     public CTEInfo createCTEInfo() {
         List<String> attributes = prepareAndGetAttributes();
-        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, this, null);
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
         return info;
     }
     

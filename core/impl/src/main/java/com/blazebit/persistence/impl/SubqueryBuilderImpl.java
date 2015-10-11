@@ -35,7 +35,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>> implements SubqueryBuilder<T>, Subquery {
+public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, SubqueryBuilder<T>> implements SubqueryBuilder<T>, Subquery {
 
     private final T result;
     private final SubqueryBuilderListener<T> listener;

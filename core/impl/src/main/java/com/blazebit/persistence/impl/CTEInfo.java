@@ -9,14 +9,16 @@ class CTEInfo {
 	final EntityType<?> cteType;
 	final List<String> attributes;
 	final boolean recursive;
-	final AbstractCommonQueryBuilder<?, ?> nonRecursiveCriteriaBuilder;
-	final AbstractCommonQueryBuilder<?, ?> recursiveCriteriaBuilder;
+	final boolean unionAll;
+	final AbstractCommonQueryBuilder<?, ?, ?> nonRecursiveCriteriaBuilder;
+	final AbstractCommonQueryBuilder<?, ?, ?> recursiveCriteriaBuilder;
 	
-	CTEInfo(String name, EntityType<?> cteType, List<String> attributes, boolean recursive, AbstractCommonQueryBuilder<?, ?> nonRecursiveCriteriaBuilder, AbstractCommonQueryBuilder<?, ?> recursiveCriteriaBuilder) {
+	CTEInfo(String name, EntityType<?> cteType, List<String> attributes, boolean recursive, boolean unionAll, AbstractCommonQueryBuilder<?, ?, ?> nonRecursiveCriteriaBuilder, AbstractCommonQueryBuilder<?, ?, ?> recursiveCriteriaBuilder) {
 		this.name = name;
 		this.cteType = cteType;
 		this.attributes = attributes;
 		this.recursive = recursive;
+		this.unionAll = unionAll;
 		this.nonRecursiveCriteriaBuilder = nonRecursiveCriteriaBuilder;
 		this.recursiveCriteriaBuilder = recursiveCriteriaBuilder;
 	}

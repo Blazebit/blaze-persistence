@@ -21,8 +21,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.spi.DbmsDialect;
 
@@ -110,8 +110,8 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
         sb.append("\n");
     }
 
-	<X, Y> SelectCTECriteriaBuilder<X, Y> with(Class<X> cteClass, Y result) {
-		CTECriteriaBuilderImpl<X, Y, T> cteBuilder = new CTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
+	<X, Y> FullSelectCTECriteriaBuilder<X, Y> with(Class<X> cteClass, Y result) {
+		FullSelectCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new FullSelectCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
