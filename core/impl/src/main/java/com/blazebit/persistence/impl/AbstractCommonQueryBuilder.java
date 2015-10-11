@@ -1268,7 +1268,7 @@ public abstract class AbstractCommonQueryBuilder<T, X> {
 
                 cascadingDeleteSqlSb.setLength(0);
                 cascadingDeleteSqlSb.append(cascadingDeleteSql);
-                dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, true, null, null, null, new String[]{ "count(*)" }, null);
+                dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, true, null, null, null, null, null);
                 sb.append(cascadingDeleteSqlSb);
                 
                 sb.append("\n)");

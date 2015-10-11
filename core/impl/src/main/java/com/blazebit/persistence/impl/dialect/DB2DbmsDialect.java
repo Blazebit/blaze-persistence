@@ -54,24 +54,24 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
         }
         
-        boolean needsReturningWrapper = isSubquery && returningColumns != null;
+        boolean needsReturningWrapper = isSubquery && (returningColumns != null || statementType != DbmsStatementType.SELECT);
         if (needsReturningWrapper || withClause != null && (statementType != DbmsStatementType.SELECT)) {
             // Insert might need limit
             if (limit != null) {
                 appendLimit(sqlSb, isSubquery, limit, offset);
             }
             
-            if (needsReturningWrapper) {
-                applyQueryReturning(sqlSb, statementType, withClause, returningColumns);
+            String[] columns;
+            if (returningColumns == null) {
+                // we will simulate the update count
+                columns = new String[]{ "count(*)" };
             } else {
-                String[] columns;
-                if (returningColumns == null) {
-                    // we will simulate the update count
-                    columns = new String[]{ "count(*)" };
-                } else {
-                    columns = returningColumns;
-                }
-                
+                columns = returningColumns;
+            }
+            
+            if (needsReturningWrapper) {
+                applyQueryReturning(sqlSb, statementType, withClause, columns);
+            } else {
                 applyQueryReturning(sqlSb, statementType, withClause, columns);
             }
             
