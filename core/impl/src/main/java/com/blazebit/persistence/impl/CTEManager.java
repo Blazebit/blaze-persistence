@@ -19,12 +19,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -32,23 +29,15 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Moritz Becker
  * @since 1.1.0
  */
-public class CTEManager<T> extends CTEBuilderListenerImpl {
+public class CTEManager extends CTEBuilderListenerImpl {
 
-	private final CriteriaBuilderFactoryImpl cbf;
-	private final EntityManager em;
-	private final DbmsDialect dbmsDialect;
-	private final Set<String> registeredFunctions;
-	private final ParameterManager parameterManager;
+	private final MainQuery mainQuery;
 
     private final Set<CTEInfo> ctes;
     private boolean recursive = false;
 
-    CTEManager(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager) {
-    	this.cbf = cbf;
-    	this.em = em;
-    	this.dbmsDialect = dbmsDialect;
-    	this.registeredFunctions = registeredFunctions;
-    	this.parameterManager = parameterManager;
+    CTEManager(MainQuery mainQuery) {
+    	this.mainQuery = mainQuery;
         this.ctes = new LinkedHashSet<CTEInfo>();
     }
     
@@ -110,21 +99,23 @@ public class CTEManager<T> extends CTEBuilderListenerImpl {
         sb.append("\n");
     }
 
-	<X, Y> FullSelectCTECriteriaBuilder<X, Y> with(Class<X> cteClass, Y result) {
-		FullSelectCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new FullSelectCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
+    @SuppressWarnings("unchecked")
+	<Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result) {
+		FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
-	<X, Y> SelectRecursiveCTECriteriaBuilder<X, Y> withRecursive(Class<X> cteClass, Y result) {
+	@SuppressWarnings("unchecked")
+    <Y> SelectRecursiveCTECriteriaBuilder<Y> withRecursive(Class<?> cteClass, Y result) {
 		recursive = true;
-		RecursiveCTECriteriaBuilderImpl<X, Y, T> cteBuilder = new RecursiveCTECriteriaBuilderImpl<X, Y, T>(cbf, em, dbmsDialect, cteClass, registeredFunctions, parameterManager, result, this);
+		RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
 		return cteBuilder;
 	}
 
-	<X, Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<X> cteClass, Y result) {
-	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(cbf, em, dbmsDialect, registeredFunctions, parameterManager, cteClass, result, this);
+	<Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<?> cteClass, Y result) {
+	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteClass, result, this);
 		return factory;
 	}
 	

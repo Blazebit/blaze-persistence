@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Attribute;
@@ -49,7 +48,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, X> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
 
 	protected final EntityType<T> entityType;
 	protected final String entityAlias;
@@ -61,10 +60,10 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	protected final Map<String, String> returningAttributeBindingMap;
 
 	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+	public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
-		super(cbf, em, statementType, dbmsDialect, (Class<T>) Tuple.class, null, registeredFunctions, parameterManager);
+		super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
 		this.entityType = em.getMetamodel().entity(clazz);
 		this.entityAlias = alias;
 		this.result = result;
@@ -85,7 +84,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	}
 
     @Override
-    public <Z> FullSelectCTECriteriaBuilder<Z, X> with(Class<Z> cteClass) {
+    public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
@@ -94,7 +93,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
 
     @Override
-    public <Z> SelectRecursiveCTECriteriaBuilder<Z, X> withRecursive(Class<Z> cteClass) {
+    public SelectRecursiveCTECriteriaBuilder<X> withRecursive(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
@@ -103,7 +102,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
 
     @Override
-    public <Z> ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<Z> cteClass) {
+    public ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClauseInModificationQuery()) {
             throw new UnsupportedOperationException("The database does not support a with clause in modification queries!");
         }
@@ -143,11 +142,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             query = em.createQuery(getBaseQueryString());
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            boolean isSubquery = this instanceof ReturningBuilder;
-            StringBuilder withClause = applyCtes(sqlSb, query, isSubquery, participatingQueries);
+            boolean isEmbedded = this instanceof ReturningBuilder;
+            StringBuilder withClause = applyCtes(sqlSb, query, isEmbedded, participatingQueries);
             String[] returningColumns = getReturningColumns();
             // NOTE: CTEs will only be added, if this is a subquery
-            Map<String, String> addedCtes = applyExtendedSql(sqlSb, isSubquery, withClause, returningColumns, includedModificationStates);
+            Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);
             
             String finalSql = sqlSb.toString();
             participatingQueries.add(query);
@@ -305,7 +304,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         
         StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, baseQuery));
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, withClause, returningColumns, null);
+        applyExtendedSql(sqlSb, false, false, withClause, returningColumns, null);
         String finalSql = sqlSb.toString();
         participatingQueries.add(baseQuery);
         

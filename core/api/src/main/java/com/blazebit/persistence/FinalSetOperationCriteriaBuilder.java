@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.limit;
-
-import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
+package com.blazebit.persistence;
 
 /**
+ * An interface for builders that support set operators.
  *
+ * @param <T> The builder result type
  * @author Christian Beikov
- * @since 1.0.1
+ * @since 1.1.0
  */
-public class OracleLimitFunction extends LimitFunction {
-
-    public OracleLimitFunction() {
-        super(new OracleDbmsDialect());
-    }
+public interface FinalSetOperationCriteriaBuilder<T> extends Queryable<T, FinalSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationBuilder<T, FinalSetOperationCriteriaBuilder<T>> {
 
 }

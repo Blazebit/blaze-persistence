@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Tuple;
 
 /**
  * A builder for subquery criteria queries.
@@ -24,7 +23,7 @@ import javax.persistence.Tuple;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SubqueryBuilder<T> extends BaseQueryBuilder<Tuple, SubqueryBuilder<T>>, GroupByBuilder<SubqueryBuilder<T>>, DistinctBuilder<SubqueryBuilder<T>>, LimitBuilder<SubqueryBuilder<T>>, CTEBuilder<SubqueryBuilder<T>>, SetOperationBuilder<SubqueryBuilder<T>> {
+public interface SubqueryBuilder<T> extends BaseSubqueryBuilder<SubqueryBuilder<T>>, SetOperationBuilder<LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>>> {
 
     /**
      * Finishes the subquery builder.

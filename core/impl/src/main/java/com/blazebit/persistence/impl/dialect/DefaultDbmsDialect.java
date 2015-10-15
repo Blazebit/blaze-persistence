@@ -7,9 +7,10 @@ import java.util.Map;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 
 public class DefaultDbmsDialect implements DbmsDialect {
-
+    
 	@Override
 	public boolean supportsWithClause() {
 		return true;
@@ -30,7 +31,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 	}
 
 	@Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
+        }
+        
 	    if (withClause != null) {
 	        sqlSb.insert(0, withClause);
 	    }
@@ -40,8 +45,73 @@ public class DefaultDbmsDialect implements DbmsDialect {
         if (isSubquery && !supportsReturningColumns() && returningColumns != null) {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
         }
+
+        if (isSubquery) {
+            sqlSb.append(')');
+        }
         
         return null;
+    }
+
+    @Override
+    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands) {
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
+        }
+        
+        if (operands.size() > 0) {
+            String operator = getOperator(setType);
+            boolean first = true;
+            for (String operand : operands) {
+                if (first) {
+                    first = false;
+                } else {
+                    sqlSb.append("\n");
+                    sqlSb.append(operator);
+                    sqlSb.append("\n");
+                }
+    
+                sqlSb.append(operand);
+            }
+        }
+        
+        if (isSubquery) {
+            sqlSb.append(')');
+        }
+    }
+    
+    protected String getOperator(SetOperationType type) {
+        if (type == null) {
+            return null;
+        }
+        
+        switch (type) {
+            case UNION: return "UNION";
+            case UNION_ALL: return "UNION ALL";
+            case INTERSECT: return "INTERSECT";
+            case INTERSECT_ALL: return "INTERSECT ALL";
+            case EXCEPT: return "EXCEPT";
+            case EXCEPT_ALL: return "EXCEPT ALL";
+        }
+        
+        return null;
+    }
+
+    @Override
+    public boolean supportsUnion(boolean all) {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIntersect(boolean all) {
+        // Most dbms don't support intersect all
+        return !all;
+    }
+
+    @Override
+    public boolean supportsExcept(boolean all) {
+        // Most dbms don't support except all
+        return !all;
     }
 
     @Override

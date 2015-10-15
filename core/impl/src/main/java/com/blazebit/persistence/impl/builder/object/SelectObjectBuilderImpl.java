@@ -20,13 +20,13 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.SelectObjectBuilderEndedListener;
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -36,7 +36,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> implements SelectObjectBuilder<T> {
+public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends SubqueryBuilderListenerImpl<SelectObjectBuilder<T>> implements SelectObjectBuilder<T> {
 
     private final T result;
     // maps positions to expressions
@@ -102,7 +102,7 @@ public class SelectObjectBuilderImpl<T extends QueryBuilder<?, T>> extends Subqu
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<SelectObjectBuilder<T>> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<SelectObjectBuilder<T>> builder) {
         super.onBuilderEnded(builder);
         expressions.put(expressions.size(), new AbstractMap.SimpleEntry<Expression, String>(new SubqueryExpression(builder), subqueryAlias));
     }

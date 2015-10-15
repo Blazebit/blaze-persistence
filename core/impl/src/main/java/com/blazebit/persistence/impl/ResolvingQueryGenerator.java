@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -27,7 +28,6 @@ import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
@@ -35,6 +35,7 @@ import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 /**
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.0
  */
 public class ResolvingQueryGenerator extends SimpleQueryGenerator {
@@ -78,21 +79,21 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 	public void visit(SubqueryExpression expression) {
         sb.append('(');
         
-        final Subquery subquery = expression.getSubquery();
+        final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
         final boolean hasFirstResult = subquery.getFirstResult() != 0;
         final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
+        final boolean hasLimit = hasFirstResult || hasMaxResults;
+        final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
+        final boolean isSimple = !hasLimit && !hasSetOperations;
         
-        if (!hasFirstResult && !hasMaxResults) {
+        if (isSimple) {
         	sb.append(subquery.getQueryString());
+        } else if (!hasLimit) {
+            asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
         } else {
         	List<Expression> arguments = new ArrayList<Expression>(3);
         	arguments.add(new FooExpression("'LIMIT'"));
-        	String queryString = subquery.getQueryString();
-        	StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
-        	subquerySb.append('(');
-        	subquerySb.append(queryString);
-        	subquerySb.append(')');
-        	arguments.add(new FooExpression(subquerySb.toString()));
+        	arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
         	
         	if (!hasMaxResults) {
         		throw new IllegalArgumentException("First result without max results is not supported!");
@@ -109,6 +110,37 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         
         sb.append(')');
 	}
+    
+    protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
+            BaseFinalSetOperationBuilderImpl<?, ?, ?> operationBuilder = (BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder;
+            SetOperationManager operationManager = operationBuilder.setOperationManager;
+            
+            List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
+            StringBuilder nameSb = new StringBuilder();
+            nameSb.append('\'');
+            // Use prefix because hibernate uses UNION as keyword
+            nameSb.append("SET_");
+            nameSb.append(operationManager.getOperator().name());
+            nameSb.append('\'');
+            setOperationArgs.add(new FooExpression(nameSb));
+            setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
+
+            for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand : operationManager.getSetOperations()) {
+                setOperationArgs.add(asExpression(operand));
+            }
+            
+            Expression functionExpr = new FunctionExpression("FUNCTION", setOperationArgs);
+            return functionExpr;
+        }
+
+        String queryString = queryBuilder.getQueryString();
+        StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
+        subquerySb.append('(');
+        subquerySb.append(queryString);
+        subquerySb.append(')');
+        return new FooExpression(subquerySb.toString());
+    }
 
 	protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         if (registeredFunctions.contains(functionName.toLowerCase())) {

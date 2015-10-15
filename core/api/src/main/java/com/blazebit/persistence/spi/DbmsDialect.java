@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.spi;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -59,16 +60,26 @@ public interface DbmsDialect {
      * @param sqlSb The sql string builder to which the with clause should be append to
      * @param statementType The type of the statement in the sql string builder
      * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
+     * @param isSubquery True if the query in the sql string builder will be embedded in a clause, false otherwise
      * @param withClause The with clause which should be appended, or null if none
      * @param limit The limit for the limit clause, or null if no limit
      * @param offset The offset for the offset clause, or null if no offset
      * @param returningColumns The columns which the sql should return or null if none
      * @param includedModificationStates The modification states of the returned columns for which additional CTEs should be generated mapped to the expected CTE names
      * @return Generated CTEs queries for the requested modification states
-     * 
      */
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates);
 
+    /**
+     * Connects the given operands with the given set operation and appends that to the sql string builder.
+     * 
+     * @param sqlSb The sql string builder to which the connected operands should be appended to
+     * @param setType The type of the set connection
+     * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
+     * @param operands An list of operand sql strings
+     */
+    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands);
+    
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.
      * 
@@ -118,4 +129,13 @@ public interface DbmsDialect {
 
     // TODO: documentation
     public boolean supportsLimitOffset();
+
+    // TODO: documentation
+    public boolean supportsUnion(boolean all);
+
+    // TODO: documentation
+    public boolean supportsIntersect(boolean all);
+
+    // TODO: documentation
+    public boolean supportsExcept(boolean all);
 }

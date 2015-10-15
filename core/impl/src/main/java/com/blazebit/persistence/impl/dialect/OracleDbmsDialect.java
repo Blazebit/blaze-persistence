@@ -7,7 +7,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 
 
 public class OracleDbmsDialect extends DefaultDbmsDialect {
-	
+    
 //	private static final Method registerReturnParameter;
 //	private static final Method getReturnResultSet;
 //	
@@ -27,8 +27,18 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 //	}
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
+        }
+        
+        // TODO: implement
         sqlSb.insert(indexOfIgnoreCase(sqlSb, "select"), withClause);
+        
+        if (isSubquery) {
+            sqlSb.append(')');
+        }
+        
         return null;
     }
 

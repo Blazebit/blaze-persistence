@@ -38,7 +38,6 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
@@ -47,10 +46,12 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -58,7 +59,6 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
 import com.blazebit.persistence.impl.keyset.KeysetLink;
@@ -69,37 +69,46 @@ import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.QueryTransformer;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
- * @param <T> The query result type
- * @param <X> The concrete builder type
- * @param <Z> The builder type that should be returned on set operations
+ * @param <QueryResultType> The query result type
+ * @param <BuilderType> The concrete builder type
+ * @param <SetReturn> The builder type that should be returned on set operations
+ * @param <SubquerySetReturn> The builder type that should be returned on subquery set operations
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractCommonQueryBuilder<T, X, Z> {
+public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
 
+    protected final MainQuery mainQuery;
+    /* This might change when transitioning to a set operation */
+    protected boolean isMainQuery;
+    
     protected final CriteriaBuilderFactoryImpl cbf;
     protected final EntityManager em;
     protected final DbmsStatementType statementType;
     protected final Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities = new HashMap<Class<?>, Map<String, DbmsModificationState>>(0);
 
     protected final ParameterManager parameterManager;
-    protected final SelectManager<T> selectManager;
-    protected final WhereManager<X> whereManager;
-    protected final HavingManager<X> havingManager;
+    protected final SelectManager<QueryResultType> selectManager;
+    protected final WhereManager<BuilderType> whereManager;
+    protected final HavingManager<BuilderType> havingManager;
     protected final GroupByManager groupByManager;
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
     protected final KeysetManager keysetManager;
-	protected final CTEManager<T> cteManager;
+	protected final CTEManager cteManager;
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
+    
+    // This builder will be passed in when using set operations
+    protected final FinalSetReturn finalSetOperationBuilder;
 
     protected final DbmsDialect dbmsDialect;
     protected final JpaProvider jpaProvider;
@@ -113,7 +122,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     private final SizeSelectToSubqueryTransformer sizeSelectToSubqueryTransformer;
 
     // Mutable state
-    protected Class<T> resultType;
+    protected Class<QueryResultType> resultType;
     protected int firstResult = 0;
     protected int maxResults = Integer.MAX_VALUE;
     protected boolean fromClassExplicitelySet = false;
@@ -132,20 +141,23 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
      * @param builder
      */
     @SuppressWarnings("unchecked")
-    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<T, ? extends BaseQueryBuilder<T, ?>, ?> builder) {
+    protected AbstractCommonQueryBuilder(AbstractCommonQueryBuilder<QueryResultType, ?, ?, ?, ?> builder) {
+        this.mainQuery = builder.mainQuery;
+        this.isMainQuery = builder.isMainQuery;
         this.cbf = builder.cbf;
         this.statementType = builder.statementType;
         this.orderByManager = builder.orderByManager;
         this.parameterManager = builder.parameterManager;
         this.selectManager = builder.selectManager;
-        this.whereManager = (WhereManager<X>) builder.whereManager;
-        this.havingManager = (HavingManager<X>) builder.havingManager;
+        this.whereManager = (WhereManager<BuilderType>) builder.whereManager;
+        this.havingManager = (HavingManager<BuilderType>) builder.havingManager;
         this.groupByManager = builder.groupByManager;
         this.keysetManager = builder.keysetManager;
         this.cteManager = builder.cteManager;
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
+        this.finalSetOperationBuilder = (FinalSetReturn) builder.finalSetOperationBuilder;
         this.dbmsDialect = builder.dbmsDialect;
         this.jpaProvider = builder.jpaProvider;
         this.registeredFunctions = builder.registeredFunctions;
@@ -157,104 +169,113 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
         this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
-
-    protected AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> resultClazz, String alias, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
-        if (cbf == null) {
-            throw new NullPointerException("criteriaBuilderFactory");
+    
+    protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder) {
+        if (mainQuery == null) {
+            throw new NullPointerException("mainQuery");
         }
-        if (em == null) {
-            throw new NullPointerException("entityManager");
+        if (statementType == null) {
+            throw new NullPointerException("statementType");
         }
         if (resultClazz == null) {
             throw new NullPointerException("resultClazz");
         }
-
-        this.cbf = cbf;
+        
+        this.mainQuery = mainQuery;
+        this.isMainQuery = isMainQuery;
         this.statementType = statementType;
-        this.jpaProvider = JpaProviders.resolveJpaProvider(em);
-        this.dbmsDialect = dbmsDialect;
+        this.cbf = mainQuery.cbf;
+        this.parameterManager = mainQuery.parameterManager;
+        this.cteManager = mainQuery.cteManager;
+        this.em = mainQuery.em;
+        this.dbmsDialect = mainQuery.dbmsDialect;
+        this.jpaProvider = mainQuery.jpaProvider;
+        this.registeredFunctions = mainQuery.registeredFunctions;
+
         this.aliasManager = new AliasManager(aliasManager);
         this.expressionFactory = expressionFactory;
-
-        this.parameterManager = parameterManager;
-
-        this.registeredFunctions = registeredFunctions;
-        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, this.jpaProvider, registeredFunctions);
-
-        this.joinManager = new JoinManager(queryGenerator, parameterManager, null, expressionFactory, jpaProvider, this.aliasManager, em.getMetamodel(), parentJoinManager);
+        this.queryGenerator = new ResolvingQueryGenerator(this.aliasManager, jpaProvider, registeredFunctions);
+        this.joinManager = new JoinManager(mainQuery, queryGenerator, this.aliasManager, parentJoinManager, expressionFactory);
 
         // set defaults
         if (alias == null) {
-        	alias = resultClazz.getSimpleName().toLowerCase();
+            alias = resultClazz.getSimpleName().toLowerCase();
         } else {
-        	// If the user supplies an alias, the intention is clear
-        	fromClassExplicitelySet = true;
+            // If the user supplies an alias, the intention is clear
+            fromClassExplicitelySet = true;
         }
         
         try {
             this.joinManager.addRoot(em.getMetamodel().entity(resultClazz), alias);
         } catch (IllegalArgumentException ex) {
-        	// the result class might not be an entity
-        	if (fromClassExplicitelySet) {
-        		// If the intention was to use that as from clause, we have to throw an exception
-        		throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
-        	}
+            // the result class might not be an entity
+            if (fromClassExplicitelySet) {
+                // If the intention was to use that as from clause, we have to throw an exception
+                throw new IllegalArgumentException("The class [" + resultClazz.getName() + "] is not an entity and therefore can't be aliased!");
+            }
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(cbf, em, dbmsDialect, parameterManager, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()), registeredFunctions);
-
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()));
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
-        this.whereManager = new WhereManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
-        this.havingManager = new HavingManager<X>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
+        this.havingManager = new HavingManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
         this.groupByManager = new GroupByManager(queryGenerator, parameterManager);
 
-        this.selectManager = new SelectManager<T>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
+        this.selectManager = new SelectManager<QueryResultType>(queryGenerator, parameterManager, this.joinManager, this.aliasManager, subqueryInitFactory, expressionFactory, jpaProvider, resultClazz);
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
-        this.cteManager = new CTEManager<T>(cbf, em, dbmsDialect, registeredFunctions, parameterManager);
-
-        // resolve cyclic dependencies
-        this.em = em;
 
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
         this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager, em.getMetamodel());
         this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
         this.resultType = resultClazz;
+        
+        this.finalSetOperationBuilder = finalSetOperationBuilder;
     }
 
-    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
-        this(cbf, em, statementType, dbmsDialect, clazz, alias, parameterManager, null, null, cbf.getExpressionFactory(), registeredFunctions);
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder) {
+        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.cbf.getExpressionFactory(), finalSetOperationBuilder);
     }
 
-    public AbstractCommonQueryBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsStatementType statementType, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        this(cbf, em, statementType, dbmsDialect, clazz, alias, new ParameterManager(), null, null, cbf.getExpressionFactory(), registeredFunctions);
+    public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
+        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null);
     }
 
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
     }
 
+    public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass) {
+        if (!dbmsDialect.supportsWithClause()) {
+            throw new UnsupportedOperationException("The database does not support the with clause!");
+        }
+        
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+//        return cteManager.with(cteClass, (BuilderType) this);
+    }
+
 	@SuppressWarnings("unchecked")
-    public <Y> FullSelectCTECriteriaBuilder<Y, X> with(Class<Y> cteClass) {
+    public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-		return cteManager.with(cteClass, (X) this);
+		return cteManager.with(cteClass, (BuilderType) this);
 	}
 
     @SuppressWarnings("unchecked")
-	public <Y> SelectRecursiveCTECriteriaBuilder<Y, X> withRecursive(Class<Y> cteClass) {
+	public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-		return cteManager.withRecursive(cteClass, (X) this);
+		return cteManager.withRecursive(cteClass, (BuilderType) this);
 	}
 
     @SuppressWarnings("unchecked")
-    public <Y> ReturningModificationCriteriaBuilderFactory<X> withReturning(Class<Y> cteClass) {
+    public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
@@ -262,65 +283,160 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
         
-		return cteManager.withReturning(cteClass, (X) this);
+		return cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
-    public Z union() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn union() {
+        return addSetOperation(SetOperationType.UNION);
     }
 
-    public Z unionAll() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn unionAll() {
+        return addSetOperation(SetOperationType.UNION_ALL);
     }
 
-    public Z intersect() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn intersect() {
+        return addSetOperation(SetOperationType.INTERSECT);
     }
 
-    public Z intersectAll() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn intersectAll() {
+        return addSetOperation(SetOperationType.INTERSECT_ALL);
     }
 
-    public Z except() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn except() {
+        return addSetOperation(SetOperationType.EXCEPT);
     }
 
-    public Z exceptAll() {
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+    public SetReturn exceptAll() {
+        return addSetOperation(SetOperationType.EXCEPT_ALL);
     }
 
-    public X from(Class<?> clazz) {
+    public SubquerySetReturn startUnion() {
+        return addSubquerySetOperation(SetOperationType.UNION);
+    }
+
+    public SubquerySetReturn startUnionAll() {
+        return addSubquerySetOperation(SetOperationType.UNION_ALL);
+    }
+
+    public SubquerySetReturn startIntersect() {
+        return addSubquerySetOperation(SetOperationType.INTERSECT);
+    }
+
+    public SubquerySetReturn startIntersectAll() {
+        return addSubquerySetOperation(SetOperationType.INTERSECT_ALL);
+    }
+
+    public SubquerySetReturn startExcept() {
+        return addSubquerySetOperation(SetOperationType.EXCEPT);
+    }
+
+    public SubquerySetReturn startExceptAll() {
+        return addSubquerySetOperation(SetOperationType.EXCEPT_ALL);
+    }
+
+    public SubquerySetReturn startSet() {
+        return addSubquerySetOperation(null);
+    }
+    
+    private SetReturn addSetOperation(SetOperationType type) {
+        FinalSetReturn finalSetOperationBuilder = this.finalSetOperationBuilder;
+        
+        if (finalSetOperationBuilder == null) {
+            finalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
+            finalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
+        } else {
+            SetOperationManager oldOperationManager = finalSetOperationBuilder.setOperationManager;
+            if (oldOperationManager.getOperator() == null) {
+                oldOperationManager.setOperator(type);
+            } else if (oldOperationManager.getOperator() != type) {
+                // Put existing set operands into a sub builder and use the sub builder as new start
+                FinalSetReturn subFinalSetOperationBuilder = createFinalSetOperationBuilder(oldOperationManager.getOperator(), false);
+                subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(oldOperationManager.getStartQueryBuilder());
+                subFinalSetOperationBuilder.setOperationManager.getSetOperations().addAll(oldOperationManager.getSetOperations());
+                oldOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
+                oldOperationManager.getSetOperations().clear();
+                oldOperationManager.setOperator(type);
+            }
+        }
+        
+        SetReturn setOperand = createSetOperand(finalSetOperationBuilder);
+        finalSetOperationBuilder.setOperationManager.addSetOperation((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) setOperand);
+        return setOperand;
+    }
+    
+    private SubquerySetReturn addSubquerySetOperation(SetOperationType type) {
+        FinalSetReturn parentFinalSetOperationBuilder = this.finalSetOperationBuilder;
+        
+        if (parentFinalSetOperationBuilder == null) {
+            parentFinalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
+            parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
+        } else {
+            SetOperationManager oldParentOperationManager = finalSetOperationBuilder.setOperationManager; 
+
+            if (oldParentOperationManager.getOperator() == null) {
+                oldParentOperationManager.setOperator(type);
+            } else if (oldParentOperationManager.getOperator() != type) {
+                // Put existing set operands into a sub builder and use the sub builder as new start
+                FinalSetReturn subFinalSetOperationBuilder = createFinalSetOperationBuilder(oldParentOperationManager.getOperator(), false);
+                subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(oldParentOperationManager.getStartQueryBuilder());
+                subFinalSetOperationBuilder.setOperationManager.getSetOperations().addAll(oldParentOperationManager.getSetOperations());
+                oldParentOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
+                oldParentOperationManager.getSetOperations().clear();
+                oldParentOperationManager.setOperator(type);
+            }
+        }
+        
+        FinalSetReturn finalSetOperationBuilder = createFinalSetOperationBuilder(type, true);
+        SubquerySetReturn subquerySetOperand = createSubquerySetOperand(finalSetOperationBuilder, parentFinalSetOperationBuilder);
+        finalSetOperationBuilder.setOperationManager.setStartQueryBuilder((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquerySetOperand);
+        
+        if (type != null) {
+            parentFinalSetOperationBuilder.setOperationManager.addSetOperation(finalSetOperationBuilder);
+        } else {
+            parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(finalSetOperationBuilder);
+        }
+        
+        return subquerySetOperand;
+    }
+    
+    protected FinalSetReturn createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        throw new IllegalArgumentException("Set operations aren't supported!");
+    }
+    
+    protected SetReturn createSetOperand(FinalSetReturn baseQueryBuilder) {
+        throw new IllegalArgumentException("Set operations aren't supported!");
+    }
+    
+    protected SubquerySetReturn createSubquerySetOperand(FinalSetReturn baseQueryBuilder, FinalSetReturn resultFinalSetOperationBuilder) {
+        throw new IllegalArgumentException("Set operations aren't supported!");
+    }
+
+    public BuilderType from(Class<?> clazz) {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
 
-    public X from(Class<?> clazz, String alias) {
+    public BuilderType from(Class<?> clazz, String alias) {
         return from(clazz, alias, null);
     }
 
-    public X fromOld(Class<?> clazz) {
+    public BuilderType fromOld(Class<?> clazz) {
         return fromOld(clazz, clazz.getSimpleName().toLowerCase());
     }
 
-    public X fromOld(Class<?> clazz, String alias) {
+    public BuilderType fromOld(Class<?> clazz, String alias) {
         return from(clazz, alias, DbmsModificationState.OLD);
     }
 
-    public X fromNew(Class<?> clazz) {
+    public BuilderType fromNew(Class<?> clazz) {
         return fromNew(clazz, clazz.getSimpleName().toLowerCase());
     }
 
-    public X fromNew(Class<?> clazz, String alias) {
+    public BuilderType fromNew(Class<?> clazz, String alias) {
         return from(clazz, alias, DbmsModificationState.NEW);
     }
 
     @SuppressWarnings("unchecked")
-    private X from(Class<?> clazz, String alias, DbmsModificationState state) {
+    private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
     	if (!fromClassExplicitelySet) {
     		// When from is explicitly called we have to revert the implicit root
     		if (joinManager.getRoots().size() > 0) {
@@ -342,19 +458,19 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     	    versionEntities.put(finalAlias, state);
     	}
     	
-        return (X) this;
+        return (BuilderType) this;
     }
 
 	@SuppressWarnings("unchecked")
-    public X setFirstResult(int firstResult) {
+    public BuilderType setFirstResult(int firstResult) {
     	this.firstResult = firstResult;
-        return (X) this;
+        return (BuilderType) this;
     }
 
 	@SuppressWarnings("unchecked")
-	public X setMaxResults(int maxResults) {
+	public BuilderType setMaxResults(int maxResults) {
     	this.maxResults = maxResults;
-        return (X) this;
+        return (BuilderType) this;
 	}
 
     public int getFirstResult() {
@@ -388,21 +504,21 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     }
 
     @SuppressWarnings("unchecked")
-    public X setParameter(String name, Object value) {
+    public BuilderType setParameter(String name, Object value) {
         parameterManager.satisfyParameter(name, value);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public X setParameter(String name, Calendar value, TemporalType temporalType) {
+    public BuilderType setParameter(String name, Calendar value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public X setParameter(String name, Date value, TemporalType temporalType) {
+    public BuilderType setParameter(String name, Date value, TemporalType temporalType) {
         parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
-        return (X) this;
+        return (BuilderType) this;
     }
 
     public boolean containsParameter(String name) {
@@ -429,73 +545,76 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
      * Select methods
      */
     @SuppressWarnings("unchecked")
-    public X distinct() {
+    public BuilderType distinct() {
         clearCache();
         selectManager.distinct();
-        return (X) this;
+        return (BuilderType) this;
     }
 
-    public CaseWhenStarterBuilder<X> selectCase() {
+    public CaseWhenStarterBuilder<BuilderType> selectCase() {
         return selectCase(null);
     }
 
     /* CASE (WHEN condition THEN scalarExpression)+ ELSE scalarExpression END */
     @SuppressWarnings("unchecked")
-    public CaseWhenStarterBuilder<X> selectCase(String selectAlias) {
+    public CaseWhenStarterBuilder<BuilderType> selectCase(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        return selectManager.selectCase((X) this, selectAlias);
+        return selectManager.selectCase((BuilderType) this, selectAlias);
     }
 
-    public SimpleCaseWhenStarterBuilder<X> selectSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<BuilderType> selectSimpleCase(String expression) {
         return selectSimpleCase(expression, null);
     }
 
     /* CASE caseOperand (WHEN scalarExpression THEN scalarExpression)+ ELSE scalarExpression END */
     @SuppressWarnings("unchecked")
-    public SimpleCaseWhenStarterBuilder<X> selectSimpleCase(String caseOperandExpression, String selectAlias) {
+    public SimpleCaseWhenStarterBuilder<BuilderType> selectSimpleCase(String caseOperandExpression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
-        return selectManager.selectSimpleCase((X) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
+        return selectManager.selectSimpleCase((BuilderType) this, selectAlias, expressionFactory.createCaseOperandExpression(caseOperandExpression));
     }
 
-    public X select(String expression) {
+    public BuilderType select(String expression) {
         return select(expression, null);
     }
 
     @SuppressWarnings("unchecked")
-    public X select(String expression, String selectAlias) {
+    public BuilderType select(String expression, String selectAlias) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
         selectManager.select(expr, selectAlias);
-        resultType = (Class<T>) Tuple.class;
-        return (X) this;
+        if (selectManager.getSelectInfos().size() > 1) {
+            // TODO: don't know if we should override this here
+            resultType = (Class<QueryResultType>) Tuple.class;
+        }
+        return (BuilderType) this;
     }
 
-    public SubqueryInitiator<X> selectSubquery() {
+    public SubqueryInitiator<BuilderType> selectSubquery() {
         return selectSubquery(null);
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> selectSubquery(String selectAlias) {
+    public SubqueryInitiator<BuilderType> selectSubquery(String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((X) this, selectAlias);
+        return selectManager.selectSubquery((BuilderType) this, selectAlias);
     }
 
-    public SubqueryInitiator<X> selectSubquery(String subqueryAlias, String expression) {
+    public SubqueryInitiator<BuilderType> selectSubquery(String subqueryAlias, String expression) {
         return selectSubquery(subqueryAlias, expression, null);
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
+    public SubqueryInitiator<BuilderType> selectSubquery(String subqueryAlias, String expression, String selectAlias) {
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -512,13 +631,13 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((X) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
+        return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
     }
 
     /*
      * Where methods
      */
-    public RestrictionBuilder<X> where(String expression) {
+    public RestrictionBuilder<BuilderType> where(String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return whereManager.restrict(this, expr);
     }
@@ -526,33 +645,33 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     /*
      * Where methods
      */
-    public CaseWhenStarterBuilder<RestrictionBuilder<X>> whereCase() {
+    public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereCase() {
         return whereManager.restrictCase(this);
     }
 
-    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> whereSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> whereSimpleCase(String expression) {
         return whereManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
-    public WhereOrBuilder<X> whereOr() {
+    public WhereOrBuilder<BuilderType> whereOr() {
         return whereManager.whereOr(this);
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> whereExists() {
-        return whereManager.restrictExists((X) this);
+    public SubqueryInitiator<BuilderType> whereExists() {
+        return whereManager.restrictExists((BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> whereNotExists() {
-        return whereManager.restrictNotExists((X) this);
+    public SubqueryInitiator<BuilderType> whereNotExists() {
+        return whereManager.restrictNotExists((BuilderType) this);
     }
 
-    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery() {
+    public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery() {
         return whereManager.restrict(this);
     }
 
-    public SubqueryInitiator<RestrictionBuilder<X>> whereSubquery(String subqueryAlias, String expression) {
+    public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression) {
         return whereManager.restrict(this, subqueryAlias, expression);
     }
 
@@ -560,15 +679,15 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
      * Group by methods
      */
     @SuppressWarnings("unchecked")
-    public X groupBy(String... paths) {
+    public BuilderType groupBy(String... paths) {
         for (String path : paths) {
             groupBy(path);
         }
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public X groupBy(String expression) {
+    public BuilderType groupBy(String expression) {
         clearCache();
         Expression expr;
         if (cbf.isCompatibleModeEnabled()) {
@@ -578,13 +697,13 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     /*
      * Having methods
      */
-    public RestrictionBuilder<X> having(String expression) {
+    public RestrictionBuilder<BuilderType> having(String expression) {
         clearCache();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -593,15 +712,15 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         return havingManager.restrict(this, expr);
     }
 
-    public CaseWhenStarterBuilder<RestrictionBuilder<X>> havingCase() {
+    public CaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingCase() {
         return havingManager.restrictCase(this);
     }
 
-    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<X>> havingSimpleCase(String expression) {
+    public SimpleCaseWhenStarterBuilder<RestrictionBuilder<BuilderType>> havingSimpleCase(String expression) {
         return havingManager.restrictSimpleCase(this, expressionFactory.createCaseOperandExpression(expression));
     }
 
-    public HavingOrBuilder<X> havingOr() {
+    public HavingOrBuilder<BuilderType> havingOr() {
         clearCache();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
@@ -610,29 +729,29 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> havingExists() {
+    public SubqueryInitiator<BuilderType> havingExists() {
         clearCache();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictExists((X) this);
+        return havingManager.restrictExists((BuilderType) this);
     }
 
     @SuppressWarnings("unchecked")
-    public SubqueryInitiator<X> havingNotExists() {
+    public SubqueryInitiator<BuilderType> havingNotExists() {
         clearCache();
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        return havingManager.restrictNotExists((X) this);
+        return havingManager.restrictNotExists((BuilderType) this);
     }
 
-    public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery() {
+    public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery() {
         clearCache();
         return havingManager.restrict(this);
     }
 
-    public SubqueryInitiator<RestrictionBuilder<X>> havingSubquery(String subqueryAlias, String expression) {
+    public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression) {
         clearCache();
         return havingManager.restrict(this, subqueryAlias, expression);
     }
@@ -640,24 +759,24 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     /*
      * Order by methods
      */
-    public X orderByDesc(String expression) {
+    public BuilderType orderByDesc(String expression) {
         return orderBy(expression, false, false);
     }
 
-    public X orderByAsc(String expression) {
+    public BuilderType orderByAsc(String expression) {
         return orderBy(expression, true, false);
     }
 
-    public X orderByDesc(String expression, boolean nullFirst) {
+    public BuilderType orderByDesc(String expression, boolean nullFirst) {
         return orderBy(expression, false, nullFirst);
     }
 
-    public X orderByAsc(String expression, boolean nullFirst) {
+    public BuilderType orderByAsc(String expression, boolean nullFirst) {
         return orderBy(expression, true, nullFirst);
     }
 
     @SuppressWarnings("unchecked")
-    public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+    public BuilderType orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;
         if (cbf.isCompatibleModeEnabled()) {
             expr = expressionFactory.createOrderByExpression(expression);
@@ -665,7 +784,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
             expr = expressionFactory.createSimpleExpression(expression);
         }
         _orderBy(expr, ascending, nullFirst);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     protected void verifyBuilderEnded() {
@@ -684,81 +803,81 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     /*
      * Join methods
      */
-    public X innerJoin(String path, String alias) {
+    public BuilderType innerJoin(String path, String alias) {
         return join(path, alias, JoinType.INNER);
     }
 
-    public X innerJoinDefault(String path, String alias) {
+    public BuilderType innerJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.INNER);
     }
 
-    public X leftJoin(String path, String alias) {
+    public BuilderType leftJoin(String path, String alias) {
         return join(path, alias, JoinType.LEFT);
     }
 
-    public X leftJoinDefault(String path, String alias) {
+    public BuilderType leftJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.LEFT);
     }
 
-    public X rightJoin(String path, String alias) {
+    public BuilderType rightJoin(String path, String alias) {
         return join(path, alias, JoinType.RIGHT);
     }
 
-    public X rightJoinDefault(String path, String alias) {
+    public BuilderType rightJoinDefault(String path, String alias) {
         return joinDefault(path, alias, JoinType.RIGHT);
     }
 
     @SuppressWarnings("unchecked")
-    public X join(String path, String alias, JoinType type) {
+    public BuilderType join(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, false);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public X joinDefault(String path, String alias, JoinType type) {
+    public BuilderType joinDefault(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
         joinManager.join(path, alias, type, false, true);
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public JoinOnBuilder<X> joinOn(String path, String alias, JoinType type) {
+    public JoinOnBuilder<BuilderType> joinOn(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
-        return joinManager.joinOn((X) this, path, alias, type, false);
+        return joinManager.joinOn((BuilderType) this, path, alias, type, false);
     }
 
     @SuppressWarnings("unchecked")
-    public JoinOnBuilder<X> joinDefaultOn(String path, String alias, JoinType type) {
+    public JoinOnBuilder<BuilderType> joinDefaultOn(String path, String alias, JoinType type) {
         clearCache();
         checkJoinPreconditions(path, alias, type);
-        return joinManager.joinOn((X) this, path, alias, type, true);
+        return joinManager.joinOn((BuilderType) this, path, alias, type, true);
     }
 
-    public JoinOnBuilder<X> innerJoinOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> innerJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.INNER);
     }
 
-    public JoinOnBuilder<X> innerJoinDefaultOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> innerJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.INNER);
     }
 
-    public JoinOnBuilder<X> leftJoinOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> leftJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.LEFT);
     }
 
-    public JoinOnBuilder<X> leftJoinDefaultOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> leftJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.LEFT);
     }
 
-    public JoinOnBuilder<X> rightJoinOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> rightJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.RIGHT);
     }
 
-    public JoinOnBuilder<X> rightJoinDefaultOn(String path, String alias) {
+    public JoinOnBuilder<BuilderType> rightJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.RIGHT);
     }
 
@@ -895,7 +1014,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         hasGroupBy = hasGroupBy || Boolean.TRUE.equals(havingManager.acceptVisitor(aggregateDetector));
     }
 
-    public Class<T> getResultType() {
+    public Class<QueryResultType> getResultType() {
         return resultType;
     }
 
@@ -914,23 +1033,23 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         return getCteQueryString0();
     }
 
-    protected TypedQuery<T> getTypedQuery() {
+    protected TypedQuery<QueryResultType> getTypedQuery() {
         // If we have no ctes, there is nothing to do
-        if (cteManager.getCtes().isEmpty()) {
+        if (!isMainQuery || cteManager.getCtes().isEmpty()) {
             return getTypedQuery(getBaseQueryString());
         }
 
-        TypedQuery<T> baseQuery = getTypedQuery(getBaseQueryString());
+        TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryString());
         List<Query> participatingQueries = new ArrayList<Query>();
         
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
         StringBuilder sqlSb = new StringBuilder(sqlQuery);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, withClause, null, null);
+        applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
         String finalQuery = sqlSb.toString();
         participatingQueries.add(baseQuery);
-        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
         // TODO: object builder?
         
         return query;
@@ -945,8 +1064,8 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     }
     
     @SuppressWarnings("unchecked")
-    protected TypedQuery<T> getTypedQuery(String queryString) {
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, selectManager.getExpectedQueryResultType());
+    protected TypedQuery<QueryResultType> getTypedQuery(String queryString) {
+        TypedQuery<QueryResultType> query = (TypedQuery<QueryResultType>) em.createQuery(queryString, selectManager.getExpectedQueryResultType());
         if (firstResult != 0) {
             query.setFirstResult(firstResult);
         }
@@ -962,39 +1081,39 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     }
 
     @SuppressWarnings("unchecked")
-    public KeysetBuilder<X> beforeKeyset() {
+    public KeysetBuilder<BuilderType> beforeKeyset() {
         clearCache();
-        return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.PREVIOUS));
+        return keysetManager.startBuilder(new KeysetBuilderImpl<BuilderType>((BuilderType) this, keysetManager, KeysetMode.PREVIOUS));
     }
 
-    public X beforeKeyset(Serializable... values) {
+    public BuilderType beforeKeyset(Serializable... values) {
         return beforeKeyset(new KeysetImpl(values));
     }
 
     @SuppressWarnings("unchecked")
-    public X beforeKeyset(Keyset keyset) {
+    public BuilderType beforeKeyset(Keyset keyset) {
         clearCache();
         keysetManager.verifyBuilderEnded();
         keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.PREVIOUS));
-        return (X) this;
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
-    public KeysetBuilder<X> afterKeyset() {
+    public KeysetBuilder<BuilderType> afterKeyset() {
         clearCache();
-        return keysetManager.startBuilder(new KeysetBuilderImpl<X>((X) this, keysetManager, KeysetMode.NEXT));
+        return keysetManager.startBuilder(new KeysetBuilderImpl<BuilderType>((BuilderType) this, keysetManager, KeysetMode.NEXT));
     }
 
-    public X afterKeyset(Serializable... values) {
+    public BuilderType afterKeyset(Serializable... values) {
         return afterKeyset(new KeysetImpl(values));
     }
 
     @SuppressWarnings("unchecked")
-    public X afterKeyset(Keyset keyset) {
+    public BuilderType afterKeyset(Keyset keyset) {
         clearCache();
         keysetManager.verifyBuilderEnded();
         keysetManager.setKeysetLink(new SimpleKeysetLink(keyset, KeysetMode.NEXT));
-        return (X) this;
+        return (BuilderType) this;
     }
 
     protected String getQueryString0() {
@@ -1075,7 +1194,9 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     }
 
     protected void getCteQueryString1(StringBuilder sbSelectFrom) {
-        cteManager.buildClause(sbSelectFrom);
+        if (isMainQuery) {
+            cteManager.buildClause(sbSelectFrom);
+        }
         getQueryString1(sbSelectFrom);
     }
 
@@ -1129,7 +1250,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         return null;
     }
     
-    private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
+    private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
         if (query instanceof CustomSQLQuery) {
             // EntityAlias -> CteName
             Map<String, String> cteTableNameRemappings = queryBuilder.getModificationStateRelatedTableNameRemappings(explicitVersionEntities);
@@ -1162,7 +1283,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
     
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
-        if (isSubquery || !cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
+        if (!isMainQuery || isSubquery || !cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
             return null;
         }
 
@@ -1281,7 +1402,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         return sb;
     }
     
-    private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
+    private boolean applyCascadingDelete(Query baseQuery, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, List<Query> participatingQueries, StringBuilder sb, String cteBaseName, boolean firstCte) {
         if (queryBuilder.statementType == DbmsStatementType.DELETE) {
             List<String> cascadingDeleteSqls = cbf.getExtendedQuerySupport().getCascadingDeleteSql(em, baseQuery);
             StringBuilder cascadingDeleteSqlSb = new StringBuilder();
@@ -1303,7 +1424,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
 
                 cascadingDeleteSqlSb.setLength(0);
                 cascadingDeleteSqlSb.append(cascadingDeleteSql);
-                dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, true, null, null, null, null, null);
+                dbmsDialect.appendExtendedSql(cascadingDeleteSqlSb, DbmsStatementType.DELETE, false, true, null, null, null, null, null);
                 sb.append(cascadingDeleteSqlSb);
                 
                 sb.append("\n)");
@@ -1388,7 +1509,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
         return firstResult != 0 || maxResults != Integer.MAX_VALUE;
     }
     
-    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         String limit = null;
         String offset = null;
         
@@ -1399,7 +1520,7 @@ public abstract class AbstractCommonQueryBuilder<T, X, Z> {
             limit = Integer.toString(maxResults);
         }
         
-        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, withClause, limit, offset, returningColumns, includedModificationStates);
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
     }
     
     protected void applyJpaLimit(StringBuilder sbSelectFrom) {

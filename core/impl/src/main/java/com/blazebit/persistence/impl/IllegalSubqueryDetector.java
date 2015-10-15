@@ -61,7 +61,8 @@ public class IllegalSubqueryDetector extends VisitorAdapter {
     public void visit(SubqueryExpression expression) {
         boolean inSubqueryCpy = inSubquery;
         inSubquery = true;
-        SubqueryBuilderImpl<?> builder = (SubqueryBuilderImpl<?>) expression.getSubquery();
+        // TODO: this is ugly
+        AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder = (AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery();
         builder.applyVisitor(this);
 
         if (!inSubqueryCpy) {

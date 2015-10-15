@@ -18,16 +18,13 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
 import com.blazebit.persistence.BaseInsertCriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
@@ -40,8 +37,8 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
 	private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
-	public BaseInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, DbmsStatementType.INSERT, dbmsDialect, clazz, null, registeredFunctions, parameterManager, cteClass, result, listener);
+	public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(mainQuery, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteClass, result, listener);
 		
         if (!jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");

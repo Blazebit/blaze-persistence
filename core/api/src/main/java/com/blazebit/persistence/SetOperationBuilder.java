@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface SetOperationBuilder<X> {
+public interface SetOperationBuilder<X, Y extends StartOngoingSetOperationBuilder<?, ?, ?>> {
 
     /**
      * Connects this query with the union operator with query following after this call. 
@@ -65,4 +65,48 @@ public interface SetOperationBuilder<X> {
      * @return The query builder that should be connected via union
      */
     public X exceptAll();
+    
+    /* Subquery variants */
+
+    /**
+     * Connects this query with the union operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startUnion();
+
+    /**
+     * Connects this query with the union all operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startUnionAll();
+
+    /**
+     * Connects this query with the intersect operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startIntersect();
+
+    /**
+     * Connects this query with the intersect all operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startIntersectAll();
+
+    /**
+     * Connects this query with the except operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startExcept();
+
+    /**
+     * Connects this query with the except all operator with subquery following after this call. 
+     *
+     * @return The query builder that should be connected via union
+     */
+    public Y startExceptAll();
 }

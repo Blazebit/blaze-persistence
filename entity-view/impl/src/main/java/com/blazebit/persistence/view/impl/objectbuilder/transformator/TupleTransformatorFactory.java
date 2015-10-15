@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
@@ -74,7 +74,7 @@ public class TupleTransformatorFactory {
         transformatorLevels.get(currentLevel).tupleTransformerFactories.add(tupleTransformerFactory);
     }
 
-    public TupleTransformator create(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+    public TupleTransformator create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
     	List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
             final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>(thisLevel.tupleTransformerFactories.size());

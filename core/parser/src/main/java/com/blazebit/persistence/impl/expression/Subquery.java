@@ -16,7 +16,6 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import java.util.List;
 
 /**
  *
@@ -26,11 +25,5 @@ import java.util.List;
 public interface Subquery {
 
     public String getQueryString();
-
-    public List<Expression> getSelectExpressions();
-    
-    public int getFirstResult();
-    
-    public int getMaxResults();
 
 }

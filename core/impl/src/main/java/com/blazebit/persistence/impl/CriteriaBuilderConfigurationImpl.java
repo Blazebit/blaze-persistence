@@ -102,20 +102,19 @@ import com.blazebit.persistence.impl.function.groupconcat.H2GroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.MySQLGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.OracleGroupConcatFunction;
 import com.blazebit.persistence.impl.function.groupconcat.PostgreSQLGroupConcatFunction;
-import com.blazebit.persistence.impl.function.limit.DB2LimitFunction;
 import com.blazebit.persistence.impl.function.limit.LimitFunction;
-import com.blazebit.persistence.impl.function.limit.MySQLLimitFunction;
-import com.blazebit.persistence.impl.function.limit.OracleLimitFunction;
 import com.blazebit.persistence.impl.function.pageposition.MySQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
+import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -140,19 +139,23 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         loadFunctions();
     }
 
+    // NOTE: When adding a function here, you might want to also add it in AbstractCoreTest so it is recognized
     private void loadFunctions() {
         JpqlFunctionGroup jpqlFunctionGroup;
         
+        // limit
 
         jpqlFunctionGroup = new JpqlFunctionGroup("limit", false);
-        jpqlFunctionGroup.add(null, new LimitFunction());
-        jpqlFunctionGroup.add("mysql", new MySQLLimitFunction());
-        jpqlFunctionGroup.add("oracle", new OracleLimitFunction());
-        jpqlFunctionGroup.add("db2", new DB2LimitFunction());
+        jpqlFunctionGroup.add(null, new LimitFunction(dbmsDialects.get(null)));
+        jpqlFunctionGroup.add("mysql", new LimitFunction(dbmsDialects.get("mysql")));
+        jpqlFunctionGroup.add("oracle", new LimitFunction(dbmsDialects.get("oracle")));
+        jpqlFunctionGroup.add("db2", new LimitFunction(dbmsDialects.get("db2")));
         jpqlFunctionGroup.add("sybase", null); // Does not support limit
         // The function for SQLServer is hard to implement
         // jpqlFunctions.put("microsoft", new SQLServerLimitFunction());
         registerFunction(jpqlFunctionGroup);
+        
+        // page_position
 
         jpqlFunctionGroup = new JpqlFunctionGroup("page_position", false);
         jpqlFunctionGroup.add(null, new PagePositionFunction());
@@ -161,6 +164,19 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("sybase", new TransactSQLPagePositionFunction());
         jpqlFunctionGroup.add("microsoft", new TransactSQLPagePositionFunction());
         registerFunction(jpqlFunctionGroup);
+        
+        // set operations
+
+        for (SetOperationType setType : SetOperationType.values()) {
+            // Use a prefix because hibernate uses UNION as keyword
+            jpqlFunctionGroup = new JpqlFunctionGroup("set_" + setType.name().toLowerCase(), false);
+            
+            for (Map.Entry<String, DbmsDialect> dbmsDialectEntry : dbmsDialects.entrySet()) {
+                jpqlFunctionGroup.add(dbmsDialectEntry.getKey(), new SetFunction(setType, dbmsDialectEntry.getValue()));
+            }
+            
+            registerFunction(jpqlFunctionGroup);
+        }
 
         // group_concat
         

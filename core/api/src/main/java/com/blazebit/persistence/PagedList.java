@@ -78,7 +78,7 @@ public interface PagedList<T> extends List<T> {
      * Returns the key set page for this paged list which can be used for key set pagination.
      * The key set page may be null if key set pagination wasn't used.
      *
-     * @see QueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
+     * @see FullQueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
      * @return The key set
      */
     public KeysetPage getKeysetPage();

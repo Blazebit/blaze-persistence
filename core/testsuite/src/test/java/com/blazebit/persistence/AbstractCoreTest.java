@@ -75,6 +75,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         		"count_star",
                 "limit",
                 "page_position",
+                "set_union", "set_union_all", "set_intersect", "set_intersect_all", "set_except", "set_except_all",
                 "group_concat",
                 "second_diff", "minute_diff", "hour_diff", "day_diff", "month_diff", "year_diff",
                 "second", "minute", "hour", "day", "month", "year",

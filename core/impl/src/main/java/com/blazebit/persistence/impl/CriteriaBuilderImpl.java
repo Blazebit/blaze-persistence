@@ -15,14 +15,12 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -31,10 +29,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Moritz Becker
  * @since 1.0
  */
-public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuilder<T>> implements CriteriaBuilder<T> {
+public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>, FinalSetOperationCriteriaBuilderImpl<T>> implements CriteriaBuilder<T> {
 	
-    public CriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions);
+    public CriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
+        super(mainQuery, isMainQuery, clazz, alias);
     }
 
     @Override
@@ -57,6 +55,24 @@ public class CriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, CriteriaBuil
     @SuppressWarnings("unchecked")
     public <Y> CriteriaBuilder<Y> selectNew(ObjectBuilder<Y> builder) {
         return (CriteriaBuilder<Y>) super.selectNew(builder);
+    }
+    
+    @Override
+    protected FinalSetOperationCriteriaBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        boolean wasMainQuery = isMainQuery;
+        this.isMainQuery = false;
+        return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested);
+    }
+
+    @Override
+    protected LeafOngoingSetOperationCriteriaBuilder<T> createSetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
+        return new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, finalSetOperationBuilder);
+    }
+
+    @Override
+    protected StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationCriteriaBuilderImpl<T> resultFinalSetOperationBuilder) {
+        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, resultFinalSetOperationBuilder);
+        return new OngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingSetOperationCriteriaBuilder<T>>(mainQuery, false, resultType, finalSetOperationBuilder, leafCb);
     }
 
 }

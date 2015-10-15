@@ -36,7 +36,7 @@ public interface KeysetQueryBuilder<X extends KeysetQueryBuilder<X>> {
     public KeysetBuilder<X> beforeKeyset();
 
     /**
-     * Like {@link QueryBuilder#beforeKeyset()} but maps the reference values by position instead of by expression.
+     * Like {@link FullQueryBuilder#beforeKeyset()} but maps the reference values by position instead of by expression.
      * The order of the reference values has to match the order of the order by expressions.
      * 
      * @param values The reference values
@@ -45,7 +45,7 @@ public interface KeysetQueryBuilder<X extends KeysetQueryBuilder<X>> {
     public X beforeKeyset(Serializable... values);
 
     /**
-     * Like {@link QueryBuilder#beforeKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
+     * Like {@link FullQueryBuilder#beforeKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
      * The order of the tuple values has to match the order of the order by expressions.
      * 
      * @param keyset The reference keyset
@@ -63,7 +63,7 @@ public interface KeysetQueryBuilder<X extends KeysetQueryBuilder<X>> {
     public KeysetBuilder<X> afterKeyset();
 
     /**
-     * Like {@link QueryBuilder#afterKeyset()} but maps the reference values by position instead of by expression.
+     * Like {@link FullQueryBuilder#afterKeyset()} but maps the reference values by position instead of by expression.
      * The order of the reference values has to match the order of the order by expressions.
      * 
      * @param values The reference values
@@ -72,7 +72,7 @@ public interface KeysetQueryBuilder<X extends KeysetQueryBuilder<X>> {
     public X afterKeyset(Serializable... values);
 
     /**
-     * Like {@link QueryBuilder#afterKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
+     * Like {@link FullQueryBuilder#afterKeyset(java.io.Serializable...)} but uses the given keyset as reference values.
      * The order of the tuple values has to match the order of the order by expressions.
      * 
      * @param keyset The reference keyset

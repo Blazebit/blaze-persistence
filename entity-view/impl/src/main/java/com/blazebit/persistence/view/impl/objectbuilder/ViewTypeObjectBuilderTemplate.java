@@ -27,7 +27,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -460,11 +460,11 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
     }
 
-    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         return createObjectBuilder(queryBuilder, optionalParameters, false);
     }
 
-    public ObjectBuilder<T> createObjectBuilder(QueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, boolean isSubview) {
+    public ObjectBuilder<T> createObjectBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, boolean isSubview) {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
 

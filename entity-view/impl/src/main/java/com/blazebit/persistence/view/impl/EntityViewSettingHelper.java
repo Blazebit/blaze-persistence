@@ -24,7 +24,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -49,7 +49,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 public final class EntityViewSettingHelper {
 
     @SuppressWarnings("unchecked")
-    public static <T, Q extends QueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder) {
+    public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
     	applyAttributeFilters(setting, evm, criteriaBuilder, ef);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef);

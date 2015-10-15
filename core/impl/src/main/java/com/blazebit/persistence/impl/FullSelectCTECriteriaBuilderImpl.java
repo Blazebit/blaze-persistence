@@ -15,14 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -30,22 +26,26 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class FullSelectCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, FullSelectCTECriteriaBuilder<T, Y>, SelectCTECriteriaBuilder<T, Y>> implements FullSelectCTECriteriaBuilder<T, Y> {
+public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>, FinalSetOperationCTECriteriaBuilderImpl<Object>> implements FullSelectCTECriteriaBuilder<T> {
 
-	public FullSelectCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
+	public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, T result, CTEBuilderListener listener) {
+		super(mainQuery, clazz, null, result, listener);
 	}
+    
+    @Override
+    protected FinalSetOperationCTECriteriaBuilderImpl<Object> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, resultType, result, operator, nested, listener, this);
+    }
 
-	@Override
-	public Y end() {
-		listener.onBuilderEnded(this);
-		return result;
-	}
-	
-	public CTEInfo createCTEInfo() {
-		List<String> attributes = prepareAndGetAttributes();
-		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
-		return info;
-	}
+    @Override
+    protected LeafOngoingSetOperationCTECriteriaBuilder<T> createSetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
+        return new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, (Class<Object>) resultType, finalSetOperationBuilder);
+    }
+
+    @Override
+    protected StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, FinalSetOperationCTECriteriaBuilderImpl<Object> resultFinalSetOperationBuilder) {
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, (Class<Object>) resultType, resultFinalSetOperationBuilder);
+        return new OngoingSetOperationCTECriteriaBuilderImpl<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>(mainQuery, (Class<Object>) resultType, finalSetOperationBuilder, leafCb);
+    }
 
 }

@@ -29,6 +29,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.InsertCriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
@@ -101,14 +103,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     public boolean isCompatibleModeEnabled() {
         return compatibleModeEnabled;
     }
-
-    @Override
-    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass) {
-        return create(entityManager, resultClass, null);
-    }
-
-    @Override
-    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
+    
+    private MainQuery createMainQuery(EntityManager entityManager) {
         Set<String> registeredFunctions = new HashSet<String>();
         EntityManager em = entityManager;
         String dbms = null;
@@ -126,7 +122,32 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             dialect = dbmsDialects.get(null);
         }
         
-        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(this, em, dialect, resultClass, alias, registeredFunctions);
+        return MainQuery.create(this, em, dialect, registeredFunctions);
+    }
+
+    @Override
+    public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass) {
+        MainQuery mainQuery = createMainQuery(entityManager);
+        FinalSetOperationCriteriaBuilderImpl<T> parentFinalSetOperationBuilder = new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, true, resultClass, null, false);
+        FinalSetOperationCriteriaBuilderImpl<T> subFinalSetOperationBuilder = new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultClass, null, true);
+        
+        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultClass, parentFinalSetOperationBuilder);
+        OngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingSetOperationCriteriaBuilder<T>> cb = new OngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingSetOperationCriteriaBuilder<T>>(mainQuery, false, resultClass, subFinalSetOperationBuilder, leafCb);
+        
+        subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
+        parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
+        return cb;
+    }
+
+    @Override
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass) {
+        return create(entityManager, resultClass, null);
+    }
+
+    @Override
+    public <T> CriteriaBuilder<T> create(EntityManager entityManager, Class<T> resultClass, String alias) {
+        MainQuery mainQuery = createMainQuery(entityManager);
+        CriteriaBuilderImpl<T> cb = new CriteriaBuilderImpl<T>(mainQuery, true, resultClass, alias);
         return cb;
     }
 
@@ -137,24 +158,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
 	@Override
 	public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias) {
-        Set<String> registeredFunctions = new HashSet<String>();
-        EntityManager em = entityManager;
-        String dbms = null;
-        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
-            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
-            em = integrator.registerFunctions(em, functions);
-            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
-            dbms = integrator.getDbms(em);
-        }
-
-        DbmsDialect dialect = dbmsDialects.get(dbms);
-        
-        // Use the default dialect
-        if (dialect == null) {
-            dialect = dbmsDialects.get(null);
-        }
-        
-        DeleteCriteriaBuilderImpl<T> cb = new DeleteCriteriaBuilderImpl<T>(this, em, dialect, deleteClass, alias, registeredFunctions);
+        MainQuery mainQuery = createMainQuery(entityManager);
+        DeleteCriteriaBuilderImpl<T> cb = new DeleteCriteriaBuilderImpl<T>(mainQuery, deleteClass, alias);
         return cb;
 	}
 
@@ -165,47 +170,15 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
 	@Override
 	public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias) {
-        Set<String> registeredFunctions = new HashSet<String>();
-        EntityManager em = entityManager;
-        String dbms = null;
-        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
-            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
-            em = integrator.registerFunctions(em, functions);
-            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
-            dbms = integrator.getDbms(em);
-        }
-
-        DbmsDialect dialect = dbmsDialects.get(dbms);
-        
-        // Use the default dialect
-        if (dialect == null) {
-            dialect = dbmsDialects.get(null);
-        }
-        
-        UpdateCriteriaBuilderImpl<T> cb = new UpdateCriteriaBuilderImpl<T>(this, em, dialect, updateClass, alias, registeredFunctions);
+        MainQuery mainQuery = createMainQuery(entityManager);
+        UpdateCriteriaBuilderImpl<T> cb = new UpdateCriteriaBuilderImpl<T>(mainQuery, updateClass, alias);
         return cb;
 	}
 
 	@Override
 	public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass) {
-        Set<String> registeredFunctions = new HashSet<String>();
-        EntityManager em = entityManager;
-        String dbms = null;
-        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
-            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
-            em = integrator.registerFunctions(em, functions);
-            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
-            dbms = integrator.getDbms(em);
-        }
-
-        DbmsDialect dialect = dbmsDialects.get(dbms);
-        
-        // Use the default dialect
-        if (dialect == null) {
-            dialect = dbmsDialects.get(null);
-        }
-        
-        InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(this, em, dialect, insertClass, registeredFunctions);
+        MainQuery mainQuery = createMainQuery(entityManager);
+        InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(mainQuery, insertClass);
         return cb;
 	}
 

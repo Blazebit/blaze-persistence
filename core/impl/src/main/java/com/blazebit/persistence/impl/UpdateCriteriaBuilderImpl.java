@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -30,12 +25,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
 
-    public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, new ParameterManager(), null, null, null);
-    }
-    
-    public UpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, null, null, null);
+    public UpdateCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias) {
+        super(mainQuery, true, clazz, alias, null, null, null);
     }
 
 }

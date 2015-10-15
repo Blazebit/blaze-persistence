@@ -15,45 +15,35 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Tuple;
-
+import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
  * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.0
  */
 public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
-    private final CriteriaBuilderFactoryImpl cbf;
-    private final EntityManager em;
-    private final DbmsDialect dbmsDialect;
-    private final X result;
-    private final ParameterManager parameterManager;
+    private final MainQuery mainQuery;
     private final AliasManager aliasManager;
-    private final SubqueryBuilderListener<X> listener;
-    private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
-    private final Set<String> registeredFunctions;
+    private final ExpressionFactory expressionFactory;
+    
+    private final X result;
+    private final SubqueryBuilderListener<X> listener;
 
-    public SubqueryInitiatorImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, X result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<X> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
-        this.cbf = cbf;
-        this.em = em;
-        this.dbmsDialect = dbmsDialect;
-        this.result = result;
-        this.parameterManager = parameterManager;
+    public SubqueryInitiatorImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, X result, SubqueryBuilderListener<X> listener) {
+        this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
-        this.listener = listener;
-        this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
-        this.registeredFunctions = registeredFunctions;
+        this.expressionFactory = expressionFactory;
+        this.result = result;
+        this.listener = listener;
     }
 
     @Override
@@ -63,10 +53,16 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(cbf, em, dbmsDialect, Tuple.class, null, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener);
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
+    }
+
+    @Override
+    public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>> startSet() {
+        // TODO implement
+        throw new UnsupportedOperationException("Not yet implemented!");
     }
 
 }

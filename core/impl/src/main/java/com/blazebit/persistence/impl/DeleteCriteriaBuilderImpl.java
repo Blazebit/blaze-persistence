@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.DeleteCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -30,12 +25,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class DeleteCriteriaBuilderImpl<T> extends BaseDeleteCriteriaBuilderImpl<T, DeleteCriteriaBuilder<T>, Void> implements DeleteCriteriaBuilder<T> {
 
-    public DeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, new ParameterManager(), null, null, null);
-    }
-    
-    public DeleteCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager) {
-        super(cbf, em, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, null, null, null);
+    public DeleteCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias) {
+        super(mainQuery, true, clazz, alias, null, null, null);
     }
 
 }

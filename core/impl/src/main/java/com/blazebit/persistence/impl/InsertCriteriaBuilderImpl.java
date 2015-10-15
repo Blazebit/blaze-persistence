@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.InsertCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -30,12 +25,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class InsertCriteriaBuilderImpl<T> extends BaseInsertCriteriaBuilderImpl<T, InsertCriteriaBuilder<T>, Void> implements InsertCriteriaBuilder<T> {
 
-    public InsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions) {
-        super(cbf, em, dbmsDialect, clazz, registeredFunctions, new ParameterManager(), null, null, null);
-    }
-
-    public InsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager) {
-        super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, null, null, null);
+    public InsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz) {
+        super(mainQuery, true, clazz, null, null, null);
     }
 
 }

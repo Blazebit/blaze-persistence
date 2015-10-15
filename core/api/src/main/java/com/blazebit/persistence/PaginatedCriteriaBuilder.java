@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface PaginatedCriteriaBuilder<T> extends QueryBuilder<T, PaginatedCriteriaBuilder<T>> {
+public interface PaginatedCriteriaBuilder<T> extends FullQueryBuilder<T, PaginatedCriteriaBuilder<T>> {
 
     /**
      * Returns the query string that selects the count of elements.

@@ -7,7 +7,7 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
-
+    
     @Override
     public boolean supportsModificationQueryInWithClause() {
         return true;
@@ -19,7 +19,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in PostgreSQL won't be visible to other queries, we need to create the new state if required
         boolean requiresNew = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.NEW);
         
@@ -29,6 +29,10 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             sb.append(" returning *");
             
             sqlSb.setLength(0);
+            
+            if (isSubquery) {
+                sqlSb.append('(');
+            }
             
             if (statementType == DbmsStatementType.DELETE) {
                 appendSelectColumnsFromTable(statementType, sb, sqlSb, returningColumns);
@@ -40,7 +44,15 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 appendSelectColumnsFromTable(statementType, sb, sqlSb, returningColumns);
             }
             
+            if (isSubquery) {
+                sqlSb.append(')');
+            }
+            
             return Collections.singletonMap(includedModificationStates.get(DbmsModificationState.NEW), sb.toString());
+        }
+
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
         }
         
         if (withClause != null) {
@@ -50,7 +62,7 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
         
-        if (isSubquery && returningColumns != null) {
+        if (isEmbedded && returningColumns != null) {
             sqlSb.append(" returning ");
 
             for (int i = 0; i < returningColumns.length; i++) {
@@ -60,6 +72,10 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
                 
                 sqlSb.append(returningColumns[i]);
             }
+        }
+        
+        if (isSubquery) {
+            sqlSb.append(')');
         }
         
         return null;

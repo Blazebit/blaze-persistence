@@ -3,7 +3,7 @@ package com.blazebit.persistence.impl.dialect;
 import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 
 public class MySQLDbmsDialect extends DefaultDbmsDialect {
-
+    
     private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
 
         @Override

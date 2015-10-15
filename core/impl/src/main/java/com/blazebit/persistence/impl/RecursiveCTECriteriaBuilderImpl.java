@@ -1,39 +1,35 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
-public class RecursiveCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectRecursiveCTECriteriaBuilder<T, Y>, SelectCTECriteriaBuilder<T, Y>> implements SelectRecursiveCTECriteriaBuilder<T, Y>, CTEBuilderListener {
+public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectRecursiveCTECriteriaBuilder<Y>, SelectCTECriteriaBuilder<Y>, Void, BaseFinalSetOperationBuilderImpl<Object, ?, ?>> implements SelectRecursiveCTECriteriaBuilder<Y>, CTEBuilderListener {
 
-    protected final Class<T> clazz;
+    protected final Class<Object> clazz;
 	protected boolean done;
 	protected boolean unionAll;
-	protected SelectCTECriteriaBuilderImpl<T, Y, X> recursiveCteBuilder;
+	protected SelectCTECriteriaBuilderImpl<Y> recursiveCteBuilder;
 
-	public RecursiveCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, final CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
+	public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
+		super(mainQuery, clazz, null, result, listener);
 		this.clazz = clazz;
 	}
 
     @Override
-    public SelectCTECriteriaBuilder<T, Y> union() {
+    public SelectCTECriteriaBuilderImpl<Y> union() {
         verifyBuilderEnded();
         unionAll = false;
-        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<T, Y, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, this);
+        recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, clazz, result, this);
         return recursiveCteBuilder;
     }
 
 	@Override
-	public SelectCTECriteriaBuilder<T, Y> unionAll() {
+	public SelectCTECriteriaBuilderImpl<Y> unionAll() {
 		verifyBuilderEnded();
 		unionAll = true;
-		recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<T, Y, X>(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, this);
+		recursiveCteBuilder = new SelectCTECriteriaBuilderImpl<Y>(mainQuery, clazz, result, this);
 		return recursiveCteBuilder;
 	}
 

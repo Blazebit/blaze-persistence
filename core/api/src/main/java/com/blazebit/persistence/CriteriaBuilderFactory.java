@@ -25,6 +25,9 @@ import javax.persistence.EntityManager;
  */
 public interface CriteriaBuilderFactory {
 
+    // TODO: documentation
+    public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
+
     /**
      * Like {@link CriteriaBuilderFactory#create(javax.persistence.EntityManager, java.lang.Class, java.lang.String)} but with the alias
      * equivalent to the camel cased result of what {@link Class#getSimpleName()} of the result class returns.

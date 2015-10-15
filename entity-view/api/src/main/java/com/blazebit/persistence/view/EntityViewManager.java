@@ -19,7 +19,7 @@ import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 
 /**
@@ -66,5 +66,5 @@ public interface EntityViewManager {
      * @return {@linkplain PaginatedCriteriaBuilder} if paginated,
      *         {@linkplain CriteriaBuilder} otherwise
      */
-    public <T, Q extends QueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder);
+    public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder);
 }

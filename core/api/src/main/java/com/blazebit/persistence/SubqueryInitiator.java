@@ -41,4 +41,7 @@ public interface SubqueryInitiator<T> {
      * @return A new subquery builder
      */
     public SubqueryBuilder<T> from(Class<?> entityClass, String alias);
+
+    // TODO: documentation
+    public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet();
 }

@@ -24,10 +24,10 @@ import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.ExpressionUtils;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -421,7 +421,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
 
             @Override
-            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
                 super.onBuilderEnded(builder);
                 onSubqueryBuilderEnded(superExpression);
                 listener.onBuilderEnded(RestrictionBuilderImpl.this);
@@ -439,7 +439,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
 
             @Override
-            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
                 super.onBuilderEnded(builder);
                 onSubqueryBuilderEnded(superExpression);
                 listener.onBuilderEnded(RestrictionBuilderImpl.this);
@@ -475,7 +475,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         onSubqueryBuilderEnded(new SubqueryExpression(builder));
         listener.onBuilderEnded(this);

@@ -26,7 +26,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T> {
 
     private SubqueryInitiator<?> currentSubqueryInitiator;
-    private SubqueryBuilderImpl<?> currentSubqueryBuilder;
+    private SubqueryInternalBuilder<T> currentSubqueryBuilder;
 
     public void verifySubqueryBuilderEnded() {
         if (currentSubqueryInitiator != null) {
@@ -38,7 +38,7 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         if (currentSubqueryBuilder == null) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
         }
@@ -46,7 +46,7 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
     }
 
     @Override
-    public void onBuilderStarted(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderStarted(SubqueryInternalBuilder<T> builder) {
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("There was an attempt to start a builder but a previous builder was not ended.");
         }

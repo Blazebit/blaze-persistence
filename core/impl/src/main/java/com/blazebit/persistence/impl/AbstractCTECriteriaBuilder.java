@@ -20,9 +20,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -31,19 +29,18 @@ import com.blazebit.persistence.BaseCTECriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
  *
  * @param <T> The query result type
- * @param <T> The criteria builder returned after the cte builder
+ * @param <Y> The criteria builder returned after the cte builder
  * @param <X> The concrete builder type
  * @param <Z> The builder type that should be returned on set operations
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteriaBuilder<X>, Z> extends AbstractCommonQueryBuilder<T, X, Z> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBuilder<X>, Z, W, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<Object, ?, ?>> extends AbstractCommonQueryBuilder<Object, X, Z, W, FinalSetReturn> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
 	
 	protected static final Integer EMPTY = Integer.valueOf(-1);
 	protected final Y result;
@@ -51,15 +48,15 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 	protected final String cteName;
 	protected final EntityType<?> cteType;
 	protected final Map<String, Integer> bindingMap;
-	
-    public AbstractCTECriteriaBuilder(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
-        super(cbf, em, DbmsStatementType.SELECT, dbmsDialect, clazz, null, registeredFunctions, parameterManager);
+
+    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, FinalSetReturn finalSetOperationBuilder, Y result, CTEBuilderListener listener) {
+        super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
         this.result = result;
         this.listener = listener;
 
-		this.cteType = em.getMetamodel().entity(clazz);
-		this.cteName = cteType.getName();
-		this.bindingMap = new LinkedHashMap<String, Integer>();
+        this.cteType = em.getMetamodel().entity(clazz);
+        this.cteName = cteType.getName();
+        this.bindingMap = new LinkedHashMap<String, Integer>();
     }
 
     @Override
@@ -78,7 +75,7 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
             List<Query> participatingQueries = Arrays.asList(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            applyExtendedSql(sqlSb, true, null, null, null);
+            applyExtendedSql(sqlSb, false, true, null, null, null);
             String finalSql = sqlSb.toString();
             
             query = new CustomSQLQuery(participatingQueries, query, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, null);
@@ -103,6 +100,17 @@ public abstract class AbstractCTECriteriaBuilder<T, Y, X extends BaseCTECriteria
 		bindingMap.put(cteAttribute, selectManager.getSelectInfos().size());
 		return this;
 	}
+
+    public Y end() {
+        listener.onBuilderEnded(this);
+        return result;
+    }
+    
+    public CTEInfo createCTEInfo() {
+        List<String> attributes = prepareAndGetAttributes();
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
+        return info;
+    }
     
     protected List<String> prepareAndGetAttributes() {
         List<String> attributes = new ArrayList<String>(bindingMap.size());

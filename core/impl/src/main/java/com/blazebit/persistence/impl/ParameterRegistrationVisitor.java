@@ -38,7 +38,7 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
             expression.setName(parameterManager.getParamNameForObject(expression.getValue()));
         } else {
             // Value was not set so we only have an unsatisfied parameter name which we register
-            if (AbstractQueryBuilder.idParamName.equals(expression.getName())) {
+            if (AbstractFullQueryBuilder.idParamName.equals(expression.getName())) {
                 throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
             } else {
                 parameterManager.registerParameterName(expression.getName());

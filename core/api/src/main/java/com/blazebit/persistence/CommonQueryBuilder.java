@@ -95,7 +95,7 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
 
     /**
      * Returns the parameter object representing the parameter with the given name if
-     * {@link QueryBuilder#containsParameter(java.lang.String) } returns true, otherwise null.
+     * {@link FullQueryBuilder#containsParameter(java.lang.String) } returns true, otherwise null.
      *
      * @param name The name of the parameter that should be returned
      * @return The parameter object if the parameter is registered, otherwise null

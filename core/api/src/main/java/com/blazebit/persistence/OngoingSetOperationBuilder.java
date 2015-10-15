@@ -13,19 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.limit;
-
-import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
+package com.blazebit.persistence;
 
 /**
+ * An interface for builders that support set operators.
  *
+ * @param <X> The concrete builder type
+ * @param <Y> The set sub-operation result type
+ * @param <Z> The set nesting start type 
  * @author Christian Beikov
- * @since 1.0.1
+ * @since 1.1.0
  */
-public class MySQLLimitFunction extends LimitFunction {
+public interface OngoingSetOperationBuilder<X, Y, Z extends StartOngoingSetOperationBuilder<?, ?, ?>> extends SetOperationBuilder<X, Z> {
 
-    public MySQLLimitFunction() {
-        super(new MySQLDbmsDialect());
-    }
-
+    /**
+     * Ends the current set operation scope and switches back to the parent query.
+     *
+     * @return The parent query builder
+     */
+    public Y endSet();
 }

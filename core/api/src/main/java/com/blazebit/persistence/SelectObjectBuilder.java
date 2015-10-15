@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface SelectObjectBuilder<T extends QueryBuilder<?, T>> {
+public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
 
     /**
      * Like {@link SelectObjectBuilder#withSubquery(java.lang.String)} but without an alias.

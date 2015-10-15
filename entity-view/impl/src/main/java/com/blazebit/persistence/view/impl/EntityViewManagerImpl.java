@@ -28,7 +28,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -138,7 +138,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public <T, Q extends QueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
+    public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
         return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
     }
 
@@ -235,7 +235,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
@@ -246,11 +246,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (QueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
 
-    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, QueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
+    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
         if (criteriaBuilder.getResultType() != viewType.getEntityClass()) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
@@ -260,7 +260,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(QueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
+    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(FullQueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
     	ExpressionFactory ef = cb.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
     	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);

@@ -30,8 +30,8 @@ import javax.persistence.Tuple;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.QueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -291,7 +291,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    <Y, X extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(X builder, Class<Y> clazz) {
+    <Y, X extends AbstractFullQueryBuilder<?, ?, ?, ?, ?>> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(X builder, Class<Y> clazz) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -305,7 +305,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    <Y, X extends AbstractQueryBuilder<?, ?>> SelectObjectBuilder<? extends QueryBuilder<Y, ?>> selectNew(X builder, Constructor<Y> constructor) {
+    <Y, X extends AbstractFullQueryBuilder<?, ?, ?, ?, ?>> SelectObjectBuilder<? extends FullQueryBuilder<Y, ?>> selectNew(X builder, Constructor<Y> constructor) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -319,7 +319,7 @@ public class SelectManager<T> extends AbstractManager {
     }
 
     @SuppressWarnings("unchecked")
-    <X extends QueryBuilder<?, X>> void selectNew(X builder, ObjectBuilder<?> objectBuilder) {
+    <X extends FullQueryBuilder<?, X>> void selectNew(X builder, ObjectBuilder<?> objectBuilder) {
         if (selectObjectBuilder != null) {
             throw new IllegalStateException("Only one selectNew is allowed");
         }
@@ -356,7 +356,7 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         @Override
-        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
+        public void onBuilderEnded(SubqueryInternalBuilder<X> builder) {
             super.onBuilderEnded(builder);
             select(new SubqueryExpression(builder), selectAlias);
         }
@@ -372,7 +372,7 @@ public class SelectManager<T> extends AbstractManager {
         }
 
         @Override
-        public void onBuilderEnded(SubqueryBuilderImpl<X> builder) {
+        public void onBuilderEnded(SubqueryInternalBuilder<X> builder) {
             super.onBuilderEnded(builder);
             select(superExpression, selectAlias);
         }

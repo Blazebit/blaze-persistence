@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.limit;
-
-import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
+package com.blazebit.persistence;
 
 /**
+ * A builder for criteria queries. This is the entry point for building queries.
  *
+ * @param <T> The query result type
  * @author Christian Beikov
- * @since 1.0.1
+ * @since 1.1.0
  */
-public class DB2LimitFunction extends LimitFunction {
-
-    public DB2LimitFunction() {
-        super(new DB2DbmsDialect());
-    }
+public interface BaseCriteriaBuilder<T, X extends BaseCriteriaBuilder<T, X>> extends BaseQueryBuilder<T, X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X>, CTEBuilder<X> {
 
 }

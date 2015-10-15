@@ -23,7 +23,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface FullSelectCTECriteriaBuilder<T, X> extends SelectBaseCTECriteriaBuilder<FullSelectCTECriteriaBuilder<T, X>>, SetOperationBuilder<SelectCTECriteriaBuilder<T, X>> {
+public interface FullSelectCTECriteriaBuilder<X> extends SelectBaseCTECriteriaBuilder<FullSelectCTECriteriaBuilder<X>>, SetOperationBuilder<LeafOngoingSetOperationCTECriteriaBuilder<X>, StartOngoingSetOperationCTECriteriaBuilder<X, LeafOngoingSetOperationCTECriteriaBuilder<X>>> {
 
     /**
      * Finishes the CTE builder.

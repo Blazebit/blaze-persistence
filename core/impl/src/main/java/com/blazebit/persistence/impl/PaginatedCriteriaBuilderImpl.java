@@ -30,7 +30,7 @@ import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
@@ -46,7 +46,7 @@ import com.blazebit.persistence.spi.QueryTransformer;
  * @author Moritz Becker
  * @since 1.0
  */
-public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, PaginatedCriteriaBuilder<T>> implements PaginatedCriteriaBuilder<T> {
+public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, PaginatedCriteriaBuilder<T>, PaginatedCriteriaBuilderImpl<T>, PaginatedCriteriaBuilderImpl<T>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements PaginatedCriteriaBuilder<T> {
 
     private static final String ENTITY_PAGE_POSITION_PARAMETER_NAME = "_entityPagePositionParameter";
     private static final String PAGE_POSITION_ID_QUERY_ALIAS_PREFIX = "_page_position_";
@@ -68,7 +68,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
     private String cachedCountQueryString;
     private String cachedIdQueryString;
 
-    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, Object entityId, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, Object entityId, int pageSize) {
         super(baseBuilder);
         if (firstRow < 0) {
             throw new IllegalArgumentException("firstRow may not be negative");
@@ -87,7 +87,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractQueryBuilder<T, Pag
         this.keysetManager.setKeysetLink(null);
     }
 
-    public PaginatedCriteriaBuilderImpl(AbstractQueryBuilder<T, ? extends QueryBuilder<T, ?>> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, int firstRow, int pageSize) {
+    public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, int firstRow, int pageSize) {
         super(baseBuilder);
         if (firstRow < 0) {
             throw new IllegalArgumentException("firstRow may not be negative");

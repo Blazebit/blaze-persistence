@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -30,8 +25,8 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class ReturningInsertCriteriaBuilderImpl<T, Y> extends BaseInsertCriteriaBuilderImpl<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, cteClass, result, listener);
+    public ReturningInsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, false, clazz, cteClass, result, listener);
     }
 
     @Override

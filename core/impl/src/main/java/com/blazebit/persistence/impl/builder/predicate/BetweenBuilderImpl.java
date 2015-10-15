@@ -19,9 +19,9 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -84,7 +84,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         SubqueryBuilderListenerImpl<T> superExpressionSubqueryListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
 
             @Override
-            public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
                 super.onBuilderEnded(builder);
                 predicate = new BetweenPredicate(left, start, superExpression, negated);
                 listener.onBuilderEnded(BetweenBuilderImpl.this);
@@ -105,7 +105,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         this.subqueryStartMarker = null;
         this.predicate = new BetweenPredicate(left, start, new SubqueryExpression(builder), negated);

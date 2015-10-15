@@ -16,12 +16,8 @@
 package com.blazebit.persistence.impl;
 
 import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.SelectCTECriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -29,10 +25,10 @@ import com.blazebit.persistence.spi.DbmsDialect;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class SelectCTECriteriaBuilderImpl<T, Y, X> extends AbstractCTECriteriaBuilder<T, Y, SelectCTECriteriaBuilder<T, Y>, SelectCTECriteriaBuilder<T, Y>> implements SelectCTECriteriaBuilder<T, Y> {
+public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void, BaseFinalSetOperationBuilderImpl<Object, ?, ?>> implements SelectCTECriteriaBuilder<Y> {
 
-	public SelectCTECriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, Set<String> registeredFunctions, ParameterManager parameterManager, Y result, CTEBuilderListener listener) {
-		super(cbf, em, dbmsDialect, clazz, registeredFunctions, parameterManager, result, listener);
+	public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener) {
+		super(mainQuery, clazz, null, result, listener);
 	}
 
 	@Override

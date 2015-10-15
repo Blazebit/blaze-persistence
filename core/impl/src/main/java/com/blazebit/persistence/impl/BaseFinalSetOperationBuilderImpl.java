@@ -1,0 +1,180 @@
+/*
+ * Copyright 2015 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.blazebit.persistence.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+
+import com.blazebit.persistence.BaseFinalSetOperationBuilder;
+import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
+
+/**
+ *
+ * @param <T> The query result type
+ * @author Christian Beikov
+ * @since 1.1.0
+ */
+public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>, Y extends BaseFinalSetOperationBuilderImpl<T, X, Y>> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Y> implements BaseFinalSetOperationBuilder<T, X> {
+
+    protected final SetOperationManager setOperationManager;
+
+    public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested) {
+        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null);
+        this.setOperationManager = new SetOperationManager(operator, nested);
+    }
+    
+    private static boolean isNested(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
+            return ((BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder).setOperationManager.isNested();
+        }
+        
+        return false;
+    }
+
+    @Override
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
+        boolean nested = isNested(setOperationManager.getStartQueryBuilder());
+        if (nested) {
+            sbSelectFrom.append('(');
+        }
+        
+        setOperationManager.getStartQueryBuilder().getQueryString1(sbSelectFrom);
+        
+        if (nested) {
+            sbSelectFrom.append(')');
+        }
+        
+        if (setOperationManager.hasSetOperations()) { 
+            String operator = getOperator(setOperationManager.getOperator());
+            for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
+                sbSelectFrom.append("\n");
+                sbSelectFrom.append(operator);
+                sbSelectFrom.append("\n");
+                
+                nested = isNested(setOperand);
+                if (nested) {
+                    sbSelectFrom.append('(');
+                }
+                
+                setOperand.getQueryString1(sbSelectFrom);
+                
+                if (nested) {
+                    sbSelectFrom.append(')');
+                }
+            }
+        }
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    protected TypedQuery<T> getTypedQuery() {
+        TypedQuery<T> leftMostQuery = (TypedQuery<T>) setOperationManager.getStartQueryBuilder().getTypedQuery();
+        
+        TypedQuery<T> baseQuery;
+        String sqlQuery;
+        List<Query> participatingQueries = new ArrayList<Query>();
+        
+        if (leftMostQuery instanceof CustomSQLQuery) {
+            CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
+            List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
+            participatingQueries.addAll(customQueryParticipants);
+            baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
+            sqlQuery = customQuery.getSql();
+        } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
+            CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
+            List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
+            participatingQueries.addAll(customQueryParticipants);
+            baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
+            sqlQuery = customQuery.getSql();
+        } else {
+            baseQuery = leftMostQuery;
+            participatingQueries.add(baseQuery);
+            sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+        }
+        
+        int size = sqlQuery.length() + 10;
+        List<String> setOperands = new ArrayList<String>();
+        setOperands.add(sqlQuery);
+        
+        for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
+            Query q = setOperand.getQuery();
+            String setOperandSql;
+            
+            if (q instanceof CustomSQLQuery) {
+                CustomSQLQuery customQuery = (CustomSQLQuery) q;
+                List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
+                participatingQueries.addAll(customQueryParticipants);
+                
+                setOperandSql = customQuery.getSql();
+            } else if (q instanceof CustomSQLTypedQuery<?>) {
+                CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) q;
+                List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
+                participatingQueries.addAll(customQueryParticipants);
+
+                setOperandSql = customQuery.getSql();
+            } else {
+                setOperandSql = cbf.getExtendedQuerySupport().getSql(em, q);
+                participatingQueries.add(q);
+            }
+            
+            setOperands.add(setOperandSql);
+            size += setOperandSql.length() + 30;
+        }
+
+        StringBuilder sqlSb = new StringBuilder(size);
+
+        dbmsDialect.appendSet(sqlSb, setOperationManager.getOperator(), setOperationManager.isNested(), setOperands);
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+        
+        String finalQuery = sqlSb.toString();
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
+        // TODO: object builder?
+        
+        return query;
+    }
+    
+    protected String getOperator(SetOperationType type) {
+        switch (type) {
+            case UNION: return "UNION";
+            case UNION_ALL: return "UNION ALL";
+            case INTERSECT: return "INTERSECT";
+            case INTERSECT_ALL: return "INTERSECT ALL";
+            case EXCEPT: return "EXCEPT";
+            case EXCEPT_ALL: return "EXCEPT ALL";
+        }
+        
+        return null;
+    }
+
+    @Override
+    public TypedQuery<T> getQuery() {
+        return getTypedQuery();
+    }
+
+    public List<T> getResultList() {
+        return getTypedQuery().getResultList();
+    }
+
+    public T getSingleResult() {
+        return getTypedQuery().getSingleResult();
+    }
+
+}

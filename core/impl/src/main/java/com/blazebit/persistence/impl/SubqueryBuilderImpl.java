@@ -17,17 +17,16 @@ package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
-import javax.persistence.EntityManager;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.Subquery;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -35,13 +34,13 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, SubqueryBuilder<T>> implements SubqueryBuilder<T>, Subquery {
+public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>>, FinalSetOperationSubqueryBuilderImpl<T>> implements SubqueryBuilder<T>, SubqueryInternalBuilder<T> {
 
     private final T result;
     private final SubqueryBuilderListener<T> listener;
 
-    public SubqueryBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<?> fromClazz, String alias, T result, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, SubqueryBuilderListener<T> listener, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
-        super(cbf, em, DbmsStatementType.SELECT, dbmsDialect, Tuple.class, alias, parameterManager, aliasManager, parentJoinManager, expressionFactory, registeredFunctions);
+    public SubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener) {
+        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, null);
         this.result = result;
         this.listener = listener;
     }
@@ -65,5 +64,21 @@ public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, Su
 
     public T getResult() {
         return result;
+    }
+    
+    @Override
+    protected FinalSetOperationSubqueryBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, result, operator, nested, listener, this);
+    }
+
+    @Override
+    protected LeafOngoingSetOperationSubqueryBuilder<T> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+        return new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, finalSetOperationBuilder);
+    }
+
+    @Override
+    protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
+        LeafOngoingSetOperationSubqueryBuilderImpl<T> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, resultFinalSetOperationBuilder);
+        return new OngoingSetOperationSubqueryBuilderImpl<T, LeafOngoingSetOperationSubqueryBuilder<T>>(mainQuery, finalSetOperationBuilder, leafCb);
     }
 }

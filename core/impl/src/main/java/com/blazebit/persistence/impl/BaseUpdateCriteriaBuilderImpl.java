@@ -17,12 +17,8 @@ package com.blazebit.persistence.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-
-import javax.persistence.EntityManager;
 
 import com.blazebit.persistence.BaseUpdateCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
@@ -35,8 +31,8 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 
 	private final Map<String, String> setAttributes = new LinkedHashMap<String, String>();
 
-	public BaseUpdateCriteriaBuilderImpl(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Class<T> clazz, String alias, Set<String> registeredFunctions, ParameterManager parameterManager, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(cbf, em, DbmsStatementType.UPDATE, dbmsDialect, clazz, alias, registeredFunctions, parameterManager, cteClass, result, listener);
+	public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+		super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteClass, result, listener);
 
         // set defaults
         if (alias == null) {

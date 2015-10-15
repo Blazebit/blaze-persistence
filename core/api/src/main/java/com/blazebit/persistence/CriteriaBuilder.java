@@ -22,8 +22,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilder<T> extends QueryBuilder<T, CriteriaBuilder<T>>, GroupByBuilder<CriteriaBuilder<T>>, DistinctBuilder<CriteriaBuilder<T>>, LimitBuilder<CriteriaBuilder<T>>, CTEBuilder<CriteriaBuilder<T>>, SetOperationBuilder<CriteriaBuilder<T>> {
-
+public interface CriteriaBuilder<T> extends FullQueryBuilder<T, CriteriaBuilder<T>>, BaseCriteriaBuilder<T, CriteriaBuilder<T>>, SetOperationBuilder<LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>> {
 
     @Override
     public <Y> SelectObjectBuilder<CriteriaBuilder<Y>> selectNew(Class<Y> clazz);

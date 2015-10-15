@@ -25,9 +25,9 @@ import com.blazebit.persistence.SubqueryInitiator;
  */
 public interface SubqueryBuilderListener<T> {
 
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder);
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder);
 
-    public void onBuilderStarted(SubqueryBuilderImpl<T> builder);
+    public void onBuilderStarted(SubqueryInternalBuilder<T> builder);
 
     public void onInitiatorStarted(SubqueryInitiator<?> initiator);
 }

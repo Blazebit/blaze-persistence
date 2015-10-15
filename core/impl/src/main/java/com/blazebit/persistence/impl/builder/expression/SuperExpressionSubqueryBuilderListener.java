@@ -16,8 +16,8 @@
 package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.impl.ExpressionUtils;
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
@@ -37,7 +37,7 @@ public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderLi
     }
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, new SubqueryExpression(builder));
     }

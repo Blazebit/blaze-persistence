@@ -29,7 +29,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         // since changes in DB2 will be visible to other queries, we need to preserve the old state if required
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
         
@@ -62,6 +62,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             }
             
             sqlSb.setLength(0);
+            
+            if (isSubquery) {
+                sqlSb.append('(');
+            }
+            
             sqlSb.append("select ");
             for (int i = 0; i < returningColumns.length; i++) {
                 if (i != 0) {
@@ -74,11 +79,20 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             sqlSb.append(includedModificationStates.get(DbmsModificationState.OLD));
             
             dbmsModificationStateQueries.put(includedModificationStates.get(DbmsModificationState.OLD), sb.toString());
+            
+            if (isSubquery) {
+                sqlSb.append(')');
+            }
+            
             return dbmsModificationStateQueries;
         }
         
-        boolean needsReturningWrapper = isSubquery && (returningColumns != null || statementType != DbmsStatementType.SELECT);
+        boolean needsReturningWrapper = isEmbedded && (returningColumns != null || statementType != DbmsStatementType.SELECT);
         if (needsReturningWrapper || withClause != null && (statementType != DbmsStatementType.SELECT)) {
+            if (isSubquery) {
+                sqlSb.insert(0, '(');
+            }
+            
             // Insert might need limit
             if (limit != null) {
                 appendLimit(sqlSb, isSubquery, limit, offset);
@@ -98,7 +112,15 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
                 applyQueryReturning(sqlSb, statementType, withClause, columns);
             }
             
+            if (isSubquery) {
+                sqlSb.append(')');
+            }
+            
             return null;
+        }
+
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
         }
         
         // This is a select
@@ -107,6 +129,10 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+        
+        if (isSubquery) {
+            sqlSb.append(')');
         }
         
         return null;

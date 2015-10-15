@@ -18,7 +18,7 @@ package com.blazebit.persistence.view;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.QueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,7 +37,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0
  */
-public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
+public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
 
     private final Class<T> entityViewClass;
     private final String viewConstructorName;
@@ -178,7 +178,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * The id of the entity which should be located on the page returned result.
      * Returns <code>null</code> if no pagination or a absolute first result will be applied.
      *
-     * @see QueryBuilder#page(java.lang.Object, int)
+     * @see FullQueryBuilder#page(java.lang.Object, int)
      * @return The id of the entity which should be located on a page
      */
     public Object getEntityId() {
@@ -189,7 +189,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * The first result that the criteria builder should return. Returns 0 if no
      * pagination will be applied. Returns -1 if an entity id was supplied.
      *
-     * @see QueryBuilder#page(int, int)
+     * @see FullQueryBuilder#page(int, int)
      * @return The first result
      */
     public int getFirstResult() {
@@ -201,7 +201,7 @@ public final class EntityViewSetting<T, Q extends QueryBuilder<T, Q>> {
      * Returns {@linkplain java.lang.Integer#MAX_VALUE} if no pagination will be
      * applied.
      *
-     * @see QueryBuilder#page(int, int)
+     * @see FullQueryBuilder#page(int, int)
      * @return The maximum number of results
      */
     public int getMaxResults() {

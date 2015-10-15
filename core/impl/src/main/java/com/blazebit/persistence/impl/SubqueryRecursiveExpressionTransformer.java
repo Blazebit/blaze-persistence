@@ -34,7 +34,8 @@ public class SubqueryRecursiveExpressionTransformer extends VisitorAdapter imple
 
     @Override
     public void visit(SubqueryExpression expression) {
-        ((SubqueryBuilderImpl<?>) expression.getSubquery()).applyExpressionTransformers();
+        // TODO: this is ugly
+        ((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) expression.getSubquery()).applyExpressionTransformers();
     }
 
 }

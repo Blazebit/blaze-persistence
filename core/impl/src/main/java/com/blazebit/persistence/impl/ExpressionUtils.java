@@ -100,7 +100,7 @@ public class ExpressionUtils {
     }
 
     private static boolean isUnique(Metamodel metamodel, SubqueryExpression expr) {
-        List<Expression> expressions = expr.getSubquery().getSelectExpressions();
+        List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
 
         if (expressions.size() != 1) {
             throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");
@@ -253,7 +253,7 @@ public class ExpressionUtils {
     }
 
     private static boolean isNullable(Metamodel metamodel, SubqueryExpression expr) {
-        List<Expression> expressions = expr.getSubquery().getSelectExpressions();
+        List<Expression> expressions = ((SubqueryInternalBuilder<?>) expr.getSubquery()).getSelectExpressions();
 
         if (expressions.size() != 1) {
             throw new IllegalArgumentException("Can't perform nullability analysis on a subquery with more than one result column!");

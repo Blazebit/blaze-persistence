@@ -15,13 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Set;
-
-import javax.persistence.EntityManager;
-
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
  *
@@ -30,27 +25,19 @@ import com.blazebit.persistence.spi.DbmsDialect;
  */
 public class SubqueryInitiatorFactory {
 
-    private final CriteriaBuilderFactoryImpl cbf;
-    private final EntityManager em;
-    private final DbmsDialect dbmsDialect;
-    private final ParameterManager parameterManager;
+    private final MainQuery mainQuery;
     private final AliasManager aliasManager;
     private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
-    private final Set<String> registeredFunctions;
 
-    public SubqueryInitiatorFactory(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, ParameterManager parameterManager, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, Set<String> registeredFunctions) {
-        this.cbf = cbf;
-        this.em = em;
-        this.dbmsDialect = dbmsDialect;
-        this.parameterManager = parameterManager;
+    public SubqueryInitiatorFactory(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+        this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
         this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
-        this.registeredFunctions = registeredFunctions;
     }
 
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener) {
-        return new SubqueryInitiatorImpl<T>(cbf, em, dbmsDialect, result, parameterManager, aliasManager, parentJoinManager, listener, expressionFactory, registeredFunctions);
+        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener);
     }
 }

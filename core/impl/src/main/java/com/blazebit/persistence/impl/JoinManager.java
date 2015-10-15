@@ -47,7 +47,6 @@ import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -80,14 +79,13 @@ public class JoinManager extends AbstractManager {
     private final Set<JoinNode> renderedJoins = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
 
-    JoinManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, AliasManager aliasManager, Metamodel metamodel, JoinManager parent) {
-        super(queryGenerator, parameterManager);
+    JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
+        super(queryGenerator, mainQuery.parameterManager);
         this.aliasManager = aliasManager;
-        this.metamodel = metamodel;
+        this.metamodel = mainQuery.em.getMetamodel();
         this.parent = parent;
-        this.joinRestrictionKeyword = " " + jpaProvider.getOnClause() + " ";
+        this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
-        this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
     }
 

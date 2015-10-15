@@ -15,8 +15,8 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.impl.SubqueryBuilderImpl;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
 /**
@@ -27,7 +27,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 public class LeftHandsideSubqueryPredicateBuilderListener<T extends LeftHandsideSubqueryPredicateBuilder> extends SubqueryBuilderListenerImpl<T> {
 
     @Override
-    public void onBuilderEnded(SubqueryBuilderImpl<T> builder) {
+    public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         T leftHandsideSubqueryPredicateBuilder = builder.getResult();
         leftHandsideSubqueryPredicateBuilder.setLeftExpression(new SubqueryExpression(builder));

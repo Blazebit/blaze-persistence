@@ -6,7 +6,7 @@ import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
-
+    
     @Override
     public boolean supportsReturningAllGeneratedKeys() {
         return false;
@@ -28,7 +28,11 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+    public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        if (isSubquery) {
+            sqlSb.insert(0, '(');
+        }
+        
         if (isSubquery && returningColumns != null) {
             throw new IllegalArgumentException("Returning columns in a subquery is not possible for this dbms!");
         }
@@ -39,6 +43,10 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
+        }
+        
+        if (isSubquery) {
+            sqlSb.append(')');
         }
         
         return null;
