@@ -28,6 +28,16 @@ public class SubqueryBuilderListenerImpl<T> implements SubqueryBuilderListener<T
     private SubqueryInitiator<?> currentSubqueryInitiator;
     private SubqueryInternalBuilder<T> currentSubqueryBuilder;
 
+    public void onReplaceBuilder(SubqueryInternalBuilder<T> oldBuilder, SubqueryInternalBuilder<T> newBuilder) {
+        if (currentSubqueryBuilder == null) {
+            throw new BuilderChainingException("There was an attempt to replace a builder that was not started or already closed.");
+        }
+        if (currentSubqueryBuilder != oldBuilder) {
+            throw new BuilderChainingException("There was an attempt to replace a builder that was not started or already closed.");
+        }
+        currentSubqueryBuilder = newBuilder;
+    }
+
     public void verifySubqueryBuilderEnded() {
         if (currentSubqueryInitiator != null) {
             throw new BuilderChainingException("An initiator was not ended properly.");

@@ -31,29 +31,63 @@ public class FinalSetOperationCTECriteriaBuilderImpl<T> extends BaseFinalSetOper
     private final T result;
     private final CTEBuilderListener listener;
     private final FullSelectCTECriteriaBuilderImpl<?> initiator;
+    private final CTEBuilderListenerImpl subListener;
     
     public FinalSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, T result, SetOperationType operator, boolean nested, CTEBuilderListener listener, FullSelectCTECriteriaBuilderImpl<?> initiator) {
         super(mainQuery, false, clazz, operator, nested);
         this.result = result;
         this.listener = listener;
         this.initiator = initiator;
+        this.subListener = new CTEBuilderListenerImpl();
     }
     
     public FullSelectCTECriteriaBuilderImpl<?> getInitiator() {
         return initiator;
     }
+    
+    public T getResult() {
+        return result;
+    }
+
+    public CTEBuilderListener getListener() {
+        return listener;
+    }
+
+    public CTEBuilderListenerImpl getSubListener() {
+        return subListener;
+    }
 
     @Override
     public T end() {
+        subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
     }
 
     @Override
     public CTEInfo createCTEInfo() {
-        List<String> attributes = initiator.prepareAndGetAttributes();
-        CTEInfo info = new CTEInfo(initiator.cteName, initiator.cteType, attributes, false, false, this, null);
-        return info;
+        return createCTEInfo(this, this);
+    }
+    
+    private static CTEInfo createCTEInfo(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> target) {
+        if (queryBuilder instanceof FinalSetOperationCTECriteriaBuilderImpl<?>) {
+            FinalSetOperationCTECriteriaBuilderImpl<?> setOperationBuilder = (FinalSetOperationCTECriteriaBuilderImpl<?>) queryBuilder;
+            
+            if (setOperationBuilder.initiator == null) {
+                return createCTEInfo(setOperationBuilder.setOperationManager.getStartQueryBuilder(), target);
+            } else {
+                List<String> attributes = setOperationBuilder.initiator.prepareAndGetAttributes();
+                CTEInfo info = new CTEInfo(setOperationBuilder.initiator.cteName, setOperationBuilder.initiator.cteType, attributes, false, false, target, null);
+                return info;
+            }
+        } else if (queryBuilder instanceof AbstractCTECriteriaBuilder<?, ?, ?, ?, ?>) {
+            AbstractCTECriteriaBuilder<?, ?, ?, ?, ?> cteBuilder = (AbstractCTECriteriaBuilder<?, ?, ?, ?, ?>) queryBuilder;
+            List<String> attributes = cteBuilder.prepareAndGetAttributes();
+            CTEInfo info = new CTEInfo(cteBuilder.cteName, cteBuilder.cteType, attributes, false, false, target, null);
+            return info;
+        }
+        
+        throw new IllegalArgumentException("Unsupported query builder type for creating a CTE info: " + queryBuilder);
     }
 
 }

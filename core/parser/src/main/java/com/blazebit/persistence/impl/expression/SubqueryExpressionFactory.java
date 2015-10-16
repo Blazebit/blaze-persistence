@@ -37,6 +37,7 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
+    // TODO: this class is used in a very unefficient way
     public SubqueryExpressionFactory(Set<String> aggregateFunctions) {
         super(aggregateFunctions);
     }

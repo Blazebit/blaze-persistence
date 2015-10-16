@@ -13,7 +13,7 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
 	protected SelectCTECriteriaBuilderImpl<Y> recursiveCteBuilder;
 
 	public RecursiveCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, Y result, final CTEBuilderListener listener) {
-		super(mainQuery, clazz, null, result, listener);
+		super(mainQuery, clazz, result, listener, null);
 		this.clazz = clazz;
 	}
 
@@ -34,6 +34,11 @@ public class RecursiveCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuild
 	}
 
 	@Override
+    public void onReplaceBuilder(CTEInfoBuilder oldBuilder, CTEInfoBuilder newBuilder) {
+        // Don't care about that
+    }
+
+    @Override
 	public void onBuilderStarted(CTEInfoBuilder builder) {
 		// Don't care about that
 	}

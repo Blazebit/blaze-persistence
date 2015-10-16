@@ -61,8 +61,19 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>> startSet() {
-        // TODO implement
-        throw new UnsupportedOperationException("Not yet implemented!");
+        FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, result, null, false, listener, null);
+        FinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
+        listener.onBuilderStarted(parentFinalSetOperationBuilder);
+        
+        LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
+        OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>> cb = new OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb);
+        
+        subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
+        parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
+        
+        subFinalSetOperationBuilder.getSubListener().onBuilderStarted(cb);
+        parentFinalSetOperationBuilder.getSubListener().onBuilderStarted(leafCb);
+        return cb;
     }
 
 }

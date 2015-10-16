@@ -29,7 +29,7 @@ import com.blazebit.persistence.spi.SetOperationType;
 public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>, FinalSetOperationCTECriteriaBuilderImpl<Object>> implements FullSelectCTECriteriaBuilder<T> {
 
 	public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, T result, CTEBuilderListener listener) {
-		super(mainQuery, clazz, null, result, listener);
+		super(mainQuery, clazz, result, listener, null);
 	}
     
     @Override
@@ -39,13 +39,17 @@ public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuil
 
     @Override
     protected LeafOngoingSetOperationCTECriteriaBuilder<T> createSetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
-        return new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, (Class<Object>) resultType, finalSetOperationBuilder);
+        subListener.verifyBuilderEnded();
+        listener.onReplaceBuilder(this, finalSetOperationBuilder);
+        return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
     protected StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, FinalSetOperationCTECriteriaBuilderImpl<Object> resultFinalSetOperationBuilder) {
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, (Class<Object>) resultType, resultFinalSetOperationBuilder);
-        return new OngoingSetOperationCTECriteriaBuilderImpl<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>(mainQuery, (Class<Object>) resultType, finalSetOperationBuilder, leafCb);
+        subListener.verifyBuilderEnded();
+        listener.onReplaceBuilder(this, resultFinalSetOperationBuilder);
+        LeafOngoingSetOperationCTECriteriaBuilder<T> leafCb = createSetOperand(resultFinalSetOperationBuilder);
+        return createOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

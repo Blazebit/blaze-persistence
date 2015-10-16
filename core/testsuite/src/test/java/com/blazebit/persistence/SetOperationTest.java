@@ -92,10 +92,39 @@ public class SetOperationTest extends AbstractCoreTest {
             throw new RuntimeException(e);
         }
     }
+    
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testPrecedence() {
+        FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
+                    .from(Document.class, "d1")
+                    .select("d1.name")
+                    .where("d1.name").eq("D1")
+                .intersect()
+                    .from(Document.class, "d2")
+                    .select("d2.name")
+                    .where("d2.name").notEq("D2")
+                .except()
+                    .from(Document.class, "d3")
+                    .select("d3.name")
+                    .where("d3.name").eq("D3")
+                .endSet();
+        String expected = ""
+                + "SELECT d1.name FROM Document d1 WHERE d1.name = :param_0\n"
+                + "INTERSECT\n"
+                + "SELECT d2.name FROM Document d2 WHERE d2.name <> :param_1\n"
+                + "EXCEPT\n"
+                + "SELECT d3.name FROM Document d3 WHERE d3.name = :param_2";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<String> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D1", resultList.get(0));
+    }
 	
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testUnionAll(){
+    public void testUnionAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
                 .select("d1")
@@ -119,7 +148,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testUnion(){
+    public void testUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
                 .select("d1")
@@ -144,7 +173,7 @@ public class SetOperationTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL support EXCEPT ALL
     @Test
     @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testExceptAll(){
+    public void testExceptAll() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
                 .select("d1")
@@ -167,7 +196,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testExcept(){
+    public void testExcept() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
                 .select("d1")
@@ -191,7 +220,7 @@ public class SetOperationTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL support INTERSECT ALL
     @Test
     @Category({ NoH2.class, NoDB2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testIntersectAll(){
+    public void testIntersectAll() {
         FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "d1")
                 .select("SUBSTRING(d1.name, 1, 1)")
@@ -215,7 +244,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testIntersect(){
+    public void testIntersect() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d1")
                 .select("d1")
@@ -240,7 +269,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testNestedIntersectWithUnion(){
+    public void testNestedIntersectWithUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
                     .from(Document.class, "d1")
@@ -272,7 +301,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testIntersectWithNestedUnion(){
+    public void testIntersectWithNestedUnion() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
                 .from(Document.class, "d1")
@@ -303,7 +332,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testRightNesting(){
+    public void testRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class)
                 .from(Document.class, "d1")
@@ -353,7 +382,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testLeftNesting(){
+    public void testLeftNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
                 .startSet()
@@ -400,7 +429,7 @@ public class SetOperationTest extends AbstractCoreTest {
     
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testLeftRightNesting(){
+    public void testLeftRightNesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
             .startSet(em, Document.class)
                 .startSet()
@@ -459,7 +488,7 @@ public class SetOperationTest extends AbstractCoreTest {
     // NOTE: H2 does not seem to support set operations in CTEs properly
     @Test
     @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testCTENesting(){
+    public void testCTENesting() {
         FinalSetOperationCriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
                 .select("d")
@@ -528,10 +557,75 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
     }
+    
+    // NOTE: H2 does not seem to support set operations in CTEs properly
+    @Test
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testCTELeftNesting() {
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class)
+                    .withStartSet(IdHolderCTE.class)
+                        .startSet()
+                            .from(Document.class, "d1")
+                            .bind("id").select("d1.id")
+                            .where("d1.name").eq("D1")
+                        .except()
+                            .from(Document.class, "d2")
+                            .bind("id").select("d2.id")
+                            .where("d2.name").eq("D2")
+                        .endSet()
+                        .startExcept()
+                            .from(Document.class, "d3")
+                            .bind("id").select("d3.id")
+                            .where("d3.name").eq("D3")
+                        .union()
+                            .from(Document.class, "d4")
+                            .bind("id").select("d4.id")
+                            .where("d4.name").eq("D4")
+                        .endSet()
+                    .endSet()
+                    .startExcept()
+                        .startSet()
+                            .from(Document.class, "d5")
+                            .bind("id").select("d5.id")
+                            .where("d5.name").eq("D5")
+                        .union()
+                            .from(Document.class, "d6")
+                            .bind("id").select("d6.id")
+                            .where("d6.name").eq("D6")
+                        .endSet()
+                    .endSet()
+                .endSet()
+                .end()
+                .from(Document.class, "d")
+                .from(IdHolderCTE.class, "idHolder")
+                .select("d")
+                .where("d.id").eqExpression("idHolder.id");
+        String expected = ""
+                + "WITH IdHolderCTE(id) AS(\n" +
+                    "((SELECT d1.id FROM Document d1 WHERE d1.name = :param_0\n"
+                    + "EXCEPT\n"
+                    + "SELECT d2.id FROM Document d2 WHERE d2.name = :param_1)\n"
+                    + "EXCEPT\n"
+                    + "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2\n"
+                    + "UNION\n"
+                    + "SELECT d4.id FROM Document d4 WHERE d4.name = :param_3))\n"
+                    + "EXCEPT\n"
+                    + "((SELECT d5.id FROM Document d5 WHERE d5.name = :param_4\n"
+                    + "UNION\n"
+                    + "SELECT d6.id FROM Document d6 WHERE d6.name = :param_5))\n"
+                + ")\n"
+                + "SELECT d FROM Document d, IdHolderCTE idHolder WHERE d.id = idHolder.id";
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D1", resultList.get(0).getName());
+    }
+
+    /* Subquery set operations */
 
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testSubqueryNesting(){
+    public void testSubqueryNesting() {
         CriteriaBuilder<Document> cb = cbf
                 .create(em, Document.class, "d")
                 .select("d")
@@ -574,7 +668,7 @@ public class SetOperationTest extends AbstractCoreTest {
                                     "SET_INTERSECT",
                                     function(
                                         "SET_UNION",
-                                        function("SET_EXCEPT", "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2)"),
+                                        "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2)",
                                         "(SELECT d4.id FROM Document d4 WHERE d4.name = :param_3)"
                                     ),
                                     "(SELECT d5.id FROM Document d5 WHERE d5.name = :param_4)"
@@ -588,33 +682,74 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
     }
-    
+
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testPrecedence(){
-        FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
-                    .from(Document.class, "d1")
-                    .select("d1.name")
-                    .where("d1.name").eq("D1")
-                .intersect()
-                    .from(Document.class, "d2")
-                    .select("d2.name")
-                    .where("d2.name").notEq("D2")
-                .except()
-                    .from(Document.class, "d3")
-                    .select("d3.name")
-                    .where("d3.name").eq("D3")
-                .endSet();
+    public void testSubqueryLeftNesting() {
+        CriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class, "d")
+                .select("d")
+                .where("d.id").in()
+                    .startSet()
+                        .startSet()
+                            .from(Document.class, "d1")
+                            .select("d1.id")
+                            .where("d1.name").eq("D1")
+                        .except()
+                            .from(Document.class, "d2")
+                            .select("d2.id")
+                            .where("d2.name").eq("D2")
+                        .endSet()
+                        .startExcept()
+                            .from(Document.class, "d3")
+                            .select("d3.id")
+                            .where("d3.name").eq("D3")
+                        .union()
+                            .from(Document.class, "d4")
+                            .select("d4.id")
+                            .where("d4.name").eq("D4")
+                        .endSet()
+                    .endSet()
+                    .startExcept()
+                        .startSet()
+                            .from(Document.class, "d5")
+                            .select("d5.id")
+                            .where("d5.name").eq("D5")
+                        .union()
+                            .from(Document.class, "d6")
+                            .select("d6.id")
+                            .where("d6.name").eq("D6")
+                        .endSet()
+                    .endSet()
+                .endSet()
+                .end();
         String expected = ""
-                + "SELECT d1.name FROM Document d1 WHERE d1.name = :param_0\n"
-                + "INTERSECT\n"
-                + "SELECT d2.name FROM Document d2 WHERE d2.name <> :param_1\n"
-                + "EXCEPT\n"
-                + "SELECT d3.name FROM Document d3 WHERE d3.name = :param_2";
-        
+                + "SELECT d FROM Document d WHERE d.id IN (" +
+                    function(
+                         "SET_EXCEPT",
+                        function(
+                             "SET_EXCEPT",
+                            function(
+                                 "SET_EXCEPT",
+                                 "(SELECT d1.id FROM Document d1 WHERE d1.name = :param_0)",
+                                 "(SELECT d2.id FROM Document d2 WHERE d2.name = :param_1)"
+                            ),
+                            function(
+                                 "SET_UNION",
+                                 "(SELECT d3.id FROM Document d3 WHERE d3.name = :param_2)",
+                                 "(SELECT d4.id FROM Document d4 WHERE d4.name = :param_3)"
+                            )
+                        ),
+                        function(
+                             "SET_UNION",
+                             "(SELECT d5.id FROM Document d5 WHERE d5.name = :param_4)",
+                             "(SELECT d6.id FROM Document d6 WHERE d6.name = :param_5)"
+                        )
+                    )
+                + ")";
         assertEquals(expected, cb.getQueryString());
-        List<String> resultList = cb.getResultList();
+        List<Document> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
-        assertEquals("D1", resultList.get(0));
+        assertEquals("D1", resultList.get(0).getName());
     }
 }

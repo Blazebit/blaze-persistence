@@ -48,8 +48,9 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 	protected final String cteName;
 	protected final EntityType<?> cteType;
 	protected final Map<String, Integer> bindingMap;
+	protected final CTEBuilderListenerImpl subListener;
 
-    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, FinalSetReturn finalSetOperationBuilder, Y result, CTEBuilderListener listener) {
+    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener, FinalSetReturn finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
         this.result = result;
         this.listener = listener;
@@ -57,6 +58,11 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         this.cteType = em.getMetamodel().entity(clazz);
         this.cteName = cteType.getName();
         this.bindingMap = new LinkedHashMap<String, Integer>();
+        this.subListener = new CTEBuilderListenerImpl();
+    }
+    
+    public CTEBuilderListenerImpl getSubListener() {
+        return subListener;
     }
 
     @Override
@@ -130,19 +136,21 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             }
         }
         
-//        List<SelectInfo> originalSelectInfos = new ArrayList<SelectInfo>(selectManager.getSelectInfos());
-//        List<SelectInfo> newSelectInfos = selectManager.getSelectInfos();
-//        newSelectInfos.clear();
-//        
-//        for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
-//            Integer newPosition = attributes.size();
-//            SelectInfo selectInfo = originalSelectInfos.get(bindingEntry.getValue());
-//            
-//            newSelectInfos.add(selectInfo);
-//            bindingEntry.setValue(newPosition);
-//        }
-        
         return attributes;
+    }
+
+    protected LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> createLeaf(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
+        CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, resultType, result, newListener, finalSetOperationBuilder);
+        newListener.onBuilderStarted(next);
+        return next;
+    }
+
+    protected <T> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, T endSetResult) {
+        CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, resultType, result, newListener, finalSetOperationBuilder, endSetResult);
+        newListener.onBuilderStarted(next);
+        return next;
     }
 
 }

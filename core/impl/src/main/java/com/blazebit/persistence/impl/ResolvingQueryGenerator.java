@@ -116,6 +116,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             BaseFinalSetOperationBuilderImpl<?, ?, ?> operationBuilder = (BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder;
             SetOperationManager operationManager = operationBuilder.setOperationManager;
             
+            if (operationManager.getOperator() == null || !operationManager.hasSetOperations()) {
+                return asExpression(operationManager.getStartQueryBuilder());
+            }
+            
             List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
             StringBuilder nameSb = new StringBuilder();
             nameSb.append('\'');

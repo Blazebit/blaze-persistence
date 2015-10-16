@@ -15,11 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
-import javax.persistence.Tuple;
-
 import com.blazebit.persistence.OngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
-import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -28,15 +26,13 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends AbstractCommonQueryBuilder<Tuple, OngoingSetOperationSubqueryBuilder<T, Z>, OngoingSetOperationSubqueryBuilder<T, Z>, StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>>, FinalSetOperationSubqueryBuilderImpl<Tuple>> implements StartOngoingSetOperationSubqueryBuilder<T, Z> {
+public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBuilderImpl<T, OngoingSetOperationSubqueryBuilder<T, Z>, OngoingSetOperationSubqueryBuilder<T, Z>, StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>>> implements StartOngoingSetOperationSubqueryBuilder<T, Z> {
 	
-    private final Z result;
+    private final Z endSetResult;
     
-    // Very tricky for subquery, thank god we have raw types
-    @SuppressWarnings("unchecked")
-    public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z result) {
-        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, (FinalSetOperationSubqueryBuilderImpl<Tuple>) finalSetOperationBuilder);
-        this.result = result;
+    public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
+        super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
+        this.endSetResult = endSetResult;
     }
 
     @Override
@@ -51,32 +47,31 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends AbstractCommon
 
     @Override
     public Z endSet() {
-        return result;
+        subListener.verifySubqueryBuilderEnded();
+        listener.onBuilderEnded(this);
+        return endSetResult;
     }
     
     @Override
-    @SuppressWarnings("unchecked")
-    protected FinalSetOperationSubqueryBuilderImpl<Tuple> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+    protected FinalSetOperationSubqueryBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        // TODO: not quite sure about the listener passing
         FinalSetOperationSubqueryBuilderImpl<T> currentSetOperationBuilder = (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder;
-        return (FinalSetOperationSubqueryBuilderImpl<Tuple>) new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, currentSetOperationBuilder.getResult(), operator, nested, currentSetOperationBuilder.getListener(), currentSetOperationBuilder.getInitiator());
+        return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, currentSetOperationBuilder.getResult(), operator, nested, currentSetOperationBuilder.getListener(), currentSetOperationBuilder.getInitiator());
     }
 
     @Override
-    public StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> startSet() {
-        return (StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>>) super.startSet();
+    protected OngoingSetOperationSubqueryBuilderImpl<T, Z> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+        subListener.verifySubqueryBuilderEnded();
+        listener.onBuilderEnded(this);
+        return createOngoing(finalSetOperationBuilder, endSetResult);
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    protected OngoingSetOperationSubqueryBuilder<T, Z> createSetOperand(FinalSetOperationSubqueryBuilderImpl<Tuple> finalSetOperationBuilder) {
-        return new OngoingSetOperationSubqueryBuilderImpl<T, Z>(mainQuery, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, result);
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    protected StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<Tuple> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<Tuple> resultFinalSetOperationBuilder) {
-        OngoingSetOperationSubqueryBuilderImpl<T, Z> resultCb = new OngoingSetOperationSubqueryBuilderImpl<T, Z>(mainQuery, (FinalSetOperationSubqueryBuilderImpl<T>) resultFinalSetOperationBuilder, result);
-        return new OngoingSetOperationSubqueryBuilderImpl<T, OngoingSetOperationSubqueryBuilder<T,Z>>(mainQuery, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, resultCb);
+    protected StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
+        subListener.verifySubqueryBuilderEnded();
+        listener.onBuilderEnded(this);
+        OngoingSetOperationSubqueryBuilder<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);
+        return createOngoing(finalSetOperationBuilder, resultCb);
     }
 
 }

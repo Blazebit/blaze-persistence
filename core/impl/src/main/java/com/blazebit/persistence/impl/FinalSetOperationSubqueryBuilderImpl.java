@@ -34,6 +34,8 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
     private final T result;
     private final SubqueryBuilderListener<T> listener;
     private final SubqueryBuilderImpl<?> initiator;
+
+    private final SubqueryBuilderListenerImpl<T> subListener;
     
     @SuppressWarnings("unchecked")
     public FinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
@@ -41,19 +43,24 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
         this.result = result;
         this.listener = listener;
         this.initiator = initiator;
+        this.subListener = new SubqueryBuilderListenerImpl<T>();
     }
 
     public SubqueryBuilderListener<T> getListener() {
         return listener;
     }
     
+    public SubqueryBuilderListener<T> getSubListener() {
+        return subListener;
+    }
+
     public SubqueryBuilderImpl<?> getInitiator() {
         return initiator;
     }
 
-
     @Override
     public T end() {
+        subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
     }
@@ -65,7 +72,24 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
 
     @Override
     public List<Expression> getSelectExpressions() {
-        return initiator.getSelectExpressions();
+        return getSelectExpressions(this);
     }
 
+    private static List<Expression> getSelectExpressions(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryBuilder instanceof FinalSetOperationSubqueryBuilderImpl<?>) {
+            FinalSetOperationSubqueryBuilderImpl<?> setOperationBuilder = (FinalSetOperationSubqueryBuilderImpl<?>) queryBuilder;
+            
+            if (setOperationBuilder.initiator == null) {
+                return getSelectExpressions(setOperationBuilder.setOperationManager.getStartQueryBuilder());
+            } else {
+                return setOperationBuilder.initiator.getSelectExpressions();
+            }
+        } else if (queryBuilder instanceof BaseSubqueryBuilderImpl<?, ?, ?, ?>) {
+            BaseSubqueryBuilderImpl<?, ?, ?, ?> subqueryBuilder = (BaseSubqueryBuilderImpl<?, ?, ?, ?>) queryBuilder;
+            return subqueryBuilder.getSelectExpressions();
+        }
+        
+        throw new IllegalArgumentException("Unsupported query builder type for creating select expressions: " + queryBuilder);
+    }
+    
 }

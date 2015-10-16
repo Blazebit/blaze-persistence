@@ -33,6 +33,11 @@ public class SubqueryAndExpressionBuilderListener<T> implements SubqueryBuilderL
     private final ExpressionBuilderEndedListenerImpl expressionBuilderEndedListener = new ExpressionBuilderEndedListenerImpl();
 
     @Override
+    public void onReplaceBuilder(SubqueryInternalBuilder<T> oldBuilder, SubqueryInternalBuilder<T> newBuilder) {
+        subqueryBuilderListener.onReplaceBuilder(oldBuilder, newBuilder);
+    }
+
+    @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         subqueryBuilderListener.onBuilderEnded(builder);
     }

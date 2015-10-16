@@ -22,6 +22,8 @@ package com.blazebit.persistence.impl;
  */
 public interface CTEBuilderListener {
 
+    public void onReplaceBuilder(CTEInfoBuilder oldBuilder, CTEInfoBuilder newBuilder);
+
     public void onBuilderEnded(CTEInfoBuilder builder);
 
     public void onBuilderStarted(CTEInfoBuilder builder);

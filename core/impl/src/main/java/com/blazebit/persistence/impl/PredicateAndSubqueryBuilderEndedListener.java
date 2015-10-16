@@ -36,6 +36,11 @@ public class PredicateAndSubqueryBuilderEndedListener<T> implements PredicateBui
     }
 
     @Override
+    public void onReplaceBuilder(SubqueryInternalBuilder<T> oldBuilder, SubqueryInternalBuilder<T> newBuilder) {
+        subqueryBuilderListener.onReplaceBuilder(oldBuilder, newBuilder);
+    }
+
+    @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         subqueryBuilderListener.onBuilderEnded(builder);
     }

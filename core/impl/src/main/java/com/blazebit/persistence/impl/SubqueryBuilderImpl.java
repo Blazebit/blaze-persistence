@@ -18,14 +18,11 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.Tuple;
-
 import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -34,15 +31,10 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>>, FinalSetOperationSubqueryBuilderImpl<T>> implements SubqueryBuilder<T>, SubqueryInternalBuilder<T> {
-
-    private final T result;
-    private final SubqueryBuilderListener<T> listener;
+public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryBuilder<T>, LeafOngoingSetOperationSubqueryBuilder<T>, StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>>> implements SubqueryBuilder<T>, SubqueryInternalBuilder<T> {
 
     public SubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener) {
-        super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, null);
-        this.result = result;
-        this.listener = listener;
+        super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, null);
     }
 
     @Override
@@ -73,12 +65,16 @@ public class SubqueryBuilderImpl<T> extends AbstractCommonQueryBuilder<Tuple, Su
 
     @Override
     protected LeafOngoingSetOperationSubqueryBuilder<T> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
-        return new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, finalSetOperationBuilder);
+        subListener.verifySubqueryBuilderEnded();
+        listener.onReplaceBuilder(this, finalSetOperationBuilder);
+        return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
     protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
-        LeafOngoingSetOperationSubqueryBuilderImpl<T> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, resultFinalSetOperationBuilder);
-        return new OngoingSetOperationSubqueryBuilderImpl<T, LeafOngoingSetOperationSubqueryBuilder<T>>(mainQuery, finalSetOperationBuilder, leafCb);
+        subListener.verifySubqueryBuilderEnded();
+        listener.onReplaceBuilder(this, resultFinalSetOperationBuilder);
+        LeafOngoingSetOperationSubqueryBuilder<T> leafCb = createSetOperand(resultFinalSetOperationBuilder);
+        return createOngoing(finalSetOperationBuilder, leafCb);
     }
 }

@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
 
 /**
  *
@@ -97,6 +99,24 @@ public class CTEManager extends CTEBuilderListenerImpl {
         }
         
         sb.append("\n");
+    }
+
+    @SuppressWarnings("unchecked")
+    <Y> StartOngoingSetOperationCTECriteriaBuilder<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>> withStartSet(Class<?> cteClass, Y result) {
+        FinalSetOperationCTECriteriaBuilderImpl<Y> parentFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, result, null, false, this, null);
+        FinalSetOperationCTECriteriaBuilderImpl<Y> subFinalSetOperationBuilder = new FinalSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Y>) cteClass, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);
+        this.onBuilderStarted(parentFinalSetOperationBuilder);
+        
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, (Class<Object>) cteClass, result, parentFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) parentFinalSetOperationBuilder);
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>> cb = new OngoingSetOperationCTECriteriaBuilderImpl<Y, LeafOngoingSetOperationCTECriteriaBuilder<Y>>(mainQuery, (Class<Object>) cteClass, result, subFinalSetOperationBuilder.getSubListener(), (FinalSetOperationCTECriteriaBuilderImpl<Object>) subFinalSetOperationBuilder, leafCb);
+        
+        subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
+        parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);
+
+        subFinalSetOperationBuilder.getSubListener().onBuilderStarted(cb);
+        parentFinalSetOperationBuilder.getSubListener().onBuilderStarted(leafCb);
+        
+        return cb;
     }
 
     @SuppressWarnings("unchecked")

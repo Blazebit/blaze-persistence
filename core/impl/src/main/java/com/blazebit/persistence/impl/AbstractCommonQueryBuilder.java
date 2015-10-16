@@ -246,14 +246,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return cbf;
     }
 
+    @SuppressWarnings("unchecked")
     public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-        // TODO: implement
-        throw new UnsupportedOperationException("Not yet implemeneted!");
-//        return cteManager.with(cteClass, (BuilderType) this);
+        return cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
 	@SuppressWarnings("unchecked")

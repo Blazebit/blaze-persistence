@@ -28,7 +28,7 @@ import com.blazebit.persistence.SelectCTECriteriaBuilder;
 public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void, BaseFinalSetOperationBuilderImpl<Object, ?, ?>> implements SelectCTECriteriaBuilder<Y> {
 
 	public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener) {
-		super(mainQuery, clazz, null, result, listener);
+		super(mainQuery, clazz, result, listener, null);
 	}
 
 	@Override

@@ -28,31 +28,39 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>, FinalSetOperationCTECriteriaBuilderImpl<Object>> implements LeafOngoingSetOperationCTECriteriaBuilder<T> {
 
-    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
-        super(mainQuery, clazz, finalSetOperationBuilder, null, null);
+    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, T result, CTEBuilderListener listener, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
+        super(mainQuery, clazz, result, listener, finalSetOperationBuilder);
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public FinalSetOperationCTECriteriaBuilder<T> endSet() {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
         return (FinalSetOperationCTECriteriaBuilder<T>) finalSetOperationBuilder;
     }
     
     @Override
     @SuppressWarnings("unchecked")
     protected FinalSetOperationCTECriteriaBuilderImpl<Object> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, resultType, result, operator, nested, listener, ((FinalSetOperationCTECriteriaBuilderImpl<T>) finalSetOperationBuilder).getInitiator());
+        // TODO: not quite sure about the listener passing
+        FinalSetOperationCTECriteriaBuilderImpl<T> currentSetOperationBuilder = (FinalSetOperationCTECriteriaBuilderImpl<T>) finalSetOperationBuilder;
+        return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, resultType, result, operator, nested, currentSetOperationBuilder.getListener(), currentSetOperationBuilder.getInitiator());
     }
 
     @Override
     protected LeafOngoingSetOperationCTECriteriaBuilder<T> createSetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
-        return new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, resultType, finalSetOperationBuilder);
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
     protected StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, FinalSetOperationCTECriteriaBuilderImpl<Object> resultFinalSetOperationBuilder) {
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCTECriteriaBuilderImpl<T>(mainQuery, resultType, resultFinalSetOperationBuilder);
-        return new OngoingSetOperationCTECriteriaBuilderImpl<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>(mainQuery, resultType, finalSetOperationBuilder, leafCb);
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        LeafOngoingSetOperationCTECriteriaBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
+        return createOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }
