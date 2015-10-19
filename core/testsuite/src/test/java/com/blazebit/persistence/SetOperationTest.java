@@ -843,9 +843,10 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
     }
-    
+
+    // NOTE: H2 does not seem to support set operations in subqueries with limit properly
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testSubqueryOrderByLimit() {
         CriteriaBuilder<String> cb = cbf.create(em, String.class)
                 .from(Document.class, "doc")
