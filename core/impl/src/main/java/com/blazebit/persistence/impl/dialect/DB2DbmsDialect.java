@@ -1,6 +1,6 @@
 package com.blazebit.persistence.impl.dialect;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         boolean requiresOld = includedModificationStates != null && includedModificationStates.containsKey(DbmsModificationState.OLD);
         
         if (requiresOld) {
-            Map<String, String> dbmsModificationStateQueries = new HashMap<String, String>();
+            Map<String, String> dbmsModificationStateQueries = new LinkedHashMap<String, String>();
             StringBuilder sb = new StringBuilder(sqlSb.length() + 30);
             if (statementType == DbmsStatementType.INSERT) {
                 StringBuilder newValuesSb = new StringBuilder();
