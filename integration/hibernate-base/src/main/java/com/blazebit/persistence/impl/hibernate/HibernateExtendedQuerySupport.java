@@ -229,10 +229,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 		try {
 			return list(em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw new IllegalStateException(he);
 		} catch(TypeMismatchException e) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
+		    LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw getEntityManager(em).convert(he);
 		}
 	}
@@ -260,10 +263,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 				return result.get(0);
 			}
 		} catch (QueryExecutionRequestException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw new IllegalStateException(he);
 		} catch(TypeMismatchException e) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw getEntityManager(em).convert(he);
 		}
 	}
@@ -311,14 +317,27 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         String[][] returningColumns = getReturningColumns(exampleQuerySql);
         
-        @SuppressWarnings("unchecked")
-        List<Object> results = queryPlan.performList(queryParameters, wrapSession(session, true, returningColumns, null));
-        if (results.size() != 1) {
-            throw new IllegalArgumentException("Expected size 1 but was: " + results.size());
+        try {
+            @SuppressWarnings("unchecked")
+            List<Object> results = queryPlan.performList(queryParameters, wrapSession(session, true, returningColumns, null));
+            
+            if (results.size() != 1) {
+                throw new IllegalArgumentException("Expected size 1 but was: " + results.size());
+            }
+            
+            Number count = (Number) results.get(0);
+            return count.intValue();
+        } catch (QueryExecutionRequestException he) {
+            LOG.severe("Could not execute the following SQL query: " + finalSql);
+            throw new IllegalStateException(he);
+        } catch(TypeMismatchException e) {
+            LOG.severe("Could not execute the following SQL query: " + finalSql);
+            throw new IllegalArgumentException(e);
+        } catch (HibernateException he) {
+            LOG.severe("Could not execute the following SQL query: " + finalSql);
+            getEntityManager(em).throwPersistenceException(he);
+            return 0;
         }
-        
-        Number count = (Number) results.get(0);
-        return count.intValue();
     }
 
     @Override
@@ -373,6 +392,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             try {
                 results = queryLoader.list(wrapSession(session, generatedKeys, returningColumns, returningResult), queryParameters);
                 success = true;
+            } catch (QueryExecutionRequestException he) {
+                LOG.severe("Could not execute the following SQL query: " + finalSql);
+                throw new IllegalStateException(he);
+            } catch(TypeMismatchException e) {
+                LOG.severe("Could not execute the following SQL query: " + finalSql);
+                throw new IllegalArgumentException(e);
+            } catch (HibernateException he) {
+                LOG.severe("Could not execute the following SQL query: " + finalSql);
+                throw getEntityManager(em).convert(he);
             } finally {
                 hibernateAccess.afterTransaction(session, success);
             }
