@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.OngoingFinalSetOperationSubqueryBuilder;
 import com.blazebit.persistence.OngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -30,19 +31,9 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
 	
     private final Z endSetResult;
     
-    public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
+    public OngoingSetOperationSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, OngoingFinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
         super(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener, finalSetOperationBuilder);
         this.endSetResult = endSetResult;
-    }
-
-    @Override
-    public OngoingSetOperationSubqueryBuilder<T, Z> from(Class<?> clazz) {
-        return super.from(clazz);
-    }
-
-    @Override
-    public OngoingSetOperationSubqueryBuilder<T, Z> from(Class<?> clazz, String alias) {
-        return super.from(clazz, alias);
     }
 
     @Override
@@ -51,23 +42,29 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
         listener.onBuilderEnded(this);
         return endSetResult;
     }
-    
+
     @Override
-    protected FinalSetOperationSubqueryBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        // TODO: not quite sure about the listener passing
-        FinalSetOperationSubqueryBuilderImpl<T> currentSetOperationBuilder = (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder;
-        return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, currentSetOperationBuilder.getResult(), operator, nested, currentSetOperationBuilder.getListener(), currentSetOperationBuilder.getInitiator());
+    @SuppressWarnings("unchecked")
+    public OngoingFinalSetOperationSubqueryBuilder<Z> endSetWith() {
+        subListener.verifySubqueryBuilderEnded();
+        listener.onBuilderEnded(this);
+        return (OngoingFinalSetOperationSubqueryBuilder<Z>) finalSetOperationBuilder;
     }
 
     @Override
-    protected OngoingSetOperationSubqueryBuilderImpl<T, Z> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+    protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return createFinalSetOperationBuilder(operator, nested, true);
+    }
+
+    @Override
+    protected OngoingSetOperationSubqueryBuilderImpl<T, Z> createSetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         return createOngoing(finalSetOperationBuilder, endSetResult);
     }
 
     @Override
-    protected StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
+    protected StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Z>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         OngoingSetOperationSubqueryBuilder<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);

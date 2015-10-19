@@ -30,6 +30,7 @@ import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -40,7 +41,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBuilder<X>, Z, W, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<Object, ?, ?>> extends AbstractCommonQueryBuilder<Object, X, Z, W, FinalSetReturn> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
+public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBuilder<X>, Z, W> extends AbstractCommonQueryBuilder<Object, X, Z, W, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
 	
 	protected static final Integer EMPTY = Integer.valueOf(-1);
 	protected final Y result;
@@ -50,7 +51,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 	protected final Map<String, Integer> bindingMap;
 	protected final CTEBuilderListenerImpl subListener;
 
-    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener, FinalSetReturn finalSetOperationBuilder) {
+    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
         this.result = result;
         this.listener = listener;
@@ -138,17 +139,39 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         
         return attributes;
     }
+    
+    protected BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested, boolean isSubquery) {
+        FullSelectCTECriteriaBuilderImpl<?> newInitiator = finalSetOperationBuilder == null ? null : finalSetOperationBuilder.getInitiator();
+        return createFinalSetOperationBuilder(operator, nested, isSubquery, newInitiator);
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested, boolean isSubquery, FullSelectCTECriteriaBuilderImpl<?> initiator) {
+        CTEBuilderListener newListener = finalSetOperationBuilder == null ? listener : finalSetOperationBuilder.getSubListener();
+        Y newResult = finalSetOperationBuilder == null ? result : (Y) finalSetOperationBuilder.getResult();
+        
+        if (isSubquery) {
+            return new OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, resultType, newResult, operator, nested, newListener, initiator);
+        } else {
+            return new FinalSetOperationCTECriteriaBuilderImpl<Object>(mainQuery, resultType, newResult, operator, nested, newListener, initiator);
+        }
+    }
 
-    protected LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> createLeaf(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
+    @SuppressWarnings("unchecked")
+    protected LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> createLeaf(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, resultType, result, newListener, finalSetOperationBuilder);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, resultType, result, newListener, (FinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
 
-    protected <T> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, T endSetResult) {
+    @SuppressWarnings("unchecked")
+    protected <T> OngoingSetOperationCTECriteriaBuilderImpl<Y, T> createOngoing(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder, T endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+        
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, resultType, result, newListener, finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, resultType, result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

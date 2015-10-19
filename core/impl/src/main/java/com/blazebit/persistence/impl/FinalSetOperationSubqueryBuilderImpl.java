@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.List;
-
-import javax.persistence.Tuple;
-
 import com.blazebit.persistence.FinalSetOperationSubqueryBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -29,33 +24,10 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperationBuilderImpl<T, FinalSetOperationSubqueryBuilder<T>, FinalSetOperationSubqueryBuilderImpl<T>> implements FinalSetOperationSubqueryBuilder<T>, SubqueryInternalBuilder<T> {
+public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperationSubqueryBuilderImpl<T, FinalSetOperationSubqueryBuilder<T>> implements FinalSetOperationSubqueryBuilder<T> {
 
-    private final T result;
-    private final SubqueryBuilderListener<T> listener;
-    private final SubqueryBuilderImpl<?> initiator;
-
-    private final SubqueryBuilderListenerImpl<T> subListener;
-    
-    @SuppressWarnings("unchecked")
     public FinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
-        super(mainQuery, false, (Class<T>) Tuple.class, operator, nested);
-        this.result = result;
-        this.listener = listener;
-        this.initiator = initiator;
-        this.subListener = new SubqueryBuilderListenerImpl<T>();
-    }
-
-    public SubqueryBuilderListener<T> getListener() {
-        return listener;
-    }
-    
-    public SubqueryBuilderListener<T> getSubListener() {
-        return subListener;
-    }
-
-    public SubqueryBuilderImpl<?> getInitiator() {
-        return initiator;
+        super(mainQuery, result, operator, nested, listener, initiator);
     }
 
     @Override
@@ -63,33 +35,6 @@ public class FinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperati
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         return result;
-    }
-
-    @Override
-    public T getResult() {
-        return result;
-    }
-
-    @Override
-    public List<Expression> getSelectExpressions() {
-        return getSelectExpressions(this);
-    }
-
-    private static List<Expression> getSelectExpressions(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
-        if (queryBuilder instanceof FinalSetOperationSubqueryBuilderImpl<?>) {
-            FinalSetOperationSubqueryBuilderImpl<?> setOperationBuilder = (FinalSetOperationSubqueryBuilderImpl<?>) queryBuilder;
-            
-            if (setOperationBuilder.initiator == null) {
-                return getSelectExpressions(setOperationBuilder.setOperationManager.getStartQueryBuilder());
-            } else {
-                return setOperationBuilder.initiator.getSelectExpressions();
-            }
-        } else if (queryBuilder instanceof BaseSubqueryBuilderImpl<?, ?, ?, ?>) {
-            BaseSubqueryBuilderImpl<?, ?, ?, ?> subqueryBuilder = (BaseSubqueryBuilderImpl<?, ?, ?, ?>) queryBuilder;
-            return subqueryBuilder.getSelectExpressions();
-        }
-        
-        throw new IllegalArgumentException("Unsupported query builder type for creating select expressions: " + queryBuilder);
     }
     
 }

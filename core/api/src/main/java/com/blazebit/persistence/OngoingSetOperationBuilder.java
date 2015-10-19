@@ -24,12 +24,7 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface OngoingSetOperationBuilder<X, Y, Z extends StartOngoingSetOperationBuilder<?, ?, ?>> extends SetOperationBuilder<X, Z> {
+public interface OngoingSetOperationBuilder<X, Y, Z extends StartOngoingSetOperationBuilder<?, ?, ?>> extends BaseOngoingSetOperationBuilder<X, Y, Z> {
 
-    /**
-     * Ends the current set operation scope and switches back to the parent query.
-     *
-     * @return The parent query builder
-     */
-    public Y endSet();
+    public BaseOngoingFinalSetOperationBuilder<Y, ?> endSetWith();
 }

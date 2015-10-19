@@ -7,6 +7,7 @@ import java.util.Map;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
 public class DefaultDbmsDialect implements DbmsDialect {
@@ -54,13 +55,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands) {
+    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
         if (isSubquery) {
             sqlSb.insert(0, '(');
         }
         
         if (operands.size() > 0) {
             String operator = getOperator(setType);
+            boolean hasLimit = limit != null;
+            boolean hasOrderBy = orderByElements.size() > 0;
+            
             boolean first = true;
             for (String operand : operands) {
                 if (first) {
@@ -71,7 +75,20 @@ public class DefaultDbmsDialect implements DbmsDialect {
                     sqlSb.append("\n");
                 }
     
-                sqlSb.append(operand);
+                if ((hasLimit || hasOrderBy) && !operand.startsWith("(")) {
+                    // Wrap operand so that the order by or limit has a clear target 
+                    sqlSb.append('(');
+                    sqlSb.append(operand);
+                    sqlSb.append(')');
+                } else {
+                    sqlSb.append(operand);
+                }
+            }
+            
+            appendOrderBy(sqlSb, orderByElements);
+            
+            if (limit != null) {
+                appendLimit(sqlSb, isSubquery, limit, offset);
             }
         }
         
@@ -80,6 +97,35 @@ public class DefaultDbmsDialect implements DbmsDialect {
         }
     }
     
+    protected void appendOrderBy(StringBuilder sqlSb, List<? extends OrderByElement> orderByElements) {
+        if (orderByElements.isEmpty()) {
+            return;
+        }
+        
+        sqlSb.append(" order by ");
+        boolean first = true;
+        for (OrderByElement element : orderByElements) {
+            if (first) {
+                first = false;
+            } else {
+                sqlSb.append(',');
+            }
+            
+            sqlSb.append(element.getPosition());
+            
+            if (element.isAscending()) {
+                sqlSb.append(" asc");
+            } else {
+                sqlSb.append(" desc");
+            }
+            if (element.isNullsFirst()) {
+                sqlSb.append(" nulls first");
+            } else {
+                sqlSb.append(" nulls last");
+            }
+        }
+    }
+
     protected String getOperator(SetOperationType type) {
         if (type == null) {
             return null;

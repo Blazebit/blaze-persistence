@@ -18,13 +18,18 @@ package com.blazebit.persistence;
 /**
  * An interface for builders that support set operators.
  *
- * @param <T> The builder result type
+ * @param <X> The concrete builder type
  * @param <Y> The set sub-operation result type
+ * @param <Z> The set nesting start type 
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface OngoingSetOperationSubqueryBuilder<T, Y> extends OngoingSetOperationBuilder<OngoingSetOperationSubqueryBuilder<T, Y>, Y, StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Y>>>, BaseSubqueryBuilder<OngoingSetOperationSubqueryBuilder<T, Y>> {
+public interface BaseOngoingSetOperationBuilder<X, Y, Z extends StartOngoingSetOperationBuilder<?, ?, ?>> extends SetOperationBuilder<X, Z> {
 
-    @Override
-    public OngoingFinalSetOperationSubqueryBuilder<Y> endSetWith();
+    /**
+     * Ends the current set operation scope and switches back to the parent query.
+     *
+     * @return The parent query builder
+     */
+    public Y endSet();
 }

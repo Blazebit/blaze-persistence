@@ -48,8 +48,21 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
+	public int getSqlSelectAliasPosition(EntityManager em, Query query, String alias) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+	}
+
+    @Override
     public String getSqlAlias(EntityManager em, Query query, String alias) {
-        return null;
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
+    }
+
+    @Override
+    public int getSqlSelectAttributePosition(EntityManager em, Query query, String alias) {
+        // TODO: implement
+        throw new UnsupportedOperationException("Not yet implemeneted!");
     }
 
     @Override

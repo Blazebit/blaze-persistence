@@ -41,6 +41,10 @@ public interface ExtendedQuerySupport {
     
     public String getSqlAlias(EntityManager em, Query query, String alias);
     
+    public int getSqlSelectAliasPosition(EntityManager em, Query query, String alias);
+    
+    public int getSqlSelectAttributePosition(EntityManager em, Query query, String alias);
+    
     @SuppressWarnings("rawtypes")
     public List getResultList(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     

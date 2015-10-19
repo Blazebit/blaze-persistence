@@ -17,12 +17,16 @@ package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
+import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
+import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -31,13 +35,18 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>, Y extends BaseFinalSetOperationBuilderImpl<T, X, Y>> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Y> implements BaseFinalSetOperationBuilder<T, X> {
+public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperationBuilder<T, X>, Y extends BaseFinalSetOperationBuilderImpl<T, X, Y>> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, Y> implements BaseFinalSetOperationBuilder<T, X>, BaseOngoingFinalSetOperationBuilder<T, X> {
 
+    protected T endSetResult;
+    
     protected final SetOperationManager setOperationManager;
+    protected final List<DefaultOrderByElement> orderByElements;
 
-    public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested) {
+    public BaseFinalSetOperationBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, T endSetResult) {
         super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null);
+        this.endSetResult = endSetResult;
         this.setOperationManager = new SetOperationManager(operator, nested);
+        this.orderByElements = new ArrayList<DefaultOrderByElement>(0);
     }
     
     private static boolean isNested(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
@@ -46,6 +55,54 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         }
         
         return false;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public X orderBy(String expression, boolean ascending, boolean nullFirst) {
+        prepareAndCheck();
+        AbstractCommonQueryBuilder<?, ?, ?, ?, ?> leftMostQuery = getLeftMost(setOperationManager.getStartQueryBuilder());
+        
+        AliasInfo aliasInfo = leftMostQuery.aliasManager.getAliasInfo(expression);
+        if (aliasInfo != null) {
+            // find out the position by JPQL alias
+            int position = cbf.getExtendedQuerySupport().getSqlSelectAliasPosition(em, leftMostQuery.getTypedQuery(), expression);
+            orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
+            return (X) this;
+        }
+
+        int position = cbf.getExtendedQuerySupport().getSqlSelectAttributePosition(em, leftMostQuery.getTypedQuery(), expression);
+        orderByElements.add(new DefaultOrderByElement(expression, position, ascending, nullFirst));
+        
+        return (X) this;
+    }
+    
+    private AbstractCommonQueryBuilder<?, ?, ?, ?, ?> getLeftMost(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
+        if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
+            return getLeftMost(((BaseFinalSetOperationBuilderImpl<?, ?, ?>) queryBuilder).setOperationManager.getStartQueryBuilder());
+        }
+        
+        return queryBuilder;
+    }
+    
+    protected List<? extends OrderByElement> getOrderByElements() {
+        return orderByElements;
+    }
+    
+    public T getEndSetResult() {
+        return endSetResult;
+    }
+    
+    public void setEndSetResult(T endSetResult) {
+        this.endSetResult = endSetResult;
+    }
+
+    public T endSet() {
+        return endSetResult;
+    }
+
+    @Override
+    protected void prepareAndCheck() {
+        // nothing to do here
     }
 
     @Override
@@ -61,7 +118,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             sbSelectFrom.append(')');
         }
         
-        if (setOperationManager.hasSetOperations()) { 
+        if (setOperationManager.hasSetOperations()) {
             String operator = getOperator(setOperationManager.getOperator());
             for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
                 sbSelectFrom.append("\n");
@@ -78,6 +135,38 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                 if (nested) {
                     sbSelectFrom.append(')');
                 }
+            }
+            
+            applySetOrderBy(sbSelectFrom);
+            applyJpaLimit(sbSelectFrom);
+        }
+    }
+    
+    protected void applySetOrderBy(StringBuilder sbSelectFrom) {
+        if (orderByElements.isEmpty()) {
+            return;
+        }
+        
+        sbSelectFrom.append("\nORDER BY ");
+        
+        for (int i = 0; i < orderByElements.size(); i++) {
+            if (i != 0) {
+                sbSelectFrom.append(", ");
+            }
+            
+            DefaultOrderByElement elem = orderByElements.get(i);
+            sbSelectFrom.append(elem.getName());
+
+            if (elem.isAscending()) {
+                sbSelectFrom.append(" ASC");
+            } else {
+                sbSelectFrom.append(" DESC");
+            }
+            
+            if (elem.isNullsFirst()) {
+                sbSelectFrom.append(" NULLS FIRST");
+            } else {
+                sbSelectFrom.append(" NULLS LAST");
             }
         }
     }
@@ -139,8 +228,18 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         }
 
         StringBuilder sqlSb = new StringBuilder(size);
+        
+        String limit = null;
+        String offset = null;
+        
+        if (firstResult != 0) {
+            offset = Integer.toString(firstResult);
+        }
+        if (maxResults != Integer.MAX_VALUE) {
+            limit = Integer.toString(maxResults);
+        }
 
-        dbmsDialect.appendSet(sqlSb, setOperationManager.getOperator(), setOperationManager.isNested(), setOperands);
+        dbmsDialect.appendSet(sqlSb, setOperationManager.getOperator(), setOperationManager.isNested(), setOperands, getOrderByElements(), limit, offset);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
@@ -151,6 +250,11 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         return query;
     }
     
+    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
+        // No limit/offset here because we need to handle that differently 
+        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, null, null, returningColumns, includedModificationStates);
+    }
+
     protected String getOperator(SetOperationType type) {
         switch (type) {
             case UNION: return "UNION";

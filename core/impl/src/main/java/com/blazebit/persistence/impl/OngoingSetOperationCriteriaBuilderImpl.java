@@ -15,9 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.OngoingFinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.OngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -26,51 +26,48 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCommonQueryBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>, OngoingSetOperationCriteriaBuilder<T, Z>, StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>>, FinalSetOperationCriteriaBuilderImpl<T>> implements StartOngoingSetOperationCriteriaBuilder<T, Z> {
+public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>, OngoingSetOperationCriteriaBuilder<T, Z>, StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>>> implements StartOngoingSetOperationCriteriaBuilder<T, Z> {
 	
-    private final Z result;
+    private final Z endSetResult;
     
-    public OngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, Z result) {
-        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
-        this.result = result;
-    }
-
-    @Override
-    public OngoingSetOperationCriteriaBuilder<T, Z> from(Class<?> clazz) {
-        return super.from(clazz);
-    }
-
-    @Override
-    public OngoingSetOperationCriteriaBuilder<T, Z> from(Class<?> clazz, String alias) {
-        return super.from(clazz, alias);
+    public OngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, OngoingFinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, Z endSetResult) {
+        super(mainQuery, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
+        this.endSetResult = endSetResult;
     }
 
     @Override
     public Z endSet() {
-        return result;
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return endSetResult;
     }
     
     @Override
-    protected FinalSetOperationCriteriaBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        boolean wasMainQuery = isMainQuery;
-        this.isMainQuery = false;
-        return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested);
+    @SuppressWarnings("unchecked")
+    public OngoingFinalSetOperationCriteriaBuilder<Z> endSetWith() {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return (OngoingFinalSetOperationCriteriaBuilder<Z>) finalSetOperationBuilder;
     }
 
     @Override
-    public StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>> startSet() {
-        return (StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>>) super.startSet();
+    protected BaseFinalSetOperationCriteriaBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return createFinalSetOperationBuilder(operator, nested, true);
     }
 
     @Override
-    protected OngoingSetOperationCriteriaBuilder<T, Z> createSetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
-        return new OngoingSetOperationCriteriaBuilderImpl<T, Z>(mainQuery, false, resultType, (FinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, result);
+    protected OngoingSetOperationCriteriaBuilder<T, Z> createSetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return createOngoing(finalSetOperationBuilder, endSetResult);
     }
 
     @Override
-    protected StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>> createSubquerySetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationCriteriaBuilderImpl<T> resultFinalSetOperationBuilder) {
-        OngoingSetOperationCriteriaBuilderImpl<T, Z> resultCb = new OngoingSetOperationCriteriaBuilderImpl<T, Z>(mainQuery, false, resultType, (FinalSetOperationCriteriaBuilderImpl<T>) resultFinalSetOperationBuilder, result);
-        return new OngoingSetOperationCriteriaBuilderImpl<T, OngoingSetOperationCriteriaBuilder<T,Z>>(mainQuery, false, resultType, (FinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, resultCb);
+    protected StartOngoingSetOperationCriteriaBuilder<T, OngoingSetOperationCriteriaBuilder<T, Z>> createSubquerySetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationCriteriaBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        OngoingSetOperationCriteriaBuilder<T, Z> resultCb = createOngoing(resultFinalSetOperationBuilder, endSetResult);
+        return createOngoing(finalSetOperationBuilder, resultCb);
     }
 
 }

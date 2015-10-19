@@ -20,10 +20,11 @@ import java.util.List;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.OngoingSetOperationBuilder;
+import com.blazebit.persistence.BaseOngoingSetOperationBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -31,13 +32,13 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class BaseSubqueryBuilderImpl<T, X, Y extends OngoingSetOperationBuilder<?, ?, ?>, Z extends OngoingSetOperationBuilder<?, ?, ?>> extends AbstractCommonQueryBuilder<Tuple, X, Y, Z, FinalSetOperationSubqueryBuilderImpl<T>> implements SubqueryInternalBuilder<T> {
+public class BaseSubqueryBuilderImpl<T, X, Y extends BaseOngoingSetOperationBuilder<?, ?, ?>, Z extends BaseOngoingSetOperationBuilder<?, ?, ?>> extends AbstractCommonQueryBuilder<Tuple, X, Y, Z, BaseFinalSetOperationSubqueryBuilderImpl<T, ?>> implements SubqueryInternalBuilder<T> {
 
     protected final T result;
     protected final SubqueryBuilderListener<T> listener;
     protected final SubqueryBuilderListenerImpl<T> subListener;
 
-    public BaseSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+    public BaseSubqueryBuilderImpl(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, T result, SubqueryBuilderListener<T> listener, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, Tuple.class, null, aliasManager, parentJoinManager, expressionFactory, finalSetOperationBuilder);
         this.result = result;
         this.listener = listener;
@@ -62,17 +63,39 @@ public class BaseSubqueryBuilderImpl<T, X, Y extends OngoingSetOperationBuilder<
     public T getResult() {
         return result;
     }
+    
+    protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested, boolean isSubquery) {
+        SubqueryBuilderImpl<?> newInitiator = finalSetOperationBuilder == null ? null : finalSetOperationBuilder.getInitiator();
+        return createFinalSetOperationBuilder(operator, nested, isSubquery, newInitiator);
+    }
+    
+    protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested, boolean isSubquery, SubqueryBuilderImpl<?> newInitiator) {
+        // TODO: this should never be null, handle it!
+        SubqueryBuilderListener<T> newListener = finalSetOperationBuilder == null ? listener : finalSetOperationBuilder.getSubListener();
+        T newResult = finalSetOperationBuilder == null ? result : finalSetOperationBuilder.getResult();
+        
+        if (isSubquery) {
+            return new OngoingFinalSetOperationSubqueryBuilderImpl<T>(mainQuery, newResult, operator, nested, newListener, newInitiator);
+        } else {
+            return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, newResult, operator, nested, newListener, newInitiator);
+        }
+    }
 
-    protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createLeaf(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+    @SuppressWarnings("unchecked")
+    protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createLeaf(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, finalSetOperationBuilder);
+        LeafOngoingSetOperationSubqueryBuilderImpl<T> next = new LeafOngoingSetOperationSubqueryBuilderImpl<T>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, (FinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
 
-    protected <W> OngoingSetOperationSubqueryBuilderImpl<T, W> createOngoing(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, W endSetResult) {
+    @SuppressWarnings("unchecked")
+    protected <W> OngoingSetOperationSubqueryBuilderImpl<T, W> createOngoing(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, W endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+        
         SubqueryBuilderListener<T> newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationSubqueryBuilderImpl<T, W> next = new OngoingSetOperationSubqueryBuilderImpl<T, W>(mainQuery, aliasManager, joinManager.getParent(), expressionFactory, result, newListener, (OngoingFinalSetOperationSubqueryBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

@@ -31,6 +31,7 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.spi.OrderByElement;
 
 /**
  *
@@ -88,7 +89,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         
         if (isSimple) {
         	sb.append(subquery.getQueryString());
-        } else if (!hasLimit) {
+        } else if (hasSetOperations) {
             asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
         } else {
         	List<Expression> arguments = new ArrayList<Expression>(3);
@@ -132,6 +133,30 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
             for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand : operationManager.getSetOperations()) {
                 setOperationArgs.add(asExpression(operand));
+            }
+            
+            List<? extends OrderByElement> orderByElements = operationBuilder.getOrderByElements();
+            if (orderByElements.size() > 0) {
+                setOperationArgs.add(new FooExpression("'ORDER_BY'"));
+                
+                for (OrderByElement elem : orderByElements) {
+                    StringBuilder argSb = new StringBuilder(20);
+                    argSb.append('\'');
+                    argSb.append(elem.toString());
+                    argSb.append('\'');
+                    setOperationArgs.add(new FooExpression(argSb));
+                }
+            }
+            
+            if (operationBuilder.hasLimit()) {
+                if (operationBuilder.maxResults != Integer.MAX_VALUE) {
+                    setOperationArgs.add(new FooExpression("'LIMIT'"));
+                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.maxResults)));
+                }
+                if (operationBuilder.firstResult != 0) {
+                    setOperationArgs.add(new FooExpression("'OFFSET'"));
+                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.firstResult)));
+                }
             }
             
             Expression functionExpr = new FunctionExpression("FUNCTION", setOperationArgs);

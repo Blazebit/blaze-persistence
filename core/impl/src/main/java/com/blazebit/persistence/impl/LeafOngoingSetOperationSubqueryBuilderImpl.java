@@ -34,27 +34,27 @@ public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryB
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public FinalSetOperationSubqueryBuilder<T> endSet() {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
-        return finalSetOperationBuilder;
+        return (FinalSetOperationSubqueryBuilder<T>) finalSetOperationBuilder;
     }
     
     @Override
-    protected FinalSetOperationSubqueryBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        // TODO: not quite sure about the listener passing
-        return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, finalSetOperationBuilder.getResult(), operator, nested, finalSetOperationBuilder.getListener(), finalSetOperationBuilder.getInitiator());
+    protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return createFinalSetOperationBuilder(operator, nested, nested);
     }
 
     @Override
-    protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+    protected LeafOngoingSetOperationSubqueryBuilderImpl<T> createSetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
-    protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
+    protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
         LeafOngoingSetOperationSubqueryBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);

@@ -59,19 +59,19 @@ public class SubqueryBuilderImpl<T> extends BaseSubqueryBuilderImpl<T, SubqueryB
     }
     
     @Override
-    protected FinalSetOperationSubqueryBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        return new FinalSetOperationSubqueryBuilderImpl<T>(mainQuery, result, operator, nested, listener, this);
+    protected BaseFinalSetOperationSubqueryBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return createFinalSetOperationBuilder(operator, nested, nested, this);
     }
 
     @Override
-    protected LeafOngoingSetOperationSubqueryBuilder<T> createSetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder) {
+    protected LeafOngoingSetOperationSubqueryBuilder<T> createSetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onReplaceBuilder(this, finalSetOperationBuilder);
         return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
-    protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(FinalSetOperationSubqueryBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationSubqueryBuilderImpl<T> resultFinalSetOperationBuilder) {
+    protected StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationSubqueryBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationSubqueryBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
         subListener.verifySubqueryBuilderEnded();
         listener.onReplaceBuilder(this, resultFinalSetOperationBuilder);
         LeafOngoingSetOperationSubqueryBuilder<T> leafCb = createSetOperand(resultFinalSetOperationBuilder);

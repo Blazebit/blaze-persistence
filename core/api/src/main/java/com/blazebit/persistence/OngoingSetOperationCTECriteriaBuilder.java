@@ -24,4 +24,6 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface OngoingSetOperationCTECriteriaBuilder<T, Y> extends OngoingSetOperationBuilder<OngoingSetOperationCTECriteriaBuilder<T, Y>, Y, StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Y>>>, SelectBaseCTECriteriaBuilder<OngoingSetOperationCTECriteriaBuilder<T, Y>> {
+
+    public OngoingFinalSetOperationCTECriteriaBuilder<Y> endSetWith();
 }

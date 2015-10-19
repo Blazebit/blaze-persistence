@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.FinalSetOperationCriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
-import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
 /**
@@ -27,43 +26,38 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCommonQueryBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>, FinalSetOperationCriteriaBuilderImpl<T>> implements LeafOngoingSetOperationCriteriaBuilder<T> {
+public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>> implements LeafOngoingSetOperationCriteriaBuilder<T> {
 
-    public LeafOngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
-        super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
+    public LeafOngoingSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, BuilderListener<Object> listener, FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
+        super(mainQuery, isMainQuery, clazz, null, listener, finalSetOperationBuilder);
     }
 
     @Override
-    public LeafOngoingSetOperationCriteriaBuilder<T> from(Class<?> clazz) {
-        return super.from(clazz);
-    }
-
-    @Override
-    public LeafOngoingSetOperationCriteriaBuilder<T> from(Class<?> clazz, String alias) {
-        return super.from(clazz, alias);
-    }
-
-    @Override
+    @SuppressWarnings("unchecked")
     public FinalSetOperationCriteriaBuilder<T> endSet() {
-        return finalSetOperationBuilder;
-    }
-    
-    @Override
-    protected FinalSetOperationCriteriaBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
-        boolean wasMainQuery = isMainQuery;
-        this.isMainQuery = false;
-        return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested);
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return (FinalSetOperationCriteriaBuilder<T>) finalSetOperationBuilder;
     }
 
     @Override
-    protected LeafOngoingSetOperationCriteriaBuilder<T> createSetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
-        return new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, finalSetOperationBuilder);
+    protected BaseFinalSetOperationCriteriaBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+        return createFinalSetOperationBuilder(operator, nested, nested);
     }
 
     @Override
-    protected StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationCriteriaBuilderImpl<T> resultFinalSetOperationBuilder) {
-        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, resultFinalSetOperationBuilder);
-        return new OngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingSetOperationCriteriaBuilder<T>>(mainQuery, false, resultType, finalSetOperationBuilder, leafCb);
+    protected LeafOngoingSetOperationCriteriaBuilder<T> createSetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        return createLeaf(finalSetOperationBuilder);
+    }
+
+    @Override
+    protected StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationCriteriaBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
+        subListener.verifyBuilderEnded();
+        listener.onBuilderEnded(this);
+        LeafOngoingSetOperationCriteriaBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
+        return createOngoing(finalSetOperationBuilder, leafCb);
     }
 
 }

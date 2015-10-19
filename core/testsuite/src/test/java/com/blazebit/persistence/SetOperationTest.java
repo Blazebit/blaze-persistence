@@ -483,6 +483,97 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals("D1", resultList.get(0).getName());
     }
     
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testAttributeOrderByLimit() {
+        FinalSetOperationCriteriaBuilder<Document> cb = cbf
+                .create(em, Document.class)
+                .from(Document.class, "d1")
+                .select("d1")
+                .where("d1.name").eq("D1")
+            .union()
+                .from(Document.class, "d2")
+                .select("d2")
+                .where("d2.name").eq("D2")
+            .startExcept()
+                    .from(Document.class, "d3")
+                    .select("d3")
+                    .where("d3.name").eq("D2")
+                .union()
+                    .from(Document.class, "d4")
+                    .select("d4")
+                    .where("d4.name").eq("D3")
+                .endSetWith()
+                    .orderByDesc("name")
+                    .setMaxResults(1)
+                .endSet()
+            .endSet()
+            .orderByDesc("name")
+            .setMaxResults(1);
+        String expected = ""
+                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "UNION\n"
+                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1\n"
+                + "EXCEPT\n"
+                + "(SELECT d3 FROM Document d3 WHERE d3.name = :param_1\n"
+                + "UNION\n"
+                + "SELECT d4 FROM Document d4 WHERE d4.name = :param_2\n"
+                + "ORDER BY " + renderNullPrecedence("name", "DESC", "LAST")
+                + " LIMIT 1)\n"
+                + "ORDER BY " + renderNullPrecedence("name", "DESC", "LAST")
+                + " LIMIT 1";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<Document> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D2", resultList.get(0).getName());
+    }
+    
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testAliasOrderByLimit() {
+        FinalSetOperationCriteriaBuilder<String> cb = cbf.create(em, String.class)
+                .from(Document.class, "d1")
+                .select("d1.name", "docName")
+                .where("d1.name").eq("D1")
+            .union()
+                .from(Document.class, "d2")
+                .select("d2.name")
+                .where("d2.name").eq("D2")
+            .startExcept()
+                    .from(Document.class, "d3")
+                    .select("d3.name", "dName")
+                    .where("d3.name").eq("D2")
+                .union()
+                    .from(Document.class, "d4")
+                    .select("d4.name")
+                    .where("d4.name").eq("D3")
+                .endSetWith()
+                    .orderByDesc("dName")
+                    .setMaxResults(1)
+                .endSet()
+            .endSet()
+            .orderByDesc("docName")
+            .setMaxResults(1);
+        String expected = ""
+                + "SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0\n"
+                + "UNION\n"
+                + "SELECT d2.name FROM Document d2 WHERE d2.name = :param_1\n"
+                + "EXCEPT\n"
+                + "(SELECT d3.name AS dName FROM Document d3 WHERE d3.name = :param_1\n"
+                + "UNION\n"
+                + "SELECT d4.name FROM Document d4 WHERE d4.name = :param_2\n"
+                + "ORDER BY " + renderNullPrecedence("dName", "DESC", "LAST")
+                + " LIMIT 1)\n"
+                + "ORDER BY " + renderNullPrecedence("docName", "DESC", "LAST")
+                + " LIMIT 1";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<String> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D2", resultList.get(0));
+    }
+    
     /* CTE set operations */
     
     // NOTE: H2 does not seem to support set operations in CTEs properly
@@ -751,5 +842,66 @@ public class SetOperationTest extends AbstractCoreTest {
         List<Document> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0).getName());
+    }
+    
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testSubqueryOrderByLimit() {
+        CriteriaBuilder<String> cb = cbf.create(em, String.class)
+                .from(Document.class, "doc")
+                .select("doc.name")
+                .where("doc.name").in()
+                        .from(Document.class, "d1")
+                        .select("d1.name", "docName")
+                        .where("d1.name").eq("D1")
+                    .union()
+                        .from(Document.class, "d2")
+                        .select("d2.name")
+                        .where("d2.name").eq("D2")
+                    .startExcept()
+                            .from(Document.class, "d3")
+                            .select("d3.name", "dName")
+                            .where("d3.name").eq("D2")
+                        .union()
+                            .from(Document.class, "d4")
+                            .select("d4.name")
+                            .where("d4.name").eq("D3")
+                        .endSetWith()
+                            .orderByDesc("dName")
+                            .setMaxResults(1)
+                        .endSet()
+                    .endSet()
+                    .orderByDesc("docName")
+                    .setMaxResults(1)
+                .end();
+        String expected = ""
+                + "SELECT doc.name FROM Document doc WHERE doc.name IN ("
+                + function(
+                           "SET_EXCEPT",
+                          function(
+                               "SET_UNION",
+                               "(SELECT d1.name AS docName FROM Document d1 WHERE d1.name = :param_0)",
+                               "(SELECT d2.name FROM Document d2 WHERE d2.name = :param_1)"
+                          ),
+                          function(
+                               "SET_UNION",
+                               "(SELECT d3.name AS dName FROM Document d3 WHERE d3.name = :param_1)",
+                               "(SELECT d4.name FROM Document d4 WHERE d4.name = :param_2)",
+                               "'ORDER_BY'",
+                               "'1 DESC NULLS LAST'",
+                               "'LIMIT'",
+                               "1"
+                          ),
+                          "'ORDER_BY'",
+                          "'1 DESC NULLS LAST'",
+                          "'LIMIT'",
+                          "1"
+                      )
+                + ")";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<String> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("D2", resultList.get(0));
     }
 }

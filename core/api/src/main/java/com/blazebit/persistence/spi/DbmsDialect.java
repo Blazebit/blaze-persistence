@@ -77,8 +77,11 @@ public interface DbmsDialect {
      * @param setType The type of the set connection
      * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
      * @param operands An list of operand sql strings
+     * @param orderByElements The order by elements of the composite set operation
+     * @param limit The limit for the limit clause, or null if no limit
+     * @param offset The offset for the offset clause, or null if no offset
      */
-    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands);
+    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset);
     
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.

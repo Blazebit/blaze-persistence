@@ -54,8 +54,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         super(builder);
     }
 
-    public AbstractFullQueryBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
-        super(mainQuery, isMainQuery, clazz, alias);
+    public AbstractFullQueryBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, FinalSetReturn finalSetOperationBuilder) {
+        super(mainQuery, isMainQuery, clazz, alias, finalSetOperationBuilder);
     }
 
     @Override

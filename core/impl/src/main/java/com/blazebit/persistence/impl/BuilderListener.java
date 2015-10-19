@@ -13,18 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence;
+package com.blazebit.persistence.impl;
+
 
 /**
- * An interface for builders that support set operators.
  *
- * @param <T> The builder result type
- * @param <Y> The set sub-operation result type
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface OngoingSetOperationSubqueryBuilder<T, Y> extends OngoingSetOperationBuilder<OngoingSetOperationSubqueryBuilder<T, Y>, Y, StartOngoingSetOperationSubqueryBuilder<T, OngoingSetOperationSubqueryBuilder<T, Y>>>, BaseSubqueryBuilder<OngoingSetOperationSubqueryBuilder<T, Y>> {
+public interface BuilderListener<T> {
 
-    @Override
-    public OngoingFinalSetOperationSubqueryBuilder<Y> endSetWith();
+    public void onReplaceBuilder(T oldBuilder, T newBuilder);
+
+    public void onBuilderEnded(T builder);
+
+    public void onBuilderStarted(T builder);
+    
+    public boolean isBuilderEnded();
 }

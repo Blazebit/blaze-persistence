@@ -28,6 +28,21 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
 		throw new UnsupportedOperationException("With clause is not supported!");
 	}
 
+    @Override
+    public boolean supportsUnion(boolean all) {
+        return true;
+    }
+
+    @Override
+    public boolean supportsIntersect(boolean all) {
+        return false;
+    }
+
+    @Override
+    public boolean supportsExcept(boolean all) {
+        return false;
+    }
+
     /**
      * Uses a workaround for limit in IN predicates because of an limitation of MySQL.
      * See http://dev.mysql.com/doc/refman/5.0/en/subquery-restrictions.html for reference.

@@ -23,5 +23,5 @@ package com.blazebit.persistence;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface LeafOngoingSetOperationSubqueryBuilder<X> extends OngoingSetOperationBuilder<LeafOngoingSetOperationSubqueryBuilder<X>, FinalSetOperationSubqueryBuilder<X>, StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>>>, BaseSubqueryBuilder<LeafOngoingSetOperationSubqueryBuilder<X>> {
+public interface LeafOngoingSetOperationSubqueryBuilder<X> extends BaseOngoingSetOperationBuilder<LeafOngoingSetOperationSubqueryBuilder<X>, FinalSetOperationSubqueryBuilder<X>, StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>>>, BaseSubqueryBuilder<LeafOngoingSetOperationSubqueryBuilder<X>> {
 }

@@ -24,10 +24,10 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class FinalSetOperationCriteriaBuilderImpl<T> extends BaseFinalSetOperationBuilderImpl<T, FinalSetOperationCriteriaBuilder<T>, FinalSetOperationCriteriaBuilderImpl<T>> implements FinalSetOperationCriteriaBuilder<T> {
+public class FinalSetOperationCriteriaBuilderImpl<T> extends BaseFinalSetOperationCriteriaBuilderImpl<T, FinalSetOperationCriteriaBuilder<T>> implements FinalSetOperationCriteriaBuilder<T> {
 
-    public FinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested) {
-        super(mainQuery, isMainQuery, clazz, operator, nested);
+    
+    public FinalSetOperationCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, SetOperationType operator, boolean nested, BuilderListener<Object> listener) {
+        super(mainQuery, isMainQuery, clazz, operator, nested, listener, null);
     }
-
 }

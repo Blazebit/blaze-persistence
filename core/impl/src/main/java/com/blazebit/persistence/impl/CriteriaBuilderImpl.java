@@ -29,20 +29,10 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @author Moritz Becker
  * @since 1.0
  */
-public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>, FinalSetOperationCriteriaBuilderImpl<T>> implements CriteriaBuilder<T> {
+public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> implements CriteriaBuilder<T> {
 	
     public CriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
-        super(mainQuery, isMainQuery, clazz, alias);
-    }
-
-    @Override
-    public CriteriaBuilder<T> from(Class<?> clazz) {
-        return super.from(clazz);
-    }
-
-    @Override
-    public CriteriaBuilder<T> from(Class<?> clazz, String alias) {
-        return super.from(clazz, alias);
+        super(mainQuery, isMainQuery, clazz, alias, null);
     }
 
     @Override
@@ -58,21 +48,46 @@ public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, Criteria
     }
     
     @Override
-    protected FinalSetOperationCriteriaBuilderImpl<T> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
+    protected BaseFinalSetOperationCriteriaBuilderImpl<T, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {
         boolean wasMainQuery = isMainQuery;
         this.isMainQuery = false;
-        return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested);
+        BuilderListener<Object> newListener = finalSetOperationBuilder == null ? null : finalSetOperationBuilder.getSubListener();
+        
+        if (nested) {
+            return new OngoingFinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested, newListener);
+        } else {
+            return new FinalSetOperationCriteriaBuilderImpl<T>(mainQuery, wasMainQuery, resultType, operator, nested, newListener);
+        }
     }
 
     @Override
-    protected LeafOngoingSetOperationCriteriaBuilder<T> createSetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder) {
-        return new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, finalSetOperationBuilder);
+    protected LeafOngoingSetOperationCriteriaBuilder<T> createSetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
+        return createLeaf(finalSetOperationBuilder);
     }
 
     @Override
-    protected StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> createSubquerySetOperand(FinalSetOperationCriteriaBuilderImpl<T> finalSetOperationBuilder, FinalSetOperationCriteriaBuilderImpl<T> resultFinalSetOperationBuilder) {
-        LeafOngoingSetOperationCriteriaBuilderImpl<T> leafCb = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, resultFinalSetOperationBuilder);
-        return new OngoingSetOperationCriteriaBuilderImpl<T, LeafOngoingSetOperationCriteriaBuilder<T>>(mainQuery, false, resultType, finalSetOperationBuilder, leafCb);
+    protected StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> createSubquerySetOperand(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, BaseFinalSetOperationCriteriaBuilderImpl<T, ?> resultFinalSetOperationBuilder) {
+        LeafOngoingSetOperationCriteriaBuilder<T> leafCb = createLeaf(resultFinalSetOperationBuilder);
+        return createOngoing(finalSetOperationBuilder, leafCb);
+    }
+
+    @SuppressWarnings("unchecked")
+    private LeafOngoingSetOperationCriteriaBuilderImpl<T> createLeaf(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
+        BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
+        LeafOngoingSetOperationCriteriaBuilderImpl<T> next = new LeafOngoingSetOperationCriteriaBuilderImpl<T>(mainQuery, false, resultType, newListener, (FinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder);
+        newListener.onBuilderStarted(next);
+        return next;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <Y> OngoingSetOperationCriteriaBuilderImpl<T, Y> createOngoing(BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder, Y endSetResult) {
+        // TODO: This is such an ugly hack, but I don't know how else to fix this generics issue for now
+        finalSetOperationBuilder.setEndSetResult((T) endSetResult);
+        
+        BuilderListener<Object> newListener = finalSetOperationBuilder.getSubListener();
+        OngoingSetOperationCriteriaBuilderImpl<T, Y> next = new OngoingSetOperationCriteriaBuilderImpl<T, Y>(mainQuery, false, resultType, newListener, (OngoingFinalSetOperationCriteriaBuilderImpl<T>) finalSetOperationBuilder, endSetResult);
+        newListener.onBuilderStarted(next);
+        return next;
     }
 
 }

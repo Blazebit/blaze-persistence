@@ -15,9 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.List;
-
-import com.blazebit.persistence.SelectCTECriteriaBuilder;
+import com.blazebit.persistence.OngoingFinalSetOperationSubqueryBuilder;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -25,22 +24,10 @@ import com.blazebit.persistence.SelectCTECriteriaBuilder;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> implements SelectCTECriteriaBuilder<Y> {
+public class OngoingFinalSetOperationSubqueryBuilderImpl<T> extends BaseFinalSetOperationSubqueryBuilderImpl<T, OngoingFinalSetOperationSubqueryBuilder<T>> implements OngoingFinalSetOperationSubqueryBuilder<T> {
 
-	public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener) {
-		super(mainQuery, clazz, result, listener, null);
-	}
-
-	@Override
-	public Y end() {
-		listener.onBuilderEnded(this);
-		return result;
-	}
-	
-	public CTEInfo createCTEInfo() {
-		List<String> attributes = prepareAndGetAttributes();
-		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
-		return info;
-	}
-
+    public OngoingFinalSetOperationSubqueryBuilderImpl(MainQuery mainQuery, T result, SetOperationType operator, boolean nested, SubqueryBuilderListener<T> listener, SubqueryBuilderImpl<?> initiator) {
+        super(mainQuery, result, operator, nested, listener, initiator);
+    }
+    
 }

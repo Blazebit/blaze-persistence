@@ -50,6 +50,7 @@ import org.hibernate.hql.internal.ast.exec.DeleteExecutor;
 import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
+import org.hibernate.hql.internal.ast.tree.SelectClause;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
@@ -58,6 +59,7 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -141,6 +143,81 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             
             return fromElement.getTableAlias();
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        }
+    }
+
+    @Override
+    public int getSqlSelectAliasPosition(EntityManager em, Query query, String alias) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        HQLQueryPlan plan = getOriginalQueryPlan(session, query);
+        QueryTranslator translator = plan.getTranslators()[0];
+
+        try {
+            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
+            sqlAstField.setAccessible(true);
+            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
+            
+            String[] aliases = queryNode.getSelectClause().getQueryReturnAliases();
+
+            for (int i = 0; i < aliases.length; i++) {
+                if (alias.equals(aliases[i])) {
+                    // the ordinal is 1 based
+                    return i + 1;
+                }
+            }
+            
+            return -1;
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        }
+    }
+    
+    @Override
+    public int getSqlSelectAttributePosition(EntityManager em, Query query, String expression) {
+        if (expression.contains(".")) {
+            // TODO: implement
+            throw new UnsupportedOperationException("Embeddables are not yet supported!");
+        }
+        
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        HQLQueryPlan plan = getOriginalQueryPlan(session, query);
+        QueryTranslator translator = plan.getTranslators()[0];
+
+        try {
+            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
+            sqlAstField.setAccessible(true);
+            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
+            SelectClause selectClause = queryNode.getSelectClause();
+            Type[] queryReturnTypes = selectClause.getQueryReturnTypes();
+            
+            boolean found = false;
+            // The ordinal is 1 based
+            int position = 1;
+            for (int i = 0; i < queryReturnTypes.length; i++) {
+                Type t = queryReturnTypes[i];
+                if (t instanceof ManyToOneType) {
+                    ManyToOneType manyToOneType = (ManyToOneType) t;
+                    AbstractEntityPersister persister = (AbstractEntityPersister) session.getFactory().getEntityPersister(manyToOneType.getAssociatedEntityName());
+                    
+                    int propertyIndex = persister.getPropertyIndex(expression);
+                    found = true;
+                    for (int j = 0; j < propertyIndex; j++) {
+                        position += persister.getPropertyColumnNames(j).length;
+                    }
+                    // Increment to the actual property position
+                    position++;
+                } else {
+                    position++;
+                }
+            }
+            
+            if (found) {
+                return position;
+            }
+            
+            return -1;
         } catch (Exception e1) {
             throw new RuntimeException(e1);
         }
