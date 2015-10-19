@@ -33,11 +33,11 @@ public class LeafOngoingSetOperationCriteriaBuilderImpl<T> extends AbstractCrite
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public FinalSetOperationCriteriaBuilder<T> endSet() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        return (FinalSetOperationCriteriaBuilder<T>) finalSetOperationBuilder;
+        return (FinalSetOperationCriteriaBuilder<T>) (FinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
     }
 
     @Override

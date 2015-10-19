@@ -43,11 +43,11 @@ public class OngoingSetOperationCriteriaBuilderImpl<T, Z> extends AbstractCriter
     }
     
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationCriteriaBuilder<Z> endSetWith() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        return (OngoingFinalSetOperationCriteriaBuilder<Z>) finalSetOperationBuilder;
+        return (OngoingFinalSetOperationCriteriaBuilder<Z>) (OngoingFinalSetOperationCriteriaBuilder) finalSetOperationBuilder;
     }
 
     @Override

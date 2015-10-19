@@ -34,11 +34,11 @@ public class LeafOngoingSetOperationSubqueryBuilderImpl<T> extends BaseSubqueryB
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public FinalSetOperationSubqueryBuilder<T> endSet() {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
-        return (FinalSetOperationSubqueryBuilder<T>) finalSetOperationBuilder;
+        return (FinalSetOperationSubqueryBuilder<T>) (FinalSetOperationSubqueryBuilder) finalSetOperationBuilder;
     }
     
     @Override

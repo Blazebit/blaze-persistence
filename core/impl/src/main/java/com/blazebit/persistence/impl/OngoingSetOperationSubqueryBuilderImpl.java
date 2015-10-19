@@ -44,11 +44,11 @@ public class OngoingSetOperationSubqueryBuilderImpl<T, Z> extends BaseSubqueryBu
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationSubqueryBuilder<Z> endSetWith() {
         subListener.verifySubqueryBuilderEnded();
         listener.onBuilderEnded(this);
-        return (OngoingFinalSetOperationSubqueryBuilder<Z>) finalSetOperationBuilder;
+        return (OngoingFinalSetOperationSubqueryBuilder<Z>) (OngoingFinalSetOperationSubqueryBuilder) finalSetOperationBuilder;
     }
 
     @Override

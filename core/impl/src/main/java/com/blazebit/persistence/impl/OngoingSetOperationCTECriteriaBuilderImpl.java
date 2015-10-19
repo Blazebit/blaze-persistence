@@ -53,11 +53,11 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTE
     }
     
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public OngoingFinalSetOperationCTECriteriaBuilder<Z> endSetWith() {
         subListener.verifyBuilderEnded();
         listener.onBuilderEnded(this);
-        return (OngoingFinalSetOperationCTECriteriaBuilder<Z>) finalSetOperationBuilder;
+        return (OngoingFinalSetOperationCTECriteriaBuilder<Z>) (OngoingFinalSetOperationCTECriteriaBuilder) finalSetOperationBuilder;
     }
 
     @Override
