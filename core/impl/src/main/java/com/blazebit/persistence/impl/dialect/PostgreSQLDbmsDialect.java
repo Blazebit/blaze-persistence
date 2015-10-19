@@ -1,6 +1,7 @@
 package com.blazebit.persistence.impl.dialect;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -79,6 +80,29 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         }
         
         return null;
+    }
+    
+    @Override
+    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        boolean first = true;
+        for (String operand : operands) {
+            if (first) {
+                first = false;
+            } else {
+                sqlSb.append("\n");
+                sqlSb.append(operator);
+                sqlSb.append("\n");
+            }
+
+            if (hasOuterClause && !operand.startsWith("(")) {
+                // Wrap operand so that the order by or limit has a clear target 
+                sqlSb.append('(');
+                sqlSb.append(operand);
+                sqlSb.append(')');
+            } else {
+                sqlSb.append(operand);
+            }
+        }
     }
     
     private static void appendSelectColumnsFromCte(StringBuilder sqlSb, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {

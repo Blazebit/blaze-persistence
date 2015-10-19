@@ -64,27 +64,9 @@ public class DefaultDbmsDialect implements DbmsDialect {
             String operator = getOperator(setType);
             boolean hasLimit = limit != null;
             boolean hasOrderBy = orderByElements.size() > 0;
+            boolean hasOuterClause = hasLimit || hasOrderBy;
             
-            boolean first = true;
-            for (String operand : operands) {
-                if (first) {
-                    first = false;
-                } else {
-                    sqlSb.append("\n");
-                    sqlSb.append(operator);
-                    sqlSb.append("\n");
-                }
-    
-                if ((hasLimit || hasOrderBy) && !operand.startsWith("(")) {
-                    // Wrap operand so that the order by or limit has a clear target 
-                    sqlSb.append('(');
-                    sqlSb.append(operand);
-                    sqlSb.append(')');
-                } else {
-                    sqlSb.append(operand);
-                }
-            }
-            
+            appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
             appendOrderBy(sqlSb, orderByElements);
             
             if (limit != null) {
@@ -94,6 +76,21 @@ public class DefaultDbmsDialect implements DbmsDialect {
         
         if (isSubquery) {
             sqlSb.append(')');
+        }
+    }
+    
+    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        boolean first = true;
+        for (String operand : operands) {
+            if (first) {
+                first = false;
+            } else {
+                sqlSb.append("\n");
+                sqlSb.append(operator);
+                sqlSb.append("\n");
+            }
+
+            sqlSb.append(operand);
         }
     }
     
@@ -111,19 +108,35 @@ public class DefaultDbmsDialect implements DbmsDialect {
                 sqlSb.append(',');
             }
             
-            sqlSb.append(element.getPosition());
-            
-            if (element.isAscending()) {
-                sqlSb.append(" asc");
-            } else {
-                sqlSb.append(" desc");
-            }
-            if (element.isNullsFirst()) {
-                sqlSb.append(" nulls first");
-            } else {
-                sqlSb.append(" nulls last");
-            }
+            appendOrderByElement(sqlSb, element);
         }
+    }
+    
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
+        sqlSb.append(element.getPosition());
+        
+        if (element.isAscending()) {
+            sqlSb.append(" asc");
+        } else {
+            sqlSb.append(" desc");
+        }
+        if (element.isNullsFirst()) {
+            sqlSb.append(" nulls first");
+        } else {
+            sqlSb.append(" nulls last");
+        }
+    }
+    
+    protected void appendEmulatedOrderByElementWithNulls(StringBuilder sqlSb, OrderByElement element) {
+        sqlSb.append("case when ");
+        sqlSb.append(element.getPosition());
+        sqlSb.append(" is null then ");
+        sqlSb.append(element.isNullsFirst() ? 0 : 1);
+        sqlSb.append(" else ");
+        sqlSb.append(element.isNullsFirst() ? 1 : 0);
+        sqlSb.append(" end, ");
+        sqlSb.append(element.getPosition());
+        sqlSb.append(element.isAscending() ? " asc" : " desc");
     }
 
     protected String getOperator(SetOperationType type) {

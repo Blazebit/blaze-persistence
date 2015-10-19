@@ -5,8 +5,6 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
-import com.blazebit.persistence.spi.OrderByElement;
-import com.blazebit.persistence.spi.SetOperationType;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
     
@@ -56,46 +54,12 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
     }
     
     @Override
-    public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset) {
-        if (isSubquery) {
-            sqlSb.insert(0, '(');
-        }
-        
-        if (operands.size() > 0) {
-            String operator = getOperator(setType);
-            boolean hasLimit = limit != null;
-            boolean hasOrderBy = orderByElements.size() > 0;
-            boolean needWrapping = hasLimit || hasOrderBy;
-            
-            if (needWrapping) {
-                sqlSb.append("select * from (");
-            }
-            
-            boolean first = true;
-            for (String operand : operands) {
-                if (first) {
-                    first = false;
-                } else {
-                    sqlSb.append("\n");
-                    sqlSb.append(operator);
-                    sqlSb.append("\n");
-                }
-    
-                sqlSb.append(operand);
-            }
-
-            if (needWrapping) {
-                sqlSb.append(')');
-            }
-            
-            appendOrderBy(sqlSb, orderByElements);
-            
-            if (limit != null) {
-                appendLimit(sqlSb, isSubquery, limit, offset);
-            }
-        }
-        
-        if (isSubquery) {
+    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        if (!hasOuterClause) {
+            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+        } else {
+            sqlSb.append("select * from (");
+            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
             sqlSb.append(')');
         }
     }

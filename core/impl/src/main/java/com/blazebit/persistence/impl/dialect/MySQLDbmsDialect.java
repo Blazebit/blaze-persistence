@@ -1,6 +1,7 @@
 package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
+import com.blazebit.persistence.spi.OrderByElement;
 
 public class MySQLDbmsDialect extends DefaultDbmsDialect {
     
@@ -51,7 +52,8 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         if (isSubquery) {
-            sqlSb.insert(0, "SELECT * FROM (");
+            // Insert it after the open bracket
+            sqlSb.insert(1, "SELECT * FROM (");
         }
         
         if (offset == null) {
@@ -65,6 +67,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
             String limitSubqueryAlias = "_tmp_" + threadLocalCounter.get().incrementAndGet();
             sqlSb.append(") as ").append(limitSubqueryAlias);
         }
+    }
+    
+    @Override
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
+        appendEmulatedOrderByElementWithNulls(sqlSb, element);
     }
 
 }

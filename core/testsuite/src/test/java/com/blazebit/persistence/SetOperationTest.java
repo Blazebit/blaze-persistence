@@ -518,9 +518,9 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "(SELECT d3 FROM Document d3 WHERE d3.name = :param_1\n"
                 + "UNION\n"
                 + "SELECT d4 FROM Document d4 WHERE d4.name = :param_2\n"
-                + "ORDER BY " + renderNullPrecedence("name", "DESC", "LAST")
+                + "ORDER BY name DESC NULLS LAST"
                 + " LIMIT 1)\n"
-                + "ORDER BY " + renderNullPrecedence("name", "DESC", "LAST")
+                + "ORDER BY name DESC NULLS LAST"
                 + " LIMIT 1";
         
         assertEquals(expected, cb.getQueryString());
@@ -563,9 +563,9 @@ public class SetOperationTest extends AbstractCoreTest {
                 + "(SELECT d3.name AS dName FROM Document d3 WHERE d3.name = :param_1\n"
                 + "UNION\n"
                 + "SELECT d4.name FROM Document d4 WHERE d4.name = :param_2\n"
-                + "ORDER BY " + renderNullPrecedence("dName", "DESC", "LAST")
+                + "ORDER BY dName DESC NULLS LAST"
                 + " LIMIT 1)\n"
-                + "ORDER BY " + renderNullPrecedence("docName", "DESC", "LAST")
+                + "ORDER BY docName DESC NULLS LAST"
                 + " LIMIT 1";
         
         assertEquals(expected, cb.getQueryString());

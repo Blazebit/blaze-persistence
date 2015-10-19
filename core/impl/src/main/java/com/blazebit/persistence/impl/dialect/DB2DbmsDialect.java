@@ -1,10 +1,12 @@
 package com.blazebit.persistence.impl.dialect;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.OrderByElement;
 
 public class DB2DbmsDialect extends DefaultDbmsDialect {
     
@@ -148,6 +150,29 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             sqlSb.append(" limit ").append(limit).append(" offset ").append(offset);
             // TODO: This is selecting the rownum too...
             // "select * from ( select db2limit2_.*, rownumber() over(order by order of db2limit2_) as rownumber_ from ( ?1 fetch first ?2 rows only ) as db2limit2_ ) as db2limit1_ where rownumber_ > ?3 order by rownumber_"
+        }
+    }
+    
+    @Override
+    protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
+        if (!hasOuterClause) {
+            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+        } else {
+            sqlSb.append("select * from (");
+            super.appendSetOperands(sqlSb, operator, isSubquery, operands, hasOuterClause);
+            sqlSb.append(')');
+        }
+    }
+    
+    @Override
+    protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
+        if ((element.isNullsFirst() && !element.isAscending()) || (!element.isNullsFirst() && element.isAscending())) {
+            // The following are ok according to DB2 docs
+            // ASC + NULLS LAST
+            // DESC + NULLS FIRST
+            super.appendOrderByElement(sqlSb, element);
+        } else {
+            appendEmulatedOrderByElementWithNulls(sqlSb, element);
         }
     }
 
