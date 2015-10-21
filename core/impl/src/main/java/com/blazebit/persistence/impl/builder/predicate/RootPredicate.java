@@ -15,9 +15,8 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.impl.AbstractFullQueryBuilder;
 import com.blazebit.persistence.impl.ParameterManager;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.ParameterRegistrationVisitor;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -32,29 +31,12 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
     private final AndPredicate predicate;
-    private final ParameterManager parameterManager;
 
-    private final VisitorAdapter parameterRegistrationVisitor = new VisitorAdapter() {
-
-        @Override
-        public void visit(ParameterExpression expression) {
-            if (expression.getValue() != null) {
-                // ParameterExpression was created with an object but no name is set
-                expression.setName(parameterManager.getParamNameForObject(expression.getValue()));
-            } else {
-                // Value was not set so we only have an unsatisfied parameter name which we register
-                if (AbstractFullQueryBuilder.idParamName.equals(expression.getName())) {
-                    throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
-                } else {
-                    parameterManager.registerParameterName(expression.getName());
-                }
-            }
-        }
-    };
+    private final VisitorAdapter parameterRegistrationVisitor;
 
     public RootPredicate(ParameterManager parameterManager) {
         this.predicate = new AndPredicate();
-        this.parameterManager = parameterManager;
+        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);
     }
 
     @Override
@@ -63,12 +45,8 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
         Predicate pred = builder.getPredicate();
 
         // register parameter expressions
-        registerParameterExpressions(pred);
+        pred.accept(parameterRegistrationVisitor);
         predicate.getChildren().add(pred);
-    }
-
-    private void registerParameterExpressions(Predicate predicate) {
-        predicate.accept(parameterRegistrationVisitor);
     }
 
     public AndPredicate getPredicate() {

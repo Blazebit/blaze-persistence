@@ -19,12 +19,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
+
+import com.blazebit.persistence.impl.expression.ParameterExpression;
 
 /**
  *
@@ -35,7 +36,6 @@ public class ParameterManager {
 
     private static final String prefix = "param_";
     private int counter;
-    private final Map<Object, String> nameCache = new IdentityHashMap<Object, String>();
     private final Map<String, Object> parameters = new HashMap<String, Object>();
     private static final Object REGISTERED_PLACEHOLDER = new Object();
 
@@ -87,17 +87,18 @@ public class ParameterManager {
         return o == REGISTERED_PLACEHOLDER ? null : o;
     }
 
-    public String getParamNameForObject(Object o) {
+    public ParameterExpression addParameterExpression(Object o) {
+        String name = addParameter(o);
+        return new ParameterExpression(name, o);
+    }
+
+    public String addParameter(Object o) {
         if (o == null) {
             throw new NullPointerException();
         }
-        String existingName = nameCache.get(o);
-        if (existingName == null) {
-            existingName = prefix + counter++;
-            nameCache.put(o, existingName);
-            parameters.put(existingName, o);
-        }
-        return existingName;
+        String name = prefix + counter++;
+        parameters.put(name, o);
+        return name;
     }
 
     public void addParameterMapping(String parameterName, Object o) {

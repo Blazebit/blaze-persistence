@@ -24,14 +24,14 @@ package com.blazebit.persistence.impl.expression;
 public class ParameterExpression extends AbstractExpression {
 
     private String name;
-    private final Object value;
+    private Object value;
 
     public ParameterExpression(String name) {
         this.name = name;
-        this.value = null;
     }
 
-    public ParameterExpression(Object value) {
+    public ParameterExpression(String name, Object value) {
+        this.name = name;
         this.value = value;
     }
 

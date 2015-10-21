@@ -21,6 +21,7 @@ import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
@@ -47,18 +48,20 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
     private final OrPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final ParameterManager parameterManager;
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private final SubqueryBuilderListenerImpl<RestrictionBuilder<WhereOrBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
     private SubqueryBuilderListenerImpl<WhereOrBuilder<T>> rightSubqueryPredicateBuilderListener;
     private SubqueryBuilderListenerImpl<RestrictionBuilder<WhereOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
 
-    public WhereOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public WhereOrBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
         this.result = result;
         this.listener = listener;
         this.predicate = new OrPredicate();
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.parameterManager = parameterManager;
     }
 
     @Override
@@ -81,25 +84,25 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
 
     @Override
     public WhereAndBuilder<WhereOrBuilder<T>> whereAnd() {
-        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        return startBuilder(new WhereAndBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public RestrictionBuilder<WhereOrBuilder<T>> where(String expression) {
         Expression exp = expressionFactory.createSimpleExpression(expression);
-        return startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, exp, subqueryInitFactory, expressionFactory));
+        return startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, exp, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public CaseWhenStarterBuilder<RestrictionBuilder<WhereOrBuilder<T>>> whereCase() {
-        RestrictionBuilderImpl<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilderImpl<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
-        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<WhereOrBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
+        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<WhereOrBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public SimpleCaseWhenStarterBuilder<RestrictionBuilder<WhereOrBuilder<T>>> whereSimpleCase(String expression) {
-        RestrictionBuilderImpl<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilderImpl<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(restrictionBuilder);
         return caseExpressionBuilderListener.startBuilder(new SimpleCaseWhenBuilderImpl<RestrictionBuilder<WhereOrBuilder<T>>>(restrictionBuilder, caseExpressionBuilderListener, expressionFactory, expressionFactory.createCaseOperandExpression(expression)));
     }
@@ -118,7 +121,7 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery() {
-        RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
@@ -126,7 +129,7 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public SubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubquery(String subqueryAlias, String expression) {
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
-        RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory));
+        RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 

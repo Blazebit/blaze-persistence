@@ -261,7 +261,7 @@ public class SelectManager<T> extends AbstractManager {
     <X> CaseWhenStarterBuilder<X> selectCase(X builder, final String selectAlias) {
         verifyBuilderEnded();
         caseExpressionBuilderListener = new CaseExpressionBuilderListener(selectAlias);
-        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory));
+        return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<X>(builder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     <X> SimpleCaseWhenStarterBuilder<X> selectSimpleCase(X builder, final String selectAlias, Expression caseOperandExpression) {

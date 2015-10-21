@@ -386,9 +386,9 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) GROUP BY document.id ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
-        String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0)";
-        String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_0) ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1) GROUP BY document.id ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedCountQuery = "SELECT COUNT(DISTINCT document.id) FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1)";
+        String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1) ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         assertEquals(expectedObjectQuery, pcb.getQueryString());

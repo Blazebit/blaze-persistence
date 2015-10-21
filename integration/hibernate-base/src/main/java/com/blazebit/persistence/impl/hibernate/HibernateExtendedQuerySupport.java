@@ -283,6 +283,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new PersistenceException("Entity manager is closed!");
         }
 
+        // TODO: SQL as cache key is a very bad idea
         HQLQueryPlan queryPlan = getQueryPlan(sfi, query, finalSql);
         
         // Create combined query parameters
@@ -301,7 +302,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         if (session.isClosed()) {
             throw new PersistenceException("Entity manager is closed!");
         }
-        
+
+        // TODO: SQL as cache key is a very bad idea
         HQLQueryPlan queryPlan = getQueryPlan(sfi, query, finalSql);
         
         // Create combined query parameters
@@ -351,6 +353,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         
         // Create plan for example query
+        // TODO: SQL as cache key is a very bad idea
         HQLQueryPlan queryPlan = getQueryPlan(sfi, exampleQuery, sqlOverride);
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         

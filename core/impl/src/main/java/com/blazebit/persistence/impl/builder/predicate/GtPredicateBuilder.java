@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.impl.builder.predicate;
 
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -29,8 +30,8 @@ import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredi
  */
 public class GtPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<T> {
 
-    public GtPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
-        super(result, listener, leftExpression, false, subqueryInitFactory, expressionFactory);
+    public GtPredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
+        super(result, listener, leftExpression, false, subqueryInitFactory, expressionFactory, parameterManager);
     }
 
     @Override

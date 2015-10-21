@@ -24,7 +24,6 @@ import javax.persistence.Query;
 
 import com.blazebit.persistence.BaseInsertCriteriaBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
@@ -57,8 +56,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         }
         
 		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		String paramName = parameterManager.getParamNameForObject(value);
-		selectManager.select(new ParameterExpression(paramName), null);
+		selectManager.select(parameterManager.addParameterExpression(value), null);
 		
 		return (X) this;
 	}

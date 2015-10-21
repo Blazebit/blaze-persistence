@@ -46,7 +46,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
             throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
         }
         
-		String paramName = parameterManager.getParamNameForObject(value);
+		String paramName = parameterManager.addParameter(value);
 		setAttributes.put(attributeName, paramName);
 		return (X) this;
 	}

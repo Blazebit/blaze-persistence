@@ -26,6 +26,7 @@ import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryAndExpressionBuilderListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
@@ -34,7 +35,6 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
@@ -58,15 +58,17 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
     protected final ExpressionFactory expressionFactory;
+    private final ParameterManager parameterManager;
     private SubqueryInitiator<T> subqueryInitiator;
 
-    public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
+    public AbstractQuantifiablePredicateBuilder(T result, PredicateBuilderEndedListener listener, Expression leftExpression, boolean wrapNot, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
         this.result = result;
         this.listener = listener;
         this.wrapNot = wrapNot;
         this.leftExpression = leftExpression;
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
+        this.parameterManager = parameterManager;
     }
 
     protected abstract QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier);
@@ -85,7 +87,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     @Override
     public T value(Object value) {
-        return chain(createPredicate(leftExpression, new ParameterExpression(value), PredicateQuantifier.ONE));
+        return chain(createPredicate(leftExpression, parameterManager.addParameterExpression(value), PredicateQuantifier.ONE));
     }
 
     @Override
@@ -97,43 +99,43 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhen(String expression) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).when(expression);
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).when(expression);
     }
 
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> caseWhenAnd() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenAnd();
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenAnd();
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenExists() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenExists();
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenExists();
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhenNotExists() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenNotExists();
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenNotExists();
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenSubquery();
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery();
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenSubquery(subqueryAlias, expression);
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery(subqueryAlias, expression);
     }
 
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> caseWhenOr() {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
-        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory)).whenOr();
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenOr();
     }
 
     @Override

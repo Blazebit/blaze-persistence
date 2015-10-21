@@ -19,13 +19,13 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 
@@ -37,6 +37,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
 
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
+    private final ParameterManager parameterManager;
     private final PredicateBuilderEndedListener listener;
     private final Expression left;
     private final boolean negated;
@@ -45,15 +46,16 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     private BetweenPredicate predicate;
     private SubqueryInitiator<?> subqueryStartMarker;
 
-    public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
-        this(result, left, start, expressionFactory, listener, subqueryInitFactory, false);
+    public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, ParameterManager parameterManager, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory) {
+        this(result, left, start, expressionFactory, parameterManager, listener, subqueryInitFactory, false);
     }
 
-    public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, boolean negated) {
+    public BetweenBuilderImpl(T result, Expression left, Expression start, ExpressionFactory expressionFactory, ParameterManager parameterManager, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, boolean negated) {
         this.result = result;
         this.left = left;
         this.start = start;
         this.expressionFactory = expressionFactory;
+        this.parameterManager = parameterManager;
         this.listener = listener;
         this.subqueryInitFactory = subqueryInitFactory;
         this.negated = negated;
@@ -64,7 +66,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
         if (end == null) {
             throw new NullPointerException("end");
         }
-        return chain(new BetweenPredicate(left, start, new ParameterExpression(end), negated));
+        return chain(new BetweenPredicate(left, start, parameterManager.addParameterExpression(end), negated));
     }
 
     @Override

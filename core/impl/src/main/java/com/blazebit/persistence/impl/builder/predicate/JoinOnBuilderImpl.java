@@ -36,6 +36,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     private final RootPredicate rootPredicate;
     private final PredicateBuilderEndedListener listener;
     private final ExpressionFactory expressionFactory;
+    private final ParameterManager parameterManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
 
     public JoinOnBuilderImpl(T result, PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
@@ -43,13 +44,14 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
         this.listener = listener;
         this.rootPredicate = new RootPredicate(parameterManager);
         this.expressionFactory = expressionFactory;
+        this.parameterManager = parameterManager;
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
     @Override
     public RestrictionBuilder<JoinOnBuilder<T>> on(String expression) {
         Expression leftExpression = expressionFactory.createSimpleExpression(expression);
-        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory));
+        return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
@@ -66,6 +68,6 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
 
     @Override
     public JoinOnOrBuilder<JoinOnBuilder<T>> onOr() {
-        return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, expressionFactory, subqueryInitFactory));
+        return rootPredicate.startBuilder(new JoinOnOrBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, expressionFactory, parameterManager, subqueryInitFactory));
     }
 }
