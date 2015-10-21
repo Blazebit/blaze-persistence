@@ -486,9 +486,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     void parameterizeQuery(Query q) {
         for (Parameter<?> p : q.getParameters()) {
-            if (!isParameterSet(p.getName())) {
-                throw new IllegalStateException("Unsatisfied parameter " + p.getName());
-            }
+            // Allow to defer setting parameter values
+//            if (!isParameterSet(p.getName())) {
+//                throw new IllegalStateException("Unsatisfied parameter " + p.getName());
+//            }
+            
             Object paramValue = parameterManager.getParameterValue(p.getName());
             if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
                 ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
