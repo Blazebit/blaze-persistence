@@ -69,7 +69,9 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 	protected void getQueryString1(StringBuilder sbSelectFrom) {
 		sbSelectFrom.append("UPDATE ");
 		sbSelectFrom.append(entityType.getName()).append(' ');
-		sbSelectFrom.append(entityAlias);
+		if (entityAlias != null) {
+		    sbSelectFrom.append(entityAlias);
+		}
 		sbSelectFrom.append(" SET ");
 		
 		for (Map.Entry<String, String> attributeEntry : setAttributes.entrySet()) {
