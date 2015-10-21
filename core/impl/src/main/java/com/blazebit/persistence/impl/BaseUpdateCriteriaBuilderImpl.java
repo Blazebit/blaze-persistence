@@ -33,20 +33,6 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 
 	public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteClass, result, listener);
-
-        // set defaults
-        if (alias == null) {
-        	alias = clazz.getSimpleName().toLowerCase();
-        } else {
-        	// If the user supplies an alias, the intention is clear
-        	fromClassExplicitelySet = true;
-        }
-        
-        try {
-            this.joinManager.addRoot(em.getMetamodel().entity(clazz), alias);
-        } catch (IllegalArgumentException ex) {
-    		throw new IllegalArgumentException("The class [" + clazz.getName() + "] is not an entity!");
-        }
 	}
 
     @Override
@@ -69,9 +55,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 	protected void getQueryString1(StringBuilder sbSelectFrom) {
 		sbSelectFrom.append("UPDATE ");
 		sbSelectFrom.append(entityType.getName()).append(' ');
-		if (entityAlias != null) {
-		    sbSelectFrom.append(entityAlias);
-		}
+	    sbSelectFrom.append(entityAlias);
 		sbSelectFrom.append(" SET ");
 		
 		for (Map.Entry<String, String> attributeEntry : setAttributes.entrySet()) {

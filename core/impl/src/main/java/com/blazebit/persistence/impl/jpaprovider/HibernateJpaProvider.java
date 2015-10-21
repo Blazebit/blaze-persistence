@@ -33,7 +33,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class HibernateJpaProvider implements JpaProvider {
 
-    private static final ConcurrentMap<WeakReference<Class<?>>, DB> dbDialectCache = new ConcurrentHashMap<WeakReference<Class<?>>, DB>();
+    private static final ConcurrentMap<WeakClassKey, DB> dbDialectCache = new ConcurrentHashMap<WeakClassKey, DB>();
     private final DB db;
 
     private static enum DB {
@@ -49,7 +49,7 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 Object session = em.unwrap(Class.forName("org.hibernate.Session"));
                 Class<?> dialectClass = ExpressionUtils.getValue(session, "sessionFactory.dialect").getClass();
-                WeakReference<Class<?>> key = new WeakReference<Class<?>>(dialectClass);
+                WeakClassKey key = new WeakClassKey(dialectClass);
                 DB cacheValue = dbDialectCache.get(key);
 
                 if (cacheValue == null) {
@@ -61,6 +61,14 @@ public class HibernateJpaProvider implements JpaProvider {
                     } else {
                         cacheValue = DB.OTHER;
                     }
+                    
+                    // When we have to add a new dialect, we probably got redeployed, so let's do a cleanup
+                    for (WeakClassKey keyElement : dbDialectCache.keySet()) {
+                        if (keyElement.get() == null) {
+                            dbDialectCache.remove(keyElement);
+                        }
+                    }
+                    
                     dbDialectCache.put(key, cacheValue);
                 }
 
@@ -162,5 +170,51 @@ public class HibernateJpaProvider implements JpaProvider {
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
         return functionName + "(";
     }
+    
+    static class WeakClassKey extends WeakReference<Class<?>> {
+        /**
+         * saved value of the referent's identity hash code, to maintain
+         * a consistent hash code after the referent has been cleared
+         */
+        private final int hash;
+
+        /**
+         * Create a new WeakClassKey to the given object, registered
+         * with a queue.
+         */
+        WeakClassKey(Class<?> cl) {
+            super(cl);
+            hash = System.identityHashCode(cl);
+        }
+
+        /**
+         * Returns the identity hash code of the original referent.
+         */
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+
+        /**
+         * Returns true if the given object is this identical
+         * WeakClassKey instance, or, if this object's referent has not
+         * been cleared, if the given object is another WeakClassKey
+         * instance with the identical non-null referent as this one.
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this)
+                return true;
+
+            if (obj instanceof WeakClassKey) {
+                Object referent = get();
+                return (referent != null) &&
+                       (referent == ((WeakClassKey) obj).get());
+            } else {
+                return false;
+            }
+        }
+    }
+
 
 }

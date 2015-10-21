@@ -64,8 +64,17 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
 		super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
+
+        // set defaults
+        if (alias == null) {
+            alias = clazz.getSimpleName().toLowerCase();
+        } else {
+            // If the user supplies an alias, the intention is clear
+            fromClassExplicitelySet = true;
+        }
+        
 		this.entityType = em.getMetamodel().entity(clazz);
-		this.entityAlias = alias;
+		this.entityAlias = joinManager.addRoot(entityType, alias);
 		this.result = result;
 		this.listener = listener;
 		
