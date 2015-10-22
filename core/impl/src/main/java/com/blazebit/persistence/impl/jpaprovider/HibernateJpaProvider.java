@@ -96,7 +96,7 @@ public class HibernateJpaProvider implements JpaProvider {
                         // The following are ok according to DB2 docs
                         // ASC + NULLS LAST
                         // DESC + NULLS FIRST
-                        sb.append(" NULLS ").append(nulls);
+                        sb.append(expression).append(" ").append(order).append(" NULLS ").append(nulls);
                         return;
                     }
                 }
