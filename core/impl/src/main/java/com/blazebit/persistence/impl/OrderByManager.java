@@ -18,8 +18,6 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,7 +50,10 @@ public class OrderByManager extends AbstractManager {
         }
 
         Set<String> orderBySelectAliases = new HashSet<String>();
-        for (OrderByInfo orderByInfo : orderByInfos) {
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             if (aliasManager.isSelectAlias(potentialSelectAlias)) {
                 orderBySelectAliases.add(potentialSelectAlias);
@@ -68,7 +69,10 @@ public class OrderByManager extends AbstractManager {
 
         List<OrderByExpression> realExpressions = new ArrayList<OrderByExpression>(orderByInfos.size());
 
-        for (OrderByInfo orderByInfo : orderByInfos) {
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             Expression expr;
 
@@ -100,7 +104,10 @@ public class OrderByManager extends AbstractManager {
             return false;
         }
 
-        for (OrderByInfo orderByInfo : orderByInfos) {
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
             AliasInfo aliasInfo = aliasManager.getAliasInfo(orderByInfo.getExpression().toString());
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
                 SelectInfo selectInfo = (SelectInfo) aliasInfo;
@@ -120,14 +127,20 @@ public class OrderByManager extends AbstractManager {
     }
 
     void acceptVisitor(Expression.Visitor v) {
-        for (OrderByInfo orderBy : orderByInfos) {
-            orderBy.getExpression().accept(v);
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
+            orderByInfo.getExpression().accept(v);
         }
     }
 
     <X> X acceptVisitor(Expression.ResultVisitor<X> v, X stopValue) {
-        for (OrderByInfo orderBy : orderByInfos) {
-            if (stopValue.equals(orderBy.getExpression().accept(v))) {
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
+            if (stopValue.equals(orderByInfo.getExpression().accept(v))) {
                 return stopValue;
             }
         }
@@ -136,8 +149,11 @@ public class OrderByManager extends AbstractManager {
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
-        for (OrderByInfo orderBy : orderByInfos) {
-            orderBy.setExpression(transformer.transform(orderBy.getExpression(), ClauseType.ORDER_BY, true));
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
+            orderByInfo.setExpression(transformer.transform(orderByInfo.getExpression(), ClauseType.ORDER_BY, true));
         }
     }
 
@@ -148,11 +164,11 @@ public class OrderByManager extends AbstractManager {
 
         queryGenerator.setQueryBuffer(sb);
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
-        Iterator<OrderByInfo> iter = orderByInfos.iterator();
-        OrderByInfo orderByInfo;
 
-        while (iter.hasNext()) {
-            orderByInfo = iter.next();
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             if (aliasInfo != null && aliasInfo instanceof SelectInfo) {
@@ -177,21 +193,19 @@ public class OrderByManager extends AbstractManager {
      * 
      * @return
      */
-    Set<String> buildGroupByClauses() {
+    void buildGroupByClauses(Set<String> clauses) {
         if (orderByInfos.isEmpty()) {
-            return Collections.emptySet();
+            return;
         }
 
-        Set<String> groupByClauses = new LinkedHashSet<String>();
-        Iterator<OrderByInfo> iter = orderByInfos.iterator();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
-        OrderByInfo orderByInfo;
         StringBuilder sb = new StringBuilder();
 
-        while (iter.hasNext()) {
-            sb.setLength(0);
-            queryGenerator.setQueryBuffer(sb);
-            orderByInfo = iter.next();
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            final OrderByInfo orderByInfo = infos.get(i);
+            
             String potentialSelectAlias = orderByInfo.getExpression().toString();
             AliasInfo aliasInfo = aliasManager.getAliasInfo(potentialSelectAlias);
             Expression expr;
@@ -209,12 +223,11 @@ public class OrderByManager extends AbstractManager {
                 sb.setLength(0);
                 queryGenerator.setQueryBuffer(sb);
                 expr.accept(queryGenerator);
-                groupByClauses.add(sb.toString());
+                clauses.add(sb.toString());
             }
         }
 
         queryGenerator.setConditionalContext(conditionalContext);
-        return groupByClauses;
     }
 
     void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {
@@ -223,12 +236,17 @@ public class OrderByManager extends AbstractManager {
         }
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
-        Iterator<OrderByInfo> iter = orderByInfos.iterator();
+        
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
-        applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
-        while (iter.hasNext()) {
-            sb.append(", ");
-            applyOrderBy(sb, iter.next(), inverseOrder, resolveSelectAliases);
+
+        List<OrderByInfo> infos = orderByInfos;
+        int size = infos.size();
+        for (int i = 0; i < size; i++) {
+            if (i != 0) {
+                sb.append(", ");
+            }
+            
+            applyOrderBy(sb, infos.get(i), inverseOrder, resolveSelectAliases);
         }
         queryGenerator.setConditionalContext(conditionalContext);
     }
@@ -296,7 +314,7 @@ public class OrderByManager extends AbstractManager {
                 nulls = "FIRST";
             }
 
-            sb.append(jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls));
+            jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
         }
     }
 

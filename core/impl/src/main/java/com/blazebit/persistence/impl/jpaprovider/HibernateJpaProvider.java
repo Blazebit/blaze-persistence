@@ -15,16 +15,7 @@
  */
 package com.blazebit.persistence.impl.jpaprovider;
 
-import java.lang.ref.WeakReference;
-import java.util.Locale;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import javax.persistence.EntityManager;
-
-import com.blazebit.reflection.ExpressionUtils;
-import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -33,7 +24,6 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public class HibernateJpaProvider implements JpaProvider {
 
-    private static final ConcurrentMap<WeakClassKey, DB> dbDialectCache = new ConcurrentHashMap<WeakClassKey, DB>();
     private final DB db;
 
     private static enum DB {
@@ -42,37 +32,16 @@ public class HibernateJpaProvider implements JpaProvider {
         DB2;
     }
 
-    public HibernateJpaProvider(EntityManager em) {
+    public HibernateJpaProvider(EntityManager em, String dbms) {
         try {
             if (em == null) {
                 db = DB.OTHER;
+            } else if ("mysql".equals(dbms)) {
+                db = DB.MY_SQL;
+            } else if ("db2".equals(dbms)) {
+                db = DB.DB2;
             } else {
-                Object session = em.unwrap(Class.forName("org.hibernate.Session"));
-                Class<?> dialectClass = ExpressionUtils.getValue(session, "sessionFactory.dialect").getClass();
-                WeakClassKey key = new WeakClassKey(dialectClass);
-                DB cacheValue = dbDialectCache.get(key);
-
-                if (cacheValue == null) {
-                    Set<Class<?>> types = ReflectionUtils.getSuperTypes(dialectClass);
-                    if (types.contains(Class.forName("org.hibernate.dialect.MySQLDialect"))) {
-                        cacheValue = DB.MY_SQL;
-                    } else if (types.contains(Class.forName("org.hibernate.dialect.DB2Dialect"))) {
-                        cacheValue = DB.DB2;
-                    } else {
-                        cacheValue = DB.OTHER;
-                    }
-                    
-                    // When we have to add a new dialect, we probably got redeployed, so let's do a cleanup
-                    for (WeakClassKey keyElement : dbDialectCache.keySet()) {
-                        if (keyElement.get() == null) {
-                            dbDialectCache.remove(keyElement);
-                        }
-                    }
-                    
-                    dbDialectCache.put(key, cacheValue);
-                }
-
-                db = cacheValue;
+                db = DB.OTHER;
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -119,13 +88,22 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
-        if (nulls == null) {
-            return expression + " " + order;
-        } else {
-            if (db == DB.MY_SQL) {
+    public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
+        sb.append(expression).append(' ').append(order);
+        
+        if (nulls != null) {
+            if (db == DB.DB2 || db == DB.MY_SQL) {
+                if (db == DB.DB2) {
+                    if (("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order)) || ("LAST".equals(nulls) && "ASC".equalsIgnoreCase(order))) {
+                        // The following are ok according to DB2 docs
+                        // ASC + NULLS LAST
+                        // DESC + NULLS FIRST
+                        sb.append(" NULLS ").append(nulls);
+                        return;
+                    }
+                }
+
                 // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL
-                StringBuilder sb = new StringBuilder();
                 sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
                 if ("FIRST".equals(nulls)) {
                     sb.append("0 ELSE 1");
@@ -134,19 +112,8 @@ public class HibernateJpaProvider implements JpaProvider {
                 }
                 sb.append(" END, ");
                 sb.append(expression).append(" ").append(order);
-                return sb.toString();
-            } else if (db == DB.DB2) {
-                if (("FIRST".equals(nulls) && "DESC".equalsIgnoreCase(order)) || ("LAST".equals(nulls) && "ASC".equalsIgnoreCase(order))) {
-                    // The following are ok according to DB2 docs
-                    // ASC + NULLS LAST
-                    // DESC + NULLS FIRST
-                    return expression + " " + order + " NULLS " + nulls;
-                }
-
-                // But for the rest we have to use case when
-                return String.format(Locale.ENGLISH, "CASE WHEN %s IS NULL THEN %s ELSE %s END, %s %s", resolvedExpression != null ? resolvedExpression : expression, "FIRST".equals(nulls) ? "0" : "1", "FIRST".equals(nulls) ? "1" : "0", expression, order);
             } else {
-                return expression + " " + order + " NULLS " + nulls;
+                sb.append(" NULLS ").append(nulls);
             }
         }
     }
@@ -170,51 +137,5 @@ public class HibernateJpaProvider implements JpaProvider {
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
         return functionName + "(";
     }
-    
-    static class WeakClassKey extends WeakReference<Class<?>> {
-        /**
-         * saved value of the referent's identity hash code, to maintain
-         * a consistent hash code after the referent has been cleared
-         */
-        private final int hash;
-
-        /**
-         * Create a new WeakClassKey to the given object, registered
-         * with a queue.
-         */
-        WeakClassKey(Class<?> cl) {
-            super(cl);
-            hash = System.identityHashCode(cl);
-        }
-
-        /**
-         * Returns the identity hash code of the original referent.
-         */
-        @Override
-        public int hashCode() {
-            return hash;
-        }
-
-        /**
-         * Returns true if the given object is this identical
-         * WeakClassKey instance, or, if this object's referent has not
-         * been cleared, if the given object is another WeakClassKey
-         * instance with the identical non-null referent as this one.
-         */
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this)
-                return true;
-
-            if (obj instanceof WeakClassKey) {
-                Object referent = get();
-                return (referent != null) &&
-                       (referent == ((WeakClassKey) obj).get());
-            } else {
-                return false;
-            }
-        }
-    }
-
 
 }

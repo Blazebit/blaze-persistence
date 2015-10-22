@@ -41,8 +41,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     
     @Rule
     public TestRule benchmarkRun = new BenchmarkRule();
-    private ExpressionFactory cachingExpressionFactory;
-    private ExpressionFactory nonCachingExpressionFactory;
+    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
+    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>());
     
     @BeforeClass
     public static void beforeClass() {
@@ -55,12 +55,6 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     public static void afterClass() {
         Logger log = Logger.getLogger("com.blazebit.persistence.parser");
         log.setLevel(originalLevel);
-    }
-    
-    @Before
-    public void before() {
-        cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
-        nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>());
     }
 
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 1000, concurrency = 4)

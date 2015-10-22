@@ -24,7 +24,7 @@ import javax.persistence.EntityManager;
  */
 public class JpaProviders {
 
-    public static JpaProvider resolveJpaProvider(EntityManager em) {
+    public static JpaProvider resolveJpaProvider(EntityManager em, String dbms) {
         boolean jpa21 = false;
 
         try {
@@ -37,9 +37,9 @@ public class JpaProviders {
             Class<?> sessionClass = Class.forName("org.hibernate.Session");
             if (em == null || em.unwrap(sessionClass) != null) {
                 if (jpa21) {
-                    return new HibernateJpa21Provider(em);
+                    return new HibernateJpa21Provider(em, dbms);
                 } else {
-                    return new HibernateJpaProvider(em);
+                    return new HibernateJpaProvider(em, dbms);
                 }
             }
         } catch (ClassNotFoundException e) {

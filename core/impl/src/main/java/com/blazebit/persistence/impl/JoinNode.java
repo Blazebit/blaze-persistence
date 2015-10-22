@@ -25,9 +25,13 @@ import java.util.TreeMap;
 import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *
@@ -55,6 +59,10 @@ public class JoinNode {
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
     private AndPredicate onPredicate;
+    
+    // Cache
+    private boolean dirty = true;
+    private boolean cardinalityMandatory;
 
     public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass) {
         this.parent = parent;
@@ -62,6 +70,101 @@ public class JoinNode {
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.propertyClass = propertyClass;
+        onUpdate(null);
+    }
+    
+    private void onUpdate(StateChange stateChange) {
+        // Once mandatory, only a type change can cause a change of the cardinality mandatory
+        if (cardinalityMandatory && stateChange != StateChange.JOIN_TYPE) {
+            return;
+        }
+        
+        dirty = true;
+        if (parent != null) {
+            parent.onUpdate(StateChange.CHILD);
+        }
+    }
+
+    public boolean isCardinalityMandatory() {
+        if (dirty) {
+            updateCardinalityMandatory();
+            dirty = false;
+        }
+        
+        return cardinalityMandatory;
+    }
+    
+    private void updateCardinalityMandatory() {
+        boolean computedMandatory = false;
+        if (type == JoinType.INNER) {
+            // If the relation is optional/nullable or the join has a condition
+            // the join is mandatory, because doing omitting it might change the semantics result set 
+            if (parentTreeNode.isOptional() || !isEmptyCondition()) {
+                computedMandatory = true;
+            }
+        } else if (type == JoinType.LEFT) {
+            // If the join has a condition which is not an array expression condition
+            // we definitively need the join
+            // NOTE: an array expression condition with a left join will always produce 1 row
+            // so the join is not yet absolutely mandatory 
+            if (!isEmptyCondition() && !isArrayExpressionCondition()) {
+                computedMandatory = true;
+            }
+
+            // Check if any of the child nodes is mandatory for the cardinality
+            OUTER: for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
+                JoinTreeNode treeNode = nodeEntry.getValue();
+
+                for (JoinNode childNode : treeNode.getJoinNodes().values()) {
+                    if (childNode.isCardinalityMandatory()) {
+                        computedMandatory = true;
+                        break OUTER;
+                    }
+                }
+            }
+        }
+        
+        if (computedMandatory != cardinalityMandatory) {
+            cardinalityMandatory = computedMandatory;
+        }
+    }
+    
+    private boolean isEmptyCondition() {
+        return onPredicate == null || onPredicate.getChildren().isEmpty();
+    }
+    
+    private boolean isArrayExpressionCondition() {
+        if (onPredicate == null || onPredicate.getChildren().size() != 1) {
+            return false;
+        }
+
+        Predicate predicate = onPredicate.getChildren().get(0);
+        if (!(predicate instanceof EqPredicate)) {
+            return false;
+        }
+
+        EqPredicate eqPredicate = (EqPredicate) predicate;
+        Expression left = eqPredicate.getLeft();
+        if (!(left instanceof FunctionExpression)) {
+            return false;
+        }
+
+        FunctionExpression keyExpression = (FunctionExpression) left;
+        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName())) {
+            return false;
+        }
+
+        Expression keyContentExpression = keyExpression.getExpressions().get(0);
+        if (!(keyContentExpression instanceof PathExpression)) {
+            return false;
+        }
+
+        PathExpression keyPath = (PathExpression) keyContentExpression;
+        if (!this.equals(keyPath.getBaseNode())) {
+            return false;
+        }
+
+        return true;
     }
 
     public void registerDependencies() {
@@ -134,6 +237,7 @@ public class JoinNode {
 
     public void setType(JoinType type) {
         this.type = type;
+        onUpdate(StateChange.JOIN_TYPE);
     }
 
     public boolean isFetch() {
@@ -167,8 +271,9 @@ public class JoinNode {
         return onPredicate;
     }
 
-    public void setOnPredicate(AndPredicate withPredicate) {
-        this.onPredicate = withPredicate;
+    public void setOnPredicate(AndPredicate onPredicate) {
+        this.onPredicate = onPredicate;
+        onUpdate(StateChange.ON_PREDICATE);
     }
 
     public Set<JoinNode> getDependencies() {
@@ -192,5 +297,11 @@ public class JoinNode {
         }
 
         return false;
+    }
+    
+    private static enum StateChange {
+        JOIN_TYPE,
+        ON_PREDICATE,
+        CHILD;
     }
 }

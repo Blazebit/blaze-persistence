@@ -35,6 +35,7 @@ import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -55,6 +56,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final Set<String> aggregateFunctions;
     private final List<EntityManagerIntegrator> entityManagerIntegrators;
     private final ExpressionFactory expressionFactory;
+    private final ExpressionFactory subqueryExpressionFactory;
     private final Map<String, Object> properties;
     private final boolean compatibleModeEnabled;
 
@@ -66,6 +68,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.aggregateFunctions = resolveAggregateFunctions(functions);
         this.entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>(config.getEntityManagerIntegrators());
         this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions));
+        this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, expressionFactory);
         this.properties = copyProperties(config.getProperties());
         this.compatibleModeEnabled = Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.COMPATIBLE_MODE)));
     }
@@ -96,6 +99,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return expressionFactory;
     }
 
+    public ExpressionFactory getSubqueryExpressionFactory() {
+        return subqueryExpressionFactory;
+    }
+
     public Map<String, Object> getProperties() {
         return properties;
     }
@@ -122,7 +129,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             dialect = dbmsDialects.get(null);
         }
         
-        return MainQuery.create(this, em, dialect, registeredFunctions);
+        return MainQuery.create(this, em, dbms, dialect, registeredFunctions);
     }
 
     @Override

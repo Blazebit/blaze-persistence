@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.metamodel.Attribute;
@@ -126,9 +127,12 @@ public class JoinManager extends AbstractManager {
 	}
 
     private JoinNode getRootNode(String alias) {
-    	for (int i = 0; i < rootNodes.size(); i++) {
-    		if (alias.equals(rootNodes.get(i).getAliasInfo().getAlias())) {
-    			return rootNodes.get(i);
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+        for (int i = 0; i < size; i++) {
+            JoinNode node = nodes.get(i);
+    		if (alias.equals(node.getAliasInfo().getAlias())) {
+    			return node;
     		}
     	}
     	
@@ -140,8 +144,10 @@ public class JoinManager extends AbstractManager {
     }
 
     boolean hasCollections() {
-    	for (int i = 0; i < rootNodes.size(); i++) {
-    		if (rootNodes.get(i).hasCollections()) {
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+    	for (int i = 0; i < size; i++) {
+    		if (nodes.get(i).hasCollections()) {
     			return true;
     		}
     	}
@@ -162,12 +168,14 @@ public class JoinManager extends AbstractManager {
         sb.append(" FROM ");
         
         // TODO: we might have dependencies to other from clause elements which should also be accounted for
-    	for (int i = 0; i < rootNodes.size(); i++) {
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+    	for (int i = 0; i < size; i++) {
     		if (i != 0) {
     			sb.append(", ");
     		}
     		
-    		JoinNode rootNode = rootNodes.get(i);
+    		JoinNode rootNode = nodes.get(i);
     		EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
 	        sb.append(type.getName()).append(' ');
 	        
@@ -177,6 +185,7 @@ public class JoinManager extends AbstractManager {
 	        
 	        sb.append(rootNode.getAliasInfo().getAlias());
 	        
+	        // TODO: not sure if needed since applyImplicitJoins will already invoke that
     		rootNode.registerDependencies();
     		applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix);
     	}
@@ -187,16 +196,20 @@ public class JoinManager extends AbstractManager {
     }
 
     void acceptVisitor(JoinNodeVisitor v) {
-    	for (int i = 0; i < rootNodes.size(); i++) {
-    		rootNodes.get(i).accept(v);
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+    	for (int i = 0; i < size; i++) {
+    	    nodes.get(i).accept(v);
     	}
     }
 
     public boolean acceptVisitor(AggregateDetectionVisitor aggregateDetector, boolean stopValue) {
     	Boolean stop = Boolean.valueOf(stopValue);
 
-    	for (int i = 0; i < rootNodes.size(); i++) {
-    		if (stop.equals(rootNodes.get(i).accept(new AbortableOnClauseJoinNodeVisitor(aggregateDetector, stopValue)))) {
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+    	for (int i = 0; i < size; i++) {
+    		if (stop.equals(nodes.get(i).accept(new AbortableOnClauseJoinNodeVisitor(aggregateDetector, stopValue)))) {
     			return true;
     		}
     	}
@@ -205,8 +218,10 @@ public class JoinManager extends AbstractManager {
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
-    	for (int i = 0; i < rootNodes.size(); i++) {
-    		rootNodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+    	for (int i = 0; i < size; i++) {
+    		nodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
     	}
     }
 
@@ -272,84 +287,25 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private boolean isEmptyCondition(JoinNode node) {
-        return node.getOnPredicate() == null || node.getOnPredicate().getChildren().isEmpty();
-    }
-
-    private boolean isArrayExpressionCondition(JoinNode node) {
-        if (node.getOnPredicate() == null || node.getOnPredicate().getChildren().size() != 1) {
-            return false;
-        }
-
-        Predicate predicate = node.getOnPredicate().getChildren().get(0);
-        if (!(predicate instanceof EqPredicate)) {
-            return false;
-        }
-
-        EqPredicate eqPredicate = (EqPredicate) predicate;
-        Expression left = eqPredicate.getLeft();
-        if (!(left instanceof FunctionExpression)) {
-            return false;
-        }
-
-        FunctionExpression keyExpression = (FunctionExpression) left;
-        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName())) {
-            return false;
-        }
-
-        Expression keyContentExpression = keyExpression.getExpressions().get(0);
-        if (!(keyContentExpression instanceof PathExpression)) {
-            return false;
-        }
-
-        PathExpression keyPath = (PathExpression) keyContentExpression;
-        if (!node.equals(keyPath.getBaseNode())) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // TODO: Maybe do that more efficient in a future version
-    private boolean isMandatoryJoin(JoinNode node) {
-        if (node.getType() == JoinType.INNER) {
-            if (node.getParentTreeNode().isOptional() || !isEmptyCondition(node)) {
-                return true;
-            }
-        } else if (node.getType() == JoinType.LEFT) {
-            if (!isEmptyCondition(node) && !isArrayExpressionCondition(node)) {
-                return true;
-            }
-
-            for (Map.Entry<String, JoinTreeNode> nodeEntry : node.getNodes().entrySet()) {
-                JoinTreeNode treeNode = nodeEntry.getValue();
-
-                for (JoinNode childNode : treeNode.getJoinNodes().values()) {
-                    if (isMandatoryJoin(childNode)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
     private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
 
             for (JoinNode node : treeNode.getJoinNodes().values()) {
-                if (!isMandatoryJoin(node) && !clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies())) {
+                // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
+                if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
                     continue;
                 }
 
+                // We have to render any dependencies this join node has before actually rendering itself 
                 if (!node.getDependencies().isEmpty()) {
                     renderReverseDependency(sb, node, aliasPrefix);
                 }
 
+                // Finally render this join node
                 renderJoinNode(sb, joinBase, node, aliasPrefix);
 
+                // Render child nodes recursively
                 if (!node.getNodes().isEmpty()) {
                     applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix);
                 }
@@ -486,13 +442,15 @@ public class JoinManager extends AbstractManager {
             }
 
             // First try to implicit join indices of array expressions since we will need their base nodes
-            for (PathElementExpression pathElem : pathExpression.getExpressions()) {
+            List<PathElementExpression> pathElements = pathExpression.getExpressions();
+            int pathElementSize = pathElements.size();
+            for (int i = 0; i < pathElementSize; i++) {
+                PathElementExpression pathElem = pathElements.get(i);
                 if (pathElem instanceof ArrayExpression) {
                     implicitJoin(((ArrayExpression) pathElem).getIndex(), false, fromClause, fromSubquery, fromSelectAlias, joinRequired);
                 }
             }
 
-            List<PathElementExpression> pathElements = pathExpression.getExpressions();
             PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
             boolean singleValuedAssociationIdExpression = false;
             JoinNode current = null;
@@ -512,7 +470,7 @@ public class JoinManager extends AbstractManager {
                 int maybeSingularAssociationIdIndex = pathElements.size() - 1;
                 currentResult = implicitJoin(current, pathExpression, startIndex, maybeSingularAssociationIndex);
                 current = currentResult.baseNode;
-                // TODO: Not sure if necessary
+                
                 if (currentResult.hasField()) {
                     resultFields.addAll(Arrays.asList(currentResult.field.split("\\.")));
                 }
@@ -520,12 +478,6 @@ public class JoinManager extends AbstractManager {
 
                 if (singleValuedAssociationIdExpression) {
                 } else {
-                    // TODO: Not sure if necessary
-//                    if (!resultFields.isEmpty()) {
-//                        throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part ["
-//                            + StringUtils.join(".", resultFields) + "]");
-//                    }
-                    
                     if (currentResult.hasField()) {
                         // Start form the start index to respect the non joinable part
                         currentResult = createOrUpdateNode(current, currentResult.field + "." + pathElements.get(maybeSingularAssociationIndex), null, null, true, true);
@@ -608,7 +560,7 @@ public class JoinManager extends AbstractManager {
                         throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
                     }
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
-                    generateAndApplyWithPredicate(current, arrayExpr);
+                    generateAndApplyOnPredicate(current, arrayExpr);
                 } else if ((matchingNode = findNode(current, joinRelationName, arrayExpr)) != null) {
                     // We found a join node for the same join relation with the same array expression predicate
                     current = matchingNode;
@@ -621,7 +573,7 @@ public class JoinManager extends AbstractManager {
                         throw new IllegalArgumentException("The join path [" + pathExpression + "] has a non joinable part [" + currentResult.field
                             + "]");
                     }
-                    generateAndApplyWithPredicate(current, arrayExpr);
+                    generateAndApplyOnPredicate(current, arrayExpr);
                 }
 
                 result = new JoinResult(current, null);
@@ -686,12 +638,16 @@ public class JoinManager extends AbstractManager {
             pathExpression.setBaseNode(result.baseNode);
             pathExpression.setField(result.field);
         } else if (expression instanceof CompositeExpression) {
-            for (Expression exp : ((CompositeExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
+            List<Expression> expressions = ((CompositeExpression) expression).getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                implicitJoin(expressions.get(i), objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
             }
         } else if (expression instanceof FunctionExpression) {
-            for (Expression exp : ((FunctionExpression) expression).getExpressions()) {
-                implicitJoin(exp, objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
+            List<Expression> expressions = ((FunctionExpression) expression).getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                implicitJoin(expressions.get(i), objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
             }
         }
     }
@@ -839,8 +795,8 @@ public class JoinManager extends AbstractManager {
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 
-    private void registerDependencies(final JoinNode joinNode, Predicate withPredicate) {
-        withPredicate.accept(new VisitorAdapter() {
+    private void registerDependencies(final JoinNode joinNode, Predicate onPredicate) {
+        onPredicate.accept(new VisitorAdapter() {
 
             @Override
             public void visit(PathExpression pathExpr) {
@@ -852,7 +808,7 @@ public class JoinManager extends AbstractManager {
         });
     }
 
-    private void generateAndApplyWithPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
+    private void generateAndApplyOnPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
         if (joinNode.getOnPredicate() != null) {
@@ -895,7 +851,7 @@ public class JoinManager extends AbstractManager {
                         throw new IllegalArgumentException("Illegal reference to the select alias '" + joinRelationName + "'");
                     }
                     current = ((JoinAliasInfo) aliasInfo).getJoinNode();
-                    generateAndApplyWithPredicate(current, arrayExpr);
+                    generateAndApplyOnPredicate(current, arrayExpr);
                 } else {
                     String joinAlias = getJoinAlias(arrayExpr);
                     final JoinResult result = createOrUpdateNode(current, joinRelationName, joinAlias, null, true, false);
@@ -904,7 +860,7 @@ public class JoinManager extends AbstractManager {
                     if (result.hasField()) {
                         resultFields.add(result.field);
                     }
-                    generateAndApplyWithPredicate(current, arrayExpr);
+                    generateAndApplyOnPredicate(current, arrayExpr);
                 }
             } else if (pathElements.size() == 1 && (aliasInfo = aliasManager.getAliasInfoForBottomLevel(elementExpr.toString())) != null) {
                 if (aliasInfo instanceof SelectInfo) {
@@ -925,7 +881,7 @@ public class JoinManager extends AbstractManager {
                 } else {
                     final JoinResult result = implicitJoinSingle(current, elementExpr.toString());
                     current = result.baseNode;
-                    // TODO: Not sure if necessary
+                    
                     if (result.hasField()) {
                         resultFields.add(result.field);
                     }
@@ -1153,11 +1109,13 @@ public class JoinManager extends AbstractManager {
         Class<?> resolvedFieldClass = JpaUtils.resolveFieldClass(attrJoinResult.containingClass, attr);
 
         if (!JpaUtils.isJoinable(attr)) {
-            LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
-                .append(" of class ")
-                .append(baseNodeType.getName())
-                .append(" is parseable and therefore it has not to be fetched explicitly.")
-                .toString());
+            if (LOG.isLoggable(Level.FINE)) {
+                LOG.fine(new StringBuilder("Field with name ").append(joinRelationName)
+                    .append(" of class ")
+                    .append(baseNodeType.getName())
+                    .append(" is parseable and therefore it has not to be fetched explicitly.")
+                    .toString());
+            }
             return new JoinResult(baseNode, joinRelationName);
         }
 
@@ -1256,8 +1214,10 @@ public class JoinManager extends AbstractManager {
 
     private boolean findPredicate(AndPredicate andPredicate, Predicate pred) {
         if (andPredicate != null) {
-            for (Predicate p : andPredicate.getChildren()) {
-                if (p.equals(pred)) {
+            List<Predicate> children = andPredicate.getChildren();
+            int size = children.size();
+            for (int i = 0; i < size; i++) {
+                if (pred.equals(children.get(i))) {
                     return true;
                 }
             }

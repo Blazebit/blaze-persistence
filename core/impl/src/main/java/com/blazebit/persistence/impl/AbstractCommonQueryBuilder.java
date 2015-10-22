@@ -56,7 +56,6 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
@@ -215,7 +214,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
         }
 
-        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, this.aliasManager, joinManager, new SubqueryExpressionFactory(cbf.getAggregateFunctions()));
+        this.subqueryInitFactory = new SubqueryInitiatorFactory(mainQuery, this.aliasManager, joinManager);
         this.joinManager.setSubqueryInitFactory(subqueryInitFactory);
 
         this.whereManager = new WhereManager<BuilderType>(queryGenerator, parameterManager, subqueryInitFactory, expressionFactory);
@@ -789,7 +788,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void verifyBuilderEnded() {
+        if (isMainQuery) {
+            cteManager.verifyBuilderEnded();
+        }
+        
         whereManager.verifyBuilderEnded();
+        keysetManager.verifyBuilderEnded();
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
         joinManager.verifyBuilderEnded();
@@ -952,15 +956,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void applySizeSelectTransformer() {
-        boolean containsSizeSelect = false;
-        for (SelectInfo selectInfo : selectManager.getSelectInfos()) {
-            if (ExpressionUtils.containsSizeExpression(selectInfo.getExpression())) {
-                containsSizeSelect = true;
-                break;
-            }
-        }
-
-        if (containsSizeSelect) {
+        if (selectManager.containsSizeSelect()) {
             if (joinManager.hasCollections() || joinManager.getRoots().size() > 1) {
                 selectManager.applySelectInfoTransformer(sizeSelectToSubqueryTransformer);
             } else {
@@ -1168,8 +1164,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             keysetManager.initialize(orderByExpressions);
         }
 
-        // Check if aggregate functions are used
-
         // No need to do all that stuff again if no mutation occurs
         needsCheck = false;
     }
@@ -1202,7 +1196,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
-        sbSelectFrom.append(selectManager.buildSelect());
+        selectManager.buildSelect(sbSelectFrom);
     }
 
     protected void appendFromClause(StringBuilder sbSelectFrom) {
@@ -1227,11 +1221,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected void appendGroupByClause(StringBuilder sbSelectFrom) {
         Set<String> clauses = new LinkedHashSet<String>();
-        clauses.addAll(groupByManager.buildGroupByClauses());
+        groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-            clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
-            clauses.addAll(havingManager.buildGroupByClauses());
-            clauses.addAll(orderByManager.buildGroupByClauses());
+            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            havingManager.buildGroupByClauses(clauses);
+            orderByManager.buildGroupByClauses(clauses);
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
         havingManager.buildClause(sbSelectFrom);

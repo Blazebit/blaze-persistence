@@ -142,24 +142,25 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     void buildClause(StringBuilder sb) {
-        queryGenerator.setQueryBuffer(sb);
         if (!hasPredicates()) {
             return;
         }
+        
+        queryGenerator.setQueryBuffer(sb);
         sb.append(' ').append(getClauseName()).append(' ');
-        applyPredicate(queryGenerator, sb);
+        applyPredicate(queryGenerator);
     }
 
     void buildClausePredicate(StringBuilder sb) {
         queryGenerator.setQueryBuffer(sb);
-        applyPredicate(queryGenerator, sb);
+        applyPredicate(queryGenerator);
     }
 
     protected abstract String getClauseName();
 
     protected abstract ClauseType getClauseType();
 
-    void applyPredicate(ResolvingQueryGenerator queryGenerator, StringBuilder sb) {
+    void applyPredicate(ResolvingQueryGenerator queryGenerator) {
         boolean conditionalContext = queryGenerator.setConditionalContext(true);
         rootPredicate.getPredicate().accept(queryGenerator);
         queryGenerator.setConditionalContext(conditionalContext);

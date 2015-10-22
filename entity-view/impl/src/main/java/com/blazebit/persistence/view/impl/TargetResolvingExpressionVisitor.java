@@ -120,8 +120,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     public Map<Method, Class<?>> getPossibleTargets() {
         Map<Method, Class<?>> possibleTargets = new HashMap<Method, Class<?>>();
-        
-        for (PathPosition position : pathPositions) {
+
+        List<PathPosition> positions = pathPositions;
+        int size = positions.size();
+        for (int i = 0; i < size; i++) {
+            PathPosition position = positions.get(i);
             possibleTargets.put(position.getMethod(), position.getRealCurrentClass());
         }
         
@@ -154,11 +157,15 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<PathPosition>();
         
-        for (PathPosition position : currentPositions) {
-            for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
+        int positionsSize = currentPositions.size();
+        for (int j = 0; j < positionsSize; j++) {
+            PathPosition position = currentPositions.get(j);
+            List<WhenClauseExpression> expressions = expression.getWhenClauses();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
                 pathPositions = new ArrayList<PathPosition>();
                 pathPositions.add(currentPosition = position);
-                whenClause.accept(this);
+                expressions.get(i).accept(this);
                 newPositions.addAll(pathPositions);
             }
             
@@ -174,8 +181,10 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     @Override
     public void visit(PathExpression expression) {
-        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            pathElementExpression.accept(this);
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
     }
 

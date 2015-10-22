@@ -62,8 +62,10 @@ public class CompositeExpression extends AbstractExpression {
         Expression lastExpr;
         if (expr instanceof CompositeExpression) {
             CompositeExpression composite = (CompositeExpression) expr;
-            for (Expression subexpr : composite.getExpressions()) {
-                append(subexpr);
+            List<Expression> expressions = composite.getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                append(expressions.get(i));
             }
         } else if (!expressions.isEmpty() && expr instanceof FooExpression
             && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression) {

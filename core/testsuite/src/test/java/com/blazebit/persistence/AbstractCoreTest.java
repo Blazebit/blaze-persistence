@@ -47,17 +47,18 @@ import com.blazebit.persistence.tx.TxWork;
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     private static final JpaProvider staticJpaProvider;
+    private CriteriaBuilderConfiguration config;
     private JpaProvider jpaProvider;
     protected String ON_CLAUSE;
     
     static {
-        staticJpaProvider = JpaProviders.resolveJpaProvider(null);
+        staticJpaProvider = JpaProviders.resolveJpaProvider(null, null);
     }
 
     @Override
     public void init() {
         super.init();
-        jpaProvider = JpaProviders.resolveJpaProvider(em);
+        jpaProvider = JpaProviders.resolveJpaProvider(em, config.getEntityManagerIntegrators().get(0).getDbms(em));
         ON_CLAUSE = jpaProvider.getOnClause();
     }
     
@@ -66,6 +67,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         config = super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
+        this.config = config;
         return config;
     }
     
@@ -127,7 +129,9 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
-    	return jpaProvider.renderNullPrecedence(expression, resolvedExpression, order, nulls);
+        StringBuilder sb = new StringBuilder();
+    	jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
+    	return sb.toString();
     }
     
     protected String countStar() {

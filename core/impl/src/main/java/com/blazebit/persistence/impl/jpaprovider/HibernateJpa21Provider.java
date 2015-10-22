@@ -24,8 +24,8 @@ import javax.persistence.EntityManager;
  */
 public class HibernateJpa21Provider extends HibernateJpaProvider {
 
-    public HibernateJpa21Provider(EntityManager em) {
-        super(em);
+    public HibernateJpa21Provider(EntityManager em, String dbms) {
+        super(em, dbms);
     }
 
     @Override

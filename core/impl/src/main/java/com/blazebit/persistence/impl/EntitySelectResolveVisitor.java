@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  * in the select clause when used in combination with aggregate functions. We have to decompose the
  * entity and add the components to the group by because all component will end up in the select clause.
  * 
- * @author Christian
+ * @author Christian Beikov
  * @since 1.0.5
  */
 public class EntitySelectResolveVisitor extends VisitorAdapter {

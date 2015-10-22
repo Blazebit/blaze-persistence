@@ -15,8 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -34,7 +33,7 @@ public class GroupByManager extends AbstractManager {
 
     GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         super(queryGenerator, parameterManager);
-        groupByInfos = new HashSet<NodeInfo>();
+        groupByInfos = new LinkedHashSet<NodeInfo>();
     }
 
     void groupBy(Expression expr) {
@@ -42,12 +41,11 @@ public class GroupByManager extends AbstractManager {
         registerParameterExpressions(expr);
     }
 
-    Set<String> buildGroupByClauses() {
+    void buildGroupByClauses(Set<String> clauses) {
         if (groupByInfos.isEmpty()) {
-            return Collections.emptySet();
+            return;
         }
 
-        Set<String> groupByClauses = new HashSet<String>();
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
 
@@ -55,10 +53,9 @@ public class GroupByManager extends AbstractManager {
             sb.setLength(0);
             queryGenerator.setQueryBuffer(sb);
             info.getExpression().accept(queryGenerator);
-            groupByClauses.add(sb.toString());
+            clauses.add(sb.toString());
         }
         queryGenerator.setConditionalContext(conditionalContext);
-        return groupByClauses;
     }
 
     void buildGroupBy(StringBuilder sb, Set<String> clauses) {

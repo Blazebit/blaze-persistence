@@ -58,23 +58,17 @@ public final class JpaUtils {
 
         // Try again polymorphic
         Class<?> javaType = type.getJavaType();
-        Set<ManagedType<?>> possibleSubTypes = new HashSet<ManagedType<?>>();
+        Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
 
         // Collect all possible subtypes of the given type
         for (ManagedType<?> subType : metamodel.getManagedTypes()) {
             if (javaType.isAssignableFrom(subType.getJavaType()) && javaType != subType.getJavaType()) {
-                possibleSubTypes.add(subType);
-            }
-        }
+                // Collect all the attributes that resolve on every possible subtype
+                attr = JpaUtils.getAttribute(subType, attributeName);
 
-        Set<Attribute<?, ?>> resolvedAttributes = new HashSet<Attribute<?, ?>>();
-
-        // Collect all the attributes that resolve on every possible subtype
-        for (ManagedType<?> subType : possibleSubTypes) {
-            attr = JpaUtils.getAttribute(subType, attributeName);
-
-            if (attr != null) {
-                resolvedAttributes.add(attr);
+                if (attr != null) {
+                    resolvedAttributes.add(attr);
+                }
             }
         }
 

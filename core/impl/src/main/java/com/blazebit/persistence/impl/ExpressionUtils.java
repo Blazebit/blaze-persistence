@@ -38,6 +38,7 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
@@ -114,8 +115,10 @@ public class ExpressionUtils {
             return false;
         }
 
-        for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
-            if (!isUnique(metamodel, whenExpr.getResult())) {
+        List<WhenClauseExpression> expressions = expr.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (!isUnique(metamodel, expressions.get(i).getResult())) {
                 return false;
             }
         }
@@ -199,8 +202,10 @@ public class ExpressionUtils {
 
     private static boolean isNullable(Metamodel metamodel, CompositeExpression expr) {
         boolean nullable;
-        for (Expression subExpr : expr.getExpressions()) {
-            nullable = isNullable(metamodel, subExpr);
+        List<Expression> expressions = expr.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            nullable = isNullable(metamodel, expressions.get(i));
 
             if (nullable) {
                 return true;
@@ -215,8 +220,10 @@ public class ExpressionUtils {
             return true;
         }
 
-        for (WhenClauseExpression whenExpr : expr.getWhenClauses()) {
-            if (isNullable(metamodel, whenExpr.getResult())) {
+        List<WhenClauseExpression> expressions = expr.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (isNullable(metamodel, expressions.get(i).getResult())) {
                 return true;
             }
         }
@@ -229,8 +236,10 @@ public class ExpressionUtils {
             return true;
         } else if ("COALESCE".equalsIgnoreCase(expr.getFunctionName())) {
             boolean nullable;
-            for (Expression subExpr : expr.getExpressions()) {
-                nullable = isNullable(metamodel, subExpr);
+            List<Expression> expressions = expr.getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                nullable = isNullable(metamodel, expressions.get(i));
 
                 if (!nullable) {
                     return false;
@@ -240,8 +249,10 @@ public class ExpressionUtils {
             return true;
         } else {
             boolean nullable;
-            for (Expression subExpr : expr.getExpressions()) {
-                nullable = isNullable(metamodel, subExpr);
+            List<Expression> expressions = expr.getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                nullable = isNullable(metamodel, expressions.get(i));
 
                 if (nullable) {
                     return true;
@@ -349,15 +360,11 @@ public class ExpressionUtils {
     }
 
     public static boolean containsSubqueryExpression(Expression e) {
-        SubqueryExpressionDetector detector = new SubqueryExpressionDetector();
-        e.accept(detector);
-        return detector.hasSubquery;
+        return e.accept(subqueryExpressionDetector);
     }
 
     public static boolean containsSizeExpression(Expression e) {
-        SizeExpressionDetector detector = new SizeExpressionDetector();
-        e.accept(detector);
-        return detector.hasSizeExpression;
+        return e.accept(sizeExpressionDetector);
     }
 
     public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
@@ -368,8 +375,10 @@ public class ExpressionUtils {
             public void visit(CompositeExpression expression) {
                 super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
-                for (Expression expr : expression.getExpressions()) {
-                    transformed.add(replacementTransformer.transform(expr, null, false));
+                List<Expression> expressions = expression.getExpressions();
+                int size = expressions.size();
+                for (int i = 0; i < size; i++) {
+                    transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
                 }
                 expression.getExpressions().clear();
                 expression.getExpressions().addAll(transformed);
@@ -379,8 +388,10 @@ public class ExpressionUtils {
             public void visit(FunctionExpression expression) {
                 super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
-                for (Expression expr : expression.getExpressions()) {
-                    transformed.add(replacementTransformer.transform(expr, null, false));
+                List<Expression> expressions = expression.getExpressions();
+                int size = expressions.size();
+                for (int i = 0; i < size; i++) {
+                    transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
                 }
                 expression.setExpressions(transformed);
             }
@@ -405,26 +416,19 @@ public class ExpressionUtils {
         return "OUTER".equalsIgnoreCase(e.getFunctionName());
     }
 
-    private static class SubqueryExpressionDetector extends VisitorAdapter {
-
-        private boolean hasSubquery = false;
+    private static final AbortableVisitorAdapter subqueryExpressionDetector = new AbortableVisitorAdapter() {
 
         @Override
-        public void visit(SubqueryExpression expression) {
-            hasSubquery = true;
+        public Boolean visit(SubqueryExpression expression) {
+            return true;
         }
-    }
+    };
 
-    private static class SizeExpressionDetector extends VisitorAdapter {
-
-        private boolean hasSizeExpression = false;
+    private static final AbortableVisitorAdapter sizeExpressionDetector = new AbortableVisitorAdapter() {
 
         @Override
-        public void visit(FunctionExpression expression) {
-            if (hasSizeExpression) {
-                return;
-            }
-            hasSizeExpression = ExpressionUtils.isSizeFunction(expression);
+        public Boolean visit(FunctionExpression expression) {
+            return ExpressionUtils.isSizeFunction(expression);
         }
-    }
+    };
 }

@@ -100,7 +100,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
         final int startLen = sb.length();
         final String and = " AND ";
-        for (Predicate child : predicate.getChildren()) {
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            Predicate child = children.get(i);
             if (child instanceof OrPredicate) {
                 sb.append("(");
                 int len = sb.length();
@@ -135,7 +138,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             return;
         }
         final String or = " OR ";
-        for (Predicate child : predicate.getChildren()) {
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            Predicate child = children.get(i);
             if (child instanceof AndPredicate) {
                 sb.append("(");
                 int len = sb.length();
@@ -369,8 +375,10 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(CompositeExpression expression) {
-        for (Expression e : expression.getExpressions()) {
-            e.accept(this);
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
     }
 
@@ -486,8 +494,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             sb.append(" ");
         }
 
-        for (WhenClauseExpression whenClause : whenClauses) {
-            whenClause.accept(this);
+        int size = whenClauses.size();
+        for (int i = 0; i < size; i++) {
+            whenClauses.get(i).accept(this);
             sb.append(" ");
         }
         sb.append("ELSE ");

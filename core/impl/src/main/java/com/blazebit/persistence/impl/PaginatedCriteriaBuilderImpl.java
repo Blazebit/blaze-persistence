@@ -426,7 +426,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        clauses.addAll(orderByManager.buildGroupByClauses());
+        orderByManager.buildGroupByClauses(clauses);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         boolean inverseOrder = false;
@@ -467,7 +467,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        clauses.addAll(orderByManager.buildGroupByClauses());
+        orderByManager.buildGroupByClauses(clauses);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
@@ -487,7 +487,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
         String rootAlias = rootNode.getAliasInfo().getAlias();
 
-        sbSelectFrom.append(selectManager.buildSelect());
+        selectManager.buildSelect(sbSelectFrom);
 
         /**
          * we have already selected the IDs so now we only need so select the
@@ -499,11 +499,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         sbSelectFrom.append(" WHERE ").append(rootAlias).append('.').append(idName).append(" IN :").append(idParamName).append("");
 
         Set<String> clauses = new LinkedHashSet<String>();
-        clauses.addAll(groupByManager.buildGroupByClauses());
+        groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-            clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
-            clauses.addAll(havingManager.buildGroupByClauses());
-            clauses.addAll(orderByManager.buildGroupByClauses());
+            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            havingManager.buildGroupByClauses(clauses);
+            orderByManager.buildGroupByClauses(clauses);
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
@@ -517,7 +517,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     private String getObjectQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
-        sbSelectFrom.append(selectManager.buildSelect());
+        selectManager.buildSelect(sbSelectFrom);
 
         if (keysetExtraction) {
             orderByManager.buildSelectClauses(sbSelectFrom, true);
@@ -539,11 +539,11 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         Set<String> clauses = new LinkedHashSet<String>();
-        clauses.addAll(groupByManager.buildGroupByClauses());
+        groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-            clauses.addAll(selectManager.buildGroupByClauses(em.getMetamodel()));
-            clauses.addAll(havingManager.buildGroupByClauses());
-            clauses.addAll(orderByManager.buildGroupByClauses());
+            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            havingManager.buildGroupByClauses(clauses);
+            orderByManager.buildGroupByClauses(clauses);
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 

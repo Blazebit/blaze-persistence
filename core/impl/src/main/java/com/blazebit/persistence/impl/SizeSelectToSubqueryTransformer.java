@@ -42,7 +42,6 @@ public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
             info.setExpression(info.getExpression().accept(deepTransformer));
         } else {
             info.getExpression().accept(deepTransformer);
-
         }
     }
 
@@ -57,7 +56,6 @@ public class SizeSelectToSubqueryTransformer implements SelectInfoTransformer {
         @Override
         public Expression visit(FunctionExpression expression) {
             if (ExpressionUtils.isSizeFunction(expression)) {
-
                 PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
                 Class<?> collectionPropertyClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
                 String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();

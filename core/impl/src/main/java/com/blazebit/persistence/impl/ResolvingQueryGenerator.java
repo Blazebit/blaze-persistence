@@ -131,18 +131,21 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             setOperationArgs.add(new FooExpression(nameSb));
             setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
 
-            for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> operand : operationManager.getSetOperations()) {
-                setOperationArgs.add(asExpression(operand));
+            List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
+            int operandsSize = setOperands.size();
+            for (int i = 0; i < operandsSize; i++) {
+                setOperationArgs.add(asExpression(setOperands.get(i)));
             }
             
             List<? extends OrderByElement> orderByElements = operationBuilder.getOrderByElements();
             if (orderByElements.size() > 0) {
                 setOperationArgs.add(new FooExpression("'ORDER_BY'"));
                 
-                for (OrderByElement elem : orderByElements) {
+                int orderByElementsSize = orderByElements.size();
+                for (int i = 0; i < orderByElementsSize; i++) {
                     StringBuilder argSb = new StringBuilder(20);
                     argSb.append('\'');
-                    argSb.append(elem.toString());
+                    argSb.append(orderByElements.get(i).toString());
                     argSb.append('\'');
                     setOperationArgs.add(new FooExpression(argSb));
                 }

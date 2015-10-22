@@ -64,11 +64,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
-    public String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
-        if (nulls == null) {
-            return expression + " " + order;
-        } else {
-            return expression + " " + order + " NULLS " + nulls;
+    public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
+        sb.append(expression).append(' ').append(order);
+        
+        if (nulls != null) {
+            sb.append(" NULLS ").append(nulls);
         }
     }
 

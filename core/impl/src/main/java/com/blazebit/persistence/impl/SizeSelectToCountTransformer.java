@@ -53,7 +53,6 @@ public class SizeSelectToCountTransformer implements SelectInfoTransformer {
             info.setExpression(info.getExpression().accept(deepTransformer));
         } else {
             info.getExpression().accept(deepTransformer);
-
         }
     }
 

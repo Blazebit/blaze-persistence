@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.List;
+
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -41,8 +43,10 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(PathExpression expression) {
-        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            pathElementExpression.accept(this);
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
     }
 
@@ -62,8 +66,10 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(CompositeExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            expr.accept(this);
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
     }
 
@@ -85,15 +91,19 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(FunctionExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            expr.accept(this);
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
     }
 
     @Override
     public void visit(GeneralCaseExpression expression) {
-        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
-            whenClause.accept(this);
+        List<WhenClauseExpression> expressions = expression.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         expression.getDefaultExpr().accept(this);
     }
@@ -112,15 +122,19 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(AndPredicate predicate) {
-        for (Predicate p : predicate.getChildren()) {
-            p.accept(this);
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            children.get(i).accept(this);
         }
     }
 
     @Override
     public void visit(OrPredicate predicate) {
-        for (Predicate p : predicate.getChildren()) {
-            p.accept(this);
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            children.get(i).accept(this);
         }
     }
 

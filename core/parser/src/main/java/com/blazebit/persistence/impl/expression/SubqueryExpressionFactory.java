@@ -29,6 +29,8 @@ import org.antlr.v4.runtime.ParserRuleContext;
  */
 public class SubqueryExpressionFactory extends AbstractExpressionFactory {
 
+    private final ExpressionFactory delegate;
+
     private final RuleInvoker simpleExpressionRuleInvoker = new RuleInvoker() {
 
         @Override
@@ -37,14 +39,56 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
-    // TODO: this class is used in a very unefficient way
-    public SubqueryExpressionFactory(Set<String> aggregateFunctions) {
+    public SubqueryExpressionFactory(Set<String> aggregateFunctions, ExpressionFactory delegate) {
         super(aggregateFunctions);
+        this.delegate = delegate;
+    }
+
+    @Override
+    public Expression createSimpleExpression(String expression) {
+        return super.createSimpleExpression(expression);
     }
 
     @Override
     protected RuleInvoker getSimpleExpressionRuleInvoker() {
         return simpleExpressionRuleInvoker;
+    }
+    
+    // Delegates
+
+    @Override
+    public PathExpression createPathExpression(String expression) {
+        return delegate.createPathExpression(expression);
+    }
+
+    @Override
+    public Expression createCaseOperandExpression(String caseOperandExpression) {
+        return delegate.createCaseOperandExpression(caseOperandExpression);
+    }
+
+    @Override
+    public Expression createScalarExpression(String expression) {
+        return delegate.createScalarExpression(expression);
+    }
+
+    @Override
+    public Expression createArithmeticExpression(String expression) {
+        return delegate.createArithmeticExpression(expression);
+    }
+
+    @Override
+    public Expression createStringExpression(String expression) {
+        return delegate.createStringExpression(expression);
+    }
+
+    @Override
+    public Expression createOrderByExpression(String expression) {
+        return delegate.createOrderByExpression(expression);
+    }
+
+    @Override
+    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions) {
+        return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
     }
 
 }

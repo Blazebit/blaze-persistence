@@ -132,9 +132,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                    | string_expression 
                    | enum_expression 
                    | datetime_expression 
-                   | boolean_expression 
-                   | coalesce_expression 
-                   | nullif_expression 
+                   | boolean_expression
                    | entity_type_expression 
                    | case_expression
                    ;
@@ -254,10 +252,10 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
               | scalar_expression
               ;
 
- case_expression : {allowCaseWhen == true}? general_case_expression     //for entity view extension only
-                 | {allowCaseWhen == true}? simple_case_expression     //for entity view extension only
-                 | coalesce_expression 
+ case_expression : coalesce_expression
                  | nullif_expression
+                 | {allowCaseWhen == true}? general_case_expression     //for entity view extension only
+                 | {allowCaseWhen == true}? simple_case_expression     //for entity view extension only
                  ;
 
  coalesce_expression : COALESCE '('scalar_expression (',' scalar_expression)+')';

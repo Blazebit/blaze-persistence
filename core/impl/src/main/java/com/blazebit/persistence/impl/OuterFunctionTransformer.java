@@ -49,15 +49,19 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         if (original instanceof CompositeExpression) {
             CompositeExpression compExpr = (CompositeExpression) original;
             CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
-            for (Expression e : compExpr.getExpressions()) {
-                transformed.getExpressions().add(transform(e, fromClause, joinRequired));
+            List<Expression> expressions = compExpr.getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                transformed.getExpressions().add(transform(expressions.get(i), fromClause, joinRequired));
             }
             return transformed;
         } else if (original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
             FunctionExpression func = (FunctionExpression) original;
             List<Expression> transformed = new ArrayList<Expression>();
-            for (Expression e : func.getExpressions()) {
-                transformed.add(transform(e, fromClause, joinRequired));
+            List<Expression> expressions = func.getExpressions();
+            int size = expressions.size();
+            for (int i = 0; i < size; i++) {
+                transformed.add(transform(expressions.get(i), fromClause, joinRequired));
             }
             func.setExpressions(transformed);
             return func;

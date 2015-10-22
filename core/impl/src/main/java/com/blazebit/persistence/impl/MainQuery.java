@@ -30,7 +30,7 @@ public class MainQuery {
         this.cteManager = new CTEManager(this);
     }
     
-    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
+    public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {
         if (cbf == null) {
             throw new NullPointerException("criteriaBuilderFactory");
         }
@@ -39,6 +39,6 @@ public class MainQuery {
         }
         
         ParameterManager parameterManager = new ParameterManager();
-        return new MainQuery(cbf, em, JpaProviders.resolveJpaProvider(em), dbmsDialect, registeredFunctions, parameterManager);
+        return new MainQuery(cbf, em, JpaProviders.resolveJpaProvider(em, dbms), dbmsDialect, registeredFunctions, parameterManager);
     }
 }

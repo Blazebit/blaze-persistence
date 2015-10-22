@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -107,15 +106,33 @@ public class SelectManager<T> extends AbstractManager {
     public List<SelectInfo> getSelectInfos() {
         return selectInfos;
     }
+    
+    public boolean containsSizeSelect() {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
+            if (ExpressionUtils.containsSizeExpression(selectInfo.getExpression())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     void acceptVisitor(Visitor v) {
-        for (SelectInfo selectInfo : selectInfos) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
             selectInfo.getExpression().accept(v);
         }
     }
 
     <X> X acceptVisitor(ResultVisitor<X> v, X stopValue) {
-        for (SelectInfo selectInfo : selectInfos) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
             if (stopValue.equals(selectInfo.getExpression().accept(v))) {
                 return stopValue;
             }
@@ -130,8 +147,7 @@ public class SelectManager<T> extends AbstractManager {
      * @param m
      * @return
      */
-    Set<String> buildGroupByClauses(final Metamodel m) {
-        Set<String> groupByClauses = new LinkedHashSet<String>();
+    void buildGroupByClauses(final Metamodel m, Set<String> clauses) {
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         StringBuilder sb = new StringBuilder();
 
@@ -156,12 +172,13 @@ public class SelectManager<T> extends AbstractManager {
                 sb.setLength(0);
                 queryGenerator.setQueryBuffer(sb);
                 pathExpr.accept(queryGenerator);
-                groupByClauses.add(sb.toString());
+                clauses.add(sb.toString());
             }
-
-            componentPaths.clear();
         } else {
-            for (SelectInfo selectInfo : selectInfos) {
+            List<SelectInfo> infos = selectInfos;
+            int size = selectInfos.size();
+            for (int i = 0; i < size; i++) {
+                final SelectInfo selectInfo = infos.get(i);
                 selectInfo.getExpression().accept(resolveVisitor);
 
                 // The select info can only either an entity select or any other expression
@@ -171,10 +188,8 @@ public class SelectManager<T> extends AbstractManager {
                         sb.setLength(0);
                         queryGenerator.setQueryBuffer(sb);
                         pathExpr.accept(queryGenerator);
-                        groupByClauses.add(sb.toString());
+                        clauses.add(sb.toString());
                     }
-
-                    componentPaths.clear();
                 } else {
                     // This visitor checks if an expression is usable in a group by
                     GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
@@ -182,25 +197,25 @@ public class SelectManager<T> extends AbstractManager {
                         sb.setLength(0);
                         queryGenerator.setQueryBuffer(sb);
                         selectInfo.getExpression().accept(queryGenerator);
-                        groupByClauses.add(sb.toString());
+                        clauses.add(sb.toString());
                     }
                 }
             }
         }
 
         queryGenerator.setConditionalContext(conditionalContext);
-        return groupByClauses;
     }
 
-    String buildSelect() {
-        StringBuilder sb = new StringBuilder();
+    void buildSelect(StringBuilder sb) {
         sb.append("SELECT ");
 
         if (distinct) {
             sb.append("DISTINCT ");
         }
 
-        if (selectInfos.isEmpty()) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+        if (size == 0) {
             List<JoinNode> roots = joinManager.getRoots();
             
             if (roots.size() > 1) {
@@ -211,29 +226,36 @@ public class SelectManager<T> extends AbstractManager {
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
-            Iterator<SelectInfo> iter = selectInfos.iterator();
             boolean conditionalContext = queryGenerator.setConditionalContext(false);
-            applySelect(queryGenerator, sb, iter.next());
-            while (iter.hasNext()) {
-                sb.append(", ");
-                applySelect(queryGenerator, sb, iter.next());
+            
+            for (int i = 0; i < size; i++) {
+                if (i != 0) {
+                    sb.append(", ");
+                }
+                
+                applySelect(queryGenerator, sb, infos.get(i));
             }
+            
             queryGenerator.setConditionalContext(conditionalContext);
         }
-
-        return sb.toString();
     }
 
     void applyTransformer(ExpressionTransformer transformer) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
         // carry out transformations
-        for (SelectInfo selectInfo : selectInfos) {
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
             Expression transformed = transformer.transform(selectInfo.getExpression(), ClauseType.SELECT, true);
             selectInfo.setExpression(transformed);
         }
     }
 
     void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
-        for (SelectInfo selectInfo : selectInfos) {
+        List<SelectInfo> infos = selectInfos;
+        int size = selectInfos.size();
+        for (int i = 0; i < size; i++) {
+            final SelectInfo selectInfo = infos.get(i);
             selectInfoTransformer.transform(selectInfo);
         }
     }

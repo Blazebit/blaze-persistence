@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
  *
@@ -27,17 +26,15 @@ public class SubqueryInitiatorFactory {
 
     private final MainQuery mainQuery;
     private final AliasManager aliasManager;
-    private final ExpressionFactory expressionFactory;
     private final JoinManager parentJoinManager;
 
-    public SubqueryInitiatorFactory(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory) {
+    public SubqueryInitiatorFactory(MainQuery mainQuery, AliasManager aliasManager, JoinManager parentJoinManager) {
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
-        this.expressionFactory = expressionFactory;
         this.parentJoinManager = parentJoinManager;
     }
 
     public <T> SubqueryInitiator<T> createSubqueryInitiator(T result, SubqueryBuilderListener<T> listener) {
-        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, listener);
+        return new SubqueryInitiatorImpl<T>(mainQuery, aliasManager, parentJoinManager, result, listener);
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.List;
+
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -41,8 +43,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(PathExpression expression) {
-        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            if (pathElementExpression.accept(this)) {
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (expressions.get(i).accept(this)) {
                 return true;
             }
         }
@@ -69,8 +73,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(CompositeExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            if (expr.accept(this)) {
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (expressions.get(i).accept(this)) {
                 return true;
             }
         }
@@ -99,8 +105,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(FunctionExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            if (expr.accept(this)) {
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (expressions.get(i).accept(this)) {
                 return true;
             }
         }
@@ -109,8 +117,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(GeneralCaseExpression expression) {
-        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
-            if (whenClause.accept(this)) {
+        List<WhenClauseExpression> expressions = expression.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            if (expressions.get(i).accept(this)) {
                 return true;
             }
         }
@@ -135,8 +145,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(AndPredicate predicate) {
-        for (Predicate p : predicate.getChildren()) {
-            if (p.accept(this)) {
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            if (children.get(i).accept(this)) {
                 return true;
             }
         }
@@ -145,8 +157,10 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(OrPredicate predicate) {
-        for (Predicate p : predicate.getChildren()) {
-            if (p.accept(this)) {
+        List<Predicate> children = predicate.getChildren();
+        int size = children.size();
+        for (int i = 0; i < size; i++) {
+            if (children.get(i).accept(this)) {
                 return true;
             }
         }

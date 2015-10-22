@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.List;
+
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
@@ -45,8 +47,10 @@ public abstract class SizeTransformationVisitor extends PredicateModifyingResult
 
     @Override
     public Expression visit(GeneralCaseExpression expression) {
-        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
-            whenClause.accept(this);
+        List<WhenClauseExpression> expressions = expression.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         expression.setDefaultExpr(expression.getDefaultExpr().accept(this));
         return expression;

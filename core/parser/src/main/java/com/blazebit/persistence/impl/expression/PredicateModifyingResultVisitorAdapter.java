@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.List;
+
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
@@ -43,8 +45,10 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(PathExpression expression) {
-        for (PathElementExpression pathElementExpression : expression.getExpressions()) {
-            pathElementExpression.accept(this);
+        List<PathElementExpression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         return expression;
     }
@@ -68,8 +72,10 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(CompositeExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            expr.accept(this);
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         return expression;
     }
@@ -96,16 +102,20 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(FunctionExpression expression) {
-        for (Expression expr : expression.getExpressions()) {
-            expr.accept(this);
+        List<Expression> expressions = expression.getExpressions();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         return expression;
     }
 
     @Override
     public Expression visit(GeneralCaseExpression expression) {
-        for (WhenClauseExpression whenClause : expression.getWhenClauses()) {
-            whenClause.accept(this);
+        List<WhenClauseExpression> expressions = expression.getWhenClauses();
+        int size = expressions.size();
+        for (int i = 0; i < size; i++) {
+            expressions.get(i).accept(this);
         }
         expression.getDefaultExpr().accept(this);
         return expression;

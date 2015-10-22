@@ -74,7 +74,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     
-    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<String,HQLQueryPlan>>();
+    private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>>();
     private final HibernateAccess hibernateAccess;
     
 	public HibernateExtendedQuerySupport() {
@@ -283,8 +283,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new PersistenceException("Entity manager is closed!");
         }
 
-        // TODO: SQL as cache key is a very bad idea
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, finalSql);
+        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
+        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, cacheKey);
         
         // Create combined query parameters
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
@@ -303,8 +303,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new PersistenceException("Entity manager is closed!");
         }
 
-        // TODO: SQL as cache key is a very bad idea
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, finalSql);
+        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
+        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, cacheKey);
         
         // Create combined query parameters
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
@@ -353,8 +353,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         
         // Create plan for example query
-        // TODO: SQL as cache key is a very bad idea
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, exampleQuery, sqlOverride);
+        QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
+        HQLQueryPlan queryPlan = getQueryPlan(sfi, exampleQuery, cacheKey);
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
@@ -495,7 +495,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return factory.getServiceRegistry().getService(EventListenerRegistry.class).getEventListenerGroup(type).listeners();
     }
     
-    // TODO: needs to expand query params like AbstractQueryImpl and move parameters from namedParameterLists to namedParameters
     private QueryParamEntry createQueryParameters(EntityManager em, List<Query> participatingQueries) {
         List<ParameterSpecification> parameterSpecifications = new ArrayList<ParameterSpecification>();
         
@@ -810,8 +809,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         );
     }
     
-    private HQLQueryPlan getQueryPlan(SessionFactoryImplementor sfi, Query query, String cacheKey) {
-        BoundedConcurrentHashMap<String, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
+    private HQLQueryPlan getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
+        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
         HQLQueryPlan queryPlan = queryPlanCache.get(cacheKey);
         if (queryPlan == null) {
             queryPlan = createQueryPlan(sfi, query);
@@ -827,14 +826,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private HQLQueryPlan createQueryPlan(SessionFactoryImplementor sfi, Query query) {
         org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
         String queryString = hibernateQuery.getQueryString();
-        return new HQLQueryPlan( queryString, false, Collections.emptyMap(), sfi);
+        return new HQLQueryPlan(queryString, false, Collections.emptyMap(), sfi);
     }
     
-    private BoundedConcurrentHashMap<String, HQLQueryPlan> getQueryPlanCache(SessionFactoryImplementor sfi) {
-        BoundedConcurrentHashMap<String, HQLQueryPlan> queryPlanCache = queryPlanCachesCache.get(sfi);
+    private BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> getQueryPlanCache(SessionFactoryImplementor sfi) {
+        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = queryPlanCachesCache.get(sfi);
         if (queryPlanCache == null) {
-            queryPlanCache = new BoundedConcurrentHashMap<String, HQLQueryPlan>(QueryPlanCache.DEFAULT_QUERY_PLAN_MAX_COUNT, 20, BoundedConcurrentHashMap.Eviction.LIRS);
-            BoundedConcurrentHashMap<String, HQLQueryPlan> oldQueryPlanCache = queryPlanCachesCache.putIfAbsent(sfi, queryPlanCache);
+            queryPlanCache = new BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>(QueryPlanCache.DEFAULT_QUERY_PLAN_MAX_COUNT, 20, BoundedConcurrentHashMap.Eviction.LIRS);
+            BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> oldQueryPlanCache = queryPlanCachesCache.putIfAbsent(sfi, queryPlanCache);
             if (oldQueryPlanCache != null) {
                 queryPlanCache = oldQueryPlanCache;
             }
@@ -843,14 +842,66 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return queryPlanCache;
     }
     
+    private QueryPlanCacheKey createCacheKey(List<Query> queries) {
+        List<String> parts = new ArrayList<String>(queries.size());
+        addAll(queries, parts);
+        return new QueryPlanCacheKey(parts);
+    }
+    
+    private void addAll(List<Query> queries, List<String> parts) {
+        for (int i = 0; i< queries.size(); i++) {
+            Query q = queries.get(i);
+            
+            if (q instanceof CteQueryWrapper) {
+                addAll(((CteQueryWrapper) q).getParticipatingQueries(), parts);
+            } else {
+                parts.add(q.unwrap(org.hibernate.Query.class).getQueryString());
+            }
+        }
+    }
+    
     private static class QueryParamEntry {
-        QueryParameters queryParameters;
-        List<ParameterSpecification> specifications;
+        final QueryParameters queryParameters;
+        final List<ParameterSpecification> specifications;
         
         public QueryParamEntry(QueryParameters queryParameters, List<ParameterSpecification> specifications) {
             this.queryParameters = queryParameters;
             this.specifications = specifications;
         }
+    }
+    
+    private static class QueryPlanCacheKey {
+        final List<String> cacheKeyParts;
+
+        public QueryPlanCacheKey(List<String> cacheKeyParts) {
+            this.cacheKeyParts = cacheKeyParts;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((cacheKeyParts == null) ? 0 : cacheKeyParts.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            QueryPlanCacheKey other = (QueryPlanCacheKey) obj;
+            if (cacheKeyParts == null) {
+                if (other.cacheKeyParts != null)
+                    return false;
+            } else if (!cacheKeyParts.equals(other.cacheKeyParts))
+                return false;
+            return true;
+        }
+        
     }
 	
 	private HibernateEntityManagerImplementor getEntityManager(EntityManager em) {
