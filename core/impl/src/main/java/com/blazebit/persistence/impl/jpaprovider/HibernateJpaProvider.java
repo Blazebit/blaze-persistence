@@ -89,8 +89,6 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        sb.append(expression).append(' ').append(order);
-        
         if (nulls != null) {
             if (db == DB.DB2 || db == DB.MY_SQL) {
                 if (db == DB.DB2) {
@@ -113,8 +111,10 @@ public class HibernateJpaProvider implements JpaProvider {
                 sb.append(" END, ");
                 sb.append(expression).append(" ").append(order);
             } else {
-                sb.append(" NULLS ").append(nulls);
+                sb.append(expression).append(' ').append(order).append(" NULLS ").append(nulls);
             }
+        } else {
+            sb.append(expression).append(' ').append(order);
         }
     }
 
