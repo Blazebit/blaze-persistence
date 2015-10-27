@@ -34,6 +34,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.PolymorphicBase;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -63,7 +64,8 @@ public class UpdateTest extends AbstractCoreTest {
             Version.class,
             IntIdEntity.class,
             Person.class, 
-            IdHolderCTE.class
+            IdHolderCTE.class,
+            PolymorphicBase.class
         };
     }
     
@@ -266,5 +268,24 @@ public class UpdateTest extends AbstractCoreTest {
                 assertEquals("NewD1", em.find(Document.class, doc1.getId()).getName());
             }
         });
+    }
+    
+    @Test
+    public void testPolymorphicUpdate(){
+    	final long ownerId = 0;
+    	final int pageSize = 500;
+    	cbf.update(em, Document.class, "d").set("archived", true)
+			.where("d.id").nonPortable().in("alias", "FUNCTION('LIMIT',alias,:pageSize)").from(Document.class, "d2")
+				.select("d2.id")
+				.where("d2.owner.id").eq(ownerId)
+				.where("d2.age").ge(18)
+				.whereNotExists().from(PolymorphicBase.class, "e")
+					.select("e.id")
+					.where("e.name").eq("tom")
+				.end()
+				.orderByAsc("d2.id")
+			.end()
+			.setParameter("pageSize", pageSize)
+			.executeWithReturning("id", Long.class);
     }
 }
