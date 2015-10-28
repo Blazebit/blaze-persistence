@@ -278,7 +278,7 @@ public class UpdateTest extends AbstractCoreTest {
 			.where("d.id").nonPortable().in("alias", "FUNCTION('LIMIT',alias,:pageSize)").from(Document.class, "d2")
 				.select("d2.id")
 				.where("d2.owner.id").eq(ownerId)
-				.where("d2.age").ge(18)
+				.where("d2.age").ge(18l)
 				.whereNotExists().from(Person.class, "e")
 					.select("e.id")
 					.where("e.name").eq("tom")
