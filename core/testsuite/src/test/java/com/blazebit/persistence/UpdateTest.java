@@ -271,7 +271,7 @@ public class UpdateTest extends AbstractCoreTest {
     }
     
     @Test
-    public void testPolymorphicUpdate(){
+    public void testUpdateQueryWithNamedParameters(){
     	final long ownerId = 0;
     	final int pageSize = 500;
     	cbf.update(em, Document.class, "d").set("archived", true)
@@ -279,7 +279,7 @@ public class UpdateTest extends AbstractCoreTest {
 				.select("d2.id")
 				.where("d2.owner.id").eq(ownerId)
 				.where("d2.age").ge(18)
-				.whereNotExists().from(PolymorphicBase.class, "e")
+				.whereNotExists().from(Person.class, "e")
 					.select("e.id")
 					.where("e.name").eq("tom")
 				.end()
