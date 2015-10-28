@@ -1048,6 +1048,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         participatingQueries.add(baseQuery);
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
         // TODO: object builder?
+        if (selectManager.getSelectObjectBuilder() != null) {
+            query = transformQuery(query);
+        }
         
         return query;
     }
