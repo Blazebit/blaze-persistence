@@ -22,10 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 
 /**
  *
@@ -35,8 +36,9 @@ import com.blazebit.persistence.entity.Document;
  */
 public class InTest extends AbstractCoreTest {
 
+    // TODO: Enable again when HHH-7407 is fixed
     @Test
-    @Ignore("Enable again when HHH-7407 is fixed")
+    @Category({ NoHibernate.class })
     public void testBuggyHqlIn() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });
@@ -51,8 +53,9 @@ public class InTest extends AbstractCoreTest {
         criteria.getResultList();
     }
 
+    // TODO: Enable again when HHH-7407 is fixed
     @Test
-    @Ignore("Enable again when HHH-7407 is fixed")
+    @Category({ NoHibernate.class })
     public void testBuggyHqlIn1() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         List<Integer> indicies = Arrays.asList(new Integer[]{ 1, 2, 3, 4, 5 });

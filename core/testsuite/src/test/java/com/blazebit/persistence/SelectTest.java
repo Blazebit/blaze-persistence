@@ -433,22 +433,5 @@ public class SelectTest extends AbstractCoreTest {
         
         assertEquals("SELECT " + function("ARRAY", "(SELECT DISTINCT " + function("UNNEST","d2.creationDate") + " FROM Document d2)") + " FROM Document document", cb.getQueryString());
     }
-    // TODO: whats with this test?
-//    @Test
-//    public void testSelectAggregateEntitySelectLazyAssociation() {
-//        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
-//                .selectCase().when("MIN(lastModified)").gtExpression("creationDate").then("MIN(lastModified)").otherwiseExpression("CURRENT_TIMESTAMP")
-//                .select("owner")
-//                .orderByDesc("id");
-//
-//        String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP() END, owner_1 FROM Document d "
-//                + "JOIN d.owner owner_1 "
-//                + "GROUP BY d.creationDate, owner_1.age, owner_1.id, owner_1.name, owner_1.partnerDocument, d.id "
-//                + "ORDER BY d.id DESC NULLS LAST";
-//
-//        assertEquals(objectQuery, cb.getQueryString());
-//        
-//        cb.getResultList();
-//    }
     
 }

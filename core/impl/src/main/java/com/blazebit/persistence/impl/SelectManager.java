@@ -50,6 +50,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 
@@ -166,7 +167,7 @@ public class SelectManager<T> extends AbstractManager {
         	String rootAlias = rootNode.getAliasInfo().getAlias();
         	
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
-            resolveVisitor.visit(new PathExpression(path, rootNode, null, false, false));
+            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null), false, false));
 
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);

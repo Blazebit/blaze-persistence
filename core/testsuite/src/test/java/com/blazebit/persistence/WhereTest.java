@@ -310,8 +310,7 @@ public class WhereTest extends AbstractCoreTest {
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 AND (SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
 
         assertEquals(expected, crit.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        crit.getResultList(); 
     }
     
     @Test
@@ -333,8 +332,7 @@ public class WhereTest extends AbstractCoreTest {
         String expected = "SELECT d FROM Document d WHERE d.name = :param_0 OR SQRT((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
 
         assertEquals(expected, crit.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        crit.getResultList(); 
     }
     
     @Test

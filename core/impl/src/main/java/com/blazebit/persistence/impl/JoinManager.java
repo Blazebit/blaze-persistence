@@ -46,7 +46,9 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -635,8 +637,11 @@ public class JoinManager extends AbstractManager {
                 updateClauseDependencies(result.baseNode, fromClause);
             }
 
-            pathExpression.setBaseNode(result.baseNode);
-            pathExpression.setField(result.field);
+            if (result.isLazy()) {
+                pathExpression.setPathReference(new LazyPathReference(result.baseNode, result.field));
+            } else {
+                pathExpression.setPathReference(new SimplePathReference(result.baseNode, result.field));
+            }
         } else if (expression instanceof CompositeExpression) {
             List<Expression> expressions = ((CompositeExpression) expression).getExpressions();
             int size = expressions.size();
@@ -649,6 +654,67 @@ public class JoinManager extends AbstractManager {
             for (int i = 0; i < size; i++) {
                 implicitJoin(expressions.get(i), objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
             }
+        }
+    }
+    
+    private static class LazyPathReference implements PathReference {
+        private final JoinNode baseNode;
+        private final String field;
+        
+        public LazyPathReference(JoinNode baseNode, String field) {
+            this.baseNode = baseNode;
+            this.field = field;
+        }
+        
+        @Override
+        public JoinNode getBaseNode() {
+            JoinTreeNode subNode = baseNode.getNodes().get(field);
+            if (subNode != null && subNode.getDefaultNode() != null) {
+                return subNode.getDefaultNode();
+            }
+            
+            return baseNode;
+        }
+
+        @Override
+        public String getField() {
+            JoinTreeNode subNode = baseNode.getNodes().get(field);
+            if (subNode != null && subNode.getDefaultNode() != null) {
+                return null;
+            }   
+            
+            return field;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((baseNode == null) ? 0 : baseNode.hashCode());
+            result = prime * result + ((field == null) ? 0 : field.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (!(obj instanceof PathReference))
+                return false;
+            PathReference other = (PathReference) obj;
+            if (baseNode == null) {
+                if (other.getBaseNode() != null)
+                    return false;
+            } else if (!baseNode.equals(other.getBaseNode()))
+                return false;
+            if (field == null) {
+                if (other.getField() != null)
+                    return false;
+            } else if (!field.equals(other.getField()))
+                return false;
+            return true;
         }
     }
 
@@ -790,7 +856,7 @@ public class JoinManager extends AbstractManager {
     private EqPredicate getArrayExpressionPredicate(JoinNode joinNode, ArrayExpression arrayExpr) {
         PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
         keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
-        keyPath.setBaseNode(joinNode);
+        keyPath.setPathReference(new SimplePathReference(joinNode, null));
         FunctionExpression keyExpression = new FunctionExpression("KEY", Arrays.asList((Expression) keyPath));
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
@@ -918,6 +984,7 @@ public class JoinManager extends AbstractManager {
     private JoinResult implicitJoinSingle(JoinNode baseNode, String attributeName, boolean objectLeafAllowed, boolean joinRequired) {
         JoinNode newBaseNode;
         String field;
+        boolean lazy = false;
         // The given path may be relative to the root or it might be an alias
         if (objectLeafAllowed) {
             Class<?> baseNodeType = baseNode.getPropertyClass();
@@ -938,7 +1005,7 @@ public class JoinManager extends AbstractManager {
             } else {
             	newBaseNode = baseNode;
                 field = attributeName;
-                // TODO: maybe reuse implicitly joined nodes?
+                lazy = true;
             }
         } else {
             Class<?> baseNodeType = baseNode.getPropertyClass();
@@ -952,7 +1019,7 @@ public class JoinManager extends AbstractManager {
             newBaseNode = baseNode;
             field = attributeName;
         }
-        return new JoinResult(newBaseNode, field);
+        return new JoinResult(newBaseNode, field, lazy);
     }
 
     private Attribute<?, ?> getSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
@@ -1247,14 +1314,26 @@ public class JoinManager extends AbstractManager {
 
         final JoinNode baseNode;
         final String field;
+        final boolean lazy;
 
         public JoinResult(JoinNode baseNode, String field) {
             this.baseNode = baseNode;
             this.field = field;
+            this.lazy = false;
+        }
+
+        public JoinResult(JoinNode baseNode, String field, boolean lazy) {
+            this.baseNode = baseNode;
+            this.field = field;
+            this.lazy = lazy;
         }
 
         private boolean hasField() {
             return field != null && !field.isEmpty();
+        }
+        
+        private boolean isLazy() {
+            return lazy;
         }
     }
 

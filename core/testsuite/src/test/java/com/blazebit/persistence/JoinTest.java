@@ -316,6 +316,17 @@ public class JoinTest extends AbstractCoreTest {
     }
     
     @Test
+    public void testImplicitJoinNodeReuse() {
+        CriteriaBuilder<String> crit = cbf.create(em, String.class);
+        crit.from(Document.class, "d");
+        crit.select("d.intIdEntity.name");
+        crit.where("d.intIdEntity").isNotNull();
+
+        assertEquals("SELECT intIdEntity_1.name FROM Document d LEFT JOIN d.intIdEntity intIdEntity_1 WHERE intIdEntity_1 IS NOT NULL", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
     public void testCyclicJoinDependencyDetection(){
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("owner", "o1").on("o1.name").eqExpression("o2.name").end()

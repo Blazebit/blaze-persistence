@@ -101,7 +101,7 @@ public class HibernateJpaProvider implements JpaProvider {
                     }
                 }
 
-                // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL
+                // Unfortunately we have to take care of that our selves because the SQL generation has a bug for MySQL: HHH-10241
                 sb.append("CASE WHEN ").append(resolvedExpression != null ? resolvedExpression : expression).append(" IS NULL THEN ");
                 if ("FIRST".equals(nulls)) {
                     sb.append("0 ELSE 1");

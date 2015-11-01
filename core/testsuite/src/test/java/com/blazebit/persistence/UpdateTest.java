@@ -269,23 +269,4 @@ public class UpdateTest extends AbstractCoreTest {
             }
         });
     }
-    
-    @Test
-    public void testUpdateQueryWithNamedParameters(){
-    	final long ownerId = 0;
-    	final int pageSize = 500;
-    	cbf.update(em, Document.class, "d").set("archived", true)
-			.where("d.id").nonPortable().in("alias", "FUNCTION('LIMIT',alias,:pageSize)").from(Document.class, "d2")
-				.select("d2.id")
-				.where("d2.owner.id").eq(ownerId)
-				.where("d2.age").ge(18l)
-				.whereNotExists().from(Person.class, "e")
-					.select("e.id")
-					.where("e.name").eq("tom")
-				.end()
-				.orderByAsc("d2.id")
-			.end()
-			.setParameter("pageSize", pageSize)
-			.executeWithReturning("id", Long.class);
-    }
 }

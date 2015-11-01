@@ -18,7 +18,6 @@ package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.IntIdEntity;
@@ -50,12 +49,11 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     }
     
     @Test
-    @Ignore("I wasn't able to fully debug and understand the problem and had time pressure")
     public void testSelectSubProperty() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
-        cb.select("propBase.base.test1");
-//        cb.where("TYPE(base)").eq(PolymorphicSub1.class);
-        String expectedQuery = "SELECT base_1.test1 FROM PolymorphicPropertyBase propBase LEFT JOIN propBase.base base_1";// WHERE TYPE(base) = :param_0";
+        cb.select("propBase.base.relation1");
+        cb.where("TYPE(base)").eq(PolymorphicSub1.class);
+        String expectedQuery = "SELECT relation1_1 FROM PolymorphicPropertyBase propBase LEFT JOIN propBase.base base_1 LEFT JOIN base_1.relation1 relation1_1 WHERE TYPE(base_1) = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

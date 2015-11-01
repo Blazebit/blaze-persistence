@@ -135,7 +135,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         setting.addAttributeSorter("id", Sorters.descending());
 
         PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView> paginatedCb = evm.applySetting(setting, cb);
-        // TODO: Since case when statements in order bys use the resolved expression, because hibernate does not resolve
+        // TODO: Since case when statements in order bys use the resolved expression and because hibernate does not resolve
         // the select alias in nested expressions, we can't run this on DB2
         // The fix is to use the select alias
         PagedList<DocumentWithExpressionSubqueryView> result = paginatedCb.getResultList();
