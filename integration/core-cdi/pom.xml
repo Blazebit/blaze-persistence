@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.blazebit</groupId>
         <artifactId>blaze-persistence-integration</artifactId>
-        <version>1.1.0-Alpha3</version>
+        <version>1.1.0-SNAPSHOT</version>
     </parent>
     <artifactId>blaze-persistence-integration-core-cdi</artifactId>
     <packaging>jar</packaging>
