@@ -49,7 +49,7 @@ public class InTest extends AbstractCoreTest {
                 .where("d.idx").in(indicies)
             .endOr();
 
-        assertEquals("SELECT d FROM Document d WHERE 1 = 1 AND (1 = 1 OR d.idx IN :param_0)", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE 1 = 1 AND (1 = 1 OR d.idx IN " + listParameter("param_0") + ")", criteria.getQueryString());
         criteria.getResultList();
     }
 
@@ -68,7 +68,7 @@ public class InTest extends AbstractCoreTest {
                 .endAnd()
             .endOr();
 
-        assertEquals("SELECT d FROM Document d WHERE 1 = 1 OR (1 = 1 AND d.idx IN :param_0)", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE 1 = 1 OR (1 = 1 AND d.idx IN " + listParameter("param_0") + ")", criteria.getQueryString());
         criteria.getResultList();
     }
     
