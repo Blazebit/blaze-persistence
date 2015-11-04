@@ -63,6 +63,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -225,7 +226,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public List getResultList(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		try {
 			return list(em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
@@ -242,7 +243,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	
 	@Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getSingleResult(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public Object getSingleResult(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
 		try {
 			final List result = list(em, participatingQueries, query, sqlOverride);
 
@@ -295,7 +296,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
+    public int executeUpdate(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -316,8 +317,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return queryPlan.performExecuteUpdate(queryParameters, session);
         }
 
+        boolean caseInsensitive = !Boolean.valueOf(cbf.getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
-        String[][] returningColumns = getReturningColumns(exampleQuerySql);
+        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         
         try {
             @SuppressWarnings("unchecked")
@@ -344,7 +346,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -360,7 +362,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
         
-        String[][] returningColumns = getReturningColumns(exampleQuerySql);
+        boolean caseInsensitive = !Boolean.valueOf(cbf.getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
+        String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         boolean generatedKeys = !dialect.supportsReturningColumns();
         String finalSql = sqlSb.toString();
         
@@ -418,7 +421,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
     }
 
-    private static String[][] getReturningColumns(String exampleQuerySql) {
+    private static String[][] getReturningColumns(boolean caseInsensitive, String exampleQuerySql) {
         int fromIndex = exampleQuerySql.indexOf("from");
         int selectIndex = exampleQuerySql.indexOf("select");
         String[] selectItems = splitSelectItems(exampleQuerySql.subSequence(selectIndex + "select".length() + 1, fromIndex));
@@ -426,7 +429,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         
         for (int i = 0; i < selectItems.length; i++) {
             String selectItemWithAlias = selectItems[i].substring(selectItems[i].lastIndexOf('.') + 1);
-            returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' '));
+            if (caseInsensitive) {
+            	returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' ')).toLowerCase();
+            } else {
+            	returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' '));
+            }
             returningColumns[i][1] = selectItemWithAlias.substring(selectItemWithAlias.lastIndexOf(' ') + 1);
         }
         

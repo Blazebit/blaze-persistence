@@ -57,7 +57,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final List<EntityManagerIntegrator> entityManagerIntegrators;
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
-    private final Map<String, Object> properties;
+    private final Map<String, String> properties;
     private final boolean compatibleModeEnabled;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
@@ -103,11 +103,17 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return subqueryExpressionFactory;
     }
 
-    public Map<String, Object> getProperties() {
+    @Override
+    public Map<String, String> getProperties() {
         return properties;
     }
 
-    public boolean isCompatibleModeEnabled() {
+    @Override
+	public String getProperty(String propertyName) {
+		return (String) properties.get(propertyName);
+	}
+
+	public boolean isCompatibleModeEnabled() {
         return compatibleModeEnabled;
     }
     
@@ -207,12 +213,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return null;
     }
 
-    private Map<String, Object> copyProperties(Properties properties) {
-        Map<String, Object> newProperties = new HashMap<String, Object>();
+    private Map<String, String> copyProperties(Properties properties) {
+        Map<String, String> newProperties = new HashMap<String, String>();
 
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
             String key = (String) entry.getKey();
-            Object value = entry.getValue();
+            String value = (String) entry.getValue();
             newProperties.put(key, value);
         }
 

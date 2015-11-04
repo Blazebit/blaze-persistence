@@ -27,7 +27,9 @@ import java.util.TreeSet;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
@@ -165,7 +167,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 query = getCountExampleQuery();
             }
             
-            query = new CustomSQLQuery(participatingQueries, query, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
+            query = new CustomSQLQuery(participatingQueries, query, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
         } else {
             query = em.createQuery(getBaseQueryString());
         }
@@ -251,7 +253,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	        throw new IllegalArgumentException("Invalid empty attributes");
 	    }
 
-	    List<Attribute<?, ?>> attributeList = getAndCheckAttributes(attributes);
+	    List<List<Attribute<?, ?>>> attributeList = getAndCheckAttributes(attributes);
         Query exampleQuery = getExampleQuery(attributeList);
         Query baseQuery = getBaseQuery();
         String[] returningColumns = getReturningColumns(attributeList);
@@ -259,6 +261,48 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         final List<Object[]> originalResultList = result.getResultList();
         final int updateCount = result.getUpdateCount();
         return new DefaultReturningResult<Tuple>(originalResultList, updateCount, dbmsDialect, new ReturningTupleObjectBuilder());
+	}
+	
+	private List<Attribute<?,?>> getAndCheckAttributePath(String attribute){
+		String[] attributeParts = attribute.split("\\.");
+        ManagedType<?> currentType = entityType;
+        List<Attribute<?, ?>> attrPath = new ArrayList<Attribute<?, ?>>();
+        
+        boolean joinableAllowed = true;
+        for (int i = 0; i < attributeParts.length; i++){
+        	Attribute<?, ?> attr = null;
+        	if (currentType == null){
+        		// dereference basic
+        		break;
+        	}
+        	attr = JpaUtils.getAttribute(currentType, attributeParts[i]);
+        	if (attr == null) {
+        		attrPath.clear();
+        		break;
+        	}
+        	if (attr.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
+        		currentType = getMetamodel().embeddable(attr.getJavaType());
+        	} else if(attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
+        		currentType = null;
+        	} else if(JpaUtils.isJoinable(attr) && joinableAllowed) {
+        		joinableAllowed = false;
+        		if (i + 1 < attributeParts.length) {
+        			currentType = getMetamodel().entity(attr.getJavaType());
+        			// look ahead
+    				Attribute<?, ?> nextAttr = JpaUtils.getAttribute(currentType, attributeParts[i + 1]);
+        			if (!JpaUtils.getIdAttribute((EntityType<?>) currentType).equals(nextAttr)) {
+        				throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attribute);
+        			}
+    			}
+        	} else {
+        		throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attribute);
+        	}
+        	attrPath.add(attr);
+        }
+        if (attrPath.isEmpty()) {
+        	throw new IllegalArgumentException("Path " + attribute + " does not exist on entity " + entityType.getJavaType().getName());
+        }
+        return attrPath;
 	}
 
     @SuppressWarnings("unchecked")
@@ -273,13 +317,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty attribute");
         }
         
-        Attribute<?, ?> attr = JpaUtils.getAttribute(entityType, attribute);
-        if (!type.isAssignableFrom(attr.getJavaType())) {
-            throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attr.getJavaType().getName());
+        List<Attribute<?,?>> attrPath = getAndCheckAttributePath(attribute);
+        
+        if (!type.isAssignableFrom(attrPath.get(attrPath.size() - 1).getJavaType())) {
+            throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.get(attrPath.size() - 1).getJavaType().getName());
         }
 
-        List<Attribute<?, ?>> attributes = new ArrayList<Attribute<?,?>>();
-        attributes.add(attr);
+        List<List<Attribute<?, ?>>> attributes = new ArrayList<List<Attribute<?, ?>>>();
+        attributes.add(attrPath);
         
         Query exampleQuery = getExampleQuery(attributes);
         Query baseQuery = getBaseQuery();
@@ -296,7 +341,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     public <Z> ReturningResult<Z> executeWithReturning(ReturningObjectBuilder<Z> objectBuilder) {
 	    // TODO: this is not really nice, we should abstract that somehow
 	    objectBuilder.applyReturning((ReturningBuilder) this);
-	    List<Attribute<?, ?>> attributes = getAndCheckReturningAttributes();
+	    List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
 	    returningAttributeBindingMap.clear();
 	    
         Query exampleQuery = getExampleQuery(attributes);
@@ -318,11 +363,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         participatingQueries.add(baseQuery);
         
         // TODO: hibernate will return the object directly for single attribute case instead of an object array
-        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning(dbmsDialect, em, participatingQueries, exampleQuery, finalSql);
+        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning(cbf, dbmsDialect, em, participatingQueries, exampleQuery, finalSql);
         return result;
 	}
 	
-    private List<Attribute<?, ?>> getAndCheckReturningAttributes() {
+    private List<List<Attribute<?, ?>>> getAndCheckReturningAttributes() {
         validateReturningAttributes();
         return getAndCheckAttributes(returningAttributeBindingMap.keySet().toArray(new String[returningAttributeBindingMap.size()]));
     }
@@ -414,8 +459,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return info;
     }
     
-    private List<Attribute<?, ?>> getAndCheckAttributes(String[] attributes) {
-        List<Attribute<?, ?>> attrs = new ArrayList<Attribute<?,?>>(attributes.length);
+    private List<List<Attribute<?, ?>>> getAndCheckAttributes(String[] attributes) {
+        List<List<Attribute<?, ?>>> attrs = new ArrayList<List<Attribute<?, ?>>>(attributes.length);
 
         for (int i = 0; i < attributes.length; i++) {
             if (attributes[i] == null) {
@@ -425,24 +470,25 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("empty attribute at position " + i);
             }
             
-            Attribute<?, ?> attribute = JpaUtils.getAttribute(entityType, attributes[i]);
-            if (attribute == null) {
-                throw new IllegalArgumentException("The query attribute [" + attributes[i] + "] does not exist!");
-            }
-            
-            attrs.add(attribute);
+            attrs.add(getAndCheckAttributePath(attributes[i]));
         }
         
         return attrs;
     }
     
-    private String[] getReturningColumns(List<Attribute<?, ?>> attributes) {
+    private String[] getReturningColumns(List<List<Attribute<?, ?>>> attributes) {
         List<String> columns = new ArrayList<String>(attributes.size());
 
-        for (Attribute<?, ?> returningAttribute : attributes) {
-            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, returningAttribute.getName())) {
+        StringBuilder sb = new StringBuilder();
+        for (List<Attribute<?, ?>> returningAttribute : attributes) {
+        	sb.append(returningAttribute.get(0).getName());
+        	for(int i = 1; i < returningAttribute.size(); i++){
+        		sb.append('.').append(returningAttribute.get(i).getName());
+        	}
+        	for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, sb.toString())) {
                 columns.add(column);
             }
+        	sb.setLength(0);
         }
         
         return columns.toArray(new String[columns.size()]);
@@ -475,12 +521,13 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return em.createQuery(exampleQueryString);
     }
     
-    private Query getExampleQuery(List<Attribute<?, ?>> attributes) {
+    private Query getExampleQuery(List<List<Attribute<?, ?>>> attributes) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         
         boolean first = true;
-        for (Attribute<?, ?> attribute : attributes) {
+        for (List<Attribute<?, ?>> attrPath : attributes) {
+        	Attribute<?, ?> lastPathElem = attrPath.get(attrPath.size() - 1);
             if (first) {
                 first = false;
             } else {
@@ -488,19 +535,22 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             }
             
             // TODO: actually we should also check if the attribute is a @GeneratedValue
-            if (!dbmsDialect.supportsReturningColumns() && !JpaUtils.getIdAttribute(entityType).equals(attribute)) {
-                throw new IllegalArgumentException("Returning the query attribute [" + attribute.getName() + "] is not supported by the dbms, only generated keys can be returned!");
+            if (!dbmsDialect.supportsReturningColumns() && !JpaUtils.getIdAttribute(entityType).equals(lastPathElem)) {
+                throw new IllegalArgumentException("Returning the query attribute [" + lastPathElem.getName() + "] is not supported by the dbms, only generated keys can be returned!");
             }
             
-            if (JpaUtils.isJoinable(attribute)) {
+            if (JpaUtils.isJoinable(lastPathElem)) {
                 // We have to map *-to-one relationships to their ids
-                EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), attribute));
+                EntityType<?> type = em.getMetamodel().entity(JpaUtils.resolveFieldClass(entityType.getJavaType(), lastPathElem));
                 Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(type);
                 // NOTE: Since we are talking about *-to-ones, the expression can only be a path to an object
                 // so it is safe to just append the id to the path
-                sb.append(attribute.getName()).append('.').append(idAttribute.getName());
+                sb.append(lastPathElem.getName()).append('.').append(idAttribute.getName());
             } else {
-                sb.append(attribute.getName());
+                sb.append(attrPath.get(0).getName());
+                for(int i = 1; i < attrPath.size(); i++){
+                	sb.append('.').append(attrPath.get(i).getName());
+                }
             }
         }
         

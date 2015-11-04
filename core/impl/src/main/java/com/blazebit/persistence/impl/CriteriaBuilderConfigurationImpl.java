@@ -318,6 +318,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
 
     private void loadDefaultProperties() {
         properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
+        properties.put(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "true");
     }
 
     private void loadQueryTransformers() {

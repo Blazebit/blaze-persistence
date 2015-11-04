@@ -32,6 +32,14 @@ public final class ConfigurationProperties {
      * @since 1.0.5
      */
     public static final String COMPATIBLE_MODE = "com.blazebit.persistence.compatible_mode";
+    
+    /**
+     * Some databases require case sensitivity for attribute paths in the returning clause
+     * (unlike PostgreSQL which requires case insensitivity for column names in returning clause)
+     * 
+     * @since 1.1.0
+     */
+    public static final String RETURNING_CLAUSE_CASE_SENSITIVE = "com.blazebit.persistence.returning_clause_case_sensitive";
 
     private ConfigurationProperties() {
     }

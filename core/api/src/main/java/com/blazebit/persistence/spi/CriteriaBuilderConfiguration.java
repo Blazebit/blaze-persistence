@@ -31,7 +31,7 @@ public interface CriteriaBuilderConfiguration {
     /**
      * Registers the given query transformer in the configuration.
      *
-     * @param queryTransformer The transformer that should be addded
+     * @param queryTransformer The transformer that should be added
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerQueryTransformer(QueryTransformer queryTransformer);
@@ -71,7 +71,7 @@ public interface CriteriaBuilderConfiguration {
     /**
      * Registers the given entity manager enricher in the configuration.
      *
-     * @param entityManagerEnricher The enricher that should be addded
+     * @param entityManagerEnricher The enricher that should be added
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher);

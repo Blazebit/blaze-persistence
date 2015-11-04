@@ -1046,7 +1046,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         String finalQuery = sqlSb.toString();
         participatingQueries.add(baseQuery);
-        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
         // TODO: object builder?
         
         return query;

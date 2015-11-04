@@ -21,6 +21,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningResult;
 
 /**
@@ -46,11 +47,11 @@ public interface ExtendedQuerySupport {
     public int getSqlSelectAttributePosition(EntityManager em, Query query, String alias);
     
     @SuppressWarnings("rawtypes")
-    public List getResultList(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public List getResultList(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public Object getSingleResult(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public Object getSingleResult(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public int executeUpdate(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
+    public int executeUpdate(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public ReturningResult<Object[]> executeReturning(DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
+    public ReturningResult<Object[]> executeReturning(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
 }

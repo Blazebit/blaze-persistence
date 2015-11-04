@@ -31,6 +31,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.EmbeddableTestEntity;
+import com.blazebit.persistence.entity.EmbeddableTestEntityEmbeddable;
+import com.blazebit.persistence.entity.EmbeddableTestEntityId;
+import com.blazebit.persistence.entity.EmbeddableTestEntityIdEmbeddable;
 import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
@@ -65,7 +69,10 @@ public class UpdateTest extends AbstractCoreTest {
             IntIdEntity.class,
             Person.class, 
             IdHolderCTE.class,
-            PolymorphicBase.class
+            PolymorphicBase.class,
+            EmbeddableTestEntity.class,
+            EmbeddableTestEntityEmbeddable.class,
+            EmbeddableTestEntityId.class
         };
     }
     
@@ -270,22 +277,75 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
     
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-    public void testUpdateQueryWithNamedParameters(){
-    	final long ownerId = 0;
-    	final int pageSize = 500;
-    	cbf.update(em, Document.class, "d").set("archived", true)
-			.where("d.id").nonPortable().in("alias", "FUNCTION('LIMIT',alias,:pageSize)").from(Document.class, "d2")
-				.select("d2.id")
-				.where("d2.owner.id").eq(ownerId)
-				.where("d2.age").ge(18l)
-				.whereNotExists().from(Person.class, "e")
-					.select("e.id")
-					.where("e.name").eq("tom")
-				.end()
-				.orderByAsc("d2.id")
-			.end()
-			.setParameter("pageSize", pageSize)
-			.executeWithReturning("id", Long.class);
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUpdateWithReturningEmbeddable(){
+    	final String newEmbeddableTestEntityIdKey = "newKey";
+    	EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			IntIdEntity intIdEntity1 = new IntIdEntity("1");
+			em.persist(intIdEntity1);
+			
+			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, "oldKey");
+			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
+			embeddable1.setId(embeddable1Id);
+			em.persist(embeddable1);
+			
+			em.flush();
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw new RuntimeException(e);
+		}
+			
+    	String key = cbf.update(em, EmbeddableTestEntity.class, "e").set("id.key", newEmbeddableTestEntityIdKey)
+    		.executeWithReturning("id.key", String.class).getLastResult();
+    	
+    	assertEquals(newEmbeddableTestEntityIdKey, key);
+    }
+    
+    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testUpdateWithReturningExplicitId(){
+    	final String intIdEntity1Key = "1";
+    	EmbeddableTestEntityId embeddable2Id = null;
+    	EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			IntIdEntity intIdEntity1 = new IntIdEntity("1");
+			em.persist(intIdEntity1);
+			
+			embeddable2Id = new EmbeddableTestEntityId(intIdEntity1, "2");
+			embeddable2Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+			EmbeddableTestEntity embeddable2 = new EmbeddableTestEntity();
+			
+			embeddable2.setId(embeddable2Id);
+			em.persist(embeddable2);
+			
+			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, intIdEntity1Key);
+			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
+			embeddable1.setId(embeddable1Id);
+			EmbeddableTestEntityEmbeddable embeddable1Embeddable = new EmbeddableTestEntityEmbeddable();
+			embeddable1Embeddable.setManyToOne(embeddable2);
+			embeddable1.setEmbeddable(embeddable1Embeddable);
+			em.persist(embeddable1);
+			
+			em.flush();
+			tx.commit();
+		} catch (Exception e) {
+			tx.rollback();
+			throw new RuntimeException(e);
+		}
+		
+		EmbeddableTestEntityId manyToOneId = cbf.update(em, EmbeddableTestEntity.class, "e").set("id.key", "newKey")
+			.where("e.id.key").eq(intIdEntity1Key)
+    		.executeWithReturning("embeddable.manyToOne.id", EmbeddableTestEntityId.class).getLastResult();
+		
+		assertEquals(embeddable2Id, manyToOneId);
     }
 }

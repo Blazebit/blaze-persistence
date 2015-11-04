@@ -14,6 +14,7 @@ import javax.persistence.Query;
 import javax.persistence.TemporalType;
 import javax.persistence.TypedQuery;
 
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -22,14 +23,16 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 
     private final List<Query> participatingQueries;
 	private final TypedQuery<X> delegate;
+	private final CriteriaBuilderFactory cbf;
 	private final DbmsDialect dbmsDialect;
 	private final EntityManager em;
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
 	
-	public CustomSQLTypedQuery(List<Query> participatingQueries, TypedQuery<X> delegate, DbmsDialect dbmsDialect, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql) {
+	public CustomSQLTypedQuery(List<Query> participatingQueries, TypedQuery<X> delegate, CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql) {
 	    this.participatingQueries = participatingQueries;
 		this.delegate = delegate;
+		this.cbf = cbf;
 		this.dbmsDialect = dbmsDialect;
 		this.em = em;
 		this.extendedQuerySupport = extendedQuerySupport;
@@ -50,19 +53,19 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 			return this;
 		}
 		
-		return new CustomSQLTypedQuery<X>(participatingQueries, q, dbmsDialect, em, extendedQuerySupport, sql);
+		return new CustomSQLTypedQuery<X>(participatingQueries, q, cbf, dbmsDialect, em, extendedQuerySupport, sql);
 	}
 
     @Override
     @SuppressWarnings("unchecked")
 	public List<X> getResultList() {
-		return (List<X>) extendedQuerySupport.getResultList(dbmsDialect, em, participatingQueries, delegate, sql);
+		return (List<X>) extendedQuerySupport.getResultList(cbf, dbmsDialect, em, participatingQueries, delegate, sql);
 	}
 
 	@Override
     @SuppressWarnings("unchecked")
 	public X getSingleResult() {
-		return (X) extendedQuerySupport.getSingleResult(dbmsDialect, em, participatingQueries, delegate, sql);
+		return (X) extendedQuerySupport.getSingleResult(cbf, dbmsDialect, em, participatingQueries, delegate, sql);
 	}
 
 	@Override

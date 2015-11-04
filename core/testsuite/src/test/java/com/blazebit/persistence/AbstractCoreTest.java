@@ -67,6 +67,11 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         config = super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
+        
+        if ("postgresql".equals(config.getEntityManagerIntegrators().get(0).getDbms(em))) {
+        	config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
+        }
+        
         this.config = config;
         return config;
     }

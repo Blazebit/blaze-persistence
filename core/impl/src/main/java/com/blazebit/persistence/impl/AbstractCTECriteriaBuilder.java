@@ -85,7 +85,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             applyExtendedSql(sqlSb, false, true, null, null, null);
             String finalSql = sqlSb.toString();
             
-            query = new CustomSQLQuery(participatingQueries, query, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, null);
+            query = new CustomSQLQuery(participatingQueries, query, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, null);
         } else {
             query = em.createQuery(getBaseQueryString());
         }

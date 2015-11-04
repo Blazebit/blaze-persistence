@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence;
 
+import java.util.Map;
+
 import javax.persistence.EntityManager;
 
 /**
@@ -119,4 +121,21 @@ public interface CriteriaBuilderFactory {
      * @since 1.0.5
      */
     public <T> T getService(Class<T> serviceClass);
+
+    /**
+     * Returns all properties.
+     *
+     * @return All properties
+     * @since 1.1.0
+     */
+    public Map<String, String> getProperties();
+
+    /**
+     * Returns a property value by name.
+     *
+     * @param propertyName The name of the property
+     * @return The value currently associated with that property name; may be null.
+     * @since 1.1.0
+     */
+    public String getProperty(String propertyName);
 }

@@ -244,7 +244,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
         String finalQuery = sqlSb.toString();
-        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
         // TODO: object builder?
         
         return query;
