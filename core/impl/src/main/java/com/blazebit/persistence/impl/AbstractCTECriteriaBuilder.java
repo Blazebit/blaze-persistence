@@ -95,6 +95,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     public SelectBuilder<X> bind(String cteAttribute) {
+        // NOTE: Since CTEs can't have embeddables right now, we can skip resolving that
 		Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
 		
 		if (attribute == null) {
@@ -123,6 +124,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         List<String> attributes = new ArrayList<String>(bindingMap.size());
         for (Map.Entry<String, Integer> bindingEntry : bindingMap.entrySet()) {
             final String attributeName = bindingEntry.getKey();
+            // NOTE: Since CTEs can't have embeddables right now, we can skip resolving that
             Attribute<?, ?> attribute = cteType.getAttribute(attributeName);
             attributes.add(attributeName);
             

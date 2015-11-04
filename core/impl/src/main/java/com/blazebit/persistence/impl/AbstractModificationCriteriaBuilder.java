@@ -27,9 +27,7 @@ import java.util.TreeSet;
 import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
@@ -262,48 +260,6 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         final int updateCount = result.getUpdateCount();
         return new DefaultReturningResult<Tuple>(originalResultList, updateCount, dbmsDialect, new ReturningTupleObjectBuilder());
 	}
-	
-	private List<Attribute<?,?>> getAndCheckAttributePath(String attribute){
-		String[] attributeParts = attribute.split("\\.");
-        ManagedType<?> currentType = entityType;
-        List<Attribute<?, ?>> attrPath = new ArrayList<Attribute<?, ?>>();
-        
-        boolean joinableAllowed = true;
-        for (int i = 0; i < attributeParts.length; i++){
-        	Attribute<?, ?> attr = null;
-        	if (currentType == null){
-        		// dereference basic
-        		break;
-        	}
-        	attr = JpaUtils.getAttribute(currentType, attributeParts[i]);
-        	if (attr == null) {
-        		attrPath.clear();
-        		break;
-        	}
-        	if (attr.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
-        		currentType = getMetamodel().embeddable(attr.getJavaType());
-        	} else if(attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
-        		currentType = null;
-        	} else if(JpaUtils.isJoinable(attr) && joinableAllowed) {
-        		joinableAllowed = false;
-        		if (i + 1 < attributeParts.length) {
-        			currentType = getMetamodel().entity(attr.getJavaType());
-        			// look ahead
-    				Attribute<?, ?> nextAttr = JpaUtils.getAttribute(currentType, attributeParts[i + 1]);
-        			if (!JpaUtils.getIdAttribute((EntityType<?>) currentType).equals(nextAttr)) {
-        				throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attribute);
-        			}
-    			}
-        	} else {
-        		throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attribute);
-        	}
-        	attrPath.add(attr);
-        }
-        if (attrPath.isEmpty()) {
-        	throw new IllegalArgumentException("Path " + attribute + " does not exist on entity " + entityType.getJavaType().getName());
-        }
-        return attrPath;
-	}
 
     @SuppressWarnings("unchecked")
     public <Z> ReturningResult<Z> executeWithReturning(String attribute, Class<Z> type) {
@@ -317,7 +273,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("Invalid empty attribute");
         }
         
-        List<Attribute<?,?>> attrPath = getAndCheckAttributePath(attribute);
+        List<Attribute<?,?>> attrPath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
         
         if (!type.isAssignableFrom(attrPath.get(attrPath.size() - 1).getJavaType())) {
             throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.get(attrPath.size() - 1).getJavaType().getName());
@@ -470,7 +426,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("empty attribute at position " + i);
             }
             
-            attrs.add(getAndCheckAttributePath(attributes[i]));
+            attrs.add(JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]));
         }
         
         return attrs;

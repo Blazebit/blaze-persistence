@@ -47,8 +47,12 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
     @Override
     @SuppressWarnings("unchecked")
 	public X bind(String attributeName, Object value) {
+        // NOTE: We are not resolving embedded properties, because hibernate does not support them
 		// Just do that to assert the attribute exists
-		entityType.getAttribute(attributeName);
+        if (entityType.getAttribute(attributeName) == null) {
+            // Well, some implementations might not be fully spec compliant..
+            throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
+        }
         Integer attributeBindIndex = bindingMap.get(attributeName);
         
         if (attributeBindIndex != null) {
@@ -63,8 +67,12 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 
     @Override
 	public SelectBuilder<X> bind(String attributeName) {
+        // NOTE: We are not resolving embedded properties, because hibernate does not support them
 		// Just do that to assert the attribute exists
-		entityType.getAttribute(attributeName);
+        if (entityType.getAttribute(attributeName) == null) {
+            // Well, some implementations might not be fully spec compliant..
+            throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
+        }
 		Integer attributeBindIndex = bindingMap.get(attributeName);
 		
 		if (attributeBindIndex != null) {

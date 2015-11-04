@@ -19,10 +19,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.MapAttribute;
@@ -45,6 +48,65 @@ public final class JpaUtils {
         } catch (IllegalArgumentException ex) {
             return null;
         }
+    }
+    
+    public static List<Attribute<?, ?>> getBasicAttributePath(Metamodel metamodel, ManagedType<?> type, String attributePath) {
+        List<Attribute<?, ?>> attrPath;
+        
+        if (attributePath.indexOf('.') == -1) {
+            attrPath = new ArrayList<Attribute<?, ?>>(1);
+            Attribute<?, ?> attribute = type.getAttribute(attributePath);
+            if (attribute == null) {
+                // Well, some implementations might not be fully spec compliant..
+                throw new IllegalArgumentException("Attribute '" + attributePath + "' does not exist on '" + type.getJavaType().getName() + "'!");
+            }
+            
+            attrPath.add(attribute);
+            return attrPath;
+        } else {
+            attrPath = new ArrayList<Attribute<?, ?>>();
+        }
+        
+        String[] attributeParts = attributePath.split("\\.");
+        ManagedType<?> currentType = type;
+        
+        boolean joinableAllowed = true;
+        for (int i = 0; i < attributeParts.length; i++) {
+            Attribute<?, ?> attr = null;
+            if (currentType == null) {
+                // dereference basic
+                break;
+            }
+            attr = JpaUtils.getAttribute(currentType, attributeParts[i]);
+            if (attr == null) {
+                attrPath.clear();
+                break;
+            }
+            if (attr.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
+                currentType = metamodel.embeddable(attr.getJavaType());
+            } else if(attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
+                currentType = null;
+            } else if(JpaUtils.isJoinable(attr) && joinableAllowed) {
+                joinableAllowed = false;
+                if (i + 1 < attributeParts.length) {
+                    currentType = metamodel.entity(attr.getJavaType());
+                    // look ahead
+                    Attribute<?, ?> nextAttr = JpaUtils.getAttribute(currentType, attributeParts[i + 1]);
+                    if (!JpaUtils.getIdAttribute((EntityType<?>) currentType).equals(nextAttr)) {
+                        throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
+                    }
+                }
+            } else {
+                throw new IllegalArgumentException("Path joining not allowed in returning expression: " + attributePath);
+            }
+            attrPath.add(attr);
+        }
+        
+        if (attrPath.isEmpty()) {
+            throw new IllegalArgumentException("Path " + attributePath + " does not exist on entity " + type.getJavaType().getName());
+        }
+        
+        return attrPath;
     }
 
     public static Set<Attribute<?, ?>> getAttributesPolymorphic(Metamodel metamodel, ManagedType<?> type, String attributeName) {

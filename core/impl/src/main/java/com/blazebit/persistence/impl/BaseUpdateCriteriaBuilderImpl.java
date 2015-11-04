@@ -39,7 +39,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @SuppressWarnings("unchecked")
 	public X set(String attributeName, Object value) {
 		// Just do that to assert the attribute exists
-		entityType.getAttribute(attributeName);
+		JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributeName);
         String attributeValue = setAttributes.get(attributeName);
         
         if (attributeValue != null) {

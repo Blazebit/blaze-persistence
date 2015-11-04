@@ -34,7 +34,6 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.entity.EmbeddableTestEntityId;
-import com.blazebit.persistence.entity.EmbeddableTestEntityIdEmbeddable;
 import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
@@ -275,77 +274,5 @@ public class UpdateTest extends AbstractCoreTest {
                 assertEquals("NewD1", em.find(Document.class, doc1.getId()).getName());
             }
         });
-    }
-    
-    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
-    @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testUpdateWithReturningEmbeddable(){
-    	final String newEmbeddableTestEntityIdKey = "newKey";
-    	EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			IntIdEntity intIdEntity1 = new IntIdEntity("1");
-			em.persist(intIdEntity1);
-			
-			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, "oldKey");
-			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
-			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
-			embeddable1.setId(embeddable1Id);
-			em.persist(embeddable1);
-			
-			em.flush();
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-			
-    	String key = cbf.update(em, EmbeddableTestEntity.class, "e").set("id.key", newEmbeddableTestEntityIdKey)
-    		.executeWithReturning("id.key", String.class).getLastResult();
-    	
-    	assertEquals(newEmbeddableTestEntityIdKey, key);
-    }
-    
-    // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
-    @Test
-    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-    public void testUpdateWithReturningExplicitId(){
-    	final String intIdEntity1Key = "1";
-    	EmbeddableTestEntityId embeddable2Id = null;
-    	EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			IntIdEntity intIdEntity1 = new IntIdEntity("1");
-			em.persist(intIdEntity1);
-			
-			embeddable2Id = new EmbeddableTestEntityId(intIdEntity1, "2");
-			embeddable2Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
-			EmbeddableTestEntity embeddable2 = new EmbeddableTestEntity();
-			
-			embeddable2.setId(embeddable2Id);
-			em.persist(embeddable2);
-			
-			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, intIdEntity1Key);
-			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
-			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
-			embeddable1.setId(embeddable1Id);
-			EmbeddableTestEntityEmbeddable embeddable1Embeddable = new EmbeddableTestEntityEmbeddable();
-			embeddable1Embeddable.setManyToOne(embeddable2);
-			embeddable1.setEmbeddable(embeddable1Embeddable);
-			em.persist(embeddable1);
-			
-			em.flush();
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-		
-		EmbeddableTestEntityId manyToOneId = cbf.update(em, EmbeddableTestEntity.class, "e").set("id.key", "newKey")
-			.where("e.id.key").eq(intIdEntity1Key)
-    		.executeWithReturning("embeddable.manyToOne.id", EmbeddableTestEntityId.class).getLastResult();
-		
-		assertEquals(embeddable2Id, manyToOneId);
     }
 }
