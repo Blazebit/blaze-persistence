@@ -31,9 +31,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.EmbeddableTestEntity;
-import com.blazebit.persistence.entity.EmbeddableTestEntityEmbeddable;
-import com.blazebit.persistence.entity.EmbeddableTestEntityId;
 import com.blazebit.persistence.entity.IdHolderCTE;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
@@ -68,10 +65,7 @@ public class UpdateTest extends AbstractCoreTest {
             IntIdEntity.class,
             Person.class, 
             IdHolderCTE.class,
-            PolymorphicBase.class,
-            EmbeddableTestEntity.class,
-            EmbeddableTestEntityEmbeddable.class,
-            EmbeddableTestEntityId.class
+            PolymorphicBase.class
         };
     }
     
