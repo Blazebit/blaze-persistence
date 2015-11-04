@@ -27,9 +27,7 @@ import java.util.List;
 public class PathExpression extends AbstractExpression implements Expression {
 
     private final List<PathElementExpression> pathProperties;
-    // Although this node will always be a JoinNode we will use casting at use site to be able to reuse the parser
-    private Object baseNode;
-    private String field;
+    private PathReference pathReference;
     private boolean usedInCollectionFunction = false;
     private boolean collectionKeyPath;
 
@@ -46,10 +44,9 @@ public class PathExpression extends AbstractExpression implements Expression {
         this.collectionKeyPath = isCollectionKeyPath;
     }
 
-    public PathExpression(List<PathElementExpression> pathProperties, Object baseNode, String field, boolean usedInCollectionFunction, boolean collectionKeyPath) {
+    public PathExpression(List<PathElementExpression> pathProperties, PathReference pathReference, boolean usedInCollectionFunction, boolean collectionKeyPath) {
         this.pathProperties = pathProperties;
-        this.baseNode = baseNode;
-        this.field = field;
+        this.pathReference = pathReference;
         this.usedInCollectionFunction = usedInCollectionFunction;
         this.collectionKeyPath = collectionKeyPath;
     }
@@ -63,7 +60,7 @@ public class PathExpression extends AbstractExpression implements Expression {
             newPathProperties.add(pathProperties.get(i).clone());
         }
 
-        return new PathExpression(newPathProperties, baseNode, field, usedInCollectionFunction, collectionKeyPath);
+        return new PathExpression(newPathProperties, pathReference, usedInCollectionFunction, collectionKeyPath);
     }
 
     @Override
@@ -80,20 +77,28 @@ public class PathExpression extends AbstractExpression implements Expression {
         return pathProperties;
     }
 
+    public PathReference getPathReference() {
+        return pathReference;
+    }
+    
+    public void setPathReference(PathReference pathReference) {
+        this.pathReference = pathReference;
+    }
+    
     public Object getBaseNode() {
-        return baseNode;
+        if (pathReference == null) {
+            return null;
+        }
+        
+        return pathReference.getBaseNode();
     }
-
-    public void setBaseNode(Object baseNode) {
-        this.baseNode = baseNode;
-    }
-
+    
     public String getField() {
-        return field;
-    }
-
-    public void setField(String field) {
-        this.field = field;
+        if (pathReference == null) {
+            return null;
+        }
+        
+        return pathReference.getField();
     }
 
     public boolean isUsedInCollectionFunction() {
@@ -123,9 +128,8 @@ public class PathExpression extends AbstractExpression implements Expression {
     @Override
     public int hashCode() {
         int hash = 3;
-        if (this.baseNode != null || this.field != null) {
-            hash = 31 * hash + (this.baseNode != null ? this.baseNode.hashCode() : 0);
-            hash = 31 * hash + (this.field != null ? this.field.hashCode() : 0);
+        if (this.pathReference != null) {
+            hash = 31 * hash + (this.pathReference != null ? this.pathReference.hashCode() : 0);
         } else {
             hash = 31 * hash + (this.pathProperties != null ? this.pathProperties.hashCode() : 0);
         }
@@ -141,11 +145,8 @@ public class PathExpression extends AbstractExpression implements Expression {
             return false;
         }
         final PathExpression other = (PathExpression) obj;
-        if (this.baseNode != null || this.field != null || other.baseNode != null || other.field != null) {
-            if (this.baseNode != other.baseNode && (this.baseNode == null || !this.baseNode.equals(other.baseNode))) {
-                return false;
-            }
-            if ((this.field == null) ? (other.field != null) : !this.field.equals(other.field)) {
+        if (this.pathReference != null|| other.pathReference != null) {
+            if (this.pathReference != other.pathReference && (this.pathReference == null || !this.pathReference.equals(other.pathReference))) {
                 return false;
             }
         } else {

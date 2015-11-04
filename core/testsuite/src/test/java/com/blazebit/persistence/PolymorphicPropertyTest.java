@@ -50,13 +50,27 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     }
     
     @Test
-    @Ignore("I wasn't able to fully debug and understand the problem and had time pressure")
+    @Ignore("Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits")
     public void testSelectSubProperty() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
-        cb.select("propBase.base.test1");
-//        cb.where("TYPE(base)").eq(PolymorphicSub1.class);
-        String expectedQuery = "SELECT base_1.test1 FROM PolymorphicPropertyBase propBase LEFT JOIN propBase.base base_1";// WHERE TYPE(base) = :param_0";
+        cb.select("propBase.base.relation1");
+        cb.where("TYPE(base)").eq(PolymorphicSub1.class);
+        String expectedQuery = "SELECT relation1_1 FROM PolymorphicPropertyBase propBase LEFT JOIN propBase.base base_1 LEFT JOIN base_1.relation1 relation1_1 WHERE TYPE(base_1) = :param_0";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
+    }
+    
+    // NOTE: This is JPA 2.1 specific
+    // TODO: implement treat support
+    @Test
+    @Ignore("Treat support is not yet implemented. Also note that hibernate does not fully support TREAT: https://hibernate.atlassian.net/browse/HHH-9345")
+    public void testSelectSubPropertyWithTreat() {
+//        CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
+//        cb.select("TREAT(propBase.base AS PolymorphicSub1).relation1");
+//        cb.where("TYPE(base)").eq(PolymorphicSub1.class);
+        String expectedQuery = "SELECT relation1_1 FROM PolymorphicPropertyBase propBase LEFT JOIN TREAT(propBase.base AS PolymorphicSub1) base_1 LEFT JOIN base_1.relation1 relation1_1 WHERE TYPE(base_1) = :param_0";
+//        assertEquals(expectedQuery, cb.getQueryString());
+//        cb.getResultList();
+        em.createQuery(expectedQuery).getResultList();
     }
 }

@@ -358,9 +358,8 @@ public class PaginationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
-    // TODO: don't know what to do with this, order by should only allow simple paths as of #72 so maybe turn that into a negative test
-    @Ignore
     @Test
+    @Ignore("We haven't handeled SIZE transformations for all clauses yet")
     public void testOrderBySize() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)")
@@ -407,9 +406,20 @@ public class PaginationTest extends AbstractCoreTest {
         pcb.getPageCountQueryString();
         cb.getResultList();
     }
-
+    
     @Test
     public void testSelectOnlyPropagationForWithJoins2() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
+        PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts[d.owner.age]").isNull().orderByAsc("id").page(0, 1);
+
+        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts contacts_owner_1_age_1 " + ON_CLAUSE + " KEY(contacts_owner_1_age_1) = owner_1.age WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        pcb.getPageCountQueryString();
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSelectOnlyPropagationForWithJoins3() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb
                 .select("c")

@@ -935,7 +935,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         joinVisitor.setFromClause(ClauseType.GROUP_BY);
         groupByManager.acceptVisitor(joinVisitor);
 
-        joinVisitor.setFromClause(ClauseType.HAVING);// SELECT SIZE(d.contacts) AS c FROM Document d ORDER BY c
+        joinVisitor.setFromClause(ClauseType.HAVING);
         havingManager.acceptVisitor(joinVisitor);
         joinVisitor.setJoinWithObjectLeafAllowed(false);
 
@@ -956,6 +956,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void applySizeSelectTransformer() {
+        // TODO: actually we should do the SIZE transformation in all managers
         if (selectManager.containsSizeSelect()) {
             if (joinManager.hasCollections() || joinManager.getRoots().size() > 1) {
                 selectManager.applySelectInfoTransformer(sizeSelectToSubqueryTransformer);
@@ -1047,7 +1048,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         String finalQuery = sqlSb.toString();
         participatingQueries.add(baseQuery);
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
-        // TODO: object builder?
+        
+        // TODO: needs tests
+        if (selectManager.getSelectObjectBuilder() != null) {
+            query = transformQuery(query);
+        }
         
         return query;
     }

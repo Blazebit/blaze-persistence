@@ -371,16 +371,15 @@ public class HavingTest extends AbstractCoreTest {
     public void testHavingSubqueryWithSurroundingExpression() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d").select("COUNT(d.id)");
         criteria.groupBy("name")
-            .havingSubquery("alias", "SUM(alias)")
+            .havingSubquery("alias", "ABS(alias)")
                 .from(Person.class, "p")
                 .select("id")
                 .where("name").eqExpression("d.name")
             .end().eqExpression("d.owner.id");
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, criteria.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        criteria.getResultList(); 
     }
     
 
@@ -406,18 +405,17 @@ public class HavingTest extends AbstractCoreTest {
             .having("d.name").eq("test")
             .havingOr()
                 .havingAnd()
-                    .havingSubquery("alias", "SUM(alias)")
+                    .havingSubquery("alias", "ABS(alias)")
                         .from(Person.class, "p")
                         .select("id")
                         .where("name").eqExpression("d.name")
                     .end().eqExpression("d.owner.id")
                 .endAnd()
             .endOr();        
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND (SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
+        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND (ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id)";
         
         assertEquals(expected, criteria.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        criteria.getResultList(); 
     }
     
     @Test
@@ -437,8 +435,7 @@ public class HavingTest extends AbstractCoreTest {
         String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 AND ((SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id)";
         
         assertEquals(expected, criteria.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        criteria.getResultList(); 
     }
     
     @Test
@@ -447,17 +444,16 @@ public class HavingTest extends AbstractCoreTest {
         criteria.groupBy("name")
             .havingOr()
                 .having("d.name").eq("test")
-                .havingSubquery("alias", "SUM(alias)")
+                .havingSubquery("alias", "ABS(alias)")
                     .from(Person.class, "p")
                     .select("id")
                     .where("name").eqExpression("d.name")
                 .end().eqExpression("d.owner.id")
             .endOr();        
-        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR SUM((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
+        String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR ABS((SELECT p.id FROM Person p WHERE p.name = d.name)) = d.owner.id";
         
         assertEquals(expected, criteria.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        criteria.getResultList(); 
     }
     
     @Test
@@ -475,8 +471,7 @@ public class HavingTest extends AbstractCoreTest {
         String expected = "SELECT COUNT(d.id) FROM Document d GROUP BY d.name, d.owner.id HAVING d.name = :param_0 OR (SELECT p.id FROM Person p WHERE p.name = d.name) * (SELECT p.id FROM Person p WHERE p.name = d.name) = d.owner.id";
         
         assertEquals(expected, criteria.getQueryString());
-//        TODO: restore as soon as hibernate supports this
-//        cb.getResultList(); 
+        criteria.getResultList(); 
     }
     
     /* having case tests */

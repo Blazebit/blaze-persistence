@@ -16,6 +16,7 @@ import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
@@ -93,8 +94,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
                 if (resolve) {
                     PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                    attrPath.setBaseNode(baseNode);
-                    attrPath.setField(attr.getName());
+                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName()));
                     pathExpressions.add(attrPath);
                 }
             }

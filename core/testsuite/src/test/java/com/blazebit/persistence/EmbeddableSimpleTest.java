@@ -65,6 +65,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         criteria.getResultList();
     }
     
+    // TODO: not yet implemented
     @Test
     @Ignore("This is still causing problems in the JoinManager because of the cyclic dependency")
     public void testCyclicDependencyInOnClauseImplicitJoin() {
