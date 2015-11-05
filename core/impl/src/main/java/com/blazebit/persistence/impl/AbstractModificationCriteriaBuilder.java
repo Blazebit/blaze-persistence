@@ -371,9 +371,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
         }
         
-        Attribute<?, ?> queryAttr = JpaUtils.getAttribute(entityType, modificationQueryAttribute);
+        List<Attribute<?, ?>> queryAttrs = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
         Class<?> queryAttrType;
-        if (queryAttr == null) {
+        if (queryAttrs.isEmpty()) {
             if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
                 // Our little special case, since there would be no other way to refer to the id as the object type
                 queryAttrType = entityType.getJavaType();
@@ -383,14 +383,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("The query attribute [" + modificationQueryAttribute + "] does not exist!");
             }
         } else {
-            queryAttrType = queryAttr.getJavaType();
+            queryAttrType = queryAttrs.get(queryAttrs.size() - 1).getJavaType();
         }
         
         // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
         // but if it already supports the returning clause, it can only also support returning all columns
         if (!cteAttr.getJavaType().isAssignableFrom(queryAttrType)) {
             throw new IllegalArgumentException("The given cte attribute '" + cteAttribute + "' with the type '" + cteAttr.getJavaType().getName() + "'"
-                + " can not be assigned with a value of the type '" + queryAttr.getJavaType().getName() + "' of the query attribute '" + modificationQueryAttribute + "'!");
+                + " can not be assigned with a value of the type '" + queryAttrType.getName() + "' of the query attribute '" + modificationQueryAttribute + "'!");
         }
         
         String bindingEntry = returningAttributeBindingMap.get(cteAttribute);
