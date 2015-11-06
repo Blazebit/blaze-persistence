@@ -22,6 +22,7 @@ import com.blazebit.persistence.BaseUpdateCriteriaBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
 /**
@@ -32,12 +33,14 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X>, SubqueryBuilderListener<X> {
 
+    private final VisitorAdapter parameterRegistrationVisitor;
 	private final Map<String, Expression> setAttributes = new LinkedHashMap<String, Expression>();
 	private SubqueryInternalBuilder<X> currentSubqueryBuilder;
 	private String currentAttribute;
 
 	public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteName, cteClass, result, listener);
+        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);
 	}
 
     @Override
@@ -56,6 +59,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         verifyBuilderEnded();
         checkAttribute(attributeName);
         Expression attributeExpression = expressionFactory.createScalarExpression(expression);
+        attributeExpression.accept(parameterRegistrationVisitor);
         setAttributes.put(attributeName, attributeExpression);
         return (X) this;
     }
@@ -85,7 +89,9 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         if (currentSubqueryBuilder == null) {
             throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
         }
-        setAttributes.put(currentAttribute, new SubqueryExpression(builder));
+        Expression attributeExpression = new SubqueryExpression(builder);
+        attributeExpression.accept(parameterRegistrationVisitor);
+        setAttributes.put(currentAttribute, attributeExpression);
         currentAttribute = null;
         currentSubqueryBuilder = null;
     }
@@ -122,7 +128,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     }
 
     @Override
-	protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
+	protected void getQueryString1(StringBuilder sbSelectFrom) {
 		sbSelectFrom.append("UPDATE ");
 		sbSelectFrom.append(entityType.getName()).append(' ');
 	    sbSelectFrom.append(entityAlias);

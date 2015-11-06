@@ -116,6 +116,47 @@ public class UpdateTest extends AbstractCoreTest {
         });
 	}
 
+    @Test
+    public void testParameterExpression() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.setExpression("name", ":newName");
+        cb.where("name").eq("D1");
+        cb.setParameter("newName", "NewD1");
+        String expected = "UPDATE Document d SET name = :newName WHERE d.name = :param_0";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
+    @Test
+    public void testSubquery() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.set("name")
+            .from(Document.class, "subD")
+            .select("CONCAT('New', subD.name)")
+            .where("subD.id").eqExpression("d.id")
+        .end();
+        cb.where("name").eq("D1");
+        String expected = "UPDATE Document d SET name = (SELECT CONCAT('New',subD.name) FROM Document subD WHERE subD.id = d.id) WHERE d.name = :param_0";
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
     /* Returning */
 
     // NOTE: H2 and MySQL only support returning generated keys

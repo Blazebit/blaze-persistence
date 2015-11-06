@@ -35,12 +35,7 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass);
 
     // TODO: documentation
-    public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass, String cteName);
-
-    // TODO: documentation
     public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
-    // TODO: documentation
-    public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass, String cteName);
 
 	/**
 	 * TODO: documentation
@@ -51,9 +46,6 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
 	 */
     public SelectRecursiveCTECriteriaBuilder< T> withRecursive(Class<?> cteClass);
 
-    // TODO: documentation
-    public SelectRecursiveCTECriteriaBuilder< T> withRecursive(Class<?> cteClass, String cteName);
-
 	/**
 	 * TODO: documentation
 	 * 
@@ -63,7 +55,4 @@ public interface CTEBuilder<T extends CTEBuilder<T>> {
 	 */
     public ReturningModificationCriteriaBuilderFactory<T> withReturning(Class<?> cteClass);
 
-    // TODO: documentation
-    public ReturningModificationCriteriaBuilderFactory<T> withReturning(Class<?> cteClass, String cteName);
-	
 }

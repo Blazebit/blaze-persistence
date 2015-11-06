@@ -106,13 +106,13 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     }
 
     @Override
-    protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
         boolean nested = isNested(setOperationManager.getStartQueryBuilder());
         if (nested) {
             sbSelectFrom.append('(');
         }
         
-        setOperationManager.getStartQueryBuilder().getQueryString1(sbSelectFrom, baseQuery);
+        setOperationManager.getStartQueryBuilder().getQueryString1(sbSelectFrom);
         
         if (nested) {
             sbSelectFrom.append(')');
@@ -130,7 +130,7 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
                     sbSelectFrom.append('(');
                 }
                 
-                setOperand.getQueryString1(sbSelectFrom, baseQuery);
+                setOperand.getQueryString1(sbSelectFrom);
                 
                 if (nested) {
                     sbSelectFrom.append(')');

@@ -371,18 +371,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
         }
         
-        List<Attribute<?, ?>> queryAttrs = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
         Class<?> queryAttrType;
-        if (queryAttrs.isEmpty()) {
-            if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
-                // Our little special case, since there would be no other way to refer to the id as the object type
-                queryAttrType = entityType.getJavaType();
-                Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
-                modificationQueryAttribute = idAttribute.getName();
-            } else {
-                throw new IllegalArgumentException("The query attribute [" + modificationQueryAttribute + "] does not exist!");
-            }
+        if (isReturningEntityAliasAllowed && modificationQueryAttribute.equals(entityAlias)) {
+            // Our little special case, since there would be no other way to refer to the id as the object type
+            queryAttrType = entityType.getJavaType();
+            Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
+            modificationQueryAttribute = idAttribute.getName();
         } else {
+            List<Attribute<?, ?>> queryAttrs = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
             queryAttrType = queryAttrs.get(queryAttrs.size() - 1).getJavaType();
         }
         

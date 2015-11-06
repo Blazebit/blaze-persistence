@@ -30,6 +30,7 @@ import com.blazebit.persistence.entity.RecursiveEntity;
 import com.blazebit.persistence.entity.TestCTE;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoH2;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 
@@ -129,23 +130,19 @@ public class CTETest extends AbstractCoreTest {
         assertEquals("root1", resultList.get(0).getName());
     }
     
+    // NOTE: Apparently H2 can't handle multiple CTEs
     @Test
-    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testNamedCTE() {
-        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class)
-            .fromCte(TestCTE.class, "t1", "a")
-            .fromCte(TestCTE.class, "t2", "b")
-            .where("a.level").ltExpression("2")
-            .where("a.id").eqExpression("b.id")
-            .select("a");
-        cb.with(TestCTE.class, "t1")
-            .from(RecursiveEntity.class, "e")
-            .bind("id").select("e.id")
-            .bind("name").select("e.name")
-            .bind("level").select("0")
-            .where("e.parent").isNull()
-        .end()
-        .with(TestCTE.class, "t2")
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testCTEInSubquery() {
+        CriteriaBuilder<String> cb = cbf.create(em, String.class)
+            .from(RecursiveEntity.class, "r")
+            .where("r.id").in()
+                .from(TestCTE.class, "a")
+                .where("a.level").ltExpression("2")
+                .select("a.id")
+            .end()
+            .select("r.name");
+        cb.with(TestCTE.class)
             .from(RecursiveEntity.class, "e")
             .bind("id").select("e.id")
             .bind("name").select("e.name")
@@ -153,16 +150,14 @@ public class CTETest extends AbstractCoreTest {
             .where("e.parent").isNull()
         .end();
         String expected = ""
-                + "WITH t1_" + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
-                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
-                + "\n), t2_" + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
                 + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
                 + "\n)\n"
-                + "SELECT a FROM t1_" + TestCTE.class.getSimpleName() + " a, t2_" + TestCTE.class.getSimpleName() + " b WHERE a.level < 2 AND a.id = b.id";
+                + "SELECT r.name FROM RecursiveEntity r WHERE r.id IN (SELECT a.id FROM " + TestCTE.class.getSimpleName() + " a WHERE a.level < 2)";
         
         assertEquals(expected, cb.getQueryString());
-        List<TestCTE> resultList = cb.getResultList();
+        List<String> resultList = cb.getResultList();
         assertEquals(1, resultList.size());
-        assertEquals("root1", resultList.get(0).getName());
+        assertEquals("root1", resultList.get(0));
     }
 }

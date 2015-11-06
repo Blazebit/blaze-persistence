@@ -109,7 +109,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
     }
 
     @Override
-	protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
+	protected void getQueryString1(StringBuilder sbSelectFrom) {
 		sbSelectFrom.append("INSERT INTO ");
 		sbSelectFrom.append(entityType.getName()).append('(');
 		
@@ -125,7 +125,7 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
 		}
 		
 		sbSelectFrom.append(")\n");
-    	super.getQueryString1(sbSelectFrom, baseQuery);
+    	super.getQueryString1(sbSelectFrom);
 	}
 
     @Override

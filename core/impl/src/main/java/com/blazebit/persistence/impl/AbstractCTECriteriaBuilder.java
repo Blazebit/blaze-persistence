@@ -67,8 +67,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @Override
-    protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
-        super.getQueryString1(sbSelectFrom, baseQuery);
+    protected void getQueryString1(StringBuilder sbSelectFrom) {
+        super.getQueryString1(sbSelectFrom);
         applyJpaLimit(sbSelectFrom);
     }
 

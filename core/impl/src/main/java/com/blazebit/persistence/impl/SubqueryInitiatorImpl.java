@@ -76,17 +76,4 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         return cb;
     }
 
-    @Override
-    public SubqueryBuilder<X> fromCte(Class<?> cteClass, String cteName) {
-        return fromCte(cteClass, cteName, null);
-    }
-
-    @Override
-    public SubqueryBuilder<X> fromCte(Class<?> cteClass, String cteName, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.cbf.getSubqueryExpressionFactory(), result, listener);
-        subqueryBuilder.fromCte(cteClass, cteName, alias);
-        listener.onBuilderStarted(subqueryBuilder);
-        return subqueryBuilder;
-    }
-
 }

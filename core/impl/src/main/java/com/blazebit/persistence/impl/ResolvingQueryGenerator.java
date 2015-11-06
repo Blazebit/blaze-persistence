@@ -89,7 +89,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         
         if (isSimple) {
         	sb.append(subquery.getQueryString());
-        } else if (hasSetOperations) {
+        } else if (!hasLimit) {
             asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
         } else {
         	List<Expression> arguments = new ArrayList<Expression>(3);

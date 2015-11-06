@@ -251,16 +251,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-        return cteManager.withStartSet(cteClass, null, (BuilderType) this);
-    }
-
-    @SuppressWarnings("unchecked")
-    public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass, String cteName) {
-        if (!dbmsDialect.supportsWithClause()) {
-            throw new UnsupportedOperationException("The database does not support the with clause!");
-        }
-        
-        return cteManager.withStartSet(cteClass, cteName, (BuilderType) this);
+        return cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
 	@SuppressWarnings("unchecked")
@@ -269,17 +260,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-		return cteManager.with(cteClass, null, (BuilderType) this);
+		return cteManager.with(cteClass, (BuilderType) this);
 	}
-
-    @SuppressWarnings("unchecked")
-    public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass, String cteName) {
-        if (!dbmsDialect.supportsWithClause()) {
-            throw new UnsupportedOperationException("The database does not support the with clause!");
-        }
-        
-        return cteManager.with(cteClass, cteName, (BuilderType) this);
-    }
 
     @SuppressWarnings("unchecked")
 	public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass) {
@@ -287,17 +269,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
         
-		return cteManager.withRecursive(cteClass, null, (BuilderType) this);
+		return cteManager.withRecursive(cteClass, (BuilderType) this);
 	}
-
-    @SuppressWarnings("unchecked")
-    public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass, String cteName) {
-        if (!dbmsDialect.supportsWithClause()) {
-            throw new UnsupportedOperationException("The database does not support the with clause!");
-        }
-        
-        return cteManager.withRecursive(cteClass, cteName, (BuilderType) this);
-    }
 
     @SuppressWarnings("unchecked")
     public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass) {
@@ -308,19 +281,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
         
-		return cteManager.withReturning(cteClass, null, (BuilderType) this);
-    }
-
-    @SuppressWarnings("unchecked")
-    public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass, String cteName) {
-        if (!dbmsDialect.supportsWithClause()) {
-            throw new UnsupportedOperationException("The database does not support the with clause!");
-        }
-        if (!dbmsDialect.supportsModificationQueryInWithClause()) {
-            throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
-        }
-        
-        return cteManager.withReturning(cteClass, cteName, (BuilderType) this);
+		return cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
     public SetReturn union() {
@@ -453,15 +414,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType from(Class<?> clazz, String alias) {
-        return from(clazz, alias, null, null);
+        return from(clazz, alias, null);
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName) {
-        return fromCte(clazz, cteName, clazz.getSimpleName().toLowerCase());
+        return fromCte(clazz, clazz.getSimpleName().toLowerCase());
     }
 
     public BuilderType fromCte(Class<?> clazz, String cteName, String alias) {
-        return from(clazz, alias, cteName, null);
+        return from(clazz, alias, null);
     }
 
     public BuilderType fromOld(Class<?> clazz) {
@@ -469,7 +430,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromOld(Class<?> clazz, String alias) {
-        return from(clazz, alias, null, DbmsModificationState.OLD);
+        return from(clazz, alias, DbmsModificationState.OLD);
     }
 
     public BuilderType fromNew(Class<?> clazz) {
@@ -477,11 +438,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public BuilderType fromNew(Class<?> clazz, String alias) {
-        return from(clazz, alias, null, DbmsModificationState.NEW);
+        return from(clazz, alias, DbmsModificationState.NEW);
     }
 
     @SuppressWarnings("unchecked")
-    private BuilderType from(Class<?> clazz, String alias, String cteName, DbmsModificationState state) {
+    private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
     	if (!fromClassExplicitelySet) {
     		// When from is explicitly called we have to revert the implicit root
     		if (joinManager.getRoots().size() > 0) {
@@ -492,11 +453,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     	EntityType<?> type = em.getMetamodel().entity(clazz);
     	String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitelySet = true;
-        
-        // Handle named ctes
-        if (cteName != null) {
-            cteManager.addCteUsage(finalAlias, cteName);
-        }
         
         // Handle old an new references
     	if (state != null) {
@@ -1228,17 +1184,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected String getQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
-        getQueryString1(sbSelectFrom, true);
+        getQueryString1(sbSelectFrom);
         return sbSelectFrom.toString();
     }
 
     protected void getQueryString1(StringBuilder sbSelectFrom) {
-        getQueryString1(sbSelectFrom, true);
-    }
-
-    protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
     	appendSelectClause(sbSelectFrom);
-    	appendFromClause(sbSelectFrom, baseQuery);
+    	appendFromClause(sbSelectFrom);
     	appendWhereClause(sbSelectFrom);
     	appendGroupByClause(sbSelectFrom);
     	appendOrderByClause(sbSelectFrom);
@@ -1254,15 +1206,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isMainQuery) {
             cteManager.buildClause(sbSelectFrom);
         }
-        getQueryString1(sbSelectFrom, false);
+        getQueryString1(sbSelectFrom);
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
         selectManager.buildSelect(sbSelectFrom);
     }
 
-    protected void appendFromClause(StringBuilder sbSelectFrom, boolean baseQuery) {
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, baseQuery);
+    protected void appendFromClause(StringBuilder sbSelectFrom) {
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
     }
 
     protected void appendWhereClause(StringBuilder sbSelectFrom) {
@@ -1345,11 +1297,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         // EntityAlias -> CteName
-        Map<String, String> tableNameRemapping = new LinkedHashMap<String, String>(cteManager.getNamedCteUsages().size());
-        
-        for (Map.Entry<String, String> entry : cteManager.getNamedCteUsages().entrySet()) {
-            tableNameRemapping.put(entry.getKey(), cteManager.getFinalCteName(entry.getValue()));
-        }
+        Map<String, String> tableNameRemapping = new LinkedHashMap<String, String>(0);
         
         StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100);
         sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
@@ -1383,9 +1331,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 sb.append(",\n");
             }
             
-            String finalCteName = cteManager.getFinalCteName(cteInfo.name, cteInfo.cteType.getJavaType());
             String cteName = cteInfo.cteType.getName();
-            sb.append(finalCteName);
+            sb.append(cteName);
             sb.append('(');
 
             final List<String> attributes = cteInfo.attributes;
@@ -1498,7 +1445,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 
                 for (CTEInfo cteInfo : cteManager.getCtes()) {
                     // TODO: this is a hibernate specific integration detail
-                    String cteName = cteManager.getFinalCteName(cteInfo.name, cteInfo.cteType.getJavaType()); 
+                    String cteName = cteInfo.name; 
                     final String subselect = "( select * from " + cteName + " )";
                     int subselectIndex = currentSize;
                     while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
