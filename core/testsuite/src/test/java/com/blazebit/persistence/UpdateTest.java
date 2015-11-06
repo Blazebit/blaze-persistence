@@ -135,7 +135,9 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
+    // NOTE: MySQL does not like subqueries in the set
     @Test
+    @Category({ NoMySQL.class })
     public void testSubquery() {
         final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
         cb.set("name")
