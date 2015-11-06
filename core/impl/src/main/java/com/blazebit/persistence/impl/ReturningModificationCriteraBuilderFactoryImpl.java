@@ -29,12 +29,14 @@ import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
 public class ReturningModificationCriteraBuilderFactoryImpl<X> implements ReturningModificationCriteriaBuilderFactory<X> {
 
 	private final MainQuery mainQuery;
+	private final String cteName;
 	private final Class<?> cteClass;
 	private final X result;
     private final CTEBuilderListener listener;
 
-    ReturningModificationCriteraBuilderFactoryImpl(MainQuery mainQuery, Class<?> cteClass, X result, final CTEBuilderListener listener) {
+    ReturningModificationCriteraBuilderFactoryImpl(MainQuery mainQuery, String cteName, Class<?> cteClass, X result, final CTEBuilderListener listener) {
     	this.mainQuery = mainQuery;
+    	this.cteName = cteName;
     	this.cteClass = cteClass;
     	this.result = result;
     	this.listener = listener;
@@ -47,7 +49,7 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningDeleteCriteriaBuilder<T, X> delete(Class<T> deleteClass, String alias) {
-        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(mainQuery, deleteClass, alias, cteClass, result, listener);
+        ReturningDeleteCriteriaBuilderImpl<T, X> cb = new ReturningDeleteCriteriaBuilderImpl<T, X>(mainQuery, deleteClass, alias, cteName, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
@@ -59,14 +61,14 @@ public class ReturningModificationCriteraBuilderFactoryImpl<X> implements Return
 
     @Override
     public <T> ReturningUpdateCriteriaBuilder<T, X> update(Class<T> updateClass, String alias) {
-        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(mainQuery, updateClass, alias, cteClass, result, listener);
+        ReturningUpdateCriteriaBuilderImpl<T, X> cb = new ReturningUpdateCriteriaBuilderImpl<T, X>(mainQuery, updateClass, alias, cteName, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }
 
     @Override
     public <T> ReturningInsertCriteriaBuilder<T, X> insert(Class<T> insertClass) {
-        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(mainQuery, insertClass, cteClass, result, listener);
+        ReturningInsertCriteriaBuilderImpl<T, X> cb = new ReturningInsertCriteriaBuilderImpl<T, X>(mainQuery, insertClass, cteName, cteClass, result, listener);
         listener.onBuilderStarted(cb);
         return cb;
     }

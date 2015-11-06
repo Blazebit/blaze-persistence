@@ -51,13 +51,13 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 	protected final Map<String, Integer> bindingMap;
 	protected final CTEBuilderListenerImpl subListener;
 
-    public AbstractCTECriteriaBuilder(MainQuery mainQuery, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
+    public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
         this.result = result;
         this.listener = listener;
 
         this.cteType = em.getMetamodel().entity(clazz);
-        this.cteName = cteType.getName();
+        this.cteName = cteName;
         this.bindingMap = new LinkedHashMap<String, Integer>();
         this.subListener = new CTEBuilderListenerImpl();
     }
@@ -67,8 +67,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @Override
-    protected void getQueryString1(StringBuilder sbSelectFrom) {
-        super.getQueryString1(sbSelectFrom);
+    protected void getQueryString1(StringBuilder sbSelectFrom, boolean baseQuery) {
+        super.getQueryString1(sbSelectFrom, baseQuery);
         applyJpaLimit(sbSelectFrom);
     }
 
@@ -162,7 +162,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     @SuppressWarnings("unchecked")
     protected LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> createLeaf(BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, resultType, result, newListener, (FinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder);
+        LeafOngoingSetOperationCTECriteriaBuilderImpl<Y> next = new LeafOngoingSetOperationCTECriteriaBuilderImpl<Y>(mainQuery, cteName, resultType, result, newListener, (FinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder);
         newListener.onBuilderStarted(next);
         return next;
     }
@@ -173,7 +173,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         finalSetOperationBuilder.setEndSetResult((T) endSetResult);
         
         CTEBuilderListener newListener = finalSetOperationBuilder.getSubListener();
-        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, resultType, result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
+        OngoingSetOperationCTECriteriaBuilderImpl<Y, T> next = new OngoingSetOperationCTECriteriaBuilderImpl<Y, T>(mainQuery, cteName, resultType, result, newListener, (OngoingFinalSetOperationCTECriteriaBuilderImpl<Object>) finalSetOperationBuilder, endSetResult);
         newListener.onBuilderStarted(next);
         return next;
     }

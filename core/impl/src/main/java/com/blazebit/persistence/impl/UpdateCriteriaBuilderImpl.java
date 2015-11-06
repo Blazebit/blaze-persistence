@@ -26,7 +26,7 @@ import com.blazebit.persistence.UpdateCriteriaBuilder;
 public class UpdateCriteriaBuilderImpl<T> extends BaseUpdateCriteriaBuilderImpl<T, UpdateCriteriaBuilder<T>, Void> implements UpdateCriteriaBuilder<T> {
 
     public UpdateCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias) {
-        super(mainQuery, true, clazz, alias, null, null, null);
+        super(mainQuery, true, clazz, alias, null, null, null, null);
     }
 
 }

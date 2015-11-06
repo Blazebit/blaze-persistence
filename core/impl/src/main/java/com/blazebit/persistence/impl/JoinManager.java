@@ -72,6 +72,7 @@ public class JoinManager extends AbstractManager {
     // root entity class
     private final String joinRestrictionKeyword;
     private final AliasManager aliasManager;
+    private final CTEManager cteManager;
     private final Metamodel metamodel; // needed for model-aware joins
     private final JoinManager parent;
     private final JoinOnBuilderEndedListener joinOnBuilderListener;
@@ -85,6 +86,7 @@ public class JoinManager extends AbstractManager {
     JoinManager(MainQuery mainQuery, ResolvingQueryGenerator queryGenerator, AliasManager aliasManager, JoinManager parent, ExpressionFactory expressionFactory) {
         super(queryGenerator, mainQuery.parameterManager);
         this.aliasManager = aliasManager;
+        this.cteManager = mainQuery.cteManager;
         this.metamodel = mainQuery.em.getMetamodel();
         this.parent = parent;
         this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
@@ -165,7 +167,7 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    void buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix) {
+    void buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean baseQuery) {
         renderedJoins.clear();
         sb.append(" FROM ");
         
@@ -178,8 +180,15 @@ public class JoinManager extends AbstractManager {
     		}
     		
     		JoinNode rootNode = nodes.get(i);
-    		EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
-	        sb.append(type.getName()).append(' ');
+            String cteName;
+    		if (!baseQuery && (cteName = cteManager.getNamedCteUsages().get(rootNode.getAliasInfo().getAlias())) != null) {
+                sb.append(cteManager.getFinalCteName(cteName, rootNode.getPropertyClass()));
+            } else {
+                EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
+                sb.append(type.getName());
+            }
+            
+	        sb.append(' ');
 	        
 	        if (aliasPrefix != null) {
 	        	sb.append(aliasPrefix);

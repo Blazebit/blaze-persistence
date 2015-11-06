@@ -30,8 +30,8 @@ public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTE
 	
     private final Z endSetResult;
     
-    public OngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult) {
-        super(mainQuery, clazz, result, listener, finalSetOperationBuilder);
+    public OngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult) {
+        super(mainQuery, cteName, clazz, result, listener, finalSetOperationBuilder);
         this.endSetResult = endSetResult;
     }
 

@@ -60,7 +60,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	protected final Map<String, String> returningAttributeBindingMap;
 
 	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+	public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
 		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
 		super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
@@ -85,7 +85,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	        this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
 		} else {
             this.cteType = em.getMetamodel().entity(cteClass);
-            this.cteName = cteType.getName();
+            this.cteName = cteName;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
     		this.returningAttributeBindingMap = new LinkedHashMap<String, String>(cteType.getAttributes().size());
@@ -199,14 +199,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	    if (defaultOld) {
 	        for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
 	            if (entry.getValue() == DbmsModificationState.NEW) {
-	                includedModificationStates.put(DbmsModificationState.NEW, "new_" + entityType.getName());
+	                includedModificationStates.put(DbmsModificationState.NEW, entityType.getName() + "_new");
 	                break;
 	            }
 	        }
 	    } else {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
                 if (entry.getValue() == DbmsModificationState.OLD) {
-                    includedModificationStates.put(DbmsModificationState.OLD, "old_" + entityType.getName());
+                    includedModificationStates.put(DbmsModificationState.OLD, entityType.getName() + "_old");
                     break;
                 }
             }
@@ -223,19 +223,19 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
 
         Map<String, String> tableNameRemappings = new HashMap<String, String>();
-        // TODO: this needs to include the modification states based on what the dbms uses as default
+        // TODO: this needs to include the modification states based on what the dbms uses as default, so use a DbmsDialect method
         boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
         
         if (defaultOld) {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
                 if (entry.getValue() == DbmsModificationState.NEW) {
-                    tableNameRemappings.put(entry.getKey(), "new_" + entityType.getName());
+                    tableNameRemappings.put(entry.getKey(), entityType.getName() + "_new");
                 }
             }
         } else {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
                 if (entry.getValue() == DbmsModificationState.OLD) {
-                    tableNameRemappings.put(entry.getKey(), "old_" + entityType.getName());
+                    tableNameRemappings.put(entry.getKey(), entityType.getName() + "_old");
                 }
             }
         }

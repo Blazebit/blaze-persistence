@@ -28,19 +28,41 @@ public interface SubqueryInitiator<T> {
      * Like {@link SubqueryInitiator#from(java.lang.Class, java.lang.String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
-     * @param entityClass The entity class which should be the root entity
+     * @param entityClass The entity class which should be the entity
      * @return A new subquery builder
      */
     public SubqueryBuilder<T> from(Class<?> entityClass);
 
     /**
-     * Creates a new subquery builder with the given entity class as root entity in the FROM clause with the given alias.
+     * Like {@link SubqueryInitiator#fromCte(Class, String, String))} with the
+     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the cte class returns.
      *
-     * @param entityClass The entity class which should be the root entity
-     * @param alias The alias for the root entity
+     * @param cteClass The cte class which should be queried
+     * @param cteName The name of the cte which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.1.0
+     */
+    public SubqueryBuilder<T> fromCte(Class<?> cteClass, String cteName);
+
+    /**
+     * Creates a new subquery builder with the given entity class as entity in the FROM clause with the given alias.
+     *
+     * @param entityClass The entity class which should be the entity
+     * @param alias The alias for the entity
      * @return A new subquery builder
      */
     public SubqueryBuilder<T> from(Class<?> entityClass, String alias);
+
+    /**
+     * Creates a new subquery builder with the given cte class as entity in the FROM clause with the given alias.
+     *
+     * @param cteClass The cte class which should be queried
+     * @param cteName The name of the cte which should be queried
+     * @param alias The alias for the cte
+     * @return The query builder for chaining calls
+     * @since 1.1.0
+     */
+    public SubqueryBuilder<T> fromCte(Class<?> cteClass, String cteName, String alias);
 
     // TODO: documentation
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet();

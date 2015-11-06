@@ -25,6 +25,13 @@ package com.blazebit.persistence;
  */
 public interface BaseUpdateCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X> {
 	
+    // TODO: documentation
 	public X set(String attribute, Object value);
+
+    // TODO: documentation
+    public X setExpression(String attribute, String expression);
+
+    // TODO: documentation
+    public SubqueryInitiator<X> set(String attribute);
 	
 }

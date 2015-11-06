@@ -49,7 +49,7 @@ public class CTETest extends AbstractCoreTest {
 	}
 
 	@Before
-    public void setUp(){
+    public void setUp() {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
@@ -76,7 +76,7 @@ public class CTETest extends AbstractCoreTest {
 	
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testCTE(){
+    public void testCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.with(TestCTE.class)
         	.from(RecursiveEntity.class, "e")
@@ -99,7 +99,7 @@ public class CTETest extends AbstractCoreTest {
 	
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
-    public void testRecursiveCTE(){
+    public void testRecursiveCTE() {
         CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t").where("t.level").ltExpression("2");
         cb.withRecursive(TestCTE.class)
         	.from(RecursiveEntity.class, "e")
@@ -126,6 +126,43 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(expected, cb.getQueryString());
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
+        assertEquals("root1", resultList.get(0).getName());
+    }
+    
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testNamedCTE() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class)
+            .fromCte(TestCTE.class, "t1", "a")
+            .fromCte(TestCTE.class, "t2", "b")
+            .where("a.level").ltExpression("2")
+            .where("a.id").eqExpression("b.id")
+            .select("a");
+        cb.with(TestCTE.class, "t1")
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+            .where("e.parent").isNull()
+        .end()
+        .with(TestCTE.class, "t2")
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+            .where("e.parent").isNull()
+        .end();
+        String expected = ""
+                + "WITH t1_" + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\n), t2_" + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\n)\n"
+                + "SELECT a FROM t1_" + TestCTE.class.getSimpleName() + " a, t2_" + TestCTE.class.getSimpleName() + " b WHERE a.level < 2 AND a.id = b.id";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<TestCTE> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
     }
 }

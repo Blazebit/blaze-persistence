@@ -28,8 +28,8 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class LeafOngoingSetOperationCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>> implements LeafOngoingSetOperationCTECriteriaBuilder<T> {
 
-    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, Class<Object> clazz, T result, CTEBuilderListener listener, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
-        super(mainQuery, clazz, result, listener, finalSetOperationBuilder);
+    public LeafOngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, FinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder) {
+        super(mainQuery, cteName, clazz, result, listener, finalSetOperationBuilder);
     }
 
     @Override

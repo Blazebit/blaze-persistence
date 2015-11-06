@@ -25,8 +25,8 @@ import com.blazebit.persistence.ReturningInsertCriteriaBuilder;
  */
 public class ReturningInsertCriteriaBuilderImpl<T, Y> extends BaseInsertCriteriaBuilderImpl<T, ReturningInsertCriteriaBuilder<T, Y>, Y> implements ReturningInsertCriteriaBuilder<T, Y> {
 
-    public ReturningInsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, false, clazz, cteClass, result, listener);
+    public ReturningInsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, false, clazz, cteName, cteClass, result, listener);
     }
 
     @Override

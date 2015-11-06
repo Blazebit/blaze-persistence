@@ -40,11 +40,11 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
             StringBuilder sb = new StringBuilder(sqlSb.length() + 30);
             if (statementType == DbmsStatementType.INSERT) {
                 StringBuilder newValuesSb = new StringBuilder();
-                String newValuesTableName = "new_" + includedModificationStates.get(DbmsModificationState.OLD);
+                String newValuesTableName = includedModificationStates.get(DbmsModificationState.OLD) + "_new";
                 newValuesSb.append("select * from final table (");
                 newValuesSb.append(sqlSb);
                 newValuesSb.append(")");
-                dbmsModificationStateQueries.put("new_" + includedModificationStates.get(DbmsModificationState.OLD), newValuesSb.toString());
+                dbmsModificationStateQueries.put(newValuesTableName, newValuesSb.toString());
                 
                 String needle = "into";
                 int startIndex = indexOfIgnoreCase(sqlSb, needle) + needle.length() + 1;

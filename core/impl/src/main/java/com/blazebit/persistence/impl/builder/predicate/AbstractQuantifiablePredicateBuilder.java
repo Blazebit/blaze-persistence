@@ -170,6 +170,18 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
+    public SubqueryBuilder<T> fromCte(Class<?> clazz, String cteName) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromCte(clazz, cteName);
+    }
+
+    @Override
+    public SubqueryBuilder<T> fromCte(Class<?> clazz, String cteName, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().fromCte(clazz, cteName, alias);
+    }
+
+    @Override
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet() {
         return getSubqueryInitiator().startSet();
     }

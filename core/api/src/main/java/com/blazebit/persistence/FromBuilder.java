@@ -28,7 +28,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * Like {@link FromBuilder#from(Class, String))} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
-     * @param entityClass The entity class which should be the root entity
+     * @param entityClass The entity class which should be queried
      * @return The query builder for chaining calls
      */
     public X from(Class<?> entityClass);
@@ -36,43 +36,69 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     /**
      * Sets the entity class on which the query should be based on with the given alias.
      *
-     * @param entityClass The entity class which should be the root entity
-     * @param alias The alias for the root entity
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
      * @return The query builder for chaining calls
      */
     public X from(Class<?> entityClass, String alias);
 
     /**
+     * Like {@link FromBuilder#fromCte(Class, String, String))} with the
+     * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the cte class returns.
+     *
+     * @param cteClass The cte class which should be queried
+     * @param cteName The name of the cte which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.1.0
+     */
+    public X fromCte(Class<?> cteClass, String cteName);
+
+    /**
+     * Sets the cte class and cte name on which the query should be based on with the given alias.
+     *
+     * @param cteClass The cte class which should be queried
+     * @param cteName The name of the cte which should be queried
+     * @param alias The alias for the cte
+     * @return The query builder for chaining calls
+     * @since 1.1.0
+     */
+    public X fromCte(Class<?> cteClass, String cteName, String alias);
+
+    /**
      * Like {@link FromBuilder#from(Class))} but explicitly queries the data before any side effects happen because of CTEs.
      *
-     * @param entityClass The entity class which should be the root entity
+     * @param entityClass The entity class which should be queried
      * @return The query builder for chaining calls
+     * @since 1.1.0
      */
     public X fromOld(Class<?> entityClass);
 
     /**
      * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data before any side effects happen because of CTEs.
      *
-     * @param entityClass The entity class which should be the root entity
-     * @param alias The alias for the root entity
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
      * @return The query builder for chaining calls
+     * @since 1.1.0
      */
     public X fromOld(Class<?> entityClass, String alias);
 
     /**
      * Like {@link FromBuilder#from(Class))} but explicitly queries the data after any side effects happen because of CTEs.
      *
-     * @param entityClass The entity class which should be the root entity
+     * @param entityClass The entity class which should be queried
      * @return The query builder for chaining calls
+     * @since 1.1.0
      */
     public X fromNew(Class<?> entityClass);
 
     /**
      * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data after any side effects happen because of CTEs.
      *
-     * @param entityClass The entity class which should be the root entity
-     * @param alias The alias for the root entity
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
      * @return The query builder for chaining calls
+     * @since 1.1.0
      */
     public X fromNew(Class<?> entityClass, String alias);
 

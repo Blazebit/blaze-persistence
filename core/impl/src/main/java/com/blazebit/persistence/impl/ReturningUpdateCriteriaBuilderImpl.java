@@ -25,8 +25,8 @@ import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
  */
 public class ReturningUpdateCriteriaBuilderImpl<T, Y> extends BaseUpdateCriteriaBuilderImpl<T, ReturningUpdateCriteriaBuilder<T, Y>, Y> implements ReturningUpdateCriteriaBuilder<T, Y> {
 
-    public ReturningUpdateCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-        super(mainQuery, false, clazz, alias, cteClass, result, listener);
+    public ReturningUpdateCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, false, clazz, alias, cteName, cteClass, result, listener);
     }
 
     @Override

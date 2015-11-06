@@ -401,7 +401,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             sbSelectFrom.append(")");
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true);
         whereManager.buildClause(sbSelectFrom);
 
         return sbSelectFrom.toString();
@@ -421,7 +421,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // TODO: actually we should add the select clauses needed for order bys
         // TODO: if we do so, the page position function has to omit select items other than the first
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, true);
         whereManager.buildClause(sbSelectFrom);
 
         Set<String> clauses = new LinkedHashSet<String>();
@@ -450,7 +450,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, true);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -495,7 +495,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * more and therefore we can also omit any joins which the SELECT or the
          * ORDER_BY clause do not depend on
          */
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, true);
         sbSelectFrom.append(" WHERE ").append(rootAlias).append('.').append(idName).append(" IN :").append(idParamName).append("");
 
         Set<String> clauses = new LinkedHashSet<String>();
@@ -523,7 +523,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, true);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, true);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

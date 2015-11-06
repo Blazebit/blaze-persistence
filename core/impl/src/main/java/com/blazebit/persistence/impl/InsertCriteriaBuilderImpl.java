@@ -26,7 +26,7 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 public class InsertCriteriaBuilderImpl<T> extends BaseInsertCriteriaBuilderImpl<T, InsertCriteriaBuilder<T>, Void> implements InsertCriteriaBuilder<T> {
 
     public InsertCriteriaBuilderImpl(MainQuery mainQuery, Class<T> clazz) {
-        super(mainQuery, true, clazz, null, null, null);
+        super(mainQuery, true, clazz, null, null, null, null);
     }
 
 }
