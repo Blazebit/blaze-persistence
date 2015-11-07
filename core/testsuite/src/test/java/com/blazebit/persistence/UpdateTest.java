@@ -135,9 +135,9 @@ public class UpdateTest extends AbstractCoreTest {
         });
     }
 
-    // NOTE: MySQL does not like subqueries in the set
+    // NOTE: MySQL does not like subqueries in the set, Datanucleus fails with a parser exception currently
     @Test
-    @Category({ NoMySQL.class })
+    @Category({ NoMySQL.class, NoDatanucleus.class })
     public void testSubquery() {
         final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
         cb.set("name")
