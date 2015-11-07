@@ -15,8 +15,10 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.blazebit.persistence.BaseUpdateCriteriaBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
@@ -137,11 +139,20 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         queryGenerator.setQueryBuffer(sbSelectFrom);
         boolean conditionalContext = queryGenerator.setConditionalContext(false);
         
-		for (Map.Entry<String, Expression> attributeEntry : setAttributes.entrySet()) {
-			sbSelectFrom.append(attributeEntry.getKey());
+        Iterator<Entry<String, Expression>> setAttributeIter = setAttributes.entrySet().iterator();
+        if (setAttributeIter.hasNext()) {
+        	Map.Entry<String, Expression> attributeEntry = setAttributeIter.next();
+        	sbSelectFrom.append(attributeEntry.getKey());
 			sbSelectFrom.append(" = ");
 			attributeEntry.getValue().accept(queryGenerator);
-		}
+			while (setAttributeIter.hasNext()) {
+				attributeEntry = setAttributeIter.next();
+				sbSelectFrom.append(',');
+	        	sbSelectFrom.append(attributeEntry.getKey());
+				sbSelectFrom.append(" = ");
+				attributeEntry.getValue().accept(queryGenerator);
+			}
+        }
 
         queryGenerator.setConditionalContext(conditionalContext);
     	appendWhereClause(sbSelectFrom);
