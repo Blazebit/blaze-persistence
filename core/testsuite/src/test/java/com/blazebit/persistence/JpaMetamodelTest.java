@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.Document_;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.function.ZeroFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
