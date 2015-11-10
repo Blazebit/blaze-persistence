@@ -20,9 +20,9 @@ limitations under the License.
         <class>com.blazebit.persistence.entity.EmbeddableTestEntity</class>
         <class>com.blazebit.persistence.entity.IdHolderCTE</class>
         <class>com.blazebit.persistence.entity.IntIdEntity</class>
-        <class>com.blazebit.persistence.entity.JuniorProjectLeader</class>
+<!--         <class>com.blazebit.persistence.entity.JuniorProjectLeader</class> -->
         <class>com.blazebit.persistence.entity.KeysetEntity</class>
-        <class>com.blazebit.persistence.entity.LargeProject</class>
+<!--         <class>com.blazebit.persistence.entity.LargeProject</class> -->
         <class>com.blazebit.persistence.entity.LocalizedEntity</class>
         <class>com.blazebit.persistence.entity.Order</class>
         <class>com.blazebit.persistence.entity.OrderPosition</class>
@@ -36,8 +36,8 @@ limitations under the License.
 <!--         <class>com.blazebit.persistence.entity.Project</class> -->
 <!--         <class>com.blazebit.persistence.entity.ProjectLeader</class> -->
         <class>com.blazebit.persistence.entity.RecursiveEntity</class>
-        <class>com.blazebit.persistence.entity.SeniorProjectLeader</class>
-        <class>com.blazebit.persistence.entity.SmallProject</class>
+<!--         <class>com.blazebit.persistence.entity.SeniorProjectLeader</class> -->
+<!--         <class>com.blazebit.persistence.entity.SmallProject</class> -->
         <class>com.blazebit.persistence.entity.TestCTE</class>
         <class>com.blazebit.persistence.entity.Version</class>
         <class>com.blazebit.persistence.entity.Workflow</class>
