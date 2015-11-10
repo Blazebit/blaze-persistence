@@ -29,7 +29,8 @@ import javax.persistence.ManyToOne;
  * @author Christian Beikov
  * @since 1.0
  */
-@Entity(name = "Projects")
+// TODO: Re-enable when HHH-10265 is fixed 
+//@Entity(name = "Projects")
 @Inheritance
 @DiscriminatorColumn(name = "category_type")
 public abstract class Project<PL extends ProjectLeader<? extends Project<?>>> implements Serializable {

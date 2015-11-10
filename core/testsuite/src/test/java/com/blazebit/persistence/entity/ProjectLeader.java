@@ -25,6 +25,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 /**
@@ -33,7 +34,8 @@ import javax.persistence.OneToMany;
  * @author Moritz Becker
  * @since 1.0
  */
-@Entity
+//TODO: Re-enable when HHH-10265 is fixed
+//@Entity
 @Inheritance
 @DiscriminatorColumn(name = "project_leader_type")
 public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>>> implements Serializable {
@@ -42,6 +44,7 @@ public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>
 
     private Long id;
     private String name;
+    private P currentProject;
     private Set<P> leadedProjects = new HashSet<P>();
     
     public ProjectLeader() {
@@ -68,6 +71,15 @@ public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @ManyToOne(optional = true, targetEntity = Project.class)
+    public P getCurrentProject() {
+        return currentProject;
+    }
+
+    public void setCurrentProject(P currentProject) {
+        this.currentProject = currentProject;
     }
 
     @OneToMany(mappedBy = "leader", targetEntity = Project.class)

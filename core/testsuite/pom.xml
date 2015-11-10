@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -326,6 +327,56 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+									</processors>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+							<!-- Metamodel -->
+							<dependency>
+								<groupId>org.hibernate</groupId>
+								<artifactId>hibernate-jpamodelgen</artifactId>
+								<version>1.3.0.Final</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>hibernate-4.3</id>
@@ -349,6 +400,56 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+									</processors>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+							<!-- Metamodel -->
+							<dependency>
+								<groupId>org.hibernate</groupId>
+								<artifactId>hibernate-jpamodelgen</artifactId>
+								<version>${version.hibernate-4.3}</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>hibernate-5.0</id>
@@ -372,6 +473,56 @@
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+									</processors>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+							<!-- Metamodel -->
+							<dependency>
+								<groupId>org.hibernate</groupId>
+								<artifactId>hibernate-jpamodelgen</artifactId>
+								<version>${version.hibernate-5}</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>eclipselink</id>
@@ -379,12 +530,70 @@
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</jpa.excludedGroups>
 			</properties>
 			<dependencies>
+		        <dependency>
+		            <groupId>org.eclipse.persistence</groupId>
+		            <artifactId>eclipselink</artifactId>
+		            <version>${version.eclipselink}</version>
+		        </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.eclipse.persistence.internal.jpa.modelgen.CanonicalModelProcessor</processor>
+									</processors>
+									<optionMap>
+										<eclipselink.persistencexml>${basedir}/src/test/resources/META-INF/persistence.xml</eclipselink.persistencexml>
+									</optionMap>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+							<!-- Metamodel -->
+							<dependency>
+								<groupId>org.eclipse.persistence</groupId>
+								<artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+								<version>${version.eclipselink}</version>
+							</dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 		<profile>
 			<id>datanucleus-4</id>
@@ -460,6 +669,44 @@
 								<version>${project.version}</version>
 							</dependency>
 						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.datanucleus.jpa.JPACriteriaProcessor</processor>
+									</processors>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
 					</plugin>
 				</plugins>
 			</build>
@@ -539,6 +786,44 @@
 							</dependency>
 						</dependencies>
 					</plugin>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.datanucleus.jpa.JPACriteriaProcessor</processor>
+									</processors>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
 				</plugins>
 			</build>
 		</profile>
@@ -548,12 +833,69 @@
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</jpa.excludedGroups>
 			</properties>
 			<dependencies>
+		        <dependency>
+		            <groupId>org.apache.openjpa</groupId>
+		            <artifactId>openjpa-all</artifactId>
+		            <version>${version.openjpa}</version>
+		        </dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
 					<scope>test</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.bsc.maven</groupId>
+						<artifactId>maven-processor-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>process-test</id>
+								<goals>
+									<goal>process</goal>
+								</goals>
+								<phase>generate-test-sources</phase>
+								<configuration>
+									<!-- source output directory -->
+									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
+									<processors>
+										<processor>org.apache.openjpa.persistence.meta.AnnotationProcessor6</processor>
+									</processors>
+									<optionMap>
+										<openjpa.metamodel>true</openjpa.metamodel>
+									</optionMap>
+								</configuration>
+							</execution>
+						</executions>
+						<dependencies>
+					        <dependency>
+					            <groupId>org.apache.openjpa</groupId>
+					            <artifactId>openjpa-all</artifactId>
+					            <version>${version.openjpa}</version>
+					        </dependency>
+						</dependencies>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>add-test-source</id>
+								<phase>generate-test-sources</phase>
+								<goals>
+									<goal>add-test-source</goal>
+								</goals>
+								<configuration>
+									<sources>
+										<source>${project.build.directory}/test-metamodel</source>
+									</sources>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 
