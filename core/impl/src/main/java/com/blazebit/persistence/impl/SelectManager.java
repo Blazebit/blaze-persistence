@@ -180,6 +180,7 @@ public class SelectManager<T> extends AbstractManager {
             int size = selectInfos.size();
             for (int i = 0; i < size; i++) {
                 final SelectInfo selectInfo = infos.get(i);
+                componentPaths.clear();
                 selectInfo.getExpression().accept(resolveVisitor);
 
                 // The select info can only either an entity select or any other expression
