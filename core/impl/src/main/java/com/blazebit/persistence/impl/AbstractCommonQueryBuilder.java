@@ -1379,10 +1379,20 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             }
             
             sb.append("\n)");
+        }
 
+        // Add cascading delete statements from base query as CTEs
+        firstCte = applyCascadingDelete(baseQuery, this, participatingQueries, sb, "main_query", firstCte);
+        
+        // If no CTE has been added, we can just return
+        if (firstCte) {
+            return null;
+        }
+
+        for (CTEInfo cteInfo : cteManager.getCtes()) {
+            String cteName = cteInfo.cteType.getName();
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this cte
-            // TODO: move this out of the loop to first generate all, then replace
             final String subselect = "( select * from " + cteName + " )";
             int subselectIndex = 0;
             while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
@@ -1394,14 +1404,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             while ((subselectIndex = sqlSb.indexOf(mainSubselect, subselectIndex)) > -1) {
                 sqlSb.replace(subselectIndex, subselectIndex + mainSubselect.length(), cteName);
             }
-        }
-
-        // Add cascading delete statements from base query as CTEs
-        firstCte = applyCascadingDelete(baseQuery, this, participatingQueries, sb, "main_query", firstCte);
-        
-        // If no CTE has been added, we can just return
-        if (firstCte) {
-            return null;
         }
         
         sb.append("\n");
@@ -1431,7 +1433,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 // Since we kind of need the parameters from the base query, it will participate for each cascade
                 participatingQueries.add(baseQuery);
                 
-                int currentSize = sb.length();
                 sb.append(cteBaseName);
                 sb.append('_').append(cteBaseNameCount);
                 sb.append(" AS (\n");
@@ -1442,16 +1443,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 sb.append(cascadingDeleteSqlSb);
                 
                 sb.append("\n)");
-                
-                for (CTEInfo cteInfo : cteManager.getCtes()) {
-                    // TODO: this is a hibernate specific integration detail
-                    String cteName = cteInfo.name; 
-                    final String subselect = "( select * from " + cteName + " )";
-                    int subselectIndex = currentSize;
-                    while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
-                        sb.replace(subselectIndex, subselectIndex + subselect.length(), cteName);
-                    }
-                }
             }
         }
         

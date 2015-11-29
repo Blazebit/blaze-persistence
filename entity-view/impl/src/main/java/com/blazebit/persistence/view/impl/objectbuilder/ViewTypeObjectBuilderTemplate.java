@@ -26,19 +26,25 @@ import java.util.Set;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
+import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedAliasExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedAliasSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedSubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
@@ -212,29 +218,38 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
             if (mapping[0] instanceof Class) {
                 @SuppressWarnings("unchecked")
-				Class<? extends SubqueryProvider> subqueryProviderClass = (Class<? extends SubqueryProvider>) mapping[0];
-                SubqueryProvider provider;
-
-                try {
-                    provider = subqueryProviderClass.newInstance();
-                } catch (Exception ex) {
-                    throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryProviderClass.getName(), ex);
-                }
+				SubqueryProviderFactory factory = SubqueryProviderHelper.getFactory((Class<? extends SubqueryProvider>) mapping[0]);
 
                 String subqueryAlias = (String) mapping[2];
                 String subqueryExpression = (String) mapping[3];
 
                 if (subqueryExpression.isEmpty()) {
                     if (mapping[1] != null) {
-                        mappers[i] = new AliasSubqueryTupleElementMapper(provider, (String) mapping[1]);
+                    	if (factory.isParameterized()) {
+                    		mappers[i] = new ParameterizedAliasSubqueryTupleElementMapper(factory, (String) mapping[1]);
+                    	} else {
+                    		mappers[i] = new AliasSubqueryTupleElementMapper(factory.create(null, null), (String) mapping[1]);
+                    	}
                     } else {
-                        mappers[i] = new SubqueryTupleElementMapper(provider);
+                    	if (factory.isParameterized()) {
+                    		mappers[i] = new ParameterizedSubqueryTupleElementMapper(factory);
+                    	} else {
+                    		mappers[i] = new SubqueryTupleElementMapper(factory.create(null, null));
+                    	}
                     }
                 } else {
                     if (mapping[1] != null) {
-                        mappers[i] = new AliasExpressionSubqueryTupleElementMapper(provider, subqueryExpression, subqueryAlias, (String) mapping[1]);
+                    	if (factory.isParameterized()) {
+                    		mappers[i] = new ParameterizedAliasExpressionSubqueryTupleElementMapper(factory, subqueryExpression, subqueryAlias, (String) mapping[1]);
+                    	} else {
+                    		mappers[i] = new AliasExpressionSubqueryTupleElementMapper(factory.create(null, null), subqueryExpression, subqueryAlias, (String) mapping[1]);
+                    	}
                     } else {
-                        mappers[i] = new ExpressionSubqueryTupleElementMapper(provider, subqueryExpression, subqueryAlias);
+                    	if (factory.isParameterized()) {
+                    		mappers[i] = new ParameterizedExpressionSubqueryTupleElementMapper(factory, subqueryExpression, subqueryAlias);
+                    	} else {
+                    		mappers[i] = new ExpressionSubqueryTupleElementMapper(factory.create(null, null), subqueryExpression, subqueryAlias);
+                    	}
                     }
                 }
             } else {
@@ -468,7 +483,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         boolean hasOffset = tupleOffset != 0;
         ObjectBuilder<T> result;
 
-        result = new ViewTypeObjectBuilder<T>(this);
+        result = new ViewTypeObjectBuilder<T>(this, queryBuilder, optionalParameters);
 
         if (hasOffset || isSubview || hasIndexedCollections || hasSubviews) {
             result = new ReducerViewTypeObjectBuilder<T>(result, tupleOffset, mappers.length);
