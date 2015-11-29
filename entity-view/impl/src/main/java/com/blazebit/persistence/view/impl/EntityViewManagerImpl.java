@@ -251,7 +251,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
-        if (criteriaBuilder.getResultType() != viewType.getEntityClass()) {
+        if (!viewType.getEntityClass().isAssignableFrom(criteriaBuilder.getResultType())) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }

@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
@@ -94,6 +95,10 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             attributeType = ReflectionUtils.resolveTypeVariable(constructor.getDeclaringType().getJavaType(), (TypeVariable<?>) parameterType);
         } else {
             attributeType = constructor.getJavaConstructor().getParameterTypes()[index];
+        }
+        
+        if (mapping instanceof MappingParameter) {
+            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         }
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];

@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.FullQueryBuilder;
@@ -142,8 +143,14 @@ public class ViewTypeObjectBuilderTemplate<T> {
         int length = 1 + attributes.length + parameterAttributes.length;
 
         // First we add the id attribute
-        EntityType<?> entityType = metamodel.entity(viewType.getEntityClass());
-        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = entityType.getId(entityType.getIdType().getJavaType());
+        ManagedType<?> managedType = metamodel.managedType(viewType.getEntityClass());
+        
+        if (!(managedType instanceof IdentifiableType<?>)) {
+        	throw new IllegalArgumentException("The given managed type '" + viewType.getEntityClass().getName() + "' of the entity view type '" + viewType.getJavaType().getName() + "' is not an identifiable type!");
+        }
+        
+        IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
+        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
         Class<?> idAttributeType;
         
         if (jpaIdAttr.getJavaMember() instanceof Field) {

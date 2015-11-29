@@ -35,6 +35,7 @@ import java.util.TreeMap;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.UpdateableEntityView;
@@ -215,7 +216,7 @@ public class ViewTypeImpl<X> implements ViewType<X> {
         Class<?> attributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method);
         
         // Force singular mapping
-        if (AnnotationUtils.findAnnotation(method, MappingSingular.class) != null) {
+        if (AnnotationUtils.findAnnotation(method, MappingSingular.class) != null || mapping instanceof MappingParameter) {
             return new MethodMappingSingularAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         }
 
