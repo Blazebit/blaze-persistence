@@ -129,11 +129,11 @@ Input_parameter : ':'Identifier;
  
 //Entity_type_literal : Identifier;
  
-Date_literal : '(' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* ')';
+Date_literal : '{' 'd' (' ' | '\t')+ '\'' Date_string '\'' (' ' | '\t')* '}';
 
-Time_literal : '(' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* ')';
+Time_literal : '{' 't' (' ' | '\t')+ '\'' Time_string '\'' (' ' | '\t')* '}';
 
-Timestamp_literal : '(' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string '\'' (' ' | '\t')* ')';
+Timestamp_literal : '{' 'ts' (' ' | '\t')+ '\'' Date_string ' ' Time_string '\'' (' ' | '\t')* '}';
      
 Boolean_literal
      : [Tt][Rr][Uu][Ee]
