@@ -791,4 +791,12 @@ public class GeneralParserTest extends AbstractParserTest {
 		);
         assertEquals(expected, result);
     }
+    
+    @Test
+    public void testParameterSignumInvert() {
+    	CompositeExpression result = (CompositeExpression) parse("-(:test)");
+    	
+    	CompositeExpression expected = new CompositeExpression(Arrays.asList((Expression) new FooExpression("-("), new ParameterExpression("test"), new FooExpression(")")));
+    	assertEquals(expected, result);
+    }
 }
