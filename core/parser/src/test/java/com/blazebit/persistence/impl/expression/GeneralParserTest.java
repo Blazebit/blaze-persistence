@@ -686,17 +686,17 @@ public class GeneralParserTest extends AbstractParserTest {
 
     @Test
     public void testBetweenDate() {
-        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN (d '1991-05-21') AND (d '1991-05-22') THEN 0 ELSE 1 END");
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN {d '1991-05-21'} AND {d '1991-05-22'} THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("(d '1991-05-21')"), foo("(d '1991-05-22')")), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("{d '1991-05-21'}"), foo("{d '1991-05-22'}")), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
 
     @Test
     public void testNotBetweenDate() {
-        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN (d '1991-05-21') AND (d '1991-05-22') THEN 0 ELSE 1 END");
+        GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN {d '1991-05-21'} AND {d '1991-05-22'} THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("(d '1991-05-21')"), foo("(d '1991-05-22')"), true), foo("0"))), foo("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("{d '1991-05-21'}"), foo("{d '1991-05-22'}"), true), foo("0"))), foo("1"));
         assertEquals(expected, result);
     }
 
