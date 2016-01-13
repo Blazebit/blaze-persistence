@@ -5,7 +5,6 @@ This is a step-by-step introduction about how to get started with {projectname} 
 === Setup
 
 TODO: Describe what the dependencies are, maybe give a subsection about Maven.
-TODO: Mention core-integration-cdi for Java EE environment.
 
 === Environments [[Environments]]
 
