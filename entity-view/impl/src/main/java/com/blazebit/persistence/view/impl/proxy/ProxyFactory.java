@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.impl.proxy;
 
+import java.io.File;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -211,7 +213,7 @@ public class ProxyFactory {
                 if (unsafe) {
                 	return (Class<? extends T>) UnsafeHelper.define(cc.getName(), cc.toBytecode(), clazz);
                 } else {
-                	return cc.toClass();
+                	return cc.toClass(clazz.getClassLoader(), null);
                 }
             } catch (CannotCompileException ex) {
         		// If there are multiple proxy factories for the same class loader 

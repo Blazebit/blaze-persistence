@@ -15,11 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.proxy;
 
-import sun.misc.Unsafe;
-
 import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
+
+import sun.misc.Unsafe;
 
 /**
  *
@@ -44,11 +42,7 @@ public class UnsafeHelper {
 
 	public static Class<?> define(String name, byte[] bytes, final Class<?> declaringClass) {
 		try {
-			ClassLoader newLoader = AccessController.doPrivileged(new PrivilegedAction<ClassLoader>() {
-				public ClassLoader run() {
-					return new ClassLoader(declaringClass.getClassLoader()) { };
-				}
-			});
+			ClassLoader newLoader = declaringClass.getClassLoader();
 			return unsafe.defineClass(name, bytes, 0, bytes.length, newLoader, null);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
