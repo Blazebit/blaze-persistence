@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.mapper;
 
+import java.util.Map;
+
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.SubqueryProvider;
 
@@ -32,7 +35,7 @@ public class SubqueryTupleElementMapper implements TupleElementMapper {
     }
 
     @Override
-    public void applyMapping(SelectBuilder<?> queryBuilder) {
+    public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
         provider.createSubquery(queryBuilder.selectSubquery());
     }
 

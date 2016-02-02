@@ -19,25 +19,25 @@ import java.util.Map;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class AliasSubqueryTupleElementMapper extends SubqueryTupleElementMapper {
+public class ParameterizedAliasExpressionSubqueryTupleElementMapper extends ParameterizedExpressionSubqueryTupleElementMapper {
 
     private final String alias;
 
-    public AliasSubqueryTupleElementMapper(SubqueryProvider provider, String alias) {
-        super(provider);
+    public ParameterizedAliasExpressionSubqueryTupleElementMapper(SubqueryProviderFactory providerFactory, String subqueryExpression, String subqueryAlias, String alias) {
+        super(providerFactory, subqueryExpression, subqueryAlias);
         this.alias = alias;
     }
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-        provider.createSubquery(queryBuilder.selectSubquery(alias));
+    	providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
     }
 
 }

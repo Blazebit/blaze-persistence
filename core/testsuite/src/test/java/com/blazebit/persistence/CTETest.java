@@ -97,6 +97,31 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
     }
+
+    // NOTE: Apparently H2 doesn't like limit in CTEs
+    @Test
+    @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testCTELimit() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class, "t");
+        cb.with(TestCTE.class)
+        	.from(RecursiveEntity.class, "e")
+        	.bind("id").select("e.id")
+        	.bind("name").select("e.name")
+        	.bind("level").select("0")
+        	.where("e.parent").isNull()
+        	.setMaxResults(1)
+        .end();
+        String expected = ""
+        		+ "WITH " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+        		+ "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL LIMIT 1"
+        		+ "\n)\n"
+        		+ "SELECT t FROM " + TestCTE.class.getSimpleName() + " t";
+        
+        assertEquals(expected, cb.getQueryString());
+        List<TestCTE> resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("root1", resultList.get(0).getName());
+    }
 	
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })

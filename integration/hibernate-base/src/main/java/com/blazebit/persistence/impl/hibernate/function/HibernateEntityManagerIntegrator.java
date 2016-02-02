@@ -15,15 +15,18 @@
  */
 package com.blazebit.persistence.impl.hibernate.function;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -57,6 +60,34 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
 public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator {
     
     private static final Logger LOG = Logger.getLogger(EntityManagerIntegrator.class.getName());
+    private final Map<WeakCacheKey<SessionFactory>, Map<String, SQLFunction>> functionsCache = new ConcurrentHashMap<WeakCacheKey<SessionFactory>, Map<String,SQLFunction>>(1);
+    
+    private static class WeakCacheKey<K> extends WeakReference<K> {
+
+        private final int hash;
+        
+		public WeakCacheKey(K referent) {
+			super(referent);
+            this.hash = System.identityHashCode(referent);  // compare by identity
+        }
+
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            K key;
+            return obj == this ||
+                   obj != null &&
+                   obj.getClass() == this.getClass() &&
+                   // cleared CacheKey is only equal to itself
+                   (key = this.get()) != null &&
+                   // compare key by identity
+                   key == ((WeakCacheKey<K>) obj).get();
+        }
+    }
     
     @Override
 	public String getDbms(EntityManager entityManager) {
@@ -98,34 +129,42 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
     @Override
     public EntityManager registerFunctions(EntityManager em, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         Session s = em.unwrap(Session.class);
-        Map<String, SQLFunction> originalFunctions = getFunctions(s);
-
-        // If our function is registered, we don't need to register any others anymore
-        if (originalFunctions.containsKey("COUNT_STAR")) {
-            return em;
+        WeakCacheKey<SessionFactory> key = new WeakCacheKey<SessionFactory>(s.getSessionFactory());
+        
+        // We already registered it once
+        if (functionsCache.get(key) != null) {
+        	return em;
         }
         
-        Map<String, SQLFunction> functions = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
-        functions.putAll(originalFunctions);
-        Dialect dialect = getDialect(s);
-        String dbms = getDbmsName(dialect);
+        synchronized (s.getSessionFactory()) {
+            // Double check
+            if (functionsCache.get(key) != null) {
+            	return em;
+            }
         
-        for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
-            String functionName = functionEntry.getKey();
-            JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
-            JpqlFunction function = dbmsFunctionMap.get(dbms);
+            Map<String, SQLFunction> originalFunctions = getFunctions(s);
+            Map<String, SQLFunction> functions = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
+            functions.putAll(originalFunctions);
+            Dialect dialect = getDialect(s);
+            String dbms = getDbmsName(dialect);
             
-            if (function == null && !dbmsFunctionMap.contains(dbms)) {
-                function = dbmsFunctionMap.get(null);
+            for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
+                String functionName = functionEntry.getKey();
+                JpqlFunctionGroup dbmsFunctionMap = functionEntry.getValue();
+                JpqlFunction function = dbmsFunctionMap.get(dbms);
+                
+                if (function == null && !dbmsFunctionMap.contains(dbms)) {
+                    function = dbmsFunctionMap.get(null);
+                }
+                if (function == null) {
+                    LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
+                } else {
+                    functions.put(functionName, new HibernateJpqlFunctionAdapter(function));
+                }
             }
-            if (function == null) {
-                LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
-            } else {
-                functions.put(functionName, new HibernateJpqlFunctionAdapter(function));
-            }
-        }
-        
-        replaceFunctions(s, functions);
+            
+            replaceFunctions(s, functions);
+		}
         
         return em;
     }
@@ -156,12 +195,16 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             
             // We have to retrieve the functionMap the old fashioned way via reflection :(
             Field f = null;
-            boolean wasAccessible = false;
+            boolean madeAccessible = false;
             
             try {
             	f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
-            	wasAccessible = f.isAccessible();
-            	f.setAccessible(true);
+            	madeAccessible = !f.isAccessible();
+            	
+            	if (madeAccessible) {
+            		f.setAccessible(true);
+            	}
+            	
             	return (Map<String, SQLFunction>) f.get(registry);
             } catch (NoSuchFieldException e) {
     			ex = e;
@@ -171,8 +214,8 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
 			} catch (IllegalAccessException e) {
 				ex = e;
 			} finally {
-			    if (f != null) {
-			        f.setAccessible(wasAccessible);
+			    if (f != null && madeAccessible) {
+			        f.setAccessible(false);
 			    }
 			}
             
@@ -192,12 +235,16 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
         if (major < 5 || (major == 5 && minor == 0 && fix == 0 && "Beta1".equals(type))) {
             Exception ex;
             Field f = null;
-            boolean wasAccessible = false;
+            boolean madeAccessible = false;
             
             try {
                 f = Dialect.class.getDeclaredField("sqlFunctions");
-                wasAccessible = f.isAccessible();
-                f.setAccessible(true);
+                madeAccessible = !f.isAccessible();
+                
+                if (madeAccessible) {
+                	f.setAccessible(true);
+                }
+                
                 f.set(getDialect(s), newFunctions);
                 return;
             } catch (NoSuchFieldException e) {
@@ -208,8 +255,8 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             } catch (IllegalAccessException e) {
                 ex = e;
             } finally {
-                if (f != null) {
-                    f.setAccessible(wasAccessible);
+                if (f != null && madeAccessible) {
+                    f.setAccessible(false);
                 }
             }
             throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
@@ -220,12 +267,16 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             
             // We have to retrieve the functionMap the old fashioned way via reflection :(
             Field f = null;
-            boolean wasAccessible = false;
+            boolean madeAccessible = false;
             
             try {
                 f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
-                wasAccessible = f.isAccessible();
-                f.setAccessible(true);
+                madeAccessible = f.isAccessible();
+                
+                if (madeAccessible) {
+                	f.setAccessible(true);
+                }
+                
                 f.set(registry, newFunctions);
                 return;
             } catch (NoSuchFieldException e) {
@@ -236,8 +287,8 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             } catch (IllegalAccessException e) {
                 ex = e;
             } finally {
-                if (f != null) {
-                    f.setAccessible(wasAccessible);
+                if (f != null && madeAccessible) {
+                    f.setAccessible(false);
                 }
             }
             

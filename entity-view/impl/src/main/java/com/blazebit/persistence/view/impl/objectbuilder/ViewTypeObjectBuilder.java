@@ -16,7 +16,9 @@
 package com.blazebit.persistence.view.impl.objectbuilder;
 
 import java.util.List;
+import java.util.Map;
 
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
@@ -31,10 +33,14 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
 
     protected final ObjectInstantiator<T> objectInstantiator;
     protected final TupleElementMapper[] mappers;
+    private final CommonQueryBuilder<?> parameterSource;
+    private final Map<String, Object> optionalParameters;
 
-    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template) {
+    public ViewTypeObjectBuilder(ViewTypeObjectBuilderTemplate<T> template, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
         this.objectInstantiator = template.getObjectInstantiator();
         this.mappers = template.getMappers();
+        this.parameterSource = parameterSource;
+        this.optionalParameters = optionalParameters;
     }
 
     @Override
@@ -54,7 +60,7 @@ public class ViewTypeObjectBuilder<T> implements ObjectBuilder<T> {
     @Override
     public <X extends SelectBuilder<X>> void applySelects(X queryBuilder) {
         for (int i = 0; i < mappers.length; i++) {
-            mappers[i].applyMapping(queryBuilder);
+            mappers[i].applyMapping(queryBuilder, parameterSource, optionalParameters);
         }
     }
 }

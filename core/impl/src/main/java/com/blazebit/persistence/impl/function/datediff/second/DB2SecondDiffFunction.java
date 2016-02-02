@@ -25,7 +25,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DB2SecondDiffFunction extends SecondDiffFunction {
 
     public DB2SecondDiffFunction() {
-        super("select (DAYS(t1) - DAYS(t2)) * 86400 + (MIDNIGHT_SECONDS(t1) - MIDNIGHT_SECONDS(t2)) from (values (?1,?2)) as temp(t1,t2)");
+        super("(select (DAYS(t1) - DAYS(t2)) * 86400 + (MIDNIGHT_SECONDS(t1) - MIDNIGHT_SECONDS(t2)) from (values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

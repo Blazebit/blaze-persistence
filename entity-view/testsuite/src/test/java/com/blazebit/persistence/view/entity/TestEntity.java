@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Blazebit.
+ * Copyright 2014 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.datediff.day;
+package com.blazebit.persistence.view.entity;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
+import javax.persistence.Entity;
 
 /**
  *
  * @author Christian Beikov
+ * @author Moritz Becker
  * @since 1.0
  */
-public class PostgreSQLDayDiffFunction extends DayDiffFunction {
+@Entity
+public class TestEntity extends NamedEntity {
+    private static final long serialVersionUID = 1L;
 
-    public PostgreSQLDayDiffFunction() {
-        super("(select date_part('day', t2 - t1) from (values (?1,?2)) as temp(t1,t2))");
+    private String description;
+
+    public TestEntity() {
     }
 
-    @Override
-    protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).addArgument(1).build();
-    }
+	public TestEntity(String name, String description) {
+		super(name);
+		this.description = description;
+	}
+	
+    public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
 }

@@ -109,7 +109,10 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager();
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
-        List<DocumentWithSubquery> list = evm.applySetting(EntityViewSetting.create(DocumentWithSubquery.class), cb).getResultList();
+        EntityViewSetting<DocumentWithSubquery, CriteriaBuilder<DocumentWithSubquery>> setting;
+        setting = EntityViewSetting.create(DocumentWithSubquery.class);
+        setting.addOptionalParameter("optionalParameter", 1);
+        List<DocumentWithSubquery> list = evm.applySetting(setting, cb).getResultList();
 
         assertEquals(2, list.size());
         assertEquals("doc1", list.get(0).getName());
@@ -159,6 +162,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting
             .create(DocumentWithSubquery.class, 0, 1);
+        setting.addOptionalParameter("optionalParameter", 1);
         setting.addAttributeFilter("contactCount", "0");
         PagedList<DocumentWithSubquery> list = evm.applySetting(setting, cb).getResultList();
 

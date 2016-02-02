@@ -160,7 +160,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         
         Expression expr = createInItemExpression(parameterOrLiteralExpressions[0]);
         
-        if (parameterOrLiteralExpressions.length == 1) {
+        if (parameterOrLiteralExpressions.length == 1 && expr instanceof ParameterExpression) {
             return expr;
         }
         

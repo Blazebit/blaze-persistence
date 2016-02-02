@@ -15,13 +15,13 @@
  */
 package com.blazebit.persistence.impl.hibernate;
 
+import javax.persistence.TypedQuery;
+
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.impl.jpa.ObjectBuilderJPAQueryAdapter;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.QueryTransformer;
-import javax.persistence.TypedQuery;
-import org.hibernate.Query;
 
 /**
  *
@@ -32,15 +32,12 @@ import org.hibernate.Query;
 public class HibernateQueryTransformer implements QueryTransformer {
 
 	@Override
-    @SuppressWarnings("unchecked")
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
 		if (query instanceof CteQueryWrapper) {
 			return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
 		}
 		
-        Query hQuery = query.unwrap(Query.class);
-        hQuery.setResultTransformer(new ObjectBuilderResultTransformerAdapter(objectBuilder));
-        return (TypedQuery<X>) query;
+        return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
     }
 
 }

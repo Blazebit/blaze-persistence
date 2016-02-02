@@ -1,5 +1,5 @@
 /*
- * Copyright 2015 Blazebit.
+ * Copyright 2014 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.function.datediff.day;
+package com.blazebit.persistence.view.basic.model;
 
-import com.blazebit.persistence.spi.FunctionRenderContext;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.entity.NamedEntity;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class PostgreSQLDayDiffFunction extends DayDiffFunction {
+@EntityView(NamedEntity.class)
+public interface NamedView extends IdHolderView<Integer> {
 
-    public PostgreSQLDayDiffFunction() {
-        super("(select date_part('day', t2 - t1) from (values (?1,?2)) as temp(t1,t2))");
-    }
-
-    @Override
-    protected void renderDiff(FunctionRenderContext context) {
-        renderer.start(context).addArgument(0).addArgument(1).build();
-    }
+	public String getName();
 }

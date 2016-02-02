@@ -66,7 +66,7 @@ public final class EntityViewSettingHelper {
             } else {
                 if (setting.getFirstResult() == -1) {
                     return (Q) normalCb.page(0, setting.getMaxResults());
-                }else{
+                } else {
                     return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
                 }
             }
@@ -86,19 +86,10 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyFilter(Object key, AttributeFilterProvider filterProvider, CriteriaBuilder<?> cb) {
+    private static void applyFilter(Object key, AttributeFilterProvider filterProvider, EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb) {
         if (key instanceof SubqueryAttribute<?, ?>) {
             SubqueryAttribute<?, ?> subqueryAttribute = (SubqueryAttribute<?, ?>) key;
-            SubqueryProvider provider;
-
-            try {
-                provider = subqueryAttribute.getSubqueryProvider()
-                    .newInstance();
-            } catch (Exception ex) {
-                throw new IllegalArgumentException("Could not instantiate the subquery provider: " + subqueryAttribute
-                    .getSubqueryProvider()
-                    .getName(), ex);
-            }
+            SubqueryProvider provider = SubqueryProviderHelper.getFactory(subqueryAttribute.getSubqueryProvider()).create(cb, setting.getOptionalParameters());
 
             if (subqueryAttribute.getSubqueryExpression().isEmpty()) {
                 filterProvider.apply(cb, null, null, provider);
@@ -131,6 +122,7 @@ public final class EntityViewSettingHelper {
                         .getName() + "'");
             }
             
+            // TODO: allow parameter injection
             ViewFilterProvider provider = evm.createViewFilter(filterMapping.getFilterClass());
             provider.apply(cb);
         }
@@ -178,7 +170,7 @@ public final class EntityViewSettingHelper {
             }
 
             AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterValue);
-            applyFilter(expression, filter, cb);
+            applyFilter(expression, filter, setting, cb);
         }
     }
 
@@ -210,7 +202,7 @@ public final class EntityViewSettingHelper {
                 expression = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             }
             
-            applyFilter(expression, provider, cb);
+            applyFilter(expression, provider, setting, cb);
         }
     }
     

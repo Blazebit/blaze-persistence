@@ -77,9 +77,9 @@ public class CompositeExpression extends AbstractExpression {
 
     public void prepend(String str) {
         if (!str.isEmpty()) {
-            Expression lastExpr;
-            if (!expressions.isEmpty() && (lastExpr = expressions.get(expressions.size() - 1)) instanceof FooExpression) {
-                ((FooExpression) lastExpr).getStringBuilder().insert(0, str);
+            Expression firstExpr;
+            if (!expressions.isEmpty() && (firstExpr = expressions.get(0)) instanceof FooExpression) {
+                ((FooExpression) firstExpr).getStringBuilder().insert(0, str);
             } else {
                 expressions.add(0, new FooExpression(str));
             }

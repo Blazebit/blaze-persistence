@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.subquery.model;
 
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.entity.Person;
 
@@ -25,11 +26,18 @@ import com.blazebit.persistence.view.entity.Person;
  * @since 1.0
  */
 public class TestSubqueryProvider implements SubqueryProvider {
+	
+	private final Integer parameterValue;
 
-    @Override
+	public TestSubqueryProvider(@MappingParameter("optionalParameter") Integer parameterValue) {
+		this.parameterValue = parameterValue;
+	}
+
+	@Override
     public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
         return subqueryBuilder.from(Person.class)
             .where("partnerDocument.id").eqExpression("OUTER(id)")
+            .where("1").eqExpression("" + parameterValue)
             .select("COUNT(id)")
             .end();
     }

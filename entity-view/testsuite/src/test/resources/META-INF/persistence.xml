@@ -29,6 +29,7 @@ limitations under the License.
 		<class>com.blazebit.persistence.view.entity.EmbeddableTestEntity</class>
 		<class>com.blazebit.persistence.view.entity.IntIdEntity</class>
 		<class>com.blazebit.persistence.view.entity.Person</class>
+		<class>com.blazebit.persistence.view.entity.TestEntity</class>
 		<class>com.blazebit.persistence.view.entity.Version</class>
     </persistence-unit>
 </persistence>
