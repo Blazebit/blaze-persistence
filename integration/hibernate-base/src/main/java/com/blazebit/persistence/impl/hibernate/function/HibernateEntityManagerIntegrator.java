@@ -271,7 +271,7 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             
             try {
                 f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
-                madeAccessible = f.isAccessible();
+                madeAccessible = !f.isAccessible();
                 
                 if (madeAccessible) {
                 	f.setAccessible(true);
