@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.proxy;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -230,6 +228,16 @@ public class ProxyFactory {
             	} else {
             		throw ex;
             	}
+            } catch (LinkageError error) {
+                // If there are multiple proxy factories for the same class loader 
+                // we could end up in defining a class multiple times, so we check if the classloader
+                // actually has something to offer
+                try {
+                    return (Class<? extends T>) pool.getClassLoader().loadClass(proxyClassName);
+                } catch (ClassNotFoundException cnfe) {
+                    // Something we can't handle happened
+                    throw error;
+                }
             }
         } catch (Exception ex) {
             throw new RuntimeException("Probably we did something wrong, please contact us if you see this message.", ex);
