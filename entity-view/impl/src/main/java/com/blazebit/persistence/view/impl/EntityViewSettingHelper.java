@@ -34,6 +34,7 @@ import com.blazebit.persistence.view.Sorter;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.ViewFilterProvider;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -246,11 +247,11 @@ public final class EntityViewSettingHelper {
         return sb.toString();
     }
     
-    private static MethodAttribute<?, ?> getAttribute(ViewType<?> viewType, String attributeName, ViewType<?> baseViewType, String attributePath) {
+    private static MethodAttribute<?, ?> getAttribute(ManagedViewType<?> viewType, String attributeName, ViewType<?> baseViewType, String attributePath) {
         MethodAttribute<?, ?> attribute = viewType.getAttribute(attributeName);
         
         if (attribute == null) {
-            throw new IllegalArgumentException("The attribute with the name '" + attributeName + "' couldn't be found on the view type '" + viewType.getName() + "' during resolving the attribute path '" + attributePath + "' on the view type '" + baseViewType.getName() + "'");
+            throw new IllegalArgumentException("The attribute with the name '" + attributeName + "' couldn't be found on the view type '" + viewType.getJavaType().getName() + "' during resolving the attribute path '" + attributePath + "' on the view type '" + baseViewType.getName() + "'");
         }
         
         return attribute;
@@ -281,7 +282,7 @@ public final class EntityViewSettingHelper {
         }
 
         String[] parts = attributePath.split("\\.");
-        ViewType<?> currentViewType = viewType;
+        ManagedViewType<?> currentViewType = viewType;
         MethodAttribute<?, ?> currentAttribute = null;
         List<String> subviewPrefixParts = new ArrayList<String>();
         Object mapping = null;
@@ -307,9 +308,9 @@ public final class EntityViewSettingHelper {
 
                 if (currentAttribute.isCollection()) {
                     PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) currentAttribute;
-                    currentViewType = metamodel.view(pluralAttribute.getElementType());
+                    currentViewType = metamodel.managedView(pluralAttribute.getElementType());
                 } else {
-                    currentViewType = metamodel.view(currentAttribute.getJavaType());
+                    currentViewType = metamodel.managedView(currentAttribute.getJavaType());
                 }
             } else if (i + 1 != parts.length) {
                 Class<?> maybeUnmanagedType = currentAttribute.getJavaType();

@@ -65,6 +65,7 @@ import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
@@ -107,12 +108,12 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private static final int FEATURE_SUBVIEWS = 2;
 
     @SuppressWarnings("unchecked")
-	private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+	private ViewTypeObjectBuilderTemplate(String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, Metamodel metamodel, EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewType<T> managedViewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
-            if (viewType.getConstructors().size() > 1) {
-                throw new IllegalArgumentException("The given view type '" + viewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
-            } else if (viewType.getConstructors().size() == 1) {
-                mappingConstructor = (MappingConstructor<T>) viewType.getConstructors().toArray()[0];
+            if (managedViewType.getConstructors().size() > 1) {
+                throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
+            } else if (managedViewType.getConstructors().size() == 1) {
+                mappingConstructor = (MappingConstructor<T>) managedViewType.getConstructors().toArray()[0];
             }
         }
 
@@ -126,10 +127,37 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.ef = ef;
         this.proxyFactory = proxyFactory;
 
-        Set<MethodAttribute<? super T, ?>> attributeSet = viewType.getAttributes();
+        Set<MethodAttribute<? super T, ?>> attributeSet = managedViewType.getAttributes();
+        int attributeCount = attributeSet.size();
+        
+        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = null;
+        Class<?> idAttributeType = null;
         // We have special handling for the id attribute since we need to know it's position in advance
         // Therefore we have to remove it so that it doesn't get processed as normal attribute
-        attributeSet.remove(viewType.getIdAttribute());
+        if (managedViewType instanceof ViewType<?>) {
+            attributeSet.remove(((ViewType<?>) managedViewType).getIdAttribute());
+
+            // First we add the id attribute
+            ManagedType<?> managedType = metamodel.managedType(managedViewType.getEntityClass());
+            
+            if (!(managedType instanceof IdentifiableType<?>)) {
+                throw new IllegalArgumentException("The given managed type '" + managedViewType.getEntityClass().getName() + "' of the entity view type '" + managedViewType.getJavaType().getName() + "' is not an identifiable type!");
+            }
+            
+            IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
+            jpaIdAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
+            
+            if (jpaIdAttr.getJavaMember() instanceof Field) {
+                idAttributeType = ReflectionUtils.getResolvedFieldType(managedViewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
+            } else {
+                idAttributeType = ReflectionUtils.getResolvedMethodReturnType(managedViewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
+            }
+            
+            if (idAttributeType == null) {
+                throw new IllegalArgumentException("The id attribute type is not resolvable " + "for the attribute '" + jpaIdAttr.getName() + "' of the class '" + managedViewType.getEntityClass().getName() + "'!");
+            }
+        }
+        
         MethodAttribute<?, ?>[] attributes = attributeSet.toArray(new MethodAttribute<?, ?>[attributeSet.size()]);
         ParameterAttribute<?, ?>[] parameterAttributes;
 
@@ -140,59 +168,43 @@ public class ViewTypeObjectBuilderTemplate<T> {
             parameterAttributes = parameterAttributeList.toArray(new ParameterAttribute<?, ?>[parameterAttributeList.size()]);
         }
 
-        int length = 1 + attributes.length + parameterAttributes.length;
-
-        // First we add the id attribute
-        ManagedType<?> managedType = metamodel.managedType(viewType.getEntityClass());
+        attributeCount += parameterAttributes.length;
         
-        if (!(managedType instanceof IdentifiableType<?>)) {
-        	throw new IllegalArgumentException("The given managed type '" + viewType.getEntityClass().getName() + "' of the entity view type '" + viewType.getJavaType().getName() + "' is not an identifiable type!");
-        }
-        
-        IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-        javax.persistence.metamodel.SingularAttribute<?, ?> jpaIdAttr = identifiableType.getId(identifiableType.getIdType().getJavaType());
-        Class<?> idAttributeType;
-        
-        if (jpaIdAttr.getJavaMember() instanceof Field) {
-            idAttributeType = ReflectionUtils.getResolvedFieldType(viewType.getEntityClass(), (Field) jpaIdAttr.getJavaMember());
-        } else {
-            idAttributeType = ReflectionUtils.getResolvedMethodReturnType(viewType.getEntityClass(), (Method) jpaIdAttr.getJavaMember());
-        }
-        
-        if (idAttributeType == null) {
-            throw new IllegalArgumentException("The id attribute type is not resolvable " + "for the attribute '" + jpaIdAttr.getName() + "' of the class '" + viewType.getEntityClass().getName() + "'!");
-        }
-        
-        String idAttributeName = jpaIdAttr.getName();
-        MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
-        MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
-        
-        if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
-            throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
-        }
-        
-        String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
-        
-        List<Object> mappingList = new ArrayList<Object>(length);
-        List<String> parameterMappingList = new ArrayList<String>(length);
-        Class<?>[] parameterTypes = new Class<?>[length];
+        List<Object> mappingList = new ArrayList<Object>(attributeCount);
+        List<String> parameterMappingList = new ArrayList<String>(attributeCount);
+        Class<?>[] parameterTypes = new Class<?>[attributeCount];
         boolean[] featuresFound = new boolean[3];
+        int parameterOffset = 0;
         
-        parameterTypes[0] = idAttributeType;
-        mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
-        parameterMappingList.add(0, null);
+        if (managedViewType instanceof ViewType<?>) {
+            ViewType<?> viewType = (ViewType<?>) managedViewType;
+            String idAttributeName = jpaIdAttr.getName();
+            MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
+            MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
+            
+            if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
+                throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
+            }
+            
+            String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
+            
+            parameterTypes[0] = idAttributeType;
+            mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
+            parameterMappingList.add(0, null);
+            parameterOffset = 1;
+        }
         
         for (int i = 0; i < attributes.length; i++) {
-            parameterTypes[i + 1] = attributes[i].getJavaType();
+            parameterTypes[i + parameterOffset] = attributes[i].getJavaType();
         }
         for (int i = 0; i < parameterAttributes.length; i++) {
-            parameterTypes[i + attributes.length + 1] = parameterAttributes[i].getJavaType();
+            parameterTypes[i + attributes.length + parameterOffset] = parameterAttributes[i].getJavaType();
         }
         
-        if (viewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
-        	this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
+        if (managedViewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
+        	this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
         } else {
-        	this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, viewType, parameterTypes);
+        	this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
         }
         
         for (int i = 0; i < attributes.length; i++) {
@@ -205,7 +217,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         this.hasParameters = featuresFound[FEATURE_PARAMETERS];
         this.hasIndexedCollections = featuresFound[FEATURE_INDEXED_COLLECTIONS];
         this.hasSubviews = featuresFound[FEATURE_SUBVIEWS];
-        this.effectiveTupleSize = length;
+        this.effectiveTupleSize = attributeCount;
         this.mappers = getMappers(mappingList);
         this.parameterMapper = new TupleParameterMapper(parameterMappingList, tupleOffset);
     }
@@ -378,23 +390,42 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         @SuppressWarnings("unchecked")
-		ViewType<Object[]> subviewType = (ViewType<Object[]>) evm.getMetamodel().view(subviewClass);
-        String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
-        List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
-        String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
-        int[] subviewIdPositions = new int[idPositions.length + 1];
-        System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
-        subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
-        int startIndex = tupleOffset + mappingList.size();
-        ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
-                                                                                                       startIndex, metamodel, evm, ef, subviewType, null, proxyFactory);
-        Collections.addAll(mappingList, template.mappers);
-        // We do not copy because the subview object builder will populate the subview's parameters
-        for (int i = 0; i < template.mappers.length; i++) {
-            parameterMappingList.add(null);
-        }
-        tupleTransformatorFactory.add(template.tupleTransformatorFactory);
-        tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
+		ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
+
+		if (managedViewType instanceof ViewType<?>) {
+            ViewType<Object[]> subviewType = (ViewType<Object[]>) managedViewType;
+            String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
+            List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
+            String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
+            int[] subviewIdPositions = new int[idPositions.length + 1];
+            System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
+            subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
+            int startIndex = tupleOffset + mappingList.size();
+            ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
+                                                                                                           startIndex, metamodel, evm, ef, subviewType, null, proxyFactory);
+            Collections.addAll(mappingList, template.mappers);
+            // We do not copy because the subview object builder will populate the subview's parameters
+            for (int i = 0; i < template.mappers.length; i++) {
+                parameterMappingList.add(null);
+            }
+            tupleTransformatorFactory.add(template.tupleTransformatorFactory);
+            tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
+		} else {
+            String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
+            List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
+            String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
+            int[] subviewIdPositions = idPositions;
+            int startIndex = tupleOffset + mappingList.size();
+            ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
+                                                                                                           startIndex, metamodel, evm, ef, managedViewType, null, proxyFactory);
+            Collections.addAll(mappingList, template.mappers);
+            // We do not copy because the subview object builder will populate the subview's parameters
+            for (int i = 0; i < template.mappers.length; i++) {
+                parameterMappingList.add(null);
+            }
+            tupleTransformatorFactory.add(template.tupleTransformatorFactory);
+            tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
+		}
     }
 
     private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {

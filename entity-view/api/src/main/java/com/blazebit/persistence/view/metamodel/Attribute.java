@@ -30,7 +30,7 @@ public interface Attribute<X, Y> {
      *
      * @return The declaring view type
      */
-    public ViewType<X> getDeclaringType();
+    public ManagedViewType<X> getDeclaringType();
 
     /**
      * Returns the java type of the attribute.

@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.metamodel;
+package com.blazebit.persistence.view.basic.model;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Set;
-
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.entity.EmbeddableTestEntitySimpleEmbeddable;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MethodSubquerySingularAttributeImpl<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
+@EmbeddableEntityView(EmbeddableTestEntitySimpleEmbeddable.class)
+public interface EmbeddableTestEntitySimpleEmbeddableSubView {
 
-    public MethodSubquerySingularAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
-    }
-
+    @Mapping("name")
+    public String getName();
+    
 }

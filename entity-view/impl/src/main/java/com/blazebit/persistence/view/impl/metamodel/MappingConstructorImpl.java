@@ -34,6 +34,7 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -47,11 +48,11 @@ import com.blazebit.reflection.ReflectionUtils;
 public class MappingConstructorImpl<X> implements MappingConstructor<X> {
 
     private final String name;
-    private final ViewType<X> declaringType;
+    private final ManagedViewType<X> declaringType;
     private final Constructor<X> javaConstructor;
     private final List<ParameterAttribute<? super X, ?>> parameters;
 
-    public MappingConstructorImpl(ViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews) {
+    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
@@ -71,7 +72,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         this.parameters = Collections.unmodifiableList(parameters);
     }
 
-    public static String validate(ViewType<?> viewType, Constructor<?> c) {
+    public static String validate(ManagedViewType<?> viewType, Constructor<?> c) {
         ViewConstructor viewConstructor = c.getAnnotation(ViewConstructor.class);
 
         if (viewConstructor == null) {
@@ -131,7 +132,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     @Override
-    public ViewType<X> getDeclaringType() {
+    public ManagedViewType<X> getDeclaringType() {
         return declaringType;
     }
 

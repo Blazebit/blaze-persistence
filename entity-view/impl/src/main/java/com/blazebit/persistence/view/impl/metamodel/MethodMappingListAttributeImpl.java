@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.view.metamodel.ListAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 /**
  *
@@ -32,7 +32,7 @@ public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingP
 
     private final boolean isIndexed;
     
-    public MethodMappingListAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    public MethodMappingListAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews, false);
         
         if (isIgnoreIndex()) {

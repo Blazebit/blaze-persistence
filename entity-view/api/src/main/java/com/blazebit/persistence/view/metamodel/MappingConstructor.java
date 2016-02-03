@@ -35,11 +35,11 @@ public interface MappingConstructor<X> {
     public String getName();
 
     /**
-     * Returns the declaring view type.
+     * Returns the declaring managed view type.
      *
-     * @return The declaring view type
+     * @return The declaring managed view type
      */
-    public ViewType<X> getDeclaringType();
+    public ManagedViewType<X> getDeclaringType();
 
     /**
      * Returns the java constructor for this mapping constructor.

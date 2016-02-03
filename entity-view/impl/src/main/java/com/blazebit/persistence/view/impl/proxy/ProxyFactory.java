@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -66,16 +67,16 @@ public class ProxyFactory {
         this.pool = new ClassPool(ClassPool.getDefault());
     }
 
-    public <T> Class<? extends T> getProxy(ViewType<T> viewType) {
+    public <T> Class<? extends T> getProxy(ManagedViewType<T> viewType) {
         return getProxy(viewType, false);
     }
 
-    public <T> Class<? extends T> getUnsafeProxy(ViewType<T> viewType) {
+    public <T> Class<? extends T> getUnsafeProxy(ManagedViewType<T> viewType) {
     	return getProxy(viewType, true);
     }
     
     @SuppressWarnings("unchecked")
-    private <T> Class<? extends T> getProxy(ViewType<T> viewType, boolean unsafe) {
+    private <T> Class<? extends T> getProxy(ManagedViewType<T> viewType, boolean unsafe) {
         Class<T> clazz = viewType.getJavaType();
         ConcurrentMap<Class<?>, Class<?>> classes = unsafe ? unsafeProxyClasses : proxyClasses;
 		Class<? extends T> proxyClass = (Class<? extends T>) classes.get(clazz);
@@ -95,8 +96,9 @@ public class ProxyFactory {
     }
 
     @SuppressWarnings("unchecked")
-	private <T> Class<? extends T> createProxyClass(ViewType<T> viewType, boolean unsafe) {
-        Class<?> clazz = viewType.getJavaType();
+	private <T> Class<? extends T> createProxyClass(ManagedViewType<T> managedViewType, boolean unsafe) {
+        ViewType<T> viewType = managedViewType instanceof ViewType<?> ? (ViewType<T>) managedViewType : null;
+        Class<?> clazz = managedViewType.getJavaType();
         String suffix = unsafe ? "unsafe_" : "";
         String proxyClassName = clazz.getName() + "_$$_javassist_entityview_" + suffix;
         CtClass cc = pool.makeClass(proxyClassName);
@@ -116,7 +118,7 @@ public class ProxyFactory {
             
             CtField initialStateField = null;
             CtField dirtyStateField = null;
-            if (viewType.isUpdateable()) {
+            if (viewType != null && viewType.isUpdateable()) {
                 cc.addInterface(pool.get(UpdateableProxy.class.getName()));
                 addGetEntityViewClass(cc, clazz);
                 
@@ -136,21 +138,27 @@ public class ProxyFactory {
             	}
             }
 
-            Set<MethodAttribute<? super T, ?>> attributes = viewType.getAttributes();
+            Set<MethodAttribute<? super T, ?>> attributes = managedViewType.getAttributes();
             CtField[] attributeFields = new CtField[attributes.size()];
             CtClass[] attributeTypes = new CtClass[attributes.size()];
-            int i = 1;
+            int i = 0;
 
             // Create the id field
-            MethodAttribute<? super T, ?> idAttribute = viewType.getIdAttribute();
-            CtField idField = addMembersForAttribute(idAttribute, clazz, cc, initialStateField, dirtyStateField, 0, -1);
-            attributeFields[0] = idField;
-            attributeTypes[0] = idField.getType();
-            attributes.remove(idAttribute);
-
-            if (viewType.isUpdateable() && !viewType.isPartiallyUpdateable()) {
-                addGetter(cc, idField, "$$_getId", Object.class);
-                addGetter(cc, null, "$$_getInitialState", Object[].class);
+            MethodAttribute<? super T, ?> idAttribute = null;
+            CtField idField = null;
+            
+            if (viewType != null) {
+                i = 1;
+                idAttribute = viewType.getIdAttribute();
+                idField = addMembersForAttribute(idAttribute, clazz, cc, initialStateField, dirtyStateField, 0, -1);
+                attributeFields[0] = idField;
+                attributeTypes[0] = idField.getType();
+                attributes.remove(idAttribute);
+    
+                if (viewType.isUpdateable() && !viewType.isPartiallyUpdateable()) {
+                    addGetter(cc, idField, "$$_getId", Object.class);
+                    addGetter(cc, null, "$$_getInitialState", Object[].class);
+                }
             }
             
             int dirtyStateIndex = 0;
@@ -182,7 +190,7 @@ public class ProxyFactory {
             	LOG.warning("The class '" + hashCodeDeclaringClass.getName() + "' declares 'int hashCode()'! Hopefully you implemented it based on a unique key!");
             }
             
-            if (!hasCustomEqualsHashCode) {
+            if (viewType != null && !hasCustomEqualsHashCode) {
 	            cc.addMethod(createEquals(cc, idField));
 	            cc.addMethod(createHashCode(cc, idField));
             }
@@ -192,7 +200,7 @@ public class ProxyFactory {
                 cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, initialStateField, dirtyStateField, attributeFields.length, dirtyStateIndex, unsafe));
             }
 
-            Set<MappingConstructor<T>> constructors = viewType.getConstructors();
+            Set<MappingConstructor<T>> constructors = managedViewType.getConstructors();
 
             for (MappingConstructor<?> constructor : constructors) {
                 // Copy default constructor parameters

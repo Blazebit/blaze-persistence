@@ -43,6 +43,15 @@ public interface EmbeddableTestEntityViewWithSubview extends IdHolderView<Embedd
     @Mapping("id.key")
     public String getIdKey();
 
+    @Mapping("embeddable")
+    public EmbeddableTestEntityEmbeddableSubView getEmbeddable();
+
+    @Mapping("embeddableSet")
+    public Set<EmbeddableTestEntitySimpleEmbeddableSubView> getEmbeddableSet();
+
+    @Mapping("embeddableMap")
+    public Map<String, EmbeddableTestEntitySimpleEmbeddableSubView> getEmbeddableMap();
+
     @Mapping("embeddable.manyToOne")
     public EmbeddableTestEntitySubView getEmbeddableManyToOneView();
 

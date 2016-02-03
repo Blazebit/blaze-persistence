@@ -18,11 +18,22 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
 
     private static final long serialVersionUID = 1L;
     
+    private String name;
     private EmbeddableTestEntity manyToOne;
     private Set<EmbeddableTestEntity> oneToMany = new HashSet<EmbeddableTestEntity>(0);
     private Map<String, IntIdEntity> elementCollection = new HashMap<String, IntIdEntity>(0);
 
     public EmbeddableTestEntityEmbeddable() {
+    }
+
+    
+    public String getName() {
+        return name;
+    }
+
+    
+    public void setName(String name) {
+        this.name = name;
     }
 
     @ManyToOne(fetch = FetchType.LAZY)

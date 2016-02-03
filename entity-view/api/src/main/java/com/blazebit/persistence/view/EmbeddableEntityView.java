@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.metamodel;
+package com.blazebit.persistence.view;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.Set;
-
-import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
+ * Specifies that the class is is an embeddable entity view.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MethodSubquerySingularAttributeImpl<X, Y> extends AbstractMethodSingularAttribute<X, Y> implements SubqueryAttribute<X, Y> {
+@Target({ ElementType.TYPE })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface EmbeddableEntityView {
 
-    public MethodSubquerySingularAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
-        super(viewType, method, mapping, entityViews);
-    }
-
+    /**
+     * The embeddable entity class on which this view is based on.
+     *
+     * @return The embeddable entity class
+     */
+    Class<?> value();
 }

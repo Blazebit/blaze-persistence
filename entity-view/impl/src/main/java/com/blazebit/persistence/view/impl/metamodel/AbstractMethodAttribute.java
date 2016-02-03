@@ -32,8 +32,8 @@ import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -49,7 +49,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
               mapping,
@@ -124,7 +124,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return filterMappings;
     }
 
-    public static String validate(ViewType<?> viewType, Method m) {
+    public static String validate(ManagedViewType<?> viewType, Method m) {
         // Concrete methods are not mapped
         if (!Modifier.isAbstract(m.getModifiers()) || m.isBridge()) {
             return null;
@@ -175,7 +175,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return attributeName;
     }
 
-    public static Annotation getMapping(ViewType<?> viewType, Method m) {
+    public static Annotation getMapping(ManagedViewType<?> viewType, Method m) {
         Class<?> entityClass = viewType.getEntityClass();
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
@@ -218,7 +218,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (!entityAttributeExists) {
                 throw new IllegalArgumentException("The entity class '" + entityClass.getName() + "' has no attribute '" + attributeName
-                    + "' that was implicitly mapped in entity view '" + viewType.getName() + "' in class '" + m.getDeclaringClass().getName() + "'");
+                    + "' that was implicitly mapped in entity view '" + viewType.getJavaType().getName() + "' in class '" + m.getDeclaringClass().getName() + "'");
             }
 
             mapping = new MappingLiteral(attributeName);

@@ -23,9 +23,9 @@ import java.util.Set;
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.view.CollectionMapping;
 import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -44,7 +44,7 @@ public abstract class AbstractMethodMappingPluralAttribute<X, C, Y> extends Abst
     private final Comparator<Y> comparator;
 
     @SuppressWarnings("unchecked")
-    public AbstractMethodMappingPluralAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
+    public AbstractMethodMappingPluralAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, boolean sorted) {
         super(viewType, method, mapping, entityViews);
         Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(viewType.getJavaType(), method);
         this.elementType = (Class<Y>) typeArguments[typeArguments.length - 1];
