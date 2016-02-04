@@ -81,6 +81,9 @@ public class Document extends Ownable implements Serializable {
         this(name);
         setOwner(owner);
         this.versions.addAll(Arrays.asList(versions));
+        for (Version v : versions) {
+            v.setDocument(this);
+        }
     }
 
     @Id

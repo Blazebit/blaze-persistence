@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.function.groupconcat;
 
+import java.util.List;
+
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
@@ -38,12 +40,19 @@ public class OracleGroupConcatFunction extends AbstractGroupConcatFunction {
         }
 
         sb.append(groupConcat.getExpression());
-        sb.append(", ");
-        sb.append(groupConcat.getSeparator());
+        sb.append(", '");
+        appendQuoted(sb, groupConcat.getSeparator());
 
-        if (!groupConcat.getOrderByExpression().isEmpty()) {
+        List<Order> orderBys = groupConcat.getOrderBys();
+        if (!orderBys.isEmpty()) {
             sb.append(") within group (order by ");
-            sb.append(groupConcat.getOrderByExpression());
+            
+            render(sb, orderBys.get(0));
+            
+            for (int i = 1; i < orderBys.size(); i++) {
+                sb.append(", ");
+                render(sb, orderBys.get(i));
+            }
         }
 
         renderer.start(context).addParameter(sb.toString()).build();

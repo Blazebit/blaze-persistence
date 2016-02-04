@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.function.groupconcat;
 
+import java.util.List;
+
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
@@ -39,12 +41,27 @@ public class H2GroupConcatFunction extends AbstractGroupConcatFunction {
 
         sb.append(groupConcat.getExpression());
 
-        if (!groupConcat.getOrderByExpression().isEmpty()) {
-            sb.append(" order by ").append(groupConcat.getOrderByExpression());
+        List<Order> orderBys = groupConcat.getOrderBys();
+        if (!orderBys.isEmpty()) {
+            sb.append(" order by ");
+            
+            render(sb, orderBys.get(0));
+            
+            for (int i = 1; i < orderBys.size(); i++) {
+                sb.append(", ");
+                render(sb, orderBys.get(i));
+            }
         }
 
-        sb.append(" separator ").append(groupConcat.getSeparator());
+        sb.append(" separator ");
+        appendQuoted(sb, groupConcat.getSeparator());
 
         renderer.start(context).addParameter(sb.toString()).build();
+    }
+
+    @Override
+    protected void render(StringBuilder sb, Order order) {
+        // In group_concat H2 does not support the nulls clause
+        appendEmulatedOrderByElementWithNulls(sb, order);
     }
 }
