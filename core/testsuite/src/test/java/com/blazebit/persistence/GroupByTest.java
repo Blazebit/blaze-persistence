@@ -32,7 +32,7 @@ public class GroupByTest extends AbstractCoreTest {
     public void testGroupByEntitySelect() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d");
         criteria.groupBy("d.owner");
-        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, d.age, d.archived, d.creationDate, d.documentType, d.id, d.idx, d.intIdEntity, d.lastModified, d.name, d.nonJoinable, d.owner", criteria.getQueryString());
+        assertEquals("SELECT d FROM Document d JOIN d.owner owner_1 GROUP BY owner_1, d.age, d.archived, d.creationDate, d.creationDate2, d.documentType, d.id, d.idx, d.intIdEntity, d.lastModified, d.lastModified2, d.name, d.nonJoinable, d.owner", criteria.getQueryString());
         criteria.getResultList();
     }
 }
