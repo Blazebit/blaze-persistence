@@ -17,7 +17,6 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *
@@ -25,14 +24,14 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  * @since 1.0.6
  */
 public class UnsafeInstantiator<T> extends ReflectionInstantiator<T> {
-
 	
 	public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
 		super(mappingConstructor, proxyFactory, viewType, parameterTypes);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
-	protected Class<T> getProxyClass(ProxyFactory proxyFactory, ViewType<T> viewType) {
+    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType) {
 		return (Class<T>) proxyFactory.getUnsafeProxy(viewType);
 	}
 	

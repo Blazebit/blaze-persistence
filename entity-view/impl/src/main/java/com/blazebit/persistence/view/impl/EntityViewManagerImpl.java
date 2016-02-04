@@ -24,11 +24,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -86,8 +88,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
     
     private final boolean unsafeDisabled;
 
-    public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
-        this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
+    public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf, EntityManagerFactory entityManagerFactory) {
+        this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), entityManagerFactory.getMetamodel());
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();

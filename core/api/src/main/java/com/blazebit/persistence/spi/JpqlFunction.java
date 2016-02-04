@@ -23,7 +23,7 @@ package com.blazebit.persistence.spi;
  *
  * @author Christian Beikov
  * @since 1.0
- * @see EntityManagerIntegrator#registerFunctions(javax.persistence.EntityManager, java.util.Map)
+ * @see EntityManagerFactoryIntegrator#registerFunctions(javax.persistence.EntityManager, java.util.Map)
  */
 public interface JpqlFunction {
 

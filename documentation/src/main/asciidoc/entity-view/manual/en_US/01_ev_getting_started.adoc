@@ -8,7 +8,6 @@ guide for the core yet, you might want to start your reading there.
 === Setup
 
 TODO: Describe what the dependencies are, maybe give a subsection about Maven.
-TODO: Mention core-integration-cdi for Java EE environment.
 
 === Environments [[Environments]]
 
@@ -35,16 +34,35 @@ configurations.
 ==== Java EE
 
 For usage with CDI blaze-persistence-integration provides a CDI
-extension which takes over the task of configuring and creating the `EntityViewManager`
-and allows the injection of the `EntityViewManager` into your application's CDI beans like following example shows.
+extension which takes over the task of creating and providing an `EntityViewConfiguration`
+from which an `EntityViewManager` can be created like following example shows.
 
 [source,java]
 ----
-public class KittenDataAccess {
-    @Inject
-    private EntityViewManager evm;
+public class EntityViewManagerProducer {
+
+	// inject the configuration provided by the cdi integration
+	@Inject
+	private EntityViewConfiguration config;
+	
+	// inject the criteria builder factory which will be used along with the entity view manager
+	@Inject
+	private CriteriaBuilderFactory criteriaBuilderFactory;
+
+	// inject your entity manager factory
+	@PersistenceContext
+	private EntityManagerFactory entityManagerFactory;
+    
+    @Produces
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager() {
+		// do some configuration
+    	return config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+    }
 }
 ----
+
+The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
 === First entity view query
 

@@ -66,7 +66,7 @@ public abstract class AbstractJpaPersistenceTest {
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
-        cbf = config.createCriteriaBuilderFactory();
+        cbf = config.createCriteriaBuilderFactory(factory);
     }
 
     @After

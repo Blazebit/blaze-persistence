@@ -31,17 +31,37 @@ NOTE: The `CriteriaBuilderFactory` should only be built once.
 
 ==== Java EE
 
-For usage with CDI blaze-persistence-integration-core-cdi provides a CDI
-extension which allows the injection of the `CriteriaBuilderFactory` into your
-application's CDI beans like following example shows.
+The most convenient way to use {projectname} within a CDI environment is by creating a simple producer method like the following example shows.
 
 [source,java]
 ----
-public class KittenDataAccess {
-    @Inject
-    private CriteriaBuilderFactory cbf;
+@javax.ejb.Singleton
+@javax.ejb.Startup
+public class CriteriaBuilderFactoryProducer {
+
+	// inject your entity manager factory
+	@PersistenceContext
+	private EntityManagerFactory entityManagerFactory;
+	
+	private CriteriaBuilderFactory criteriaBuilderFactory;
+	
+	@PostConstruct
+	public void init() {
+    	CriteriaBuilderConfiguration config = Criteria.getDefault();
+		// do some configuration
+    	this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
+	}
+    
+    @Produces
+    @ApplicationScoped
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+    	return criteriaBuilderFactory;
+    }
 }
 ----
+
+Creating the criteria builder factory eagerly at startup is required so that the integration can work properly.
+Initializing it differently might result in data races because at creation time e.g. custom functions are registered. 
 
 === First criteria query
 

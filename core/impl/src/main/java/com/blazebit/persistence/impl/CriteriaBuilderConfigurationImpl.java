@@ -15,7 +15,12 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.math.BigDecimal;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +28,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 import java.util.Set;
+
+import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
@@ -108,9 +115,10 @@ import com.blazebit.persistence.impl.function.pageposition.OraclePagePositionFun
 import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
+import com.blazebit.persistence.impl.function.treat.TreatFunction;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
@@ -126,7 +134,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
     private final Map<String, DbmsDialect> dbmsDialects = new HashMap<String, DbmsDialect>();
     private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
-    private final List<EntityManagerIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>();
+    private final List<EntityManagerFactoryIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerFactoryIntegrator>();
     private Properties properties = new Properties();
     private ExtendedQuerySupport extendedQuerySupport;
 
@@ -177,6 +185,23 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             
             registerFunction(jpqlFunctionGroup);
         }
+        
+        // cast
+
+        registerFunction(new JpqlFunctionGroup("treat_decimal", new TreatFunction(BigDecimal.class)));
+        registerFunction(new JpqlFunctionGroup("treat_long", new TreatFunction(Long.class)));
+        registerFunction(new JpqlFunctionGroup("treat_int", new TreatFunction(Integer.class)));
+        registerFunction(new JpqlFunctionGroup("treat_short", new TreatFunction(Short.class)));
+        registerFunction(new JpqlFunctionGroup("treat_byte", new TreatFunction(Byte.class)));
+        registerFunction(new JpqlFunctionGroup("treat_double", new TreatFunction(Double.class)));
+        registerFunction(new JpqlFunctionGroup("treat_float", new TreatFunction(Float.class)));
+        registerFunction(new JpqlFunctionGroup("treat_boolean", new TreatFunction(Boolean.class)));
+        registerFunction(new JpqlFunctionGroup("treat_char", new TreatFunction(Character.class)));
+        
+        registerFunction(new JpqlFunctionGroup("treat_date", new TreatFunction(Date.class)));
+        registerFunction(new JpqlFunctionGroup("treat_timestamp", new TreatFunction(Timestamp.class)));
+        registerFunction(new JpqlFunctionGroup("treat_time", new TreatFunction(Time.class)));
+        registerFunction(new JpqlFunctionGroup("treat_calendar", new TreatFunction(Calendar.class)));
 
         // group_concat
         
@@ -341,11 +366,11 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     private void loadEntityManagerIntegrator() {
-        ServiceLoader<EntityManagerIntegrator> serviceLoader = ServiceLoader.load(EntityManagerIntegrator.class);
-        Iterator<EntityManagerIntegrator> iterator = serviceLoader.iterator();
+        ServiceLoader<EntityManagerFactoryIntegrator> serviceLoader = ServiceLoader.load(EntityManagerFactoryIntegrator.class);
+        Iterator<EntityManagerFactoryIntegrator> iterator = serviceLoader.iterator();
 
         if (iterator.hasNext()) {
-            EntityManagerIntegrator enricher = iterator.next();
+            EntityManagerFactoryIntegrator enricher = iterator.next();
             entityManagerIntegrators.add(enricher);
         }
     }
@@ -392,19 +417,19 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     @Override
-    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher) {
+    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerFactoryIntegrator entityManagerEnricher) {
         entityManagerIntegrators.add(entityManagerEnricher);
         return this;
     }
 
     @Override
-    public List<EntityManagerIntegrator> getEntityManagerIntegrators() {
+    public List<EntityManagerFactoryIntegrator> getEntityManagerIntegrators() {
         return entityManagerIntegrators;
     }
 
     @Override
-    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
-        return new CriteriaBuilderFactoryImpl(this);
+    public CriteriaBuilderFactory createCriteriaBuilderFactory(EntityManagerFactory emf) {
+        return new CriteriaBuilderFactoryImpl(this, emf);
     }
 
     @Override

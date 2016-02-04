@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityManagerFactory;
+
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
@@ -54,8 +57,8 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
     }
 
     @Override
-    public EntityViewManager createEntityViewManager() {
-        return new EntityViewManagerImpl(this);
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityManagerFactory emf) {
+        return new EntityViewManagerImpl(this, cbf, emf);
     }
 
     @Override

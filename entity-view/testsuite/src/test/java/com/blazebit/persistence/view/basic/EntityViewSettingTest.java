@@ -93,7 +93,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSetting() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(FilteredDocument.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<FilteredDocument, PaginatedCriteriaBuilder<FilteredDocument>> setting = EntityViewSetting.create(
@@ -120,7 +120,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingWithEntityAttribute() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting
@@ -143,7 +143,7 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
     public void testEntityViewSettingNotExistingFilterAttribute() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithEntityView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<DocumentWithEntityView, PaginatedCriteriaBuilder<DocumentWithEntityView>> setting = EntityViewSetting

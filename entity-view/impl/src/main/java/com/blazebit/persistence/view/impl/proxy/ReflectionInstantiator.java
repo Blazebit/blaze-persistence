@@ -57,7 +57,16 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
         try {
             return constructor.newInstance(tuple);
         } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
+            String[] types = new String[tuple.length];
+            
+            for (int i = 0; i < types.length; i++) {
+                if (tuple[i] == null) {
+                    types[i] = null;
+                } else {
+                    types[i] = tuple[i].getClass().getName();
+                }
+            }
+            throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple) + " with the types: " + Arrays.toString(types), ex);
         }
 	}
 	

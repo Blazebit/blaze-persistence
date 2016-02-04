@@ -2,8 +2,6 @@
 
 {projectname} can be configured by setting properties on a `com.blazebit.persistence.spi.CriteriaBuilderConfiguration` object and creating a `CriteriaBuilderFactory` from it.
 
-NOTE: When using the CDI extension the `CriteriaBuilderConfiguration` can be observed to be further configured. 
-
 === Configuration properties
 
 ==== COMPATIBLE_MODE

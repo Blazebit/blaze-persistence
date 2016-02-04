@@ -40,6 +40,14 @@ public final class ConfigurationProperties {
 	 * @since 1.0.6
 	 */
 	public static final String PROXY_UNSAFE_ALLOWED = "com.blazebit.persistence.view.proxy.unsafe_allowed";
+    /**
+     * We added a flag to make it possible to disable the expression validation.
+     * By default the expression validation is enabled, but since the validation is not bullet proof, it can be disabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * 
+     * @since 1.1.0
+     */
+    public static final String EXPRESSION_VALIDATION_DISABLED = "com.blazebit.persistence.view.expression_validation_disabled";
 
 	private ConfigurationProperties() {
 	}

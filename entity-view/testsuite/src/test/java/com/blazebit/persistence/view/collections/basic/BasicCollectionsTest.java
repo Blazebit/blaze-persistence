@@ -140,7 +140,7 @@ public class BasicCollectionsTest<T extends BasicDocumentCollectionsView> extend
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .orderByAsc("id");

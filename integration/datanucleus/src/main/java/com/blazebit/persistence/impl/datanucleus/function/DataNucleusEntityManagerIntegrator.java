@@ -25,7 +25,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.datanucleus.NucleusContext;
 import org.datanucleus.store.StoreManager;
@@ -33,7 +33,7 @@ import org.datanucleus.store.rdbms.RDBMSStoreManager;
 import org.datanucleus.store.rdbms.sql.expression.SQLExpressionFactory;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
@@ -41,8 +41,8 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  *
  * @author Christian
  */
-@ServiceProvider(EntityManagerIntegrator.class)
-public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrator {
+@ServiceProvider(EntityManagerFactoryIntegrator.class)
+public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
 
     private static final Logger LOG = Logger.getLogger(DataNucleusEntityManagerIntegrator.class.getName());
 	private static final Map<String, String> vendorToDbmsMapping = new HashMap<String, String>();
@@ -65,21 +65,16 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
 	}
 
     @Override
-	public String getDbms(EntityManager entityManager) {
-        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManager.getEntityManagerFactory().unwrap(StoreManager.class);
+	public String getDbms(EntityManagerFactory entityManagerFactory) {
+        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
     	return vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
 	}
 
 	@Override
-    public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManager.getEntityManagerFactory().unwrap(StoreManager.class);
+    public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
+        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
         String dbms = vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
-
-        // If our function is registered, we don't need to register any others anymore
-        if (exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
-        	return entityManager;
-        }
         
         // Register compatibility functions
     	exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
@@ -99,12 +94,12 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
             }
         }
         
-        return entityManager;
+        return entityManagerFactory;
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManager entityManager) {
-        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManager.getEntityManagerFactory().unwrap(StoreManager.class);
+    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+        RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
         String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
 
@@ -151,10 +146,17 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
 	@SuppressWarnings("unchecked")
 	private <T> T fieldGet(String fieldName, Object value, String version) {
     	Exception ex;
+    	Field field = null;
+    	boolean madeAccessible = false;
     	
 		try {
-			Field field = value.getClass().getDeclaredField(fieldName);
-			field.setAccessible(true);
+			field = value.getClass().getDeclaredField(fieldName);
+			madeAccessible = !field.isAccessible();
+			
+			if (madeAccessible) {
+			    field.setAccessible(true);
+			}
+			
 	    	return (T) field.get(value);
 		} catch (NoSuchFieldException e) {
 			ex = e;
@@ -164,6 +166,10 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerIntegrat
 			ex = e;
 		} catch (IllegalAccessException e) {
 			ex = e;
+		} finally {
+		    if (madeAccessible) {
+		        field.setAccessible(false);
+		    }
 		}
 		
 		throw new RuntimeException("Could not access the supported methods to dynamically retrieve registered functions. Please report this version of datanucleus(" + version + ") so we can provide support for it!", ex);

@@ -139,7 +139,7 @@ public class NestedEmptyCollectionsTest<T extends PersonForCollectionsMasterView
         cfg.addEntityView(viewType);
         cfg.addEntityView(subviewType);
         cfg.addEntityView(SubviewPersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<PersonForCollections> criteria = cbf.create(em, PersonForCollections.class, "p")
             .where("id").in(pers1.getId(), pers2.getId())

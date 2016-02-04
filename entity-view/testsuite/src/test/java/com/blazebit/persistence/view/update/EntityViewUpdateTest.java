@@ -71,7 +71,7 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
     public void setUp() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
         
         EntityTransaction tx = em.getTransaction();
         try {

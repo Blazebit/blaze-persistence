@@ -33,15 +33,21 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -54,7 +60,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     protected final Class<X> javaType;
     protected final Class<?> entityClass;
     protected final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
-    protected final Map<ParametersKey, MappingConstructor<X>> constructors;
+    protected final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
     protected final Map<String, MappingConstructor<X>> constructorIndex;
     protected final Map<String, AttributeFilterMapping> attributeFilters;
 
@@ -83,7 +89,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             }
         }
         
-        this.constructors = new HashMap<ParametersKey, MappingConstructor<X>>();
+        this.constructors = new HashMap<ParametersKey, MappingConstructorImpl<X>>();
         this.constructorIndex = new HashMap<String, MappingConstructor<X>>();
 
         // TODO: This is probably not deterministic since the constructor order is not defined
@@ -92,10 +98,88 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructor<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews);
+            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
+    }
+    
+    public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Set<String> errors) {
+        ManagedType<?> managedType = metamodel.managedType(entityClass);
+        
+        for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
+            String error = checkAttribute(attribute, managedType, managedViews, expressionFactory, metamodel);
+            
+            if (error != null) {
+                errors.add(error);
+            }
+        }
+        
+        for (MappingConstructorImpl<X> constructor : constructors.values()) {
+            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, errors);
+        }
+    }
+
+    private String checkAttribute(AbstractMethodAttribute<? super X, ?> attribute, ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel) {
+        String expression = attribute.getMapping();
+        
+        if (expression == null || attribute.isQueryParameter()) {
+            // Subqueries and parameters can't be checked
+            return null;
+        }
+        
+        Class<?> expressionType = attribute.getJavaType();
+        
+        if (attribute.isCollection() && !((PluralAttribute<?, ?, ?>) attribute).isIndexed() && Collection.class.isAssignableFrom(expressionType)) {
+            // We can assign e.g. a Set to a List, so let's use the common supertype
+            expressionType = Collection.class;
+        } else if (!attribute.isCollection() && attribute.isSubview()) {
+            ManagedViewType<?> subviewType = managedViews.get(expressionType);
+            
+            if (subviewType == null) {
+                throw new IllegalStateException("Expected subview '" + expressionType.getName() + "' to exist but couldn't find it!");
+            }
+            
+            expressionType = subviewType.getEntityClass();
+        }
+
+        MetamodelTargetResolvingExpressionVisitor visitor = new MetamodelTargetResolvingExpressionVisitor(managedType, metamodel);
+        
+        try {
+            expressionFactory.createSimpleExpression(expression).accept(visitor);
+        } catch (IllegalArgumentException ex) {
+            return "An error occurred while trying to resolve the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
+        }
+        
+        Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+        
+        if (!possibleTargets.isEmpty()) {
+            boolean error = true;
+            for (Map.Entry<Method, Class<?>[]> entry : possibleTargets.entrySet()) {
+                Class<?> possibleTargetType = entry.getValue()[0];
+                
+                if (expressionType.isAssignableFrom(possibleTargetType)
+                    || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(entry.getValue()[1])) {
+                    error = false;
+                    break;
+                }
+            }
+            
+            if (error) {
+                StringBuilder sb = new StringBuilder();
+                sb.append('[');
+                for (Class<?>[] possibleTargetType : possibleTargets.values()) {
+                    sb.append(possibleTargetType[0].getName());
+                    sb.append(", ");
+                }
+                
+                sb.setLength(sb.length() - 2);
+                sb.append(']');
+                return "The resolved possible types " + sb.toString() + " are not assignable to the given expression type '" + attribute.getJavaType().getName() + "' of the expression declared by the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "'!";
+            }
+        }
+        
+        return null;
     }
 
     private void addAttributeFilters(AbstractMethodAttribute<? super X, ?> attribute) {

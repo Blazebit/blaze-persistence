@@ -15,21 +15,23 @@
  */
 package com.blazebit.persistence.view.impl.cdi;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.impl.integration.cdi.CustomBean;
-import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.EntityViewManager;
-import com.blazebit.persistence.view.EntityViews;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import java.lang.annotation.Annotation;
+
+import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.inject.Singleton;
+
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.impl.integration.cdi.CustomBean;
+import com.blazebit.persistence.impl.integration.cdi.DefaultLiteral;
+import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
  *
@@ -42,24 +44,20 @@ public class EntityViewExtension implements Extension {
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
 
     <X> void processEntityView(@Observes ProcessAnnotatedType<X> pat) {
-        if (pat.getAnnotatedType()
-            .isAnnotationPresent(EntityView.class)) {
-            configuration.addEntityView(pat.getAnnotatedType()
-                .getJavaClass());
+        if (pat.getAnnotatedType().isAnnotationPresent(EntityView.class) || pat.getAnnotatedType().isAnnotationPresent(EmbeddableEntityView.class)) {
+            configuration.addEntityView(pat.getAnnotatedType().getJavaClass());
         }
     }
-
+    
     void beforeBuild(@Observes AfterBeanDiscovery abd, BeanManager bm) {
-        bm.fireEvent(configuration);
-        final EntityViewManager entityViewManager = configuration.createEntityViewManager();
-        
-        Class<?> beanClass = EntityViewManager.class;
-        Class<?>[] types = new Class[] { EntityViewManager.class, Object.class };
+        Class<?> beanClass = EntityViewConfiguration.class;
+        Class<?>[] types = new Class[] { EntityViewConfiguration.class, Object.class };
         Annotation[] qualifiers = new Annotation[] { new DefaultLiteral()};
-        Class<? extends Annotation> scope = Singleton.class;
-        EntityViewManager instance = entityViewManager;
-        Bean<EntityViewManager> bean = new CustomBean<EntityViewManager>(beanClass, types, qualifiers, scope, instance);
+        Class<? extends Annotation> scope = Dependent.class;
+        Bean<EntityViewConfiguration> bean = new CustomBean<EntityViewConfiguration>(beanClass, types, qualifiers, scope, configuration);
 
         abd.addBean(bean);
+        return;
     }
+    
 }

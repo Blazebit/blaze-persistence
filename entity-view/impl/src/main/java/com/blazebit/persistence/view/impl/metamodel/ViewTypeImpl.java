@@ -20,6 +20,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdateableEntityView;
@@ -43,18 +46,8 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    
-    private static Class<?> getEntityClass(Class<?> clazz) {
-        EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
-
-        if (entityViewAnnot == null) {
-            throw new IllegalArgumentException("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
-        }
-
-        return entityViewAnnot.value();
-    }
-    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
-        super(clazz, getEntityClass(clazz), entityViews);
+    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, Metamodel metamodel) {
+        super(clazz, getEntityClass(clazz, metamodel), entityViews);
 
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 
@@ -119,6 +112,30 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
 
         this.idAttribute = foundIdAttribute;
+    }
+    
+    private static Class<?> getEntityClass(Class<?> clazz, Metamodel metamodel) {
+        EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
+
+        if (entityViewAnnot == null) {
+            throw new IllegalArgumentException("Could not find any EntityView annotation for the class '" + clazz.getName() + "'");
+        }
+
+        Class<?> entityClass = entityViewAnnot.value();
+        Exception exception = null;
+        boolean error = true;
+        
+        try {
+            error = !(metamodel.managedType(entityClass) instanceof IdentifiableType<?>);
+        } catch (IllegalArgumentException ex) {
+            exception = ex;
+        }
+        
+        if (error) {
+            throw new IllegalArgumentException("The class which is referenced by the EntityView annotation of the class '" + clazz.getName() + "' is not an identifiable type!", exception);
+        }
+        
+        return entityClass;
     }
 
     private void addFilterMapping(ViewFilter filterMapping) {

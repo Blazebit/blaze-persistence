@@ -24,6 +24,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
@@ -37,7 +38,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.spi.QueryTransformer;
@@ -52,25 +53,45 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Map<String, DbmsDialect> dbmsDialects;
-    private final Map<String, JpqlFunctionGroup> functions;
     private final Set<String> aggregateFunctions;
-    private final List<EntityManagerIntegrator> entityManagerIntegrators;
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
     private final Map<String, String> properties;
     private final boolean compatibleModeEnabled;
+    
+    private final String configuredDbms;
+    private final DbmsDialect configuredDbmsDialect;
+    private final Set<String> configuredRegisteredFunctions;
 
-    public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config) {
+    public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
-        this.functions = new HashMap<String, JpqlFunctionGroup>(config.getFunctions());
-        this.aggregateFunctions = resolveAggregateFunctions(functions);
-        this.entityManagerIntegrators = new ArrayList<EntityManagerIntegrator>(config.getEntityManagerIntegrators());
+        this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
         this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions));
         this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, expressionFactory);
         this.properties = copyProperties(config.getProperties());
         this.compatibleModeEnabled = Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.COMPATIBLE_MODE)));
+        
+        EntityManagerFactory emf = entityManagerFactory;
+        Set<String> registeredFunctions = new HashSet<String>();
+        String dbms = null;
+        for (EntityManagerFactoryIntegrator integrator : config.getEntityManagerIntegrators()) {
+            emf = integrator.registerFunctions(emf, config.getFunctions());
+            registeredFunctions.addAll(integrator.getRegisteredFunctions(emf));
+            dbms = integrator.getDbms(emf);
+        }
+
+        DbmsDialect dialect = dbmsDialects.get(dbms);
+        
+        // Use the default dialect
+        if (dialect == null) {
+            dialect = dbmsDialects.get(null);
+        }
+        
+        this.configuredDbms = dbms;
+        this.configuredDbmsDialect = dialect;
+        this.configuredRegisteredFunctions = registeredFunctions;
     }
 
     private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {
@@ -118,24 +139,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
     
     private MainQuery createMainQuery(EntityManager entityManager) {
-        Set<String> registeredFunctions = new HashSet<String>();
-        EntityManager em = entityManager;
-        String dbms = null;
-        for (int i = 0; i < entityManagerIntegrators.size(); i++) {
-            EntityManagerIntegrator integrator = entityManagerIntegrators.get(i);
-            em = integrator.registerFunctions(em, functions);
-            registeredFunctions.addAll(integrator.getRegisteredFunctions(em));
-            dbms = integrator.getDbms(em);
-        }
-
-        DbmsDialect dialect = dbmsDialects.get(dbms);
-        
-        // Use the default dialect
-        if (dialect == null) {
-            dialect = dbmsDialects.get(null);
-        }
-        
-        return MainQuery.create(this, em, dbms, dialect, registeredFunctions);
+        return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions);
     }
 
     @Override

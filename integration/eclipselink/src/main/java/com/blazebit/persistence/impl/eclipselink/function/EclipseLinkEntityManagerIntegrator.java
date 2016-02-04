@@ -20,16 +20,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
-import org.eclipse.persistence.jpa.JpaEntityManager;
 import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
@@ -38,10 +37,10 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  * @author Christian Beikov
  * @since 1.0
  */
-@ServiceProvider(EntityManagerIntegrator.class)
-public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrator {
+@ServiceProvider(EntityManagerFactoryIntegrator.class)
+public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
     
-    private static final Logger LOG = Logger.getLogger(EntityManagerIntegrator.class.getName());
+    private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
     
     /**
      * EclipseLink uses integer values for something they call selectors.
@@ -51,14 +50,13 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     private int functionSelectorCounter = 100000;
 
     @Override
-	public String getDbms(EntityManager entityManager) {
+	public String getDbms(EntityManagerFactory entityManagerFactory) {
 		return null;
 	}
 
 	@Override
-    public Set<String> getRegisteredFunctions(EntityManager entityManager) {
-        JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
-        DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();
+    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
         @SuppressWarnings("unchecked")
 		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         Set<String> functions = new HashSet<String>(platformOperators.size());
@@ -75,9 +73,8 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
     }
 
     @Override
-    public EntityManager registerFunctions(EntityManager entityManager, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        JpaEntityManager jpaEntityManager = JpaHelper.getEntityManager(entityManager);
-        DatabasePlatform platform = jpaEntityManager.getDatabaseSession().getPlatform();
+    public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
+        DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
         @SuppressWarnings("unchecked")
 		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;
@@ -109,7 +106,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerIntegrat
             }
         }
         
-        return entityManager;
+        return entityManagerFactory;
     }
     
     private void addFunction(Map<Integer, ExpressionOperator> platformOperators, String name, JpqlFunction function) {

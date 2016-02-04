@@ -438,7 +438,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applyQueryParameterMapping(MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         Object[] mapping = new Object[2];
-        mapping[0] = "NULLIF(1,1)";
+        mapping[0] = "NULL";
         mappingList.add(mapping);
         parameterMappingList.add(mappingAttribute.getMapping());
     }

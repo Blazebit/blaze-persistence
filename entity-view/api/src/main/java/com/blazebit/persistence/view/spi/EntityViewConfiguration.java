@@ -18,6 +18,9 @@ package com.blazebit.persistence.view.spi;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityManagerFactory;
+
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.view.EntityViewManager;
 
 /**
@@ -39,9 +42,11 @@ public interface EntityViewConfiguration {
     /**
      * Creates a new entity view manager from this configuration.
      *
+     * @param criteriaBuilderFactory The criteria builder factory for which the entity view manager should be created
+     * @param entityManagerFactory The entity manager factory for which the entity view manager should be created
      * @return A new entity view manager
      */
-    public EntityViewManager createEntityViewManager();
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory criteriaBuilderFactory, EntityManagerFactory entityManagerFactory);
 
     /**
      * Returns the currently known entity views.

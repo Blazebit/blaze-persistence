@@ -116,7 +116,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
-        cbf = config.createCriteriaBuilderFactory();
+        cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         try {
             criteria.orderByAsc("SIZE(d.partners)");

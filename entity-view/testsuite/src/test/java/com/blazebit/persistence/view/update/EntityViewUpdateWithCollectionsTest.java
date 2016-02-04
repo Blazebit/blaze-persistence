@@ -74,7 +74,7 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWit
     public void setUp() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
         
         EntityTransaction tx = em.getTransaction();
         try {

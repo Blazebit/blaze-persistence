@@ -25,7 +25,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 	</properties>
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
-Choose the integration artifacts based on your JPA provider and whether you use CDI.
+Choose the integration artifacts based on your JPA provider.
 
 Blaze-Persistence Core module dependencies
 
@@ -80,21 +80,6 @@ Blaze-Persistence JPA provider integration module dependencies
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-integration-openjpa</artifactId>
-		<version>${blaze-persistence.version}</version>
-		<scope>runtime</scope>
-	</dependency>
-
-Blaze-Persistence CDI integration module dependencies
-
-	<dependency>
-		<groupId>com.blazebit</groupId>
-		<artifactId>blaze-persistence-integration-core-cdi</artifactId>
-		<version>${blaze-persistence.version}</version>
-		<scope>runtime</scope>
-	</dependency>
-	<dependency>
-		<groupId>com.blazebit</groupId>
-		<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>

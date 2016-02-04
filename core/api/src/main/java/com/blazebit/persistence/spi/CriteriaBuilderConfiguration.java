@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityManagerFactory;
+
 /**
  * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.
  *
@@ -74,21 +76,22 @@ public interface CriteriaBuilderConfiguration {
      * @param entityManagerEnricher The enricher that should be added
      * @return this for method chaining
      */
-    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerIntegrator entityManagerEnricher);
+    public CriteriaBuilderConfiguration registerEntityManagerIntegrator(EntityManagerFactoryIntegrator entityManagerEnricher);
 
     /**
      * Returns a list of registered entity manager enrichers.
      *
      * @return A list of registered entity manager enrichers
      */
-    public List<EntityManagerIntegrator> getEntityManagerIntegrators();
+    public List<EntityManagerFactoryIntegrator> getEntityManagerIntegrators();
 
     /**
      * Creates a new {@linkplain CriteriaBuilderFactory} based on this configuration.
      *
+     * @param entityManagerFactory The entity manager factory for which the criteria builder factory should be created
      * @return A new {@linkplain CriteriaBuilderFactory}
      */
-    public CriteriaBuilderFactory createCriteriaBuilderFactory();
+    public CriteriaBuilderFactory createCriteriaBuilderFactory(EntityManagerFactory entityManagerFactory);
 
     /**
      * Returns all properties.

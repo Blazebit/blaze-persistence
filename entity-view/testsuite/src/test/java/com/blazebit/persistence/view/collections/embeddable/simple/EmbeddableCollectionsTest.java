@@ -143,7 +143,7 @@ public class EmbeddableCollectionsTest<T extends EmbeddableDocumentCollectionsVi
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<DocumentForElementCollections> criteria = cbf.create(em, DocumentForElementCollections.class, "d")
             .orderByAsc("id").where("id").gt(doc0.getId());

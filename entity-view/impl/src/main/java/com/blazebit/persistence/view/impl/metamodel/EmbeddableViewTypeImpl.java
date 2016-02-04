@@ -17,6 +17,8 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.util.Set;
 
+import javax.persistence.metamodel.Metamodel;
+
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
@@ -29,18 +31,26 @@ import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 public class EmbeddableViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements EmbeddableViewType<X> {
 
 
-    public EmbeddableViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews) {
-        super(clazz, getEntityClass(clazz), entityViews);
+    public EmbeddableViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, Metamodel metamodel) {
+        super(clazz, getEntityClass(clazz, metamodel), entityViews);
     }
     
-    private static Class<?> getEntityClass(Class<?> clazz) {
+    private static Class<?> getEntityClass(Class<?> clazz, Metamodel metamodel) {
         EmbeddableEntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EmbeddableEntityView.class);
 
         if (entityViewAnnot == null) {
             throw new IllegalArgumentException("Could not find any EmbeddableEntityView annotation for the class '" + clazz.getName() + "'");
         }
 
-        return entityViewAnnot.value();
+        Class<?> entityClass = entityViewAnnot.value();
+        
+        try {
+            metamodel.embeddable(entityClass);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("The class which is referenced by the EmbeddableEntityView annotation of the class '" + clazz.getName() + "' is not an embeddable!", ex);
+        }
+        
+        return entityClass;
     }
 
 }

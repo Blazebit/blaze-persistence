@@ -15,18 +15,16 @@
  */
 package com.blazebit.persistence.impl.hibernate.function;
 
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -46,7 +44,7 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerIntegrator;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
@@ -56,44 +54,25 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  * @since 1.0
  */
 @SuppressWarnings("deprecation")
-@ServiceProvider(EntityManagerIntegrator.class)
-public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator {
+@ServiceProvider(EntityManagerFactoryIntegrator.class)
+public class HibernateEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
     
-    private static final Logger LOG = Logger.getLogger(EntityManagerIntegrator.class.getName());
-    private final Map<WeakCacheKey<SessionFactory>, Map<String, SQLFunction>> functionsCache = new ConcurrentHashMap<WeakCacheKey<SessionFactory>, Map<String,SQLFunction>>(1);
-    
-    private static class WeakCacheKey<K> extends WeakReference<K> {
-
-        private final int hash;
-        
-		public WeakCacheKey(K referent) {
-			super(referent);
-            this.hash = System.identityHashCode(referent);  // compare by identity
-        }
-
-        @Override
-        public int hashCode() {
-            return hash;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            K key;
-            return obj == this ||
-                   obj != null &&
-                   obj.getClass() == this.getClass() &&
-                   // cleared CacheKey is only equal to itself
-                   (key = this.get()) != null &&
-                   // compare key by identity
-                   key == ((WeakCacheKey<K>) obj).get();
-        }
-    }
+    private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
     
     @Override
-	public String getDbms(EntityManager entityManager) {
-        Session s = entityManager.unwrap(Session.class);
-        Dialect dialect = getDialect(s);
-        return getDbmsName(dialect);
+	public String getDbms(EntityManagerFactory entityManagerFactory) {
+        EntityManager em = null;
+        
+        try {
+            em = entityManagerFactory.createEntityManager();
+            Session s = em.unwrap(Session.class);
+            Dialect dialect = getDialect(s);
+            return getDbmsName(dialect);
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
     
     private String getDbmsName(Dialect dialect) {
@@ -127,21 +106,12 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
 	}
     
     @Override
-    public EntityManager registerFunctions(EntityManager em, Map<String, JpqlFunctionGroup> dbmsFunctions) {
-        Session s = em.unwrap(Session.class);
-        WeakCacheKey<SessionFactory> key = new WeakCacheKey<SessionFactory>(s.getSessionFactory());
+    public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
+        EntityManager em = null;
         
-        // We already registered it once
-        if (functionsCache.get(key) != null) {
-        	return em;
-        }
-        
-        synchronized (s.getSessionFactory()) {
-            // Double check
-            if (functionsCache.get(key) != null) {
-            	return em;
-            }
-        
+        try {
+            em = entityManagerFactory.createEntityManager();
+            Session s = em.unwrap(Session.class);
             Map<String, SQLFunction> originalFunctions = getFunctions(s);
             Map<String, SQLFunction> functions = new TreeMap<String, SQLFunction>(String.CASE_INSENSITIVE_ORDER);
             functions.putAll(originalFunctions);
@@ -164,15 +134,28 @@ public class HibernateEntityManagerIntegrator implements EntityManagerIntegrator
             }
             
             replaceFunctions(s, functions);
-		}
-        
-        return em;
+            
+            return entityManagerFactory;
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
 
     @Override
-    public Set<String> getRegisteredFunctions(EntityManager em) {
-        Session s = em.unwrap(Session.class);
-        return getFunctions(s).keySet();
+    public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
+        EntityManager em = null;
+        
+        try {
+            em = entityManagerFactory.createEntityManager();
+            Session s = em.unwrap(Session.class);
+            return getFunctions(s).keySet();
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
     }
     
     @SuppressWarnings("unchecked")
