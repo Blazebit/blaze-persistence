@@ -59,7 +59,9 @@ public class Document extends Ownable implements Serializable {
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Calendar creationDate;
+    private Calendar creationDate2;
     private Date lastModified;
+    private Date lastModified2;
     private DocumentType documentType;
     private Boolean archived = false;
 
@@ -191,6 +193,15 @@ public class Document extends Ownable implements Serializable {
         this.creationDate = creationDate;
     }
 
+    @Temporal(TemporalType.DATE)
+    public Calendar getCreationDate2() {
+        return creationDate2;
+    }
+
+    public void setCreationDate2(Calendar creationDate2) {
+        this.creationDate2 = creationDate2;
+    }
+
     @Temporal(TemporalType.TIMESTAMP)
     public Date getLastModified() {
         return lastModified;
@@ -198,6 +209,15 @@ public class Document extends Ownable implements Serializable {
 
     public void setLastModified(Date lastModified) {
         this.lastModified = lastModified;
+    }
+
+    @Temporal(TemporalType.TIMESTAMP)
+    public Date getLastModified2() {
+        return lastModified2;
+    }
+
+    public void setLastModified2(Date lastModified2) {
+        this.lastModified2 = lastModified2;
     }
 
     public DocumentType getDocumentType() {
