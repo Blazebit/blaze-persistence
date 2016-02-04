@@ -77,7 +77,9 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryI
         String dbms = vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
         
         // Register compatibility functions
-    	exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
+        if (!exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
+            exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
+        }
         
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {
             String functionName = functionEntry.getKey().toUpperCase();
@@ -89,7 +91,7 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryI
             }
             if (function == null) {
                 LOG.warning("Could not register the function '" + functionName + "' because there is neither an implementation for the dbms '" + dbms + "' nor a default implementation!");
-            } else {
+            } else if (!exprFactory.isMethodRegistered(null, functionName)) {
                 exprFactory.registerMethod(null, functionName, new DataNucleusJpqlFunctionAdapter(function, dbmsFunctionGroup.isAggregate()), true); 
             }
         }
