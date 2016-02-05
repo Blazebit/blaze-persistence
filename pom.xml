@@ -119,6 +119,10 @@
 		<version.injection.plugin>1.0.2</version.injection.plugin>
 		<version.release.plugin>2.5.1</version.release.plugin>
 		<version.surefire.plugin>2.18.1</version.surefire.plugin>
+		
+        <!-- JVM values for surefire plugin -->
+        <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
+        <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
 	</properties>
 
 	<dependencyManagement>
@@ -407,6 +411,20 @@
 					<!-- Disable annotation processing via compiler plugin. -->
 					<compilerArgument>-proc:none</compilerArgument>
 				</configuration>
+			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+				<executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Travis build workaround -->
+                            <argLine>${surefire.jvm.params}</argLine>
+                            <skipTests>${skipTests}</skipTests>
+                        </configuration>
+                    </execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

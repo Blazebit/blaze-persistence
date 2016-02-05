@@ -30,7 +30,8 @@ after_success:
 #  - oraclejdk7
 env:
   global:
-    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+# Tried to increase memory because of failures, but didn't help
+#    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 matrix:
   fast_finish: true
   include:
