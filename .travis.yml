@@ -30,35 +30,35 @@ after_success:
 #  - oraclejdk7
 env:
   global:
-    - MAVEN_OPTS="-Xmx512m -XX:MaxPermSize=350m"
-# hibernate
-  - JPAPROVIDER=hibernate RDBMS=h2
-  - JPAPROVIDER=hibernate RDBMS=mysql
-  - JPAPROVIDER=hibernate RDBMS=postgresql
-#  - JPAPROVIDER=hibernate RDBMS=sqlite
-# hibernate-4.3
-  - JPAPROVIDER=hibernate-4.3 RDBMS=h2
-  - JPAPROVIDER=hibernate-4.3 RDBMS=mysql
-  - JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
-#  - JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
-# datanucleus-4
-  - JPAPROVIDER=datanucleus-4 RDBMS=h2
-  - JPAPROVIDER=datanucleus-4 RDBMS=mysql
-  - JPAPROVIDER=datanucleus-4 RDBMS=postgresql
-  - JPAPROVIDER=datanucleus-4 RDBMS=sqlite
-# eclipselink
-  - JPAPROVIDER=eclipselink RDBMS=h2
-#  - JPAPROVIDER=eclipselink RDBMS=mysql
-#  - JPAPROVIDER=eclipselink RDBMS=postgresql
-#  - JPAPROVIDER=eclipselink RDBMS=sqlite
-# openjpa
-#  - JPAPROVIDER=openjpa RDBMS=h2
-#  - JPAPROVIDER=openjpa RDBMS=mysql
-#  - JPAPROVIDER=openjpa RDBMS=postgresql
-#  - JPAPROVIDER=openjpa RDBMS=sqlite
+    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 matrix:
   fast_finish: true
   include:
+# hibernate
+    - env: JPAPROVIDER=hibernate RDBMS=h2
+    - env: JPAPROVIDER=hibernate RDBMS=mysql
+    - env: JPAPROVIDER=hibernate RDBMS=postgresql
+#    - env: JPAPROVIDER=hibernate RDBMS=sqlite
+# hibernate-4.3
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=h2
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=mysql
+    - env: JPAPROVIDER=hibernate-4.3 RDBMS=postgresql
+#    - env: JPAPROVIDER=hibernate-4.3 RDBMS=sqlite
+# datanucleus-4
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
+    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+# eclipselink
+    - env: JPAPROVIDER=eclipselink RDBMS=h2
+#    - env: JPAPROVIDER=eclipselink RDBMS=mysql
+#    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
+#    - env: JPAPROVIDER=eclipselink RDBMS=sqlite
+# openjpa
+#    - env: JPAPROVIDER=openjpa RDBMS=h2
+#    - env: JPAPROVIDER=openjpa RDBMS=mysql
+#    - env: JPAPROVIDER=openjpa RDBMS=postgresql
+#    - env: JPAPROVIDER=openjpa RDBMS=sqlite
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2
       jdk: oraclejdk8
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=mysql
