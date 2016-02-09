@@ -15,17 +15,31 @@
  */
 package com.blazebit.persistence.view.update.model;
 
-import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdateableEntityView;
-import com.blazebit.persistence.view.entity.Document;
+import java.util.Date;
+
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.entity.Person;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
-@UpdateableEntityView
-@EntityView(Document.class)
-public interface PartialUpdateableDocumentWithCollectionsView extends UpdateableDocumentWithCollectionsView {
+public interface UpdatableDocumentView {
+    
+    @IdMapping("id")
+    public Long getId();
+
+    public String getName();
+
+    public void setName(String name);
+
+	public Date getLastModified();
+	
+	public void setLastModified(Date date);
+
+	public Person getOwner();
+	
+	public void setOwner(Person owner);
 
 }

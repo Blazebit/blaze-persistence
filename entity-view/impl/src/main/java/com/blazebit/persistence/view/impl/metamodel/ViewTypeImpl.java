@@ -25,7 +25,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdateableEntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewFilter;
 import com.blazebit.persistence.view.ViewFilters;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
@@ -41,8 +41,8 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<X> {
 
     private final String name;
-    private final boolean updateable;
-    private final boolean partiallyUpdateable;
+    private final boolean updatable;
+    private final boolean partiallyUpdatable;
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
@@ -57,14 +57,15 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             this.name = entityViewAnnot.name();
         }
 
-        // TODO: updateable entity views have restrictions on the mappings
-        UpdateableEntityView updateableEntityView = AnnotationUtils.findAnnotation(javaType, UpdateableEntityView.class);
-        if (updateableEntityView != null) {
-        	this.updateable = true;
-        	this.partiallyUpdateable = updateableEntityView.partial();
+        // TODO: updatable entity views have restrictions on the mappings
+        // Updatable attributes may only be simple paths
+        UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(javaType, UpdatableEntityView.class);
+        if (updatableEntityView != null) {
+        	this.updatable = true;
+        	this.partiallyUpdatable = updatableEntityView.partial();
         } else {
-        	this.updateable = false;
-        	this.partiallyUpdateable = false;
+        	this.updatable = false;
+        	this.partiallyUpdatable = false;
         }
         
         this.viewFilters = new HashMap<String, ViewFilterMapping>();
@@ -96,18 +97,18 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             }
             
             // TODO: remove this as soon as we have support for collection updates
-            if (attribute.isCollection() && updateable && attribute.isUpdateable()) {
-            	throw new IllegalArgumentException("Collection updates are not yet implemented! Please remove the setter for the attribute [" + attribute.getName() + "] from [" + javaType.getName() + "]");
-            }
+//            if (attribute.isCollection() && updatable && attribute.isUpdatable()) {
+//            	throw new IllegalArgumentException("Collection updates are not yet implemented! Please remove the setter for the attribute [" + attribute.getName() + "] from [" + javaType.getName() + "]");
+//            }
         }
         
         if (foundIdAttribute == null) {
             throw new IllegalArgumentException("No id attribute was defined for entity view '" + javaType.getName() + "' although it is needed!");
         }
         
-        if (updateable) {
-	        if (foundIdAttribute.isUpdateable()) {
-	        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updateable which is not allowed!");
+        if (updatable) {
+	        if (foundIdAttribute.isUpdatable()) {
+	        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
 	        }
         }
 
@@ -162,13 +163,13 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     }
 
     @Override
-    public boolean isUpdateable() {
-        return updateable;
+    public boolean isUpdatable() {
+        return updatable;
     }
 
     @Override
-	public boolean isPartiallyUpdateable() {
-		return partiallyUpdateable;
+	public boolean isPartiallyUpdatable() {
+		return partiallyUpdatable;
 	}
 
     @Override

@@ -44,7 +44,7 @@ import com.blazebit.reflection.ReflectionUtils;
 public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X, Y> implements MethodAttribute<X, Y> {
 
     private final String name;
-    private final boolean updateable;
+    private final boolean updatable;
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
@@ -56,7 +56,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
               entityViews,
               "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         this.name = StringUtils.firstToLower(method.getName().substring(3));
-        this.updateable = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
+        // TODO: this is not correct for collections
+        this.updatable = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
         this.javaMethod = method;
         this.filterMappings = new HashMap<String, AttributeFilterMapping>();
         
@@ -101,8 +102,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-	public boolean isUpdateable() {
-		return updateable;
+	public boolean isUpdatable() {
+		return updatable;
 	}
 
 	@Override

@@ -36,12 +36,12 @@ public interface MethodAttribute<X, Y> extends Attribute<X, Y> {
     public String getName();
     
     /**
-     * Returns whether the attribute is updateable.
+     * Returns whether the attribute is updatable.
      * 
-     * @return Whether the attribute is updateable
+     * @return Whether the attribute is updatable
      * @since 1.1.0
      */
-    public boolean isUpdateable();
+    public boolean isUpdatable();
 
     /**
      * Returns the getter java method of this attribute.

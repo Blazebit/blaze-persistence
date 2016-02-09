@@ -59,6 +59,14 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleList
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedMapTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableIndexedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSortedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSortedSetTupleListTransformer;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
@@ -328,15 +336,31 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformatorFactory.add(new IndexedListTupleListTransformer(idPositions, startIndex));
+                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                            tupleTransformatorFactory.add(new UpdatableIndexedListTupleListTransformer(idPositions, startIndex));
+                        } else {
+                            tupleTransformatorFactory.add(new IndexedListTupleListTransformer(idPositions, startIndex));
+                        }
                     }
                 } else if (mapKey) {
                     if (pluralAttribute.isSorted()) {
-                        tupleTransformatorFactory.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                            tupleTransformatorFactory.add(new UpdatableSortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                        } else {
+                            tupleTransformatorFactory.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                        }
                     } else if (pluralAttribute.isOrdered()) {
-                        tupleTransformatorFactory.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
+                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                            tupleTransformatorFactory.add(new UpdatableOrderedMapTupleListTransformer(idPositions, startIndex));
+                        } else {
+                            tupleTransformatorFactory.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
+                        }
                     } else {
-                        tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex));
+                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                            tupleTransformatorFactory.add(new UpdatableMapTupleListTransformer(idPositions, startIndex));
+                        } else {
+                            tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex));
+                        }
                     }
                 } else {
                     switch (pluralAttribute.getCollectionType()) {
@@ -344,23 +368,43 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                    tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
+                                } else {
+                                    tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                }
                             }
                             break;
                         case LIST:
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                    tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
+                                } else {
+                                    tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
+                                }
                             }
                             break;
                         case SET:
                             if (pluralAttribute.isSorted()) {
-                                tupleTransformatorFactory.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                    tupleTransformatorFactory.add(new UpdatableSortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                } else {
+                                    tupleTransformatorFactory.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
+                                }
                             } else if (pluralAttribute.isOrdered()) {
-                                tupleTransformatorFactory.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
+                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                    tupleTransformatorFactory.add(new UpdatableOrderedSetTupleListTransformer(idPositions, startIndex));
+                                } else {
+                                    tupleTransformatorFactory.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
+                                }
                             } else {
-                                tupleTransformatorFactory.add(new SetTupleListTransformer(idPositions, startIndex));
+                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                    tupleTransformatorFactory.add(new UpdatableSetTupleListTransformer(idPositions, startIndex));
+                                } else {
+                                    tupleTransformatorFactory.add(new SetTupleListTransformer(idPositions, startIndex));
+                                }
                             }
                             break;
                         case MAP:
