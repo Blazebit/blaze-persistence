@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.Document;
@@ -492,6 +493,29 @@ public class WhereTest extends AbstractCoreTest {
         String expected = "SELECT d FROM Document d WHERE d.id < CASE d.id WHEN 2 THEN 1 WHEN 4 THEN 12 ELSE 10 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
+    }
+    
+    @Ignore("Not yet implemented")
+    @Test
+    public void testWhereSizeSingle() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.select("d.id").select("d.name")
+            .where("SIZE(d.versions)").gtExpression("2");
+        
+        final String expected = "SELECT d.id, d.name FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.name HAVING COUNT(versions_1) > 2";
+        assertEquals(expected, crit.getQueryString());
+    }
+    
+    @Ignore("Not yet implemented")
+    @Test
+    public void testWhereSizeMultiple() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
+        crit.select("d.id").select("d.name")
+            .where("SIZE(d.versions)").gtExpression("2")
+            .where("SIZE(d.partners)").ltExpression("1");
+        
+        final String expected = "SELECT d.id, d.name FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, d.name HAVING COUNT(DISTINCT versions_1) > 2 AND COUNT(DISTINCT partners_1) < 1";
+        assertEquals(expected, crit.getQueryString());
     }
     
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){

@@ -18,11 +18,15 @@ package com.blazebit.persistence;
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
+import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import org.junit.Test;
 
 import com.blazebit.persistence.entity.Document;
+import com.blazebit.persistence.entity.Person;
 
 /**
  *
@@ -349,5 +353,56 @@ public class JoinTest extends AbstractCoreTest {
                 .page(0, 10);
         
         assertEquals("SELECT d FROM Document d LEFT JOIN FETCH d.contacts c WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST"), crit.getQueryString());
+    }
+    
+    @Test
+    public void testSizeInOnClause() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+            .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
+        
+        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p ON (SELECT COUNT(versions) FROM Document document LEFT JOIN document.versions versions WHERE document = d) > 2";
+        assertEquals(expected, crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    public void testSizeNoExplicitJoinReusal() {
+        // Given
+        EntityTransaction tx = em.getTransaction();
+        try{
+            tx.begin();
+            Document d = new Document("D1");
+
+            Person p1 = new Person("Joe");
+            Person p2 = new Person("Fred");
+            p2.setPartnerDocument(d);
+            d.setOwner(p1);
+            
+            em.persist(p1);
+            em.persist(d);
+            em.persist(p2);
+            
+            p1.setPartnerDocument(d);
+            em.merge(p1);
+            
+            tx.commit();
+        } catch(Throwable t) {
+            t.printStackTrace();
+            tx.rollback();
+        }
+        
+        // When
+        CriteriaBuilder<Long> crit = cbf.create(em, Long.class)
+            .from(Document.class, "d")
+            .leftJoin("d.partners", "partner")
+            .select("SIZE(d.partners)")
+            .where("partner.name").eqExpression("'Joe'");
+    
+        // Then
+        final String expected = "SELECT COUNT(DISTINCT partners_1) FROM Document d LEFT JOIN d.partners partner LEFT JOIN d.partners partners_1 WHERE partner.name = 'Joe' GROUP BY d.id";
+        assertEquals(expected, crit.getQueryString());
+        List<Long> results = crit.getResultList();
+        assertEquals(1, results.size());
+        assertEquals(Long.valueOf(2l), results.get(0));
     }
 }

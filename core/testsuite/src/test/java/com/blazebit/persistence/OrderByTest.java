@@ -146,4 +146,24 @@ public class OrderByTest extends AbstractCoreTest {
         criteria.orderByDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
         assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence(function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1"), "DESC", "LAST"), criteria.getQueryString());
     }
+    
+    @Test
+    public void testOrderBySize(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").orderByAsc("SIZE(d.partners)");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id ORDER BY COUNT(partners_1) ASC NULLS LAST";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
+    public void testOrderBySizeMultiple(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").orderByAsc("SIZE(d.partners)").orderByDesc("SIZE(d.versions)");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id ORDER BY COUNT(DISTINCT partners_1) ASC NULLS LAST, COUNT(DISTINCT versions_1) DESC NULLS LAST";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
 }

@@ -131,7 +131,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     @Override
 	public String getProperty(String propertyName) {
-		return (String) properties.get(propertyName);
+		return properties.get(propertyName);
 	}
 
 	public boolean isCompatibleModeEnabled() {

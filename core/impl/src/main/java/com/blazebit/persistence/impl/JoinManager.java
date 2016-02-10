@@ -32,6 +32,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -156,6 +157,29 @@ public class JoinManager extends AbstractManager {
     	
         return false;
     }
+    
+    Set<JoinNode> getCollectionJoins() {
+        if (rootNodes.isEmpty()) {
+            return Collections.EMPTY_SET;
+        } else {
+            Set<JoinNode> collectionJoins = rootNodes.get(0).getCollectionJoins();
+            for (int i = 1; i < rootNodes.size(); i++) {
+                collectionJoins.addAll(rootNodes.get(i).getCollectionJoins());
+            }
+            return collectionJoins;
+        }
+    }
+    
+    private void fillCollectionJoinsNodesRec(JoinNode node, Set<JoinNode> collectionNodes) {
+        for (JoinTreeNode treeNode : node.getNodes().values()) {
+            if (treeNode.isCollection()) {
+                collectionNodes.addAll(treeNode.getJoinNodes().values());
+                for (JoinNode childNode : treeNode.getJoinNodes().values()) {
+                    fillCollectionJoinsNodesRec(childNode, collectionNodes);
+                }
+            }
+        }
+    }
 
     JoinManager getParent() {
         return parent;
@@ -225,7 +249,7 @@ public class JoinManager extends AbstractManager {
         List<JoinNode> nodes = rootNodes;
         int size = nodes.size();
     	for (int i = 0; i < size; i++) {
-    		nodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, null)));
+    		nodes.get(i).accept(new OnClauseJoinNodeVisitor(new PredicateManager.TransformationVisitor(transformer, ClauseType.JOIN)));
     	}
     }
 
@@ -394,22 +418,13 @@ public class JoinManager extends AbstractManager {
         PathElementExpression elementExpr = pathElements.get(pathElements.size() - 1);
         JoinResult result = implicitJoin(null, pathExpression, 0, pathElements.size() - 1);
         JoinNode current = result.baseNode;
-
-        // TODO: Not sure if necessary
-        if (result.hasField()) {
-            throw new IllegalArgumentException("The join path [" + path + "] has a non joinable part [" + result.field + "]");
-        }
-
+        
         if (elementExpr instanceof ArrayExpression) {
             throw new IllegalArgumentException("Array expressions are not allowed!");
         } else {
+            String joinRelation = result.field == null ? elementExpr.toString() : result.field + "." + elementExpr.toString();
             current = current == null ? getRootNodeOrFail("Could not join path [" + path + "] because it did not use an absolute path but multiple root nodes are available!") : current;
-            result = createOrUpdateNode(current, elementExpr.toString(), alias, type, false, defaultJoin);
-        }
-
-        // TODO: Not sure if necessary
-        if (result.hasField()) {
-            throw new IllegalArgumentException("The join path [" + path + "] has a non joinable part [" + result.field + "]");
+            result = createOrUpdateNode(current, joinRelation, alias, type, false, defaultJoin);
         }
 
         if (fetch) {

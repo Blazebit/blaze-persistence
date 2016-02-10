@@ -15,7 +15,9 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
@@ -29,16 +31,24 @@ import com.blazebit.persistence.impl.expression.Expression.Visitor;
  */
 public class GroupByManager extends AbstractManager {
 
-    private final Set<NodeInfo> groupByInfos;
+    /**
+     * We use an ArrayList since a HashSet causes problems when the path reference in the expression is changed
+     * after it was inserted into the set (e.g. when implicit joining is performed).
+     */
+    private final List<NodeInfo> groupByInfos;
 
     GroupByManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         super(queryGenerator, parameterManager);
-        groupByInfos = new LinkedHashSet<NodeInfo>();
+        groupByInfos = new ArrayList<NodeInfo>();
     }
-
+    
     void groupBy(Expression expr) {
         groupByInfos.add(new NodeInfo(expr));
         registerParameterExpressions(expr);
+    }
+    
+    boolean existsGroupBy(Expression expr) {
+        return groupByInfos.contains(new NodeInfo(expr));
     }
 
     void buildGroupByClauses(Set<String> clauses) {
