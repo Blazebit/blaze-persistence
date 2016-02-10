@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.function.ZeroFunction;
@@ -363,7 +362,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN SIZE(d.partners) ELSE SIZE(d.versions) END");
 
         // Then
-        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN COUNT(DISTINCT " + joinAliasValue("partners_1") + ") ELSE COUNT(DISTINCT " + joinAliasValue("versions_1") + ") END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         assertEquals(3l, result.get(0).get(0));
@@ -376,7 +375,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)")
                 .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false");
         
-        final String expected = "SELECT (SELECT COUNT(contacts) FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
+        final String expected = "SELECT (SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
