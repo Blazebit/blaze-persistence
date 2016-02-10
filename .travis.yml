@@ -29,9 +29,9 @@ after_success:
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
 #  - oraclejdk7
-env:
-  global:
-    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+#env:
+#  global:
+#    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 matrix:
   fast_finish: true
   include:
@@ -79,6 +79,7 @@ matrix:
       jdk: oraclejdk8
 # DB2
     - env: JPAPROVIDER=hibernate RDBMS=db2
+      jdk: oraclejdk8
       sudo: true
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
