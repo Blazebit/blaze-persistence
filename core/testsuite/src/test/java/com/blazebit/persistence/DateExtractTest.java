@@ -18,16 +18,19 @@ package com.blazebit.persistence;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
+import java.util.List;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 
 /**
  *
@@ -38,6 +41,8 @@ public class DateExtractTest extends AbstractCoreTest {
     
     private Calendar c1;
     private Calendar c2;
+    
+    private Document doc1;
 
     @Before
     public void setUp() {
@@ -51,7 +56,7 @@ public class DateExtractTest extends AbstractCoreTest {
             Version v1 = new Version();
             em.persist(v1);
 
-            Document doc1 = new Document("Doc1", p, v1);
+            doc1 = new Document("Doc1", p, v1);
             
             c1 = Calendar.getInstance();
             c1.set(2000, 0, 1, 0, 0, 0);
@@ -73,7 +78,9 @@ public class DateExtractTest extends AbstractCoreTest {
         }
     }
 
+    // NOTE: MySQL is strange again https://bugs.mysql.com/bug.php?id=31990
     @Test
+    @Category({ NoMySQL.class })
     public void testDateExtract() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -91,7 +98,10 @@ public class DateExtractTest extends AbstractCoreTest {
             .select("FUNCTION('SECOND', lastModified)")
             ;
 
-        Tuple actual = criteria.getResultList().get(0);
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
         assertEquals(c1.get(Calendar.YEAR), actual.get(0));
         assertEquals(c1.get(Calendar.MONTH) + 1, actual.get(1));

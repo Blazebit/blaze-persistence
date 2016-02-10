@@ -25,7 +25,6 @@ import java.util.List;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -40,19 +39,17 @@ import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.update.model.FullUpdateableDocumentWithCollectionsView;
-import com.blazebit.persistence.view.update.model.PartialUpdateableDocumentWithCollectionsView;
-import com.blazebit.persistence.view.update.model.UpdateableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.FullUpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.PartialUpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.UpdatableDocumentWithCollectionsView;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
-// TODO: implement
-@Ignore
 @RunWith(Parameterized.class)
-public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWithCollectionsView> extends AbstractEntityViewTest {
+public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWithCollectionsView> extends AbstractEntityViewTest {
 
     private Class<T> viewType;
     private EntityViewManager evm;
@@ -65,8 +62,8 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWit
     @Parameterized.Parameters
     public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
-            { PartialUpdateableDocumentWithCollectionsView.class },
-            { FullUpdateableDocumentWithCollectionsView.class }
+            { PartialUpdatableDocumentWithCollectionsView.class },
+            { FullUpdatableDocumentWithCollectionsView.class }
         });
     }
 

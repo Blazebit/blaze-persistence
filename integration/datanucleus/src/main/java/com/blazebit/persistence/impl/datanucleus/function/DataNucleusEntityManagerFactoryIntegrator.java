@@ -31,6 +31,7 @@ import org.datanucleus.NucleusContext;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.rdbms.RDBMSStoreManager;
 import org.datanucleus.store.rdbms.sql.expression.SQLExpressionFactory;
+import org.datanucleus.store.rdbms.sql.method.SQLMethod;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
@@ -42,9 +43,9 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  * @author Christian
  */
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
-public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
+public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
 
-    private static final Logger LOG = Logger.getLogger(DataNucleusEntityManagerIntegrator.class.getName());
+    private static final Logger LOG = Logger.getLogger(DataNucleusEntityManagerFactoryIntegrator.class.getName());
 	private static final Map<String, String> vendorToDbmsMapping = new HashMap<String, String>();
 	
 	static {
@@ -70,7 +71,8 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryI
     	return vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
 	}
 
-	@Override
+	@SuppressWarnings("unchecked")
+    @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
@@ -79,6 +81,28 @@ public class DataNucleusEntityManagerIntegrator implements EntityManagerFactoryI
         // Register compatibility functions
         if (!exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
             exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
+        }
+        
+        // DataNucleus uses a month function that is 0 based which conflicts with ANSI EXTRACT(MONTH)
+        if (!(exprFactory.getMethod("java.util.Date", "getMonth", null) instanceof DataNucleusJpqlFunctionAdapter)) {
+            LOG.warning("Overriding DataNucleus native 'MONTH' function to return months 1-based like ANSI EXTRACT instead of 0-based!");
+            
+            JpqlFunctionGroup dbmsFunctionGroup = dbmsFunctions.get("month");
+            JpqlFunction function = dbmsFunctionGroup.get(dbms);
+            
+            if (function == null && !dbmsFunctionGroup.contains(dbms)) {
+                function = dbmsFunctionGroup.get(null);
+            }
+            
+            SQLMethod method = new DataNucleusJpqlFunctionAdapter(function, dbmsFunctionGroup.isAggregate());
+            String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
+            Set<Object> methodKeys = fieldGet("methodNamesSupported", exprFactory, version);
+
+            for (Object methodKey : methodKeys) {
+                if ("getMonth".equals((String) fieldGet("methodName", methodKey, version)) && "java.util.Date".equals((String) fieldGet("clsName", methodKey, version))) {
+                    ((Map<Object, Object>) fieldGet("methodByClassMethodName", exprFactory, version)).put(methodKey, method);
+                }
+            }
         }
         
         for (Map.Entry<String, JpqlFunctionGroup> functionEntry : dbmsFunctions.entrySet()) {

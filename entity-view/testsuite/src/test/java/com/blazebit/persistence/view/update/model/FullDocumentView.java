@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.update.model;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.UpdateableEntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.entity.Document;
 
 /**
@@ -24,8 +24,8 @@ import com.blazebit.persistence.view.entity.Document;
  * @author Christian Beikov
  * @since 1.1.0
  */
-@UpdateableEntityView(partial = false)
+@UpdatableEntityView(partial = false)
 @EntityView(Document.class)
-public interface FullDocumentView extends UpdateableDocumentView {
+public interface FullDocumentView extends UpdatableDocumentView {
     
 }

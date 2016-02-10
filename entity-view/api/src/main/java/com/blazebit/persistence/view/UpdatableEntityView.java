@@ -21,14 +21,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Specifies that the class is is an updateable entity view.
+ * Specifies that the class is is an updatable entity view.
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface UpdateableEntityView {
+public @interface UpdatableEntityView {
 
 	/**
 	 * Specifies whether partial updates are allowed or not.

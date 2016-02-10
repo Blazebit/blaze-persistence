@@ -34,18 +34,18 @@ public interface ViewType<X> extends IdentifiableViewType<X> {
     public String getName();
     
     /**
-     * Returns whether the entity view is updateable.
+     * Returns whether the entity view is updatable.
      * 
-     * @return Whether the entity view is updateable
+     * @return Whether the entity view is updatable
      */
-    public boolean isUpdateable();
+    public boolean isUpdatable();
 
     /**
-     * Returns whether the entity view is partially updateable.
+     * Returns whether the entity view is partially updatable.
      * 
-     * @return Whether the entity view is partially updateable
+     * @return Whether the entity view is partially updatable
      */
-    public boolean isPartiallyUpdateable();
+    public boolean isPartiallyUpdatable();
     
     /**
      * Returns the view filter mapping of the entity view with the given name.

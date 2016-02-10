@@ -63,7 +63,7 @@ import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.UpdateableProxy;
+import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
@@ -127,16 +127,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private void update(EntityManager em, Object view, boolean partial) {
-        if (!(view instanceof UpdateableProxy)) {
-            throw new IllegalArgumentException("Only updateable entity views can be updated!");
+        if (!(view instanceof UpdatableProxy)) {
+            throw new IllegalArgumentException("Only updatable entity views can be updated!");
         }
         
-        UpdateableProxy updateableProxy = (UpdateableProxy) view;
-        Class<?> entityViewClass = updateableProxy.$$_getEntityViewClass();
+        UpdatableProxy updatableProxy = (UpdatableProxy) view;
+        Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ViewType<?> viewType = metamodel.view(entityViewClass);
-        partial = viewType.isPartiallyUpdateable() && partial;
+        partial = viewType.isPartiallyUpdatable() && partial;
         EntityViewUpdater updater = getUpdater(viewType, partial);
-        updater.executeUpdate(em, updateableProxy);
+        updater.executeUpdate(em, updatableProxy);
     }
 
     @Override

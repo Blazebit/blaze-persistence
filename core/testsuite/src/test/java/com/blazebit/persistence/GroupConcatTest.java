@@ -22,12 +22,15 @@ import javax.persistence.Tuple;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
 
 /**
+ * We don't run these tests on DB2 as it would crash.
  *
  * @author Christian Beikov
  * @since 1.1.0
@@ -68,7 +71,9 @@ public class GroupConcatTest extends AbstractCoreTest {
         }
     }
 
+    // NOTE: DB2 crashes when executing this test
     @Test
+    @Category({ NoDB2.class })
     public void testSimpleWithDefault() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -81,7 +86,9 @@ public class GroupConcatTest extends AbstractCoreTest {
         assertEquals("Doc1,Doc1,Doc2", actual.get(0));
     }
 
+    // NOTE: DB2 crashes when executing this test
     @Test
+    @Category({ NoDB2.class })
     public void testSimpleWithSeparator() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -94,7 +101,12 @@ public class GroupConcatTest extends AbstractCoreTest {
         assertEquals("Doc1, Doc1, Doc2", actual.get(0));
     }
 
+    // NOTE: DB2 apparently does not support distinct?!
+    // NOTE: DB2 crashes when executing this test
+    // Documentation states it does https://www-01.ibm.com/support/knowledgecenter/SS6NHC/com.ibm.swg.im.dashdb.sql.ref.doc/doc/r0058709.html
+    // See stackoverflow http://stackoverflow.com/questions/35309065/db2-listagg-with-distinct
     @Test
+    @Category({ NoDB2.class })
     public void testDistinct() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -107,7 +119,9 @@ public class GroupConcatTest extends AbstractCoreTest {
         assertEquals("Doc1, Doc2", actual.get(0));
     }
 
+    // NOTE: DB2 crashes when executing this test
     @Test
+    @Category({ NoDB2.class })
     public void testDescNullsLast() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")

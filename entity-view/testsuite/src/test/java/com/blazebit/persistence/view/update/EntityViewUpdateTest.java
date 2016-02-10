@@ -41,7 +41,7 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.update.model.FullDocumentView;
 import com.blazebit.persistence.view.update.model.PartialDocumentView;
-import com.blazebit.persistence.view.update.model.UpdateableDocumentView;
+import com.blazebit.persistence.view.update.model.UpdatableDocumentView;
 
 /**
  *
@@ -49,7 +49,7 @@ import com.blazebit.persistence.view.update.model.UpdateableDocumentView;
  * @since 1.1.0
  */
 @RunWith(Parameterized.class)
-public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends AbstractEntityViewTest {
+public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends AbstractEntityViewTest {
 
     private Class<T> viewType;
     private EntityViewManager evm;

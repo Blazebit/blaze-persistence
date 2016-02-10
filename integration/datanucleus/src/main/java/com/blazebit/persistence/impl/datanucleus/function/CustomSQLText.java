@@ -9,8 +9,12 @@ public class CustomSQLText extends SQLText {
 
 	private final String sql;
 
-	public CustomSQLText(String sql, List<SQLExpression> expressions) {
+	public CustomSQLText(String sql, SQLExpression expr, List<SQLExpression> expressions) {
 		this.sql = sql;
+		
+		if (expr != null) {
+		    append(expr);
+		}
 
 		for (SQLExpression expression : expressions) {
 			append(expression);

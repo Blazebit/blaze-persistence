@@ -33,11 +33,20 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
 
 	@Override
 	public SQLExpression getExpression(SQLExpression expr, List<SQLExpression> args) {
+	    // NOTE: expr will be the first argument for class methods like getMonth!
 		int argsSize = args.size();
-        List<String> newArgs = new ArrayList<String>(argsSize);
+        List<String> newArgs = new ArrayList<String>(argsSize + (expr == null ? 0 : 1));
         Class<?> firstArgumentType = null;
         JavaTypeMapping firstArgumentTypeMapping = null;
-        if (argsSize > 0) {
+        
+        if (expr != null) {
+            firstArgumentTypeMapping = expr.getJavaTypeMapping();
+            firstArgumentType = firstArgumentTypeMapping.getJavaType();
+            newArgs.add(expr.toSQLText().toSQL());
+            for (int i = 0; i < argsSize; i++) {
+                newArgs.add(args.get(i).toSQLText().toSQL());
+            }
+        } else if (argsSize > 0) {
         	firstArgumentTypeMapping = args.get(0).getJavaTypeMapping();
         	firstArgumentType = firstArgumentTypeMapping.getJavaType();
             newArgs.add(args.get(0).toSQLText().toSQL());
@@ -62,7 +71,7 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
         final DataNucleusFunctionRenderContext context = new DataNucleusFunctionRenderContext(newArgs);
         function.render(context);
         
-        final SQLText sqlText = new CustomSQLText(context.renderToString(), args);
+        final SQLText sqlText = new CustomSQLText(context.renderToString(), expr, args);
         
         if (aggregate) {
         	if (returnTypeMapping instanceof TemporalMapping) {

@@ -53,12 +53,12 @@ public class EntityViewManagerProducer {
 	@PersistenceContext
 	private EntityManagerFactory entityManagerFactory;
     
-    @Produces
-    @ApplicationScoped
-    public EntityViewManager createEntityViewManager() {
+	@Produces
+	@ApplicationScoped
+	public EntityViewManager createEntityViewManager() {
 		// do some configuration
-    	return config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
-    }
+		return config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+	}
 }
 ----
 
@@ -85,7 +85,9 @@ we would first define a new view for this purpose:
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
-    public String getName();
+
+	public String getName();
+	
 }
 ----
 The usage of the `CatNameView` could look like this:
@@ -109,8 +111,10 @@ have to add an additional `@Mapping` annotation:
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
-    @Mapping("name")
-    public String getCatName();
+
+	@Mapping("name")
+	public String getCatName();
+	
 }
 ----
 
@@ -119,16 +123,22 @@ Of course, it is also possible to combine various views via inheritance.
 ----
 @EntityView(Cat.class)
 public interface CatKittens {
-    public List<Kitten> getKittens();
+
+	public List<Kitten> getKittens();
+	
 }
 @EntityView(Cat.class)
 public interface CatNameView {
-    @Mapping("name")
-    public String getCatName();
+
+	@Mapping("name")
+	public String getCatName();
+	
 }
 public interface CombinedView extends CatKittens, CatNameView {
-    @Mapping("SIZE(kittens)")
-    public Integer getKittenSize();
+
+	@Mapping("SIZE(kittens)")
+	public Integer getKittenSize();
+	
 }
 ----
 The above example also shows that a view which inherits other views is not required
@@ -146,14 +156,20 @@ Another useful feature are subviews which is illustrated in following example.
 ----
 @EntityView(Landlord.class)
 public interface LandlordView {
-    public String getName();
-    public Integer getAge();
-    @Mapping("ownedProperties")
-    public PropertyAddressView getHouses();
+
+	public String getName();
+	
+	public Integer getAge();
+	
+	@Mapping("ownedProperties")
+	public PropertyAddressView getHouses();
+	
 }
 @EntityView(Property.class)
 public interface PropertyAddressView {
-    public String getAddress();
+
+	public String getAddress();
+	
 }
 ----
 
@@ -165,18 +181,19 @@ in a filterable and/or sortable data table. Following example illustrates how th
 ----
 @EntityView(Cat.class)
 @ViewFilters({
-    @ViewFilter(name = "customFilter", value = FilteredDocument.CustomFilter.class)
+	@ViewFilter(name = "customFilter", value = FilteredDocument.CustomFilter.class)
 })
 public interface FilteredCatView {
-    @AttributeFilter(ContainsFilter.class)
-    public String getName();
 
-    public static class CustomFilter extends ViewFilterProvider {
-        @Override
-        public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
-            return whereBuilder.where("doctor.name").like().expression("Julia%").noEscape();
-        }
-    }
+	@AttributeFilter(ContainsFilter.class)
+	public String getName();
+
+	public static class CustomFilter extends ViewFilterProvider {
+		@Override
+		public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
+			return whereBuilder.where("doctor.name").like().expression("Julia%").noEscape();
+		}
+	}
 }
 ----
 In this example we once again define a view on our Cat entity and select the cat's name only.
@@ -188,8 +205,8 @@ query should filter and how we paginate the resulting query.
 [source,java]
 ----
 // Base setting
-EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = EntityViewSetting.create(
-            FilteredCatView.class, 0, 10);
+EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = 
+									EntityViewSetting.create(FilteredCatView.class, 0, 10);
 
 // Query
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);

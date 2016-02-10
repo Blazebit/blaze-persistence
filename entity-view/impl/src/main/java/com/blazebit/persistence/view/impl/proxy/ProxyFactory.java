@@ -41,14 +41,12 @@ import javassist.CtMethod;
 import javassist.Modifier;
 import javassist.NotFoundException;
 import javassist.bytecode.AccessFlag;
-import javassist.bytecode.BadBytecode;
 import javassist.bytecode.Bytecode;
 import javassist.bytecode.ConstPool;
 import javassist.bytecode.Descriptor;
 import javassist.bytecode.FieldInfo;
 import javassist.bytecode.MethodInfo;
 import javassist.bytecode.SignatureAttribute;
-import javassist.bytecode.stackmap.MapMaker;
 
 /**
  *
@@ -118,8 +116,8 @@ public class ProxyFactory {
             
             CtField initialStateField = null;
             CtField dirtyStateField = null;
-            if (viewType != null && viewType.isUpdateable()) {
-                cc.addInterface(pool.get(UpdateableProxy.class.getName()));
+            if (viewType != null && viewType.isUpdatable()) {
+                cc.addInterface(pool.get(UpdatableProxy.class.getName()));
                 addGetEntityViewClass(cc, clazz);
                 
                 dirtyStateField = new CtField(pool.get(Object[].class.getName()), "$$_dirtyState", cc);
@@ -128,12 +126,11 @@ public class ProxyFactory {
                 
                 addGetter(cc, dirtyStateField, "$$_getDirtyState");
                 
-            	if (viewType.isPartiallyUpdateable()) {
+            	if (viewType.isPartiallyUpdatable()) {
 	                initialStateField = new CtField(pool.get(Object[].class.getName()), "$$_initialState", cc);
 	                initialStateField.setModifiers(getModifiers(false));
 	                cc.addField(initialStateField);
 	                
-	                addStateElementGetter(cc, initialStateField, "$$_getId", 0);
 	                addGetter(cc, initialStateField, "$$_getInitialState");
             	}
             }
@@ -150,14 +147,17 @@ public class ProxyFactory {
             if (viewType != null) {
                 i = 1;
                 idAttribute = viewType.getIdAttribute();
-                idField = addMembersForAttribute(idAttribute, clazz, cc, initialStateField, dirtyStateField, 0, -1);
+                idField = addMembersForAttribute(idAttribute, clazz, cc, null, -1);
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
                 attributes.remove(idAttribute);
-    
-                if (viewType.isUpdateable() && !viewType.isPartiallyUpdateable()) {
+
+                if (viewType.isUpdatable()) {
                     addGetter(cc, idField, "$$_getId", Object.class);
-                    addGetter(cc, null, "$$_getInitialState", Object[].class);
+                
+                    if (!viewType.isPartiallyUpdatable()) {
+                        addGetter(cc, null, "$$_getInitialState", Object[].class);
+                    }
                 }
             }
             
@@ -167,12 +167,12 @@ public class ProxyFactory {
                     continue;
                 }
                 
-                CtField attributeField = addMembersForAttribute(attribute, clazz, cc, initialStateField, dirtyStateField, i, dirtyStateIndex);
+                CtField attributeField = addMembersForAttribute(attribute, clazz, cc, dirtyStateField, dirtyStateIndex);
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
                 i++;
                 
-                if (attribute.isUpdateable()) {
+                if (attribute.isUpdatable()) {
                 	dirtyStateIndex++;
                 }
             }
@@ -197,7 +197,7 @@ public class ProxyFactory {
 
             // Add the default constructor only for interfaces since abstract classes may omit it
             if (clazz.isInterface()) {
-                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, initialStateField, dirtyStateField, attributeFields.length, dirtyStateIndex, unsafe));
+                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
 
             Set<MappingConstructor<T>> constructors = managedViewType.getConstructors();
@@ -212,7 +212,7 @@ public class ProxyFactory {
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, 1 + attributes.size(), superConstructor.getParameterTypes().length);
 
-                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, initialStateField, dirtyStateField, attributeFields.length, dirtyStateIndex, unsafe));
+                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
 
             try {
@@ -268,22 +268,6 @@ public class ProxyFactory {
         cc.addMethod(CtMethod.make(minfo, cc));
     }
     
-    private void addStateElementGetter(CtClass cc, CtField stateField, String methodName, int index) throws CannotCompileException {
-        ConstPool cp = cc.getClassFile2().getConstPool();
-        MethodInfo minfo = new MethodInfo(cp, methodName, "()" + Descriptor.of(Object.class.getName()));
-        minfo.setAccessFlags(AccessFlag.PUBLIC);
-
-        Bytecode code = new Bytecode(cp, 2, 1);
-    	code.addAload(0);
-    	code.addGetfield(cc, stateField.getName(), stateField.getFieldInfo().getDescriptor());
-    	code.addIconst(index);
-    	code.addOpcode(Bytecode.AALOAD);
-        code.addOpcode(Bytecode.ARETURN);
-        
-        minfo.setCodeAttribute(code.toCodeAttribute());
-        cc.addMethod(CtMethod.make(minfo, cc));
-    }
-    
     private CtMethod addGetter(CtClass cc, CtField field, String methodName) throws CannotCompileException {
     	return addGetter(cc, field, methodName, field.getFieldInfo().getDescriptor());
     }
@@ -318,7 +302,7 @@ public class ProxyFactory {
         return method;
     }
 
-	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, CtField initialStateField, CtField dirtyStateField, int initialStateIndex, int dirtyStateIndex) throws CannotCompileException, NotFoundException {
+	private CtField addMembersForAttribute(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, CtField dirtyStateField, int dirtyStateIndex) throws CannotCompileException, NotFoundException {
         Method getter = attribute.getJavaMethod();
         Method setter = ReflectionUtils.getSetter(clazz, attribute.getName());
         
@@ -331,12 +315,12 @@ public class ProxyFactory {
         }
         cc.addField(attributeField);
         
-        createGettersAndSetters(attribute, clazz, cc, getter, setter, initialStateField, dirtyStateField, initialStateIndex, dirtyStateIndex, attributeField);
+        createGettersAndSetters(attribute, clazz, cc, getter, setter, dirtyStateField, dirtyStateIndex, attributeField);
         
         return attributeField;
     }
 
-	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField initialStateField, CtField dirtyStateField, int initialStateIndex, int dirtyStateIndex, CtField attributeField) throws CannotCompileException, NotFoundException {
+	private void createGettersAndSetters(MethodAttribute<?, ?> attribute, Class<?> clazz, CtClass cc, Method getter, Method setter, CtField dirtyStateField, int dirtyStateIndex, CtField attributeField) throws CannotCompileException, NotFoundException {
 		SignatureAttribute sa = (SignatureAttribute)attributeField.getFieldInfo2().getAttribute(SignatureAttribute.tag);
 		String genericSignature = sa == null ? null : sa.getSignature();
 		List<Method> bridgeGetters = getBridgeGetters(clazz, attribute, getter);
@@ -354,7 +338,7 @@ public class ProxyFactory {
         }
         
         if (setter != null) {
-            CtMethod attributeSetter = addSetter(attribute, setter, initialStateField, dirtyStateField, initialStateIndex, dirtyStateIndex, attributeField);
+            CtMethod attributeSetter = addSetter(attribute, setter, dirtyStateField, dirtyStateIndex, attributeField);
             List<Method> bridgeSetters = getBridgeSetters(clazz, attribute, setter);
             
             if (genericSignature != null) {
@@ -369,7 +353,7 @@ public class ProxyFactory {
         }
 	}
 	
-	private CtMethod addSetter(MethodAttribute<?, ?> attribute, Method setter, CtField initialStateField, CtField dirtyStateField, int initialStateIndex, int dirtyStateIndex, CtField attributeField) throws CannotCompileException {
+	private CtMethod addSetter(MethodAttribute<?, ?> attribute, Method setter, CtField dirtyStateField, int dirtyStateIndex, CtField attributeField) throws CannotCompileException {
 	        FieldInfo finfo = attributeField.getFieldInfo2();
 	        String fieldType = finfo.getDescriptor();
 	        String desc = "(" + fieldType + ")V";
@@ -381,54 +365,7 @@ public class ProxyFactory {
 	        try {
 	            String fieldName = finfo.getName();
                 
-                if (initialStateField != null) {
-                	// $2 = initialState[initialStateIndex]
-                    code.addAload(0);
-                    code.addGetfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
-                    code.addIconst(initialStateIndex);
-                    code.addOpcode(Bytecode.AALOAD);
-                    code.addAstore(2);
-                    
-                    // if $1 != $2
-                    code.addAload(2);
-                    code.addAload(1);
-                    code.addOpcode(Bytecode.IF_ACMPEQ);
-                    int firstPc = code.currentPc();
-                    code.addIndex(0);   // correct later
-                    
-                    // if $2 == null
-                    code.addAload(2);
-                    code.addOpcode(Bytecode.IFNULL);
-                    int secondPc = code.currentPc();
-                    code.addIndex(0);   // correct later
-                    
-                    // if !$2.equals($1)
-                    code.addAload(2);
-                    code.addAload(1);
-                    code.addInvokevirtual(pool.get(Object.class.getName()), "equals", getEqualsDesc());
-                    code.addOpcode(Bytecode.IFNE);
-                    int thirdPc = code.currentPc();
-                    code.addIndex(0);   // correct later
-
-                    // correct if pc
-                    code.write16bit(secondPc, code.currentPc() - secondPc + 1);
-
-                    // this.field = $1
-                    code.addAload(0);
-                    code.addAload(1);
-                    code.addPutfield(Bytecode.THIS, fieldName, fieldType);
-
-                    // this.dirtyState[dirtyStateIndex] = $1
-                    code.addAload(0);
-                    code.addGetfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-                    code.addIconst(dirtyStateIndex);
-                    code.addAload(1);
-                    code.addOpcode(Bytecode.AASTORE);
-
-                    // correct if pc
-                    code.write16bit(firstPc, code.currentPc() - firstPc + 1);
-                    code.write16bit(thirdPc, code.currentPc() - thirdPc + 1);
-                } else if (dirtyStateField != null) {
+                if (dirtyStateField != null) {
                     // this.field = $1
                     code.addAload(0);
                     code.addLoad(1, attributeField.getType());
@@ -453,14 +390,6 @@ public class ProxyFactory {
 	        }
 
 	        minfo.setCodeAttribute(code.toCodeAttribute());
-	        
-	        if (initialStateField != null) {
-	        	try {
-					minfo.getCodeAttribute().setAttribute(MapMaker.make(pool, minfo));
-				} catch (BadBytecode e) {
-		            throw new CannotCompileException(e);
-				}
-	        }
 	        
 	        CtClass cc = attributeField.getDeclaringClass();
 	        CtMethod method = CtMethod.make(minfo, cc);
@@ -613,17 +542,17 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField dirtyStateField, int initialStateSize, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
+    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
         CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
         ctConstructor.setModifiers(Modifier.PUBLIC);
         Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1);
         
         if (unsafe) {
-	        renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, initialStateSize, dirtyStateSize, bytecode);
+	        renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
 	        renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
         } else {
 	        renderSuperCall(cc, attributeFields, attributeTypes, bytecode);
-	        renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, initialStateSize, dirtyStateSize, bytecode);
+	        renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
         }
 
         bytecode.add(Bytecode.RETURN);
@@ -631,52 +560,50 @@ public class ProxyFactory {
         return ctConstructor;
     }
 
-	private void renderFieldInitialization(CtField[] attributeFields, CtField initialStateField, CtField dirtyStateField, int initialStateSize, int dirtyStateSize, Bytecode bytecode) throws NotFoundException {
+	private void renderFieldInitialization(CtField[] attributeFields, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, Bytecode bytecode) throws NotFoundException {
 		if (initialStateField != null) {
-			// this.initialState = new Object[initialStateSize]
+			// this.initialState = new Object[dirtyStateSize]
 			bytecode.addAload(0);
-			bytecode.addIconst(initialStateSize);
+			bytecode.addIconst(dirtyStateSize);
 			bytecode.addAnewarray(Object.class.getName());
 			bytecode.addPutfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
+		}
 
+		if (dirtyStateField != null) {
 			// this.dirtyState = new Object[dirtyStateSize]
 			bytecode.addAload(0);
 			bytecode.addIconst(dirtyStateSize);
 			bytecode.addAnewarray(Object.class.getName());
 			bytecode.addPutfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-			
-			for (int i = 0; i < attributeFields.length; i++) {
-				// this.initialState[i] = $(i + 1)
-				bytecode.addAload(0);
-				bytecode.addGetfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
-				bytecode.addIconst(i);
-				bytecode.addAload(i + 1);
-				bytecode.addOpcode(Bytecode.AASTORE);
-	        }
-		} else if (dirtyStateField != null) {
-			// this.dirtyState = new Object[dirtyStateSize]
-			bytecode.addAload(0);
-			bytecode.addIconst(dirtyStateSize);
-			bytecode.addAnewarray(Object.class.getName());
-			bytecode.addPutfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-			
-			int j = 0;
-			for (int i = 1; i < attributeFields.length; i++) {
-				if ((attributeFields[i].getModifiers() & Modifier.FINAL) == 0) {
-					// this.dirtyState[j] = $(i + 1)
-					bytecode.addAload(0);
-					bytecode.addGetfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
-					bytecode.addIconst(j++);
-					bytecode.addAload(i + 1);
-					bytecode.addOpcode(Bytecode.AASTORE);
-				}
-	        }
 		}
 		
+		int j = 0;
 		for (int i = 0; i < attributeFields.length; i++) {
-			bytecode.addAload(0);
-			bytecode.addAload(i + 1);
-			bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
+            bytecode.addAload(0);
+            bytecode.addAload(i + 1);
+            bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
+            
+            if ((attributeFields[i].getModifiers() & Modifier.FINAL) == 0) {
+                if (initialStateField != null) {
+    				// this.initialState[j] = $(i + 1)
+    				bytecode.addAload(0);
+    				bytecode.addGetfield(Bytecode.THIS, initialStateField.getName(), initialStateField.getFieldInfo().getDescriptor());
+    				bytecode.addIconst(j);
+    				bytecode.addAload(i + 1);
+    				bytecode.addOpcode(Bytecode.AASTORE);
+                }
+
+                if (dirtyStateField != null) {
+                    // this.dirtyState[j] = $(i + 1)
+                    bytecode.addAload(0);
+                    bytecode.addGetfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
+                    bytecode.addIconst(j);
+                    bytecode.addAload(i + 1);
+                    bytecode.addOpcode(Bytecode.AASTORE);
+                }
+                
+                j++;
+            }
         }
 	}
 

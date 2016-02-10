@@ -47,16 +47,16 @@ public class CriteriaBuilderFactoryProducer {
 	
 	@PostConstruct
 	public void init() {
-    	CriteriaBuilderConfiguration config = Criteria.getDefault();
+		CriteriaBuilderConfiguration config = Criteria.getDefault();
 		// do some configuration
-    	this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
+		this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
 	}
     
-    @Produces
-    @ApplicationScoped
-    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
-    	return criteriaBuilderFactory;
-    }
+	@Produces
+	@ApplicationScoped
+	public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+		return criteriaBuilderFactory;
+	}
 }
 ----
 

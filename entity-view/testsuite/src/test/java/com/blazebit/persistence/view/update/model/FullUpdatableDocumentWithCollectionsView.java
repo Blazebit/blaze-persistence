@@ -15,27 +15,17 @@
  */
 package com.blazebit.persistence.view.update.model;
 
-import java.util.List;
-
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.entity.Person;
+import com.blazebit.persistence.view.EntityView;
+import com.blazebit.persistence.view.UpdatableEntityView;
+import com.blazebit.persistence.view.entity.Document;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
-public interface UpdateableDocumentWithCollectionsView {
-    
-    @IdMapping("id")
-    public Long getId();
-
-    public String getName();
-
-    public void setName(String name);
-
-	public List<Person> getPersonList();
-	
-	public void setPersonList(List<Person> personList);
+@UpdatableEntityView(partial = false)
+@EntityView(Document.class)
+public interface FullUpdatableDocumentWithCollectionsView extends UpdatableDocumentWithCollectionsView {
 
 }
