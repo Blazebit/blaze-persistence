@@ -223,7 +223,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(em.getMetamodel(), this.aliasManager, subqueryInitFactory, joinManager, groupByManager, mainQuery.properties);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager);
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor));
         this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
         this.resultType = resultClazz;
@@ -243,13 +243,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return cbf;
     }
     
+    @SuppressWarnings("unchecked")
     public BuilderType setProperty(String propertyName, String propertyValue) {
         this.mainQuery.properties.put(propertyName, propertyValue);
         return (BuilderType) this;
     }
-    
+
+    @SuppressWarnings("unchecked")
     public BuilderType setProperties(Map<String, String> properties) {
-        this.mainQuery.properties = properties;
+        this.mainQuery.properties.clear();
+        this.mainQuery.properties.putAll(properties);
         return (BuilderType) this;
     }
     

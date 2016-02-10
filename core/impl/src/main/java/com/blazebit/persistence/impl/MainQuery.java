@@ -20,7 +20,7 @@ public class MainQuery {
     final Set<String> registeredFunctions;
     final ParameterManager parameterManager;
     final CTEManager cteManager;
-    Map<String, String> properties;
+    final Map<String, String> properties;
     
     private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager, Map<String, String> properties) {
         super();
@@ -31,11 +31,7 @@ public class MainQuery {
         this.registeredFunctions = registeredFunctions;
         this.parameterManager = parameterManager;
         this.cteManager = new CTEManager(this);
-        if (properties == null) {
-            this.properties = new HashMap<String, String>();
-        } else {
-            this.properties = properties;
-        }
+        this.properties = properties;
     }
     
     public static MainQuery create(CriteriaBuilderFactoryImpl cbf, EntityManager em, String dbms, DbmsDialect dbmsDialect, Set<String> registeredFunctions) {

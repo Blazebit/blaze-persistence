@@ -36,6 +36,8 @@ public final class ConfigurationProperties {
     /**
      * Some databases require case sensitivity for attribute paths in the returning clause
      * (unlike PostgreSQL which requires case insensitivity for column names in returning clause)
+     * By default the returning clause is case sensitive.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
      * 
      * @since 1.1.0
      */
@@ -43,6 +45,8 @@ public final class ConfigurationProperties {
 
     /**
      * If set to false, uses of SIZE will always be transformed to subqueries.
+     * By default the size to count transformation is enabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
      * 
      * @since 1.1.0
      */

@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -63,13 +62,13 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     // maps absolute paths to join nodes
     private final Map<String, PathReference> generatedJoins = new HashMap<String, PathReference>();
     
-    public SizeTransformationVisitor(Metamodel metamodel, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, Map<String, String> properties) {
-        this.metamodel = metamodel;
+    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager) {
+        this.metamodel = mainQuery.em.getMetamodel();
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
-        this.properties = properties;
+        this.properties = mainQuery.properties;
     }
     
     public ClauseType getClause() {
