@@ -29,9 +29,9 @@ after_success:
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
 #  - oraclejdk7
-#env:
-#  global:
-#    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+env:
+  global:
+    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 matrix:
   fast_finish: true
   include:
@@ -49,9 +49,11 @@ matrix:
     - env: JPAPROVIDER=datanucleus-4 RDBMS=h2
     - env: JPAPROVIDER=datanucleus-4 RDBMS=mysql
     - env: JPAPROVIDER=datanucleus-4 RDBMS=postgresql
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+# TODO: work on datanucleus-4/sqlite support
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 # eclipselink
-    - env: JPAPROVIDER=eclipselink RDBMS=h2
+# TODO: work on eclipselink4/h2 support
+#    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=eclipselink RDBMS=mysql
 #    - env: JPAPROVIDER=eclipselink RDBMS=postgresql
 #    - env: JPAPROVIDER=eclipselink RDBMS=sqlite
@@ -75,8 +77,9 @@ matrix:
       jdk: oraclejdk8
     - env: JPAPROVIDER=datanucleus-5 RDBMS=postgresql
       jdk: oraclejdk8
-    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
-      jdk: oraclejdk8
+# TODO: work on datanucleus-5/sqlite support
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
+#      jdk: oraclejdk8
 # DB2
     - env: JPAPROVIDER=hibernate RDBMS=db2
       jdk: oraclejdk8
@@ -86,6 +89,7 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
+# TODO: work on datanucleus-4/db2 support
     - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
       sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=db2
@@ -96,15 +100,17 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=db2
 #      sudo: true
 # Firebird
-    - env: JPAPROVIDER=hibernate RDBMS=firebird
-      sudo: true
+# TODO: work on hibernate/firebird support
+#    - env: JPAPROVIDER=hibernate RDBMS=firebird
+#      sudo: true
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=firebird
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=firebird
 #      jdk: oraclejdk8
 #      sudo: true
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
-      sudo: true
+# TODO: work on datanucleus-4/firebird support
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
+#      sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=firebird
 #      jdk: oraclejdk8
 #      sudo: true
@@ -113,15 +119,17 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=firebird
 #      sudo: true
 # Oracle
-    - env: JPAPROVIDER=hibernate RDBMS=oracle
-      sudo: true
+# TODO: work on hibernate/oracle support
+#    - env: JPAPROVIDER=hibernate RDBMS=oracle
+#      sudo: true
 #    - env: JPAPROVIDER=hibernate-4.3 RDBMS=oracle
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
-      sudo: true
+# TODO: work on datanucleus-4/oracle support
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
+#      sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
@@ -133,19 +141,19 @@ matrix:
     - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/
       sudo: true
   allow_failures:
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
-    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
-      sudo: true
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
-      sudo: true
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
-      sudo: true
-    - env: JPAPROVIDER=eclipselink RDBMS=h2
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
+#    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
+#      sudo: true
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
+#      sudo: true
+#    - env: JPAPROVIDER=eclipselink RDBMS=h2
 #    - env: JPAPROVIDER=openjpa RDBMS=h2
-    - env: JPAPROVIDER=hibernate RDBMS=firebird
-      sudo: true
-    - env: JPAPROVIDER=hibernate RDBMS=oracle
-      sudo: true
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/
+#    - env: JPAPROVIDER=hibernate RDBMS=firebird
+#      sudo: true
+#    - env: JPAPROVIDER=hibernate RDBMS=oracle
+#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/ MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m"
       sudo: true
