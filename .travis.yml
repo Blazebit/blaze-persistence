@@ -29,10 +29,9 @@ after_success:
 # No big deal because oraclejdk7 is the default anyways
 #jdk:
 #  - oraclejdk7
-#env:
-#  global:
-# Tried to increase memory because of failures, but didn't help
-#    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+env:
+  global:
+    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
 matrix:
   fast_finish: true
   include:
