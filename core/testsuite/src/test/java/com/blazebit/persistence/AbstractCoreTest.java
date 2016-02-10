@@ -22,7 +22,6 @@ import java.util.Set;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.entity.Document;
-import com.blazebit.persistence.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
@@ -202,8 +201,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             Version.class,
             Person.class,
             Workflow.class,
-            IntIdEntity.class,
-            EmbeddableTestEntity.class
+            IntIdEntity.class
         };
     }
     

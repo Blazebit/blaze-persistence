@@ -502,14 +502,4 @@ public class SelectTest extends AbstractCoreTest {
         assertEquals("SELECT " + function("ARRAY", "(SELECT DISTINCT " + function("UNNEST","d2.creationDate") + " FROM Document d2)") + " FROM Document document", cb.getQueryString());
     }
     
-    @Test
-    public void testSelectEmbeddedIdCollectionSize(){
-        CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class, "e");
-        cb.select("SIZE(e.embeddable.oneToMany)");
-        
-        String expected = "SELECT (SELECT COUNT(embeddable_oneToMany) FROM EmbeddableTestEntity embeddabletestentity LEFT JOIN embeddabletestentity.embeddable.oneToMany embeddable_oneToMany WHERE embeddabletestentity = e) FROM EmbeddableTestEntity e";
-        assertEquals(expected, cb.getQueryString());
-        cb.getResultList();
-    }
-    
 }
