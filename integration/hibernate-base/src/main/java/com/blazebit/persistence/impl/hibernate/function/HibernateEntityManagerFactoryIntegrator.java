@@ -55,7 +55,7 @@ import com.blazebit.persistence.spi.JpqlFunctionGroup;
  */
 @SuppressWarnings("deprecation")
 @ServiceProvider(EntityManagerFactoryIntegrator.class)
-public class HibernateEntityManagerIntegrator implements EntityManagerFactoryIntegrator {
+public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
     

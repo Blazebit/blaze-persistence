@@ -21,6 +21,7 @@ before_script:
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
+  - mvn -version
   - mvn -P ${JPAPROVIDER},${RDBMS} install
 after_success:
   - "bash ./.travis-deploy.sh"

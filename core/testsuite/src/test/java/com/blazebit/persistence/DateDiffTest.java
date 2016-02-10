@@ -18,6 +18,7 @@ package com.blazebit.persistence;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Calendar;
+import java.util.List;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
@@ -96,8 +97,11 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF', creationDate, creationDate)")
             .select("FUNCTION('SECOND_DIFF', creationDate, creationDate)")
             ;
-
-        Tuple actual = criteria.getResultList().get(0);
+        
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
         assertEquals(0, actual.get(0));
         assertEquals(0, actual.get(1));
@@ -124,8 +128,11 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF', creationDate2, creationDate)")
             .select("FUNCTION('SECOND_DIFF', creationDate2, creationDate)")
             ;
-
-        Tuple actual = criteria.getResultList().get(0);
+        
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
         assertEquals(yearsBetween  (c1, c2), actual.get(0));
         assertEquals(monthsBetween (c1, c2), actual.get(1));
@@ -159,8 +166,11 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('MINUTE_DIFF', lastModified2, lastModified)")
             .select("FUNCTION('SECOND_DIFF', lastModified2, lastModified)")
             ;
-
-        Tuple actual = criteria.getResultList().get(0);
+        
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
         assertEquals(yearsBetween  (l1, l2), actual.get(0));
         assertEquals(monthsBetween (l1, l2), actual.get(1));
@@ -195,7 +205,10 @@ public class DateDiffTest extends AbstractCoreTest {
             .select("FUNCTION('SECOND_DIFF', creationDate, lastModified)")
             ;
 
-        Tuple actual = criteria.getResultList().get(0);
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
         assertEquals(yearsBetween  (l1, c1), actual.get(0));
         assertEquals(monthsBetween (l1, c1), actual.get(1));

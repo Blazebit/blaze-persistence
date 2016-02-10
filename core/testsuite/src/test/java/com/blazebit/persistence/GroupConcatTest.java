@@ -22,10 +22,12 @@ import javax.persistence.Tuple;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.testsuite.base.category.NoDB2;
 
 /**
  *
@@ -94,7 +96,11 @@ public class GroupConcatTest extends AbstractCoreTest {
         assertEquals("Doc1, Doc1, Doc2", actual.get(0));
     }
 
+    // NOTE: DB2 apparently does not support distinct?!
+    // Documentation states it does https://www-01.ibm.com/support/knowledgecenter/SS6NHC/com.ibm.swg.im.dashdb.sql.ref.doc/doc/r0058709.html
+    // See stackoverflow http://stackoverflow.com/questions/35309065/db2-listagg-with-distinct
     @Test
+    @Category({ NoDB2.class })
     public void testDistinct() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")

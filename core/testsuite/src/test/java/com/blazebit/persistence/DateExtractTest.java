@@ -17,7 +17,10 @@ package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
 
+import java.text.DateFormat;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
@@ -38,6 +41,8 @@ public class DateExtractTest extends AbstractCoreTest {
     
     private Calendar c1;
     private Calendar c2;
+    
+    private Document doc1;
 
     @Before
     public void setUp() {
@@ -51,7 +56,7 @@ public class DateExtractTest extends AbstractCoreTest {
             Version v1 = new Version();
             em.persist(v1);
 
-            Document doc1 = new Document("Doc1", p, v1);
+            doc1 = new Document("Doc1", p, v1);
             
             c1 = Calendar.getInstance();
             c1.set(2000, 0, 1, 0, 0, 0);
@@ -91,20 +96,32 @@ public class DateExtractTest extends AbstractCoreTest {
             .select("FUNCTION('SECOND', lastModified)")
             ;
 
-        Tuple actual = criteria.getResultList().get(0);
+        List<Tuple> list = criteria.getResultList();
+        assertEquals(1, list.size());
+        
+        Tuple actual = list.get(0);
 
-        assertEquals(c1.get(Calendar.YEAR), actual.get(0));
-        assertEquals(c1.get(Calendar.MONTH) + 1, actual.get(1));
-        assertEquals(c1.get(Calendar.DAY_OF_MONTH), actual.get(2));
-        assertEquals(c1.get(Calendar.HOUR), actual.get(3));
-        assertEquals(c1.get(Calendar.MINUTE), actual.get(4));
-        assertEquals(c1.get(Calendar.SECOND), actual.get(5));
-
-        assertEquals(c2.get(Calendar.YEAR), actual.get(6));
-        assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(7));
-        assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(8));
-        assertEquals(c2.get(Calendar.HOUR), actual.get(9));
-        assertEquals(c2.get(Calendar.MINUTE), actual.get(10));
-        assertEquals(c2.get(Calendar.SECOND), actual.get(11));
+        try {
+            assertEquals(c1.get(Calendar.YEAR), actual.get(0));
+            assertEquals(c1.get(Calendar.MONTH) + 1, actual.get(1));
+            assertEquals(c1.get(Calendar.DAY_OF_MONTH), actual.get(2));
+            assertEquals(c1.get(Calendar.HOUR), actual.get(3));
+            assertEquals(c1.get(Calendar.MINUTE), actual.get(4));
+            assertEquals(c1.get(Calendar.SECOND), actual.get(5));
+    
+            assertEquals(c2.get(Calendar.YEAR), actual.get(6));
+            assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(7));
+            assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(8));
+            assertEquals(c2.get(Calendar.HOUR), actual.get(9));
+            assertEquals(c2.get(Calendar.MINUTE), actual.get(10));
+            assertEquals(c2.get(Calendar.SECOND), actual.get(11));
+        } catch (AssertionError e) {
+            // TODO: remove this when the mysql error on travis ci has been found
+            Document doc = em.find(Document.class, doc1.getId());
+            DateFormat format = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY);
+            System.err.println("CreationDate: " + format.format(doc.getCreationDate().getTime()) + ", " + doc.getCreationDate().getTime());
+            System.err.println("LastModified: " + format.format(doc.getLastModified()) + ", " + doc.getLastModified());
+            throw e;
+        }
     }
 }
