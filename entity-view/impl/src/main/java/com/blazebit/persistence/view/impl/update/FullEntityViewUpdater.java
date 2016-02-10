@@ -63,9 +63,9 @@ public class FullEntityViewUpdater implements EntityViewUpdater {
                 
                 if (attribute.isCollection()) {
                     if (attribute instanceof MapAttribute<?, ?, ?>) {
-                        flusher = new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>((PropertyPathExpression<Object, ? extends Map<?, ?>>) ExpressionUtils.getExpression(entityClass, attributeMapping));
+                        flusher = new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>((PropertyPathExpression<Object, Map<?, ?>>) (PropertyPathExpression) ExpressionUtils.getExpression(entityClass, attributeMapping));
                     } else {
-                        flusher = new CollectionAttributeFlusher<Object, RecordingCollection<Collection<?>, ?>>((PropertyPathExpression<Object, ? extends Collection<?>>) ExpressionUtils.getExpression(entityClass, attributeMapping));
+                        flusher = new CollectionAttributeFlusher<Object, RecordingCollection<Collection<?>, ?>>((PropertyPathExpression<Object, Collection<?>>) (PropertyPathExpression) ExpressionUtils.getExpression(entityClass, attributeMapping));
                     }
                 } else {
                     flusher = new BasicAttributeFlusher<Object, Object>(attributeName, (PropertyPathExpression<Object, Object>) ExpressionUtils.getExpression(entityClass, attributeMapping));
