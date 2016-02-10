@@ -125,6 +125,8 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * 
      * @param propertyName The name of the property
      * @param propertyValue The value of the property
+     * 
+     * @since 1.1.0
      */
     public X setProperty(String propertyName, String propertyValue);
     
@@ -132,6 +134,8 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * Overwrites the properties with the given set of properties
      * 
      * @param properties The new properties
+     * 
+     * @since 1.1.0
      */
     public X setProperties(Map<String, String> properties);
     
@@ -139,6 +143,8 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * Retrieves all properties
      * 
      * @return A map representing all properties
+     * 
+     * @since 1.1.0
      */
     public Map<String, String> getProperties();
 }
