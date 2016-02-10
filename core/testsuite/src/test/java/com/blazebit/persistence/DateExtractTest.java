@@ -17,20 +17,20 @@ package com.blazebit.persistence;
 
 import static org.junit.Assert.assertEquals;
 
-import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
+import com.blazebit.persistence.testsuite.base.category.NoMySQL;
 
 /**
  *
@@ -78,7 +78,9 @@ public class DateExtractTest extends AbstractCoreTest {
         }
     }
 
+    // NOTE: MySQL is strange again https://bugs.mysql.com/bug.php?id=31990
     @Test
+    @Category({ NoMySQL.class })
     public void testDateExtract() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class)
             .from(Document.class, "doc")
@@ -101,27 +103,18 @@ public class DateExtractTest extends AbstractCoreTest {
         
         Tuple actual = list.get(0);
 
-        try {
-            assertEquals(c1.get(Calendar.YEAR), actual.get(0));
-            assertEquals(c1.get(Calendar.MONTH) + 1, actual.get(1));
-            assertEquals(c1.get(Calendar.DAY_OF_MONTH), actual.get(2));
-            assertEquals(c1.get(Calendar.HOUR), actual.get(3));
-            assertEquals(c1.get(Calendar.MINUTE), actual.get(4));
-            assertEquals(c1.get(Calendar.SECOND), actual.get(5));
-    
-            assertEquals(c2.get(Calendar.YEAR), actual.get(6));
-            assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(7));
-            assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(8));
-            assertEquals(c2.get(Calendar.HOUR), actual.get(9));
-            assertEquals(c2.get(Calendar.MINUTE), actual.get(10));
-            assertEquals(c2.get(Calendar.SECOND), actual.get(11));
-        } catch (AssertionError e) {
-            // TODO: remove this when the mysql error on travis ci has been found
-            Document doc = em.find(Document.class, doc1.getId());
-            DateFormat format = DateFormat.getDateTimeInstance(DateFormat.FULL, DateFormat.FULL, Locale.GERMANY);
-            System.err.println("CreationDate: " + format.format(doc.getCreationDate().getTime()) + ", " + doc.getCreationDate().getTime());
-            System.err.println("LastModified: " + format.format(doc.getLastModified()) + ", " + doc.getLastModified());
-            throw e;
-        }
+        assertEquals(c1.get(Calendar.YEAR), actual.get(0));
+        assertEquals(c1.get(Calendar.MONTH) + 1, actual.get(1));
+        assertEquals(c1.get(Calendar.DAY_OF_MONTH), actual.get(2));
+        assertEquals(c1.get(Calendar.HOUR), actual.get(3));
+        assertEquals(c1.get(Calendar.MINUTE), actual.get(4));
+        assertEquals(c1.get(Calendar.SECOND), actual.get(5));
+
+        assertEquals(c2.get(Calendar.YEAR), actual.get(6));
+        assertEquals(c2.get(Calendar.MONTH) + 1, actual.get(7));
+        assertEquals(c2.get(Calendar.DAY_OF_MONTH), actual.get(8));
+        assertEquals(c2.get(Calendar.HOUR), actual.get(9));
+        assertEquals(c2.get(Calendar.MINUTE), actual.get(10));
+        assertEquals(c2.get(Calendar.SECOND), actual.get(11));
     }
 }
