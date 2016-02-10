@@ -138,7 +138,7 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
 # JDK 9
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/ MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m"
       sudo: true
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
