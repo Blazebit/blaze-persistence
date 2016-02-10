@@ -41,6 +41,13 @@ public final class ConfigurationProperties {
      */
     public static final String RETURNING_CLAUSE_CASE_SENSITIVE = "com.blazebit.persistence.returning_clause_case_sensitive";
 
+    /**
+     * If set to false, uses of SIZE will always be transformed to subqueries.
+     * 
+     * @since 1.1.0
+     */
+    public static final String SIZE_TO_COUNT_TRANSFORMATION = "com.blazebit.persistence.size_to_count_transformation";
+    
     private ConfigurationProperties() {
     }
 }

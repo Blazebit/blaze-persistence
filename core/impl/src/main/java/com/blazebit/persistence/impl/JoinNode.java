@@ -299,6 +299,26 @@ public class JoinNode {
         return false;
     }
     
+    Set<JoinNode> getCollectionJoins() {
+        Set<JoinNode> collectionJoins = new HashSet<JoinNode>();
+        Stack<JoinTreeNode> stack = new Stack<JoinTreeNode>();
+        stack.addAll(nodes.values());
+
+        while (!stack.isEmpty()) {
+            JoinTreeNode treeNode = stack.pop();
+
+            if (treeNode.isCollection()) {
+                collectionJoins.addAll(treeNode.getJoinNodes().values());
+            }
+
+            for (JoinNode joinNode : treeNode.getJoinNodes().values()) {
+                stack.addAll(joinNode.nodes.values());
+            }
+        }
+        
+        return collectionJoins;
+    }
+    
     private static enum StateChange {
         JOIN_TYPE,
         ON_PREDICATE,

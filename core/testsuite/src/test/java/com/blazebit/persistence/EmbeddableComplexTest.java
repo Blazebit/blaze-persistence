@@ -159,4 +159,15 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         assertEquals("SELECT e.id.localizedEntity.someValue FROM EmbeddableTestEntity e", crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testEmbeddableExplicitJoin(){
+        CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
+                .leftJoin("e.embeddable.nestedEmbeddable.nestedOneToMany", "oneToMany")
+                .select("oneToMany");
+        
+        assertEquals("SELECT oneToMany FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.nestedEmbeddable.nestedOneToMany oneToMany", crit.getQueryString());
+        crit.getResultList();
+    }
 }

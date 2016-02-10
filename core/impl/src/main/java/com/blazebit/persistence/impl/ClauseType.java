@@ -25,5 +25,6 @@ public enum ClauseType {
     WHERE,
     GROUP_BY,
     ORDER_BY,
-    HAVING
+    HAVING,
+    JOIN
 }

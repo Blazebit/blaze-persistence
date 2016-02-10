@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class AggregateExpression extends FunctionExpression {
 
-    private final boolean distinct;
+    private boolean distinct;
 
     public AggregateExpression(boolean distinct, String functionName, List<Expression> expressions) {
         super(functionName, expressions);
@@ -60,6 +60,10 @@ public class AggregateExpression extends FunctionExpression {
 
     public boolean isDistinct() {
         return distinct;
+    }
+    
+    public void setDistinct(boolean distinct) {
+        this.distinct = distinct;
     }
 
     @Override

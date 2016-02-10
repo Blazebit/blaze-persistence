@@ -284,13 +284,16 @@ public class SetOperationTest extends AbstractCoreTest {
                 .from(Document.class, "d3")
                 .select("d3")
                 .where("d3.name").eq("D3")
-            .endSet();
+            .endSet()
+            .orderByAsc("name");
+
         String expected = ""
                 + "(SELECT d1 FROM Document d1 WHERE d1.name <> :param_0\n"
                 + "INTERSECT\n"
                 + "SELECT d2 FROM Document d2 WHERE d2.name <> :param_1)\n"
                 + "UNION\n"
-                + "SELECT d3 FROM Document d3 WHERE d3.name = :param_2";
+                + "SELECT d3 FROM Document d3 WHERE d3.name = :param_2\n"
+                + "ORDER BY name ASC NULLS LAST";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();

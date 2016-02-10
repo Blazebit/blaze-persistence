@@ -12,7 +12,7 @@ public class EmbeddableTestEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private EmbeddableTestEntityId id;
-    private EmbeddableTestEntityEmbeddable embeddable;
+    private EmbeddableTestEntityEmbeddable embeddable = new EmbeddableTestEntityEmbeddable();
 
     public EmbeddableTestEntity() {
     }

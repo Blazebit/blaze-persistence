@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
@@ -21,6 +22,7 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     private EmbeddableTestEntity manyToOne;
     private Set<EmbeddableTestEntity> oneToMany = new HashSet<EmbeddableTestEntity>(0);
     private Map<String, IntIdEntity> elementCollection = new HashMap<String, IntIdEntity>(0);
+    private EmbeddableTestEntityNestedEmbeddable nestedEmbeddable = new EmbeddableTestEntityNestedEmbeddable();
 
     @ManyToOne(fetch = FetchType.LAZY)
     public EmbeddableTestEntity getManyToOne() {
@@ -49,6 +51,15 @@ public class EmbeddableTestEntityEmbeddable implements Serializable {
     
     public void setElementCollection(Map<String, IntIdEntity> elementCollection) {
         this.elementCollection = elementCollection;
+    }
+
+    @Embedded
+    public EmbeddableTestEntityNestedEmbeddable getNestedEmbeddable() {
+        return nestedEmbeddable;
+    }
+
+    public void setNestedEmbeddable(EmbeddableTestEntityNestedEmbeddable nestedEmbeddable) {
+        this.nestedEmbeddable = nestedEmbeddable;
     }
 
 }

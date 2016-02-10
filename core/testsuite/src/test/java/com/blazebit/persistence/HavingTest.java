@@ -552,6 +552,26 @@ public class HavingTest extends AbstractCoreTest {
         criteria.getResultList(); 
     }
     
+    @Test
+    public void testHavingSize(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING COUNT(partners_1) > 1";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
+    public void testHavingSizeMultiple(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1").having("SIZE(d.versions)").gtExpression("2");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING COUNT(DISTINCT partners_1) > 1 AND COUNT(DISTINCT versions_1) > 2";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
     private void verifyBuilderChainingException(CriteriaBuilder<Document> crit){
         verifyException(crit, BuilderChainingException.class).havingCase();
         verifyException(crit, BuilderChainingException.class).havingSimpleCase("d.id");
