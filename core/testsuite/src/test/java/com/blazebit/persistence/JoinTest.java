@@ -360,7 +360,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
         
-        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p ON (SELECT COUNT(versions) FROM Document document LEFT JOIN document.versions versions WHERE document = d) > 2";
+        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p " + ON_CLAUSE + " (SELECT COUNT(versions) FROM Document document LEFT JOIN document.versions versions WHERE document = d) > 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
