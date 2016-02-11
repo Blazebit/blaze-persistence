@@ -11,6 +11,7 @@ before_install:
   - sh -c "if [ '$RDBMS' = 'oracle' ]; then sh travis/before_install_oracle.sh; fi"
 install:
   - sh -c "if [ '$JDK' = '9' ]; then sh travis/install_jdk9.sh; fi"
+  - sh -c "if [ '$LATEST_MAVEN' = 'true' ]; then sh travis/install_latest_maven.sh; fi"
 before_script:
   - sh -c "if [ '$JDK' = '9' ]; then sh travis/before_script_jdk9.sh; fi"
   - sh -c "if [ '$RDBMS' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS test DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_bin;'; fi"
@@ -18,6 +19,7 @@ before_script:
   - sh -c "if [ '$RDBMS' = 'db2' ]; then sh travis/before_script_db2.sh; fi"
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_script_firebird.sh; fi"
   - sh -c "if [ '$RDBMS' = 'oracle' ]; then sh travis/before_script_oracle.sh; fi"
+  - . travis/set_env_vars.sh
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
@@ -81,8 +83,7 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 #      jdk: oraclejdk8
 # DB2
-    - env: JPAPROVIDER=hibernate RDBMS=db2
-      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate RDBMS=db2 LATEST_MAVEN=true
       sudo: true
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
@@ -90,8 +91,8 @@ matrix:
       jdk: oraclejdk8
       sudo: true
 # TODO: work on datanucleus-4/db2 support
-    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
-      sudo: true
+#    - env: JPAPROVIDER=datanucleus-4 RDBMS=db2
+#      sudo: true
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=db2
 #      jdk: oraclejdk8
 #      sudo: true
@@ -138,7 +139,7 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
 # JDK 9
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/ MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
       sudo: true
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
@@ -155,5 +156,5 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate RDBMS=oracle
 #      sudo: true
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 JAVA_HOME=/usr/lib/jvm/java-9-oracle/ MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
       sudo: true
