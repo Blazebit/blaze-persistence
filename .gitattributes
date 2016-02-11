@@ -30,6 +30,7 @@ Makefile text eol=lf
 *.tab text eol=lf
 *.tsv text eol=lf
 *.sql text eol=lf
+*.erb text eol=lf
 
 # Graphics
 *.png binary
