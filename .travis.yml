@@ -31,7 +31,7 @@ after_success:
 #  - oraclejdk7
 env:
   global:
-    - MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"
+    - MAVEN_SKIP_RC=true
 matrix:
   fast_finish: true
   include:

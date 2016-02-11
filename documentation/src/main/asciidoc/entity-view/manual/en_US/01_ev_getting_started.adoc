@@ -39,6 +39,8 @@ from which an `EntityViewManager` can be created like following example shows.
 
 [source,java]
 ----
+@javax.ejb.Singleton
+@javax.ejb.Startup
 public class EntityViewManagerProducer {
 
 	// inject the configuration provided by the cdi integration
@@ -53,12 +55,19 @@ public class EntityViewManagerProducer {
 	@PersistenceContext
 	private EntityManagerFactory entityManagerFactory;
     
-	@Produces
-	@ApplicationScoped
-	public EntityViewManager createEntityViewManager() {
+	private EntityViewManager evm;
+	
+	@PostConstruct
+	public void init() {
 		// do some configuration
-		return config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+    	evm = config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
 	}
+
+    @Produces
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager() {
+    	return evm;
+    }
 }
 ----
 
