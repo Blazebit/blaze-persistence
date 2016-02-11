@@ -19,7 +19,6 @@ before_script:
   - sh -c "if [ '$RDBMS' = 'db2' ]; then sh travis/before_script_db2.sh; fi"
   - sh -c "if [ '$RDBMS' = 'firebird' ]; then sh travis/before_script_firebird.sh; fi"
   - sh -c "if [ '$RDBMS' = 'oracle' ]; then sh travis/before_script_oracle.sh; fi"
-  - . travis/set_env_vars.sh
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
