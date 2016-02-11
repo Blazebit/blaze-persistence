@@ -22,8 +22,7 @@ before_script:
 after_failure: 
   - sh travis/print_surefire_reports.sh
 script:
-  - ${MVN_BIN}mvn -version
-  - ${MVN_BIN}mvn -P ${JPAPROVIDER},${RDBMS} install
+  - ./build.sh
 after_success:
   - "bash ./.travis-deploy.sh"
 # Leave out jdk switch because on the legacy infrastructure this won't work
@@ -82,7 +81,7 @@ matrix:
 #    - env: JPAPROVIDER=datanucleus-5 RDBMS=sqlite
 #      jdk: oraclejdk8
 # DB2
-    - env: JPAPROVIDER=hibernate RDBMS=db2 LATEST_MAVEN=true MVN_BIN="/tmp/apache-maven/bin/"
+    - env: JPAPROVIDER=hibernate RDBMS=db2 LATEST_MAVEN=true
       sudo: true
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
@@ -138,7 +137,7 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
 # JDK 9
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 MVN_BIN="/tmp/apache-maven/bin/" MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" JAVA_HOME="/usr/lib/jvm/java-9-oracle/"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
       sudo: true
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
@@ -155,5 +154,5 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate RDBMS=oracle
 #      sudo: true
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9 MVN_BIN="/tmp/apache-maven/bin/" MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m" JAVA_HOME="/usr/lib/jvm/java-9-oracle/"
+    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
       sudo: true
