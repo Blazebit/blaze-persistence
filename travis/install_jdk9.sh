@@ -5,4 +5,4 @@ sudo /bin/echo -e oracle-java9-installer shared/accepted-oracle-license-v1-1 sel
 sudo apt-get install -y oracle-java9-installer
 sudo apt-get install -y oracle-java9-unlimited-jce-policy
 
-sh install_latest_maven.sh
+sh travis/install_latest_maven.sh
