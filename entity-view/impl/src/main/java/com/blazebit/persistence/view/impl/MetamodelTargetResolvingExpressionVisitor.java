@@ -53,6 +53,7 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     private final ManagedType<?> managedType;
     private final Metamodel metamodel;
+    private boolean parametersAllowed;
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
 
@@ -100,6 +101,7 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     public MetamodelTargetResolvingExpressionVisitor(ManagedType<?> managedType, Metamodel metamodel) {
         this.managedType = managedType;
         this.metamodel = metamodel;
+        this.parametersAllowed = false;
         this.pathPositions = new ArrayList<PathPosition>();
         this.pathPositions.add(currentPosition = new PathPosition(managedType, null));
     }
@@ -204,16 +206,21 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     @Override
     public void visit(ParameterExpression expression) {
         // We can't infer a type here
-        // NOTE: parameters are only supported in the select clause when having an insert!
-        invalid(expression, "Parameters are not allowed as results in mapping. Please use @MappingParameter for this instead!");
+        if (parametersAllowed) {
+            // NOTE: We use null as marker for ANY TYPE
+            currentPosition.setCurrentClass(null);
+        } else {
+            // NOTE: parameters are only supported in the select clause when having an insert!
+            invalid(expression, "Parameters are not allowed as results in mapping. Please use @MappingParameter for this instead!");
+        }
     }
 
     @Override
     public void visit(CompositeExpression expression) {
-        resolveToAny(expression.getExpressions());
+        resolveToAny(expression.getExpressions(), false);
     }
     
-    private void resolveToAny(List<Expression> expressions) {
+    private void resolveToAny(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<PathPosition>();
         
@@ -224,7 +231,13 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
             for (int i = 0; i < size; i++) {
                 pathPositions = new ArrayList<PathPosition>();
                 pathPositions.add(currentPosition = position);
+                if (allowParams) {
+                    parametersAllowed = true;
+                }
                 expressions.get(i).accept(this);
+                if (allowParams) {
+                    parametersAllowed = false;
+                }
                 newPositions.addAll(pathPositions);
             }
         }
@@ -247,9 +260,14 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     @Override
     public void visit(FooExpression expression) {
-        // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
-        super.visit(expression);
+        String expressionString = expression.toString();
+        if ("true".equalsIgnoreCase(expressionString) || "false".equalsIgnoreCase(expressionString)) {
+            currentPosition.setCurrentClass(Boolean.class);
+        } else {
+            // We can't infer a type here
+            // TODO: Not sure what happens when this is the result node of a case when
+            super.visit(expression);
+        }
     }
 
     @Override
@@ -297,11 +315,12 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
             }
         } else if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
-            resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()));
+            resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
         } else {
+            // TODO: we could do better here by checking the actual return types of the functions or put a list of other "known" functions here, at least make it extendible
     	    // We can't just say it's invalid, we might just not know the function
 //    		invalid(expression);
-            resolveToAny(expression.getExpressions());
+            resolveToAny(expression.getExpressions(), true);
     	}
     }
     

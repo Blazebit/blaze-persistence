@@ -31,6 +31,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -56,8 +57,19 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
               entityViews,
               "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         this.name = StringUtils.firstToLower(method.getName().substring(3));
-        // TODO: this is not correct for collections
-        this.updatable = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
+
+        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
+        boolean hasSetter = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
+
+        // TODO: this is not correct for collections, maybe collections should be mutable by default?
+        // Btw. what shall we do if the attribute would be updatable but the viewType isn't? Since it could be a subview, we should keep the updatable state I think, 
+        // but then I'd also need to create updatable proxy classes even if the entity view is not updatable by itself 
+        if (updatableMapping == null) {
+            this.updatable = hasSetter;
+        } else {
+            this.updatable = updatableMapping.updatable();
+        }
+        
         this.javaMethod = method;
         this.filterMappings = new HashMap<String, AttributeFilterMapping>();
         

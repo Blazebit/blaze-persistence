@@ -38,10 +38,12 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -128,9 +130,32 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             return null;
         }
         
+        if (attribute.isUpdatable()) {
+            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(entityClass);
+            try {
+                expressionFactory.createPathExpression(expression).accept(visitor);
+                Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+                
+                if (possibleTargets.size() > 1) {
+                    return "Multiple possible target type for the mapping in the attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "': " + possibleTargets;
+                } else {
+                    // TODO: further type checks like
+                    // * collection type is same
+                    // * collection value type is compatible
+                }
+            } catch (SyntaxErrorException ex) {
+                return "Syntax error in mapping expression '" + expression + "' of attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
+            } catch (IllegalArgumentException ex) {
+                return "There is an error for the attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "': " + ex.getMessage();
+            }
+        }
+        
         Class<?> expressionType = attribute.getJavaType();
         
-        if (attribute.isCollection() && !((PluralAttribute<?, ?, ?>) attribute).isIndexed() && Collection.class.isAssignableFrom(expressionType)) {
+        // TODO: check if collection value types are compatible => subview is view for entity class, or class is super type of entity class
+        
+        // Updatable collection attributes must have the same collection type
+        if (!attribute.isUpdatable() && attribute.isCollection() && !((PluralAttribute<?, ?, ?>) attribute).isIndexed() && Collection.class.isAssignableFrom(expressionType)) {
             // We can assign e.g. a Set to a List, so let's use the common supertype
             expressionType = Collection.class;
         } else if (!attribute.isCollection() && attribute.isSubview()) {
@@ -147,6 +172,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         
         try {
             expressionFactory.createSimpleExpression(expression).accept(visitor);
+        } catch (SyntaxErrorException ex) {
+            return "Syntax error in mapping expression '" + expression + "' of attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
         } catch (IllegalArgumentException ex) {
             return "An error occurred while trying to resolve the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
         }
@@ -158,7 +185,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             for (Map.Entry<Method, Class<?>[]> entry : possibleTargets.entrySet()) {
                 Class<?> possibleTargetType = entry.getValue()[0];
                 
-                if (expressionType.isAssignableFrom(possibleTargetType)
+                // Null is the marker for ANY TYPE
+                if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
                     || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(entry.getValue()[1])) {
                     error = false;
                     break;

@@ -107,18 +107,17 @@ public class RecordingCollection<C extends Collection<E>, E> implements Collecti
     public boolean containsAll(Collection<?> c) {
         return delegate.containsAll(c);
     }
-    
-    /**
-     * We use identity for equals-hashCode
-     */
 
     @Override
     public int hashCode() {
-        return System.identityHashCode(this);
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((delegate == null) ? 0 : delegate.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        return this == obj;
+        return delegate.equals(obj);
     }
 }

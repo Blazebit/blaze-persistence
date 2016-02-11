@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.proxy.model;
+package com.blazebit.persistence.view;
 
-import java.io.Serializable;
-import java.util.Map;
-
-import com.blazebit.persistence.view.UpdatableMapping;
-import com.blazebit.persistence.view.entity.Person;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
+ * Specifies that the attribute is updatable.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.1.0
  */
-interface ContactHolderView<T> extends Serializable {
+@Target({ ElementType.METHOD })
+@Retention(RetentionPolicy.RUNTIME)
+public @interface UpdatableMapping {
 
-    @UpdatableMapping(updatable = false)
-    public Map<T, Person> getContacts();
-
-    public void setContacts(Map<T, Person> localized);
+    /**
+     * Specifies whether attribute updates are enabled or not.
+     * 
+     * @return Whether attribute updates are enabled
+     */
+    public boolean updatable() default true;
 }

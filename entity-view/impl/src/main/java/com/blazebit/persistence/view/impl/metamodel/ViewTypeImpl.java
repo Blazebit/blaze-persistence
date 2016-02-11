@@ -57,8 +57,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             this.name = entityViewAnnot.name();
         }
 
-        // TODO: updatable entity views have restrictions on the mappings
-        // Updatable attributes may only be simple paths
         UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(javaType, UpdatableEntityView.class);
         if (updatableEntityView != null) {
         	this.updatable = true;
@@ -95,11 +93,6 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
                     foundIdAttribute = attribute;
                 }
             }
-            
-            // TODO: remove this as soon as we have support for collection updates
-//            if (attribute.isCollection() && updatable && attribute.isUpdatable()) {
-//            	throw new IllegalArgumentException("Collection updates are not yet implemented! Please remove the setter for the attribute [" + attribute.getName() + "] from [" + javaType.getName() + "]");
-//            }
         }
         
         if (foundIdAttribute == null) {

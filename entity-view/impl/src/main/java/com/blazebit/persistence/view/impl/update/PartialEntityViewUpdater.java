@@ -157,14 +157,14 @@ public class PartialEntityViewUpdater implements EntityViewUpdater {
 	}
     
     private boolean isDirty(Object initial, Object current) {
-        if (initial != current && (initial == null || !initial.equals(current))) {
-            return true;
-        }
-        
         if (current instanceof RecordingCollection<?, ?>) {
             return ((RecordingCollection<?, ?>) current).hasActions();
         } else if (current instanceof RecordingMap<?, ?, ?>) {
             return ((RecordingMap<?, ?, ?>) current).hasActions();
+        }
+        
+        if (initial != current && (initial == null || !initial.equals(current))) {
+            return true;
         }
         
         return false;

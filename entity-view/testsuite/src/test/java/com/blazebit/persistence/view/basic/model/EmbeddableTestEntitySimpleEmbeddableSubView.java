@@ -48,8 +48,12 @@ public interface EmbeddableTestEntitySimpleEmbeddableSubView {
     @Mapping("NULL")
     public Integer getStaticIntegerNull();
     
+    @Mapping("CASE WHEN 1=1 THEN true ELSE false END")
+    public Boolean getStaticBoolean();
+    
     @MappingParameter("optionalInteger")
     public Integer getOptionalInteger();
+    
     
     // Works for blaze-persistence but apparently hibernate can't handle the literals
 //    @Mapping("FUNCTION('TREAT_CALENDAR', {ts '2016-01-01 00:00:00.0'})")

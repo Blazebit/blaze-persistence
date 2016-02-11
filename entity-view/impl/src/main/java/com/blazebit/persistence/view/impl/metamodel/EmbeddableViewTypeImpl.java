@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 /**
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.1.0
  */
 public class EmbeddableViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements EmbeddableViewType<X> {
 

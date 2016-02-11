@@ -131,8 +131,9 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             boolean error = true;
             for (Map.Entry<Method, Class<?>[]> entry : possibleTargets.entrySet()) {
                 Class<?> possibleTargetType = entry.getValue()[0];
-                
-                if (expressionType.isAssignableFrom(possibleTargetType)
+
+                // Null is the marker for ANY TYPE
+                if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
                     || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(entry.getValue()[1])) {
                     error = false;
                     break;
