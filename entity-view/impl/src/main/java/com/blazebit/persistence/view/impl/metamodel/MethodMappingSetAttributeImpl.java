@@ -19,8 +19,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Set;
 
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.SetAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *
@@ -29,7 +29,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public class MethodMappingSetAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Set<Y>, Y> implements SetAttribute<X, Y> {
 
-    public MethodMappingSetAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    public MethodMappingSetAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews, MetamodelUtils.isSorted(viewType.getJavaType(), method));
     }
 

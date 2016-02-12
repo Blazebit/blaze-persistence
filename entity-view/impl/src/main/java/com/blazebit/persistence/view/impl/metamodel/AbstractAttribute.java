@@ -24,8 +24,8 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *
@@ -34,7 +34,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
-    protected final ViewType<X> declaringType;
+    protected final ManagedViewType<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
@@ -45,7 +45,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final boolean subqueryMapping;
     protected final boolean subview;
 
-    public AbstractAttribute(ViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
+    public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
         if (javaType == null) {
             throw new IllegalArgumentException("The attribute type is not resolvable " + errorLocation);
         }
@@ -131,7 +131,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
 
     @Override
-    public ViewType<X> getDeclaringType() {
+    public ManagedViewType<X> getDeclaringType() {
         return declaringType;
     }
 

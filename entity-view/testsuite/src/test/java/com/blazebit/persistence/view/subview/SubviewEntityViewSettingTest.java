@@ -95,7 +95,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentMasterView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<DocumentMasterView, PaginatedCriteriaBuilder<DocumentMasterView>> setting = EntityViewSetting.create(
@@ -124,7 +124,7 @@ public class SubviewEntityViewSettingTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentMasterView.class);
         cfg.addEntityView(PersonSubView.class);
         cfg.addEntityView(PersonSubViewFiltered.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<DocumentMasterView, PaginatedCriteriaBuilder<DocumentMasterView>> setting = EntityViewSetting.create(

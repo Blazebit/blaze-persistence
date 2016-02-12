@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.basic.model.CircularDocument;
 import com.blazebit.persistence.view.basic.model.CircularPerson;
@@ -51,14 +52,14 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ViewMetamodelTest {
+public class ViewMetamodelTest extends AbstractEntityViewTest {
 
     private ViewMetamodel getViewMetamodel() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        return cfg.createEntityViewManager().getMetamodel();
+        return cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
     }
 
     @Test
@@ -66,7 +67,7 @@ public class ViewMetamodelTest {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(CircularDocument.class);
         cfg.addEntityView(CircularPerson.class);
-        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager();
+        verifyException(cfg, IllegalArgumentException.class).createEntityViewManager(cbf, em.getEntityManagerFactory());
     }
 
     @Test
@@ -75,7 +76,7 @@ public class ViewMetamodelTest {
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        ViewMetamodel viewMetamodel = cfg.createEntityViewManager().getMetamodel();
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
 
         assertEquals(3, viewMetamodel.getViews().size());
         assertTrue(viewMetamodel.getViews().contains(viewMetamodel.view(DocumentViewInterface.class)));
@@ -87,7 +88,7 @@ public class ViewMetamodelTest {
     public void testMappingSingularView() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(PersonViewWithSingularMapping.class);
-        ViewMetamodel viewMetamodel = cfg.createEntityViewManager().getMetamodel();
+        ViewMetamodel viewMetamodel = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
 
         ViewType<?> viewType = viewMetamodel.view(PersonViewWithSingularMapping.class);
         assertNotNull(viewType);

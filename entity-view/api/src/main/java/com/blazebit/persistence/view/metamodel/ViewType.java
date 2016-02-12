@@ -24,7 +24,7 @@ import java.util.Set;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface ViewType<X> {
+public interface ViewType<X> extends IdentifiableViewType<X> {
 
     /**
      * Returns the name of the entity view.
@@ -34,114 +34,18 @@ public interface ViewType<X> {
     public String getName();
     
     /**
-     * Returns whether the entity view is updateable.
+     * Returns whether the entity view is updatable.
      * 
-     * @return Whether the entity view is updateable
+     * @return Whether the entity view is updatable
      */
-    public boolean isUpdateable();
+    public boolean isUpdatable();
 
     /**
-     * Returns whether the entity view is partially updateable.
+     * Returns whether the entity view is partially updatable.
      * 
-     * @return Whether the entity view is partially updateable
+     * @return Whether the entity view is partially updatable
      */
-    public boolean isPartiallyUpdateable();
-
-    /**
-     * Returns the java type of the entity view.
-     *
-     * @return The java type of the entity view
-     */
-    public Class<X> getJavaType();
-
-    /**
-     * Returns the entity class that the entity view uses.
-     *
-     * @return The entity class that the entity view uses
-     */
-    public Class<?> getEntityClass();
-    
-    /**
-     * Returns the id attribute of the entity view.
-     * 
-     * @return The id attribute of the entity view
-     */
-    public MethodAttribute<? super X, ?> getIdAttribute();
-
-    /**
-     * Returns the attributes of the entity view.
-     *
-     * @return The attributes of the entity view
-     */
-    public Set<MethodAttribute<? super X, ?>> getAttributes();
-
-    /**
-     * Returns the attribute of the entity view specified by the given name.
-     *
-     * @param name The name of the attribute which should be returned
-     * @return The attribute of the entity view with the given name
-     */
-    public MethodAttribute<? super X, ?> getAttribute(String name);
-
-    /**
-     * Returns the mapping constructors of the entity view.
-     *
-     * @return The mapping constructors of the entity view
-     */
-    public Set<MappingConstructor<X>> getConstructors();
-
-    /**
-     * Returns the mapping constructor of the entity view specified by the given parameter types.
-     *
-     * @param parameterTypes The parameter types of the constructor which should be returned.
-     * @return The mapping constructor of the entity view with the given parameter types
-     */
-    public MappingConstructor<X> getConstructor(Class<?>... parameterTypes);
-
-    /**
-     * Returns the names of the constructors of the entity view.
-     *
-     * @return The names of the constructors of the entity view
-     */
-    public Set<String> getConstructorNames();
-
-    /**
-     * Returns the constructor of the entity view specified by the given name.
-     *
-     * @param name The name of the constructor which should be returned
-     * @return The constructor of the entity view with the given name
-     */
-    public MappingConstructor<X> getConstructor(String name);
-    
-    /**
-     * Returns the filter mapping of the entity view with the given name.
-     * 
-     * @param filterName The name of the filter mapping which should be returned
-     * @return The filter mapping of the entity view with the given name
-     */
-    public FilterMapping<?> getFilter(String filterName);
-    
-    /**
-     * Returns the filter mappings of the entity view.
-     * 
-     * @return The filter mappings of the entity view
-     */
-    public Set<FilterMapping<?>> getFilters();
-    
-    /**
-     * Returns the attribute filter mapping of the entity view with the given name.
-     * 
-     * @param filterName The name of the attribute filter mapping which should be returned
-     * @return The attribute filter mapping of the entity view with the given name
-     */
-    public AttributeFilterMapping getAttributeFilter(String filterName);
-    
-    /**
-     * Returns the attribute filter mappings of the entity view.
-     * 
-     * @return The attribute filter mappings of the entity view
-     */
-    public Set<AttributeFilterMapping> getAttributeFilters();
+    public boolean isPartiallyUpdatable();
     
     /**
      * Returns the view filter mapping of the entity view with the given name.

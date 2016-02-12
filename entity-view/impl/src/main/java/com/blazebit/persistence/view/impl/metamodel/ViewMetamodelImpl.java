@@ -21,6 +21,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.metamodel.Metamodel;
+
+import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.view.EmbeddableEntityView;
+import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
@@ -34,37 +41,73 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 public class ViewMetamodelImpl implements ViewMetamodel {
 
     private final Map<Class<?>, ViewType<?>> views;
+    private final Map<Class<?>, EmbeddableViewType<?>> embeddableViews;
+    private final Map<Class<?>, ManagedViewType<?>> managedViews;
 
-    public ViewMetamodelImpl(Set<Class<?>> entityViews) {
+    public ViewMetamodelImpl(Set<Class<?>> entityViews, boolean validateExpressions, ExpressionFactory expressionFactory, Metamodel metamodel) {
         this.views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
+        this.embeddableViews = new HashMap<Class<?>, EmbeddableViewType<?>>(entityViews.size());
+        this.managedViews = new HashMap<Class<?>, ManagedViewType<?>>(entityViews.size());
 
+        Set<String> errors = new HashSet<String>();
+        
         for (Class<?> entityViewClass : entityViews) {
-            views.put(entityViewClass, getViewType(entityViewClass, entityViews));
+            ManagedViewType<?> managedView;
+            
+            if (!isEmbeddableViewType(entityViewClass)) {
+                ViewType<?> viewType = getViewType(entityViewClass, entityViews, metamodel);
+                views.put(entityViewClass, viewType);
+                managedView = viewType;
+            } else {
+                EmbeddableViewType<?> embeddableViewType = getEmbeddableViewType(entityViewClass, entityViews, metamodel);
+                embeddableViews.put(entityViewClass, embeddableViewType);
+                managedView = embeddableViewType;
+            }
+            
+            managedViews.put(entityViewClass, managedView);
+        }
+        
+        if (validateExpressions) {
+            for (ManagedViewType<?> t : managedViews.values()) {
+                ((ManagedViewTypeImpl<?>) t).checkAttributes(managedViews, expressionFactory, metamodel, errors);
+            }
+        }
+        
+        if (!errors.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("There are error(s) in entity views!");
+            
+            for (String error : errors) {
+                sb.append('\n');
+                sb.append(error);
+            }
+            
+            throw new IllegalArgumentException(sb.toString());
         }
 
         // Check for circular dependencies
         for (ViewType<?> viewType : views.values()) {
-            Set<ViewType<?>> dependencies = new HashSet<ViewType<?>>();
+            Set<ManagedViewType<?>> dependencies = new HashSet<ManagedViewType<?>>();
             dependencies.add(viewType);
             checkCircularDependencies(viewType, dependencies);
         }
     }
 
-    private void checkCircularDependencies(ViewType<?> viewType, Set<ViewType<?>> dependencies) {
+    private void checkCircularDependencies(ManagedViewType<?> viewType, Set<ManagedViewType<?>> dependencies) {
         for (MethodAttribute<?, ?> attr : viewType.getAttributes()) {
             if (attr.isSubview()) {
-                ViewType<?> subviewType;
+                ManagedViewType<?> subviewType;
                 if (attr instanceof PluralAttribute<?, ?, ?>) {
-                    subviewType = views.get(((PluralAttribute<?, ?, ?>) attr).getElementType());
+                    subviewType = managedViews.get(((PluralAttribute<?, ?, ?>) attr).getElementType());
                 } else {
-                    subviewType = views.get(attr.getJavaType());
+                    subviewType = managedViews.get(attr.getJavaType());
                 }
                 if (dependencies.contains(subviewType)) {
-                    throw new IllegalArgumentException("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getName()
+                    throw new IllegalArgumentException("A circular dependency is introduced at the attribute '" + attr.getName() + "' of the view type '" + viewType.getJavaType().getName()
                         + "' in the following dependency set: " + Arrays.deepToString(dependencies.toArray()));
                 }
 
-                Set<ViewType<?>> subviewDependencies = new HashSet<ViewType<?>>(dependencies);
+                Set<ManagedViewType<?>> subviewDependencies = new HashSet<ManagedViewType<?>>(dependencies);
                 subviewDependencies.add(subviewType);
                 checkCircularDependencies(subviewType, subviewDependencies);
             }
@@ -82,8 +125,38 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         return new HashSet<ViewType<?>>(views.values());
     }
 
-    private ViewType<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews) {
-        return new ViewTypeImpl<Object>(entityViewClass, entityViews);
+    @Override
+    @SuppressWarnings("unchecked")
+    public <X> ManagedViewType<X> managedView(Class<X> clazz) {
+        return (ManagedViewType<X>) managedViews.get(clazz);
+    }
+
+    @Override
+    public Set<ManagedViewType<?>> getManagedViews() {
+        return new HashSet<ManagedViewType<?>>(managedViews.values());
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public <X> EmbeddableViewType<X> embeddableView(Class<X> clazz) {
+        return (EmbeddableViewType<X>) embeddableViews.get(clazz);
+    }
+
+    @Override
+    public Set<EmbeddableViewType<?>> getEmbeddableViews() {
+        return new HashSet<EmbeddableViewType<?>>(embeddableViews.values());
+    }
+
+    private boolean isEmbeddableViewType(Class<?> entityViewClass) {
+        return AnnotationUtils.findAnnotation(entityViewClass, EmbeddableEntityView.class) != null;
+    }
+
+    private ViewType<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, Metamodel metamodel) {
+        return new ViewTypeImpl<Object>(entityViewClass, entityViews, metamodel);
+    }
+
+    private EmbeddableViewType<?> getEmbeddableViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, Metamodel metamodel) {
+        return new EmbeddableViewTypeImpl<Object>(entityViewClass, entityViews, metamodel);
     }
 
 }

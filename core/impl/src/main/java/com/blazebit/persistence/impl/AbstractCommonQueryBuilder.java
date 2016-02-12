@@ -93,7 +93,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final EntityManager em;
     protected final DbmsStatementType statementType;
     protected final Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities = new HashMap<Class<?>, Map<String, DbmsModificationState>>(0);
-
+    
     protected final ParameterManager parameterManager;
     protected final SelectManager<QueryResultType> selectManager;
     protected final WhereManager<BuilderType> whereManager;
@@ -117,8 +117,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final ExpressionFactory expressionFactory;
 
     private final List<ExpressionTransformer> transformers;
-    private final SizeSelectToCountTransformer sizeSelectToCountTransformer;
-    private final SizeSelectToSubqueryTransformer sizeSelectToSubqueryTransformer;
+    private final SizeSelectInfoTransformer sizeSelectToCountTransformer;
 
     // Mutable state
     protected Class<QueryResultType> resultType;
@@ -166,7 +165,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.transformers = builder.transformers;
         this.resultType = builder.resultType;
         this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
-        this.sizeSelectToSubqueryTransformer = builder.sizeSelectToSubqueryTransformer;
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder) {
@@ -225,9 +223,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
-        this.sizeSelectToCountTransformer = new SizeSelectToCountTransformer(joinManager, groupByManager, orderByManager, em.getMetamodel());
-        this.sizeSelectToSubqueryTransformer = new SizeSelectToSubqueryTransformer(subqueryInitFactory, this.aliasManager);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager);
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor));
+        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -240,11 +238,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
         this(mainQuery, isMainQuery, statementType, resultClazz, alias, null);
     }
-
+    
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
     }
+    
+    @SuppressWarnings("unchecked")
+    public BuilderType setProperty(String propertyName, String propertyValue) {
+        this.mainQuery.properties.put(propertyName, propertyValue);
+        return (BuilderType) this;
+    }
 
+    @SuppressWarnings("unchecked")
+    public BuilderType setProperties(Map<String, String> properties) {
+        this.mainQuery.properties.clear();
+        this.mainQuery.properties.putAll(properties);
+        return (BuilderType) this;
+    }
+    
+    public Map<String, String> getProperties() {
+        return this.mainQuery.properties;
+    }
+    
     @SuppressWarnings("unchecked")
     public StartOngoingSetOperationCTECriteriaBuilder<BuilderType, LeafOngoingSetOperationCTECriteriaBuilder<BuilderType>> withStartSet(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
@@ -965,13 +980,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void applySizeSelectTransformer() {
-        // TODO: actually we should do the SIZE transformation in all managers
         if (selectManager.containsSizeSelect()) {
-            if (joinManager.hasCollections() || joinManager.getRoots().size() > 1) {
-                selectManager.applySelectInfoTransformer(sizeSelectToSubqueryTransformer);
-            } else {
-                selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
-            }
+            selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
         }
     }
 
@@ -1006,6 +1016,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             selectManager.applyTransformer(transformer);
             whereManager.applyTransformer(transformer);
             groupByManager.applyTransformer(transformer);
+            havingManager.applyTransformer(transformer);
             orderByManager.applyTransformer(transformer);
         }
 

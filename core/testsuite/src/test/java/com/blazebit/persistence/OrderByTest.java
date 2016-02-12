@@ -116,7 +116,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
         config.setProperty(ConfigurationProperties.COMPATIBLE_MODE, "true");
-        cbf = config.createCriteriaBuilderFactory();
+        cbf = config.createCriteriaBuilderFactory(em.getEntityManagerFactory());
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         try {
             criteria.orderByAsc("SIZE(d.partners)");
@@ -145,5 +145,25 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.orderByDesc("FUNCTION('zero',FUNCTION('zero',d.id,FUNCTION('zero',FUNCTION('zero',:colors))),1)");
         assertEquals("SELECT d FROM Document d ORDER BY " + renderNullPrecedence(function("zero", function("zero", "d.id", function("zero", function("zero", ":colors"))), "1"), "DESC", "LAST"), criteria.getQueryString());
+    }
+    
+    @Test
+    public void testOrderBySize(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").orderByAsc("SIZE(d.partners)");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("COUNT(partners_1)", "ASC", "LAST");
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
+    }
+    
+    @Test
+    public void testOrderBySizeMultiple(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
+        criteria.select("d.id").orderByAsc("SIZE(d.partners)").orderByDesc("SIZE(d.versions)");
+        
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("COUNT(DISTINCT partners_1)", "ASC", "LAST") + ", " + renderNullPrecedence("COUNT(DISTINCT versions_1)", "DESC", "LAST");
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
     }
 }

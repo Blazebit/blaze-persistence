@@ -40,4 +40,36 @@ public interface ViewMetamodel {
      * @return The metamodel entity views
      */
     public Set<ViewType<?>> getViews();
+
+    /**
+     * Returns the metamodel managed entity view type representing the managed entity view specified by the given class.
+     *
+     * @param <X>   The type of the given entity view class
+     * @param clazz The entity view class for which the view type should be returned
+     * @return The metamodel entity view type
+     */
+    public <X> ManagedViewType<X> managedView(Class<X> clazz);
+
+    /**
+     * Returns the metamodel managed entity views.
+     *
+     * @return The metamodel managed entity views
+     */
+    public Set<ManagedViewType<?>> getManagedViews();
+
+    /**
+     * Returns the metamodel embeddable entity view type representing the embeddable entity view specified by the given class.
+     *
+     * @param <X>   The type of the given entity view class
+     * @param clazz The entity view class for which the view type should be returned
+     * @return The metamodel entity view type
+     */
+    public <X> EmbeddableViewType<X> embeddableView(Class<X> clazz);
+
+    /**
+     * Returns the metamodel embeddableentity views.
+     *
+     * @return The metamodel embeddableentity views
+     */
+    public Set<EmbeddableViewType<?>> getEmbeddableViews();
 }

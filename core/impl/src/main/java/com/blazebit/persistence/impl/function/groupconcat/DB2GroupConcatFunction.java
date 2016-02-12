@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.function.groupconcat;
 
+import java.util.List;
+
 import com.blazebit.persistence.spi.FunctionRenderContext;
 
 /**
@@ -39,13 +41,26 @@ public class DB2GroupConcatFunction extends AbstractGroupConcatFunction {
 
         sb.append(groupConcat.getExpression());
         sb.append(", ");
-        sb.append(groupConcat.getSeparator());
+        appendQuoted(sb, groupConcat.getSeparator());
 
-        if (!groupConcat.getOrderByExpression().isEmpty()) {
+        List<Order> orderBys = groupConcat.getOrderBys();
+        if (!orderBys.isEmpty()) {
             sb.append(") within group (order by ");
-            sb.append(groupConcat.getOrderByExpression());
+            
+            render(sb, orderBys.get(0));
+            
+            for (int i = 1; i < orderBys.size(); i++) {
+                sb.append(", ");
+                render(sb, orderBys.get(i));
+            }
         }
 
         renderer.start(context).addParameter(sb.toString()).build();
+    }
+
+    @Override
+    protected void render(StringBuilder sb, Order order) {
+        // NOTE: In listagg DB2 does not support the nulls clause at all 
+        appendEmulatedOrderByElementWithNulls(sb, order);
     }
 }

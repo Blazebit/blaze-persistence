@@ -25,7 +25,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DB2MinuteDiffFunction extends MinuteDiffFunction {
 
     public DB2MinuteDiffFunction() {
-        super("(select (days(t1) - days(t2)) * 1440 + coalesce((nullif(midnight_seconds(t1) - midnight_seconds(t2), 0) / 60, 0) from (values (?1,?2)) as temp(t1,t2))");
+        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
+        super("(select (days(t2) - days(t1)) * " + (24 * 60) + " + coalesce(nullif(midnight_seconds(t2) - midnight_seconds(t1), 0) / 60, 0) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

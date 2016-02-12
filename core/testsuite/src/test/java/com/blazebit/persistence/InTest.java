@@ -139,4 +139,12 @@ public class InTest extends AbstractCoreTest {
             .where("d.id").notIn(new ArrayList<Object>());
         assertEquals("SELECT d FROM Document d WHERE " + booleanConditionalExpression(true), criteria.getQueryString());
     }
+    
+    @Test
+    public void testInSingleLiteral(){
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d")
+            .where("d.id").inExpressions("12");
+        assertEquals("SELECT d FROM Document d WHERE d.id IN (12)", criteria.getQueryString());
+        criteria.getResultList();
+    }
 }

@@ -36,11 +36,22 @@ public final class ConfigurationProperties {
     /**
      * Some databases require case sensitivity for attribute paths in the returning clause
      * (unlike PostgreSQL which requires case insensitivity for column names in returning clause)
+     * By default the returning clause is case sensitive.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
      * 
      * @since 1.1.0
      */
     public static final String RETURNING_CLAUSE_CASE_SENSITIVE = "com.blazebit.persistence.returning_clause_case_sensitive";
 
+    /**
+     * If set to false, uses of SIZE will always be transformed to subqueries.
+     * By default the size to count transformation is enabled.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * 
+     * @since 1.1.0
+     */
+    public static final String SIZE_TO_COUNT_TRANSFORMATION = "com.blazebit.persistence.size_to_count_transformation";
+    
     private ConfigurationProperties() {
     }
 }

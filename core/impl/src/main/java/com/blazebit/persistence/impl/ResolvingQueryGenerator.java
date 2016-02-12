@@ -26,6 +26,7 @@ import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
@@ -51,6 +52,16 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         this.aliasManager = aliasManager;
         this.jpaProvider = jpaProvider;
         this.registeredFunctions = registeredFunctions;
+    }
+
+    @Override
+    public void visit(NullExpression expression) {
+        // TODO: extract to jpa provider
+        if (jpaProvider instanceof HibernateJpaProvider) {
+            sb.append("NULLIF(1,1)");
+        } else {
+            super.visit(expression);
+        }
     }
 
     @Override

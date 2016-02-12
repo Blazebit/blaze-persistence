@@ -141,7 +141,7 @@ public class ViewSetAsListTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonWithSetAsListView.class);
         cfg.addEntityView(DocumentWithSetAsListView.class);
         cfg.addEntityView(PersonForCollectionsView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<DocumentForCollections> criteria = cbf.create(em, DocumentForCollections.class, "d")
             .where("id").in(d1.getId(), d2.getId())

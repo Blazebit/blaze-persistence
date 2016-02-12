@@ -204,8 +204,7 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testSelectCaseWhenSizeAsSubexpression() {
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").thenExpression("2").otherwiseExpression("0").where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") +  ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
-        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
+        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -214,8 +213,7 @@ public class CaseWhenTest extends AbstractCoreTest {
     public void testThenParameterValue(){
         CriteriaBuilder<Tuple> criteria = cbf.create(em, Tuple.class).from(Document.class, "d").selectCase().when("SIZE(d.contacts)").gtExpression("2").then(1).otherwise(0).where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") +  ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
-        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN :param_0 ELSE :param_1 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
+        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN :param_0 ELSE :param_1 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, criteria.getQueryString());
     }
 }

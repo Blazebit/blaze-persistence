@@ -18,8 +18,8 @@ package com.blazebit.persistence.view.impl.proxy;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
  *
@@ -30,7 +30,7 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
 	private final Constructor<T> constructor;
 
-	public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ViewType<T> viewType, Class<?>[] parameterTypes) {
+	public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
 		Class<T> proxyClazz = getProxyClass(proxyFactory, viewType);
         Constructor<T> javaConstructor = null;
         
@@ -57,12 +57,21 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
         try {
             return constructor.newInstance(tuple);
         } catch (Exception ex) {
-            throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple), ex);
+            String[] types = new String[tuple.length];
+            
+            for (int i = 0; i < types.length; i++) {
+                if (tuple[i] == null) {
+                    types[i] = null;
+                } else {
+                    types[i] = tuple[i].getClass().getName();
+                }
+            }
+            throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple) + " with the types: " + Arrays.toString(types), ex);
         }
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected Class<T> getProxyClass(ProxyFactory proxyFactory, ViewType<T> viewType) {
+	protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType) {
 		return (Class<T>) proxyFactory.getProxy(viewType);
 	}
 	

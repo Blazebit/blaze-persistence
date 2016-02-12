@@ -41,23 +41,27 @@ public class NodeInfo {
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 17 * hash + (this.expression != null ? this.expression.hashCode() : 0);
-        return hash;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((expression == null) ? 0 : expression.hashCode());
+        return result;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (this == obj)
+            return true;
+        if (obj == null)
             return false;
-        }
-        if (getClass() != obj.getClass()) {
+        if (getClass() != obj.getClass())
             return false;
-        }
-        final NodeInfo other = (NodeInfo) obj;
-        if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
+        NodeInfo other = (NodeInfo) obj;
+        if (expression == null) {
+            if (other.expression != null)
+                return false;
+        } else if (!expression.equals(other.expression))
             return false;
-        }
         return true;
     }
+
 }

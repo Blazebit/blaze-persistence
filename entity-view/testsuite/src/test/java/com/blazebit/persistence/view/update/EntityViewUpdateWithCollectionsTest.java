@@ -22,10 +22,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.EntityTransaction;
+import javax.persistence.EntityManager;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -33,30 +32,29 @@ import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Document;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
-import com.blazebit.persistence.view.update.model.FullUpdateableDocumentWithCollectionsView;
-import com.blazebit.persistence.view.update.model.PartialUpdateableDocumentWithCollectionsView;
-import com.blazebit.persistence.view.update.model.UpdateableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.FullUpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.PartialUpdatableDocumentWithCollectionsView;
+import com.blazebit.persistence.view.update.model.UpdatableDocumentWithCollectionsView;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.1.0
  */
-// TODO: implement
-@Ignore
 @RunWith(Parameterized.class)
-public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWithCollectionsView> extends AbstractEntityViewTest {
+public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWithCollectionsView> extends AbstractEntityViewUpdateTest {
 
     private Class<T> viewType;
     private EntityViewManager evm;
     private Document doc;
+    private Person p1;
+    private Person p2;
     
     public EntityViewUpdateWithCollectionsTest(Class<T> viewType) {
     	this.viewType = viewType;
@@ -65,8 +63,8 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWit
     @Parameterized.Parameters
     public static Collection<?> entityViewCombinations() {
         return Arrays.asList(new Object[][]{
-            { PartialUpdateableDocumentWithCollectionsView.class },
-            { FullUpdateableDocumentWithCollectionsView.class }
+            { PartialUpdatableDocumentWithCollectionsView.class },
+            { FullUpdatableDocumentWithCollectionsView.class }
         });
     }
 
@@ -74,37 +72,36 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWit
     public void setUp() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
         
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc = new Document("doc");
+        transactional(new TxVoidWork() {
 
-            Person o1 = new Person("pers1");
-            o1.getLocalized().put(1, "localized1");
-            Person o2 = new Person("pers2");
-            o2.getLocalized().put(1, "localized2");
-
-            doc.setOwner(o1);
-            doc.getContacts().put(1, o1);
-            doc.getContacts2().put(2, o1);
-
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(doc);
-            
-            o1.setPartnerDocument(doc);
-
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc = em.find(Document.class, doc.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+            @Override
+            public void doWork(EntityManager em) {
+                doc = new Document("doc");
+    
+                p1 = new Person("pers1");
+                p1.getLocalized().put(1, "localized1");
+                p2 = new Person("pers2");
+                p2.getLocalized().put(1, "localized2");
+    
+                doc.setOwner(p1);
+                doc.getPersonList().add(p1);
+                doc.getContacts().put(1, p1);
+                doc.getContacts2().put(2, p1);
+    
+                em.persist(p1);
+                em.persist(p2);
+                em.persist(doc);
+                
+                p1.setPartnerDocument(doc);
+    
+                em.flush();
+            }
+        });
+        
+        em.clear();
+        doc = em.find(Document.class, doc.getId());
     }
 
     @Test
@@ -113,24 +110,47 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdateableDocumentWit
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
-        T docView = results.get(0);
+        final T docView = results.get(0);
         
         // When
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-	        docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
-	        evm.update(em, docView);
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void doWork(EntityManager em) {
+    	        docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
+    	        evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         em.clear();
-        doc = em.find(Document.class, doc.getId());
+        doc = cbf.create(em, Document.class).fetch("personList").where("id").eq(doc.getId()).getSingleResult();
+        assertEquals(doc.getPersonList(), docView.getPersonList());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class })
+    public void testUpdateAddToCollection() {
+        CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
+        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
+        List<T> results = cb.getResultList();
+        final T docView = results.get(0);
+        
+        // When
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void doWork(EntityManager em) {
+                docView.getPersonList().add(em.find(Person.class, p2.getId()));
+                evm.update(em, docView);
+                em.flush();
+            }
+        });
+
+        // Then
+        em.clear();
+        doc = cbf.create(em, Document.class).fetch("personList").where("id").eq(doc.getId()).getSingleResult();
         assertEquals(doc.getPersonList(), docView.getPersonList());
     }
 }

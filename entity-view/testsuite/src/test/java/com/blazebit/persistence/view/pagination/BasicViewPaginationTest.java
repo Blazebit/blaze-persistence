@@ -23,7 +23,6 @@ import java.util.List;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
@@ -42,13 +41,13 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
  */
 public class BasicViewPaginationTest extends AbstractEntityViewTest {
 
-    protected static EntityViewManager evm;
+    protected EntityViewManager evm;
     
-    @BeforeClass
-    public static void initEvm() {
+    @Before
+    public void initEvm() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewInterface.class);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
     }
     
     @Before

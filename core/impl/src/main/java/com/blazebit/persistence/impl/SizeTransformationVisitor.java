@@ -15,21 +15,78 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.Type.PersistenceType;
+
+import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.PredicateModifyingResultVisitorAdapter;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
+import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 
 /**
  *
  * @author Moritz Becker
  */
-public abstract class SizeTransformationVisitor extends PredicateModifyingResultVisitorAdapter {
+public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAdapter {
 
+    private final Metamodel metamodel;
+    private final AliasManager aliasManager;
+    private final SubqueryInitiatorFactory subqueryInitFactory;
+    private final JoinManager joinManager;
+    private final GroupByManager groupByManager;
+    private final Map<String, String> properties;
+    
+    // state
+    private boolean orderBySelectClause;
+    private boolean distinctRequired;
+    private ClauseType clause;
+    private final Set<AggregateExpression> transformedExpressions = new HashSet<AggregateExpression>();
+    // maps absolute paths to join nodes
+    private final Map<String, PathReference> generatedJoins = new HashMap<String, PathReference>();
+    
+    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager) {
+        this.metamodel = mainQuery.em.getMetamodel();
+        this.aliasManager = aliasManager;
+        this.subqueryInitFactory = subqueryInitFactory;
+        this.joinManager = joinManager;
+        this.groupByManager = groupByManager;
+        this.properties = mainQuery.properties;
+    }
+    
+    public ClauseType getClause() {
+        return clause;
+    }
+    
+    public void setClause(ClauseType clause) {
+        this.clause = clause;
+    }
+    
+    public boolean isOrderBySelectClause() {
+        return orderBySelectClause;
+    }
+    
+    public void setOrderBySelectClause(boolean orderBySelectClause) {
+        this.orderBySelectClause = orderBySelectClause;
+    }
+    
     @Override
     public Expression visit(CompositeExpression expression) {
         for (int i = 0; i < expression.getExpressions().size(); i++) {
@@ -59,5 +116,112 @@ public abstract class SizeTransformationVisitor extends PredicateModifyingResult
     @Override
     public Expression visit(SimpleCaseExpression expression) {
         return visit((GeneralCaseExpression) expression);
+    }
+    
+    @Override
+    public Expression visit(PathExpression expression) {
+        if (orderBySelectClause) {
+            ((JoinNode) expression.getBaseNode()).getClauseDependencies().add(ClauseType.ORDER_BY);
+        }
+        return expression;
+    }
+    
+    private boolean isCountTransformationEnabled() {
+        String sizeToCountTransformationPropertyValue = properties.get(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION);
+        if (sizeToCountTransformationPropertyValue == null) {
+            return true;
+        } else {
+            return Boolean.parseBoolean(sizeToCountTransformationPropertyValue);
+        }
+    }
+
+    @Override
+    public Expression visit(FunctionExpression expression) {
+        if (ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
+            PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
+            Class<?> collectionClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
+            PersistenceType collectionIdType = metamodel.entity(collectionClass).getIdType().getPersistenceType();
+
+            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(collectionClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled()) {
+                return generateSubquery(sizeArg, collectionClass);
+            } else {
+                // build group by id clause
+                List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
+                List<JoinNode> roots = joinManager.getRoots();
+                
+                String rootAlias = roots.get(0).getAliasInfo().getAlias();
+                String rootId = JpaUtils.getIdAttribute(metamodel.entity(roots.get(0).getPropertyClass())).getName();
+                pathElementExpr.add(new PropertyExpression(rootAlias));
+                pathElementExpr.add(new PropertyExpression(rootId));
+                PathExpression groupByExpr = new PathExpression(pathElementExpr);
+                joinManager.implicitJoin(groupByExpr, true, null, false, false, false);
+                
+                if (groupByManager.hasGroupBys() && !groupByManager.existsGroupBy(groupByExpr)) {
+                    return generateSubquery(sizeArg, collectionClass);
+                }
+                
+                // join
+                sizeArg.setUsedInCollectionFunction(false);
+                AggregateExpression countExpr = new AggregateExpression(distinctRequired, "COUNT", expression.getExpressions());
+                transformedExpressions.add(countExpr);
+                
+                JoinNode originalNode = (JoinNode) sizeArg.getBaseNode();
+                String nodeLookupKey = originalNode.getAliasInfo().getAbsolutePath() + "." + sizeArg.getField();
+                PathReference generatedJoin = generatedJoins.get(nodeLookupKey);
+                if (generatedJoin == null) { 
+                    joinManager.implicitJoin(sizeArg, true, clause, false, false, true);
+                    generatedJoin = sizeArg.getPathReference();
+                    generatedJoins.put(((JoinNode) generatedJoin.getBaseNode()).getAliasInfo().getAbsolutePath(), generatedJoin);
+                } else {
+                    sizeArg.setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField()));
+                }
+                
+                if (distinctRequired == false) { 
+                    if(joinManager.getCollectionJoins().size() > 1) {
+                        distinctRequired = true;
+                        /**
+                         *  As soon as we encounter another collection join, set previously 
+                         *  performed transformations to distinct.
+                         */
+                        for (AggregateExpression aggregateExpr : transformedExpressions) {
+                            aggregateExpr.setDistinct(true);
+                        }
+                    }
+                }
+                
+                groupByManager.groupBy(groupByExpr);
+                super.visit(expression);
+                
+                return countExpr;
+            }
+        } else {
+            super.visit(expression);
+        }
+        return expression;
+    }
+    
+    private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
+        String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
+        String collectionPropertyName = sizeArg.getField() != null ? sizeArg.getField() : baseAlias;
+        String collectionPropertyAlias = collectionPropertyName.replace('.', '_');
+        String collectionPropertyClassName = collectionClass.getSimpleName().toLowerCase();
+        String collectionPropertyClassAlias = collectionPropertyClassName;
+
+        if (aliasManager.getAliasInfo(collectionPropertyClassName) != null) {
+            collectionPropertyClassAlias = aliasManager.generatePostfixedAlias(collectionPropertyClassName);
+        }
+        if (aliasManager.getAliasInfo(collectionPropertyName) != null) {
+            collectionPropertyAlias = aliasManager.generatePostfixedAlias(collectionPropertyName);
+        }
+        
+        Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>())
+            .from(collectionClass, collectionPropertyClassAlias)
+            .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
+            .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
+            .where(collectionPropertyClassAlias)
+            .eqExpression(baseAlias);
+
+
+        return new SubqueryExpression(countSubquery);
     }
 }

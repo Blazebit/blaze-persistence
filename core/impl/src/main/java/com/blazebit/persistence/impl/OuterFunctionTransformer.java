@@ -43,7 +43,6 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         this.joinManager = joinManager;
     }
 
-    // TODO: needs to be recursive and walk into expressions
     @Override
     public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
         if (original instanceof CompositeExpression) {

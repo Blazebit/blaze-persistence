@@ -25,7 +25,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLHourDiffFunction extends HourDiffFunction {
 
     public PostgreSQLHourDiffFunction() {
-        super("(select date_part('day', t2 - t1) * 24 + date_part('hour', t2 - t1) from (values (?1,?2)) as temp(t1,t2))");
+        super("(select date_part('day', t2::timestamp - t1::timestamp) * 24 + date_part('hour', t2::timestamp - t1::timestamp) from (values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

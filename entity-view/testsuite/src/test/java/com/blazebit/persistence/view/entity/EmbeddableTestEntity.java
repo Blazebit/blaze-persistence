@@ -1,10 +1,16 @@
 package com.blazebit.persistence.view.entity;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.ElementCollection;
 import javax.persistence.Embedded;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.MapKeyColumn;
 
 @Entity
 public class EmbeddableTestEntity implements Serializable {
@@ -13,6 +19,8 @@ public class EmbeddableTestEntity implements Serializable {
 
     private EmbeddableTestEntityId id = new EmbeddableTestEntityId();
     private EmbeddableTestEntityEmbeddable embeddable = new EmbeddableTestEntityEmbeddable();
+    private Set<EmbeddableTestEntitySimpleEmbeddable> embeddableSet = new HashSet<EmbeddableTestEntitySimpleEmbeddable>(0);
+    private Map<String, EmbeddableTestEntitySimpleEmbeddable> embeddableMap = new HashMap<String, EmbeddableTestEntitySimpleEmbeddable>(0);
 
     public EmbeddableTestEntity() {
     }
@@ -33,6 +41,25 @@ public class EmbeddableTestEntity implements Serializable {
     
     public void setEmbeddable(EmbeddableTestEntityEmbeddable embeddable) {
         this.embeddable = embeddable;
+    }
+
+    @ElementCollection
+    public Set<EmbeddableTestEntitySimpleEmbeddable> getEmbeddableSet() {
+        return embeddableSet;
+    }
+    
+    public void setEmbeddableSet(Set<EmbeddableTestEntitySimpleEmbeddable> embeddableSet) {
+        this.embeddableSet = embeddableSet;
+    }
+
+    @ElementCollection
+    @MapKeyColumn(nullable = false, length = 20)
+    public Map<String, EmbeddableTestEntitySimpleEmbeddable> getEmbeddableMap() {
+        return embeddableMap;
+    }
+    
+    public void setEmbeddableMap(Map<String, EmbeddableTestEntitySimpleEmbeddable> embeddableMap) {
+        this.embeddableMap = embeddableMap;
     }
 
     @Override

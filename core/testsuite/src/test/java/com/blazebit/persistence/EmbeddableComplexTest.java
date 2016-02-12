@@ -125,6 +125,17 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         cb.getResultList();
     }
     
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testSelectEmbeddedIdCollectionSize(){
+        CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class, "e");
+        cb.select("SIZE(e.embeddable.oneToMany)");
+        
+        String expected = "SELECT (SELECT COUNT(embeddable_oneToMany) FROM EmbeddableTestEntity embeddabletestentity LEFT JOIN embeddabletestentity.embeddable.oneToMany embeddable_oneToMany WHERE embeddabletestentity = e) FROM EmbeddableTestEntity e";
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+    }
+    
     /* ElementCollection */
     
     @Test
@@ -157,6 +168,17 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
                 .select("e.id.localizedEntity.someValue");
         
         assertEquals("SELECT e.id.localizedEntity.someValue FROM EmbeddableTestEntity e", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testEmbeddableExplicitJoin(){
+        CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
+                .leftJoin("e.embeddable.nestedEmbeddable.nestedOneToMany", "oneToMany")
+                .select("oneToMany");
+        
+        assertEquals("SELECT oneToMany FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.nestedEmbeddable.nestedOneToMany oneToMany", crit.getQueryString());
         crit.getResultList();
     }
 }

@@ -106,7 +106,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubquery() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByAsc("id");
         EntityViewSetting<DocumentWithSubquery, CriteriaBuilder<DocumentWithSubquery>> setting;
@@ -126,7 +126,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubqueryWithExpression() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithExpressionSubqueryView.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         // Base setting
         EntityViewSetting<DocumentWithExpressionSubqueryView, PaginatedCriteriaBuilder<DocumentWithExpressionSubqueryView>> setting = EntityViewSetting
@@ -157,7 +157,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
     public void testSubqueryEntityViewSettings() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentWithSubquery.class);
-        EntityViewManager evm = cfg.createEntityViewManager();
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class).orderByDesc("id");
         EntityViewSetting<DocumentWithSubquery, PaginatedCriteriaBuilder<DocumentWithSubquery>> setting = EntityViewSetting

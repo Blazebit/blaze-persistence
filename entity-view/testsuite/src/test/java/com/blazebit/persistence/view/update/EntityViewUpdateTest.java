@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
@@ -32,7 +33,6 @@ import org.junit.runners.Parameterized;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -41,7 +41,7 @@ import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.update.model.FullDocumentView;
 import com.blazebit.persistence.view.update.model.PartialDocumentView;
-import com.blazebit.persistence.view.update.model.UpdateableDocumentView;
+import com.blazebit.persistence.view.update.model.UpdatableDocumentView;
 
 /**
  *
@@ -49,7 +49,7 @@ import com.blazebit.persistence.view.update.model.UpdateableDocumentView;
  * @since 1.1.0
  */
 @RunWith(Parameterized.class)
-public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends AbstractEntityViewTest {
+public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends AbstractEntityViewUpdateTest {
 
     private Class<T> viewType;
     private EntityViewManager evm;
@@ -71,37 +71,35 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
     public void setUp() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(viewType);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void doWork(EntityManager em) {
+                doc = new Document("doc");
+    
+                Person o1 = new Person("pers1");
+                o1.getLocalized().put(1, "localized1");
+                Person o2 = new Person("pers2");
+                o2.getLocalized().put(1, "localized2");
+    
+                doc.setOwner(o1);
+                doc.getContacts().put(1, o1);
+                doc.getContacts2().put(2, o1);
+    
+                em.persist(o1);
+                em.persist(o2);
+                em.persist(doc);
+                
+                o1.setPartnerDocument(doc);
+    
+                em.flush();
+            }
+        });
         
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-            doc = new Document("doc");
-
-            Person o1 = new Person("pers1");
-            o1.getLocalized().put(1, "localized1");
-            Person o2 = new Person("pers2");
-            o2.getLocalized().put(1, "localized2");
-
-            doc.setOwner(o1);
-            doc.getContacts().put(1, o1);
-            doc.getContacts2().put(2, o1);
-
-            em.persist(o1);
-            em.persist(o2);
-            em.persist(doc);
-            
-            o1.setPartnerDocument(doc);
-
-            em.flush();
-            tx.commit();
-            em.clear();
-
-            doc = em.find(Document.class, doc.getId());
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        em.clear();
+        doc = em.find(Document.class, doc.getId());
     }
 
     @Test
@@ -110,20 +108,18 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
-        T docView = results.get(0);
+        final T docView = results.get(0);
         
         // When
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-	        docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
-	        evm.update(em, docView);
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void doWork(EntityManager em) {
+    	        docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
+    	        evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         em.clear();
@@ -137,20 +133,18 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
-        T docView = results.get(0);
+        final T docView = results.get(0);
         
         // When
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-	        docView.setName("newDoc");
-	        evm.update(em, docView);
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+        transactional(new TxVoidWork() {
+
+            @Override
+            public void doWork(EntityManager em) {
+    	        docView.setName("newDoc");
+    	        evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         em.clear();
@@ -164,25 +158,24 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
-        T docView = results.get(0);
+        final T docView = results.get(0);
         
         // When
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-	        docView.setName("newDoc");
-	        evm.update(em, docView);
-            em.flush();
-            tx.rollback();
+        transactional(new TxVoidWork() {
 
-            tx.begin();
-	        evm.update(em, docView);
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+            @Override
+            public void doWork(EntityManager em) {
+                EntityTransaction tx = em.getTransaction();
+    	        docView.setName("newDoc");
+    	        evm.update(em, docView);
+                em.flush();
+                tx.rollback();
+    
+                tx.begin();
+    	        evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         em.clear();
@@ -196,31 +189,30 @@ public class EntityViewUpdateTest<T extends UpdateableDocumentView> extends Abst
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
         List<T> results = cb.getResultList();
-        T docView = results.get(0);
+        final T docView = results.get(0);
         
         // When
-        EntityTransaction tx = em.getTransaction();
-        try {
-            tx.begin();
-	        docView.setName("newDoc");
-	        evm.update(em, docView);
-            em.flush();
-            tx.rollback();
-            
-	        docView.setName("newDoc1");
-	        // Remove milliseconds because MySQL doesn't use that precision by default
-	        Date date = new Date();
-	        date.setTime(1000 * (date.getTime() / 1000));
-	        docView.setLastModified(date);
+        transactional(new TxVoidWork() {
 
-            tx.begin();
-	        evm.update(em, docView);
-            em.flush();
-            tx.commit();
-        } catch (Exception e) {
-            tx.rollback();
-            throw new RuntimeException(e);
-        }
+            @Override
+            public void doWork(EntityManager em) {
+                EntityTransaction tx = em.getTransaction();
+    	        docView.setName("newDoc");
+    	        evm.update(em, docView);
+                em.flush();
+                tx.rollback();
+                
+    	        docView.setName("newDoc1");
+    	        // Remove milliseconds because MySQL doesn't use that precision by default
+    	        Date date = new Date();
+    	        date.setTime(1000 * (date.getTime() / 1000));
+    	        docView.setLastModified(date);
+    
+                tx.begin();
+    	        evm.update(em, docView);
+                em.flush();
+            }
+        });
 
         // Then
         em.clear();

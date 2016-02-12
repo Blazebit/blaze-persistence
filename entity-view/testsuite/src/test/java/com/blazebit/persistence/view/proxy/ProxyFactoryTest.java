@@ -29,6 +29,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.entity.Person;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
@@ -47,7 +48,7 @@ import com.blazebit.reflection.ReflectionUtils;
  * @author Christian Beikov
  * @since 1.0
  */
-public class ProxyFactoryTest {
+public class ProxyFactoryTest extends AbstractEntityViewTest {
 
     private final ProxyFactory proxyFactory = new ProxyFactory();
 
@@ -56,7 +57,7 @@ public class ProxyFactoryTest {
         cfg.addEntityView(DocumentInterfaceView.class);
         cfg.addEntityView(DocumentClassView.class);
         cfg.addEntityView(UnsafeDocumentClassView.class);
-        return cfg.createEntityViewManager().getMetamodel();
+        return cfg.createEntityViewManager(cbf, em.getEntityManagerFactory()).getMetamodel();
     }
 
     @Test

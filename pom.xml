@@ -103,9 +103,9 @@
 		<version.datanucleus.rdbms-4>4.1.6</version.datanucleus.rdbms-4>
 		<version.datanucleus.api-jpa-4>4.1.4</version.datanucleus.api-jpa-4>
 		<version.datanucleus.jpa-4>4.0.4</version.datanucleus.jpa-4>
-		<version.datanucleus.base-5>5.0.0-m1-SNAPSHOT</version.datanucleus.base-5>
-		<version.datanucleus.rdbms-5>5.0.0-m1-SNAPSHOT</version.datanucleus.rdbms-5>
-		<version.datanucleus.api-jpa-5>5.0.0-m1-SNAPSHOT</version.datanucleus.api-jpa-5>
+		<version.datanucleus.base-5>5.0.0-m1</version.datanucleus.base-5>
+		<version.datanucleus.rdbms-5>5.0.0-m1</version.datanucleus.rdbms-5>
+		<version.datanucleus.api-jpa-5>5.0.0-m1</version.datanucleus.api-jpa-5>
 		<version.datanucleus.jpa-5>4.0.4</version.datanucleus.jpa-5>
 		
 		<version.eclipselink>2.6.1</version.eclipselink>
@@ -119,6 +119,10 @@
 		<version.injection.plugin>1.0.2</version.injection.plugin>
 		<version.release.plugin>2.5.1</version.release.plugin>
 		<version.surefire.plugin>2.18.1</version.surefire.plugin>
+		
+        <!-- JVM values for surefire plugin -->
+        <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
+        <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
 	</properties>
 
 	<dependencyManagement>
@@ -199,21 +203,6 @@
 				<artifactId>blaze-persistence-integration-openjpa</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-persistence-integration-base-cdi</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-persistence-integration-core-cdi</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>${project.groupId}</groupId>
-				<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-				<version>${project.version}</version>
-			</dependency>
 
 			<dependency>
 				<groupId>${project.groupId}</groupId>
@@ -239,6 +228,16 @@
 				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
 				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+		        <groupId>${project.groupId}</groupId>
+		        <artifactId>blaze-persistence-integration-base-cdi</artifactId>
+		        <version>${project.version}</version>
+			</dependency>
+			<dependency>
+		        <groupId>${project.groupId}</groupId>
+		        <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+		        <version>${project.version}</version>
 			</dependency>
 
 			<!-- Platform dependencies -->
@@ -276,6 +275,12 @@
 				<scope>test</scope>
 			</dependency>
 			<dependency>
+				<groupId>org.apache.openejb</groupId>
+				<artifactId>openejb-core</artifactId>
+				<version>${version.openejb}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.deltaspike.cdictrl</groupId>
 				<artifactId>deltaspike-cdictrl-api</artifactId>
 				<version>${version.deltaspike}</version>
@@ -285,12 +290,6 @@
 				<groupId>org.apache.deltaspike.cdictrl</groupId>
 				<artifactId>deltaspike-cdictrl-openejb</artifactId>
 				<version>${version.deltaspike}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.openejb</groupId>
-				<artifactId>openejb-core</artifactId>
-				<version>${version.openejb}</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -412,6 +411,20 @@
 					<!-- Disable annotation processing via compiler plugin. -->
 					<compilerArgument>-proc:none</compilerArgument>
 				</configuration>
+			</plugin>
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+				<executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Travis build workaround -->
+                            <argLine>${surefire.jvm.params}</argLine>
+                            <skipTests>${skipTests}</skipTests>
+                        </configuration>
+                    </execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>

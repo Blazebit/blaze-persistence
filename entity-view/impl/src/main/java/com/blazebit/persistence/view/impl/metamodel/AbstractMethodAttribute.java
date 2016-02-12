@@ -31,9 +31,10 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -44,19 +45,31 @@ import com.blazebit.reflection.ReflectionUtils;
 public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X, Y> implements MethodAttribute<X, Y> {
 
     private final String name;
-    private final boolean updateable;
+    private final boolean updatable;
     private final Method javaMethod;
     private final Map<String, AttributeFilterMapping> filterMappings;
 
     @SuppressWarnings("unchecked")
-    protected AbstractMethodAttribute(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    protected AbstractMethodAttribute(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
               mapping,
               entityViews,
               "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         this.name = StringUtils.firstToLower(method.getName().substring(3));
-        this.updateable = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
+
+        UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
+        boolean hasSetter = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
+
+        // TODO: this is not correct for collections, maybe collections should be mutable by default?
+        // Btw. what shall we do if the attribute would be updatable but the viewType isn't? Since it could be a subview, we should keep the updatable state I think, 
+        // but then I'd also need to create updatable proxy classes even if the entity view is not updatable by itself 
+        if (updatableMapping == null) {
+            this.updatable = hasSetter;
+        } else {
+            this.updatable = updatableMapping.updatable();
+        }
+        
         this.javaMethod = method;
         this.filterMappings = new HashMap<String, AttributeFilterMapping>();
         
@@ -101,8 +114,8 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
     }
 
     @Override
-	public boolean isUpdateable() {
-		return updateable;
+	public boolean isUpdatable() {
+		return updatable;
 	}
 
 	@Override
@@ -124,7 +137,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return filterMappings;
     }
 
-    public static String validate(ViewType<?> viewType, Method m) {
+    public static String validate(ManagedViewType<?> viewType, Method m) {
         // Concrete methods are not mapped
         if (!Modifier.isAbstract(m.getModifiers()) || m.isBridge()) {
             return null;
@@ -175,7 +188,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         return attributeName;
     }
 
-    public static Annotation getMapping(ViewType<?> viewType, Method m) {
+    public static Annotation getMapping(ManagedViewType<?> viewType, Method m) {
         Class<?> entityClass = viewType.getEntityClass();
         Mapping mapping = AnnotationUtils.findAnnotation(m, Mapping.class);
 
@@ -218,7 +231,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (!entityAttributeExists) {
                 throw new IllegalArgumentException("The entity class '" + entityClass.getName() + "' has no attribute '" + attributeName
-                    + "' that was implicitly mapped in entity view '" + viewType.getName() + "' in class '" + m.getDeclaringClass().getName() + "'");
+                    + "' that was implicitly mapped in entity view '" + viewType.getJavaType().getName() + "' in class '" + m.getDeclaringClass().getName() + "'");
             }
 
             mapping = new MappingLiteral(attributeName);

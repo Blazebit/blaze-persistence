@@ -15,13 +15,18 @@
  */
 package com.blazebit.persistence.view.impl.cdi;
 
-import com.blazebit.persistence.view.EntityViewManager;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import javax.inject.Inject;
+
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import static org.junit.Assert.*;
 import org.junit.Test;
+
+import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
 /**
  *
@@ -31,23 +36,18 @@ import org.junit.Test;
 public class EntityViewExtensionTest {
 
     @Inject
-    private EntityViewManager evm;
+    private EntityViewConfiguration config;
 
     @Test
     public void testInjection() throws Exception {
         CdiContainer container = CdiContainerLoader.getCdiContainer();
         container.boot();
-        container.getContextControl()
-            .startContexts();
+        container.getContextControl().startContexts();
         BeanProvider.injectFields(this);
 
-        assertTrue(ConfigObserver.observed);
-        assertNotNull(evm);
-        assertFalse(evm.getMetamodel()
-            .getViews()
-            .isEmpty());
-        assertNotNull(evm.getMetamodel()
-            .view(TestView.class));
+        assertNotNull(config);
+        assertFalse(config.getEntityViews().isEmpty());
+        assertTrue(config.getEntityViews().contains(TestView.class));
 
         container.shutdown();
     }

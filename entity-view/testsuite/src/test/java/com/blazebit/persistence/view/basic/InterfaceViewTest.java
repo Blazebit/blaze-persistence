@@ -22,7 +22,6 @@ import java.util.List;
 import javax.persistence.EntityTransaction;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -44,15 +43,15 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
  */
 public class InterfaceViewTest extends AbstractEntityViewTest {
 
-    protected static EntityViewManager evm;
+    protected EntityViewManager evm;
 
-    @BeforeClass
-    public static void initEvm() {
+    @Before
+    public void initEvm() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(DocumentViewInterface.class);
         cfg.addEntityView(DocumentViewAbstractClass.class);
         cfg.addEntityView(PersonView.class);
-        evm = cfg.createEntityViewManager();
+        evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
     }
 
     private Document doc1;

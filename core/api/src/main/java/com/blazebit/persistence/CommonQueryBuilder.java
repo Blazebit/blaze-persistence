@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Parameter;
@@ -117,4 +118,30 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * @return The value of the parameter or null if no value has been set or the parameter does not exist
      */
     public Object getParameterValue(String name);
+    
+    /**
+     * Sets a configuration property with the given propertyName to the given propertyValue.
+     * If a property with this name does not exist, it is added.
+     * 
+     * @param propertyName The name of the property
+     * @param propertyValue The value of the property
+     * @since 1.1.0
+     */
+    public X setProperty(String propertyName, String propertyValue);
+    
+    /**
+     * Overwrites the properties with the given set of properties
+     * 
+     * @param properties The new properties
+     * @since 1.1.0
+     */
+    public X setProperties(Map<String, String> properties);
+    
+    /**
+     * Retrieves all properties
+     * 
+     * @return A map representing all properties
+     * @since 1.1.0
+     */
+    public Map<String, String> getProperties();
 }

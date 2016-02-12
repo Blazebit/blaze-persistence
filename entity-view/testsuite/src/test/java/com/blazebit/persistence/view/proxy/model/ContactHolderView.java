@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.proxy.model;
 import java.io.Serializable;
 import java.util.Map;
 
+import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.entity.Person;
 
 /**
@@ -27,6 +28,7 @@ import com.blazebit.persistence.view.entity.Person;
  */
 interface ContactHolderView<T> extends Serializable {
 
+    @UpdatableMapping(updatable = false)
     public Map<T, Person> getContacts();
 
     public void setContacts(Map<T, Person> localized);

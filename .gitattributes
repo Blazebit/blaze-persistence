@@ -1,0 +1,161 @@
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto eol=lf
+
+################################################################################################
+# Custom attributes
+################################################################################################
+Makefile text eol=lf
+
+################################################################################################
+# Common attributes from https://github.com/Danimoth/gitattributes/blob/master/Common.gitattributes
+################################################################################################
+
+# Documents
+*.doc	 diff=astextplain
+*.DOC	 diff=astextplain
+*.docx diff=astextplain
+*.DOCX diff=astextplain
+*.dot  diff=astextplain
+*.DOT  diff=astextplain
+*.pdf  diff=astextplain
+*.PDF	 diff=astextplain
+*.rtf	 diff=astextplain
+*.RTF	 diff=astextplain
+*.md text eol=lf
+*.adoc text eol=lf
+*.textile text eol=lf
+*.mustache text eol=lf
+*.csv text eol=lf
+*.tab text eol=lf
+*.tsv text eol=lf
+*.sql text eol=lf
+*.erb text eol=lf
+
+# Graphics
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.eot binary
+*.svg text eol=lf
+
+################################################################################################
+# Web attributes from https://github.com/Danimoth/gitattributes/blob/master/Web.gitattributes
+################################################################################################
+
+# source code
+*.php text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.htm text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
+*.txt text eol=lf
+*.ini text eol=lf
+*.inc text eol=lf
+*.pl text eol=lf
+*.rb text eol=lf
+*.py text eol=lf
+*.scm text eol=lf
+*.sql text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+
+# templates
+*.hbt text eol=lf
+*.jade text eol=lf
+*.haml text eol=lf
+*.hbs text eol=lf
+*.dot text eol=lf
+*.tmpl text eol=lf
+
+# server config
+.htaccess text eol=lf
+
+# git config
+.gitattributes text eol=lf
+.gitignore text eol=lf
+
+# code analysis config
+.jshintrc text eol=lf
+.jscsrc text eol=lf
+.jshintignore text eol=lf
+.csslintrc text eol=lf
+
+# misc config
+*.yaml text eol=lf
+*.yml text eol=lf
+.editorconfig text eol=lf
+
+# build config
+*.npmignore text eol=lf
+*.bowerrc text eol=lf
+
+# Heroku
+Procfile text eol=lf
+.slugignore text eol=lf
+
+# Documentation
+*.md text eol=lf
+LICENSE text eol=lf
+AUTHORS text eol=lf
+
+
+#
+## These files are binary and should be left untouched
+#
+
+# (binary is a macro for -text -diff)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.pyc binary
+*.pdf binary
+
+################################################################################################
+# Java attributes from https://github.com/Danimoth/gitattributes/blob/master/Java.gitattributes
+################################################################################################
+*.css           text eol=lf
+*.df            text eol=lf
+*.htm           text eol=lf
+*.html          text eol=lf
+*.java          text eol=lf
+*.js            text eol=lf
+*.json          text eol=lf
+*.jsp           text eol=lf
+*.jspf          text eol=lf
+*.properties    text eol=lf
+*.sh            text eol=lf
+*.svg           text eol=lf
+*.tld           text eol=lf
+*.txt           text eol=lf
+*.xml           text eol=lf
+
+*.class         binary
+*.dll           binary
+*.ear           binary
+*.gif           binary
+*.ico           binary
+*.jar           binary
+*.jpg           binary
+*.jpeg          binary
+*.png           binary
+*.so            binary
+*.war           binary
+*.keystore      binary
+*.vsdx	        binary

@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import com.blazebit.persistence.view.metamodel.CollectionAttribute;
-import com.blazebit.persistence.view.metamodel.ViewType;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 /**
  *
@@ -30,7 +30,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public class MethodMappingCollectionAttributeImpl<X, Y> extends AbstractMethodMappingPluralAttribute<X, Collection<Y>, Y> implements CollectionAttribute<X, Y> {
 
-    public MethodMappingCollectionAttributeImpl(ViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    public MethodMappingCollectionAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
         super(viewType, method, mapping, entityViews, false);
     }
 

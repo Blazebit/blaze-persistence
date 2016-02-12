@@ -19,8 +19,11 @@ import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
 import org.junit.Test;
@@ -28,7 +31,9 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
+import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.function.ZeroFunction;
+import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
@@ -302,17 +307,79 @@ public class SelectTest extends AbstractCoreTest {
     }
 
     @Test
-    public void testSelectSizeAsSubexpression() {
+    public void testSelectSizeAsDistinctCount1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE 0 END")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expectedSubquery = "SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d";
-        String expected = "SELECT CASE WHEN (" + expectedSubquery + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny'";
+        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
 
+    @Test
+    public void testSelectSizeAsDistinctCount2() {
+        // Given
+        EntityTransaction tx = em.getTransaction();
+        try{
+            tx.begin();
+            Document d = new Document("D1");
+
+            Person p1 = new Person("Joe");
+            Person p2 = new Person("Fred");
+            d.setOwner(p1);
+            d.getPartners().add(p1);
+            d.getPartners().add(p2);
+            
+            em.persist(p1);
+            em.persist(p2);
+            em.persist(d);
+            
+            Version v1 = new Version();
+            v1.setDate(Calendar.getInstance());
+            v1.setDocument(d);
+            
+            Version v2 = new Version();
+            v2.setDate(Calendar.getInstance());
+            v2.setDocument(d);
+            
+            Version v3 = new Version();
+            v3.setDate(Calendar.getInstance());
+            v3.setDocument(d);
+            
+            em.persist(v1);
+            em.persist(v2);
+            em.persist(v3);
+            
+            tx.commit();
+        } catch(Throwable t) {
+            t.printStackTrace();
+            tx.rollback();
+        }
+        
+        // When
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("CASE WHEN SIZE(d.contacts) > 2 THEN SIZE(d.partners) ELSE SIZE(d.versions) END");
+
+        // Then
+        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
+        assertEquals(expected, cb.getQueryString());
+        List<Tuple> result = cb.getResultList();
+        assertEquals(3l, result.get(0).get(0));
+    }
+    
+    @Test
+    public void testDisableSizeToCountTransformation() {
+        // When
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("SIZE(d.contacts)")
+                .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false");
+        
+        final String expected = "SELECT (SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+    }
+    
     @Test
     public void testSelectAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")

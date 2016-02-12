@@ -24,11 +24,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -61,7 +63,7 @@ import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
-import com.blazebit.persistence.view.impl.proxy.UpdateableProxy;
+import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
@@ -86,8 +88,8 @@ public class EntityViewManagerImpl implements EntityViewManager {
     
     private final boolean unsafeDisabled;
 
-    public EntityViewManagerImpl(EntityViewConfigurationImpl config) {
-        this.metamodel = new ViewMetamodelImpl(config.getEntityViews());
+    public EntityViewManagerImpl(EntityViewConfigurationImpl config, CriteriaBuilderFactory cbf, EntityManagerFactory entityManagerFactory) {
+        this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), entityManagerFactory.getMetamodel());
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
         this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
@@ -125,16 +127,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private void update(EntityManager em, Object view, boolean partial) {
-        if (!(view instanceof UpdateableProxy)) {
-            throw new IllegalArgumentException("Only updateable entity views can be updated!");
+        if (!(view instanceof UpdatableProxy)) {
+            throw new IllegalArgumentException("Only updatable entity views can be updated!");
         }
         
-        UpdateableProxy updateableProxy = (UpdateableProxy) view;
-        Class<?> entityViewClass = updateableProxy.$$_getEntityViewClass();
+        UpdatableProxy updatableProxy = (UpdatableProxy) view;
+        Class<?> entityViewClass = updatableProxy.$$_getEntityViewClass();
         ViewType<?> viewType = metamodel.view(entityViewClass);
-        partial = viewType.isPartiallyUpdateable() && partial;
+        partial = viewType.isPartiallyUpdatable() && partial;
         EntityViewUpdater updater = getUpdater(viewType, partial);
-        updater.executeUpdate(em, updateableProxy);
+        updater.executeUpdate(em, updatableProxy);
     }
 
     @Override

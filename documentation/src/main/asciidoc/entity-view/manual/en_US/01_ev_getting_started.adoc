@@ -8,7 +8,6 @@ guide for the core yet, you might want to start your reading there.
 === Setup
 
 TODO: Describe what the dependencies are, maybe give a subsection about Maven.
-TODO: Mention core-integration-cdi for Java EE environment.
 
 === Environments [[Environments]]
 
@@ -35,16 +34,44 @@ configurations.
 ==== Java EE
 
 For usage with CDI blaze-persistence-integration provides a CDI
-extension which takes over the task of configuring and creating the `EntityViewManager`
-and allows the injection of the `EntityViewManager` into your application's CDI beans like following example shows.
+extension which takes over the task of creating and providing an `EntityViewConfiguration`
+from which an `EntityViewManager` can be created like following example shows.
 
 [source,java]
 ----
-public class KittenDataAccess {
-    @Inject
-    private EntityViewManager evm;
+@javax.ejb.Singleton
+@javax.ejb.Startup
+public class EntityViewManagerProducer {
+
+	// inject the configuration provided by the cdi integration
+	@Inject
+	private EntityViewConfiguration config;
+	
+	// inject the criteria builder factory which will be used along with the entity view manager
+	@Inject
+	private CriteriaBuilderFactory criteriaBuilderFactory;
+
+	// inject your entity manager factory
+	@PersistenceContext
+	private EntityManagerFactory entityManagerFactory;
+    
+	private EntityViewManager evm;
+	
+	@PostConstruct
+	public void init() {
+		// do some configuration
+    	evm = config.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
+	}
+
+    @Produces
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager() {
+    	return evm;
+    }
 }
 ----
+
+The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
 === First entity view query
 
@@ -67,7 +94,9 @@ we would first define a new view for this purpose:
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
-    public String getName();
+
+	public String getName();
+	
 }
 ----
 The usage of the `CatNameView` could look like this:
@@ -91,8 +120,10 @@ have to add an additional `@Mapping` annotation:
 ----
 @EntityView(Cat.class)
 public interface CatNameView {
-    @Mapping("name")
-    public String getCatName();
+
+	@Mapping("name")
+	public String getCatName();
+	
 }
 ----
 
@@ -101,16 +132,22 @@ Of course, it is also possible to combine various views via inheritance.
 ----
 @EntityView(Cat.class)
 public interface CatKittens {
-    public List<Kitten> getKittens();
+
+	public List<Kitten> getKittens();
+	
 }
 @EntityView(Cat.class)
 public interface CatNameView {
-    @Mapping("name")
-    public String getCatName();
+
+	@Mapping("name")
+	public String getCatName();
+	
 }
 public interface CombinedView extends CatKittens, CatNameView {
-    @Mapping("SIZE(kittens)")
-    public Integer getKittenSize();
+
+	@Mapping("SIZE(kittens)")
+	public Integer getKittenSize();
+	
 }
 ----
 The above example also shows that a view which inherits other views is not required
@@ -128,14 +165,20 @@ Another useful feature are subviews which is illustrated in following example.
 ----
 @EntityView(Landlord.class)
 public interface LandlordView {
-    public String getName();
-    public Integer getAge();
-    @Mapping("ownedProperties")
-    public PropertyAddressView getHouses();
+
+	public String getName();
+	
+	public Integer getAge();
+	
+	@Mapping("ownedProperties")
+	public PropertyAddressView getHouses();
+	
 }
 @EntityView(Property.class)
 public interface PropertyAddressView {
-    public String getAddress();
+
+	public String getAddress();
+	
 }
 ----
 
@@ -147,18 +190,19 @@ in a filterable and/or sortable data table. Following example illustrates how th
 ----
 @EntityView(Cat.class)
 @ViewFilters({
-    @ViewFilter(name = "customFilter", value = FilteredDocument.CustomFilter.class)
+	@ViewFilter(name = "customFilter", value = FilteredDocument.CustomFilter.class)
 })
 public interface FilteredCatView {
-    @AttributeFilter(ContainsFilter.class)
-    public String getName();
 
-    public static class CustomFilter extends ViewFilterProvider {
-        @Override
-        public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
-            return whereBuilder.where("doctor.name").like().expression("Julia%").noEscape();
-        }
-    }
+	@AttributeFilter(ContainsFilter.class)
+	public String getName();
+
+	public static class CustomFilter extends ViewFilterProvider {
+		@Override
+		public <T extends WhereBuilder<T>> T apply(T whereBuilder) {
+			return whereBuilder.where("doctor.name").like().expression("Julia%").noEscape();
+		}
+	}
 }
 ----
 In this example we once again define a view on our Cat entity and select the cat's name only.
@@ -170,8 +214,8 @@ query should filter and how we paginate the resulting query.
 [source,java]
 ----
 // Base setting
-EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = EntityViewSetting.create(
-            FilteredCatView.class, 0, 10);
+EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = 
+									EntityViewSetting.create(FilteredCatView.class, 0, 10);
 
 // Query
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);

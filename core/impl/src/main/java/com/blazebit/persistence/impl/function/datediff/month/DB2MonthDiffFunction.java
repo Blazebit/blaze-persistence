@@ -25,7 +25,8 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class DB2MonthDiffFunction extends MonthDiffFunction {
 
     public DB2MonthDiffFunction() {
-        super("months_between(?1, ?2)");
+        // NOTE: we need lateral, otherwise the alias will be lost in the subquery
+        super("(select months_between(t2, t1) from lateral(values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

@@ -25,7 +25,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 public class PostgreSQLMonthDiffFunction extends MonthDiffFunction {
 
     public PostgreSQLMonthDiffFunction() {
-        super("(select date_part('year', t2) - date_part('year', t1) * 12 + (date_part('month', t2) - date_part('month', t1)) from (values (?1,?2)) as temp(t1,t2))");
+        super("(select (date_part('year', t2) - date_part('year', t1)) * 12 + (date_part('month', t2) - date_part('month', t1)) from (values (?1,?2)) as temp(t1,t2))");
     }
 
     @Override

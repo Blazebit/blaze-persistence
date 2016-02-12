@@ -1,5 +1,56 @@
 == Configuration
 
-TODO: As soon as we introduce configuration options we should describe them here. +
-TODO: Describe how you can configure a criteria builder factory with a configuration object. +
-TODO: Describe how QueryTransformers are normally registered +
+{projectname} can be configured by setting properties on a `com.blazebit.persistence.spi.CriteriaBuilderConfiguration` object and creating a `CriteriaBuilderFactory` from it.
+
+=== Configuration properties
+
+==== COMPATIBLE_MODE
+
+Enables JPA compatibility mode to disallow the usage of vendor specific extensions. This will result in higher portability.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.compatible_mode 
+| Type | boolean 
+| Default | false 
+|====================
+
+==== RETURNING_CLAUSE_CASE_SENSITIVE
+
+Defines whether column names should be used with the case in which they are given or as lower case when returning column values from a DML query.
+This is mostly relevant for PostgreSQL which requires `false` to work properly.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.returning_clause_case_sensitive
+| Type | boolean 
+| Default | true 
+|====================
+
+=== Query transformers
+
+Query tranformers are used to apply object builders to typed queries. This is normally provided by an integration module for persistence providers.
+
+=== Jpql functions
+
+Custom functions that can be invoked via the JPA 2.1 function syntax `FUNCTION('function_name', args...)` can be registered with `registerFunction(JpqlFunctionGroup)`.
+A `JpqlFunctionGroup` represents a logical function that can contain multiple implementations for various dbms and can be defined as being an aggregate function.
+
+These functions are registered as native persistence provider functions and can therefore also be used with plain JPA APIs or the native persistence provider APIs.
+
+=== Dbms dialects
+
+Dbms dialect implementations provide SQL-level abstractions for a specific dbms. {projectname} comes with support for the following dbms:
+
+* h2
+* mysql
+* postgresql
+* db2
+* oracle (work in progress)
+* microsoft (work in progress)
+
+By registering a custom implementation for a specific dbms via `registerDialect(String, DbmsDialect)` the default implementation will be overridden.
+
+=== Entity manager integrators
+
+A little integration layer to extract the dbms of an entity manager and register `JpqlFunctionGroup`s with the entity manager. This is normally provided by an integration module for persistence providers.
