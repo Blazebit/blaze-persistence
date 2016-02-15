@@ -85,7 +85,12 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
         	
     		sb.append(e.toString());
 
-        	jpaAttribute = t.getAttribute(baseName);
+    		try {
+    			jpaAttribute = t.getAttribute(baseName);
+    		} catch (IllegalArgumentException ex) {
+    			// Ignore non existing attributes
+    			jpaAttribute = null;
+    		}
         	
         	// NOTE: Attribute could be null because this model might contain errors
         	if (jpaAttribute != null) {

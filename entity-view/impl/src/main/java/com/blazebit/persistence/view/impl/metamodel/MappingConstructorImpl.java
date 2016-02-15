@@ -22,7 +22,6 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -39,13 +38,9 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.ViewConstructor;
-import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
-import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
-import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -83,13 +78,13 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     
     public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
-            String error = checkParameter(parameter, managedType, managedViews, expressionFactory, metamodel);
+            String error = parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel);
             
             if (error != null) {
                 errors.add(error);
             }
             
-            for (String mapping : getCollectionJoinMappings(parameter, managedType, metamodel, expressionFactory)) {
+            for (String mapping : parameter.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
             	List<String> locations = collectionMappings.get(mapping);
             	if (locations == null) {
             		locations = new ArrayList<String>(2);
@@ -99,94 +94,6 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             	locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
             }
         }
-    }
-    
-    private Set<String> getCollectionJoinMappings(AbstractParameterAttribute<? super X, ?> attribute, ManagedType<?> managedType, Metamodel metamodel, ExpressionFactory expressionFactory) {
-    	String expression = attribute.getMapping();
-        
-        if (expression == null || attribute.isQueryParameter()) {
-            // Subqueries and parameters can't be checked
-            return Collections.emptySet();
-        }
-        
-    	CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, metamodel);
-        expressionFactory.createSimpleExpression(expression).accept(visitor);
-        Set<String> mappings = new HashSet<String>();
-        
-        for (String s : visitor.getPaths()) {
-        	mappings.add(s);
-        }
-        
-        return mappings;
-    }
-
-    private String checkParameter(AbstractParameterAttribute<? super X, ?> parameter, ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel) {
-        String expression = parameter.getMapping();
-        
-        if (expression == null || parameter.isQueryParameter()) {
-            // Subqueries and parameters can't be checked
-            return null;
-        }
-        
-        // TODO: generalize checking somehow from ManagedViewTypeImpl
-        Class<?> expressionType = parameter.getJavaType();
-        Class<?> elementType = null;
-        
-        if (parameter.isCollection()) {
-            elementType = ((PluralAttribute<?, ?, ?>) parameter).getElementType();
-        }
-        
-        if (parameter.isCollection() && !((PluralAttribute<?, ?, ?>) parameter).isIndexed() && Collection.class.isAssignableFrom(expressionType)) {
-            // We can assign e.g. a Set to a List, so let's use the common supertype
-            expressionType = Collection.class;
-        } else if (!parameter.isCollection() && parameter.isSubview()) {
-            ManagedViewType<?> subviewType = managedViews.get(expressionType);
-            
-            if (subviewType == null) {
-                throw new IllegalStateException("Expected subview '" + expressionType.getName() + "' to exist but couldn't find it!");
-            }
-            
-            expressionType = subviewType.getEntityClass();
-        }
-
-        MetamodelTargetResolvingExpressionVisitor visitor = new MetamodelTargetResolvingExpressionVisitor(managedType, metamodel);
-
-        try {
-            expressionFactory.createSimpleExpression(expression).accept(visitor);
-        } catch (IllegalArgumentException ex) {
-            return "An error occurred while trying to resolve the parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "': " + ex.getMessage();
-        }
-
-        List<TargetType> possibleTargets = visitor.getPossibleTargets();
-
-        if (!possibleTargets.isEmpty()) {
-            boolean error = true;
-            for (TargetType t : possibleTargets) {
-                Class<?> possibleTargetType = t.getLeafBaseClass();
-
-                // Null is the marker for ANY TYPE
-                if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
-                    || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(t.getLeafBaseValueClass())) {
-                    error = false;
-                    break;
-                }
-            }
-            
-            if (error) {
-                StringBuilder sb = new StringBuilder();
-                sb.append('[');
-                for (TargetType t : possibleTargets) {
-                    sb.append(t.getLeafBaseClass().getName());
-                    sb.append(", ");
-                }
-                
-                sb.setLength(sb.length() - 2);
-                sb.append(']');
-                return "The resolved possible types " + sb.toString() + " are not assignable to the given expression type '" + parameter.getJavaType().getName() + "' of the expression declared by the parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'!";
-            }
-        }
-        
-        return null;
     }
 
     public static String validate(ManagedViewType<?> viewType, Constructor<?> c) {

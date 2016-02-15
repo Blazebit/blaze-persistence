@@ -108,7 +108,12 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
     }
 
-    @Override
+	@Override
+	protected String getLocation() {
+		return "attribute '" + getName() + "' of the managed entity view class '" + getDeclaringType().getJavaType().getName() + "'";
+	}
+
+	@Override
     public String getName() {
         return name;
     }

@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.view.basic;
 
-import static org.junit.Assert.*;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -52,7 +50,9 @@ public class ValidationTest extends AbstractEntityViewTest {
         	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
         	Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-        	assertTrue(ex.getMessage().contains("'ownedDocuments'"));
+        	if (!ex.getMessage().contains("'ownedDocuments'")) {
+        		throw ex;
+        	}
         }
     }
 
@@ -65,7 +65,9 @@ public class ValidationTest extends AbstractEntityViewTest {
         	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
         	Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-        	assertTrue(ex.getMessage().contains("'defaultContact'"));
+        	if (!ex.getMessage().contains("'defaultContact'")) {
+        		throw ex;
+        	}
         }
     }
 }

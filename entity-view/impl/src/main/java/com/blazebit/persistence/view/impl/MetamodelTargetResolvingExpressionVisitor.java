@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
@@ -126,7 +127,15 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     private Method resolve(Class<?> currentClass, String property) {
-        if (metamodel.managedType(currentClass).getAttribute(property) == null) {
+    	Attribute<?, ?> attribute = null;
+    	
+    	try {
+    		attribute = metamodel.managedType(currentClass).getAttribute(property);
+    	} catch (IllegalArgumentException ex) {
+    		attribute = null;
+    	}
+    	
+        if (attribute == null) {
             throw new IllegalArgumentException("The property '" + property + "' could not be found on the type '" + currentClass.getName() + "'!");
         }
         
