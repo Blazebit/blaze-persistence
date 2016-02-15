@@ -74,6 +74,12 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
             this.currentClass = currentClass;
             this.method = method;
         }
+        
+        private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method) {
+            this.currentClass = currentClass;
+            this.valueClass = valueClass;
+            this.method = method;
+        }
 
 		Class<?> getRealCurrentClass() {
 			return currentClass;
@@ -103,6 +109,10 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 		void setValueClass(Class<?> valueClass) {
 			this.valueClass = valueClass;
 		}
+        
+        PathPosition copy() {
+            return new PathPosition(currentClass, valueClass, method);
+        }
     }
 
     public TargetResolvingExpressionVisitor(Class<?> startClass) {
@@ -159,16 +169,17 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
         
         int positionsSize = currentPositions.size();
         for (int j = 0; j < positionsSize; j++) {
-            PathPosition position = currentPositions.get(j);
             List<WhenClauseExpression> expressions = expression.getWhenClauses();
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
+                PathPosition position = currentPositions.get(j).copy();
                 pathPositions = new ArrayList<PathPosition>();
                 pathPositions.add(currentPosition = position);
                 expressions.get(i).accept(this);
                 newPositions.addAll(pathPositions);
             }
-            
+
+            PathPosition position = currentPositions.get(j).copy();
             pathPositions = new ArrayList<PathPosition>();
             pathPositions.add(currentPosition = position);
             expression.getDefaultExpr().accept(this);

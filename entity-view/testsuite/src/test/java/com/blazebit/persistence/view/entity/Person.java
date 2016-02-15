@@ -44,6 +44,7 @@ public class Person implements Serializable {
     private long age;
     private Document partnerDocument;
     private Set<Document> ownedDocuments = new HashSet<Document>();
+    private Integer defaultLanguage;
     private Map<Integer, String> localized = new HashMap<Integer, String>();
 
     public Person() {
@@ -87,6 +88,14 @@ public class Person implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public Integer getDefaultLanguage() {
+        return defaultLanguage;
+    }
+    
+    public void setDefaultLanguage(Integer defaultLanguage) {
+        this.defaultLanguage = defaultLanguage;
     }
 
     @ElementCollection
