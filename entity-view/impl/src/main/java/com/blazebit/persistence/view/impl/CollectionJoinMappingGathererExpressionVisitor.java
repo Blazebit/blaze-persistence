@@ -23,6 +23,7 @@ import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.Type;
 
 import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.Expression;
@@ -90,7 +91,13 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
         	if (jpaAttribute != null) {
 	        	if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
 	        		paths.add(sb.toString());
-	            	t = (ManagedType<?>) ((PluralAttribute<?, ?, ?>) jpaAttribute).getElementType();
+	            	Type<?> elementType = ((PluralAttribute<?, ?, ?>) jpaAttribute).getElementType();
+	            	
+	            	if (elementType instanceof ManagedType<?>) {
+	            		t = (ManagedType<?>) elementType;
+	            	} else {
+	            		t = null;
+	            	}
 	        	} else {
 	        		if (jpaAttribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
 	        			t = null;

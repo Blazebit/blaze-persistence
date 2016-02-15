@@ -362,14 +362,9 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     		return false;
     	}
     	
-    	boolean number = false;
-    	
     	for (int i = 0; i < expressionString.length(); i++) {
     		char c = expressionString.charAt(i);
-    		if (Character.isDigit(c)) {
-    			number = true;
-    			continue;
-    		} else if (number) {
+    		if (!Character.isDigit(c)) {
     			return false;
     		}
     	}

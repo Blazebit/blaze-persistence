@@ -132,23 +132,46 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             }
         }
         
-        for (MappingConstructorImpl<X> constructor : constructors.values()) {
-            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, collectionMappings, errors);
-        }
-
-		StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
-        	List<String> locations = locationsEntry.getValue();
-        	if (locations.size() > 1) {
-        		sb.setLength(0);
-        		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
-        		
-        		for (String location : locations) {
-        			sb.append("\n - ");
-        			sb.append(location);
-        		}
-        		errors.add(sb.toString());
-        	}
+        if (!constructors.isEmpty()) {
+	        for (MappingConstructorImpl<X> constructor : constructors.values()) {
+	            Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
+	        	
+	            for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
+	            	constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+	            }
+	        	
+	            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
+	
+	    		StringBuilder sb = new StringBuilder();
+	            for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
+	            	List<String> locations = locationsEntry.getValue();
+	            	if (locations.size() > 1) {
+	            		sb.setLength(0);
+	            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+	            		
+	            		for (String location : locations) {
+	            			sb.append("\n - ");
+	            			sb.append(location);
+	            		}
+	            		errors.add(sb.toString());
+	            	}
+	            }
+	        }
+        } else {
+    		StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
+            	List<String> locations = locationsEntry.getValue();
+            	if (locations.size() > 1) {
+            		sb.setLength(0);
+            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+            		
+            		for (String location : locations) {
+            			sb.append("\n - ");
+            			sb.append(location);
+            		}
+            		errors.add(sb.toString());
+            	}
+            }
         }
     }
     
