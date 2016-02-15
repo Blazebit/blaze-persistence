@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.view.basic.model;
 
-import java.util.Calendar;
 import java.util.Set;
 
 import com.blazebit.persistence.view.EntityView;
@@ -28,26 +27,11 @@ import com.blazebit.persistence.view.entity.Person;
  * @since 1.0
  */
 @EntityView(Person.class)
-public interface PersonValidationView extends IdHolderView<Long> {
+public interface PersonDuplicateCollectionUsageValidationView extends IdHolderView<Long> {
     
-    // map collection target entity property to collection of property type 
     @Mapping("ownedDocuments.id")
     public Set<Long> getOwnedDocumentIds();
 
-    // The case when a collection is mapped, but we are sure there is only one element
-    @Mapping("partnerDocument.versions.url")
-    public String getVersionUrl();
-    
-    @Mapping("FUNCTION('TIMESTAMP_ADD_DAY', partnerDocument.creationDate, -age)")
-    public Calendar getDateComputation();
-    
-    @Mapping("CONCAT(COALESCE(name,'-'),' ',COALESCE(partnerDocument.name,'-'))")
-    public abstract String getCoalescingConcat();
-    
-    // Parameters are totally ok
-    @Mapping("COALESCE(partnerDocument.contacts[:firstContact].name, partnerDocument.contacts[partnerDocument.defaultContact].name)")
-    public String getName();
-    
-    @Mapping("CASE WHEN age = 9 THEN 0 ELSE 1 END")
-    public abstract Integer getNestedCaseWhen();
+    @Mapping("ownedDocuments.name")
+    public Set<String> getOwnerDocumentNames();
 }

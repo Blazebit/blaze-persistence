@@ -19,8 +19,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -42,7 +44,9 @@ import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
 import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
@@ -108,6 +112,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     
     public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Set<String> errors) {
         ManagedType<?> managedType = metamodel.managedType(entityClass);
+        Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
         
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
             String error = checkAttribute(attribute, managedType, managedViews, expressionFactory, metamodel);
@@ -115,11 +120,55 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (error != null) {
                 errors.add(error);
             }
+            
+            for (String mapping : getCollectionJoinMappings(attribute, managedType, metamodel, expressionFactory)) {
+            	List<String> locations = collectionMappings.get(mapping);
+            	if (locations == null) {
+            		locations = new ArrayList<String>(2);
+            		collectionMappings.put(mapping, locations);
+            	}
+            	
+            	locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
+            }
         }
         
         for (MappingConstructorImpl<X> constructor : constructors.values()) {
-            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, errors);
+            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, collectionMappings, errors);
         }
+
+		StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
+        	List<String> locations = locationsEntry.getValue();
+        	if (locations.size() > 1) {
+        		sb.setLength(0);
+        		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+        		
+        		for (String location : locations) {
+        			sb.append("\n - ");
+        			sb.append(location);
+        		}
+        		errors.add(sb.toString());
+        	}
+        }
+    }
+    
+    private Set<String> getCollectionJoinMappings(AbstractAttribute<? super X, ?> attribute, ManagedType<?> managedType, Metamodel metamodel, ExpressionFactory expressionFactory) {
+    	String expression = attribute.getMapping();
+        
+        if (expression == null || attribute.isQueryParameter()) {
+            // Subqueries and parameters can't be checked
+            return Collections.emptySet();
+        }
+        
+    	CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, metamodel);
+        expressionFactory.createSimpleExpression(expression).accept(visitor);
+        Set<String> mappings = new HashSet<String>();
+        
+        for (String s : visitor.getPaths()) {
+        	mappings.add(s);
+        }
+        
+        return mappings;
     }
 
     private String checkAttribute(AbstractMethodAttribute<? super X, ?> attribute, ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel) {
@@ -151,6 +200,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
         
         Class<?> expressionType = attribute.getJavaType();
+        Class<?> elementType = null;
+        
+        if (attribute.isCollection()) {
+            elementType = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
+        }
         
         // TODO: check if collection value types are compatible => subview is view for entity class, or class is super type of entity class
         
@@ -178,17 +232,20 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             return "An error occurred while trying to resolve the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
         }
         
-        Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
+        List<TargetType> possibleTargets = visitor.getPossibleTargets();
         
         if (!possibleTargets.isEmpty()) {
             boolean error = true;
-            for (Map.Entry<Method, Class<?>[]> entry : possibleTargets.entrySet()) {
-                Class<?> possibleTargetType = entry.getValue()[0];
+            for (TargetType t : possibleTargets) {
+                Class<?> possibleTargetType = t.getLeafBaseClass();
                 
                 // Null is the marker for ANY TYPE
                 if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
-                    || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(entry.getValue()[1])) {
+                    || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(t.getLeafBaseValueClass())) {
                     error = false;
+                    break;
+                } else if (t.hasCollectionJoin() && elementType != null && elementType.isAssignableFrom(t.getLeafBaseValueClass())) {
+                	error = false;
                     break;
                 }
             }
@@ -196,8 +253,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (error) {
                 StringBuilder sb = new StringBuilder();
                 sb.append('[');
-                for (Class<?>[] possibleTargetType : possibleTargets.values()) {
-                    sb.append(possibleTargetType[0].getName());
+                for (TargetType t : possibleTargets) {
+                    sb.append(t.getLeafBaseClass().getName());
                     sb.append(", ");
                 }
                 
