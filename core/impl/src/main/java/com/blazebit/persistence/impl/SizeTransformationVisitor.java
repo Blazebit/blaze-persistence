@@ -16,16 +16,22 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
@@ -40,6 +46,7 @@ import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -135,15 +142,47 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         }
     }
 
+    private ManagedType<?> resolveManagedTargetType(Class<?> startType, String path) {
+    	String[] pathElements = path.split("\\.");
+    	ManagedType<?> currentType = metamodel.entity(startType);
+        for (String property : pathElements) {
+    		Attribute<?, ?> attribute = currentType.getAttribute(property);
+    		Class<?> type = attribute.getJavaType();
+    		
+    		if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+            	Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentType.getJavaType(), ReflectionUtils.getGetter(currentType.getJavaType(), property));
+            	type = typeArguments[typeArguments.length - 1];
+            }
+    		
+    		if (attribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
+    			throw new RuntimeException("Path [" + path.toString() + "] contains BASIC path element");
+    		} else if (attribute.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
+    			currentType = metamodel.embeddable(type);
+    		} else {
+    			currentType = metamodel.entity(type);
+    		}
+        }
+        
+        return currentType;
+    }
+    
     @Override
     public Expression visit(FunctionExpression expression) {
         if (ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
             PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
-            Class<?> collectionClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
-            PersistenceType collectionIdType = metamodel.entity(collectionClass).getIdType().getPersistenceType();
+            Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
-            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(collectionClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled()) {
-                return generateSubquery(sizeArg, collectionClass);
+            ManagedType<?> managedTargetType = resolveManagedTargetType(startClass, sizeArg.getPathReference().getField());
+            
+            PersistenceType collectionIdType;
+            if (managedTargetType instanceof EntityType<?>) {
+            	collectionIdType = ((EntityType<?>) managedTargetType).getIdType().getPersistenceType();
+            } else {
+            	throw new RuntimeException("Path [" + sizeArg.toString() + "] does not refer to a collection");
+            }
+            
+            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(startClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled()) {
+                return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause
                 List<PathElementExpression> pathElementExpr = new ArrayList<PathElementExpression>();
@@ -157,7 +196,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                 joinManager.implicitJoin(groupByExpr, true, null, false, false, false);
                 
                 if (groupByManager.hasGroupBys() && !groupByManager.existsGroupBy(groupByExpr)) {
-                    return generateSubquery(sizeArg, collectionClass);
+                    return generateSubquery(sizeArg, startClass);
                 }
                 
                 // join
