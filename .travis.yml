@@ -82,6 +82,7 @@ matrix:
 #      jdk: oraclejdk8
 # DB2
     - env: JPAPROVIDER=hibernate RDBMS=db2 LATEST_MAVEN=true
+      jdk: oraclejdk8
       sudo: true
     - env: JPAPROVIDER=hibernate-4.3 RDBMS=db2
       sudo: true
