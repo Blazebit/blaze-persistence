@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -547,11 +548,11 @@
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoEclipselink</jpa.excludedGroups>
 			</properties>
 			<dependencies>
-		        <dependency>
-		            <groupId>org.eclipse.persistence</groupId>
-		            <artifactId>eclipselink</artifactId>
-		            <version>${version.eclipselink}</version>
-		        </dependency>
+				<dependency>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>eclipselink</artifactId>
+					<version>${version.eclipselink}</version>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
@@ -850,11 +851,11 @@
 				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoOpenJPA</jpa.excludedGroups>
 			</properties>
 			<dependencies>
-		        <dependency>
-		            <groupId>org.apache.openjpa</groupId>
-		            <artifactId>openjpa-all</artifactId>
-		            <version>${version.openjpa}</version>
-		        </dependency>
+				<dependency>
+					<groupId>org.apache.openjpa</groupId>
+					<artifactId>openjpa-all</artifactId>
+					<version>${version.openjpa}</version>
+				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
@@ -886,11 +887,11 @@
 							</execution>
 						</executions>
 						<dependencies>
-					        <dependency>
-					            <groupId>org.apache.openjpa</groupId>
-					            <artifactId>openjpa-all</artifactId>
-					            <version>${version.openjpa}</version>
-					        </dependency>
+							<dependency>
+								<groupId>org.apache.openjpa</groupId>
+								<artifactId>openjpa-all</artifactId>
+								<version>${version.openjpa}</version>
+							</dependency>
 						</dependencies>
 					</plugin>
 					<plugin>

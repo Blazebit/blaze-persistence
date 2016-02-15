@@ -24,6 +24,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.EmbeddableTestEntity;
+import com.blazebit.persistence.entity.EmbeddableTestEntityContainer;
 import com.blazebit.persistence.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
@@ -41,7 +42,8 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[]{
             IntIdEntity.class,
-            EmbeddableTestEntity.class
+            EmbeddableTestEntity.class,
+            EmbeddableTestEntityContainer.class
         };
     }
     
@@ -181,4 +183,25 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         assertEquals("SELECT oneToMany FROM EmbeddableTestEntity e LEFT JOIN e.embeddable.nestedEmbeddable.nestedOneToMany oneToMany", crit.getQueryString());
         crit.getResultList();
     }
+    
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testEmbeddedIdSize1(){
+        CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
+                .select("SIZE(e.embeddable.oneToMany)");
+        
+        assertEquals("SELECT (SELECT COUNT(embeddable_oneToMany) FROM EmbeddableTestEntity embeddabletestentity LEFT JOIN embeddabletestentity.embeddable.oneToMany embeddable_oneToMany WHERE embeddabletestentity = e) FROM EmbeddableTestEntity e", crit.getQueryString());
+        crit.getResultList();
+    }
+    
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testEmbeddedIdSize2(){
+        CriteriaBuilder<EmbeddableTestEntityContainer> crit = cbf.create(em, EmbeddableTestEntityContainer.class, "e")
+                .select("SIZE(e.embeddableTestEntities)");
+        
+        assertEquals("SELECT (SELECT COUNT(embeddableTestEntities) FROM EmbeddableTestEntityContainer embeddabletestentitycontainer LEFT JOIN embeddabletestentitycontainer.embeddableTestEntities embeddableTestEntities WHERE embeddabletestentitycontainer = e) FROM EmbeddableTestEntityContainer e", crit.getQueryString());
+        crit.getResultList();
+    }
+    
 }
