@@ -5,9 +5,11 @@ import com.blazebit.persistence.impl.expression.Expression;
 
 public class SizeExpressionTransformer implements ExpressionTransformer {
     private final SizeTransformationVisitor sizeTransformationVisitor;
+    private final SelectManager<?> selectManager;
     
-    public SizeExpressionTransformer(SizeTransformationVisitor sizeTransformationVisitor) {
+    public SizeExpressionTransformer(SizeTransformationVisitor sizeTransformationVisitor, SelectManager<?> selectManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
+        this.selectManager = selectManager;
     }
     
     @Override
@@ -16,6 +18,7 @@ public class SizeExpressionTransformer implements ExpressionTransformer {
         if (fromClause != ClauseType.SELECT) {
             sizeTransformationVisitor.setClause(fromClause);
             sizeTransformationVisitor.setOrderBySelectClause(false);
+            sizeTransformationVisitor.setHasComplexSelects(selectManager.containsSizeSelect());
             return original.accept(sizeTransformationVisitor);
         } else {
             return original;

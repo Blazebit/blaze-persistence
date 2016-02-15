@@ -31,7 +31,6 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
 import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
@@ -46,6 +45,7 @@ import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -60,6 +60,8 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
     private final Map<String, String> properties;
+    private boolean hasComplexSelects;
+    private final DbmsDialect dbmsDialect;
     
     // state
     private boolean orderBySelectClause;
@@ -69,20 +71,29 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     // maps absolute paths to join nodes
     private final Map<String, PathReference> generatedJoins = new HashMap<String, PathReference>();
     
-    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager) {
+    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect) {
         this.metamodel = mainQuery.em.getMetamodel();
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
         this.joinManager = joinManager;
         this.groupByManager = groupByManager;
         this.properties = mainQuery.properties;
+        this.dbmsDialect = dbmsDialect;
     }
     
     public ClauseType getClause() {
         return clause;
     }
     
-    public void setClause(ClauseType clause) {
+    public boolean isHasComplexSelects() {
+		return hasComplexSelects;
+	}
+
+	public void setHasComplexSelects(boolean hasComplexSelects) {
+		this.hasComplexSelects = hasComplexSelects;
+	}
+
+	public void setClause(ClauseType clause) {
         this.clause = clause;
     }
     
@@ -181,7 +192,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             	throw new RuntimeException("Path [" + sizeArg.toString() + "] does not refer to a collection");
             }
             
-            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(startClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled()) {
+            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(startClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled() || (hasComplexSelects && !dbmsDialect.supportsReturningColumns())) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause

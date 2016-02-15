@@ -56,6 +56,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
@@ -223,9 +224,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager);
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor));
-        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager, dbmsDialect);
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor, selectManager));
+        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;

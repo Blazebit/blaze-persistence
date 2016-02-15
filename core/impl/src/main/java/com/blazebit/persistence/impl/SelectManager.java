@@ -108,6 +108,15 @@ public class SelectManager<T> extends AbstractManager {
         return selectInfos;
     }
     
+    public boolean containsComplexSelect() {
+    	for (SelectInfo selectInfo : selectInfos) {
+    		if (!(selectInfo.getExpression() instanceof PathExpression)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+    
     public boolean containsSizeSelect() {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
