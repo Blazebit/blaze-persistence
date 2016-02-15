@@ -96,7 +96,12 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return null;
     }
 
-    @Override
+	@Override
+	protected String getLocation() {
+		return "parameter with the index '" + getIndex() + "' of the constructor '" + getDeclaringConstructor().getJavaConstructor() + "'";
+	}
+
+	@Override
     public int getIndex() {
         return index;
     }

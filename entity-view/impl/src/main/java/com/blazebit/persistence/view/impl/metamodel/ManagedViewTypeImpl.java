@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,18 +39,14 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSingular;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
-import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
-import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -108,106 +105,67 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     
     public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Set<String> errors) {
         ManagedType<?> managedType = metamodel.managedType(entityClass);
+        Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
         
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            String error = checkAttribute(attribute, managedType, managedViews, expressionFactory, metamodel);
+            String error = attribute.checkAttribute(managedType, managedViews, expressionFactory, metamodel);
             
             if (error != null) {
                 errors.add(error);
             }
-        }
-        
-        for (MappingConstructorImpl<X> constructor : constructors.values()) {
-            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, errors);
-        }
-    }
-
-    private String checkAttribute(AbstractMethodAttribute<? super X, ?> attribute, ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel) {
-        String expression = attribute.getMapping();
-        
-        if (expression == null || attribute.isQueryParameter()) {
-            // Subqueries and parameters can't be checked
-            return null;
-        }
-        
-        if (attribute.isUpdatable()) {
-            UpdatableExpressionVisitor visitor = new UpdatableExpressionVisitor(entityClass);
-            try {
-                expressionFactory.createPathExpression(expression).accept(visitor);
-                Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
-                
-                if (possibleTargets.size() > 1) {
-                    return "Multiple possible target type for the mapping in the attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "': " + possibleTargets;
-                } else {
-                    // TODO: further type checks like
-                    // * collection type is same
-                    // * collection value type is compatible
-                }
-            } catch (SyntaxErrorException ex) {
-                return "Syntax error in mapping expression '" + expression + "' of attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
-            } catch (IllegalArgumentException ex) {
-                return "There is an error for the attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "': " + ex.getMessage();
-            }
-        }
-        
-        Class<?> expressionType = attribute.getJavaType();
-        
-        // TODO: check if collection value types are compatible => subview is view for entity class, or class is super type of entity class
-        
-        // Updatable collection attributes must have the same collection type
-        if (!attribute.isUpdatable() && attribute.isCollection() && !((PluralAttribute<?, ?, ?>) attribute).isIndexed() && Collection.class.isAssignableFrom(expressionType)) {
-            // We can assign e.g. a Set to a List, so let's use the common supertype
-            expressionType = Collection.class;
-        } else if (!attribute.isCollection() && attribute.isSubview()) {
-            ManagedViewType<?> subviewType = managedViews.get(expressionType);
             
-            if (subviewType == null) {
-                throw new IllegalStateException("Expected subview '" + expressionType.getName() + "' to exist but couldn't find it!");
-            }
-            
-            expressionType = subviewType.getEntityClass();
-        }
-
-        MetamodelTargetResolvingExpressionVisitor visitor = new MetamodelTargetResolvingExpressionVisitor(managedType, metamodel);
-        
-        try {
-            expressionFactory.createSimpleExpression(expression).accept(visitor);
-        } catch (SyntaxErrorException ex) {
-            return "Syntax error in mapping expression '" + expression + "' of attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
-        } catch (IllegalArgumentException ex) {
-            return "An error occurred while trying to resolve the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "': " + ex.getMessage();
-        }
-        
-        Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
-        
-        if (!possibleTargets.isEmpty()) {
-            boolean error = true;
-            for (Map.Entry<Method, Class<?>[]> entry : possibleTargets.entrySet()) {
-                Class<?> possibleTargetType = entry.getValue()[0];
-                
-                // Null is the marker for ANY TYPE
-                if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
-                    || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(entry.getValue()[1])) {
-                    error = false;
-                    break;
-                }
-            }
-            
-            if (error) {
-                StringBuilder sb = new StringBuilder();
-                sb.append('[');
-                for (Class<?>[] possibleTargetType : possibleTargets.values()) {
-                    sb.append(possibleTargetType[0].getName());
-                    sb.append(", ");
-                }
-                
-                sb.setLength(sb.length() - 2);
-                sb.append(']');
-                return "The resolved possible types " + sb.toString() + " are not assignable to the given expression type '" + attribute.getJavaType().getName() + "' of the expression declared by the attribute '" + attribute.getName() + "' of the managed entity view class '" + attribute.getDeclaringType().getJavaType().getName() + "'!";
+            for (String mapping : attribute.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
+            	List<String> locations = collectionMappings.get(mapping);
+            	if (locations == null) {
+            		locations = new ArrayList<String>(2);
+            		collectionMappings.put(mapping, locations);
+            	}
+            	
+            	locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
             }
         }
         
-        return null;
+        if (!constructors.isEmpty()) {
+	        for (MappingConstructorImpl<X> constructor : constructors.values()) {
+	            Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
+	        	
+	            for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
+	            	constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+	            }
+	        	
+	            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
+	
+	    		StringBuilder sb = new StringBuilder();
+	            for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
+	            	List<String> locations = locationsEntry.getValue();
+	            	if (locations.size() > 1) {
+	            		sb.setLength(0);
+	            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+	            		
+	            		for (String location : locations) {
+	            			sb.append("\n - ");
+	            			sb.append(location);
+	            		}
+	            		errors.add(sb.toString());
+	            	}
+	            }
+	        }
+        } else {
+    		StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
+            	List<String> locations = locationsEntry.getValue();
+            	if (locations.size() > 1) {
+            		sb.setLength(0);
+            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+            		
+            		for (String location : locations) {
+            			sb.append("\n - ");
+            			sb.append(location);
+            		}
+            		errors.add(sb.toString());
+            	}
+            }
+        }
     }
 
     private void addAttributeFilters(AbstractMethodAttribute<? super X, ?> attribute) {

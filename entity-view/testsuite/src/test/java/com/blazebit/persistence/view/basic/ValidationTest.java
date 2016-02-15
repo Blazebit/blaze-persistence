@@ -15,11 +15,14 @@
  */
 package com.blazebit.persistence.view.basic;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.blazebit.persistence.view.AbstractEntityViewTest;
 import com.blazebit.persistence.view.EntityViews;
 import com.blazebit.persistence.view.basic.model.DocumentValidationView;
+import com.blazebit.persistence.view.basic.model.PersonDuplicateCollectionUsageValidationView;
+import com.blazebit.persistence.view.basic.model.PersonInvalidMappingValidationView;
 import com.blazebit.persistence.view.basic.model.PersonValidationView;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 
@@ -36,5 +39,35 @@ public class ValidationTest extends AbstractEntityViewTest {
         cfg.addEntityView(DocumentValidationView.class);
         cfg.addEntityView(PersonValidationView.class);
         cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+    }
+
+    @Test
+    public void testValidationDuplicateCollection() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PersonDuplicateCollectionUsageValidationView.class);
+        
+        try {
+        	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        	Assert.fail("Expected validation exception!");
+        } catch (IllegalArgumentException ex) {
+        	if (!ex.getMessage().contains("'ownedDocuments'")) {
+        		throw ex;
+        	}
+        }
+    }
+
+    @Test
+    public void testValidationInvalidMapping() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PersonInvalidMappingValidationView.class);
+        
+        try {
+        	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+        	Assert.fail("Expected validation exception!");
+        } catch (IllegalArgumentException ex) {
+        	if (!ex.getMessage().contains("'defaultContact'")) {
+        		throw ex;
+        	}
+        }
     }
 }

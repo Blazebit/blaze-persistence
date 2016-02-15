@@ -56,6 +56,7 @@ public class Document implements Serializable {
     private Person owner;
     private long age;
     private String nonJoinable;
+    private Integer defaultContact;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private Map<Integer, Person> contacts2 = new HashMap<Integer, Person>();
     private List<Person> personList = new ArrayList<Person>();
@@ -145,7 +146,15 @@ public class Document implements Serializable {
         this.nonJoinable = nonJoinable;
     }
 
-    @OneToMany
+    public Integer getDefaultContact() {
+		return defaultContact;
+	}
+
+	public void setDefaultContact(Integer defaultContact) {
+		this.defaultContact = defaultContact;
+	}
+
+	@OneToMany
     @JoinTable(name = "contacts")
     @MapKeyColumn(table = "contacts", nullable = false)
     public Map<Integer, Person> getContacts() {

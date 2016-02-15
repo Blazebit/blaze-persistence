@@ -19,10 +19,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
@@ -62,16 +62,18 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         private Class<?> currentClass;
         private Class<?> valueClass;
         private Method method;
+        private boolean hasCollectionJoin;
 
         PathPosition(ManagedType<?> managedType, Method method) {
             this.currentClass = managedType.getJavaType();
             this.method = method;
         }
         
-		private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method) {
+		private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
             this.currentClass = currentClass;
             this.valueClass = valueClass;
             this.method = method;
+            this.hasCollectionJoin = hasCollectionJoin;
         }
 
         Class<?> getRealCurrentClass() {
@@ -99,12 +101,20 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
 			this.method = method;
 		}
 
+		public boolean hasCollectionJoin() {
+			return hasCollectionJoin;
+		}
+
 		void setValueClass(Class<?> valueClass) {
 			this.valueClass = valueClass;
+			
+			if (valueClass != null && valueClass != currentClass) {
+				hasCollectionJoin = true;
+			}
 		}
 		
         PathPosition copy() {
-            return new PathPosition(currentClass, valueClass, method);
+            return new PathPosition(currentClass, valueClass, method,hasCollectionJoin);
         }
     }
 
@@ -117,7 +127,15 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     private Method resolve(Class<?> currentClass, String property) {
-        if (metamodel.managedType(currentClass).getAttribute(property) == null) {
+    	Attribute<?, ?> attribute = null;
+    	
+    	try {
+    		attribute = metamodel.managedType(currentClass).getAttribute(property);
+    	} catch (IllegalArgumentException ex) {
+    		attribute = null;
+    	}
+    	
+        if (attribute == null) {
             throw new IllegalArgumentException("The property '" + property + "' could not be found on the type '" + currentClass.getName() + "'!");
         }
         
@@ -127,20 +145,67 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     private Class<?> getType(Class<?> baseClass, Method element) {
         return ReflectionUtils.getResolvedMethodReturnType(baseClass, element);
     }
+    
+    public static interface TargetType {
+    	
+    	public boolean hasCollectionJoin();
+    	
+    	public Method getLeafMethod();
+    	
+    	public Class<?> getLeafBaseClass();
+    	
+    	public Class<?> getLeafBaseValueClass();
+    	
+    }
+    
+    private static class TargetTypeImpl implements TargetType {
+    	
+    	private final boolean hasCollectionJoin;
+    	private final Method leafMethod;
+    	private final Class<?> leafBaseClass;
+    	private final Class<?> leafBaseValueClass;
 
-    public Map<Method, Class<?>[]> getPossibleTargets() {
+    	public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseValueClass) {
+			this.hasCollectionJoin = hasCollectionJoin;
+			this.leafMethod = leafMethod;
+			this.leafBaseClass = leafBaseClass;
+			this.leafBaseValueClass = leafBaseValueClass;
+		}
+
+    	@Override
+		public boolean hasCollectionJoin() {
+			return hasCollectionJoin;
+		}
+
+    	@Override
+		public Method getLeafMethod() {
+			return leafMethod;
+		}
+
+    	@Override
+		public Class<?> getLeafBaseClass() {
+			return leafBaseClass;
+		}
+
+    	@Override
+		public Class<?> getLeafBaseValueClass() {
+			return leafBaseValueClass;
+		}
+    }
+
+    public List<TargetType> getPossibleTargets() {
         List<PathPosition> positions = pathPositions;
         int size = positions.size();
         
         if (size == 1 && positions.get(0).getMethod() == null && managedType.getJavaType().equals(positions.get(0).getRealCurrentClass())) {
             // When we didn't resolve any property, the expression is probably static and we can't give types in that case
-            return Collections.emptyMap();
+            return Collections.emptyList();
         }
         
-        Map<Method, Class<?>[]> possibleTargets = new HashMap<Method, Class<?>[]>(size);
+        List<TargetType> possibleTargets = new ArrayList<TargetType>(size);
         for (int i = 0; i < size; i++) {
             PathPosition position = positions.get(i);
-            possibleTargets.put(position.getMethod(), new Class[]{ getBoxed(position.getRealCurrentClass()), getBoxed(position.getCurrentClass()) });
+            possibleTargets.add(new TargetTypeImpl(position.hasCollectionJoin(), position.getMethod(), getBoxed(position.getRealCurrentClass()), getBoxed(position.getCurrentClass())));
         }
         
         return possibleTargets;
@@ -210,6 +275,21 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     @Override
     public void visit(ArrayExpression expression) {
+        boolean wasParamsAllowed = parametersAllowed;
+        List<PathPosition> currentPositions = pathPositions;
+        PathPosition position = currentPosition;
+
+        parametersAllowed = true;
+        pathPositions = new ArrayList<PathPosition>();
+        pathPositions.add(currentPosition = new PathPosition(managedType, null));
+        
+        // Validate index against metamodel
+        expression.getIndex().accept(this);
+        
+        parametersAllowed = wasParamsAllowed;
+		currentPosition = position;
+		pathPositions = currentPositions;
+    
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
     }
@@ -274,6 +354,9 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         String expressionString = expression.toString();
         if ("true".equalsIgnoreCase(expressionString) || "false".equalsIgnoreCase(expressionString)) {
             currentPosition.setCurrentClass(Boolean.class);
+        } else if (isNumber(expressionString)) {
+        	// Maybe use Number?
+        	currentPosition.setCurrentClass(Integer.class);
         } else {
             // We can't infer a type here
             // TODO: Not sure what happens when this is the result node of a case when
@@ -281,7 +364,24 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    @Override
+    private boolean isNumber(String expressionString) {
+    	String s = expressionString.trim();
+    	
+    	if (s.isEmpty()) {
+    		return false;
+    	}
+    	
+    	for (int i = 0; i < expressionString.length(); i++) {
+    		char c = expressionString.charAt(i);
+    		if (!Character.isDigit(c)) {
+    			return false;
+    		}
+    	}
+    	
+    	return true;
+	}
+
+	@Override
     public void visit(SubqueryExpression expression) {
         invalid(expression);
     }
