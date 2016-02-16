@@ -47,10 +47,38 @@ public final class ConfigurationProperties {
      * If set to false, uses of SIZE will always be transformed to subqueries.
      * By default the size to count transformation is enabled.
      * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
      * 
      * @since 1.1.0
      */
     public static final String SIZE_TO_COUNT_TRANSFORMATION = "com.blazebit.persistence.size_to_count_transformation";
+    
+    /**
+     * If set to false, no implicit group by clauses will be generated from the SELECT part of the query.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     * 
+     * @since 1.1.0
+     */
+    public static final String IMPLICIT_GROUP_BY_FROM_SELECT = "com.blazebit.persistence.implicit_group_by_from_select";
+    
+    /**
+     * If set to false, no implicit group by clauses will be generated from the HAVING part of the query.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     * 
+     * @since 1.1.0
+     */
+    public static final String IMPLICIT_GROUP_BY_FROM_HAVING = "com.blazebit.persistence.implicit_group_by_from_having";
+    
+    /**
+     * If set to false, no implicit group by clauses will be generated from the ORDER BY part of the query.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     * 
+     * @since 1.1.0
+     */
+    public static final String IMPLICIT_GROUP_BY_FROM_ORDER_BY = "com.blazebit.persistence.implicit_group_by_from_order_by";
     
     private ConfigurationProperties() {
     }

@@ -381,6 +381,19 @@ public class SelectTest extends AbstractCoreTest {
     }
     
     @Test
+    public void testDisableImplicitGroupByFromSelect() {
+        // When
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("SIZE(d.contacts)")
+                .select("d.age")
+                .setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, "false");
+        
+        final String expected = "SELECT (SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d), d.age FROM Document d";
+        assertEquals(expected, cb.getQueryString());
+        cb.getResultList();
+    }
+    
+    @Test
     public void testSelectAggregate() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(versions)")

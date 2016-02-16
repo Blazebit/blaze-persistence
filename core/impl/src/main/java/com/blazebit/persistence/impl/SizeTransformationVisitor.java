@@ -45,6 +45,7 @@ import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -60,8 +61,10 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     private final JoinManager joinManager;
     private final GroupByManager groupByManager;
     private final Map<String, String> properties;
-    private boolean hasComplexSelects;
+    private boolean hasGroupBySelects;
+    private boolean hasComplexGroupBySelects;
     private final DbmsDialect dbmsDialect;
+//    private final SelectManager<?> selectManager;
     
     // state
     private boolean orderBySelectClause;
@@ -85,12 +88,20 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         return clause;
     }
     
-    public boolean isHasComplexSelects() {
-		return hasComplexSelects;
+    public boolean isHasComplexGroupBySelects() {
+		return hasComplexGroupBySelects;
 	}
 
-	public void setHasComplexSelects(boolean hasComplexSelects) {
-		this.hasComplexSelects = hasComplexSelects;
+	public void setHasComplexGroupBySelects(boolean hasComplexGroupBySelects) {
+		this.hasComplexGroupBySelects = hasComplexGroupBySelects;
+	}
+	
+	public boolean isHasGroupBySelects() {
+		return hasGroupBySelects;
+	}
+
+	public void setHasGroupBySelects(boolean hasGroupBySelects) {
+		this.hasGroupBySelects = hasGroupBySelects;
 	}
 
 	public void setClause(ClauseType clause) {
@@ -145,12 +156,11 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     }
     
     private boolean isCountTransformationEnabled() {
-        String sizeToCountTransformationPropertyValue = properties.get(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION);
-        if (sizeToCountTransformationPropertyValue == null) {
-            return true;
-        } else {
-            return Boolean.parseBoolean(sizeToCountTransformationPropertyValue);
-        }
+    	return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, true);
+    }
+    
+    private boolean isImplicitGroupByFromSelectEnabled() {
+    	return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
     }
 
     private ManagedType<?> resolveManagedTargetType(Class<?> startType, String path) {
@@ -192,7 +202,13 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             	throw new RuntimeException("Path [" + sizeArg.toString() + "] does not refer to a collection");
             }
             
-            if (collectionIdType == PersistenceType.EMBEDDABLE || !metamodel.entity(startClass).hasSingleIdAttribute() || joinManager.getRoots().size() > 1 || clause == ClauseType.JOIN || !isCountTransformationEnabled() || (hasComplexSelects && !dbmsDialect.supportsReturningColumns())) {
+            if (collectionIdType == PersistenceType.EMBEDDABLE || 
+            		!metamodel.entity(startClass).hasSingleIdAttribute() || 
+            		joinManager.getRoots().size() > 1 || 
+            		clause == ClauseType.JOIN || 
+            		!isCountTransformationEnabled() || 
+            		(hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) || 
+            		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled())) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause

@@ -203,6 +203,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 		return false;
 	}
 
+	@Override
+	public boolean supportsComplexGroupBy() {
+		return true;
+	}
+	
     @Override
     public boolean supportsLimit() {
         return true;

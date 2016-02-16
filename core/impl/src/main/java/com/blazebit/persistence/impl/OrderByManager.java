@@ -219,7 +219,7 @@ public class OrderByManager extends AbstractManager {
 
             // This visitor checks if an expression is usable in a group by
             GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
-            if (!Boolean.TRUE.equals(expr.accept(groupByUsableDetectionVisitor))) {
+            if (!expr.accept(groupByUsableDetectionVisitor)) {
                 sb.setLength(0);
                 queryGenerator.setQueryBuffer(sb);
                 expr.accept(queryGenerator);

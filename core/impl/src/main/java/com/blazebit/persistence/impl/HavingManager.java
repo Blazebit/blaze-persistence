@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.builder.predicate.HavingOrBuilderImpl;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 
 /**
@@ -53,8 +54,19 @@ public class HavingManager<T> extends PredicateManager<T> {
 
         // TODO: No idea yet how to actually handle this
         boolean conditionalContext = queryGenerator.isConditionalContext();
-        GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor(clauses, queryGenerator);
+        GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor();
         rootPredicate.getPredicate().accept(visitor);
+        
+        StringBuilder sb = new StringBuilder();
+        queryGenerator.setQueryBuffer(sb);
+        queryGenerator.setConditionalContext(true);
+        
+        for (Expression expr : visitor.getExpressions()) {
+        	expr.accept(queryGenerator);
+        	clauses.add(sb.toString());
+        	sb.setLength(0);
+        }
+        
         queryGenerator.setConditionalContext(conditionalContext);
     }
 }
