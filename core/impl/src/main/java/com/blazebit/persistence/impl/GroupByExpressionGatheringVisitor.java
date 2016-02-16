@@ -1,6 +1,5 @@
 package com.blazebit.persistence.impl;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -22,10 +21,18 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
-    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor;
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
 
-    public Set<Expression> getExpressions() {
+    public GroupByExpressionGatheringVisitor() {
+    	this(false);
+    }
+    
+    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate) {
+    	this.groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(treatSizeAsAggregate);
+	}
+
+	public Set<Expression> getExpressions() {
         return expressions;
     }
 

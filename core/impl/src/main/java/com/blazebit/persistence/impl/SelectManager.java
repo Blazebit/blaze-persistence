@@ -76,7 +76,7 @@ public class SelectManager<T> extends AbstractManager {
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
-    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
+    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
     
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
@@ -115,8 +115,8 @@ public class SelectManager<T> extends AbstractManager {
      * Element 0 is true if the select clause contains a any expression that would be required in group by when aggregates are used.
      * Element 1 is true if the select clause contains a any complex expression that would be required in group by when aggregates are used.
      */
-    public boolean[] containsGroupBySelect() {
-    	GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor();
+    public boolean[] containsGroupBySelect(boolean treatSizeAsAggregate) {
+    	GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
     	boolean containsGroupBySelect = false;
     	for (SelectInfo selectInfo : selectInfos) {
     		if (!(selectInfo.getExpression() instanceof PathExpression)) {

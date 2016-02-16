@@ -18,7 +18,7 @@ public class SizeExpressionTransformer implements ExpressionTransformer {
         if (fromClause != ClauseType.SELECT) {
             sizeTransformationVisitor.setClause(fromClause);
             sizeTransformationVisitor.setOrderBySelectClause(false);
-            boolean[] groupBySelectStatus = selectManager.containsGroupBySelect();
+            boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
             sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
             sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
             return original.accept(sizeTransformationVisitor);

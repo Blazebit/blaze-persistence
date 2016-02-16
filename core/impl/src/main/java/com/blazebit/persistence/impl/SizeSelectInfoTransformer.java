@@ -36,7 +36,7 @@ public class SizeSelectInfoTransformer implements SelectInfoTransformer {
     public void transform(SelectInfo info) {
         sizeTransformationVisitor.setOrderBySelectClause(orderByManager.getOrderBySelectAliases().contains(info.getAlias()));
         sizeTransformationVisitor.setClause(ClauseType.SELECT);
-        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect();
+        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
         sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
         sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
         if (ExpressionUtils.isSizeFunction(info.getExpression())) {

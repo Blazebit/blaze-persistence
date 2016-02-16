@@ -2,43 +2,20 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
 import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 
 class GroupByUsableDetectionVisitor extends AbortableVisitorAdapter {
+	
+	private final boolean treatSizeAsAggreagte;
+	
+	public GroupByUsableDetectionVisitor(boolean treatSizeAsAggreagte) {
+		this.treatSizeAsAggreagte = treatSizeAsAggreagte;
+	}
 
 	@Override
     public Boolean visit(FunctionExpression expression) {
-        if (expression instanceof AggregateExpression) {
+        if (expression instanceof AggregateExpression || (treatSizeAsAggreagte && ExpressionUtils.isSizeFunction(expression))) {
             return true;
         }
         return super.visit(expression);
