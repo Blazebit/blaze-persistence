@@ -169,6 +169,8 @@ public class AbstractParserTest {
         Expression indexExpr;
         if (index.startsWith(":")) {
             indexExpr = new ParameterExpression(index.substring(1));
+        } else if (index.startsWith("\'") || index.matches("\\d+")) {
+            indexExpr = new FooExpression(index);
         } else {
             indexExpr = path(index.split("\\."));
         }
