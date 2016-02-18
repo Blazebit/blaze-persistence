@@ -6,35 +6,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
 
-import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 public class CustomSQLQuery implements Query, CteQueryWrapper {
 
     private final List<Query> participatingQueries;
 	private final Query delegate;
-	private final CriteriaBuilderFactory cbf;
-	private final DbmsDialect dbmsDialect;
-	private final EntityManager em;
+	private final CommonQueryBuilder<?> cqb;
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
 	private final Map<String, String> addedCtes;
 	
-	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> addedCtes) {
+	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> addedCtes) {
 	    this.participatingQueries = participatingQueries;
 		this.delegate = delegate;
-		this.cbf = cbf;
-		this.dbmsDialect = dbmsDialect;
-		this.em = em;
+		this.cqb = cqb;
 		this.extendedQuerySupport = extendedQuerySupport;
 		this.sql = sql;
 		this.addedCtes = addedCtes;
@@ -58,7 +52,7 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 			return this;
 		}
 		
-		return new CustomSQLQuery(participatingQueries, q, cbf, dbmsDialect, em, extendedQuerySupport, sql, addedCtes);
+		return new CustomSQLQuery(participatingQueries, q, cqb, extendedQuerySupport, sql, addedCtes);
 	}
 
     @Override
@@ -74,7 +68,7 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 
 	@Override
 	public int executeUpdate() {
-        return extendedQuerySupport.executeUpdate(cbf, dbmsDialect, em, participatingQueries, delegate, sql);
+        return extendedQuerySupport.executeUpdate(cqb, participatingQueries, delegate, sql);
 	}
 
 	@Override

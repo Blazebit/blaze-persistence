@@ -102,6 +102,36 @@
                             </attributes>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>entity-manual-en_US-html</id>               
+                        <phase>generate-resources</phase>  
+                        <goals>
+                            <goal>process-asciidoc</goal>    
+                        </goals>
+                        <configuration>
+                            <sourceDirectory>${basedir}/src/main/asciidoc/entity-view/manual/en_US</sourceDirectory>
+                            <outputDirectory>${project.build.directory}/generated-docs/entity-view/manual/en_US</outputDirectory>
+                             see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 
+                            <templateDir>${basedir}/src/main/template</templateDir>
+                            <imagesDir>${basedir}/src/main/asciidoc/entity-view/manual/images</imagesDir>
+                            <doctype>book</doctype>
+                            <eruby>erb</eruby>
+                            <backend>html5</backend>
+                            <sourceHighlighter>highlightjs</sourceHighlighter>
+                            <attributes>
+                                <linkcss>true</linkcss>
+                                <stylesheet>css/style.css</stylesheet>
+                                
+                                <toc>left</toc>
+                                <icons>picture</icons>
+                                <sectanchors>true</sectanchors>
+                                <idprefix />
+                                <idseparator>-</idseparator>
+                                <docinfo1>true</docinfo1>
+                                <version>${project.version}</version>
+                            </attributes>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

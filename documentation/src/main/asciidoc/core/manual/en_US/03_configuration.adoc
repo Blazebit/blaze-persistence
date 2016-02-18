@@ -2,6 +2,8 @@
 
 {projectname} can be configured by setting properties on a `com.blazebit.persistence.spi.CriteriaBuilderConfiguration` object and creating a `CriteriaBuilderFactory` from it.
 
+You can also set configuration properties on a per builder basis via the `setProperty(String, String)` method.
+
 === Configuration properties
 
 ==== COMPATIBLE_MODE
@@ -23,6 +25,58 @@ This is mostly relevant for PostgreSQL which requires `false` to work properly.
 [width="100%",options="header,footer"]
 |====================
 | Key | com.blazebit.persistence.returning_clause_case_sensitive
+| Type | boolean 
+| Default | true 
+|====================
+
+==== SIZE_TO_COUNT_TRANSFORMATION
+
+Defines whether the SIZE to COUNT tranformation should be applied to queries or not.
+The transformation can be very beneficial especially for databases that can't optimize subqueries properly within the context of a parent query.
+This property exists just so you can turn the transformation off if you encounter problems.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.size_to_count_transformation
+| Type | boolean 
+| Default | true 
+|====================
+
+==== IMPLICIT_GROUP_BY_FROM_SELECT
+
+Defines whether non-aggregate expressions from the SELECT clause should be automatically added to the GROUP BY.
+Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
+This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.implicit_group_by_from_select
+| Type | boolean 
+| Default | true 
+|====================
+
+==== IMPLICIT_GROUP_BY_FROM_HAVING
+
+Defines whether non-aggregate expressions from the HAVING clause should be automatically added to the GROUP BY.
+Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
+This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.implicit_group_by_from_having
+| Type | boolean 
+| Default | true 
+|====================
+
+==== IMPLICIT_GROUP_BY_FROM_ORDER_BY
+
+Defines whether non-aggregate expressions from the ORDER BY clause should be automatically added to the GROUP BY.
+Some databases require that all non-aggregate expressions must be included in the GROUP BY clause which is pretty annoying.
+This feature can make writing queries a lot easier since it will implicitly copy expressions over to the GROUP BY clause.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.implicit_group_by_from_order_by
 | Type | boolean 
 | Default | true 
 |====================

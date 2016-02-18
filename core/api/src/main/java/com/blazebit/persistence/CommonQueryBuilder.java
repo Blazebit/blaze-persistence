@@ -50,6 +50,15 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
     public CriteriaBuilderFactory getCriteriaBuilderFactory();
 
     /**
+     * Returns the service provided by this criteria builder or null if none is available.
+     * 
+     * @param serviceClass The type of the service
+     * @return The service or null
+     * @since 1.1.0
+     */
+    public <T> T getService(Class<T> serviceClass);
+
+    /**
      * Sets the given value as the value for the parameter with the given name.
      *
      * @param name The name of the parameter which should be set

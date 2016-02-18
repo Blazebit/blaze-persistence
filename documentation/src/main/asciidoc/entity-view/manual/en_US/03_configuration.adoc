@@ -1,0 +1,41 @@
+== Configuration
+
+{projectname} can be configured by setting properties on a `com.blazebit.persistence.view.spi.EntityViewConfiguration` object and creating a `EntityViewManager` from it.
+
+=== Configuration properties
+
+==== PROXY_EAGER_LOADING
+
+Defines whether proxy classes for entity views should be created eagerly when creating the `EntityViewManager` or on demand.
+To improve startup performance this is deactivated by default. When using entity views in a clustered environment you might want to enable this!
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.proxy.eager_loading 
+| Type | boolean 
+| Default | false 
+|====================
+
+==== PROXY_UNSAFE_ALLOWED
+
+Defines whether proxy classes that support using the getter methods in a constructor should be allowed.
+These proxy classes have to be defined via `sun.misc.Unsafe` to avoid class verification errors.
+Disabling this property makes the use of the getter in the constructor return the default value for the property instead of the actual value.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.proxy.unsafe_allowed
+| Type | boolean 
+| Default | true 
+|====================
+
+==== EXPRESSION_VALIDATION_DISABLED
+
+Defines whether the expressions of entity view mappings should be validated.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.view.expression_validation_disabled
+| Type | boolean 
+| Default | true 
+|====================

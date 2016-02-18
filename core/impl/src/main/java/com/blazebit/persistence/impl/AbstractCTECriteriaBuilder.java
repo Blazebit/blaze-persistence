@@ -26,6 +26,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseCTECriteriaBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
@@ -85,7 +86,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             applyExtendedSql(sqlSb, false, true, null, null, null);
             String finalSql = sqlSb.toString();
             
-            query = new CustomSQLQuery(participatingQueries, query, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, null);
+            query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, null);
         } else {
             query = em.createQuery(getBaseQueryString());
         }

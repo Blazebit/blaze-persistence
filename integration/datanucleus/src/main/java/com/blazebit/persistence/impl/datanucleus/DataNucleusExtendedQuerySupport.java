@@ -11,6 +11,7 @@ import org.datanucleus.store.rdbms.query.JPQLQuery;
 import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
 
 import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -68,25 +69,25 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public List getResultList(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getResultList();
 	}
 	
 	@Override
-	public Object getSingleResult(CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public Object getSingleResult(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
 		applySql(query, sqlOverride);
 		return query.getSingleResult();
 	}
 
     @Override
-    public int executeUpdate(CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public int executeUpdate(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
         applySql(query, sqlOverride);
         return query.executeUpdate();
     }
 
     @Override
-    public ReturningResult<Object[]> executeReturning(CriteriaBuilderFactory cbf, DbmsDialect dbmsDialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }

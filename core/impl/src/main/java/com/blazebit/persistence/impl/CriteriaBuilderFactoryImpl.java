@@ -57,7 +57,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
     private final Map<String, String> properties;
-    private final boolean compatibleModeEnabled;
     
     private final String configuredDbms;
     private final DbmsDialect configuredDbmsDialect;
@@ -71,7 +70,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions));
         this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, expressionFactory);
         this.properties = copyProperties(config.getProperties());
-        this.compatibleModeEnabled = Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.COMPATIBLE_MODE)));
         
         EntityManagerFactory emf = entityManagerFactory;
         Set<String> registeredFunctions = new HashSet<String>();
@@ -133,10 +131,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 	public String getProperty(String propertyName) {
 		return properties.get(propertyName);
 	}
-
-	public boolean isCompatibleModeEnabled() {
-        return compatibleModeEnabled;
-    }
     
     private MainQuery createMainQuery(EntityManager entityManager) {
         return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions);
@@ -212,6 +206,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     public <T> T getService(Class<T> serviceClass) {
         if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
             return (T) expressionFactory;
+        } else if (DbmsDialect.class.equals(serviceClass)) {
+            return (T) configuredDbmsDialect;
         }
 
         return null;

@@ -39,6 +39,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
@@ -243,6 +244,21 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T getService(Class<T> serviceClass) {
+        if (CriteriaBuilderFactory.class.equals(serviceClass)) {
+            return (T) cbf;
+        } else if (EntityManager.class.equals(serviceClass)) {
+            return (T) em;
+        } else if (DbmsDialect.class.equals(serviceClass)) {
+            return (T) dbmsDialect;
+        } else if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
+            return (T) cbf.getExpressionFactory();
+        }
+        
+        return null;
     }
     
     @SuppressWarnings("unchecked")
@@ -716,7 +732,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public BuilderType groupBy(String expression) {
         clearCache();
         Expression expr;
-        if (cbf.isCompatibleModeEnabled()) {
+        if (isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
         } else {
         	expr = expressionFactory.createSimpleExpression(expression);
@@ -808,7 +824,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     public BuilderType orderBy(String expression, boolean ascending, boolean nullFirst) {
         Expression expr;
-        if (cbf.isCompatibleModeEnabled()) {
+        if (isCompatibleModeEnabled()) {
             expr = expressionFactory.createOrderByExpression(expression);
         } else {
             expr = expressionFactory.createSimpleExpression(expression);
@@ -1073,7 +1089,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         String finalQuery = sqlSb.toString();
         participatingQueries.add(baseQuery);
-        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
         
         // TODO: needs tests
         if (selectManager.getSelectObjectBuilder() != null) {
@@ -1571,6 +1587,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             currentQuery = (TypedQuery<Y>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
         return currentQuery;
+    }
+    
+    private boolean isCompatibleModeEnabled() {
+        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.COMPATIBLE_MODE, false);
     }
     
     private boolean isImplicitGroupByFromSelect() {

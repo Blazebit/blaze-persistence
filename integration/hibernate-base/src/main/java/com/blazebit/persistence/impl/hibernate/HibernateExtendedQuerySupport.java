@@ -63,7 +63,7 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -226,7 +226,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public List getResultList(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
+        EntityManager em = cqb.getService(EntityManager.class);
 		try {
 			return list(em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
@@ -243,7 +244,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	
 	@Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getSingleResult(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String sqlOverride) {
+	public Object getSingleResult(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
+        EntityManager em = cqb.getService(EntityManager.class);
 		try {
 			final List result = list(em, participatingQueries, query, sqlOverride);
 
@@ -296,7 +298,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
+    public int executeUpdate(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String finalSql) {
+        EntityManager em = cqb.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -317,7 +320,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return queryPlan.performExecuteUpdate(queryParameters, session);
         }
 
-        boolean caseInsensitive = !Boolean.valueOf(cbf.getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
+        boolean caseInsensitive = !Boolean.valueOf(cqb.getProperties().get("com.blazebit.persistence.returning_clause_case_sensitive"));
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         
@@ -346,7 +349,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(CriteriaBuilderFactory cbf, DbmsDialect dialect, EntityManager em, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+    public ReturningResult<Object[]> executeReturning(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+        DbmsDialect dialect = cqb.getService(DbmsDialect.class);
+        EntityManager em = cqb.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -361,8 +366,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
-        
-        boolean caseInsensitive = !Boolean.valueOf(cbf.getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
+
+        boolean caseInsensitive = !Boolean.valueOf(cqb.getProperties().get("com.blazebit.persistence.returning_clause_case_sensitive"));
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         boolean generatedKeys = !dialect.supportsReturningColumns();
         String finalSql = sqlSb.toString();

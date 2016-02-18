@@ -11,3 +11,7 @@ Copyright (C) 2014 Blazebit
 toc::[]
 
 include::01_ev_getting_started.ad[]
+
+include::02_architecture.ad[]
+
+include::03_configuration.ad[]

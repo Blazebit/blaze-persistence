@@ -30,6 +30,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.BaseModificationCriteriaBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
 import com.blazebit.persistence.ReturningBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
@@ -165,7 +166,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 query = getCountExampleQuery();
             }
             
-            query = new CustomSQLQuery(participatingQueries, query, cbf, dbmsDialect, em, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
+            query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
         } else {
             query = em.createQuery(getBaseQueryString());
         }
@@ -319,7 +320,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         participatingQueries.add(baseQuery);
         
         // TODO: hibernate will return the object directly for single attribute case instead of an object array
-        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning(cbf, dbmsDialect, em, participatingQueries, exampleQuery, finalSql);
+        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning((CommonQueryBuilder<?>) this, participatingQueries, exampleQuery, finalSql);
         return result;
 	}
 	
