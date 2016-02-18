@@ -41,6 +41,13 @@
 			<artifactId>catch-exception</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
+		<!-- Add mockito early to the local maven repo since the Hibernate,DB2 build froze on downloading this dependency -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-all</artifactId>
+			<version>1.10.19</version>
+		</dependency>
 
 	</dependencies>
 

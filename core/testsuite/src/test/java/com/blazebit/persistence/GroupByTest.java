@@ -22,6 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.testsuite.base.category.NoDB2;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
 import com.blazebit.persistence.testsuite.base.category.NoH2;
 import com.blazebit.persistence.testsuite.base.category.NoMySQL;
@@ -59,8 +60,9 @@ public class GroupByTest extends AbstractCoreTest {
     	criteria.getResultList();
     }
     
+    // NOTE: Datanucleus does not support parameters in group by yet. see http://www.datanucleus.org/servlet/jira/browse/NUCRDBMS-1009
     @Test
-    @Category({NoDB2.class})
+    @Category({NoDB2.class, NoDatanucleus.class})
     public void testSizeTransformWithImplicitParameterGroupBy2() {
     	CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
     			.select("SIZE(d.versions)")
