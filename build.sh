@@ -17,4 +17,15 @@ if [ "$JDK" = "9" ]; then
 fi
 
 ${MVN_BIN} -version
-exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
+
+if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] && 
+    [ "$TRAVIS_BRANCH" == "master" ] &&
+    [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
+    [ "$JPAPROVIDER" == "hibernate" ] &&
+    [ "$RDBMS" == "h2" ]; then
+  exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
+else
+ exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite" -am
+fi
+
+
