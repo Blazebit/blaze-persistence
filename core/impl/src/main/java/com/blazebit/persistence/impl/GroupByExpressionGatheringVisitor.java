@@ -1,5 +1,6 @@
 package com.blazebit.persistence.impl;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.AggregateExpression;
@@ -20,31 +21,28 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
-    private final GroupByUsableDetectionVisitor groupByExpressionGatheringVisitor = new GroupByUsableDetectionVisitor();
-    private final ResolvingQueryGenerator queryGenerator;
-    private final StringBuilder sb = new StringBuilder();
-    private Set<String> expressions;
+    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor;
+    private Set<Expression> expressions = new LinkedHashSet<Expression>();
 
-    public GroupByExpressionGatheringVisitor(Set<String> expressions, ResolvingQueryGenerator queryGenerator) {
-        this.expressions = expressions;
-        this.queryGenerator = queryGenerator;
-        this.queryGenerator.setQueryBuffer(sb);
-        this.queryGenerator.setConditionalContext(true);
+    public GroupByExpressionGatheringVisitor() {
+    	this(false);
     }
+    
+    public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate) {
+    	this.groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(treatSizeAsAggregate);
+	}
 
-    public Set<String> getExpressions() {
+	public Set<Expression> getExpressions() {
         return expressions;
     }
 
     private boolean handleExpression(Expression expression) {
-        if (Boolean.TRUE.equals(expression.accept(groupByExpressionGatheringVisitor))) {
-            return true;
+        if (expression.accept(groupByUsableDetectionVisitor)) {
+        	return true;
+        } else {
+        	expressions.add(expression);
+	        return false;
         }
-
-        sb.setLength(0);
-        expression.accept(queryGenerator);
-        expressions.add(sb.toString());
-        return false;
     }
 
     @Override

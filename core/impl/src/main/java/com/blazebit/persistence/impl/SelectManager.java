@@ -76,7 +76,8 @@ public class SelectManager<T> extends AbstractManager {
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final JpaProvider jpaProvider;
-
+    private final GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
+    
     @SuppressWarnings("unchecked")
     public SelectManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, JoinManager joinManager, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, JpaProvider jpaProvider, Class<?> resultClazz) {
         super(queryGenerator, parameterManager);
@@ -106,6 +107,26 @@ public class SelectManager<T> extends AbstractManager {
 
     public List<SelectInfo> getSelectInfos() {
         return selectInfos;
+    }
+    
+    /**
+     * 
+     * @return an array with length 2. 
+     * Element 0 is true if the select clause contains a any expression that would be required in group by when aggregates are used.
+     * Element 1 is true if the select clause contains a any complex expression that would be required in group by when aggregates are used.
+     */
+    public boolean[] containsGroupBySelect(boolean treatSizeAsAggregate) {
+    	GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
+    	boolean containsGroupBySelect = false;
+    	for (SelectInfo selectInfo : selectInfos) {
+    		if (!(selectInfo.getExpression() instanceof PathExpression)) {
+    			selectInfo.getExpression().accept(gatheringVisitor);
+    		} else {
+    			containsGroupBySelect = true;
+    		}
+    	}
+    	boolean containsComplexGroupBySelect = !gatheringVisitor.getExpressions().isEmpty();
+    	return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
     }
     
     public boolean containsSizeSelect() {
@@ -194,8 +215,7 @@ public class SelectManager<T> extends AbstractManager {
                     }
                 } else {
                     // This visitor checks if an expression is usable in a group by
-                    GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor();
-                    if (!Boolean.TRUE.equals(selectInfo.getExpression().accept(groupByUsableDetectionVisitor))) {
+                    if (!selectInfo.getExpression().accept(groupByUsableDetectionVisitor)) {
                         sb.setLength(0);
                         queryGenerator.setQueryBuffer(sb);
                         selectInfo.getExpression().accept(queryGenerator);

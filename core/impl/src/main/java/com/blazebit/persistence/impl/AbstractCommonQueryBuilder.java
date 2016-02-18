@@ -56,6 +56,7 @@ import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereOrBuilder;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
@@ -64,6 +65,7 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
@@ -223,9 +225,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager);
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor));
-        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager, dbmsDialect);
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor, selectManager));
+        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -717,7 +719,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (cbf.isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
         } else {
-            expr = expressionFactory.createSimpleExpression(expression);
+        	expr = expressionFactory.createSimpleExpression(expression);
+        	if (!(expr instanceof PathExpression) && dbmsDialect.supportsComplexGroupBy()) {
+        		throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
+        	}
+            
         }
         verifyBuilderEnded();
         groupByManager.groupBy(expr);
@@ -1248,9 +1254,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-            selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
-            havingManager.buildGroupByClauses(clauses);
-            orderByManager.buildGroupByClauses(clauses);
+        	if (isImplicitGroupByFromSelect()) {
+        		selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+        	}
+        	if (isImplicitGroupByFromHaving()) {
+        		havingManager.buildGroupByClauses(clauses);
+        	}
+        	if (isImplicitGroupByFromOrderBy()) {
+        		orderByManager.buildGroupByClauses(clauses);
+        	}
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
         havingManager.buildClause(sbSelectFrom);
@@ -1559,6 +1571,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             currentQuery = (TypedQuery<Y>) transformer.transformQuery(query, selectManager.getSelectObjectBuilder());
         }
         return currentQuery;
+    }
+    
+    private boolean isImplicitGroupByFromSelect() {
+    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
+    }
+    
+    private boolean isImplicitGroupByFromHaving() {
+    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, true);
+    }
+    
+    private boolean isImplicitGroupByFromOrderBy() {
+    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY, true);
     }
 
     // TODO: needs equals-hashCode implementation

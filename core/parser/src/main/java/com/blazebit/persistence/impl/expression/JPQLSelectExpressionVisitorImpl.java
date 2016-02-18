@@ -47,6 +47,8 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionArithmeticIndexContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionStringIndexContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
 
@@ -224,10 +226,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitArray_expression(JPQLSelectExpressionParser.Array_expressionContext ctx) {
+    public Expression visitArrayExpressionArithmeticIndex(ArrayExpressionArithmeticIndexContext ctx) {
         return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.arithmetic_expression().accept(this)));
     }
-
+    
+    @Override
+    public Expression visitArrayExpressionStringIndex(ArrayExpressionStringIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.string_expression().accept(this)));
+    }
+    
     @Override
     public Expression visitArithmeticExpressionPlusMinus(JPQLSelectExpressionParser.ArithmeticExpressionPlusMinusContext ctx) {
         CompositeExpression expr = accept(ctx.arithmetic_expression());

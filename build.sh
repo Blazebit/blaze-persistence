@@ -17,4 +17,4 @@ if [ "$JDK" = "9" ]; then
 fi
 
 ${MVN_BIN} -version
-exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
+exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} -X install

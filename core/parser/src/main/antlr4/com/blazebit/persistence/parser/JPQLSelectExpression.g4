@@ -95,7 +95,8 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                       ;
  
  //TODO: allow only in certain clauses??
- array_expression : simple_path_element '[' arithmetic_expression ']'
+ array_expression : simple_path_element '[' arithmetic_expression ']' #ArrayExpressionArithmeticIndex
+ 				  | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
                   ;
       
  general_subpath : general_path_start('.'general_path_element)*

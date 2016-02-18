@@ -199,6 +199,12 @@ public class GeneralParserTest extends AbstractParserTest {
         Expression result = parse("versions[test]");
         assertEquals(path("versions[test]"), result);
     }
+    
+    @Test
+    public void testArrayStringLiteralIndex() {
+        Expression result = parse("versions['test']");
+        assertEquals(path("versions['test']"), result);
+    }
 
     @Test
     public void testArrayIndexPath() {

@@ -24,16 +24,21 @@ public class SizeSelectInfoTransformer implements SelectInfoTransformer {
 
     private final OrderByManager orderByManager;
     private final SizeTransformationVisitor sizeTransformationVisitor;
+    private final SelectManager<?> selectManager;
 
-    public SizeSelectInfoTransformer(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager) {
+    public SizeSelectInfoTransformer(SizeTransformationVisitor sizeTransformationVisitor, OrderByManager orderByManager, SelectManager selectManager) {
         this.sizeTransformationVisitor = sizeTransformationVisitor;
         this.orderByManager = orderByManager;
+        this.selectManager = selectManager;
     }
 
     @Override
     public void transform(SelectInfo info) {
         sizeTransformationVisitor.setOrderBySelectClause(orderByManager.getOrderBySelectAliases().contains(info.getAlias()));
         sizeTransformationVisitor.setClause(ClauseType.SELECT);
+        boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
+        sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
+        sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
         if (ExpressionUtils.isSizeFunction(info.getExpression())) {
             info.setExpression(info.getExpression().accept(sizeTransformationVisitor));
         } else {

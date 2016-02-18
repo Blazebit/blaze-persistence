@@ -128,6 +128,9 @@ public interface DbmsDialect {
 	public boolean supportsReturningColumns();
 
 	// TODO: documentation
+    public boolean supportsComplexGroupBy();
+    
+	// TODO: documentation
     public boolean supportsLimit();
 
     // TODO: documentation
