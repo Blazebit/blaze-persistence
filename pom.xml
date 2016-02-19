@@ -86,7 +86,7 @@
 	</developers>
 
 	<properties>
-		<blaze-persistence.codename>Loki</blaze-persistence.codename>
+		<blaze-persistence.codename>Ink</blaze-persistence.codename>
 
 		<version.blazecbav>0.2.0</version.blazecbav>
 		<version.blazeutils>0.1.10</version.blazeutils>

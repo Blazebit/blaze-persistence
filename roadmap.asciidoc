@@ -1,0 +1,40 @@
+Blaze-Persistence - Roadmap
+===========================
+
+As a side note, we are naming releases after http://marvel.com/comics/characters[Marvel comic characters] since we like the Avengers :)
+
+
+= 1.3 Drax
+
+** Spatial/Range datatype support
+** RDBMS array datatype support
+** Deep EclipseLink integration
+** Deep DataNuceleus integration
+
+= 1.2 Ink
+
+** JPA static metamodel
+** Custom static metamodel
+** TREAT support
+** Table function support
+** Interval arithmetics support
+** Merge operation support
+** Entity view fetch strategies
+** Entity view partial updates
+** Entity view collection attribute filters
+
+= 1.1 - Loki *[RELEASED]*
+
+** Multiple from clause support
+** Group concat function
+** Date, and Datetime diff functions
+** CTE support
+** Set operation support
+** JPA bulk operation support
+** Hibernate bulk insert support
+** Embeddable entity views
+** Entity view metamodel checker
+
+= 1.0 - Yellow Claw *[RELEASED]*
+
+** Initial release with basic query functionality and entity views
