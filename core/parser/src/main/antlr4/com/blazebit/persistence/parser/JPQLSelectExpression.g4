@@ -110,7 +110,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                                       | {allowOuter == true}? outer_expression
                                       ;
  
- path : general_subpath'.'general_path_element
+ path : general_subpath '.' general_path_element
       ;
 
  collection_valued_path_expression : single_element_path_expression 
