@@ -208,7 +208,7 @@ public class JoinNode {
             }
         }
 
-        return null;
+        return result;
     }
 
     public EnumSet<ClauseType> getClauseDependencies() {

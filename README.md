@@ -21,7 +21,7 @@ How to use it?
 Blaze-Persistence is split up into different modules. We recommend that you define a version property in your parent pom that you can use for all artifacts. Modules are all released in one batch so you can safely increment just that property.
 
 	<properties>
-		<blaze-persistence.version>1.0.5</blaze-persistence.version>
+		<blaze-persistence.version>1.1.0</blaze-persistence.version>
 	</properties>
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.

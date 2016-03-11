@@ -373,7 +373,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     private WhenClauseExpression handleWhenClause(ParserRuleContext condition, ParserRuleContext result) {
-        return new WhenClauseExpression((Predicate) condition.accept(this), result.accept(this));
+        return new WhenClauseExpression(condition.accept(this), result.accept(this));
     }
 
     @Override
