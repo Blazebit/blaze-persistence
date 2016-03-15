@@ -20,18 +20,21 @@ import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationSubqueryBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationSubqueryBuilder;
 import com.blazebit.persistence.SubqueryBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryAndExpressionBuilderListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -95,6 +98,18 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
         return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
     }
 
+    @Override
+    public MultipleSubqueryInitiator<T> subqueries(String expression) {
+        return new MultipleSubqueryInitiatorImpl<T>(result, expressionFactory.createSimpleExpression(expression), new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                chain(createPredicate(leftExpression, builder.getExpression(), PredicateQuantifier.ONE));
+            }
+            
+        }, subqueryInitFactory);
+    }
+
     /* case when functions */
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> caseWhen(String expression) {
@@ -130,6 +145,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression) {
         chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
         return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubqueries(String expression) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return startBuilder(new CaseWhenBuilderImpl<T>(result, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubqueries(expression);
     }
 
     @Override

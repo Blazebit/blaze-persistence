@@ -16,29 +16,26 @@
 package com.blazebit.persistence;
 
 /**
- * A builder for general case when expressions.
+ * An interface used to create subquery builders for expressions with multiple subqueries.
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public interface CaseWhenBuilder<T> extends CaseWhenStarterBuilder<T> {
+public interface MultipleSubqueryInitiator<T> {
 
     /**
-     * Adds the given else expression to the case when builder.
+     * Starts a {@link SubqueryInitiator} for the given subquery alias.
      *
-     * @param elseExpression The else expression
-     * @return The parent builder
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @return The subquery initiator for building a subquery
      */
-    public T otherwiseExpression(String elseExpression);
+    public SubqueryInitiator<MultipleSubqueryInitiator<T>> with(String subqueryAlias);
 
     /**
-     * Adds the given else parameter value to the case when builder.
+     * Finishes the subquery builder.
      *
-     * @param value The else parameter value
-     * @return The parent builder
+     * @return The parent query builder
      */
-    public T otherwise(Object value);
-    
-    // TODO: add subqueries variants?
+    public T end();
 }

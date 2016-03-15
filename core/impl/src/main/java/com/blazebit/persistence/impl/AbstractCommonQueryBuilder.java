@@ -48,6 +48,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.KeysetBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
@@ -676,6 +677,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
     }
 
+    public MultipleSubqueryInitiator<BuilderType> selectSubqueries(String expression) {
+        return selectSubqueries(null, expression);
+    }
+
+    @SuppressWarnings("unchecked")
+    public MultipleSubqueryInitiator<BuilderType> selectSubqueries(String selectAlias, String expression) {
+        if (selectAlias != null && selectAlias.isEmpty()) {
+            throw new IllegalArgumentException("selectAlias");
+        }
+        if (expression == null) {
+            throw new NullPointerException("expression");
+        }
+        verifyBuilderEnded();
+        return selectManager.selectSubqueries((BuilderType) this, expressionFactory.createSimpleExpression(expression), selectAlias);
+    }
+
     /*
      * Where methods
      */
@@ -715,6 +732,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubquery(String subqueryAlias, String expression) {
         return whereManager.restrict(this, subqueryAlias, expression);
+    }
+
+    public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> whereSubqueries(String expression) {
+        return whereManager.restrictSubqueries(this, expression);
     }
 
     /*
@@ -800,6 +821,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public SubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubquery(String subqueryAlias, String expression) {
         clearCache();
         return havingManager.restrict(this, subqueryAlias, expression);
+    }
+
+    public MultipleSubqueryInitiator<RestrictionBuilder<BuilderType>> havingSubqueries(String expression) {
+        clearCache();
+        return havingManager.restrictSubqueries(this, expression);
     }
 
     /*

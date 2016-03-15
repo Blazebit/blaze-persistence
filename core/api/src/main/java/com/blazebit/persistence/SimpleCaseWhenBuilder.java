@@ -34,4 +34,5 @@ public interface SimpleCaseWhenBuilder<T> extends SimpleCaseWhenStarterBuilder<T
      * @return The parent builder
      */
     public T otherwise(String elseExpression);
+    // TODO: subqueries?
 }

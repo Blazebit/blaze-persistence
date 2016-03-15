@@ -16,13 +16,16 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.WhereAndBuilder;
 import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
+import com.blazebit.persistence.impl.RestrictionBuilderExpressionBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
@@ -131,6 +134,15 @@ public class WhereOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedListe
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         RestrictionBuilder<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> whereSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        RestrictionBuilderImpl<WhereOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<RestrictionBuilder<WhereOrBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<WhereOrBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);
+        return initiator;
     }
 
     @Override

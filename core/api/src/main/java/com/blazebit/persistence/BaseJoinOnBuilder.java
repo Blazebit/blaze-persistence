@@ -33,4 +33,8 @@ public interface BaseJoinOnBuilder<T extends BaseJoinOnBuilder<T>> {
      * @return The restriction builder for the given expression
      */
     public RestrictionBuilder<T> on(String expression);
+    
+    // NOTE: JPA 4.6.16 says that subqueries are only allowed in WHERE and HAVING
+    
+    // TODO: Subqueries?
 }

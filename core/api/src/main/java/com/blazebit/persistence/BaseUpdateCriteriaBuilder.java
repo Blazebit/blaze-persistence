@@ -33,5 +33,8 @@ public interface BaseUpdateCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilde
 
     // TODO: documentation
     public SubqueryInitiator<X> set(String attribute);
+    
+    // TODO: documentation
+    public MultipleSubqueryInitiator<X> setSubqueries(String attribute, String expression);
 	
 }

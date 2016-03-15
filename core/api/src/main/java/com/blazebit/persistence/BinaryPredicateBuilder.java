@@ -45,6 +45,20 @@ public interface BinaryPredicateBuilder<T> {
     public T expression(String expression);
 
     /**
+     * Starts a {@link MultipleSubqueryInitiator} that uses the given expression as right hand side for the binary predicate.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * </p>
+     *
+     * @param expression The expression to use for the right hand side of the binary predicate
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<T> subqueries(String expression);
+
+    /**
      * Starts a {@link RestrictionBuilder} to create a when expression with a single predicate
      * in which {@code expression} will be on the left hand side of the predicate.
      *
@@ -87,6 +101,21 @@ public interface BinaryPredicateBuilder<T> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubquery(String subqueryAlias, String expression);
+    
+    /**
+     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * </p>
+     * 
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> caseWhenSubqueries(String expression);
 
     /**
      * Starts a {@link SubqueryInitiator} to create a when expression with a single exists predicate.

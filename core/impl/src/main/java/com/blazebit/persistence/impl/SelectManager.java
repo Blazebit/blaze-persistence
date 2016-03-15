@@ -30,12 +30,14 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
@@ -299,6 +301,20 @@ public class SelectManager<T> extends AbstractManager {
         subqueryBuilderListener = new SuperExpressionSelectSubqueryBuilderListener<X>(subqueryAlias, expression, selectAlias);
         SubqueryInitiator<X> initiator = subqueryInitFactory.createSubqueryInitiator(builder, (SubqueryBuilderListener<X>) subqueryBuilderListener);
         subqueryBuilderListener.onInitiatorStarted(initiator);
+        return initiator;
+    }
+
+    <X> MultipleSubqueryInitiator<X> selectSubqueries(X builder, Expression expression, final String selectAlias) {
+        verifyBuilderEnded();
+
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, expression, new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                select(builder.getExpression(), selectAlias);
+            }
+            
+        }, subqueryInitFactory);
         return initiator;
     }
 

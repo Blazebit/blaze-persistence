@@ -21,14 +21,18 @@ import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
 import com.blazebit.persistence.EscapeBuilder;
 import com.blazebit.persistence.LikeBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryAndExpressionBuilderListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.EscapeBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -92,6 +96,31 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     }
 
     @Override
+    public MultipleSubqueryInitiator<EscapeBuilder<T>> subqueries(String expression) {
+        Expression expr = expressionFactory.createStringExpression(expression);
+        ExpressionToEscapeBuilderEndedListener listener = new ExpressionToEscapeBuilderEndedListener();
+        return new MultipleSubqueryInitiatorImpl<EscapeBuilder<T>>(new EscapeBuilderImpl<T>(listener, result), expr, listener, subqueryInitFactory);
+    }
+    
+    private class ExpressionToEscapeBuilderEndedListener extends EscapeBuilderImpl.EscapeBuilderImplEndedListener implements ExpressionBuilderEndedListener {
+
+        private Expression patternExpression;
+        
+        @Override
+        public void onBuilderEnded(ExpressionBuilder builder) {
+            patternExpression = builder.getExpression();
+        }
+        
+        @Override
+        public void onBuilderEnded(EscapeBuilderImpl<?> builder) {
+            super.onBuilderEnded(builder);
+            likePredicate = new LikePredicate(leftExpression, patternExpression, caseSensitive, builder.getEscapeCharacter(), negated);
+            listener.onBuilderEnded(LikeBuilderImpl.this);
+        }
+        
+    }
+
+    @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>> caseWhen(String expression) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
         return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).when(expression);
@@ -107,6 +136,12 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubquery(String subqueryAlias, String expression) {
         EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
         return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubquery(subqueryAlias, expression);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<EscapeBuilder<T>>>>> caseWhenSubqueries(String expression) {
+        EscapeBuilder<T> escapeBuilder = escapeBuilderEndedListener.startBuilder(new EscapeBuilderImpl<T>(escapeBuilderEndedListener, result));
+        return startBuilder(new CaseWhenBuilderImpl<EscapeBuilder<T>>(escapeBuilder, this, subqueryInitFactory, expressionFactory, parameterManager)).whenSubqueries(expression);
     }
 
     @Override

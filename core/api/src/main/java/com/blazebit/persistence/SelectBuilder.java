@@ -101,6 +101,31 @@ public interface SelectBuilder<X> {
     public SubqueryInitiator<X> selectSubquery(String subqueryAlias, String expression);
 
     /**
+     * Starts a {@link MultipleSubqueryInitiator} for a new select item with the given select alias.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * </p>
+     * 
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<X> selectSubqueries(String expression, String selectAlias);
+
+    /**
+     * Like {@link SelectBuilder#selectSubqueries(java.lang.String,java.lang.String)} but without a select alias.
+     *
+     * @param expression The expression which will be added as select item
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<X> selectSubqueries(String expression);
+    
+    /**
      * Adds a select clause with the given expression to the query.
      *
      * @param expression The expression for the select clause

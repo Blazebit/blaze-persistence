@@ -40,4 +40,7 @@ public interface GroupByBuilder<X extends GroupByBuilder<X>> extends HavingBuild
      * @return The query builder for chaining calls
      */
     public X groupBy(String expression);
+
+    // NOTE: JPA 4.6.16 says that subqueries are only allowed in WHERE and HAVING
+    // TODO: group by subqueries?
 }

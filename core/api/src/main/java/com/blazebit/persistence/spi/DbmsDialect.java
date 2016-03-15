@@ -127,21 +127,38 @@ public interface DbmsDialect {
      */
 	public boolean supportsReturningColumns();
 
-	// TODO: documentation
+    /**
+     * Returns true if the dbms supports complex expressions like subqueries as group by elements, false otherwise.
+     * 
+     * @return Whether complex group by elements are supported by the dbms
+     * @since 1.1.0
+     */
     public boolean supportsComplexGroupBy();
     
-	// TODO: documentation
-    public boolean supportsLimit();
-
-    // TODO: documentation
-    public boolean supportsLimitOffset();
-
-    // TODO: documentation
+    /**
+     * Returns true if the dbms supports the set operation UNION, false otherwise.
+     * 
+     * @param all True if the non-distinct ALL operation should be checked, false otherwise.
+     * @return Whether UNION is supported by the dbms
+     * @since 1.1.0
+     */
     public boolean supportsUnion(boolean all);
 
-    // TODO: documentation
+    /**
+     * Returns true if the dbms supports the set operation INTERSECT, false otherwise.
+     * 
+     * @param all True if the non-distinct ALL operation should be checked, false otherwise.
+     * @return Whether INTERSECT is supported by the dbms
+     * @since 1.1.0
+     */
     public boolean supportsIntersect(boolean all);
 
-    // TODO: documentation
+    /**
+     * Returns true if the dbms supports the set operation EXCEPT, false otherwise.
+     * 
+     * @param all True if the non-distinct ALL operation should be checked, false otherwise.
+     * @return Whether EXCEPT is supported by the dbms
+     * @since 1.1.0
+     */
     public boolean supportsExcept(boolean all);
 }

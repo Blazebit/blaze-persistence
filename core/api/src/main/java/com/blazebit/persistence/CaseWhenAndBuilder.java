@@ -59,6 +59,20 @@ public interface CaseWhenAndBuilder<T> {
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery(String subqueryAlias, String expression);
+    
+    /**
+     * Starts a {@link SubqueryInitiator} for the left hand side of a when predicate.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the resulting expression is used for the left hand side of a when predicate.
+     * </p>
+     * 
+     * @param expression The expression which will be used as left hand side of a when predicate
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubqueries(String expression);
 
     /**
      * Starts an exists predicate for the when clause with a subquery on the right hand side.

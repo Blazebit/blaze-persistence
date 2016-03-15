@@ -81,4 +81,18 @@ public interface BetweenBuilder<T> {
      * @return The {@link SubqueryInitiator} for building the upper bound subquery.
      */
     public SubqueryInitiator<T> andSubqery(String subqueryAlias, String expression);
+    
+    /**
+     * Constructs a between predicate with an expression containing the given expression as upper bound.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the resulting expression is used for the upper bound of the between predicate.
+     * </p>
+     * 
+     * @param expression The expression which will be used as upper bound of a the between predicate
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<T> andSubqueries(String expression);
 }

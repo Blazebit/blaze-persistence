@@ -18,11 +18,14 @@ package com.blazebit.persistence.impl.builder.predicate;
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.HavingAndBuilder;
 import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
+import com.blazebit.persistence.impl.RestrictionBuilderExpressionBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
@@ -131,6 +134,15 @@ public class HavingAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedLis
         superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expr);
         RestrictionBuilder<HavingAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> havingSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        RestrictionBuilderImpl<HavingAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<HavingAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<RestrictionBuilder<HavingAndBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<HavingAndBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);
+        return initiator;
     }
 
     @Override

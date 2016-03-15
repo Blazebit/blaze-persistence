@@ -17,7 +17,7 @@ package com.blazebit.persistence.spi;
 
 
 /**
- * TODO: documentation
+ * Specifies the type of a simple statement irrespective of set operations or CTEs.
  *
  * @author Christian Beikov
  * @since 1.1.0

@@ -20,15 +20,19 @@ import java.util.List;
 
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.LikeBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.ExpressionUtils;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -125,6 +129,24 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public MultipleSubqueryInitiator<BetweenBuilder<T>> betweenSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expr, expressionFactory, parameterManager, this, subqueryInitFactory));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        return simpleMultipleBuilder(betweenBuilder, expr);
+    }
+    
+    private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr) {
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, null, subqueryInitFactory);
+        return initiator;
+    }
+    
+    private <X> MultipleSubqueryInitiator<X> simpleMultipleBuilder(X result, Expression expr, ExpressionBuilderEndedListener listener) {
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(result, expr, listener, subqueryInitFactory);
+        return initiator;
+    }
+
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public SubqueryInitiator<BetweenBuilder<T>> betweenSubquery(String subqueryAlias, String expression) {
         leftSuperExprSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
@@ -160,6 +182,14 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public MultipleSubqueryInitiator<BetweenBuilder<T>> notBetweenSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        BetweenBuilder<T> betweenBuilder = startBuilder(new BetweenBuilderImpl<T>(result, leftExpression, expr, expressionFactory, parameterManager, this, subqueryInitFactory, true));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        return simpleMultipleBuilder(betweenBuilder, expr);
+    }
+
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> eq() {
         return startBuilder(new EqPredicateBuilder<T>(result, this, leftExpression, false, subqueryInitFactory, expressionFactory, parameterManager));
     }
@@ -173,6 +203,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public T eqExpression(String expression) {
+        return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+    }
+
+    @Override
     public SubqueryInitiator<T> eq(String subqueryAlias, String expression) {
         Expression expr = expressionFactory.createSimpleExpression(expression);
         rightSuperExprSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expr, this);
@@ -180,8 +215,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public T eqExpression(String expression) {
-        return chain(new EqPredicate(leftExpression, expressionFactory.createSimpleExpression(expression)));
+    public MultipleSubqueryInitiator<T> eqSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, null, leftExpression, false, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
@@ -210,6 +246,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public MultipleSubqueryInitiator<T> notEqSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new EqPredicateBuilder<T>(result, null, leftExpression, true, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> gt() {
         return startBuilder(new GtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
@@ -232,6 +274,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         Expression expr = expressionFactory.createSimpleExpression(expression);
         rightSuperExprSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expr, this);
         return startBuilder(new GtPredicateBuilder<T>(result, rightSuperExprSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> gtSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new GtPredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
@@ -260,6 +308,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public MultipleSubqueryInitiator<T> geSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new GePredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> lt() {
         return startBuilder(new LtPredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
@@ -285,6 +339,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
+    public MultipleSubqueryInitiator<T> ltSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new LtPredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    @Override
     public QuantifiableBinaryPredicateBuilder<T> le() {
         return startBuilder(new LePredicateBuilder<T>(result, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
@@ -307,6 +367,12 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         Expression expr = expressionFactory.createSimpleExpression(expression);
         rightSuperExprSubqueryPredicateBuilderListener = new SuperExpressionRightHandsideSubqueryPredicateBuilder(subqueryAlias, expr, this);
         return startBuilder(new LePredicateBuilder<T>(result, rightSuperExprSubqueryPredicateBuilderListener, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> leSubqueries(String expression) {
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        return simpleMultipleBuilder(result, expr, new LePredicateBuilder<T>(result, null, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
@@ -417,46 +483,63 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public SubqueryInitiator<T> in(String subqueryAlias, String expression) {
-        verifyBuilderEnded();
-
-        this.predicate = new InPredicate(leftExpression, null);
-        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
-
-            @Override
-            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
-                super.onBuilderEnded(builder);
-                onSubqueryBuilderEnded(superExpression);
-                listener.onBuilderEnded(RestrictionBuilderImpl.this);
-            }
-
-        };
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener);
-    }
-
-    @Override
-    public SubqueryInitiator<T> notIn(String subqueryAlias, String expression) {
-        verifyBuilderEnded();
-
-        this.predicate = new InPredicate(leftExpression, null, true);
-        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
-
-            @Override
-            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
-                super.onBuilderEnded(builder);
-                onSubqueryBuilderEnded(superExpression);
-                listener.onBuilderEnded(RestrictionBuilderImpl.this);
-            }
-
-        };
-        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener);
-    }
-
-    @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
         this.predicate = new InPredicate(leftExpression, null, true);
         return subqueryInitFactory.createSubqueryInitiator(result, this);
+    }
+
+    @Override
+    public SubqueryInitiator<T> in(String subqueryAlias, String expression) {
+        return in(subqueryAlias, expression, false);
+    }
+
+    @Override
+    public SubqueryInitiator<T> notIn(String subqueryAlias, String expression) {
+        return in(subqueryAlias, expression, true);
+    }
+    
+    private SubqueryInitiator<T> in(String subqueryAlias, String expression, boolean negated) {
+        verifyBuilderEnded();
+
+        this.predicate = new InPredicate(leftExpression, null, negated);
+        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
+
+            @Override
+            public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
+                super.onBuilderEnded(builder);
+                onSubqueryBuilderEnded(superExpression);
+                listener.onBuilderEnded(RestrictionBuilderImpl.this);
+            }
+
+        };
+        return subqueryInitFactory.createSubqueryInitiator(result, rightSuperExprSubqueryBuilderListener);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> inSubqueries(String expression) {
+        return inSubqueries(expression, false);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> notInSubqueries(String expression) {
+        return inSubqueries(expression, true);
+    }
+    
+    private MultipleSubqueryInitiator<T> inSubqueries(String expression, boolean negated) {
+        verifyBuilderEnded();
+
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        this.predicate = new InPredicate(leftExpression, null, negated);
+        return new MultipleSubqueryInitiatorImpl<T>(result, expr, new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                onSubqueryBuilderEnded(builder.getExpression());
+                listener.onBuilderEnded(RestrictionBuilderImpl.this);
+            }
+            
+        }, subqueryInitFactory);
     }
 
     @Override

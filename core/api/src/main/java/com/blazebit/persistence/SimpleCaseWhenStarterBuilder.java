@@ -36,4 +36,5 @@ public interface SimpleCaseWhenStarterBuilder<T> {
      * @return This simple case when builder
      */
     public SimpleCaseWhenBuilder<T> when(String expression, String thenExpression);
+    // TODO: subqueries?
 }

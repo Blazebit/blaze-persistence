@@ -68,4 +68,7 @@ public interface OrderByBuilder<T extends OrderByBuilder<T>> {
      * @return The query builder for chaining calls
      */
     public T orderByDesc(String expression, boolean nullFirst);
+
+    // NOTE: JPA 4.6.16 says that subqueries are only allowed in WHERE and HAVING
+    // TODO: order by subqueries? 
 }

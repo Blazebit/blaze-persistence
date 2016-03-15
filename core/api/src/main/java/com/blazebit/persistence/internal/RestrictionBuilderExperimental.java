@@ -16,6 +16,7 @@
 
 package com.blazebit.persistence.internal;
 
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 
@@ -48,16 +49,26 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
     public SubqueryInitiator<T> in(String subqueryAlias, String expression);
 
     /**
-     * Starts a {@link SubqueryInitiator} for the right hand side of the IN predicate.
+     * Starts a {@link MultipleSubqueryInitiator} for the right hand side of the IN predicate.
      * 
      * <p>
-     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
-     * finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the subquery builder and the restriction builder for the right hand side are finished, the predicate is added to the parent predicate
+     * container represented by the type <code>T</code>.
      * </p>
      * 
      * <p>
      * NOTE: This does not conform to the JPQL 2.1 specification
      * </p>
+     * 
+     * @param expression The expression for the right hand side of the IN predicate.
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<T> inSubqueries(String expression);
+
+    /**
+     * Like {@link RestrictionBuilderExperimental#in(java.lang.String, java.lang.String) } but the result is wrapped in a NOT predicate.
      * 
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be added as select item.
@@ -65,4 +76,13 @@ public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T>
      * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<T> notIn(String subqueryAlias, String expression);
+
+    /**
+     * Like {@link RestrictionBuilderExperimental#inSubqueries(java.lang.String) } but the result is wrapped in a NOT predicate.
+     * 
+     * @param expression The expression for the right hand side of the NOT IN predicate.
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<T> notInSubqueries(String expression);
 }

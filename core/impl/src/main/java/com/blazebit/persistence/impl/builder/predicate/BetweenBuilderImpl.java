@@ -17,12 +17,16 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.BetweenBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
@@ -94,6 +98,25 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
 
         };
         return startSubqueryInitiator(subqueryInitFactory.createSubqueryInitiator(result, superExpressionSubqueryListener));
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> andSubqueries(String expression) {
+        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+    }
+
+    private MultipleSubqueryInitiator<T> startMultipleSubqueryInitiator(Expression expression) {
+        verifySubqueryBuilderEnded();
+        MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, expression, new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                predicate = new BetweenPredicate(left, start, builder.getExpression(), negated);
+                listener.onBuilderEnded(BetweenBuilderImpl.this);
+            }
+            
+        }, subqueryInitFactory);
+        return initiator;
     }
 
     @Override

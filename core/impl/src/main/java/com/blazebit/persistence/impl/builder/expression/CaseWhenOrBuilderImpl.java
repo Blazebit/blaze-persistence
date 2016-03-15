@@ -17,8 +17,10 @@ package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.CaseWhenAndBuilder;
 import com.blazebit.persistence.CaseWhenOrBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
@@ -78,6 +80,19 @@ public class CaseWhenOrBuilderImpl<T> extends PredicateBuilderEndedListenerImpl 
         SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubqueries(String expression) {
+        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+    }
+
+    private MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> startMultipleSubqueryInitiator(Expression expression) {
+        verifyBuilderEnded();
+        RestrictionBuilder<CaseWhenOrBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenOrBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<CaseWhenOrBuilder<T>>>(restrictionBuilder, expression, null, subqueryInitFactory);
+        return initiator;
     }
 
     @Override

@@ -186,7 +186,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
             registerFunction(jpqlFunctionGroup);
         }
         
-        // cast
+        // treat
 
         registerFunction(new JpqlFunctionGroup("treat_decimal", new TreatFunction(BigDecimal.class)));
         registerFunction(new JpqlFunctionGroup("treat_long", new TreatFunction(Long.class)));

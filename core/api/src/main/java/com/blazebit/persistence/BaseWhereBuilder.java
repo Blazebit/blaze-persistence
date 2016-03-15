@@ -51,6 +51,20 @@ public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
     public SubqueryInitiator<RestrictionBuilder<T>> whereSubquery(String subqueryAlias, String expression);
 
     /**
+     * Starts a {@link MultipleSubqueryInitiator} for the left hand side of a predicate.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the resulting expression is used for the left hand side of the predicate.
+     * </p>
+     * 
+     * @param expression The expression which will be used as left hand side of a predicate
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<RestrictionBuilder<T>> whereSubqueries(String expression);
+
+    /**
      * Starts a {@link RestrictionBuilder} for a where predicate with the given expression as left hand expression.
      * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
      *

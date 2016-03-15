@@ -21,7 +21,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.blazebit.persistence.BaseUpdateCriteriaBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
@@ -33,7 +36,7 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  * @author Christian Beikov
  * @since 1.1.0
  */
-public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X>, SubqueryBuilderListener<X> {
+public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X>, SubqueryBuilderListener<X>, ExpressionBuilderEndedListener {
 
     private final VisitorAdapter parameterRegistrationVisitor;
 	private final Map<String, Expression> setAttributes = new LinkedHashMap<String, Expression>();
@@ -73,6 +76,16 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         this.currentAttribute = attribute;
         return subqueryInitFactory.createSubqueryInitiator((X) this, this);
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public MultipleSubqueryInitiator<X> setSubqueries(String attribute, String expression) {
+        verifySubqueryBuilderEnded();
+        this.currentAttribute = attribute;
+        Expression expr = expressionFactory.createSimpleExpression(expression);
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>((X) this, expr, this, subqueryInitFactory);
+        return initiator;
+    }
     
     private void verifySubqueryBuilderEnded() {
         if (currentAttribute != null) {
@@ -81,6 +94,17 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         if (currentSubqueryBuilder != null) {
             throw new BuilderChainingException("An subquery builder was not ended properly.");
         }
+    }
+
+    @Override
+    public void onBuilderEnded(ExpressionBuilder builder) {
+        if (currentAttribute == null) {
+            throw new BuilderChainingException("There was an attempt to end a builder that was not started or already closed.");
+        }
+
+        Expression attributeExpression = builder.getExpression();
+        attributeExpression.accept(parameterRegistrationVisitor);
+        setAttributes.put(currentAttribute, attributeExpression);
     }
 
     @Override

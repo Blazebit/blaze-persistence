@@ -39,4 +39,6 @@ public interface CaseWhenThenBuilder<T extends CaseWhenBuilder<?>> {
      * @return This case when builder
      */
     public T then(Object value);
+    
+    // TODO: add subqueries variants?
 }

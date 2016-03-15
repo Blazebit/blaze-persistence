@@ -27,7 +27,7 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
     /**
      * Like {@link SelectObjectBuilder#withSubquery(java.lang.String)} but without an alias.
      *
-     * @return A starting point for the subquery specification
+     * @return The subquery initiator for building a subquery
      */
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery();
 
@@ -39,6 +39,58 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
      * @return A starting point for the subquery specification
      */
     public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String alias);
+
+    /**
+     * Starts a {@link SubqueryInitiator} for a new argument for the select new clause with the given select alias.
+     * 
+     * <p>
+     * All occurrences of <code>subqueryAlias</code> in <code>expression</code> will be replaced by the subquery. When the builder
+     * finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * </p>
+     * 
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression, String selectAlias);
+
+    /**
+     * Like {@link SelectBuilder#selectSubquery(java.lang.String,java.lang.String,java.lang.String)} but without a select alias.
+     *
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(String subqueryAlias, String expression);
+
+    /**
+     * Starts a {@link MultipleSubqueryInitiator} for a new argument for the select new clause with the given select alias.
+     * 
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the select item is added to the parent container represented by the type <code>X</code>.
+     * </p>
+     * 
+     * @param expression The expression which will be added as select item.
+     *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(String expression, String selectAlias);
+
+    /**
+     * Like {@link SelectBuilder#selectSubqueries(java.lang.String,java.lang.String)} but without a select alias.
+     *
+     * @param expression The expression which will be added as select item
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(String expression);
 
     /**
      * Like {@link SelectObjectBuilder#with(java.lang.String, java.lang.String)} but without an alias.
@@ -77,6 +129,69 @@ public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
      * @throws IllegalStateException Is thrown when the argument position is already taken
      */
     public SelectObjectBuilder<T> with(int position, String expression, String alias);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubquery(int,java.lang.String)} but without an alias.
+     *
+     * @param position The position at which the expression should be added
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(int position);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String)} but adds the resulting subquery expression to the given position.
+     *
+     * @param position The position at which the expression should be added
+     * @param alias The alias for the subquery
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(int position, String alias);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String)} but adds the resulting subquery expression to the given position.
+     *
+     * @param position The position at which the expression should be added
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression, String selectAlias);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubquery(java.lang.String,java.lang.String,java.lang.String)} but adds the resulting subquery expression to the given position.
+     *
+     * @param position The position at which the expression should be added
+     * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
+     * @param expression The expression which will be added as select item.
+     * @return The subquery initiator for building a subquery
+     * @since 1.2.0
+     */
+    public SubqueryInitiator<SelectObjectBuilder<T>> withSubquery(int position, String subqueryAlias, String expression);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubqueries(java.lang.String,java.lang.String)} but adds the resulting expression to the given position.
+     *
+     * @param position The position at which the expression should be added
+     * @param expression The expression which will be added as select item.
+     * @param selectAlias The select alias for the expression
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(int position, String expression, String selectAlias);
+
+    /**
+     * Like {@link SelectObjectBuilder#withSubqueries(int,java.lang.String,java.lang.String)} but without an alias.
+     *
+     * @param position The position at which the expression should be added
+     * @param expression The expression which will be added as select item.
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     * @since 1.2.0
+     */
+    public MultipleSubqueryInitiator<SelectObjectBuilder<T>> withSubqueries(int position, String expression);
 
     /**
      * Finishes the select object builder.

@@ -82,4 +82,6 @@ public interface PagedList<T> extends List<T> {
      * @return The key set
      */
     public KeysetPage getKeysetPage();
+    
+    // TODO: simple implementation?
 }

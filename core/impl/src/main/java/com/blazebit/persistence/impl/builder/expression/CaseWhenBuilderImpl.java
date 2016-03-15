@@ -22,8 +22,10 @@ import com.blazebit.persistence.CaseWhenAndThenBuilder;
 import com.blazebit.persistence.CaseWhenBuilder;
 import com.blazebit.persistence.CaseWhenOrThenBuilder;
 import com.blazebit.persistence.CaseWhenThenBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
@@ -73,21 +75,18 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
 
     @Override
     public RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> when(String expression) {
-        verifyBuilderEnded();
         Expression expr = expressionFactory.createSimpleExpression(expression);
         return startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, expr, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubquery() {
-        verifyBuilderEnded();
         RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, leftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubquery(String subqueryAlias, String expression) {
-        verifyBuilderEnded();
         @SuppressWarnings({ "rawtypes", "unchecked" })
         SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
         RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
@@ -95,15 +94,26 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     }
 
     @Override
-    public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> whenExists() {
+    public MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> whenSubqueries(String expression) {
+        return startMultipleSubqueryInitiator(expressionFactory.createArithmeticExpression(expression));
+    }
+
+    private MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> startMultipleSubqueryInitiator(Expression expression) {
         verifyBuilderEnded();
+        RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
+        // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
+        MultipleSubqueryInitiator<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>>(restrictionBuilder, expression, null, subqueryInitFactory);
+        return initiator;
+    }
+
+    @Override
+    public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> whenExists() {
         SubqueryBuilderListenerImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>> rightHandside = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, new ExistsPredicate()));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenThenBuilder<CaseWhenBuilder<T>>) this, rightHandside);
     }
 
     @Override
     public SubqueryInitiator<CaseWhenThenBuilder<CaseWhenBuilder<T>>> whenNotExists() {
-        verifyBuilderEnded();
         SubqueryBuilderListenerImpl<CaseWhenThenBuilder<CaseWhenBuilder<T>>> rightHandside = startBuilder(new RightHandsideSubqueryPredicateBuilder<CaseWhenThenBuilder<CaseWhenBuilder<T>>>(this, new ExistsPredicate(true)));
         return subqueryInitFactory.createSubqueryInitiator((CaseWhenThenBuilder<CaseWhenBuilder<T>>) this, rightHandside);
     }
@@ -131,13 +141,11 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
 
     @Override
     public CaseWhenAndThenBuilder<CaseWhenBuilder<T>> whenAnd() {
-        verifyBuilderEnded();
         return startBuilder(new CaseWhenAndThenBuilderImpl<CaseWhenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public CaseWhenOrThenBuilder<CaseWhenBuilder<T>> whenOr() {
-        verifyBuilderEnded();
         return startBuilder(new CaseWhenOrThenBuilderImpl<CaseWhenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
     }
 

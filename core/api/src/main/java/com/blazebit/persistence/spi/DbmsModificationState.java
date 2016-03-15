@@ -17,7 +17,7 @@ package com.blazebit.persistence.spi;
 
 
 /**
- * TODO: documentation
+ * Specifies the whether entity data in a statement should be before or after a modification CTE ran.
  *
  * @author Christian Beikov
  * @since 1.1.0
