@@ -65,6 +65,7 @@ public class UpdateTest extends AbstractCoreTest {
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             Document.class,
+            DocumentNodeCTE.class,
             Version.class,
             IntIdEntity.class,
             Person.class, 
@@ -316,4 +317,36 @@ public class UpdateTest extends AbstractCoreTest {
             }
         });
     }
+    
+    @Test
+    @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testQueryCaching() {
+    	for (int i = 0; i < 2; i++) {
+	    	cbf.update(em, Document.class, "document")
+		        .withRecursive(DocumentNodeCTE.class)
+		                .from(Document.class, "d")
+		                .where("d.id").eq(1l)
+		                .bind("id").select("d.id")
+		                .bind("parentId").select("d.parent.id")
+		        .unionAll()
+		                .from(DocumentNodeCTE.class, "dRec")
+		                .from(Document.class, "d")
+		                .where("d.parent.id").eqExpression("dRec.id")
+		                .bind("id").select("d.id")
+		                .bind("parentId").select("d.parent.id")
+		        .end()
+		        .where("document.id").in()
+		            .from(Document.class, "d")
+		            .select("d.id")
+		            .where("d.id").in()
+		                .from(DocumentNodeCTE.class, "dNode")
+		                .select("dNode.id")
+		            .end()
+		        .end()
+		        .set("age", 0l)
+		        .executeWithReturning("id", Long.class)
+		        .getResultList();
+    	}
+    }
+	
 }

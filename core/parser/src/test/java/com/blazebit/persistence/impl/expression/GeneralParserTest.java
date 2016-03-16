@@ -418,6 +418,15 @@ public class GeneralParserTest extends AbstractParserTest {
                 foo("false"));
         assertEquals(expected, result);
     }
+    
+    @Test
+    public void testSimpleCaseWhen() {
+    	SimpleCaseExpression result = (SimpleCaseExpression) parse("CASE a.b WHEN 1 THEN true ELSE false END");
+    	SimpleCaseExpression expected = new SimpleCaseExpression(path("a", "b"), Arrays.asList(
+                new WhenClauseExpression(foo("1"), foo("true"))),
+                foo("false"));
+        assertEquals(expected, result);
+    }
 
     @Test
     public void testCaseWhenMultipleWhenClauses() {

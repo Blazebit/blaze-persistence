@@ -33,6 +33,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
@@ -64,6 +65,7 @@ public class Document extends Ownable implements Serializable {
     private Date lastModified2;
     private DocumentType documentType;
     private Boolean archived = false;
+    private Document parent;
 
     public Document() {
     }
@@ -238,6 +240,15 @@ public class Document extends Ownable implements Serializable {
     public void setArchived(Boolean archived) {
         this.archived = archived;
     }
+
+    @OneToOne(fetch = FetchType.LAZY)
+	public Document getParent() {
+		return parent;
+	}
+
+	public void setParent(Document parent) {
+		this.parent = parent;
+	}
 
 	@Override
 	public int hashCode() {
