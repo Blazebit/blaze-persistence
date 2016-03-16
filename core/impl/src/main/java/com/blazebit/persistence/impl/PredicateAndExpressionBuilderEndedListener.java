@@ -48,6 +48,7 @@ public class PredicateAndExpressionBuilderEndedListener implements PredicateBuil
     }
 
     protected <T extends PredicateBuilder> T startBuilder(T builder) {
+        verifyBuilderEnded();
         return predicateBuilderListener.startBuilder(builder);
     }
 
