@@ -768,6 +768,14 @@
 								</configuration>
 							</execution>
 						</executions>
+						<dependencies>
+							<!-- The old version has a bug when generating the static metamodel for PolymorphicPropertyMapBase -->
+							<dependency>
+								<groupId>org.datanucleus</groupId>
+								<artifactId>datanucleus-jpa-query</artifactId>
+								<version>${version.datanucleus.jpa-5}</version>
+							</dependency>
+						</dependencies>
 					</plugin>
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
