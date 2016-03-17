@@ -2,7 +2,6 @@ package com.blazebit.persistence.impl.hibernate;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,20 +94,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	}
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
         QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
         BasicExecutor executor = getStatementExecutor(queryTranslator);
         
-        try {
-            Field deletesField = ReflectionUtils.getField(executor.getClass(), "deletes");
-            deletesField.setAccessible(true);
-            return (List<String>) deletesField.get(executor);
-        } catch (Exception e1) {
-            throw new RuntimeException(e1);
-        }
+        return getField(executor, "deletes");
     }
     
     private HQLQueryPlan getOriginalQueryPlan(SessionImplementor session, Query query) {
@@ -133,20 +125,14 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         HQLQueryPlan plan = getOriginalQueryPlan(session, query);
         QueryTranslator translator = plan.getTranslators()[0];
         
-        try {
-            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
-            sqlAstField.setAccessible(true);
-            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
-            FromElement fromElement = queryNode.getFromClause().getFromElement(alias);
-            
-            if (fromElement == null) {
-                throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
-            }
-            
-            return fromElement.getTableAlias();
-        } catch (Exception e1) {
-            throw new RuntimeException(e1);
+        QueryNode queryNode = getField(translator, "sqlAst");
+        FromElement fromElement = queryNode.getFromClause().getFromElement(alias);
+        
+        if (fromElement == null) {
+            throw new IllegalArgumentException("The alias " + alias + " could not be found in the query: " + query);
         }
+        
+        return fromElement.getTableAlias();
     }
 
     @Override
@@ -156,9 +142,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryTranslator translator = plan.getTranslators()[0];
 
         try {
-            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
-            sqlAstField.setAccessible(true);
-            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
+            QueryNode queryNode = getField(translator, "sqlAst");
             
             String[] aliases = queryNode.getSelectClause().getQueryReturnAliases();
 
@@ -187,9 +171,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryTranslator translator = plan.getTranslators()[0];
 
         try {
-            Field sqlAstField = ReflectionUtils.getField(translator.getClass(), "sqlAst");
-            sqlAstField.setAccessible(true);
-            QueryNode queryNode = (QueryNode) sqlAstField.get(translator);
+            QueryNode queryNode = getField(translator, "sqlAst");
             SelectClause selectClause = queryNode.getSelectClause();
             Type[] queryReturnTypes = selectClause.getQueryReturnTypes();
             
@@ -287,13 +269,18 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
 
         QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, cacheKey);
-        
+        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
+        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
+
         // Create combined query parameters
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
-
-        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false);
+        
+        if (!queryPlanEntry.isFromCache()) {
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false);
+            queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+        }
+        
         return queryPlan.performList(queryParameters, session);
     }
 
@@ -308,13 +295,17 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
 
         QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, query, cacheKey);
+        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, query, cacheKey);
+        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         
         // Create combined query parameters
         QueryParamEntry queryParametersEntry = createQueryParameters(em, participatingQueries);
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
-        
-        prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
+
+        if (!queryPlanEntry.isFromCache()) {
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
+            queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+        }
         
         if (queryPlan.getReturnMetadata() == null) {
             return queryPlan.performExecuteUpdate(queryParameters, session);
@@ -361,7 +352,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         
         // Create plan for example query
         QueryPlanCacheKey cacheKey = createCacheKey(participatingQueries);
-        HQLQueryPlan queryPlan = getQueryPlan(sfi, exampleQuery, cacheKey);
+        CacheEntry<HQLQueryPlan> queryPlanEntry = getQueryPlan(sfi, exampleQuery, cacheKey);
+        HQLQueryPlan queryPlan = queryPlanEntry.getValue();
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
@@ -377,12 +369,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         try {
-            QueryTranslator queryTranslator = prepareQueryPlan(queryPlan, queryParametersEntry, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
+            if (!queryPlanEntry.isFromCache()) {
+                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true);
+                queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
+            }
+            
+            QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
             
             // Extract query loader for native listing
-            Field queryLoaderField = ReflectionUtils.getField(queryTranslator.getClass(), "queryLoader");
-            queryLoaderField.setAccessible(true);
-            QueryLoader queryLoader = (QueryLoader) queryLoaderField.get(queryTranslator);
+            QueryLoader queryLoader = getField(queryTranslator, "queryLoader");
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
             
             // Do the native list operation with custom session and combined parameters
@@ -582,7 +577,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         return hibernateAccess.wrapSession(session, generatedKeys, columns, returningResult);
     }
     
-    @SuppressWarnings("unchecked")
     private List<QueryParamEntry> getQueryParamEntries(EntityManager em, List<Query> queries) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
@@ -613,17 +607,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             try {
                 queryParameters = ((org.hibernate.internal.AbstractQueryImpl) hibernateQuery).getQueryParameters(namedParams);
 
-                Field collectedParameterSpecificationsField = ReflectionUtils.getField(queryTranslator.getClass(), "collectedParameterSpecifications");
-                collectedParameterSpecificationsField.setAccessible(true);
-                specifications = (List<ParameterSpecification>) collectedParameterSpecificationsField.get(queryTranslator);
+                specifications = getField(queryTranslator, "collectedParameterSpecifications");
                 
                 // This only happens for modification queries
                 if (specifications == null) {
                     BasicExecutor executor = getStatementExecutor(queryTranslator);
-                    
-                    Field parameterSpecifications = ReflectionUtils.getField(executor.getClass(), "parameterSpecifications");
-                    parameterSpecifications.setAccessible(true);
-                    specifications = (List<ParameterSpecification>) parameterSpecifications.get(executor);
+                    specifications = getField(executor, "parameterSpecifications");
                 }
             } catch (Exception e1) {
                 throw new RuntimeException(e1);
@@ -636,101 +625,77 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private BasicExecutor getStatementExecutor(QueryTranslator queryTranslator) {
-        try {
-            Field statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
-            statementExectuor.setAccessible(true);
-            return (BasicExecutor) statementExectuor.get(queryTranslator);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getField(queryTranslator, "statementExecutor");
     }
     
-    @SuppressWarnings("unchecked")
     private Map<String, TypedValue> getNamedParams(org.hibernate.Query hibernateQuery) {
-        try {
-            Method getNamedParams = ReflectionUtils.getGetter(hibernateQuery.getClass(), "namedParams");
-            getNamedParams.setAccessible(true);
-            return (Map<String, TypedValue>) getNamedParams.invoke(hibernateQuery);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getField(hibernateQuery, "namedParameters");
     }
     
-    @SuppressWarnings("unchecked")
     private Map<String, TypedValue> getNamedParamLists(org.hibernate.Query hibernateQuery) {
-        try {
-            Method getNamedParamLists = ReflectionUtils.getGetter(hibernateQuery.getClass(), "namedParameterLists");
-            getNamedParamLists.setAccessible(true);
-            return (Map<String, TypedValue>) getNamedParamLists.invoke(hibernateQuery);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getField(hibernateQuery, "namedParameterLists");
     }
 
     private ParameterMetadata getParameterMetadata(org.hibernate.Query hibernateQuery) {
-        try {
-            Method getParameterMetadata = ReflectionUtils.getGetter(hibernateQuery.getClass(), "parameterMetadata");
-            getParameterMetadata.setAccessible(true);
-            return (ParameterMetadata) getParameterMetadata.invoke(hibernateQuery);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getField(hibernateQuery, "parameterMetadata");
     }
     
-    private QueryTranslator prepareQueryPlan(HQLQueryPlan queryPlan, QueryParamEntry queryParametersEntry, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification) {
+    private QueryTranslator prepareQueryPlan(HQLQueryPlan queryPlan, List<ParameterSpecification> queryParameterSpecifications, String finalSql, SessionImplementor session, Query lastQuery, boolean isModification) {
         try {
             QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
             // Override the sql in the query plan
-            Field sqlField = ReflectionUtils.getField(queryTranslator.getClass(), "sql");
-            sqlField.setAccessible(true);
-            sqlField.set(queryTranslator, finalSql);
+            setField(queryTranslator, "sql", finalSql);
 
             // Modification queries keep the sql in the executor
-            Field statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
-            statementExectuor.setAccessible(true);
-            StatementExecutor executor = (StatementExecutor) statementExectuor.get(queryTranslator);
+            StatementExecutor executor = null;
             
-            if (executor == null && isModification) {
-                // We have to set an executor
-                org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
-                lastHibernateQuery.setResultTransformer(null);
+            Field statementExectuor = null;
+            boolean madeAccessible = false;
+            
+            try {
+                statementExectuor = ReflectionUtils.getField(queryTranslator.getClass(), "statementExecutor");
+                madeAccessible = !statementExectuor.isAccessible();
                 
-                Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(lastHibernateQuery));
-                String queryString = expandParameterLists(session, lastHibernateQuery, namedParams);
+                if (madeAccessible) {
+                    statementExectuor.setAccessible(true);
+                }
                 
-                // Extract the executor from the last query which is the actual main query
-                HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
-                QueryTranslator lastQueryTranslator = lastQueryPlan.getTranslators()[0];
-                executor = (StatementExecutor) statementExectuor.get(lastQueryTranslator);
-                // Now we use this executor for our example query
-                statementExectuor.set(queryTranslator, executor);
+                executor = (StatementExecutor) statementExectuor.get(queryTranslator);
+                
+                if (executor == null && isModification) {
+                    // We have to set an executor
+                    org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
+                    lastHibernateQuery.setResultTransformer(null);
+                    
+                    Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(getNamedParams(lastHibernateQuery));
+                    String queryString = expandParameterLists(session, lastHibernateQuery, namedParams);
+                    
+                    // Extract the executor from the last query which is the actual main query
+                    HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+                    QueryTranslator lastQueryTranslator = lastQueryPlan.getTranslators()[0];
+                    executor = (StatementExecutor) statementExectuor.get(lastQueryTranslator);
+                    // Now we use this executor for our example query
+                    statementExectuor.set(queryTranslator, executor);
+                }
+            } finally {
+                if (madeAccessible) {
+                    statementExectuor.setAccessible(false);
+                }
             }
             
             if (executor != null) {
-                Field executorSqlField = ReflectionUtils.getField(executor.getClass(), "sql");
-                executorSqlField.setAccessible(true);
-                executorSqlField.set(executor, finalSql);
-                
-                Field parameterSpecifications = ReflectionUtils.getField(executor.getClass(), "parameterSpecifications");
-                parameterSpecifications.setAccessible(true);
-                parameterSpecifications.set(executor, queryParametersEntry.specifications);
+                setField(executor, "sql", finalSql);
+                setField(executor, "parameterSpecifications", queryParameterSpecifications);
                 
                 if (executor instanceof DeleteExecutor) {
-                    Field deletesField = ReflectionUtils.getField(executor.getClass(), "deletes");
-                    deletesField.setAccessible(true);
-                    deletesField.set(executor, new ArrayList<String>());
+                    setField(executor, "deletes", new ArrayList<String>());
                 }
             }
             
             // Prepare queryTranslator for aggregated parameters
-            ParameterTranslations translations = new ParameterTranslationsImpl(queryParametersEntry.specifications);
-            Field paramTranslationsField = ReflectionUtils.getField(queryTranslator.getClass(), "paramTranslations");
-            paramTranslationsField.setAccessible(true);
-            paramTranslationsField.set(queryTranslator, translations);
-            
-            Field collectedParameterSpecificationsField = ReflectionUtils.getField(queryTranslator.getClass(), "collectedParameterSpecifications");
-            collectedParameterSpecificationsField.setAccessible(true);
-            collectedParameterSpecificationsField.set(queryTranslator, queryParametersEntry.specifications);
+            ParameterTranslations translations = new ParameterTranslationsImpl(queryParameterSpecifications);
+            setField(queryTranslator, "paramTranslations", translations);
+            setField(queryTranslator, "collectedParameterSpecifications", queryParameterSpecifications);
 
             return queryTranslator;
         } catch (Exception e1) {
@@ -821,15 +786,23 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         );
     }
     
-    private HQLQueryPlan getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
+    private CacheEntry<HQLQueryPlan> getQueryPlan(SessionFactoryImplementor sfi, Query query, QueryPlanCacheKey cacheKey) {
         BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
         HQLQueryPlan queryPlan = queryPlanCache.get(cacheKey);
+        boolean fromCache = true;
         if (queryPlan == null) {
+            fromCache = false;
             queryPlan = createQueryPlan(sfi, query);
-            HQLQueryPlan oldQueryPlan = queryPlanCache.putIfAbsent(cacheKey, queryPlan);
-            if (oldQueryPlan != null) {
-                queryPlan = oldQueryPlan;
-            }
+        }
+        
+        return new CacheEntry<HQLQueryPlan>(queryPlan, fromCache);
+    }
+    
+    private HQLQueryPlan putQueryPlanIfAbsent(SessionFactoryImplementor sfi, QueryPlanCacheKey cacheKey, HQLQueryPlan queryPlan) {
+        BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> queryPlanCache = getQueryPlanCache(sfi);
+        HQLQueryPlan oldQueryPlan = queryPlanCache.putIfAbsent(cacheKey, queryPlan);
+        if (oldQueryPlan != null) {
+            queryPlan = oldQueryPlan;
         }
         
         return queryPlan;
@@ -915,9 +888,70 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         
     }
+    
+    private static class CacheEntry<T> {
+        
+        private final T value;
+        private final boolean fromCache;
+        
+        public CacheEntry(T value, boolean fromCache) {
+            this.value = value;
+            this.fromCache = fromCache;
+        }
+
+        public T getValue() {
+            return value;
+        }
+
+        public boolean isFromCache() {
+            return fromCache;
+        }
+    }
 	
 	private HibernateEntityManagerImplementor getEntityManager(EntityManager em) {
 		return (HibernateEntityManagerImplementor) em.unwrap(EntityManager.class);
 	}
+    
+    @SuppressWarnings("unchecked")
+    private <T> T getField(Object object, String field) {
+        boolean madeAccessible = false;
+        Field f = null;
+        try {
+            f = ReflectionUtils.getField(object.getClass(), field);
+            madeAccessible = !f.isAccessible();
+            
+            if (madeAccessible) {
+                f.setAccessible(true);
+            }
+            return (T) f.get(object);
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        } finally {
+            if (madeAccessible) {
+                f.setAccessible(false);
+            }
+        }
+    }
+    
+    private void setField(Object object, String field, Object value) {
+        boolean madeAccessible = false;
+        Field f = null;
+        try {
+            f = ReflectionUtils.getField(object.getClass(), field);
+            madeAccessible = !f.isAccessible();
+            
+            if (madeAccessible) {
+                f.setAccessible(true);
+            }
+            
+            f.set(object, value);
+        } catch (Exception e1) {
+            throw new RuntimeException(e1);
+        } finally {
+            if (madeAccessible) {
+                f.setAccessible(false);
+            }
+        }
+    }
 
 }
