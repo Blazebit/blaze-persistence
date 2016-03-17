@@ -774,7 +774,7 @@
 									<!-- source output directory -->
 									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
 									<processors>
-										<processor>org.datanucleus.jpa.JPACriteriaProcessor</processor>
+										<processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
 									</processors>
 								</configuration>
 							</execution>
@@ -890,7 +890,7 @@
 									<!-- source output directory -->
 									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
 									<processors>
-										<processor>org.datanucleus.jpa.JPACriteriaProcessor</processor>
+										<processor>org.datanucleus.jpa.query.JPACriteriaProcessor</processor>
 									</processors>
 								</configuration>
 							</execution>

@@ -28,3 +28,5 @@ include::08_order_by_clause.ad[]
 include::09_select_clause.ad[]
 
 include::10_pagination.ad[]
+
+include::11_cte.ad[]

@@ -32,7 +32,6 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -155,6 +154,18 @@ public class JoinManager extends AbstractManager {
     		}
     	}
     	
+        return false;
+    }
+
+    boolean hasJoins() {
+        List<JoinNode> nodes = rootNodes;
+        int size = nodes.size();
+        for (int i = 0; i < size; i++) {
+            if (!nodes.get(i).getNodes().isEmpty()) {
+                return true;
+            }
+        }
+        
         return false;
     }
     

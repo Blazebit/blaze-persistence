@@ -19,6 +19,12 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
 	public boolean supportsComplexGroupBy() {
 		return false;
 	}
+	
+    @Override
+    public boolean supportsJoinsInRecursiveCte() {
+        // See https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
+        return false;
+    }
 
 	@Override
 	public boolean supportsReturningColumns() {

@@ -33,7 +33,6 @@ import org.junit.experimental.categories.Category;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -318,41 +317,44 @@ public class UpdateTest extends AbstractCoreTest {
             }
         });
     }
-    
+
+    // NOTE: H2 only supports with clause in select statement
+    // NOTE: MySQL does not support CTEs
     @Test
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testQueryCaching() {
-    	for (int i = 0; i < 2; i++) {
-            transactional(new TxVoidWork() {
-                @Override
-                public void work() {
-        	    	cbf.update(em, Document.class, "document")
-        		        .withRecursive(DocumentNodeCTE.class)
-        		                .from(Document.class, "d")
-        		                .where("d.id").eq(1l)
-        		                .bind("id").select("d.id")
-        		                .bind("parentId").select("d.parent.id")
-        		        .unionAll()
-        		                .from(DocumentNodeCTE.class, "dRec")
-        		                .from(Document.class, "d")
-        		                .where("d.parent.id").eqExpression("dRec.id")
-        		                .bind("id").select("d.id")
-        		                .bind("parentId").select("d.parent.id")
-        		        .end()
-        		        .where("document.id").in()
-        		            .from(Document.class, "d")
-        		            .select("d.id")
-        		            .where("d.id").in()
-        		                .from(DocumentNodeCTE.class, "dNode")
-        		                .select("dNode.id")
-        		            .end()
-        		        .end()
-        		        .set("age", 0l)
-        		        .executeWithReturning("id", Long.class)
-        		        .getResultList();
-                }
-            });
-    	}
+        TxVoidWork work = new TxVoidWork() {
+            @Override
+            public void work() {
+                cbf.update(em, Document.class, "document")
+                    .withRecursive(DocumentNodeCTE.class)
+                            .from(Document.class, "d")
+                            .where("d.id").eq(1l)
+                            .bind("id").select("d.id")
+                            .bind("parentId").select("d.parent.id")
+                    .unionAll()
+                            .from(DocumentNodeCTE.class, "dRec")
+                            .from(Document.class, "d")
+                            .where("d.parent.id").eqExpression("dRec.id")
+                            .bind("id").select("d.id")
+                            .bind("parentId").select("d.parent.id")
+                    .end()
+                    .where("document.id").in()
+                        .from(Document.class, "d")
+                        .select("d.id")
+                        .where("d.id").in()
+                            .from(DocumentNodeCTE.class, "dNode")
+                            .select("dNode.id")
+                        .end()
+                    .end()
+                    .set("age", 0l)
+                    .executeWithReturning("id", Long.class)
+                    .getResultList();
+            }
+        };
+        
+        transactional(work);
+        transactional(work);
     }
 	
 }

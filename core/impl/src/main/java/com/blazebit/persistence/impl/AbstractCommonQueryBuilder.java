@@ -1379,6 +1379,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             if (cteInfo.recursive) {
                 modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
                 recursiveQuery = cteInfo.recursiveCriteriaBuilder.getQuery(modificationStates);
+                
+                if (!dbmsDialect.supportsJoinsInRecursiveCte() && cteInfo.recursiveCriteriaBuilder.joinManager.hasJoins()) {
+                    throw new IllegalStateException("The dbms dialect does not support joins in the recursive part of a CTE!");
+                }
+                
                 participatingQueries.add(recursiveQuery);
             }
 

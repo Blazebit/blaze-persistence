@@ -161,4 +161,12 @@ public interface DbmsDialect {
      * @since 1.1.0
      */
     public boolean supportsExcept(boolean all);
+
+    /**
+     * Returns true if the dbms supports joins in the recursive part of a CTE, false otherwise.
+     * 
+     * @return Whether joins are supported in recursive CTEs by the dbms
+     * @since 1.2.0
+     */
+    public boolean supportsJoinsInRecursiveCte();
 }

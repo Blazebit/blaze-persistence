@@ -22,6 +22,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 		return true;
 	}
 
+    @Override
+	public boolean supportsJoinsInRecursiveCte() {
+	    return true;
+	}
+
 	@Override
 	public String getWithClause(boolean recursive) {
 		if (recursive) {

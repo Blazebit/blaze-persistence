@@ -1,0 +1,20 @@
+== CTEs
+
+TODO: Describe the features here with examples
+
+=== General
+
+TODO: Write a section about how CTE support is implemented.
+
+=== RDBMS compatibility
+
+TODO: Make a table that shows which DB supports what
+NOTE: DB2 does not support JOINs in the recursive part of a CTE: https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
+
+=== Normal CTEs
+
+TODO: Give some examples of normal and recursive CTEs
+
+=== Updatable CTEs
+
+TODO: Give examples of updatable CTEs and describe the OLD and NEW views on entity data
