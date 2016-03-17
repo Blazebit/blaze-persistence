@@ -43,6 +43,7 @@ import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.base.category.NoOracle;
 import com.blazebit.persistence.testsuite.base.category.NoSQLite;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.DocumentNodeCTE;
 import com.blazebit.persistence.testsuite.entity.IdHolderCTE;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.Person;
@@ -322,30 +323,35 @@ public class UpdateTest extends AbstractCoreTest {
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testQueryCaching() {
     	for (int i = 0; i < 2; i++) {
-	    	cbf.update(em, Document.class, "document")
-		        .withRecursive(DocumentNodeCTE.class)
-		                .from(Document.class, "d")
-		                .where("d.id").eq(1l)
-		                .bind("id").select("d.id")
-		                .bind("parentId").select("d.parent.id")
-		        .unionAll()
-		                .from(DocumentNodeCTE.class, "dRec")
-		                .from(Document.class, "d")
-		                .where("d.parent.id").eqExpression("dRec.id")
-		                .bind("id").select("d.id")
-		                .bind("parentId").select("d.parent.id")
-		        .end()
-		        .where("document.id").in()
-		            .from(Document.class, "d")
-		            .select("d.id")
-		            .where("d.id").in()
-		                .from(DocumentNodeCTE.class, "dNode")
-		                .select("dNode.id")
-		            .end()
-		        .end()
-		        .set("age", 0l)
-		        .executeWithReturning("id", Long.class)
-		        .getResultList();
+            transactional(new TxVoidWork() {
+                @Override
+                public void work() {
+        	    	cbf.update(em, Document.class, "document")
+        		        .withRecursive(DocumentNodeCTE.class)
+        		                .from(Document.class, "d")
+        		                .where("d.id").eq(1l)
+        		                .bind("id").select("d.id")
+        		                .bind("parentId").select("d.parent.id")
+        		        .unionAll()
+        		                .from(DocumentNodeCTE.class, "dRec")
+        		                .from(Document.class, "d")
+        		                .where("d.parent.id").eqExpression("dRec.id")
+        		                .bind("id").select("d.id")
+        		                .bind("parentId").select("d.parent.id")
+        		        .end()
+        		        .where("document.id").in()
+        		            .from(Document.class, "d")
+        		            .select("d.id")
+        		            .where("d.id").in()
+        		                .from(DocumentNodeCTE.class, "dNode")
+        		                .select("dNode.id")
+        		            .end()
+        		        .end()
+        		        .set("age", 0l)
+        		        .executeWithReturning("id", Long.class)
+        		        .getResultList();
+                }
+            });
     	}
     }
 	
