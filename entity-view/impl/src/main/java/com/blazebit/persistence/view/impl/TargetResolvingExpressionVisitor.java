@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.QuantifierExpression;
 import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
@@ -299,6 +300,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     @Override
     public void visit(WhenClauseExpression expression) {
         expression.getResult().accept(this);
+    }
+    
+    @Override
+    public void visit(QuantifierExpression expression) {
+        expression.getExpression().accept(this);
     }
 
     @Override

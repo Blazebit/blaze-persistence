@@ -44,9 +44,12 @@ import com.blazebit.persistence.impl.predicate.Negatable;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.All_or_any_expressionContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionArithmeticIndexContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionStringIndexContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
@@ -495,7 +498,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     BinaryExpressionPredicate handleComparison(ParseTree left, ParseTree comparisonOperator, ParseTree right) {
         BinaryExpressionPredicate pred = (BinaryExpressionPredicate) comparisonOperator.accept(this);
         pred.setLeft(left.accept(this));
-        pred.setRight(right.accept(this));
+        Expression rightExpr = right.accept(this);
+        pred.setRight(rightExpr);
+        if (pred instanceof QuantifiableBinaryExpressionPredicate && rightExpr instanceof QuantifierExpression) {
+            ((QuantifiableBinaryExpressionPredicate) pred).setQuantifier(((QuantifierExpression) rightExpr).getQuantifier());
+        }
         return pred;
     }
 
@@ -527,6 +534,27 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitLePredicate(JPQLSelectExpressionParser.LePredicateContext ctx) {
         return new LePredicate();
+    }
+    
+    @Override
+    public Expression visitAll_or_any_expression(All_or_any_expressionContext ctx) {
+        PredicateQuantifier quantifier;
+        if (ctx.quantifier == null) {
+            quantifier = PredicateQuantifier.ONE;
+        } else {
+            switch(ctx.quantifier.getType()) {
+                case JPQLSelectExpressionLexer.ANY:
+                case JPQLSelectExpressionLexer.SOME: 
+                    quantifier = PredicateQuantifier.ANY;
+                    break;
+                case JPQLSelectExpressionLexer.ALL:
+                    quantifier = PredicateQuantifier.ALL;
+                    break;
+                default:
+                    quantifier = PredicateQuantifier.ONE;
+            }
+        }
+        return new QuantifierExpression(quantifier, (FooExpression) ctx.identifier().accept(this));
     }
 
     @Override

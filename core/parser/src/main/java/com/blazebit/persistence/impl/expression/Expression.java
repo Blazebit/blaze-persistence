@@ -67,6 +67,8 @@ public interface Expression {
         public void visit(GeneralCaseExpression expression);
 
         public void visit(SimpleCaseExpression expression);
+        
+        public void visit(QuantifierExpression expression);
 
         // Predicates
         public void visit(AndPredicate predicate);
@@ -98,6 +100,7 @@ public interface Expression {
         public void visit(LePredicate predicate);
 
         public void visit(ExistsPredicate predicate);
+        
     }
 
     public static interface ResultVisitor<T> {
@@ -128,6 +131,8 @@ public interface Expression {
         public T visit(GeneralCaseExpression expression);
 
         public T visit(SimpleCaseExpression expression);
+        
+        public T visit(QuantifierExpression expression);
 
         // Predicates
         public T visit(AndPredicate predicate);

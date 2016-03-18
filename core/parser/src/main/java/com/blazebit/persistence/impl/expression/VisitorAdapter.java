@@ -119,6 +119,11 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         expression.getCondition().accept(this);
         expression.getResult().accept(this);
     }
+    
+    @Override
+    public void visit(QuantifierExpression expression) {
+        expression.getExpression().accept(this);
+    }
 
     @Override
     public void visit(AndPredicate predicate) {
@@ -212,5 +217,5 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     public void visit(ExistsPredicate predicate) {
     	predicate.getExpression().accept(this);
     }
-
+    
 }

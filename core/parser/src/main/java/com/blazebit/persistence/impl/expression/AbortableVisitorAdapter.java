@@ -142,6 +142,11 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
         }
         return expression.getResult().accept(this);
     }
+    
+    @Override
+    public Boolean visit(QuantifierExpression expression) {
+        return expression.getExpression().accept(this);
+    }
 
     @Override
     public Boolean visit(AndPredicate predicate) {
@@ -261,5 +266,5 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     public Boolean visit(ExistsPredicate predicate) {
         return false;
     }
-
+    
 }

@@ -111,6 +111,12 @@ THEN : [Tt][Hh][Ee][Nn];
     
 SIZE : [Ss][Ii][Zz][Ee];
 
+ALL : [Aa] [Ll] [Ll];
+
+ANY: [Aa] [Nn] [Yy];
+
+SOME: [Ss] [Oo] [Mm] [Ee];
+
 Empty_function : [Ii][Ss] ([ ]+ NOT_FRAG [ ]+)? [Ee][Mm][Pp][Tt][Yy];
 
 Member_of_function : [Mm][Ee][Mm][Bb][Ee][Rr] ([ ]+ [Oo][Ff])?;

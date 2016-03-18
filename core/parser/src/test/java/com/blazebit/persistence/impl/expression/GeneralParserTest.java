@@ -826,7 +826,7 @@ public class GeneralParserTest extends AbstractParserTest {
                     new WhenClauseExpression(new GtPredicate(path("document", "age"), foo("12")), path("document", "creationDate"))
                 ), function("CURRENT_TIMESTAMP")
             ),
-            path("subqueryAlias"),
+            new QuantifierExpression(PredicateQuantifier.ALL, foo("subqueryAlias")),
             PredicateQuantifier.ALL
         );
         assertEquals(expected, result);
