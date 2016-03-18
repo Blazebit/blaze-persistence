@@ -819,14 +819,14 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testConditionalCaseWhen() {
-        Predicate result = parsePredicate("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias");
+        Predicate result = parsePredicate("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
         
         Predicate expected = new LtPredicate(
             new GeneralCaseExpression(Arrays.asList(
                     new WhenClauseExpression(new GtPredicate(path("document", "age"), foo("12")), path("document", "creationDate"))
                 ), function("CURRENT_TIMESTAMP")
             ),
-            new QuantifierExpression(PredicateQuantifier.ALL, foo("subqueryAlias")),
+            foo("subqueryAlias"),
             PredicateQuantifier.ALL
         );
         assertEquals(expected, result);

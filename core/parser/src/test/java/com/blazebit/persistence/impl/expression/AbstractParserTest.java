@@ -117,8 +117,8 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
-    protected Predicate parsePredicate(String expr) {
-        return ef.createPredicateExpression(expr);
+    protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
+        return ef.createPredicateExpression(expr, allowQuantifiedPredicates);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
