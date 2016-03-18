@@ -15,11 +15,18 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
+import java.util.List;
+
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinOnOrBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.impl.BuilderChainingException;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -38,6 +45,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
     public JoinOnBuilderImpl(T result, PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
@@ -55,6 +63,39 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     }
 
     @Override
+    public T onExpression(String expression) {
+        rootPredicate.verifyBuilderEnded();
+        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        
+        List<Predicate> children = rootPredicate.getPredicate().getChildren();
+        children.clear();
+        children.add(predicate);
+        return result;
+    }
+
+    @Override
+    public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression) {
+        rootPredicate.verifyBuilderEnded();
+        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        
+        MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, predicate, new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                List<Predicate> children = rootPredicate.getPredicate().getChildren();
+                children.clear();
+                children.add((Predicate) builder.getExpression());
+                currentMultipleSubqueryInitiator = null;
+            }
+            
+        }, subqueryInitFactory);
+        currentMultipleSubqueryInitiator = initiator;
+        return initiator;
+    }
+
+    @Override
     public Predicate getPredicate() {
         return rootPredicate.getPredicate();
     }
@@ -62,6 +103,9 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     @Override
     public T end() {
         rootPredicate.verifyBuilderEnded();
+        if (currentMultipleSubqueryInitiator != null) {
+            throw new BuilderChainingException("A builder was not ended properly.");
+        }
         listener.onBuilderEnded(this);
         return result;
     }

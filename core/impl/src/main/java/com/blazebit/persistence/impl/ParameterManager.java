@@ -26,6 +26,7 @@ import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
 
 import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  *
@@ -37,7 +38,16 @@ public class ParameterManager {
     private static final String prefix = "param_";
     private int counter;
     private final Map<String, Object> parameters = new HashMap<String, Object>();
+    private final VisitorAdapter parameterRegistrationVisitor;
     private static final Object REGISTERED_PLACEHOLDER = new Object();
+
+    public ParameterManager() {
+        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);
+    }
+
+    public VisitorAdapter getParameterRegistrationVisitor() {
+        return parameterRegistrationVisitor;
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Parameter<?> getParameter(String parameterName) {

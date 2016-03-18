@@ -63,6 +63,9 @@ parseCaseOperandExpression
 parseInItemExpression
     : in_item;
 
+parsePredicateExpression
+	: conditional_expression;
+
 simple_expression : null_literal // This is a custom, non JPA compliant extension
                   | single_valued_path_expression
                   | scalar_expression 

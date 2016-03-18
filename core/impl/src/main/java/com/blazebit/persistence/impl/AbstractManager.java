@@ -35,7 +35,7 @@ public class AbstractManager {
     protected AbstractManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager) {
         this.queryGenerator = queryGenerator;
         this.parameterManager = parameterManager;
-        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);
+        this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
     }
 
     protected void registerParameterExpressions(Expression expression) {

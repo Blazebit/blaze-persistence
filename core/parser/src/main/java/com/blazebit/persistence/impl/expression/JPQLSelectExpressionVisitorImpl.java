@@ -51,6 +51,7 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressio
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionStringIndexContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TrimFunctionContext;
 
 /**
  *
@@ -96,6 +97,25 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitStringFunction(JPQLSelectExpressionParser.StringFunctionContext ctx) {
         return handleFunction(ctx.getStart().getText(), ctx);
+    }
+
+    @Override
+    public Expression visitTrimFunction(TrimFunctionContext ctx) {
+        Trimspec trimspec;
+        
+        if (ctx.trim_specification() != null) {
+            trimspec = Trimspec.valueOf(ctx.trim_specification().getText().toUpperCase());
+        } else {
+            trimspec = Trimspec.BOTH;
+        }
+        
+        Expression trimCharacter = null;
+        
+        if (ctx.trim_character() != null) {
+            trimCharacter = ctx.trim_character().accept(this);
+        }
+        
+        return new TrimExpression(trimspec, trimCharacter, ctx.string_expression().accept(this));
     }
 
     @Override

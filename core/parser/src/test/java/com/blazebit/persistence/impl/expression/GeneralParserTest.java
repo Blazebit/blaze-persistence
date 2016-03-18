@@ -26,6 +26,8 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -813,5 +815,20 @@ public class GeneralParserTest extends AbstractParserTest {
     	
     	CompositeExpression expected = new CompositeExpression(Arrays.asList((Expression) new FooExpression("-("), new ParameterExpression("test"), new FooExpression(")")));
     	assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testConditionalCaseWhen() {
+        Predicate result = parsePredicate("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias");
+        
+        Predicate expected = new LtPredicate(
+            new GeneralCaseExpression(Arrays.asList(
+                    new WhenClauseExpression(new GtPredicate(path("document", "age"), foo("12")), path("document", "creationDate"))
+                ), function("CURRENT_TIMESTAMP")
+            ),
+            path("subqueryAlias"),
+            PredicateQuantifier.ALL
+        );
+        assertEquals(expected, result);
     }
 }

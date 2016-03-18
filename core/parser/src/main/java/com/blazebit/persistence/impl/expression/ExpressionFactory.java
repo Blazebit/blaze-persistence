@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.Predicate;
+
 /**
  *
  * @author Christian Beikov
@@ -38,4 +40,6 @@ public interface ExpressionFactory {
     public Expression createOrderByExpression(String expression);
 
     public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions);
+
+    public Predicate createPredicateExpression(String expression);
 }

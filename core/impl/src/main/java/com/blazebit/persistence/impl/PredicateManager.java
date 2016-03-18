@@ -15,12 +15,16 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.List;
+
 import com.blazebit.persistence.CaseWhenStarterBuilder;
 import com.blazebit.persistence.MultipleSubqueryInitiator;
 import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
 import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
+import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
 import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
@@ -44,6 +48,7 @@ import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *
@@ -53,13 +58,14 @@ import com.blazebit.persistence.impl.predicate.NotPredicate;
 public abstract class PredicateManager<T> extends AbstractManager {
 
     protected final SubqueryInitiatorFactory subqueryInitFactory;
+    protected final ExpressionFactory expressionFactory;
     protected final RootPredicate rootPredicate;
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private final SubqueryBuilderListenerImpl<RestrictionBuilder<T>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
     private SubqueryBuilderListenerImpl<T> rightSubqueryPredicateBuilderListener;
     private SubqueryBuilderListenerImpl<RestrictionBuilder<T>> superExprLeftSubqueryPredicateBuilderListener;
     private CaseExpressionBuilderListener caseExpressionBuilderListener;
-    protected final ExpressionFactory expressionFactory;
+    private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
     PredicateManager(ResolvingQueryGenerator queryGenerator, ParameterManager parameterManager, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory) {
         super(queryGenerator, parameterManager);
@@ -71,6 +77,15 @@ public abstract class PredicateManager<T> extends AbstractManager {
     @SuppressWarnings("unchecked")
     RestrictionBuilder<T> restrict(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Expression expr) {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    void restrictExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Predicate predicate) {
+        rootPredicate.verifyBuilderEnded();
+        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        
+        List<Predicate> children = rootPredicate.getPredicate().getChildren();
+        children.clear();
+        children.add(predicate);
     }
 
     CaseWhenStarterBuilder<RestrictionBuilder<T>> restrictCase(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
@@ -99,6 +114,25 @@ public abstract class PredicateManager<T> extends AbstractManager {
         RestrictionBuilderImpl<T> restrictionBuilder = rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager));
         // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
         MultipleSubqueryInitiator<RestrictionBuilder<T>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<T>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);
+        return initiator;
+    }
+
+    <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X builder, Predicate predicate) {
+        rootPredicate.verifyBuilderEnded();
+        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
+            
+            @Override
+            public void onBuilderEnded(ExpressionBuilder builder) {
+                List<Predicate> children = rootPredicate.getPredicate().getChildren();
+                children.clear();
+                children.add((Predicate) builder.getExpression());
+                currentMultipleSubqueryInitiator = null;
+            }
+            
+        }, subqueryInitFactory);
+        currentMultipleSubqueryInitiator = initiator;
         return initiator;
     }
 
@@ -136,6 +170,9 @@ public abstract class PredicateManager<T> extends AbstractManager {
         }
         if (caseExpressionBuilderListener != null) {
             caseExpressionBuilderListener.verifyBuilderEnded();
+        }
+        if (currentMultipleSubqueryInitiator != null) {
+            throw new BuilderChainingException("A builder was not ended properly.");
         }
     }
 

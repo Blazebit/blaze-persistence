@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.Predicate;
+
 /**
  *
  * @author Christian Beikov
@@ -128,6 +130,18 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
             @Override
             public Expression get() {
                 return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
+            }
+
+        });
+    }
+
+    @Override
+    public Predicate createPredicateExpression(final String expression) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", expression, new Supplier<Predicate>() {
+
+            @Override
+            public Predicate get() {
+                return delegate.createPredicateExpression(expression);
             }
 
         });

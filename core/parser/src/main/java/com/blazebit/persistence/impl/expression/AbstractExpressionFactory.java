@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 
@@ -182,6 +183,17 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         return composite;
     }
     
+    @Override
+    public Predicate createPredicateExpression(String expression) {
+        return (Predicate) createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parsePredicateExpression();
+            }
+        }, expression, true);
+    }
+
     private Expression createInItemExpression(String expression) {
         return createExpression(new RuleInvoker() {
 

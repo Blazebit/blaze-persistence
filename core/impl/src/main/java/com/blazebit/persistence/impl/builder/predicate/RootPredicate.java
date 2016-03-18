@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.ParameterManager;
-import com.blazebit.persistence.impl.ParameterRegistrationVisitor;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -36,7 +35,7 @@ public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
     public RootPredicate(ParameterManager parameterManager) {
         this.predicate = new AndPredicate();
-        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);
+        this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
     }
 
     @Override

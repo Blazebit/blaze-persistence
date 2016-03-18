@@ -117,6 +117,10 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
+    protected Predicate parsePredicate(String expr) {
+        return ef.createPredicateExpression(expr);
+    }
+
     protected Expression parseSubqueryExpression(String expr) {
         return subqueryEf.createSimpleExpression(expr);
     }

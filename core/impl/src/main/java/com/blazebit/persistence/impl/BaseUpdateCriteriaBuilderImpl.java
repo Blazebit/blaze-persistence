@@ -45,7 +45,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 
 	public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
 		super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteName, cteClass, result, listener);
-        this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(parameterManager);
+        this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
 	}
 
     @Override
