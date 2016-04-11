@@ -75,15 +75,12 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         // We use a tree map to get a deterministic attribute order
         this.attributes = new TreeMap<String, AbstractMethodAttribute<? super X, ?>>();
         this.attributeFilters = new HashMap<String, AttributeFilterMapping>();
-        
-        for (Method method : clazz.getMethods()) {
-            String attributeName = AbstractMethodAttribute.validate(this, method);
 
-            if (attributeName != null && !attributes.containsKey(attributeName)) {
-                AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
-                if (attribute != null) {
-                    attributes.put(attribute.getName(), attribute);
-                    addAttributeFilters(attribute);
+        // Deterministic order of methods for #203
+        for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
+            for (Method method : c.getDeclaredMethods()) {
+                if (Modifier.isPublic(method.getModifiers())) {
+                    handleMethod(method, entityViews);
                 }
             }
         }
@@ -100,6 +97,18 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
+        }
+    }
+    
+    private void handleMethod(Method method, Set<Class<?>> entityViews) {
+        String attributeName = AbstractMethodAttribute.validate(this, method);
+
+        if (attributeName != null && !attributes.containsKey(attributeName)) {
+            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
+            if (attribute != null) {
+                attributes.put(attribute.getName(), attribute);
+                addAttributeFilters(attribute);
+            }
         }
     }
     
