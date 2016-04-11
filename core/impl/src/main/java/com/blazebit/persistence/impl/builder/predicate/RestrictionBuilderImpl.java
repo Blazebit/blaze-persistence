@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.LikeBuilder;
@@ -388,7 +388,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public T in(List<?> values) {
+    public T in(Collection<?> values) {
         if (values == null) {
             throw new NullPointerException("values");
         }
@@ -413,7 +413,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     }
 
     @Override
-    public T notIn(List<?> values) {
+    public T notIn(Collection<?> values) {
         if (values == null) {
             throw new NullPointerException("values");
         }
