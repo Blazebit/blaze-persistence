@@ -56,9 +56,45 @@ public class TestLiterals extends AbstractParserTest {
     }
     
     @Test
-    public void testNumericLiteral(){
+    public void testIntegerLiteral(){
         FooExpression result = (FooExpression) parse("1");
         assertEquals(new FooExpression("1"), result);
+    }
+
+    @Test
+    public void testFloatLiteral(){
+        FooExpression result = (FooExpression) parse("1F");
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void testFloatLiteralWithDecimal(){
+        FooExpression result = (FooExpression) parse("121.223F");
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void testFloatLiteralWithDecimalAndExp(){
+        FooExpression result = (FooExpression) parse("121.223e21F");
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void testDoubleLiteral(){
+        FooExpression result = (FooExpression) parse("1D");
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void testDoubleLiteralWithDecimal(){
+        FooExpression result = (FooExpression) parse("121.223D");
+        assertEquals(null, result);
+    }
+
+    @Test
+    public void testDoubleLiteralWithDecimalAndExp(){
+        FooExpression result = (FooExpression) parse("121.223e21D");
+        assertEquals(null, result);
     }
     
     @Test
@@ -103,4 +139,5 @@ public class TestLiterals extends AbstractParserTest {
         FooExpression result = (FooExpression) parse("{ts '1991-05-21 11:59:59.0'}");
         assertEquals(new FooExpression("{ts '1991-05-21 11:59:59.0'}"), result);
     }
+
 }

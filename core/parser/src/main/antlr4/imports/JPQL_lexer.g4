@@ -150,9 +150,21 @@ Not_equal_operator
      : '<>'
      | '!='
      ;
- 
-Numeric_literal
-     : DIGIT+
+
+Long_literal
+     : Signum? DIGIT+ 'L'
+     ;
+
+Float_literal
+     : Signum? DIGIT+ ('.' DIGIT+ | '.' DIGIT+ 'e' DIGIT+)? 'F'
+     ;
+
+Double_literal
+     : Signum? DIGIT+ ('.' DIGIT+ | '.' DIGIT+ 'e' DIGIT+)? 'D'
+     ;
+
+Integer_literal
+     : Signum? DIGIT+
      ;
  
 Path_separator
@@ -169,7 +181,9 @@ fragment NOT_FRAG : [Nn][Oo][Tt];
 
 fragment Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
-fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT '.' DIGIT*;
+fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT+)?;
+
+fragment Signum : '-' | '+';
  
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';

@@ -158,7 +158,7 @@ arithmetic_factor : signum=( '+' | '-' )? arithmetic_primary;
 
 arithmetic_primary : state_field_path_expression # ArithmeticPrimary
                    | single_element_path_expression # ArithmeticPrimary
-                   | Numeric_literal # ArithmeticPrimary
+                   | numeric_literal # ArithmeticPrimary
                    | '('arithmetic_expression')' # ArithmeticPrimaryParanthesis
                    | Input_parameter # ArithmeticPrimary
                    | functions_returning_numerics # ArithmeticPrimary
@@ -273,8 +273,15 @@ null_literal : NULL;
 literal
     : Boolean_literal
     | enum_literal   
-    | Numeric_literal
+    | numeric_literal
     | string_literal
+    ;
+
+numeric_literal
+    : Integer_literal
+    | Long_literal
+    | Float_literal
+    | Double_literal
     ;
 
 string_literal : String_literal
