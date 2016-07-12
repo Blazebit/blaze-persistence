@@ -52,6 +52,11 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     }
 
     @Override
+    public BuilderType setParameterType(String name, Class<?> type) {
+        return builder.setParameterType(name, type);
+    }
+
+    @Override
     public boolean containsParameter(String name) {
         return builder.containsParameter(name);
     }

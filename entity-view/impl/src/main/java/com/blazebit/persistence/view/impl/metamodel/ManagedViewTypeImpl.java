@@ -77,10 +77,13 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         this.attributeFilters = new HashMap<String, AttributeFilterMapping>();
 
         // Deterministic order of methods for #203
+        Set<String> handledMethods = new HashSet<String>();
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             for (Method method : c.getDeclaredMethods()) {
                 if (Modifier.isPublic(method.getModifiers())) {
-                    handleMethod(method, entityViews);
+                    if (handledMethods.add(method.getName())) {
+                        handleMethod(method, entityViews);
+                    }
                 }
             }
         }

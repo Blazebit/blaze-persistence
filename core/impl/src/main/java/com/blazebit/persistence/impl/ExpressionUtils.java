@@ -38,19 +38,8 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -394,6 +383,42 @@ public class ExpressionUtils {
                     transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
                 }
                 expression.setExpressions(transformed);
+            }
+
+            @Override
+            public void visit(ExistsPredicate predicate) {
+                super.visit(predicate);
+                predicate.setExpression(replacementTransformer.transform(predicate.getExpression(), null, false));
+            }
+
+            @Override
+            public void visit(EqPredicate predicate) {
+                super.visit(predicate);
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+            }
+
+            @Override
+            public void visit(GtPredicate predicate) {
+                super.visit(predicate);
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+            }
+
+            @Override
+            public void visit(GePredicate predicate) {
+                super.visit(predicate);
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+            }
+
+            @Override
+            public void visit(LtPredicate predicate) {
+                super.visit(predicate);
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+            }
+
+            @Override
+            public void visit(LePredicate predicate) {
+                super.visit(predicate);
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 
         };

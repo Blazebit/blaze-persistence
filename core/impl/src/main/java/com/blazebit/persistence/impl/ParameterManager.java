@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.Parameter;
 import javax.persistence.TemporalType;
@@ -37,9 +32,8 @@ public class ParameterManager {
 
     private static final String prefix = "param_";
     private int counter;
-    private final Map<String, Object> parameters = new HashMap<String, Object>();
+    private final Map<String, ParameterImpl<?>> parameters = new HashMap<String, ParameterImpl<?>>();
     private final VisitorAdapter parameterRegistrationVisitor;
-    private static final Object REGISTERED_PLACEHOLDER = new Object();
 
     public ParameterManager() {
         this.parameterRegistrationVisitor = new ParameterRegistrationVisitor(this);
@@ -54,25 +48,13 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        if (!containsParameter(parameterName)) {
-            return null;
-        }
-
-        Object value = getParameterValue(parameterName);
-
-        return new ParameterImpl(value == null ? null : value.getClass(), parameterName);
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        return parameter;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set<? extends Parameter<?>> getParameters() {
-        Set<Parameter<?>> result = new HashSet<Parameter<?>>();
-
-        for (Map.Entry<String, Object> paramEntry : parameters.entrySet()) {
-            Class<?> paramClass = paramEntry.getValue() == null || paramEntry.getValue() == REGISTERED_PLACEHOLDER ? null : paramEntry.getValue()
-                .getClass();
-            result.add(new ParameterImpl(paramClass, paramEntry.getKey()));
-        }
-        return result;
+        return new HashSet<Parameter<?>>(parameters.values());
     }
 
     public boolean containsParameter(String parameterName) {
@@ -86,15 +68,19 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        return parameters.containsKey(parameterName) && parameters.get(parameterName) != REGISTERED_PLACEHOLDER;
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        return parameter != null && parameter.getValue() != null;
     }
 
     public Object getParameterValue(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        Object o = parameters.get(parameterName);
-        return o == REGISTERED_PLACEHOLDER ? null : o;
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        if (parameter == null) {
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+        }
+        return parameter.getValue();
     }
 
     public ParameterExpression addParameterExpression(Object o) {
@@ -107,7 +93,7 @@ public class ParameterManager {
             throw new NullPointerException();
         }
         String name = prefix + counter++;
-        parameters.put(name, o);
+        parameters.put(name, new ParameterImpl<Object>(name, o));
         return name;
     }
 
@@ -115,7 +101,7 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        parameters.put(parameterName, o);
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o));
     }
 
     public void registerParameterName(String parameterName) {
@@ -123,35 +109,54 @@ public class ParameterManager {
             throw new NullPointerException("parameterName");
         }
         if (!parameters.containsKey(parameterName)) {
-            parameters.put(parameterName, REGISTERED_PLACEHOLDER);
+            parameters.put(parameterName, new ParameterImpl<Object>(parameterName));
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void satisfyParameter(String parameterName, Object parameterValue) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        if (!parameters.containsKey(parameterName)) {
+        ParameterImpl parameter = parameters.get(parameterName);
+        if (parameter == null) {
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
-        parameters.put(parameterName, parameterValue);
+        parameter.setValue(parameterValue);
+    }
+
+    @SuppressWarnings({ "unchecked" })
+    public void setParameterType(String parameterName, Class<?> type) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        ParameterImpl<?> parameter = parameters.get(parameterName);
+        if (parameter == null) {
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+        }
+        parameter.setParameterType((Class) type);
     }
 
     // TODO: needs equals-hashCode implementation
 
-    private class ParameterImpl<T> implements Parameter<T> {
+    private static class ParameterImpl<T> implements Parameter<T> {
 
-        private final Class<T> paramClass;
-        private final String paramName;
+        private final String name;
+        private Class<T> parameterType;
+        private T value;
 
-        public ParameterImpl(Class<T> paramClass, String paramName) {
-            this.paramClass = paramClass;
-            this.paramName = paramName;
+        public ParameterImpl(String name) {
+            this.name = name;
+        }
+
+        public ParameterImpl(String name, T value) {
+            this.name = name;
+            setValue(value);
         }
 
         @Override
         public String getName() {
-            return paramName;
+            return name;
         }
 
         @Override
@@ -161,12 +166,33 @@ public class ParameterManager {
 
         @Override
         public Class<T> getParameterType() {
-            return paramClass;
+            return parameterType;
         }
 
+        public void setParameterType(Class<T> parameterType) {
+            this.parameterType = parameterType;
+        }
+
+        public T getValue() {
+            return value;
+        }
+
+        @SuppressWarnings({ "unchecked" })
+        public void setValue(T value) {
+            this.value = value;
+            if (value != null) {
+                if (value instanceof TemporalCalendarParameterWrapper) {
+                    parameterType = (Class<T>) Calendar.class;
+                } else if (value instanceof TemporalDateParameterWrapper) {
+                    parameterType = (Class<T>) Date.class;
+                } else {
+                    parameterType = (Class<T>) value.getClass();
+                }
+            }
+        }
     }
 
-    static class TemporalCalendarParameterWrapper {
+    static class TemporalCalendarParameterWrapper<T> {
 
         private final Calendar value;
         private final TemporalType type;

@@ -16,7 +16,9 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FooExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.QuantifierExpression;
 
 /**
  *
@@ -38,6 +40,16 @@ public class AliasReplacementTransformer implements ExpressionTransformer {
         if (original instanceof PathExpression) {
             PathExpression originalPathExpr = (PathExpression) original;
             if (originalPathExpr.toString().equals(alias)) {
+                return substitute;
+            }
+        } else if (original instanceof QuantifierExpression) {
+            QuantifierExpression originalQuantifierExpr = (QuantifierExpression) original;
+            if (originalQuantifierExpr.getExpression().toString().equals(alias)) {
+                return substitute;
+            }
+        } else if (original instanceof FooExpression) {
+            FooExpression originalQuantifierExpr = (FooExpression) original;
+            if (originalQuantifierExpr.toString().equals(alias)) {
                 return substitute;
             }
         }

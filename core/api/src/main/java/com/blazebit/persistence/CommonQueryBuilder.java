@@ -127,6 +127,16 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * @return The value of the parameter or null if no value has been set or the parameter does not exist
      */
     public Object getParameterValue(String name);
+
+    /**
+     * Updates the type of the parameter with the given name.
+     *
+     * @param name The name of the parameter for which the type should be set
+     * @param type The value of the parameter that should be set
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X setParameterType(String name, Class<?> type);
     
     /**
      * Sets a configuration property with the given propertyName to the given propertyValue.

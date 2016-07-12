@@ -311,6 +311,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                             null_comparison_expression |
                             empty_collection_comparison_expression |
                             collection_member_expression |
+                            exists_expression
                         ;
 
  between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithmetic_expression AND bound2=arithmetic_expression # BetweenArithmetic
@@ -339,11 +340,13 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  null_comparison_expression : (single_valued_path_expression | Input_parameter) IS (not=NOT)? NULL
                             ;
 
- empty_collection_comparison_expression : collection_valued_path_expression Empty_function
+ empty_collection_comparison_expression : collection_valued_path_expression IS (not=NOT)? EMPTY
                                         ;
 
- collection_member_expression : entity_or_value_expression (not=NOT)? Member_of_function collection_valued_path_expression
+ collection_member_expression : entity_or_value_expression (not=NOT)? MEMBER OF? collection_valued_path_expression
                               ;
+
+ exists_expression : (not=NOT)? EXISTS identifier;
 
  entity_or_value_expression : state_field_path_expression
                             | simple_entity_or_value_expression 
@@ -476,8 +479,13 @@ all_or_any_expression : quantifier=(ALL | ANY | SOME)? identifier
         | WHEN
         | THEN
         | SIZE
-        | Empty_function
-        | Member_of_function
+        | ALL
+        | ANY
+        | SOME
+        | EXISTS
+        | EMPTY
+        | MEMBER
+        | OF
         | Outer_function
         ;
  

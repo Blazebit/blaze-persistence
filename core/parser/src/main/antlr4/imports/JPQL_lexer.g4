@@ -117,9 +117,17 @@ ANY: [Aa] [Nn] [Yy];
 
 SOME: [Ss] [Oo] [Mm] [Ee];
 
-Empty_function : [Ii][Ss] ([ ]+ NOT_FRAG [ ]+)? [Ee][Mm][Pp][Tt][Yy];
+EXISTS: [Ee] [Xx] [Ii] [Ss] [Tt] [Ss];
 
-Member_of_function : [Mm][Ee][Mm][Bb][Ee][Rr] ([ ]+ [Oo][Ff])?;
+EMPTY: [Ee][Mm][Pp][Tt][Yy];
+
+MEMBER: [Mm][Ee][Mm][Bb][Ee][Rr];
+
+OF: [Oo][Ff];
+
+//Empty_function : [Ii][Ss] ([ ]+ NOT_FRAG [ ]+)? [Ee][Mm][Pp][Tt][Yy];
+
+//Member_of_function : [Mm][Ee][Mm][Bb][Ee][Rr] ([ ]+ [Oo][Ff])?;
 
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
  
@@ -152,9 +160,17 @@ Not_equal_operator
      ;
  
 Numeric_literal
-     : DIGIT+
+     : '0' IntegerTypeSuffix?
+     | DIGIT_NOT_ZERO Digits* IntegerTypeSuffix?
+
+     | '0' FloatTypeSuffix?
+     | DIGIT_NOT_ZERO Digits* FloatTypeSuffix?
+     | '0' ExponentPart FloatTypeSuffix?
+     | DIGIT_NOT_ZERO Digits* ExponentPart FloatTypeSuffix?
+     | '0'? '.' Digits ExponentPart? FloatTypeSuffix?
+     | DIGIT_NOT_ZERO Digits* '.' Digits ExponentPart? FloatTypeSuffix?
      ;
- 
+
 Path_separator
      : '.'
      ;
@@ -169,7 +185,7 @@ fragment NOT_FRAG : [Nn][Oo][Tt];
 
 fragment Date_string : DIGIT DIGIT DIGIT DIGIT '-' DIGIT DIGIT '-' DIGIT DIGIT;
 
-fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT '.' DIGIT*;
+fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT*)?;
  
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
@@ -194,3 +210,43 @@ JavaLetterOrDigit
 [\uD800-\uDBFF] [\uDC00-\uDFFF]
 {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
 ;
+
+fragment IntegerTypeSuffix: [Ll] | ([Bb][Ii]);
+
+fragment
+Digits
+    :   DIGIT+
+    ;
+
+fragment
+DecimalFloatingPointLiteral
+    :   Digits '.' Digits? ExponentPart? FloatTypeSuffix?
+    |   '.' Digits ExponentPart? FloatTypeSuffix?
+    |   Digits ExponentPart FloatTypeSuffix?
+    |   Digits FloatTypeSuffix
+    ;
+
+fragment
+ExponentPart
+    :   ExponentIndicator SignedInteger
+    ;
+
+fragment
+ExponentIndicator
+    :   [eE]
+    ;
+
+fragment
+SignedInteger
+    :   Sign? Digits
+    ;
+
+fragment
+Sign
+    :   [+-]
+    ;
+
+fragment
+FloatTypeSuffix
+    :   [fFdD] | ([Bb][Dd])
+    ;

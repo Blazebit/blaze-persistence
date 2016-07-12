@@ -529,11 +529,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     void parameterizeQuery(Query q) {
         for (Parameter<?> p : q.getParameters()) {
-            // Allow to defer setting parameter values
-//            if (!isParameterSet(p.getName())) {
-//                throw new IllegalStateException("Unsatisfied parameter " + p.getName());
-//            }
-            
             Object paramValue = parameterManager.getParameterValue(p.getName());
             if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
                 ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
@@ -582,7 +577,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public Object getParameterValue(String name) {
-        return parameterManager.getParameterValue(name);
+        Object paramValue = parameterManager.getParameterValue(name);
+        if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
+            ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
+            return wrappedValue.getValue();
+        } else if (paramValue instanceof ParameterManager.TemporalDateParameterWrapper) {
+            ParameterManager.TemporalDateParameterWrapper wrappedValue = (ParameterManager.TemporalDateParameterWrapper) paramValue;
+            return wrappedValue.getValue();
+        } else {
+            return paramValue;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType setParameterType(String name, Class<?> type) {
+        parameterManager.setParameterType(name, type);
+        return (BuilderType) this;
     }
 
     /*

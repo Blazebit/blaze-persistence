@@ -29,12 +29,10 @@ public class ParameterizedSubqueryProviderFactory implements SubqueryProviderFac
 			
 			for (int i = 0; i < size; i++) {
 				final String name = parameterNames[i];
-				final Object value = queryBuilder.getParameterValue(name);
-				
-				if (value == null) {
-					args[i] = optionalParameters.get(name);
+				if (queryBuilder.isParameterSet(name)) {
+					args[i] = queryBuilder.getParameterValue(name);
 				} else {
-					args[i] = value;
+					args[i] = optionalParameters.get(name);
 				}
 			}
 			
