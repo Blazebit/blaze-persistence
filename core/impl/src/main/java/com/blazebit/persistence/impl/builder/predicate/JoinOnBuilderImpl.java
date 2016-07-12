@@ -65,7 +65,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     @Override
     public T onExpression(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
         predicate.accept(parameterManager.getParameterRegistrationVisitor());
         
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
@@ -77,7 +77,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     @Override
     public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
         predicate.accept(parameterManager.getParameterRegistrationVisitor());
         
         MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, predicate, new ExpressionBuilderEndedListener() {

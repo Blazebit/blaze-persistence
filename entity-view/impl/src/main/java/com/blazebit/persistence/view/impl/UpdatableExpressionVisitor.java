@@ -34,7 +34,6 @@ import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.PathElementExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.QuantifierExpression;
 import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
@@ -220,11 +219,6 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
         invalid(expression);
     }
     
-    @Override
-    public void visit(QuantifierExpression expression) {
-        invalid(expression);
-    }
-
     @Override
     public void visit(AndPredicate predicate) {
         invalid(predicate);

@@ -51,10 +51,10 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
 
     private Expression createExpression(RuleInvoker ruleInvoker, String expression) {
-        return createExpression(ruleInvoker, expression, true);
+        return createExpression(ruleInvoker, expression, true, true);
     }
 
-    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen) {
+    private Expression createExpression(RuleInvoker ruleInvoker, String expression, boolean allowCaseWhen, boolean allowQuantifiedPredicates) {
         if (expression == null) {
             throw new NullPointerException("expression");
         }
@@ -64,7 +64,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
         configureLexer(l);
         CommonTokenStream tokens = new CommonTokenStream(l);
-        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen);
+        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen, allowQuantifiedPredicates);
         configureParser(p);
         ParserRuleContext ctx = ruleInvoker.invokeRule(p);
 
@@ -98,7 +98,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseOrderByClause();
             }
-        }, expression, false);
+        }, expression, false, true);
     }
 
     @Override
@@ -125,7 +125,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseScalarExpression();
             }
-        }, expression, false);
+        }, expression, false, true);
     }
 
     @Override
@@ -136,7 +136,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseArithmeticExpression();
             }
-        }, expression, false);
+        }, expression, false, true);
     }
 
     @Override
@@ -147,7 +147,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseStringExpression();
             }
-        }, expression, false);
+        }, expression, false, true);
     }
 
     @Override
@@ -184,14 +184,14 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
     
     @Override
-    public Predicate createPredicateExpression(String expression) {
+    public Predicate createPredicateExpression(String expression, boolean allowQuantifiedPredicates) {
         return (Predicate) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePredicateExpression();
             }
-        }, expression, true);
+        }, expression, true, allowQuantifiedPredicates);
     }
 
     private Expression createInItemExpression(String expression) {
@@ -201,7 +201,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseInItemExpression();
             }
-        }, expression, false);
+        }, expression, false, true);
     }
 
     protected void configureLexer(JPQLSelectExpressionLexer lexer) {

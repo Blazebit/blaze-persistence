@@ -144,11 +144,6 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
     
     @Override
-    public Boolean visit(QuantifierExpression expression) {
-        return expression.getExpression().accept(this);
-    }
-
-    @Override
     public Boolean visit(AndPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();

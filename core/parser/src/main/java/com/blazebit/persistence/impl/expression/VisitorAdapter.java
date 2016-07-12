@@ -121,11 +121,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
     
     @Override
-    public void visit(QuantifierExpression expression) {
-        expression.getExpression().accept(this);
-    }
-
-    @Override
     public void visit(AndPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();

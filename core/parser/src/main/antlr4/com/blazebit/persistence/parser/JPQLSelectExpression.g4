@@ -21,10 +21,12 @@ import JPQL_lexer;
 @parser::members {
 private boolean allowOuter = false;
 private boolean allowCaseWhen = false;
-public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen){
+private boolean allowQuantifiedPredicates = false;
+public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen, boolean allowQuantifiedPredicates){
        this(input);
        this.allowCaseWhen = allowCaseWhen;
-}      
+       this.allowQuantifiedPredicates = allowQuantifiedPredicates;
+}
 
 }
 
@@ -358,42 +360,21 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                                    | literal
                                    ;
  
- comparison_expression : left=string_expression comparison_operator right=string_or_quantifier_expression # ComparisonExpression_string
-                       | left=boolean_expression op=equality_comparison_operator right=boolean_or_quantifier_expression # ComparisonExpression_boolean
-                       | left=enum_expression op=equality_comparison_operator right=enum_or_quantifier_expression # ComparisonExpression_enum
-                       | left=datetime_expression comparison_operator right=datetime_or_quantifier_expression # ComparisonExpression_datetime
-                       | left=entity_expression op=equality_comparison_operator right=entity_or_quantifier_expression # ComparisonExpression_entity
-                       | left=arithmetic_expression comparison_operator right=arithmetic_or_quantifier_expression # ComparisonExpression_arithmetic
-                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_or_quantifier_expression # ComparisonExpression_entitytype
+ comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
+                       | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_string
+                       | left=boolean_expression op=equality_comparison_operator right=boolean_expression # ComparisonExpression_boolean
+                       | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_boolean
+                       | left=enum_expression op=equality_comparison_operator right=enum_expression # ComparisonExpression_enum
+                       | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                       | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
+                       | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                       | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
+                       | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entity
+                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
+                       | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_arithmetic
+                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
+                       | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entitytype
                        ;
- 
- string_or_quantifier_expression : string_expression
-                                 | all_or_any_expression
-                                 ;
-                                 
- boolean_or_quantifier_expression : boolean_expression
-                                 | all_or_any_expression
-                                 ;
-                                 
- enum_or_quantifier_expression : enum_expression
-                                 | all_or_any_expression
-                                 ;
-                                 
- datetime_or_quantifier_expression : datetime_expression
-                               | all_or_any_expression
-                                 ;
-                                 
- entity_or_quantifier_expression : entity_expression
-                                 | all_or_any_expression
-                                 ;
-                                 
- arithmetic_or_quantifier_expression : arithmetic_expression
-                                 | all_or_any_expression
-                                 ;
-                                 
- entity_type_or_quantifier_expression : entity_type_expression
-                                 | all_or_any_expression
-                                 ;
  
  equality_comparison_operator : '=' # EqPredicate
                               | Not_equal_operator # NeqPredicate
@@ -421,9 +402,6 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
  case_operand : state_field_path_expression
               | type_discriminator
               ;
- 
-all_or_any_expression : quantifier=(ALL | ANY | SOME)? identifier
-                      ;
 
  keyword :KEY
         | VALUE

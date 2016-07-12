@@ -748,14 +748,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
         whereManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
         return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
 
@@ -851,14 +851,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
         havingManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression);
+        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
         return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
 
