@@ -149,7 +149,7 @@ public class TupleObjectBuilder implements ObjectBuilder<Tuple> {
             @Override
             @SuppressWarnings("unchecked")
             public Class<? extends X> getJavaType() {
-                return (Class<? extends X>) tuple[index];
+                return tuple[index] == null ? null : (Class<? extends X>) tuple[index].getClass();
             }
 
             @Override

@@ -82,7 +82,7 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                                   | key_value_expression #KeyValueExpression
                                   ;
 
-single_valued_path_expression 
+single_valued_path_expression
     : qualified_identification_variable
     // TODO: Add treat here
     | state_field_path_expression
@@ -94,7 +94,7 @@ general_path_start : general_path_element
 
 simple_path_element : identifier
                     ;
- 
+
 general_path_element : simple_path_element
                      | array_expression
                      ;
@@ -103,7 +103,7 @@ general_path_element : simple_path_element
 array_expression : simple_path_element '[' arithmetic_expression ']' #ArrayExpressionArithmeticIndex
 				  | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
                  ;
-     
+
 general_subpath : general_path_start('.'general_path_element)*
                 ;
 
@@ -118,7 +118,7 @@ single_valued_object_path_expression : path
 path : general_subpath '.' general_path_element
      ;
 
-collection_valued_path_expression : single_element_path_expression 
+collection_valued_path_expression : single_element_path_expression
                                   | path
                                   ;
 
@@ -135,11 +135,11 @@ aggregate_argument : single_element_path_expression
                    ;
 
 scalar_expression : arithmetic_expression
-                  | string_expression 
-                  | enum_expression 
-                  | datetime_expression 
+                  | string_expression
+                  | enum_expression
+                  | datetime_expression
                   | boolean_expression
-                  | entity_type_expression 
+                  | entity_type_expression
                   | case_expression
                   ;
 
@@ -167,39 +167,39 @@ arithmetic_primary : state_field_path_expression # ArithmeticPrimary
                    | function_invocation # ArithmeticPrimary
                    ;
 
-string_expression : state_field_path_expression 
-                  | single_element_path_expression 
-                  | string_literal 
-                  | Input_parameter 
-                  | functions_returning_strings 
-                  | aggregate_expression 
-                  | case_expression 
+string_expression : state_field_path_expression
+                  | single_element_path_expression
+                  | string_literal
+                  | Input_parameter
+                  | functions_returning_strings
+                  | aggregate_expression
+                  | case_expression
                   | function_invocation
                   ;
 
 datetime_expression : state_field_path_expression
-                    | single_element_path_expression 
-                    | Input_parameter 
-                    | functions_returning_datetime 
-                    | aggregate_expression 
-                    | case_expression 
-                    | function_invocation 
+                    | single_element_path_expression
+                    | Input_parameter
+                    | functions_returning_datetime
+                    | aggregate_expression
+                    | case_expression
+                    | function_invocation
                     | literal_temporal
                     ;
 
-boolean_expression : state_field_path_expression 
-                   | single_element_path_expression 
-                   | Boolean_literal 
-                   | Input_parameter 
-                   | case_expression 
+boolean_expression : state_field_path_expression
+                   | single_element_path_expression
+                   | Boolean_literal
+                   | Input_parameter
+                   | case_expression
                    | function_invocation
                    ;
 
-enum_expression : state_field_path_expression 
-                | single_element_path_expression 
-                | enum_literal // This is a custom, non JPA compliant literal 
-                | Input_parameter 
-                | case_expression 
+enum_expression : state_field_path_expression
+                | single_element_path_expression
+                | enum_literal // This is a custom, non JPA compliant literal
+                | Input_parameter
+                | case_expression
                 ;
 
 enum_literal : ENUM '(' path ')'
@@ -214,7 +214,7 @@ simple_entity_expression : identifier
                          ;
 
 entity_type_expression : type_discriminator
-                       | entity_type_literal // This is a custom, non JPA compliant literal 
+                       | entity_type_literal // This is a custom, non JPA compliant literal
                        | Input_parameter
                        ;
 entity_type_literal : ENTITY '(' identifier ')'
@@ -222,8 +222,8 @@ entity_type_literal : ENTITY '(' identifier ')'
 
 type_discriminator : TYPE '(' type_discriminator_arg ')';
 
-type_discriminator_arg : Input_parameter 
-                       | single_valued_object_path_expression 
+type_discriminator_arg : Input_parameter
+                       | single_valued_object_path_expression
                        | single_element_path_expression
                        ;
 
@@ -232,7 +232,7 @@ functions_returning_numerics : LENGTH '('string_expression')' # Functions_return
                              | ABS '('arithmetic_expression')' # Functions_returning_numerics_default
                              | SQRT '('arithmetic_expression')' # Functions_returning_numerics_default
                              | MOD '('arithmetic_expression',' arithmetic_expression')' # Functions_returning_numerics_default
-                             | SIZE '('collection_valued_path_expression')' # Functions_returning_numerics_size 
+                             | SIZE '('collection_valued_path_expression')' # Functions_returning_numerics_size
                              | INDEX '('collection_valued_path_expression')' # IndexFunction
                              ;
 
@@ -245,16 +245,16 @@ functions_returning_strings : CONCAT '('string_expression',' string_expression (
                             | UPPER '('string_expression')' # StringFunction
                             ;
 
-trim_specification : LEADING 
-                   | TRAILING 
+trim_specification : LEADING
+                   | TRAILING
                    | BOTH
                    ;
 
 function_invocation : FUNCTION '(' string_literal (',' args+=function_arg)*')';
 
 function_arg : literal
-             | state_field_path_expression 
-             | Input_parameter 
+             | state_field_path_expression
+             | Input_parameter
              | scalar_expression
              ;
 
@@ -272,7 +272,7 @@ null_literal : NULL;
 
 literal
     : Boolean_literal
-    | enum_literal   
+    | enum_literal
     | numeric_literal
     | string_literal
     ;
@@ -288,15 +288,15 @@ string_literal : String_literal
                | Character_literal
                ;
 
-literal_temporal 
-    : Date_literal 
-    | Time_literal 
+literal_temporal
+    : Date_literal
+    | Time_literal
     | Timestamp_literal
     ;
 
 trim_character : string_literal
                | Input_parameter
-               ; 
+               ;
 /* conditional expression stuff for case when in entity view extension */
 conditional_expression : conditional_term # ConditionalExpression
                        | conditional_expression or=OR conditional_term # ConditionalExpression_or
@@ -313,14 +313,15 @@ conditional_primary : simple_cond_expression # ConditionalPrimary_simple
                     | '('conditional_expression')' # ConditionalPrimary
                     ;
 
-simple_cond_expression : comparison_expression |
-                           between_expression |
-                           like_expression |
-                           in_expression |
-                           null_comparison_expression |
-                           empty_collection_comparison_expression |
-                           collection_member_expression |
-                       ;
+ simple_cond_expression : comparison_expression |
+                            between_expression |
+                            like_expression |
+                            in_expression |
+                            null_comparison_expression |
+                            empty_collection_comparison_expression |
+                            collection_member_expression |
+                            exists_expression
+                        ;
 
 between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithmetic_expression AND bound2=arithmetic_expression # BetweenArithmetic
                    | expr=string_expression (not=NOT)? BETWEEN bound1=string_expression AND bound2=string_expression # BetweenString
@@ -330,7 +331,7 @@ between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithm
 in_expression : (state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter )
               ;
 
-in_item : literal 
+in_item : literal
         | Input_parameter
         ;
 
@@ -348,19 +349,21 @@ escape_character : Character_literal
 null_comparison_expression : (single_valued_path_expression | Input_parameter) IS (not=NOT)? NULL
                            ;
 
-empty_collection_comparison_expression : collection_valued_path_expression Empty_function
-                                       ;
+ empty_collection_comparison_expression : collection_valued_path_expression IS (not=NOT)? EMPTY
+                                        ;
 
-collection_member_expression : entity_or_value_expression (not=NOT)? Member_of_function collection_valued_path_expression
-                             ;
+ collection_member_expression : entity_or_value_expression (not=NOT)? MEMBER OF? collection_valued_path_expression
+                              ;
+
+ exists_expression : (not=NOT)? EXISTS identifier;
 
 entity_or_value_expression : state_field_path_expression
-                           | simple_entity_or_value_expression 
+                           | simple_entity_or_value_expression
                            | single_element_path_expression
                            ;
 
-simple_entity_or_value_expression : identifier 
-                                  | Input_parameter 
+simple_entity_or_value_expression : identifier
+                                  | Input_parameter
                                   | literal
                                   ;
 
@@ -407,65 +410,71 @@ case_operand : state_field_path_expression
              | type_discriminator
              ;
 
-keyword :KEY
-       | VALUE
-       | ENTRY
-       | AVG
-       | SUM
-       | MAX
-       | MIN
-       | COUNT
-       | DISTINCT
-       | ENUM
-       | ENTITY
-       | TYPE
-       | LENGTH
-       | LOCATE
-       | ABS
-       | SQRT
-       | MOD
-       | INDEX
-       
-/* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
-
-       /*
-       | CURRENT_DATE
-       | CURRENT_TIME
-       | CURRENT_TIMESTAMP
-       */
-       
-       | CONCAT
-       | SUBSTRING
-       | TRIM
-       | LOWER
-       | UPPER
-       | FROM
-       | LEADING
-       | TRAILING
-       | BOTH
-       | FUNCTION
-       | COALESCE
-       | NULLIF
-       | NOT
-       | OR
-       | AND
-       | BETWEEN
-       | IN
-       | LIKE
-       | ESCAPE
-       | IS
-       | NULL
-       | CASE
-       | ELSE
-       | END
-       | WHEN
-       | THEN
-       | SIZE
-       | Empty_function
-       | Member_of_function
-       | Outer_function
-       ;
-
-identifier : Identifier
-           | keyword
-           ;           
+ keyword :KEY
+        | VALUE
+        | ENTRY
+        | AVG
+        | SUM
+        | MAX
+        | MIN
+        | COUNT
+        | DISTINCT
+        | ENUM
+        | ENTITY
+        | TYPE
+        | LENGTH
+        | LOCATE
+        | ABS
+        | SQRT
+        | MOD
+        | INDEX
+        
+ /* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
+ 
+        /*
+        | CURRENT_DATE
+        | CURRENT_TIME
+        | CURRENT_TIMESTAMP
+        */
+        
+        | CONCAT
+        | SUBSTRING
+        | TRIM
+        | LOWER
+        | UPPER
+        | FROM
+        | LEADING
+        | TRAILING
+        | BOTH
+        | FUNCTION
+        | COALESCE
+        | NULLIF
+        | NOT
+        | OR
+        | AND
+        | BETWEEN
+        | IN
+        | LIKE
+        | ESCAPE
+        | IS
+        | NULL
+        | CASE
+        | ELSE
+        | END
+        | WHEN
+        | THEN
+        | SIZE
+        | ALL
+        | ANY
+        | SOME
+        | EXISTS
+        | EMPTY
+        | MEMBER
+        | OF
+        | Outer_function
+        ;
+ 
+ identifier : Identifier
+            | keyword
+            ;
+             

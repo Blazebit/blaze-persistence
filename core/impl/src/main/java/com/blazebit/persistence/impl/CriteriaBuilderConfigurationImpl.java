@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -38,6 +39,7 @@ import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
@@ -188,20 +190,66 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         // treat
 
-        registerFunction(new JpqlFunctionGroup("treat_decimal", new TreatFunction(BigDecimal.class)));
-        registerFunction(new JpqlFunctionGroup("treat_long", new TreatFunction(Long.class)));
-        registerFunction(new JpqlFunctionGroup("treat_int", new TreatFunction(Integer.class)));
-        registerFunction(new JpqlFunctionGroup("treat_short", new TreatFunction(Short.class)));
-        registerFunction(new JpqlFunctionGroup("treat_byte", new TreatFunction(Byte.class)));
-        registerFunction(new JpqlFunctionGroup("treat_double", new TreatFunction(Double.class)));
-        registerFunction(new JpqlFunctionGroup("treat_float", new TreatFunction(Float.class)));
         registerFunction(new JpqlFunctionGroup("treat_boolean", new TreatFunction(Boolean.class)));
-        registerFunction(new JpqlFunctionGroup("treat_char", new TreatFunction(Character.class)));
-        
-        registerFunction(new JpqlFunctionGroup("treat_date", new TreatFunction(Date.class)));
-        registerFunction(new JpqlFunctionGroup("treat_timestamp", new TreatFunction(Timestamp.class)));
+        registerFunction(new JpqlFunctionGroup("treat_byte", new TreatFunction(Byte.class)));
+        registerFunction(new JpqlFunctionGroup("treat_short", new TreatFunction(Short.class)));
+        registerFunction(new JpqlFunctionGroup("treat_integer", new TreatFunction(Integer.class)));
+        registerFunction(new JpqlFunctionGroup("treat_long", new TreatFunction(Long.class)));
+        registerFunction(new JpqlFunctionGroup("treat_float", new TreatFunction(Float.class)));
+        registerFunction(new JpqlFunctionGroup("treat_double", new TreatFunction(Double.class)));
+
+        registerFunction(new JpqlFunctionGroup("treat_character", new TreatFunction(Character.class)));
+        registerFunction(new JpqlFunctionGroup("treat_string", new TreatFunction(String.class)));
+
+        registerFunction(new JpqlFunctionGroup("treat_biginteger", new TreatFunction(BigInteger.class)));
+        registerFunction(new JpqlFunctionGroup("treat_bigdecimal", new TreatFunction(BigDecimal.class)));
+
         registerFunction(new JpqlFunctionGroup("treat_time", new TreatFunction(Time.class)));
+        registerFunction(new JpqlFunctionGroup("treat_date", new TreatFunction(java.sql.Date.class)));
+        registerFunction(new JpqlFunctionGroup("treat_timestamp", new TreatFunction(Timestamp.class)));
         registerFunction(new JpqlFunctionGroup("treat_calendar", new TreatFunction(Calendar.class)));
+
+        // cast
+
+        registerFunction(new JpqlFunctionGroup("cast_boolean"));
+        registerFunction(new JpqlFunctionGroup("cast_byte"));
+        registerFunction(new JpqlFunctionGroup("cast_short"));
+        registerFunction(new JpqlFunctionGroup("cast_integer"));
+        registerFunction(new JpqlFunctionGroup("cast_long"));
+        registerFunction(new JpqlFunctionGroup("cast_float"));
+        registerFunction(new JpqlFunctionGroup("cast_double"));
+
+        registerFunction(new JpqlFunctionGroup("cast_character"));
+        registerFunction(new JpqlFunctionGroup("cast_string"));
+
+        registerFunction(new JpqlFunctionGroup("cast_biginteger"));
+        registerFunction(new JpqlFunctionGroup("cast_bigdecimal"));
+
+        registerFunction(new JpqlFunctionGroup("cast_time"));
+        registerFunction(new JpqlFunctionGroup("cast_date"));
+        registerFunction(new JpqlFunctionGroup("cast_timestamp"));
+        registerFunction(new JpqlFunctionGroup("cast_calendar"));
+
+        for (Map.Entry<String, DbmsDialect> dbmsDialectEntry : dbmsDialects.entrySet()) {
+            functions.get("cast_boolean").add(dbmsDialectEntry.getKey(), new CastFunction(Boolean.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_byte").add(dbmsDialectEntry.getKey(), new CastFunction(Byte.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_short").add(dbmsDialectEntry.getKey(), new CastFunction(Short.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_integer").add(dbmsDialectEntry.getKey(), new CastFunction(Integer.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_long").add(dbmsDialectEntry.getKey(), new CastFunction(Long.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_float").add(dbmsDialectEntry.getKey(), new CastFunction(Float.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_double").add(dbmsDialectEntry.getKey(), new CastFunction(Double.class, dbmsDialectEntry.getValue()));
+
+            functions.get("cast_character").add(dbmsDialectEntry.getKey(), new CastFunction(Character.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_string").add(dbmsDialectEntry.getKey(), new CastFunction(String.class, dbmsDialectEntry.getValue()));
+
+            functions.get("cast_biginteger").add(dbmsDialectEntry.getKey(), new CastFunction(BigInteger.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_bigdecimal").add(dbmsDialectEntry.getKey(), new CastFunction(BigDecimal.class, dbmsDialectEntry.getValue()));
+
+            functions.get("cast_time").add(dbmsDialectEntry.getKey(), new CastFunction(Time.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_date").add(dbmsDialectEntry.getKey(), new CastFunction(java.sql.Date.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_timestamp").add(dbmsDialectEntry.getKey(), new CastFunction(Timestamp.class, dbmsDialectEntry.getValue()));
+            functions.get("cast_calendar").add(dbmsDialectEntry.getKey(), new CastFunction(Calendar.class, dbmsDialectEntry.getValue()));
+        }
 
         // group_concat
         

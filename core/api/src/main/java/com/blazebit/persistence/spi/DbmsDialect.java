@@ -169,4 +169,13 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public boolean supportsJoinsInRecursiveCte();
+
+    /**
+     * Returns the sql type for the java class type for usage in cast expressions.
+     *
+     * @param castType The java class type
+     * @return The sql type
+     * @since 1.2.0
+     */
+    public String getSqlType(Class<?> castType);
 }

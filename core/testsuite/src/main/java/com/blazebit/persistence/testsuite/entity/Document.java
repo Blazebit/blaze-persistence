@@ -16,11 +16,13 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -33,6 +35,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
@@ -58,6 +61,7 @@ public class Document extends Ownable implements Serializable {
     private int idx;
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
+    private List<Person> people = new ArrayList<Person>();
     private Calendar creationDate;
     private Calendar creationDate2;
     private Date lastModified;
@@ -186,6 +190,17 @@ public class Document extends Ownable implements Serializable {
 
     public void setContacts(Map<Integer, Person> localized) {
         this.contacts = localized;
+    }
+
+    @OneToMany
+    @OrderColumn(name = "people_idx", nullable = false)
+    @JoinTable(name = "document_people")
+    public List<Person> getPeople() {
+        return people;
+    }
+
+    public void setPeople(List<Person> people) {
+        this.people = people;
     }
 
     @Temporal(TemporalType.DATE)

@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence;
 
-import java.util.List;
+import java.util.Collection;
 
 import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 
@@ -473,10 +473,10 @@ public interface RestrictionBuilder<T> {
      * @param values The values on the right hand side
      * @return The parent predicate container builder
      */
-    public T in(List<?> values);
+    public T in(Collection<?> values);
 
     /**
-     * Like {@link RestrictionBuilder#in(java.util.List) } but the values will be wrapped in a {@link List}.
+     * Like {@link RestrictionBuilder#in(java.util.Collection) } but the values will be wrapped in a {@link Collection}.
      *
      * @param values The values on the right hand side
      * @return The parent predicate container builder
@@ -493,15 +493,15 @@ public interface RestrictionBuilder<T> {
     public T notInExpressions(String... parameterOrLiteralExpressions);
 
     /**
-     * Like {@link RestrictionBuilder#in(java.util.List) } but the result is wrapped in a NOT predicate.
+     * Like {@link RestrictionBuilder#in(java.util.Collection) } but the result is wrapped in a NOT predicate.
      *
      * @param values The values on the right hand side
      * @return The parent predicate container builder
      */
-    public T notIn(List<?> values);
+    public T notIn(Collection<?> values);
 
     /**
-     * Like {@link RestrictionBuilder#notIn(java.util.List) } but the values will be wrapped in a {@link List}.
+     * Like {@link RestrictionBuilder#notIn(java.util.Collection) } but the values will be wrapped in a {@link Collection}.
      *
      * @param values The values on the right hand side
      * @return The parent predicate container builder

@@ -83,9 +83,13 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
                 "limit",
                 "page_position",
                 "set_union", "set_union_all", "set_intersect", "set_intersect_all", "set_except", "set_except_all",
+                "treat_boolean", "treat_byte", "treat_short", "treat_integer", "treat_long", "treat_float", "treat_double",
+                "treat_character", "treat_string", "treat_biginteger", "treat_bigdecimal", "treat_time", "treat_date", "treat_timestamp", "treat_calendar",
+                "cast_boolean", "cast_byte", "cast_short", "cast_integer", "cast_long", "cast_float", "cast_double",
+                "cast_character", "cast_string", "cast_biginteger", "cast_bigdecimal", "cast_time", "cast_date", "cast_timestamp", "cast_calendar",
                 "group_concat",
-                "second_diff", "minute_diff", "hour_diff", "day_diff", "month_diff", "year_diff",
                 "second", "minute", "hour", "day", "month", "year",
+                "second_diff", "minute_diff", "hour_diff", "day_diff", "month_diff", "year_diff",
                 // test functions
                 "zero", "concatenate"
         ));

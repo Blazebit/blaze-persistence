@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import com.blazebit.persistence.impl.predicate.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -28,24 +29,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.Negatable;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -221,10 +204,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitEmpty_collection_comparison_expression(JPQLSelectExpressionParser.Empty_collection_comparison_expressionContext ctx) {
-        CompositeExpression expr = accept(ctx.collection_valued_path_expression());
-        expr.append(ctx.Empty_function().getText());
-        ((PathExpression) expr.getExpressions().get(0)).setUsedInCollectionFunction(true);
-        return expr;
+        PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
+        collectionPath.setUsedInCollectionFunction(true);
+        return new IsEmptyPredicate(collectionPath, ctx.not != null);
     }
 
     @Override
@@ -469,7 +451,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitComparisonExpression_string(JPQLSelectExpressionParser.ComparisonExpression_stringContext ctx) {
         return handleComparison(ctx.left, ctx.comparison_operator(), ctx.right);
     }
-    
+
     @Override
     public Expression visitQuantifiedComparisonExpression_string(QuantifiedComparisonExpression_stringContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
@@ -484,7 +466,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitQuantifiedComparisonExpression_arithmetic(QuantifiedComparisonExpression_arithmeticContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
     }
-    
+
     @Override
     public Expression visitComparisonExpression_entitytype(JPQLSelectExpressionParser.ComparisonExpression_entitytypeContext ctx) {
         return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
@@ -494,12 +476,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitQuantifiedComparisonExpression_entitytype(QuantifiedComparisonExpression_entitytypeContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
     }
-    
+
     @Override
     public Expression visitComparisonExpression_boolean(JPQLSelectExpressionParser.ComparisonExpression_booleanContext ctx) {
         return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
-    
+
     @Override
     public Expression visitQuantifiedComparisonExpression_boolean(QuantifiedComparisonExpression_booleanContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
@@ -514,12 +496,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitQuantifiedComparisonExpression_datetime(QuantifiedComparisonExpression_datetimeContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
     }
-    
+
     @Override
     public Expression visitComparisonExpression_entity(JPQLSelectExpressionParser.ComparisonExpression_entityContext ctx) {
         return handleComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right);
     }
-    
+
     @Override
     public Expression visitQuantifiedComparisonExpression_entity(QuantifiedComparisonExpression_entityContext ctx) {
         return handleQuantifiedComparison(ctx.left, ctx.equality_comparison_operator(), ctx.right, toQuantifier(ctx.quantifier));
@@ -536,7 +518,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         pred.setRight(right.accept(this));
         return pred;
     }
-    
+
     BinaryExpressionPredicate handleQuantifiedComparison(ParseTree left, ParseTree comparisonOperator, ParseTree right, PredicateQuantifier quantifier) {
         QuantifiableBinaryExpressionPredicate pred = (QuantifiableBinaryExpressionPredicate) comparisonOperator.accept(this);
         pred.setLeft(left.accept(this));
@@ -574,7 +556,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitLePredicate(JPQLSelectExpressionParser.LePredicateContext ctx) {
         return new LePredicate();
     }
-    
+
+    @Override
+    public Expression visitExists_expression(JPQLSelectExpressionParser.Exists_expressionContext ctx) {
+        return new ExistsPredicate(ctx.identifier().accept(this), ctx.not != null);
+    }
+
     @Override
     public Expression visitChildren(RuleNode node) {
         CompositeExpression result = null;
@@ -659,7 +646,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         }
         return expr;
     }
-    
+
     private PredicateQuantifier toQuantifier(Token token) {
         PredicateQuantifier quantifier;
         if (token == null) {
@@ -667,7 +654,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         } else {
             switch(token.getType()) {
                 case JPQLSelectExpressionLexer.ANY:
-                case JPQLSelectExpressionLexer.SOME: 
+                case JPQLSelectExpressionLexer.SOME:
                     quantifier = PredicateQuantifier.ANY;
                     break;
                 case JPQLSelectExpressionLexer.ALL:

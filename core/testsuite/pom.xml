@@ -332,6 +332,13 @@
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
 					<scope>compile</scope>
 				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-jpamodelgen</artifactId>
+					<version>1.3.0.Final</version>
+					<scope>provided</scope>
+				</dependency>
 			</dependencies>
 			<build>
 				<plugins>
@@ -404,6 +411,13 @@
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
 					<scope>compile</scope>
+				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-jpamodelgen</artifactId>
+					<version>${version.hibernate-4.3}</version>
+					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 			<build>
@@ -478,6 +492,13 @@
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
 					<scope>compile</scope>
 				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-jpamodelgen</artifactId>
+					<version>${version.hibernate-5}</version>
+					<scope>provided</scope>
+				</dependency>
 			</dependencies>
 			<build>
 				<plugins>
@@ -551,6 +572,13 @@
 					<artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
 					<scope>compile</scope>
 				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<dependency>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-jpamodelgen</artifactId>
+					<version>${version.hibernate-5.1}</version>
+					<scope>provided</scope>
+				</dependency>
 			</dependencies>
 			<build>
 				<plugins>
@@ -618,6 +646,13 @@
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
 					<scope>compile</scope>
+				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<dependency>
+					<groupId>org.eclipse.persistence</groupId>
+					<artifactId>org.eclipse.persistence.jpa.modelgen.processor</artifactId>
+					<version>${version.eclipselink}</version>
+					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 			<build>
@@ -716,6 +751,14 @@
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
 					<scope>compile</scope>
+				</dependency>
+				<!-- IntelliJ apparently needs the annotation processor here -->
+				<!-- The old version has a bug when generating the static metamodel for PolymorphicPropertyMapBase -->
+				<dependency>
+					<groupId>org.datanucleus</groupId>
+					<artifactId>datanucleus-jpa-query</artifactId>
+					<version>${version.datanucleus.jpa-5}</version>
+					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 			<build>
