@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -87,7 +88,7 @@ public class AbstractParserTest {
             e.printStackTrace(System.err);
         }
     }
-    
+
     @Before
     public void initTest() {
     	aggregateFunctions = new HashSet<String>();
@@ -219,5 +220,13 @@ public class AbstractParserTest {
 
     protected ArithmeticExpression divide(Expression left, Expression right) {
         return new ArithmeticExpression(left, right, ArithmeticOperator.DIVISION);
+    }
+
+    protected String render(Expression expression) {
+        SimpleQueryGenerator queryGen = new SimpleQueryGenerator();
+        StringBuilder sb = new StringBuilder();
+        queryGen.setQueryBuffer(sb);
+        expression.accept(queryGen);
+        return sb.toString();
     }
 }

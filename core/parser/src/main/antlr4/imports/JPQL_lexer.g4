@@ -159,25 +159,30 @@ Signum : SignumFragment
        ;
 
 Byte_literal
-     : Digits ByteSuffix
+     : DigitsNotZero ByteSuffix
+     | ZERO ByteSuffix
      ;
 
 Long_literal
-     : Digits LongSuffix
+     : DigitsNotZero LongSuffix
+     | ZERO LongSuffix
      ;
 
 Float_literal
     : Digits Exponent? FloatSuffix
-    | Digits? '.' Digits Exponent? FloatSuffix?
+    | Digits '.' Digits? Exponent? FloatSuffix?
+    | '.' Digits Exponent? FloatSuffix?
     ;
 
 Double_literal
     : Digits Exponent? DoubleSuffix
-    | Digits? '.' Digits Exponent? DoubleSuffix
+    | Digits '.' Digits* Exponent? DoubleSuffix
+    | '.' Digits Exponent? DoubleSuffix
     ;
 
 Integer_literal
-     : Digits
+     : DigitsNotZero
+     | ZERO
      ;
  
 Path_separator
@@ -198,6 +203,7 @@ fragment Time_string : DIGIT DIGIT? ':' DIGIT DIGIT ':' DIGIT DIGIT ('.' DIGIT*)
  
 fragment DIGIT: '0'..'9';
 fragment DIGIT_NOT_ZERO: '1'..'9';
+fragment ZERO: '0';
 fragment
 JavaLetter
 : [a-zA-Z$_] // these are the "java letters" below 0xFF
@@ -222,6 +228,10 @@ JavaLetterOrDigit
 
 fragment Digits
     :   DIGIT+
+    ;
+
+fragment DigitsNotZero
+    : DIGIT_NOT_ZERO DIGIT*
     ;
 
 fragment FloatSuffix : [fF];

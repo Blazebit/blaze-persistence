@@ -24,6 +24,10 @@ public enum ArithmeticOperator {
         return symbol;
     }
 
+    public boolean isAddOrSubtract() {
+        return this == ADDITION || this == SUBTRACTION;
+    }
+
     public static ArithmeticOperator fromSymbol(String symbol) {
         for (ArithmeticOperator op : ArithmeticOperator.values()) {
             if (op.getSymbol().equals(symbol)) {

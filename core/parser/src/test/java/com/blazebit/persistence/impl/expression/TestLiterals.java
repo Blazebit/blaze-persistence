@@ -60,6 +60,11 @@ public class TestLiterals extends AbstractParserTest {
         assertEquals(new NumericLiteral("1", NumericType.INTEGER), parse("1"));
     }
 
+    @Test(expected = SyntaxErrorException.class)
+    public void testIntegerLeadingZero(){
+        parse("01");
+    }
+
     @Test
     public void testFloatLiteral(){
         assertEquals(new NumericLiteral("1F", NumericType.FLOAT), parse("1F"));
@@ -73,6 +78,26 @@ public class TestLiterals extends AbstractParserTest {
     @Test
     public void testFloatLiteralWithDecimalAndExp(){
         assertEquals(new NumericLiteral("121.223e21F", NumericType.FLOAT), parse("121.223e21F"));
+    }
+
+    @Test
+    public void testFloatLiteralWithExp(){
+        assertEquals(new NumericLiteral("121.e21F", NumericType.FLOAT), parse("121.e21F"));
+    }
+
+    @Test
+    public void testDotFloatLiteral(){
+        assertEquals(new NumericLiteral(".23", NumericType.FLOAT), parse(".23"));
+    }
+
+    @Test
+    public void testDotFloatLiteralWithDecimalAndNegativeExp(){
+        assertEquals(new NumericLiteral(".23e-21F", NumericType.FLOAT), parse(".23e-21F"));
+    }
+
+    @Test
+    public void testDotFloatLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral(".23e21F", NumericType.FLOAT), parse(".23e21F"));
     }
 
     @Test
@@ -91,8 +116,28 @@ public class TestLiterals extends AbstractParserTest {
     }
 
     @Test
+    public void testDotDoubleLiteral(){
+        assertEquals(new NumericLiteral(".23D", NumericType.DOUBLE), parse(".23D"));
+    }
+
+    @Test
+    public void testDotDoubleLiteralWithDecimalAndNegativeExp(){
+        assertEquals(new NumericLiteral(".23e-21D", NumericType.DOUBLE), parse(".23e-21D"));
+    }
+
+    @Test
+    public void testDotDoubleLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral(".23e21D", NumericType.DOUBLE), parse(".23e21D"));
+    }
+
+    @Test
     public void testLongLiteral(){
         assertEquals(new NumericLiteral("1L", NumericType.LONG), parse("1L"));
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testLongLeadingZero(){
+        parse("01L");
     }
 
     @Test

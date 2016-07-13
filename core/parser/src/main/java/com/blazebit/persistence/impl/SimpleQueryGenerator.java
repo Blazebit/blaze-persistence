@@ -35,6 +35,7 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -500,19 +501,38 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(ArithmeticExpression expression) {
+        ArithmeticOperator op = expression.getOp();
         if (expression.getLeft() instanceof  ArithmeticExpression) {
-            sb.append("(");
-            expression.getLeft().accept(this);
-            sb.append(")");
+            ArithmeticExpression left = (ArithmeticExpression) expression.getLeft();
+            ArithmeticOperator leftOp = left.getOp();
+            if (leftOp == ArithmeticOperator.DIVISION // (1 / 3) / 4
+                    || !op.isAddOrSubtract() && leftOp.isAddOrSubtract() // (1 - 3) * 4
+                    ) {
+                sb.append("(");
+                expression.getLeft().accept(this);
+                sb.append(")");
+            } else {
+                expression.getLeft().accept(this);
+            }
         } else {
             expression.getLeft().accept(this);
         }
         sb.append(" ").append(expression.getOp().getSymbol()).append(" ");
 
         if (expression.getRight() instanceof  ArithmeticExpression) {
-            sb.append("(");
-            expression.getRight().accept(this);
-            sb.append(")");
+            ArithmeticExpression right = (ArithmeticExpression) expression.getRight();
+            ArithmeticOperator rightOp = right.getOp();
+
+            if (rightOp == ArithmeticOperator.DIVISION    // 1 / (3 / 4)
+                    || op == ArithmeticOperator.SUBTRACTION // 1 - (3 + 4)
+                    || !op.isAddOrSubtract() && rightOp.isAddOrSubtract() // 1 - (3 * 4)
+                    ) {
+                sb.append("(");
+                expression.getRight().accept(this);
+                sb.append(")");
+            } else {
+                expression.getRight().accept(this);
+            }
         } else {
             expression.getRight().accept(this);
         }
