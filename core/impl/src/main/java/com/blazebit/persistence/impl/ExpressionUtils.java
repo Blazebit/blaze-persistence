@@ -386,6 +386,32 @@ public class ExpressionUtils {
             }
 
             @Override
+            public void visit(IsNullPredicate predicate) {
+                super.visit(predicate);
+                predicate.setExpression(replacementTransformer.transform(predicate.getExpression(), null, false));
+            }
+
+            @Override
+            public void visit(BetweenPredicate predicate) {
+                super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
+                predicate.setStart(replacementTransformer.transform(predicate.getStart(), null, false));
+                predicate.setEnd(replacementTransformer.transform(predicate.getEnd(), null, false));
+            }
+
+            @Override
+            public void visit(LikePredicate predicate) {
+                super.visit(predicate);
+            }
+
+            @Override
+            public void visit(InPredicate predicate) {
+                super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
+                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+            }
+
+            @Override
             public void visit(ExistsPredicate predicate) {
                 super.visit(predicate);
                 predicate.setExpression(replacementTransformer.transform(predicate.getExpression(), null, false));
@@ -394,30 +420,35 @@ public class ExpressionUtils {
             @Override
             public void visit(EqPredicate predicate) {
                 super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
                 predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 
             @Override
             public void visit(GtPredicate predicate) {
                 super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
                 predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 
             @Override
             public void visit(GePredicate predicate) {
                 super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
                 predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 
             @Override
             public void visit(LtPredicate predicate) {
                 super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
                 predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 
             @Override
             public void visit(LePredicate predicate) {
                 super.visit(predicate);
+                predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
                 predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
             }
 

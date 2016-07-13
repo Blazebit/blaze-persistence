@@ -321,7 +321,8 @@ qualified_identification_variable : name=ENTRY '('collection_valued_path_express
                     | expr=datetime_expression (not=NOT)? BETWEEN bound1=datetime_expression AND bound2=datetime_expression # BetweenDatetime
                     ;
 
- in_expression : (state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter )
+// TODO: the cases for identifier are actually not JPA compliant and is only required for managing a placeholder that is later replaced by a subquery
+ in_expression : (/* Placeholder case */ Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
                ;
  
  in_item : literal 
