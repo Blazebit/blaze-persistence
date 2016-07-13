@@ -15,22 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -49,7 +34,6 @@ import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 import java.util.List;
 
@@ -512,6 +496,39 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append('[');
         expression.getIndex().accept(this);
         sb.append(']');
+    }
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        if (expression.getLeft() instanceof  ArithmeticExpression) {
+            sb.append("(");
+            expression.getLeft().accept(this);
+            sb.append(")");
+        } else {
+            expression.getLeft().accept(this);
+        }
+        sb.append(" ").append(expression.getOp().getSymbol()).append(" ");
+
+        if (expression.getRight() instanceof  ArithmeticExpression) {
+            sb.append("(");
+            expression.getRight().accept(this);
+            sb.append(")");
+        } else {
+            expression.getRight().accept(this);
+        }
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        if (expression.isInvertSignum()) {
+            sb.append('-');
+        }
+        expression.getExpression().accept(this);
+    }
+
+    @Override
+    public void visit(NumericLiteral expression) {
+        sb.append(expression.getValue());
     }
 
     private void wrapNonSubquery(Expression p, StringBuilder sb) {

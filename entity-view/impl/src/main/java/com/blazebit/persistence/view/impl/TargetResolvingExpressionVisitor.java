@@ -22,21 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -232,6 +218,21 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
 
     @Override
     public void visit(SubqueryExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(NumericLiteral expression) {
         invalid(expression);
     }
 

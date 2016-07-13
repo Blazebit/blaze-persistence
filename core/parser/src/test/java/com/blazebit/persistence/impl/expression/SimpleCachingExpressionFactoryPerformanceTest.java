@@ -61,13 +61,13 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     public void testCreateSimpleExpressionPerformanceNonCaching() {
         testCreateSimpleExpressionPerformance(nonCachingExpressionFactory);
     }
-    
+
     @BenchmarkOptions(benchmarkRounds = 10000, warmupRounds = 1000, concurrency = 4)
     @Test
     public void testCreateSimpleExpressionPerformanceCaching() {
         testCreateSimpleExpressionPerformance(cachingExpressionFactory);
     }
-    
+
     private void testCreateSimpleExpressionPerformance(ExpressionFactory ef) {
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         

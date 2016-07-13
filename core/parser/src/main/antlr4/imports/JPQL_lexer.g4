@@ -125,10 +125,6 @@ MEMBER: [Mm][Ee][Mm][Bb][Ee][Rr];
 
 OF: [Oo][Ff];
 
-//Empty_function : [Ii][Ss] ([ ]+ NOT_FRAG [ ]+)? [Ee][Mm][Pp][Tt][Yy];
-
-//Member_of_function : [Mm][Ee][Mm][Bb][Ee][Rr] ([ ]+ [Oo][Ff])?;
-
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
  
 Star_operator : '*';
@@ -158,19 +154,32 @@ Not_equal_operator
      : '<>'
      | '!='
      ;
- 
-Numeric_literal
-     : '0' IntegerTypeSuffix?
-     | DIGIT_NOT_ZERO Digits* IntegerTypeSuffix?
 
-     | '0' FloatTypeSuffix?
-     | DIGIT_NOT_ZERO Digits* FloatTypeSuffix?
-     | '0' ExponentPart FloatTypeSuffix?
-     | DIGIT_NOT_ZERO Digits* ExponentPart FloatTypeSuffix?
-     | '0'? '.' Digits ExponentPart? FloatTypeSuffix?
-     | DIGIT_NOT_ZERO Digits* '.' Digits ExponentPart? FloatTypeSuffix?
+Signum : SignumFragment
+       ;
+
+Byte_literal
+     : Digits ByteSuffix
      ;
 
+Long_literal
+     : Digits LongSuffix
+     ;
+
+Float_literal
+    : Digits Exponent? FloatSuffix
+    | Digits? '.' Digits Exponent? FloatSuffix?
+    ;
+
+Double_literal
+    : Digits Exponent? DoubleSuffix
+    | Digits? '.' Digits Exponent? DoubleSuffix
+    ;
+
+Integer_literal
+     : Digits
+     ;
+ 
 Path_separator
      : '.'
      ;
@@ -211,42 +220,26 @@ JavaLetterOrDigit
 {Character.isJavaIdentifierPart(Character.toCodePoint((char)_input.LA(-2), (char)_input.LA(-1)))}?
 ;
 
-fragment IntegerTypeSuffix: [Ll] | ([Bb][Ii]);
-
-fragment
-Digits
+fragment Digits
     :   DIGIT+
     ;
 
-fragment
-DecimalFloatingPointLiteral
-    :   Digits '.' Digits? ExponentPart? FloatTypeSuffix?
-    |   '.' Digits ExponentPart? FloatTypeSuffix?
-    |   Digits ExponentPart FloatTypeSuffix?
-    |   Digits FloatTypeSuffix
+fragment FloatSuffix : [fF];
+
+fragment DoubleSuffix : [dD];
+
+fragment LongSuffix : [lL];
+
+fragment ByteSuffix : [bB];
+
+fragment Exponent
+    : [eE] SignedInteger
     ;
 
-fragment
-ExponentPart
-    :   ExponentIndicator SignedInteger
+fragment SignedInteger
+    : SignumFragment? Digits
     ;
 
-fragment
-ExponentIndicator
-    :   [eE]
-    ;
-
-fragment
-SignedInteger
-    :   Sign? Digits
-    ;
-
-fragment
-Sign
-    :   [+-]
-    ;
-
-fragment
-FloatTypeSuffix
-    :   [fFdD] | ([Bb][Dd])
+fragment SignumFragment
+    : ('+' | '-')
     ;

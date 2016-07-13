@@ -56,9 +56,48 @@ public class TestLiterals extends AbstractParserTest {
     }
     
     @Test
-    public void testNumericLiteral(){
-        FooExpression result = (FooExpression) parse("1");
-        assertEquals(new FooExpression("1"), result);
+    public void testIntegerLiteral(){
+        assertEquals(new NumericLiteral("1", NumericType.INTEGER), parse("1"));
+    }
+
+    @Test
+    public void testFloatLiteral(){
+        assertEquals(new NumericLiteral("1F", NumericType.FLOAT), parse("1F"));
+    }
+
+    @Test
+    public void testFloatLiteralWithDecimal(){
+        assertEquals(new NumericLiteral("121.223F", NumericType.FLOAT), parse("121.223F"));
+    }
+
+    @Test
+    public void testFloatLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral("121.223e21F", NumericType.FLOAT), parse("121.223e21F"));
+    }
+
+    @Test
+    public void testDoubleLiteral(){
+        assertEquals(new NumericLiteral("1D", NumericType.DOUBLE), parse("1D"));
+    }
+
+    @Test
+    public void testDoubleLiteralWithDecimal(){
+        assertEquals(new NumericLiteral("121.223D", NumericType.DOUBLE), parse("121.223D"));
+    }
+
+    @Test
+    public void testDoubleLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral("121.223e21D", NumericType.DOUBLE), parse("121.223e21D"));
+    }
+
+    @Test
+    public void testLongLiteral(){
+        assertEquals(new NumericLiteral("1L", NumericType.LONG), parse("1L"));
+    }
+
+    @Test
+    public void testByteLiteral(){
+        assertEquals(new NumericLiteral("1B", NumericType.BYTE), parse("1B"));
     }
     
     @Test
@@ -103,4 +142,5 @@ public class TestLiterals extends AbstractParserTest {
         FooExpression result = (FooExpression) parse("{ts '1991-05-21 11:59:59.0'}");
         assertEquals(new FooExpression("{ts '1991-05-21 11:59:59.0'}"), result);
     }
+
 }

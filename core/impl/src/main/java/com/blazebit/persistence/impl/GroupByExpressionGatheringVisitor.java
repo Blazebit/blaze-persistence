@@ -3,21 +3,7 @@ package com.blazebit.persistence.impl;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 
 class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
@@ -62,6 +48,16 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
     @Override
     public void visit(ParameterExpression expression) {
+    }
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        handleExpression(expression);
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        handleExpression(expression);
     }
 
     @Override

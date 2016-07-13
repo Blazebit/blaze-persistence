@@ -38,18 +38,7 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PathReference;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -873,9 +862,14 @@ public class JoinManager extends AbstractManager {
                 sb.append('_');
                 sb.append(indexPathExpr.getField().replaceAll("\\.", "_"));
             }
-        } else {
+        } else if (indexExpr instanceof FooExpression){
             sb.append('_');
             sb.append(indexExpr.toString().replaceAll("\\.", "_"));
+        } else if (indexExpr instanceof NumericLiteral) {
+            sb.append('_');
+            sb.append(((NumericLiteral) indexExpr).getValue());
+        } else {
+            throw new IllegalStateException("Invalid array index expression " + indexExpr.toString());
         }
 
         return sb.toString();
@@ -1324,8 +1318,7 @@ public class JoinManager extends AbstractManager {
     /**
      * Base node will NOT be fetched
      *
-     * @param baseNode
-     * @param path
+     * @param node
      */
     private void fetchPath(JoinNode node) {
         JoinNode currentNode = node;

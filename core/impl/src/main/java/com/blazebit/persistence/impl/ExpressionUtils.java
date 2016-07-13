@@ -67,7 +67,13 @@ public class ExpressionUtils {
             return false;
         } else if (expr instanceof LiteralExpression) {
             return false;
-        } else if (expr instanceof NullExpression) {
+        } else if (expr instanceof NumericLiteral) {
+            return false;
+        } else if (expr instanceof ArithmeticFactor) {
+            return isUnique(metamodel, ((ArithmeticFactor) expr).getExpression());
+        } else if (expr instanceof ArithmeticExpression) {
+            return false;
+        } if (expr instanceof NullExpression) {
             // The actual semantics of NULL are, that NULL != NULL
             return true;
         } else {
@@ -184,9 +190,19 @@ public class ExpressionUtils {
             return false;
         } else if (expr instanceof NullExpression) {
             return true;
+        } else if (expr instanceof NumericLiteral) {
+            return false;
+        } else if (expr instanceof ArithmeticFactor) {
+            return isNullable(metamodel, ((ArithmeticFactor) expr).getExpression());
+        } else if (expr instanceof ArithmeticExpression) {
+            return isNullable(metamodel, (ArithmeticExpression) expr);
         } else {
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for nullability!");
         }
+    }
+
+    private static boolean isNullable(Metamodel metamodel, ArithmeticExpression arithmeticExpression) {
+        return isNullable(metamodel, arithmeticExpression.getLeft()) || isNullable(metamodel, arithmeticExpression.getRight());
     }
 
     private static boolean isNullable(Metamodel metamodel, CompositeExpression expr) {
@@ -383,6 +399,19 @@ public class ExpressionUtils {
                     transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
                 }
                 expression.setExpressions(transformed);
+            }
+
+            @Override
+            public void visit(ArithmeticExpression expression) {
+                super.visit(expression);
+                expression.setLeft(replacementTransformer.transform(expression.getLeft(), null, false));
+                expression.setRight(replacementTransformer.transform(expression.getRight(), null, false));
+            }
+
+            @Override
+            public void visit(ArithmeticFactor expression) {
+                super.visit(expression);
+                expression.setExpression(replacementTransformer.transform(expression.getExpression(), null, false));
             }
 
             @Override

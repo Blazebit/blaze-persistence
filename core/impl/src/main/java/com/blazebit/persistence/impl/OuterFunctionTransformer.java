@@ -18,10 +18,7 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.*;
 
 /**
  * This Transformer runs through the expressions of the query
@@ -54,6 +51,11 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
                 transformed.getExpressions().add(transform(expressions.get(i), fromClause, joinRequired));
             }
             return transformed;
+        } else if (original instanceof ArithmeticExpression) {
+            ArithmeticExpression arithmeticExpression = (ArithmeticExpression) original;
+            Expression transformedLeft = transform(arithmeticExpression.getLeft(), fromClause, joinRequired);
+            Expression transformedRight = transform(arithmeticExpression.getRight(), fromClause, joinRequired);
+            return new ArithmeticExpression(transformedLeft, transformedRight, arithmeticExpression.getOp());
         } else if (original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
             FunctionExpression func = (FunctionExpression) original;
             List<Expression> transformed = new ArrayList<Expression>();

@@ -119,7 +119,22 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         expression.getCondition().accept(this);
         expression.getResult().accept(this);
     }
-    
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        expression.getLeft().accept(this);
+        expression.getRight().accept(this);
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        expression.getExpression().accept(this);
+    }
+
+    @Override
+    public void visit(NumericLiteral expression) {
+    }
+
     @Override
     public void visit(AndPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
