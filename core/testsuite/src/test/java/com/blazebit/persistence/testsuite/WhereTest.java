@@ -483,7 +483,7 @@ public class WhereTest extends AbstractCoreTest {
     public void testWhereRightSideCaseSubqueryExpression() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("d.id").lt().caseWhenSubquery("s", "s+1").from(Person.class).select("COUNT(person.id)").end().geExpression("4").thenExpression("4").otherwiseExpression("1");
-        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN (SELECT COUNT(person.id) FROM Person person)+1 >= 4 THEN 4 ELSE 1 END";
+        String expected = "SELECT d FROM Document d WHERE d.id < CASE WHEN (SELECT COUNT(person.id) FROM Person person) + 1 >= 4 THEN 4 ELSE 1 END";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }

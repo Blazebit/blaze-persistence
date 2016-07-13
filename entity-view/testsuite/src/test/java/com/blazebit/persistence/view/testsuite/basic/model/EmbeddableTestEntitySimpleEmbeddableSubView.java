@@ -33,7 +33,7 @@ public interface EmbeddableTestEntitySimpleEmbeddableSubView {
     
     // NOTE: we kind of need one value to be a long, otherwise the int operation will fail because of the overflow
     // For the ORM we also need to provide the expected type so that it will be fetched with the appropriate JDBC type 
-    @Mapping("FUNCTION('TREAT_LONG', " + 0x80000000L + " + 1)")
+    @Mapping("FUNCTION('TREAT_LONG', " + 0x80000000L + "L + 1)")
     public Long getStaticLong();
     
     @Mapping("1 + 1")

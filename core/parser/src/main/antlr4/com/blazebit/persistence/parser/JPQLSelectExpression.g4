@@ -100,9 +100,18 @@ general_path_element : simple_path_element
                      ;
 
 //TODO: allow only in certain clauses??
-array_expression : simple_path_element '[' arithmetic_expression ']' #ArrayExpressionArithmeticIndex
-				  | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
-                 ;
+//array_expression : simple_path_element '[' arithmetic_expression ']' #ArrayExpressionArithmeticIndex
+//				 | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
+//                 ;
+
+array_expression : simple_path_element '[' Input_parameter ']' #ArrayExpressionParameterIndex
+                | simple_path_element '[' state_field_path_expression ']' #ArrayExpressionPathIndex
+                | simple_path_element '[' single_element_path_expression ']' #ArrayExpressionSingleElementPathIndex
+                | simple_path_element '[' Integer_literal ']' #ArrayExpressionIntegerLiteralIndex
+                | simple_path_element '[' string_literal ']' #ArrayExpressionStringLiteralIndex
+                ;
+
+
 
 general_subpath : general_path_start('.'general_path_element)*
                 ;
@@ -147,14 +156,14 @@ outer_expression : Outer_function '(' single_valued_path_expression  ')'
                  ;
 
 arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
-                      | arithmetic_expression op=( '+' | '-' ) arithmetic_term # ArithmeticExpressionPlusMinus
+                      | arithmetic_expression op=Signum arithmetic_term # ArithmeticExpressionPlusMinus
                       ;
 
 arithmetic_term : arithmetic_factor # ArithmeticTermFactor
                 | term=arithmetic_term op=( '*' | '/' ) factor=arithmetic_factor # ArithmeticMultDiv
                 ;
 
-arithmetic_factor : signum=( '+' | '-' )? arithmetic_primary;
+arithmetic_factor : signum=Signum? arithmetic_primary;
 
 arithmetic_primary : state_field_path_expression # ArithmeticPrimary
                    | single_element_path_expression # ArithmeticPrimary
@@ -280,6 +289,7 @@ literal
 numeric_literal
     : Integer_literal
     | Long_literal
+    | Byte_literal
     | Float_literal
     | Double_literal
     ;
@@ -297,6 +307,7 @@ literal_temporal
 trim_character : string_literal
                | Input_parameter
                ;
+
 /* conditional expression stuff for case when in entity view extension */
 conditional_expression : conditional_term # ConditionalExpression
                        | conditional_expression or=OR conditional_term # ConditionalExpression_or
@@ -313,15 +324,15 @@ conditional_primary : simple_cond_expression # ConditionalPrimary_simple
                     | '('conditional_expression')' # ConditionalPrimary
                     ;
 
- simple_cond_expression : comparison_expression |
-                            between_expression |
-                            like_expression |
-                            in_expression |
-                            null_comparison_expression |
-                            empty_collection_comparison_expression |
-                            collection_member_expression |
-                            exists_expression
-                        ;
+simple_cond_expression : comparison_expression
+                       | between_expression
+                       | like_expression
+                       | in_expression
+                       | null_comparison_expression
+                       | empty_collection_comparison_expression
+                       | collection_member_expression
+                       | exists_expression
+                       ;
 
 between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithmetic_expression AND bound2=arithmetic_expression # BetweenArithmetic
                    | expr=string_expression (not=NOT)? BETWEEN bound1=string_expression AND bound2=string_expression # BetweenString
@@ -349,13 +360,13 @@ escape_character : Character_literal
 null_comparison_expression : (single_valued_path_expression | Input_parameter) IS (not=NOT)? NULL
                            ;
 
- empty_collection_comparison_expression : collection_valued_path_expression IS (not=NOT)? EMPTY
-                                        ;
+empty_collection_comparison_expression : collection_valued_path_expression IS (not=NOT)? EMPTY
+                                       ;
 
- collection_member_expression : entity_or_value_expression (not=NOT)? MEMBER OF? collection_valued_path_expression
-                              ;
+collection_member_expression : entity_or_value_expression (not=NOT)? MEMBER OF? collection_valued_path_expression
+                             ;
 
- exists_expression : (not=NOT)? EXISTS identifier;
+exists_expression : (not=NOT)? EXISTS identifier;
 
 entity_or_value_expression : state_field_path_expression
                            | simple_entity_or_value_expression
@@ -410,71 +421,71 @@ case_operand : state_field_path_expression
              | type_discriminator
              ;
 
- keyword :KEY
-        | VALUE
-        | ENTRY
-        | AVG
-        | SUM
-        | MAX
-        | MIN
-        | COUNT
-        | DISTINCT
-        | ENUM
-        | ENTITY
-        | TYPE
-        | LENGTH
-        | LOCATE
-        | ABS
-        | SQRT
-        | MOD
-        | INDEX
-        
- /* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
- 
-        /*
-        | CURRENT_DATE
-        | CURRENT_TIME
-        | CURRENT_TIMESTAMP
-        */
-        
-        | CONCAT
-        | SUBSTRING
-        | TRIM
-        | LOWER
-        | UPPER
-        | FROM
-        | LEADING
-        | TRAILING
-        | BOTH
-        | FUNCTION
-        | COALESCE
-        | NULLIF
-        | NOT
-        | OR
-        | AND
-        | BETWEEN
-        | IN
-        | LIKE
-        | ESCAPE
-        | IS
-        | NULL
-        | CASE
-        | ELSE
-        | END
-        | WHEN
-        | THEN
-        | SIZE
-        | ALL
-        | ANY
-        | SOME
-        | EXISTS
-        | EMPTY
-        | MEMBER
-        | OF
-        | Outer_function
-        ;
- 
- identifier : Identifier
-            | keyword
-            ;
-             
+keyword :KEY
+       | VALUE
+       | ENTRY
+       | AVG
+       | SUM
+       | MAX
+       | MIN
+       | COUNT
+       | DISTINCT
+       | ENUM
+       | ENTITY
+       | TYPE
+       | LENGTH
+       | LOCATE
+       | ABS
+       | SQRT
+       | MOD
+       | INDEX
+       
+/* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
+
+       /*
+       | CURRENT_DATE
+       | CURRENT_TIME
+       | CURRENT_TIMESTAMP
+       */
+       
+       | CONCAT
+       | SUBSTRING
+       | TRIM
+       | LOWER
+       | UPPER
+       | FROM
+       | LEADING
+       | TRAILING
+       | BOTH
+       | FUNCTION
+       | COALESCE
+       | NULLIF
+       | NOT
+       | OR
+       | AND
+       | BETWEEN
+       | IN
+       | LIKE
+       | ESCAPE
+       | IS
+       | NULL
+       | CASE
+       | ELSE
+       | END
+       | WHEN
+       | THEN
+       | SIZE
+       | ALL
+       | ANY
+       | SOME
+       | EXISTS
+       | EMPTY
+       | MEMBER
+       | OF
+       | Outer_function
+       ;
+
+identifier : Identifier
+           | keyword // TODO: why?
+           ;
+            

@@ -134,7 +134,22 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         expression.getResult().accept(this);
         return expression;
     }
-    
+
+    @Override
+    public Expression visit(ArithmeticExpression expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(ArithmeticFactor expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(NumericLiteral expression) {
+        return expression;
+    }
+
     @Override
     public Expression visit(AndPredicate predicate) {
         return visit((MultinaryPredicate) predicate);

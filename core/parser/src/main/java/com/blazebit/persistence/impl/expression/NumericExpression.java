@@ -5,5 +5,8 @@ package com.blazebit.persistence.impl.expression;
  * by Moritz Becker (moritz.becker@gmx.at)
  * on 12.07.2016.
  */
-public interface NumericExpression {
+public interface NumericExpression extends Expression {
+
+    public NumericType getNumericType();
+
 }

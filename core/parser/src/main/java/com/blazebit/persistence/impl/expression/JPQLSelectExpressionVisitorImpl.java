@@ -15,12 +15,11 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
 import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
+import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -29,20 +28,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
-import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionArithmeticIndexContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionStringIndexContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_arithmeticContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_booleanContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_datetimeContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_entityContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_entitytypeContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_stringContext;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TrimFunctionContext;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -52,10 +41,16 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     private final CommonTokenStream tokens;
     private final Set<String> aggregateFunctions;
+    private final boolean optimize;
 
     public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions) {
+        this(tokens, aggregateFunctions, false);
+    }
+
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, boolean optimize) {
         this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
+        this.optimize = optimize;
     }
 
     @Override
@@ -236,21 +231,57 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitArrayExpressionArithmeticIndex(ArrayExpressionArithmeticIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.arithmetic_expression().accept(this)));
+    public Expression visitArrayExpressionParameterIndex(JPQLSelectExpressionParser.ArrayExpressionParameterIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Input_parameter().accept(this)));
     }
-    
+
     @Override
-    public Expression visitArrayExpressionStringIndex(ArrayExpressionStringIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.string_expression().accept(this)));
+    public Expression visitArrayExpressionPathIndex(JPQLSelectExpressionParser.ArrayExpressionPathIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.state_field_path_expression().accept(this)));
     }
-    
+
+    @Override
+    public Expression visitArrayExpressionSingleElementPathIndex(ArrayExpressionSingleElementPathIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.single_element_path_expression().accept(this)));
+    }
+
+    @Override
+    public Expression visitArrayExpressionIntegerLiteralIndex(ArrayExpressionIntegerLiteralIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Integer_literal().accept(this)));
+    }
+
+    @Override
+    public Expression visitArrayExpressionStringLiteralIndex(ArrayExpressionStringLiteralIndexContext ctx) {
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.string_literal().accept(this)));
+    }
+
     @Override
     public Expression visitArithmeticExpressionPlusMinus(JPQLSelectExpressionParser.ArithmeticExpressionPlusMinusContext ctx) {
-        CompositeExpression expr = accept(ctx.arithmetic_expression());
-        expr.append(getTextWithSurroundingHiddenTokens(ctx.op));
-        acceptAndCompose(expr, ctx.arithmetic_term());
-        return expr;
+        ArithmeticOperator op = ArithmeticOperator.fromSymbol(ctx.op.getText());
+        if (op == null) {
+            throw new IllegalStateException("Unexpected arithmetic operator symbol [" + ctx.op.getText() + "]");
+        }
+        return new ArithmeticExpression(
+                ctx.arithmetic_expression().accept(this),
+                ctx.arithmetic_term().accept(this),
+                op);
+    }
+
+    @Override
+    public Expression visitArithmeticPrimaryParanthesis(JPQLSelectExpressionParser.ArithmeticPrimaryParanthesisContext ctx) {
+        return ctx.arithmetic_expression().accept(this);
+    }
+
+    @Override
+    public Expression visitArithmeticMultDiv(JPQLSelectExpressionParser.ArithmeticMultDivContext ctx) {
+        ArithmeticOperator op = ArithmeticOperator.fromSymbol(ctx.op.getText());
+        if (op == null) {
+            throw new IllegalStateException("Unexpected arithmetic operator symbol [" + ctx.op.getText() + "]");
+        }
+        return new ArithmeticExpression(
+                ctx.arithmetic_term().accept(this),
+                ctx.arithmetic_factor().accept(this),
+                op);
     }
 
     @Override
@@ -266,23 +297,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitBetweenString(JPQLSelectExpressionParser.BetweenStringContext ctx) {
         return new BetweenPredicate(ctx.expr.accept(this), ctx.bound1.accept(this), ctx.bound2.accept(this), ctx.not != null);
-    }
-
-    @Override
-    public Expression visitArithmeticPrimaryParanthesis(JPQLSelectExpressionParser.ArithmeticPrimaryParanthesisContext ctx) {
-        CompositeExpression expr = accept(ctx.arithmetic_expression());
-        expr.prepend("(" + tokenListToString(tokens.getHiddenTokensToLeft(ctx.getStart().getTokenIndex())).toString());
-        expr.append(")");
-        return expr;
-    }
-
-    @Override
-    public Expression visitArithmeticMultDiv(JPQLSelectExpressionParser.ArithmeticMultDivContext ctx) {
-        CompositeExpression expr = accept(ctx.term);
-        expr.append(getTextWithSurroundingHiddenTokens(ctx.op));
-        acceptAndCompose(expr, ctx.factor);
-
-        return expr;
     }
 
     @Override
@@ -329,12 +343,44 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitArithmetic_factor(JPQLSelectExpressionParser.Arithmetic_factorContext ctx) {
         if (ctx.signum != null) {
-            CompositeExpression expr = accept(ctx.arithmetic_primary());
-            expr.prepend(ctx.signum.getText() + tokenListToString(tokens.getHiddenTokensToRight(ctx.signum.getTokenIndex())));
-            return expr;
+            Expression expression = (Expression) ctx.arithmetic_primary().accept(this);
+
+            boolean invertSignum = "-".equals(ctx.signum.getText());
+            if (optimize && expression instanceof ArithmeticFactor && invertSignum) {
+                ArithmeticFactor arithmeticFactor = (ArithmeticFactor) expression;
+                arithmeticFactor.setInvertSignum(!arithmeticFactor.isInvertSignum());
+                return arithmeticFactor;
+            } else {
+                return new ArithmeticFactor(expression, invertSignum);
+            }
         } else {
             return ctx.arithmetic_primary().accept(this);
         }
+    }
+
+    @Override
+    public Expression visitNumeric_literal(JPQLSelectExpressionParser.Numeric_literalContext ctx) {
+        NumericType numericType;
+        String value;
+        if (ctx.Byte_literal() != null) {
+            numericType = NumericType.BYTE;
+            value = ctx.Byte_literal().getText();
+        } else if (ctx.Integer_literal() != null) {
+            numericType = NumericType.INTEGER;
+            value = ctx.Integer_literal().getText();
+        } else if (ctx.Long_literal() != null) {
+            numericType = NumericType.LONG;
+            value = ctx.Long_literal().getText();
+        } else if (ctx.Float_literal() != null) {
+            numericType = NumericType.FLOAT;
+            value = ctx.Float_literal().getText();
+        } else if (ctx.Double_literal() != null) {
+            numericType = NumericType.DOUBLE;
+            value = ctx.Double_literal().getText();
+        } else {
+            throw new IllegalStateException("Could not find literal in context [" + ctx.getText() + "]");
+        }
+        return new NumericLiteral(value, numericType);
     }
 
     @Override

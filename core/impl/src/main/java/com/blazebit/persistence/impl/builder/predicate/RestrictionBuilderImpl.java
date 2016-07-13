@@ -15,8 +15,10 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import com.blazebit.persistence.BetweenBuilder;
 import com.blazebit.persistence.LikeBuilder;
@@ -34,11 +36,7 @@ import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GePredicate;
@@ -503,7 +501,11 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         verifyBuilderEnded();
 
         this.predicate = new InPredicate(leftExpression, null, negated);
-        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, expressionFactory.createArithmeticExpression(expression)) {
+        List<Expression> compositeElements = new ArrayList<Expression>();
+        compositeElements.add(new FooExpression("("));
+        compositeElements.add(expressionFactory.createArithmeticExpression(expression));
+        compositeElements.add(new FooExpression(")"));
+        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, new CompositeExpression(compositeElements)) {
 
             @Override
             public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {

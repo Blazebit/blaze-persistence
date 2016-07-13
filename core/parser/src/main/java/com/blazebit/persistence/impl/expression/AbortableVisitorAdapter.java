@@ -142,6 +142,27 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
         }
         return expression.getResult().accept(this);
     }
+
+    @Override
+    public Boolean visit(ArithmeticExpression expression) {
+        if (expression.getLeft().accept(this)) {
+            return true;
+        }
+        if (expression.getRight().accept(this)) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Boolean visit(ArithmeticFactor expression) {
+        return expression.getExpression().accept(this);
+    }
+
+    @Override
+    public Boolean visit(NumericLiteral expression) {
+        return false;
+    }
     
     @Override
     public Boolean visit(AndPredicate predicate) {

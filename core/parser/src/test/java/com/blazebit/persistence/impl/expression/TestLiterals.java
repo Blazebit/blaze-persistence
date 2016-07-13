@@ -57,44 +57,47 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testIntegerLiteral(){
-        FooExpression result = (FooExpression) parse("1");
-        assertEquals(new FooExpression("1"), result);
+        assertEquals(new NumericLiteral("1", NumericType.INTEGER), parse("1"));
     }
 
     @Test
     public void testFloatLiteral(){
-        FooExpression result = (FooExpression) parse("1F");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("1F", NumericType.FLOAT), parse("1F"));
     }
 
     @Test
     public void testFloatLiteralWithDecimal(){
-        FooExpression result = (FooExpression) parse("121.223F");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("121.223F", NumericType.FLOAT), parse("121.223F"));
     }
 
     @Test
     public void testFloatLiteralWithDecimalAndExp(){
-        FooExpression result = (FooExpression) parse("121.223e21F");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("121.223e21F", NumericType.FLOAT), parse("121.223e21F"));
     }
 
     @Test
     public void testDoubleLiteral(){
-        FooExpression result = (FooExpression) parse("1D");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("1D", NumericType.DOUBLE), parse("1D"));
     }
 
     @Test
     public void testDoubleLiteralWithDecimal(){
-        FooExpression result = (FooExpression) parse("121.223D");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("121.223D", NumericType.DOUBLE), parse("121.223D"));
     }
 
     @Test
     public void testDoubleLiteralWithDecimalAndExp(){
-        FooExpression result = (FooExpression) parse("121.223e21D");
-        assertEquals(null, result);
+        assertEquals(new NumericLiteral("121.223e21D", NumericType.DOUBLE), parse("121.223e21D"));
+    }
+
+    @Test
+    public void testLongLiteral(){
+        assertEquals(new NumericLiteral("1L", NumericType.LONG), parse("1L"));
+    }
+
+    @Test
+    public void testByteLiteral(){
+        assertEquals(new NumericLiteral("1B", NumericType.BYTE), parse("1B"));
     }
     
     @Test

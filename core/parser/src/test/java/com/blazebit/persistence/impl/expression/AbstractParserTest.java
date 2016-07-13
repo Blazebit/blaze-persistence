@@ -184,4 +184,40 @@ public class AbstractParserTest {
     protected ParameterExpression parameter(String name) {
         return new ParameterExpression(name);
     }
+
+    protected NumericLiteral _byte(String value) {
+        return new NumericLiteral(value, NumericType.BYTE);
+    }
+
+    protected NumericLiteral _int(String value) {
+        return new NumericLiteral(value, NumericType.INTEGER);
+    }
+
+    protected NumericLiteral _long(String value) {
+        return new NumericLiteral(value, NumericType.LONG);
+    }
+
+    protected NumericLiteral _float(String value) {
+        return new NumericLiteral(value, NumericType.FLOAT);
+    }
+
+    protected NumericLiteral _double(String value) {
+        return new NumericLiteral(value, NumericType.DOUBLE);
+    }
+
+    protected ArithmeticExpression add(Expression left, Expression right) {
+        return new ArithmeticExpression(left, right, ArithmeticOperator.ADDITION);
+    }
+
+    protected ArithmeticExpression subtract(Expression left, Expression right) {
+        return new ArithmeticExpression(left, right, ArithmeticOperator.SUBTRACTION);
+    }
+
+    protected ArithmeticExpression multiply(Expression left, Expression right) {
+        return new ArithmeticExpression(left, right, ArithmeticOperator.MULTIPLICATION);
+    }
+
+    protected ArithmeticExpression divide(Expression left, Expression right) {
+        return new ArithmeticExpression(left, right, ArithmeticOperator.DIVISION);
+    }
 }

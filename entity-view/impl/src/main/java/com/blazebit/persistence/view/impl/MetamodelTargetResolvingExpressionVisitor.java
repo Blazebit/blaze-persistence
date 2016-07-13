@@ -26,22 +26,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -361,6 +346,27 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
             // We can't infer a type here
             // TODO: Not sure what happens when this is the result node of a case when
             super.visit(expression);
+        }
+    }
+
+    @Override
+    public void visit(ArithmeticExpression expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
+        }
+    }
+
+    @Override
+    public void visit(ArithmeticFactor expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
+        }
+    }
+
+    @Override
+    public void visit(NumericLiteral expression) {
+        if (expression.getNumericType() != null) {
+            currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
         }
     }
 
