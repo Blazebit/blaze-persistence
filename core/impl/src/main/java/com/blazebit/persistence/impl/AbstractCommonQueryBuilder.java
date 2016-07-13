@@ -1538,7 +1538,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 participatingQueries.add(baseQuery);
                 
                 sb.append(cteBaseName);
-                sb.append('_').append(cteBaseNameCount);
+                sb.append('_').append(cteBaseNameCount++);
                 sb.append(" AS (\n");
 
                 cascadingDeleteSqlSb.setLength(0);
