@@ -486,6 +486,6 @@ keyword :KEY
        ;
 
 identifier : Identifier
-           | keyword // TODO: why?
+           | keyword
            ;
             
