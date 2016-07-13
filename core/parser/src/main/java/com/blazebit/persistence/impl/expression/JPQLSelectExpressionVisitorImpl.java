@@ -307,7 +307,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
         if (ctx.not != null) {
             if (p instanceof Negatable) {
-                ((Negatable) p).setNegated(true);
+                Negatable n = (Negatable) p;
+                n.setNegated(!n.isNegated());
             } else {
                 p = new NotPredicate(p);
             }
