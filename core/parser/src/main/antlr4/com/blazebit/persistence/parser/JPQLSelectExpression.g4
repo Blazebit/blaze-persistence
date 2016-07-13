@@ -339,7 +339,8 @@ between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithm
                    | expr=datetime_expression (not=NOT)? BETWEEN bound1=datetime_expression AND bound2=datetime_expression # BetweenDatetime
                    ;
 
-in_expression : (state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter )
+// TODO: the cases for identifier are actually not JPA compliant and is only required for managing a placeholder that is later replaced by a subquery
+in_expression : (/* Placeholder case */ Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
               ;
 
 in_item : literal
@@ -439,7 +440,7 @@ keyword :KEY
        | SQRT
        | MOD
        | INDEX
-       
+
 /* We have to exclude date time functions from the "keyword as identifier" part because without brackets we don't know for sure if it's an identifier or function. So we assume it's never an identifier */
 
        /*
@@ -447,7 +448,7 @@ keyword :KEY
        | CURRENT_TIME
        | CURRENT_TIMESTAMP
        */
-       
+
        | CONCAT
        | SUBSTRING
        | TRIM
@@ -488,4 +489,3 @@ keyword :KEY
 identifier : Identifier
            | keyword
            ;
-            

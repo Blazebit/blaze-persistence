@@ -441,7 +441,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
         Expression inExpr;
-        if (ctx.param == null) {
+        if (ctx.param == null && ctx.right == null) {
             CompositeExpression compositeInExpr = accept(ctx.in_item(0));
             compositeInExpr.prepend("(");
             for (int i = 1; i < ctx.in_item().size(); i++) {
@@ -450,8 +450,10 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
             compositeInExpr.append(")");
             inExpr = unwrap(compositeInExpr);
-        } else {
+        } else if (ctx.param != null) {
             inExpr = ctx.Input_parameter().accept(this);
+        } else {
+            inExpr = ctx.Identifier().get(ctx.Identifier().size() - 1).accept(this);
         }
         return new InPredicate(ctx.getChild(0).accept(this), inExpr, ctx.not != null);
     }
