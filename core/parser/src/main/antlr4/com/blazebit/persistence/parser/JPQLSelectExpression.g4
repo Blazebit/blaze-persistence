@@ -289,9 +289,10 @@ literal
 numeric_literal
     : Integer_literal
     | Long_literal
-    | Byte_literal
+    | BigInteger_literal
     | Float_literal
     | Double_literal
+    | BigDecimal_literal
     ;
 
 string_literal : String_literal

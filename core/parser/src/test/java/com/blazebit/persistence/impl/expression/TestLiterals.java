@@ -131,6 +131,36 @@ public class TestLiterals extends AbstractParserTest {
     }
 
     @Test
+    public void testBigDecimalLiteral(){
+        assertEquals(new NumericLiteral("1BD", NumericType.BIG_DECIMAL), parse("1BD"));
+    }
+
+    @Test
+    public void testBigDecimalLiteralWithDecimal(){
+        assertEquals(new NumericLiteral("121.223BD", NumericType.BIG_DECIMAL), parse("121.223BD"));
+    }
+
+    @Test
+    public void testBigDecimalLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral("121.223e21BD", NumericType.BIG_DECIMAL), parse("121.223e21BD"));
+    }
+
+    @Test
+    public void testDotBigDecimalLiteral(){
+        assertEquals(new NumericLiteral(".23BD", NumericType.BIG_DECIMAL), parse(".23BD"));
+    }
+
+    @Test
+    public void testDotBigDecimalLiteralWithDecimalAndNegativeExp(){
+        assertEquals(new NumericLiteral(".23e-21BD", NumericType.BIG_DECIMAL), parse(".23e-21BD"));
+    }
+
+    @Test
+    public void testDotBigDecimalLiteralWithDecimalAndExp(){
+        assertEquals(new NumericLiteral(".23e21BD", NumericType.BIG_DECIMAL), parse(".23e21BD"));
+    }
+
+    @Test
     public void testLongLiteral(){
         assertEquals(new NumericLiteral("1L", NumericType.LONG), parse("1L"));
     }
@@ -141,8 +171,13 @@ public class TestLiterals extends AbstractParserTest {
     }
 
     @Test
-    public void testByteLiteral(){
-        assertEquals(new NumericLiteral("1B", NumericType.BYTE), parse("1B"));
+    public void testBigIntegerLiteral(){
+        assertEquals(new NumericLiteral("1BI", NumericType.BIG_INTEGER), parse("1BI"));
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testBigIntegerLeadingZero(){
+        parse("01BI");
     }
     
     @Test

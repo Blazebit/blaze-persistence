@@ -186,8 +186,8 @@ public class AbstractParserTest {
         return new ParameterExpression(name);
     }
 
-    protected NumericLiteral _byte(String value) {
-        return new NumericLiteral(value, NumericType.BYTE);
+    protected NumericLiteral _bigint(String value) {
+        return new NumericLiteral(value, NumericType.BIG_INTEGER);
     }
 
     protected NumericLiteral _int(String value) {
@@ -204,6 +204,10 @@ public class AbstractParserTest {
 
     protected NumericLiteral _double(String value) {
         return new NumericLiteral(value, NumericType.DOUBLE);
+    }
+
+    protected NumericLiteral _bigdec(String value) {
+        return new NumericLiteral(value, NumericType.BIG_DECIMAL);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

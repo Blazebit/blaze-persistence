@@ -158,15 +158,15 @@ Not_equal_operator
 Signum : SignumFragment
        ;
 
-Byte_literal
-     : DigitsNotZero ByteSuffix
-     | ZERO ByteSuffix
-     ;
+BigInteger_literal
+    : DigitsNotZero BigIntegerSuffix
+    | ZERO BigIntegerSuffix
+    ;
 
 Long_literal
-     : DigitsNotZero LongSuffix
-     | ZERO LongSuffix
-     ;
+    : DigitsNotZero LongSuffix
+    | ZERO LongSuffix
+    ;
 
 Float_literal
     : Digits Exponent? FloatSuffix
@@ -178,6 +178,12 @@ Double_literal
     : Digits Exponent? DoubleSuffix
     | Digits '.' Digits* Exponent? DoubleSuffix
     | '.' Digits Exponent? DoubleSuffix
+    ;
+
+BigDecimal_literal
+    : Digits Exponent? BigDecimalSuffix
+    | Digits '.' Digits* Exponent? BigDecimalSuffix
+    | '.' Digits Exponent? BigDecimalSuffix
     ;
 
 Integer_literal
@@ -238,9 +244,11 @@ fragment FloatSuffix : [fF];
 
 fragment DoubleSuffix : [dD];
 
+fragment BigDecimalSuffix : [bB][dD];
+
 fragment LongSuffix : [lL];
 
-fragment ByteSuffix : [bB];
+fragment BigIntegerSuffix : [bB][iI];
 
 fragment Exponent
     : [eE] SignedInteger

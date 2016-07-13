@@ -363,9 +363,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitNumeric_literal(JPQLSelectExpressionParser.Numeric_literalContext ctx) {
         NumericType numericType;
         String value;
-        if (ctx.Byte_literal() != null) {
-            numericType = NumericType.BYTE;
-            value = ctx.Byte_literal().getText();
+        if (ctx.BigInteger_literal() != null) {
+            numericType = NumericType.BIG_INTEGER;
+            value = ctx.BigInteger_literal().getText();
         } else if (ctx.Integer_literal() != null) {
             numericType = NumericType.INTEGER;
             value = ctx.Integer_literal().getText();
@@ -378,6 +378,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         } else if (ctx.Double_literal() != null) {
             numericType = NumericType.DOUBLE;
             value = ctx.Double_literal().getText();
+        } else if (ctx.BigDecimal_literal() != null) {
+            numericType = NumericType.BIG_DECIMAL;
+            value = ctx.BigDecimal_literal().getText();
         } else {
             throw new IllegalStateException("Could not find literal in context [" + ctx.getText() + "]");
         }
