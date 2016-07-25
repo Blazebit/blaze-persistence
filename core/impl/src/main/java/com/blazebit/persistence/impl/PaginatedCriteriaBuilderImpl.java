@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.KeysetPage;
@@ -414,7 +415,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         
         // Count distinct is obviously unnecessary if we have no collection joins
         if (hasCollectionJoinUsages) {
-        	if (!dbmsDialect.supportsTupleDistinctCounts()) {
+        	if (idAttribute.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED && !dbmsDialect.supportsTupleDistinctCounts()) {
                 throw new UnsupportedOperationException("The database does not support count distinct queries for tuples! This is needed for paginated queries to work when using collection joins in the where clause. Consider removing references to collection aliases to resolve the problem.");
         	}
         } else {
