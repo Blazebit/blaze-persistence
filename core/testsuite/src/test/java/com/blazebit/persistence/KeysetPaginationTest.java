@@ -85,7 +85,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     public void testWithReferenceObject() {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
-                "SELECT COUNT(DISTINCT d.id), "
+                "SELECT " + countPaginated("d.id", false) + ", "
                 + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
@@ -118,7 +118,7 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     public void testWithNotExistingReferenceObject() {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
-                "SELECT COUNT(DISTINCT d.id), "
+                "SELECT " + countPaginated("d.id", false) + ", "
                         + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "

@@ -110,7 +110,7 @@ public class PaginationTest extends AbstractCoreTest {
         crit.orderByAsc("d.id");
 
         // do not include joins that are only needed for the select clause
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN owner_1.localized localized_1_1 "
                 + ON_CLAUSE + " KEY(localized_1_1) = 1 "
                 + "WHERE UPPER(d.name) LIKE UPPER(:param_0) AND owner_1.name LIKE :param_1 AND UPPER(" + joinAliasValue("localized_1_1")
                 + ") LIKE UPPER(:param_2)";
@@ -153,7 +153,7 @@ public class PaginationTest extends AbstractCoreTest {
 
     @Test
     public void testSelectIndexedWithParameter() {
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
         String expectedIdQuery = "SELECT d.id FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0 GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         String expectedObjectQuery = "SELECT " + joinAliasValue("contacts_contactNr_1", "name") + " FROM Document d LEFT JOIN d.contacts contacts_contactNr_1 " + ON_CLAUSE
                 + " KEY(contacts_contactNr_1) = :contactNr WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
@@ -184,7 +184,7 @@ public class PaginationTest extends AbstractCoreTest {
         // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
-                "SELECT COUNT(DISTINCT d.id), "
+                "SELECT " + countPaginated("d.id", false) + ", "
                 + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
@@ -225,7 +225,7 @@ public class PaginationTest extends AbstractCoreTest {
         // TODO: Maybe report that EclipseLink can't seem to handle subqueries in functions
         Document reference = cbf.create(em, Document.class).where("name").eq("adoc").getSingleResult();
         String expectedCountQuery =
-                "SELECT COUNT(DISTINCT d.id), "
+                "SELECT " + countPaginated("d.id", false) + ", "
                 + function("PAGE_POSITION",
                         "(SELECT _page_position_d.id "
                         + "FROM Document _page_position_d "
@@ -367,7 +367,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("SIZE(d.contacts)", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedObjectQuery = "SELECT COUNT(" + joinAliasValue("contacts_1") + ") FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id ORDER BY " + renderNullPrecedence("SIZE(d.contacts)", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
@@ -385,7 +385,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id, COUNT(" + joinAliasValue("contacts_1") + ") AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id "
         		+ "ORDER BY " + renderNullPrecedence("contactCount", "COUNT(" + joinAliasValue("contacts_1") + ")", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedObjectQuery = "SELECT COUNT(" + joinAliasValue("contacts_1") + ") AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id "
         		+ "ORDER BY " + renderNullPrecedence("contactCount", "COUNT(" + joinAliasValue("contacts_1") + ")", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
 
@@ -401,7 +401,7 @@ public class PaginationTest extends AbstractCoreTest {
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts").isNull().orderByAsc("id").page(0, 1);
 
         // NOTE: This test is a bit stupid. The where clause references a different join node(d.contacts) than what is selected(d.contacts[d.owner.age]). Don't mix them up
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d LEFT JOIN d.contacts contacts_1 WHERE " + joinAliasValue("contacts_1") + " IS NULL";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d LEFT JOIN d.contacts contacts_1 WHERE " + joinAliasValue("contacts_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
         cb.getResultList();
@@ -412,7 +412,7 @@ public class PaginationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d");
         PaginatedCriteriaBuilder<Tuple> pcb = cb.select("d.contacts[d.owner.age]").where("d.contacts[d.owner.age]").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts contacts_owner_1_age_1 " + ON_CLAUSE + " KEY(contacts_owner_1_age_1) = owner_1.age WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts contacts_owner_1_age_1 " + ON_CLAUSE + " KEY(contacts_owner_1_age_1) = owner_1.age WHERE " + joinAliasValue("contacts_owner_1_age_1") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
         cb.getResultList();
@@ -428,7 +428,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .end()
                 .where("c").isNull().orderByAsc("id").page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE " + joinAliasValue("c") + " IS NULL";
+        String expectedCountQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.owner owner_1 LEFT JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = owner_1.age WHERE " + joinAliasValue("c") + " IS NULL";
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         cb.getResultList();
     }
@@ -448,7 +448,7 @@ public class PaginationTest extends AbstractCoreTest {
             .orderByAsc("Workflow_id")
             .page(0, 1);
 
-        String expectedCountQuery = "SELECT COUNT(DISTINCT w.id) FROM Workflow w";
+        String expectedCountQuery = "SELECT " + countPaginated("w.id", false) + " FROM Workflow w";
 
         assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
         pcb.getPageCountQueryString();
@@ -490,7 +490,7 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("d.id")
                 .page(0, 10);
         
-        String countQuery = "SELECT COUNT(DISTINCT d.id) FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1";
+        String countQuery = "SELECT " + countPaginated("d.id", true) + " FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1";
         String idQuery = "SELECT d.id FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         String objectQuery = "SELECT d.id, " + joinAliasValue("c", "name") + " FROM Document d JOIN d.contacts c " + ON_CLAUSE + " KEY(c) = 1 WHERE d.id IN :ids ORDER BY " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(countQuery, cb.getPageCountQueryString());

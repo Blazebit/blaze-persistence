@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence;
 
+import static org.junit.Assert.assertEquals;
+
 import javax.persistence.Tuple;
 
 import org.junit.Ignore;
@@ -65,7 +67,16 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         criteria.getResultList();
     }
     
-    // TODO: not yet implemented
+    @Test
+    public void testEmbeddedIdPagination() {
+        PaginatedCriteriaBuilder<OrderPosition> criteria = cbf.create(em, OrderPosition.class, "pos").orderByAsc("pos.id.position").orderByAsc("pos.id").page(0, 1);
+        String expectedCountQuery =
+                "SELECT " + countPaginated("pos.id", false) + " "
+                + "FROM OrderPosition pos";
+        assertEquals(expectedCountQuery, criteria.getPageCountQueryString());
+    }
+
+	// TODO: not yet implemented
     @Test
     @Ignore("This is still causing problems in the JoinManager because of the cyclic dependency")
     public void testCyclicDependencyInOnClauseImplicitJoin() {

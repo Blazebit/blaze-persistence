@@ -1247,7 +1247,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void appendFromClause(StringBuilder sbSelectFrom) {
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false);
     }
 
     protected void appendWhereClause(StringBuilder sbSelectFrom) {

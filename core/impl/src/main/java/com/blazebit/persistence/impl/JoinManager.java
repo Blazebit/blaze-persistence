@@ -32,7 +32,6 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -80,6 +79,7 @@ public class JoinManager extends AbstractManager {
     private final ExpressionFactory expressionFactory;
 
     // helper collections for join rendering
+    private final Set<JoinNode> collectionJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> renderedJoins = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
     private final Set<JoinNode> markedJoinNodes = Collections.newSetFromMap(new IdentityHashMap<JoinNode, Boolean>());
 
@@ -189,7 +189,8 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    void buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes) {
+    	collectionJoinNodes.clear();
         renderedJoins.clear();
         sb.append(" FROM ");
         
@@ -215,8 +216,10 @@ public class JoinManager extends AbstractManager {
 	        
 	        // TODO: not sure if needed since applyImplicitJoins will already invoke that
     		rootNode.registerDependencies();
-    		applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix);
+    		applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
     	}
+    	
+    	return collectionJoinNodes;
     }
 
     void verifyBuilderEnded() {
@@ -315,7 +318,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix) {
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
 
@@ -329,13 +332,18 @@ public class JoinManager extends AbstractManager {
                 if (!node.getDependencies().isEmpty()) {
                     renderReverseDependency(sb, node, aliasPrefix);
                 }
+                
+                // Collect the join nodes referring to collections
+                if (collectCollectionJoinNodes && treeNode.isCollection()) {
+                	collectionJoinNodes.add(node);
+                }
 
                 // Finally render this join node
                 renderJoinNode(sb, joinBase, node, aliasPrefix);
 
                 // Render child nodes recursively
                 if (!node.getNodes().isEmpty()) {
-                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix);
+                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
                 }
             }
         }

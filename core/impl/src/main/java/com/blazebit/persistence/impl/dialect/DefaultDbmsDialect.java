@@ -11,6 +11,11 @@ import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
 
 public class DefaultDbmsDialect implements DbmsDialect {
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return true;
+	}
     
 	@Override
 	public boolean supportsWithClause() {
