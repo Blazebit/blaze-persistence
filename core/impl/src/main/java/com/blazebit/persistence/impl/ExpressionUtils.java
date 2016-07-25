@@ -22,8 +22,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
@@ -48,6 +50,8 @@ import com.blazebit.persistence.impl.predicate.*;
  * @since 1.0
  */
 public class ExpressionUtils {
+
+    private final static Logger LOG = Logger.getLogger(ExpressionUtils.class.getName());
 
     public static boolean isUnique(Metamodel metamodel, Expression expr) {
         if (expr instanceof CompositeExpression) {
@@ -128,7 +132,19 @@ public class ExpressionUtils {
 
         if (expr.getField() != null) {
             t = metamodel.managedType(baseNode.getPropertyClass());
-            attr = t.getAttribute(expr.getField());
+            String attributeName = expr.getField();
+            if (attributeName.indexOf('.') < 0) {
+                attr = t.getAttribute(expr.getField());
+            } else {
+		        String[] attributeParts = attributeName.split("\\.");
+		        attr = getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
+
+		        for (int i = 1; i < attributeParts.length; i++) {
+		            t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
+		            attr = getPolymorphicAttribute(metamodel, t, attributeParts[i]);
+		        }
+            }
+
             if (!isUnique(attr)) {
                 return false;
             }
@@ -152,6 +168,77 @@ public class ExpressionUtils {
 
         // Right now we only support ids, but we actually should check for unique constraints
         return ((SingularAttribute<?, ?>) attr).isId();
+    }
+
+    private static Attribute<?, ?> getPolymorphicSimpleAttribute(Metamodel metamodel, ManagedType<?> type, String attributeName) {
+        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
+        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
+
+        if (resolvedAttributes.size() > 1) {
+            // If there is more than one resolved attribute we can still save the user some trouble
+            Attribute<?, ?> simpleAttribute = null;
+            Set<Attribute<?, ?>> amiguousAttributes = new HashSet<Attribute<?, ?>>();
+
+            for (Attribute<?, ?> attr : resolvedAttributes) {
+                if (JpaUtils.isJoinable(attr)) {
+                    amiguousAttributes.add(attr);
+                } else {
+                    simpleAttribute = attr;
+                }
+            }
+
+            if (simpleAttribute == null) {
+                return null;
+            } else {
+                for (Attribute<?, ?> a : amiguousAttributes) {
+                    LOG.warning("The attribute [" + attributeName + "] of the class [" + a.getDeclaringType().getJavaType().getName()
+                        + "] is ambiguous for polymorphic implicit joining on the type [" + type.getJavaType().getName() + "]");
+                }
+
+                return simpleAttribute;
+            }
+        } else if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
+        }
+    }
+
+    private static Attribute<?, ?> getPolymorphicAttribute(Metamodel metamodel, ManagedType<?> type, String attributeName) {
+        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
+        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
+
+        if (resolvedAttributes.size() > 1) {
+            // If there is more than one resolved attribute we can still save the user some trouble
+            Attribute<?, ?> joinableAttribute = null;
+            Attribute<?, ?> attr = null;
+
+            // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
+            // Multiple joinable attributes are only fine if they all have the same type
+            while (iter.hasNext()) {
+                attr = iter.next();
+                if (JpaUtils.isJoinable(attr)) {
+                    if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
+                        throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName
+                            + "] but different java types in the types [" + joinableAttribute.getDeclaringType().getJavaType().getName()
+                            + "] and [" + attr.getDeclaringType().getJavaType().getName() + "] found!");
+                    } else {
+                        joinableAttribute = attr;
+                    }
+                }
+            }
+
+            // We return the joinable attribute because OUR join manager needs it's type for further joining
+            if (joinableAttribute != null) {
+                return joinableAttribute;
+            }
+
+            return attr;
+        } else if (iter.hasNext()) {
+            return iter.next();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -285,7 +372,19 @@ public class ExpressionUtils {
 
         if (expr.getField() != null) {
             t = metamodel.managedType(baseNode.getPropertyClass());
-            attr = t.getAttribute(expr.getField());
+            String attributeName = expr.getField();
+            if (attributeName.indexOf('.') < 0) {
+                attr = t.getAttribute(expr.getField());
+            } else {
+		        String[] attributeParts = attributeName.split("\\.");
+		        attr = getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
+
+		        for (int i = 1; i < attributeParts.length; i++) {
+		            t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
+		            attr = getPolymorphicAttribute(metamodel, t, attributeParts[i]);
+		        }
+            }
+
             if (isNullable(attr)) {
                 return true;
             }

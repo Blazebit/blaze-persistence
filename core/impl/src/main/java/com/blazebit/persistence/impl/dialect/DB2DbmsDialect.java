@@ -9,6 +9,11 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 
 public class DB2DbmsDialect extends DefaultDbmsDialect {
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
     
 	@Override
 	public String getWithClause(boolean recursive) {

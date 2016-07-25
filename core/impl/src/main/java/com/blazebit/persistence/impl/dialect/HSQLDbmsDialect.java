@@ -7,6 +7,11 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 
 
 public class HSQLDbmsDialect extends DefaultDbmsDialect {
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
     
     @Override
     public boolean supportsReturningColumns() {

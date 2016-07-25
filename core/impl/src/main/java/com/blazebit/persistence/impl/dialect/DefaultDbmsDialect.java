@@ -55,7 +55,12 @@ public class DefaultDbmsDialect implements DbmsDialect {
         sqlTypes = Collections.unmodifiableMap(types);
     }
 
-	@Override
+    @Override
+    public boolean supportsTupleDistinctCounts() {
+        return true;
+    }
+
+    @Override
 	public boolean supportsWithClause() {
 		return true;
 	}

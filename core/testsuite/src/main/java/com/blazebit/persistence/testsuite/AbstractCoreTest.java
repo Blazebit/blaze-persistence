@@ -25,6 +25,7 @@ import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.entity.Document;
@@ -49,6 +50,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     private static final JpaProvider staticJpaProvider;
     private CriteriaBuilderConfiguration config;
     private JpaProvider jpaProvider;
+    private String dbms;
     protected String ON_CLAUSE;
     
     static {
@@ -58,7 +60,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     @Override
     public void init() {
         super.init();
-        jpaProvider = JpaProviders.resolveJpaProvider(em, config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory()));
+        dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
+        jpaProvider = JpaProviders.resolveJpaProvider(em, dbms);
         ON_CLAUSE = jpaProvider.getOnClause();
     }
     
@@ -68,7 +71,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
         
-        if ("postgresql".equals(config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory()))) {
+        if ("postgresql".equals(dbms)) {
         	config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
         }
         
@@ -150,6 +153,29 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     		return function("COUNT_STAR");
     	}
     }
+
+	protected String countPaginated(String string, boolean distinct) {
+		StringBuilder sb = new StringBuilder(20 + string.length());
+		sb.append("COUNT(DISTINCT ").append(string).append("   )");
+		
+		if (!distinct) {
+	    	String countStar;
+	    	if (jpaProvider instanceof HibernateJpaProvider) {
+	    		countStar = "COUNT(*";
+	    	} else {
+	    		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
+	    	}
+	    	for (int i = 0; i < sb.length() - 1; i++) {
+	    		if (i < countStar.length()) {
+	    			sb.setCharAt(i, countStar.charAt(i));
+	    		} else {
+	    			sb.setCharAt(i, ' ');
+	    		}
+	    	}
+		}
+		
+		return sb.toString();
+	}
 
     protected String renderNullPrecedence(String expression, String order, String nulls) {
     	return renderNullPrecedence(expression, expression, order, nulls);

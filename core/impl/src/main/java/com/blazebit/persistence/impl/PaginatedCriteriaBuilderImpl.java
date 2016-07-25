@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.KeysetPage;
@@ -34,6 +35,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
+import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
@@ -381,11 +383,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     private String getPageCountQueryString1() {
         StringBuilder sbSelectFrom = new StringBuilder();
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
-        String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
+        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass()));
+        String idName = idAttribute.getName();
         String rootAlias = rootNode.getAliasInfo().getAlias();
         String idClause = new StringBuilder(rootAlias).append('.').append(idName).toString();
-
-        sbSelectFrom.append("SELECT COUNT(DISTINCT ").append(idClause).append(')');
+        // Spaces are important to be able to reuse the string builder without copying
+        String countString = "COUNT(DISTINCT " + idClause + "   )";
+        sbSelectFrom.append("SELECT ").append(countString);
 
         if (entityId != null) {
             parameterManager.addParameterMapping(ENTITY_PAGE_POSITION_PARAMETER_NAME, entityId);
@@ -401,8 +405,35 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             sbSelectFrom.append(")");
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null);
+        // Collect usage of collection join nodes to optimize away the count distinct
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true);
+        // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
+        boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
+        
         whereManager.buildClause(sbSelectFrom);
+        
+        // Count distinct is obviously unnecessary if we have no collection joins
+        if (hasCollectionJoinUsages) {
+        	if (!dbmsDialect.supportsTupleDistinctCounts()) {
+                throw new UnsupportedOperationException("The database does not support count distinct queries for tuples! This is needed for paginated queries to work when using collection joins in the where clause. Consider removing references to collection aliases to resolve the problem.");
+        	}
+        } else {
+        	int idx = sbSelectFrom.indexOf(countString);
+        	int endIdx = idx + countString.length() - 1;
+        	String countStar;
+        	if (jpaProvider instanceof HibernateJpaProvider) {
+        		countStar = "COUNT(*";
+        	} else {
+        		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
+        	}
+        	for (int i = idx, j = 0; i < endIdx; i++, j++) {
+        		if (j < countStar.length()) {
+        			sbSelectFrom.setCharAt(i, countStar.charAt(j));
+        		} else {
+        			sbSelectFrom.setCharAt(i, ' ');
+        		}
+        	}
+        }
 
         return sbSelectFrom.toString();
     }
@@ -421,7 +452,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         // TODO: actually we should add the select clauses needed for order bys
         // TODO: if we do so, the page position function has to omit select items other than the first
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false);
         whereManager.buildClause(sbSelectFrom);
 
         Set<String> clauses = new LinkedHashSet<String>();
@@ -450,7 +481,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -495,7 +526,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * more and therefore we can also omit any joins which the SELECT or the
          * ORDER_BY clause do not depend on
          */
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false);
         sbSelectFrom.append(" WHERE ").append(rootAlias).append('.').append(idName).append(" IN :").append(idParamName).append("");
 
         Set<String> clauses = new LinkedHashSet<String>();
@@ -523,7 +554,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, true);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
