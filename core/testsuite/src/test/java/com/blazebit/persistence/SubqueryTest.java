@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -29,6 +30,7 @@ import com.blazebit.persistence.entity.Document;
 import com.blazebit.persistence.entity.Person;
 import com.blazebit.persistence.entity.Version;
 import com.blazebit.persistence.impl.BuilderChainingException;
+import org.junit.experimental.categories.Category;
 
 /**
  *
