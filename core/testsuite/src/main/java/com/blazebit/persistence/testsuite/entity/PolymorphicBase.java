@@ -16,11 +16,8 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import java.util.*;
+import javax.persistence.*;
 
 /**
  *
@@ -34,6 +31,10 @@ public abstract class PolymorphicBase implements Serializable {
 
     private Long id;
     private String name;
+    private PolymorphicBase parent;
+    private List<PolymorphicBase> list = new ArrayList<PolymorphicBase>();
+    private Set<PolymorphicBase> children = new HashSet<PolymorphicBase>();
+    private Map<String, PolymorphicBase> map = new HashMap<String, PolymorphicBase>();
 
     public PolymorphicBase() {
     }
@@ -54,5 +55,45 @@ public abstract class PolymorphicBase implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    public PolymorphicBase getParent() {
+        return parent;
+    }
+
+    public void setParent(PolymorphicBase parent) {
+        this.parent = parent;
+    }
+
+    @OneToMany
+    @OrderColumn(name = "list_idx", nullable = false)
+    @JoinTable(name = "polymorphic_list")
+    public List<PolymorphicBase> getList() {
+        return list;
+    }
+
+    public void setList(List<PolymorphicBase> list) {
+        this.list = list;
+    }
+
+    @OneToMany(mappedBy = "parent")
+    public Set<PolymorphicBase> getChildren() {
+        return children;
+    }
+
+    public void setChildren(Set<PolymorphicBase> children) {
+        this.children = children;
+    }
+
+    @OneToMany
+    @JoinTable(name = "polymorphic_map")
+    @MapKeyColumn(table = "polymorphic_map", nullable = false)
+    public Map<String, PolymorphicBase> getMap() {
+        return map;
+    }
+
+    public void setMap(Map<String, PolymorphicBase> map) {
+        this.map = map;
     }
 }

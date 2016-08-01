@@ -26,19 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Transient;
+import javax.persistence.*;
 
 /**
  *
@@ -53,12 +41,16 @@ public class Document extends Ownable implements Serializable {
     private Long id;
     private String name;
     private Object someTransientField;
+    private NameObject nameObject;
     private Set<Version> versions = new HashSet<Version>();
     private Set<Person> partners = new HashSet<Person>();
 //    private Person owner;
     private IntIdEntity intIdEntity;
     private long age;
     private int idx;
+    private byte[] byteArray;
+    private Byte[] wrappedByteArray;
+    private Double someValue;
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private List<Person> people = new ArrayList<Person>();
@@ -119,6 +111,15 @@ public class Document extends Ownable implements Serializable {
         this.someTransientField = someTransientField;
     }
 
+    @Embedded
+    public NameObject getNameObject() {
+        return nameObject;
+    }
+
+    public void setNameObject(NameObject nameObject) {
+        this.nameObject = nameObject;
+    }
+
     @OneToMany(mappedBy = "document")
     public Set<Version> getVersions() {
         return versions;
@@ -142,6 +143,22 @@ public class Document extends Ownable implements Serializable {
 
     public void setIdx(int index) {
         this.idx = index;
+    }
+
+    public byte[] getByteArray() {
+        return byteArray;
+    }
+
+    public void setByteArray(byte[] byteArray) {
+        this.byteArray = byteArray;
+    }
+
+    public Byte[] getWrappedByteArray() {
+        return wrappedByteArray;
+    }
+
+    public void setWrappedByteArray(Byte[] wrappedByteArray) {
+        this.wrappedByteArray = wrappedByteArray;
     }
 
     @OneToMany(mappedBy = "partnerDocument")
@@ -171,6 +188,14 @@ public class Document extends Ownable implements Serializable {
     
     public void setIntIdEntity(IntIdEntity intIdEntity) {
         this.intIdEntity = intIdEntity;
+    }
+
+    public Double getSomeValue() {
+        return someValue;
+    }
+
+    public void setSomeValue(Double someValue) {
+        this.someValue = someValue;
     }
 
     public String getNonJoinable() {

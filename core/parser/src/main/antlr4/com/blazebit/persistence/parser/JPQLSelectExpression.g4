@@ -234,6 +234,7 @@ type_discriminator : TYPE '(' type_discriminator_arg ')';
 type_discriminator_arg : Input_parameter
                        | single_valued_object_path_expression
                        | single_element_path_expression
+                       | key_value_expression
                        ;
 
 functions_returning_numerics : LENGTH '('string_expression')' # Functions_returning_numerics_default

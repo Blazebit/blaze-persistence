@@ -191,6 +191,18 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     }
 
     @Override
+    public SubqueryBuilder<T> from(String correlationPath) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(correlationPath);
+    }
+
+    @Override
+    public SubqueryBuilder<T> from(String correlationPath, String alias) {
+        chainSubbuilder(createPredicate(leftExpression, null, PredicateQuantifier.ONE));
+        return getSubqueryInitiator().from(correlationPath, alias);
+    }
+
+    @Override
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet() {
         return getSubqueryInitiator().startSet();
     }

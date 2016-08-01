@@ -43,6 +43,26 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X from(Class<?> entityClass, String alias);
 
     /**
+     * Like {@link FromBuilder#from(String, String))} with the
+     * alias equivalent to the camel cased result of the class of the correlation parent.
+     *
+     * @param correlationPath The correlation path which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X from(String correlationPath);
+
+    /**
+     * Sets the correlation path on which the query should be based on with the given alias.
+     *
+     * @param correlationPath The correlation path which should be queried
+     * @param alias The alias for the entity
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X from(String correlationPath, String alias);
+
+    /**
      * Like {@link FromBuilder#from(Class))} but explicitly queries the data before any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried

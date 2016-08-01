@@ -29,6 +29,7 @@ public class PolymorphicSub1 extends PolymorphicBase {
     private static final long serialVersionUID = 1L;
 
     private IntIdEntity relation1;
+    private Integer sub1Value;
 
     public PolymorphicSub1() {
     }
@@ -40,5 +41,13 @@ public class PolymorphicSub1 extends PolymorphicBase {
 
     public void setRelation1(IntIdEntity relation1) {
         this.relation1 = relation1;
+    }
+
+    public Integer getSub1Value() {
+        return sub1Value;
+    }
+
+    public void setSub1Value(Integer sub1Value) {
+        this.sub1Value = sub1Value;
     }
 }

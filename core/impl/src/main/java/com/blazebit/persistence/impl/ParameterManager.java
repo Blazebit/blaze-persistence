@@ -142,15 +142,18 @@ public class ParameterManager {
     private static class ParameterImpl<T> implements Parameter<T> {
 
         private final String name;
+        private final Integer position;
         private Class<T> parameterType;
         private T value;
 
         public ParameterImpl(String name) {
             this.name = name;
+            this.position = null;
         }
 
         public ParameterImpl(String name, T value) {
             this.name = name;
+            this.position = null;
             setValue(value);
         }
 
@@ -161,7 +164,7 @@ public class ParameterManager {
 
         @Override
         public Integer getPosition() {
-            return null;
+            return position;
         }
 
         @Override
@@ -189,6 +192,24 @@ public class ParameterManager {
                     parameterType = (Class<T>) value.getClass();
                 }
             }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Parameter<?>)) return false;
+
+            Parameter<?> parameter = (Parameter<?>) o;
+
+            if (name != null ? !name.equals(parameter.getName()) : parameter.getName() != null) return false;
+            return position != null ? position.equals(parameter.getPosition()) : parameter.getPosition() == null;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name != null ? name.hashCode() : 0;
+            result = 31 * result + (position != null ? position.hashCode() : 0);
+            return result;
         }
     }
 

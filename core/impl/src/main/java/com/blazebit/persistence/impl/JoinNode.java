@@ -51,6 +51,8 @@ public class JoinNode {
     private final JoinNode parent;
     private final JoinTreeNode parentTreeNode;
 
+    private final JoinNode correlationParent;
+    private final String correlationPath;
     private final Class<?> propertyClass;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
@@ -69,6 +71,19 @@ public class JoinNode {
         this.parentTreeNode = parentTreeNode;
         this.aliasInfo = aliasInfo;
         this.type = type;
+        this.propertyClass = propertyClass;
+        this.correlationParent = null;
+        this.correlationPath = null;
+        onUpdate(null);
+    }
+
+    public JoinNode(JoinNode correlationParent, String correlationPath, JoinAliasInfo aliasInfo, Class<?> propertyClass) {
+        this.parent = null;
+        this.parentTreeNode = null;
+        this.type = null;
+        this.correlationParent = correlationParent;
+        this.correlationPath = correlationPath;
+        this.aliasInfo = aliasInfo;
         this.propertyClass = propertyClass;
         onUpdate(null);
     }
@@ -265,6 +280,14 @@ public class JoinNode {
 
     public Class<?> getPropertyClass() {
         return propertyClass;
+    }
+
+    public JoinNode getCorrelationParent() {
+        return correlationParent;
+    }
+
+    public String getCorrelationPath() {
+        return correlationPath;
     }
 
     public AndPredicate getOnPredicate() {

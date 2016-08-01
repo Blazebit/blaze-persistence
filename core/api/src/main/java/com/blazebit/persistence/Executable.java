@@ -19,20 +19,32 @@ import javax.persistence.Query;
 import javax.persistence.Tuple;
 
 /**
- * A builder for modification queries.
+ * A base interface for executable query builders.
  *
- * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.1.0
+ * @since 1.2.0
  */
-public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends Executable, CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X>, CTEBuilder<X> {
+public interface Executable {
 
-    // TODO: documentation
-    public ReturningResult<Tuple> executeWithReturning(String... attributes);
+    /**
+     * Returns the query string for the built query.
+     *
+     * @return The query string
+     */
+    public String getQueryString();
 
-    // TODO: documentation
-    public <T> ReturningResult<T> executeWithReturning(String attribute, Class<T> type);
-
-    // TODO: documentation
-    public <T> ReturningResult<T> executeWithReturning(ReturningObjectBuilder<T> objectBuilder);
+    /**
+     * Returns the JPA query for the built query.
+     * The returned query is already parameterized with all known parameters.
+     *
+     * @return The typed query for the built query
+     */
+    public Query getQuery();
+    
+    /**
+     * Execute this modification statement and return the number of affected entities.
+     * 
+     * @return The number of affected entities
+     */
+    public int executeUpdate();
 }

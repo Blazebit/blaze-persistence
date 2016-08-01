@@ -16,6 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -38,28 +39,12 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
-import com.blazebit.persistence.HavingOrBuilder;
-import com.blazebit.persistence.JoinOnBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.Keyset;
-import com.blazebit.persistence.KeysetBuilder;
-import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
-import com.blazebit.persistence.MultipleSubqueryInitiator;
-import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
-import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
-import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
-import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
-import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
@@ -444,6 +429,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         throw new IllegalArgumentException("Set operations aren't supported!");
     }
 
+    public BuilderType from(String correlationPath) {
+        return from(correlationPath, null);
+    }
+
+    public BuilderType from(String correlationPath, String alias) {
+        if (!(this instanceof SubqueryBuilder<?>)) {
+            throw new IllegalStateException("Cannot use a correlation path in a non-subquery!");
+        }
+        joinManager.addRoot(correlationPath, alias);
+        return (BuilderType) this;
+    }
+
     public BuilderType from(Class<?> clazz) {
         return from(clazz, clazz.getSimpleName().toLowerCase());
     }
@@ -489,7 +486,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     	String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitelySet = true;
         
-        // Handle old an new references
+        // Handle old and new references
     	if (state != null) {
     	    Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
     	    if (versionEntities == null) {

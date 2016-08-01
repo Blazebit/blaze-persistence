@@ -36,7 +36,7 @@ import com.blazebit.persistence.testsuite.entity.SmallProject;
  * @since 1.0
  */
 public class InheritanceTest extends AbstractCoreTest {
-    
+
     @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {

@@ -239,6 +239,43 @@ public class SubqueryTest extends AbstractCoreTest {
     }
 
     @Test
+    public void testSubqueryCorrelatesSimple() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .where("owner").in()
+                .from("d.people")
+                .where("partnerDocument").eqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT person FROM d.people person WHERE person.partnerDocument = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
+    public void testMultipleCorrelationsWithJoins() {
+        CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
+                .where("owner").in()
+                .from("d.people", "person")
+                .from("d.partners", "partner")
+                .from("d.contacts", "contact")
+                .select("contact")
+                .leftJoin("contact.partnerDocument", "contactDoc")
+                .leftJoin("partner.partnerDocument", "partnerDoc")
+                .leftJoin("person.partnerDocument", "personDoc")
+                .where("contactDoc").eqExpression("d")
+                .end();
+        String expectedQuery = "SELECT d FROM Document d WHERE d.owner IN (SELECT contact " +
+                "FROM d.people person " +
+                "LEFT JOIN person.partnerDocument personDoc, " +
+                "d.partners partner " +
+                "LEFT JOIN partner.partnerDocument partnerDoc, " +
+                "d.contacts contact " +
+                "LEFT JOIN contact.partnerDocument contactDoc " +
+                "WHERE contactDoc = d)";
+        assertEquals(expectedQuery, crit.getQueryString());
+        crit.getResultList();
+    }
+
+    @Test
     public void testMultipleSubqueriesWithParameters() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.select("name", "n")

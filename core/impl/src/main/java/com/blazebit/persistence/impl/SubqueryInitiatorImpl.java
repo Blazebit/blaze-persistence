@@ -60,6 +60,19 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
     }
 
     @Override
+    public SubqueryBuilder<X> from(String correlationPath) {
+        return from(correlationPath, null);
+    }
+
+    @Override
+    public SubqueryBuilder<X> from(String correlationPath, String alias) {
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.cbf.getSubqueryExpressionFactory(), result, listener);
+        subqueryBuilder.from(correlationPath, alias);
+        listener.onBuilderStarted(subqueryBuilder);
+        return subqueryBuilder;
+    }
+
+    @Override
     public StartOngoingSetOperationSubqueryBuilder<X, LeafOngoingSetOperationSubqueryBuilder<X>> startSet() {
         FinalSetOperationSubqueryBuilderImpl<X> parentFinalSetOperationBuilder = new FinalSetOperationSubqueryBuilderImpl<X>(mainQuery, result, null, false, listener, null);
         OngoingFinalSetOperationSubqueryBuilderImpl<X> subFinalSetOperationBuilder = new OngoingFinalSetOperationSubqueryBuilderImpl<X>(mainQuery, null, null, true, parentFinalSetOperationBuilder.getSubListener(), null);

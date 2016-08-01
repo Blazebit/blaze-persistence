@@ -42,6 +42,26 @@ public interface SubqueryInitiator<T> {
      */
     public SubqueryBuilder<T> from(Class<?> entityClass, String alias);
 
+    /**
+     * Like {@link SubqueryInitiator#from(String, String))} with the
+     * alias equivalent to the camel cased result of the class of the correlation parent.
+     *
+     * @param correlationPath The correlation path which should be queried
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> from(String correlationPath);
+
+    /**
+     * Creates a new subquery builder with the given correlation path in the FROM clause with the given alias.
+     *
+     * @param correlationPath The correlation path which should be queried
+     * @param alias The alias for the entity
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public SubqueryBuilder<T> from(String correlationPath, String alias);
+
     // TODO: documentation
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet();
 }
