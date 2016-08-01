@@ -88,7 +88,7 @@ public abstract class PolymorphicBase implements Serializable {
 
     @OneToMany
     @JoinTable(name = "polymorphic_map")
-    @MapKeyColumn(table = "polymorphic_map", nullable = false)
+    @MapKeyColumn(table = "polymorphic_map", nullable = false, length = 20)
     public Map<String, PolymorphicBase> getMap() {
         return map;
     }

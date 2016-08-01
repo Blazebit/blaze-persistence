@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -238,7 +240,9 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
+    // NOTE: Looks like Datanucleus doesn't support this syntax => TODO: create an issue for datanucleus
     @Test
+    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelatesSimple() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
@@ -250,7 +254,9 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
+    // NOTE: Looks like Datanucleus doesn't support this syntax => TODO: create an issue for datanucleus
     @Test
+    @Category({ NoDatanucleus.class })
     public void testMultipleCorrelationsWithJoins() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
