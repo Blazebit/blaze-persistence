@@ -60,7 +60,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     @Override
     public void init() {
         super.init();
-        dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
         jpaProvider = JpaProviders.resolveJpaProvider(em, dbms);
         ON_CLAUSE = jpaProvider.getOnClause();
     }
@@ -70,7 +69,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         config = super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
-        
+
+        dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
         if ("postgresql".equals(dbms)) {
         	config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
         }
