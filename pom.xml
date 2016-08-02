@@ -193,6 +193,11 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-persistence-integration-datanucleus</artifactId>
 				<version>${project.version}</version>
 			</dependency>

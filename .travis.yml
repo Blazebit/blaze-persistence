@@ -84,6 +84,15 @@ matrix:
       jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=sqlite
 #      jdk: oraclejdk8
+# hibernate-5.2
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=mysql
+      jdk: oraclejdk8
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=postgresql
+      jdk: oraclejdk8
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
+#      jdk: oraclejdk8
 # datanucleus-5
     - env: JPAPROVIDER=datanucleus-5 RDBMS=h2
       jdk: oraclejdk8
@@ -103,6 +112,9 @@ matrix:
       jdk: oraclejdk8
       sudo: true
     - env: JPAPROVIDER=hibernate-5.1 RDBMS=db2
+      jdk: oraclejdk8
+      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=db2
       jdk: oraclejdk8
       sudo: true
 # TODO: work on datanucleus-4/db2 support
@@ -128,6 +140,9 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=firebird
 #      jdk: oraclejdk8
 #      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=firebird
+#      jdk: oraclejdk8
+#      sudo: true
 # TODO: work on datanucleus-4/firebird support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=firebird
 #      jdk: oraclejdk8
@@ -151,6 +166,9 @@ matrix:
 #    - env: JPAPROVIDER=hibernate-5.1 RDBMS=oracle
 #      jdk: oraclejdk8
 #      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.2 RDBMS=oracle
+#      jdk: oraclejdk8
+#      sudo: true
 # TODO: work on datanucleus-4/oracle support
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=oracle
 #      jdk: oraclejdk8
@@ -162,9 +180,9 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
-# JDK 9
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
-      sudo: true
+# JDK 9 - Not going to work until javassist is fixed
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
+#      sudo: true
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -183,5 +201,5 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate RDBMS=oracle
 #      sudo: true
-    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
-      sudo: true
+#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
+#      sudo: true

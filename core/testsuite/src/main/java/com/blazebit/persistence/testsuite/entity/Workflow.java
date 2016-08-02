@@ -21,14 +21,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Basic;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.MapKeyColumn;
+import javax.persistence.*;
 
 /**
  *
@@ -76,6 +69,8 @@ public class Workflow implements Serializable {
                 nullable = false,
                 insertable = false,
                 updatable = false) })
+    // Careful, MySQL will fail if the value is too long since it will be part of a unique key
+    @Column(length = 10)
     public Set<Locale> getSupportedLocales() {
         return supportedLocales;
     }
@@ -85,6 +80,8 @@ public class Workflow implements Serializable {
     }
 
     @ElementCollection
+    // Careful, MySQL will fail if the value is too long since it will be part of a unique key
+    @Column(length = 20)
     public Set<String> getTags() {
 		return tags;
 	}
