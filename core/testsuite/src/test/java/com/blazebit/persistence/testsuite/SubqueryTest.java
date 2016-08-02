@@ -240,7 +240,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    // NOTE: Looks like Datanucleus doesn't support this syntax => TODO: create an issue for datanucleus
+    // NOTE: Looks like Datanucleus doesn't support IN with collection tables: https://github.com/datanucleus/datanucleus-rdbms/issues/87
     @Test
     @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelatesSimple() {
@@ -254,7 +254,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    // NOTE: Looks like Datanucleus doesn't support this syntax => TODO: create an issue for datanucleus
+    // NOTE: Looks like Datanucleus doesn't support IN with collection tables: https://github.com/datanucleus/datanucleus-rdbms/issues/87
     @Test
     @Category({ NoDatanucleus.class })
     public void testMultipleCorrelationsWithJoins() {

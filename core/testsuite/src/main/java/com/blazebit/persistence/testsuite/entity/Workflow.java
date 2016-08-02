@@ -35,7 +35,7 @@ public class Workflow implements Serializable {
     private Long id;
     private Locale defaultLanguage;
     private Set<Locale> supportedLocales = new HashSet<Locale>();
-    private Set<String> tags = new HashSet<String>();
+//    private Set<String> tags = new HashSet<String>();
     private Map<Locale, LocalizedEntity> localized = new HashMap<Locale, LocalizedEntity>();
 
     public Workflow() {
@@ -79,16 +79,16 @@ public class Workflow implements Serializable {
         this.supportedLocales = supportedLocales;
     }
 
-    @ElementCollection
-    // Careful, MySQL will fail if the value is too long since it will be part of a unique key
-    @Column(length = 20)
-    public Set<String> getTags() {
-		return tags;
-	}
-
-	public void setTags(Set<String> tags) {
-		this.tags = tags;
-	}
+//    @ElementCollection
+//    // Careful, MySQL will fail if the value is too long since it will be part of a unique key
+//    @Column(length = 20)
+//    public Set<String> getTags() {
+//		return tags;
+//	}
+//
+//	public void setTags(Set<String> tags) {
+//		this.tags = tags;
+//	}
 
     @ElementCollection
     @CollectionTable(
