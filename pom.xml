@@ -19,6 +19,7 @@
 	<modules>
 		<module>core</module>
 		<module>entity-view</module>
+		<module>jpa-criteria</module>
 		<module>integration</module>
 		<module>testsuite-base</module>
 		<module>documentation</module>
@@ -97,19 +98,20 @@
 		<!-- 4.2.15.Final has a bug regarding naming strategies -->
 		<version.hibernate-4.2>4.2.21.Final</version.hibernate-4.2>
 		<version.hibernate-4.3>4.3.11.Final</version.hibernate-4.3>
-		<version.hibernate-5>5.0.7.Final</version.hibernate-5>
+		<version.hibernate-5>5.0.10.Final</version.hibernate-5>
 		<version.hibernate-5.1>5.1.0.Final</version.hibernate-5.1>
+		<version.hibernate-5.2>5.2.1.Final</version.hibernate-5.2>
 
-		<version.datanucleus.base-4>4.1.8</version.datanucleus.base-4>
-		<version.datanucleus.rdbms-4>4.1.10</version.datanucleus.rdbms-4>
-		<version.datanucleus.api-jpa-4>4.1.8</version.datanucleus.api-jpa-4>
+		<version.datanucleus.base-4>4.1.12</version.datanucleus.base-4>
+		<version.datanucleus.rdbms-4>4.1.14</version.datanucleus.rdbms-4>
+		<version.datanucleus.api-jpa-4>4.1.11</version.datanucleus.api-jpa-4>
 		<version.datanucleus.jpa-4>4.0.5</version.datanucleus.jpa-4>
-		<version.datanucleus.base-5>5.0.0-m1</version.datanucleus.base-5>
-		<version.datanucleus.rdbms-5>5.0.0-m1</version.datanucleus.rdbms-5>
-		<version.datanucleus.api-jpa-5>5.0.0-m1</version.datanucleus.api-jpa-5>
-		<version.datanucleus.jpa-5>5.0.0-m1</version.datanucleus.jpa-5>
+		<version.datanucleus.base-5>5.0.0-release</version.datanucleus.base-5>
+		<version.datanucleus.rdbms-5>5.0.0-release</version.datanucleus.rdbms-5>
+		<version.datanucleus.api-jpa-5>5.0.0-release</version.datanucleus.api-jpa-5>
+		<version.datanucleus.jpa-5>5.0.0-release</version.datanucleus.jpa-5>
 		
-		<version.eclipselink>2.6.2</version.eclipselink>
+		<version.eclipselink>2.6.3</version.eclipselink>
 		<version.openjpa>2.4.0</version.openjpa>
 
 		<version.openejb>4.6.0</version.openejb>

@@ -1,0 +1,81 @@
+package com.blazebit.persistence.criteria.impl.expression;
+
+import javax.persistence.Parameter;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+
+import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
+import com.blazebit.persistence.criteria.impl.ParameterVisitor;
+import com.blazebit.persistence.criteria.impl.RenderContext;
+
+import java.util.Collection;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements ParameterExpression<T> {
+
+    private static final long serialVersionUID = 1L;
+    
+    private final String name;
+
+    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, String name) {
+        super(criteriaBuilder, javaType);
+        this.name = name;
+    }
+
+    public ParameterExpressionImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType) {
+        super(criteriaBuilder, javaType);
+        this.name = null;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Integer getPosition() {
+        return null;
+    }
+
+    @Override
+    public Class<T> getParameterType() {
+        return getJavaType();
+    }
+
+    @Override
+    public void visitParameters(ParameterVisitor visitor) {
+        visitor.add(this);
+    }
+
+    @Override
+    public void render(RenderContext context) {
+        final String paramName = context.registerExplicitParameter(this);
+        context.getBuffer().append(':').append(paramName);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Parameter<?>)) return false;
+
+        Parameter<?> that = (Parameter<?>) o;
+
+        if (name == null) {
+            return false;
+        }
+        return name.equals(that.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        // Need the same hash code as in ParameterManager.ParameterImpl
+        result = 31 * result;// + (position != null ? position.hashCode() : 0);
+        return result;
+    }
+}

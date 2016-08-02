@@ -1,0 +1,267 @@
+package com.blazebit.persistence.criteria.impl;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.criteria.*;
+
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
+import javax.persistence.metamodel.EntityType;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public class BlazeCriteriaQueryImpl<T> implements BlazeCriteriaQuery<T> {
+
+    private final BlazeCriteriaBuilderImpl criteriaBuilder;
+
+    private final Class<T> returnType;
+    private final InternalQuery<T> query;
+
+    public BlazeCriteriaQueryImpl(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> returnType) {
+        this.criteriaBuilder = criteriaBuilder;
+        this.returnType = returnType;
+        this.query = new InternalQuery<T>(this, criteriaBuilder);
+    }
+
+    /* Select */
+
+    @Override
+    public boolean isDistinct() {
+        return query.isDistinct();
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> distinct(boolean distinct) {
+        query.setDistinct(distinct);
+        return this;
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> select(Selection<? extends T> selection) {
+        query.setSelection(criteriaBuilder.wrapSelection(selection));
+        return this;
+    }
+
+    @Override
+    public Selection<T> getSelection() {
+        return query.getSelection();
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> multiselect(Selection<?>... selections) {
+        return multiselect(Arrays.asList(selections));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public BlazeCriteriaQuery<T> multiselect(List<Selection<?>> selections) {
+        final Selection<? extends T> selection;
+
+        if (Tuple.class.isAssignableFrom(getResultType())) {
+            selection = (Selection<? extends T>) criteriaBuilder.tuple(selections);
+        } else if (getResultType().isArray()) {
+            selection = (Selection<? extends T>) (Selection<?>) criteriaBuilder.array((Class<? extends Object[]>) (Class<?>) getResultType(), selections);
+        } else if (Object.class.equals(getResultType())) {
+            switch (selections.size()) {
+                case 0: {
+                    throw new IllegalArgumentException("empty selections passed to criteria query typed as Object");
+                }
+                case 1: {
+                    selection = (Selection<? extends T>) selections.get(0);
+                    break;
+                }
+                default: {
+                    selection = (Selection<? extends T>) criteriaBuilder.array(selections);
+                }
+            }
+        } else {
+            selection = criteriaBuilder.construct(getResultType(), selections);
+        }
+
+        query.setSelection(selection);
+        return this;
+    }
+
+    /* From */
+
+    @Override
+    public Set<Root<?>> getRoots() {
+        return query.getRoots();
+    }
+
+    @Override
+    public Set<BlazeRoot<?>> getBlazeRoots() {
+        return query.getBlazeRoots();
+    }
+
+    @Override
+    public <X> BlazeRoot<X> from(Class<X> entityClass) {
+        return query.from(entityClass, null);
+    }
+
+    @Override
+    public <X> BlazeRoot<X> from(EntityType<X> entityType) {
+        return query.from(entityType, null);
+    }
+
+    @Override
+    public <X> BlazeRoot<X> from(Class<X> entityClass, String alias) {
+        return query.from(entityClass, alias);
+    }
+
+    @Override
+    public <X> BlazeRoot<X> from(EntityType<X> entityType, String alias) {
+        return query.from(entityType, alias);
+    }
+
+    /* Where */
+
+    @Override
+    public Predicate getRestriction() {
+        return query.getRestriction();
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> where(Expression<Boolean> restriction) {
+        query.setRestriction(criteriaBuilder.wrap(restriction));
+        return this;
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> where(Predicate... restrictions) {
+        query.setRestriction(criteriaBuilder.and(restrictions));
+        return this;
+    }
+
+    /* Group by */
+
+    @Override
+    public List<Expression<?>> getGroupList() {
+        return query.getGroupList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public BlazeCriteriaQuery<T> groupBy(Expression<?>... groupings) {
+        if (groupings == null || groupings.length == 0) {
+            query.setGroupList(Collections.EMPTY_LIST);
+        } else {
+            query.setGroupList(Arrays.asList(groupings));
+        }
+        
+        return this;
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> groupBy(List<Expression<?>> groupings) {
+        query.setGroupList(groupings);
+        return this;
+    }
+
+    /* Having */
+
+    @Override
+    public Predicate getGroupRestriction() {
+        return query.getGroupRestriction();
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> having(Expression<Boolean> restriction) {
+        query.setHaving(criteriaBuilder.wrap(restriction));
+        return this;
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> having(Predicate... restrictions) {
+        query.setHaving(criteriaBuilder.and(restrictions));
+        return this;
+    }
+
+    /* Order by */
+
+    @Override
+    public List<BlazeOrder> getBlazeOrderList() {
+        return query.getBlazeOrderList();
+    }
+
+    @Override
+    public List<Order> getOrderList() {
+        return query.getOrderList();
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public BlazeCriteriaQuery<T> orderBy(Order... orders) {
+        if (orders == null || orders.length == 0) {
+            query.setOrderList(Collections.EMPTY_LIST);
+        } else {
+            query.setOrderList(Arrays.asList(orders));
+        }
+        
+        return this;
+    }
+
+    @Override
+    public BlazeCriteriaQuery<T> orderBy(List<Order> orderList) {
+        query.setOrderList(orderList);
+        return this;
+    }
+
+    /* Parameters */
+
+    @Override
+    public Set<ParameterExpression<?>> getParameters() {
+        return query.getParameters();
+    }
+
+    /* Subquery */
+
+    @Override
+    public <U> BlazeSubquery<U> subquery(Class<U> type) {
+        return query.subquery(type);
+    }
+
+    @Override
+    public Class<T> getResultType() {
+        return returnType;
+    }
+
+    @Override
+    public String getQueryString() {
+        return createCriteriaBuilder().getQueryString();
+    }
+
+    @Override
+    public TypedQuery<T> getQuery() {
+        return createCriteriaBuilder().getQuery();
+    }
+
+    @Override
+    public List<T> getResultList() {
+        return createCriteriaBuilder().getResultList();
+    }
+
+    @Override
+    public T getSingleResult() {
+        return createCriteriaBuilder().getSingleResult();
+    }
+
+    @Override
+    public BlazeCriteriaBuilder getCriteriaBuilder() {
+        return criteriaBuilder;
+    }
+
+    @Override
+    public CriteriaBuilder<T> createCriteriaBuilder() {
+        CriteriaBuilder<T> cb = criteriaBuilder.getCriteriaBuilderFactory().create(criteriaBuilder.getEntityManager(), returnType);
+        return query.render(cb);
+    }
+
+}
