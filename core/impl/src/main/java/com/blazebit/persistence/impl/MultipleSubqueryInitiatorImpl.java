@@ -10,9 +10,9 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImpl<T> implements MultipleSubqueryInitiator<T>, ExpressionBuilder {
 
     private final T result;
-    private final Expression expression;
     private final ExpressionBuilderEndedListener listener;
     private final SubqueryInitiatorFactory subqueryInitFactory;
+    private Expression expression;
     private String subqueryAlias;
     private SubqueryInitiator<?> subqueryStartMarker;
     
@@ -49,7 +49,7 @@ public class MultipleSubqueryInitiatorImpl<T> extends SubqueryBuilderListenerImp
     @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
-        ExpressionUtils.replaceSubexpression(expression, subqueryAlias, new SubqueryExpression(builder));
+        expression = ExpressionUtils.replaceSubexpression(expression, subqueryAlias, new SubqueryExpression(builder));
         subqueryStartMarker = null;
         subqueryAlias = null;
     }

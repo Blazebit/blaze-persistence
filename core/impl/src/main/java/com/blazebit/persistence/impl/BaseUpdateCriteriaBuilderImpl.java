@@ -73,6 +73,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @Override
     public SubqueryInitiator<X> set(String attribute) {
         verifySubqueryBuilderEnded();
+        checkAttribute(attribute);
         this.currentAttribute = attribute;
         return subqueryInitFactory.createSubqueryInitiator((X) this, this);
     }
@@ -81,6 +82,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     @Override
     public MultipleSubqueryInitiator<X> setSubqueries(String attribute, String expression) {
         verifySubqueryBuilderEnded();
+        checkAttribute(attribute);
         this.currentAttribute = attribute;
         Expression expr = expressionFactory.createSimpleExpression(expression);
         MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>((X) this, expr, this, subqueryInitFactory);

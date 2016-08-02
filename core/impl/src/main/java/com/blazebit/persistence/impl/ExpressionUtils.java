@@ -471,7 +471,23 @@ public class ExpressionUtils {
         return e.accept(sizeExpressionDetector);
     }
 
-    public static void replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
+    public static Expression replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
+        if (superExpression instanceof PathExpression) {
+            PathExpression expression = (PathExpression) superExpression;
+            List<PathElementExpression> expressions = expression.getExpressions();
+            int size = expressions.size();
+
+            if (size == 1) {
+                PathElementExpression elementExpression = expressions.get(0);
+                if (!(elementExpression instanceof PropertyExpression)) {
+                    throw new IllegalArgumentException("Illegal array expression in subquery alias");
+                }
+
+                if (placeholder.equals(((PropertyExpression) elementExpression).getProperty())) {
+                    return substitute;
+                }
+            }
+        }
         final AliasReplacementTransformer replacementTransformer = new AliasReplacementTransformer(substitute, placeholder);
         VisitorAdapter transformationVisitor = new VisitorAdapter() {
 
@@ -583,6 +599,7 @@ public class ExpressionUtils {
         };
 
         superExpression.accept(transformationVisitor);
+        return superExpression;
     }
 
     public static boolean isSizeFunction(Expression expression) {

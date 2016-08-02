@@ -29,7 +29,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderListenerImpl<T> {
 
     private final String subqueryAlias;
-    protected final Expression superExpression;
+    protected Expression superExpression;
 
     public SuperExpressionSubqueryBuilderListener(String subqueryAlias, Expression superExpression) {
         this.subqueryAlias = subqueryAlias;
@@ -39,7 +39,7 @@ public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderLi
     @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
-        ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, new SubqueryExpression(builder));
+        superExpression = ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, new SubqueryExpression(builder));
     }
 
 }

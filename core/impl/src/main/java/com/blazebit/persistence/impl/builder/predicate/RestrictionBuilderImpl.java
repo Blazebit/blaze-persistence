@@ -603,7 +603,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
         private final PredicateBuilderEndedListener listener;
         private final String subqueryAlias;
-        private final Expression superExpression;
+        private Expression superExpression;
 
         public SuperExpressionRightHandsideSubqueryPredicateBuilder(String subqueryAlias, Expression superExpression, PredicateBuilderEndedListener listener) {
             this.listener = listener;
@@ -623,7 +623,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             }
 
             SubqueryExpression subqueryExpr = (SubqueryExpression) binaryPred.getRight();
-            ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, subqueryExpr);
+            superExpression = ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, subqueryExpr);
             binaryPred.setRight(superExpression);
             listener.onBuilderEnded(builder);
         }
