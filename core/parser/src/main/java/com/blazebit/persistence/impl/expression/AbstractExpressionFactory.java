@@ -184,8 +184,8 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
     
     @Override
-    public Predicate createPredicateExpression(String expression, boolean allowQuantifiedPredicates) {
-        return (Predicate) createExpression(new RuleInvoker() {
+    public BooleanExpression createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
+        return (BooleanExpression) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {

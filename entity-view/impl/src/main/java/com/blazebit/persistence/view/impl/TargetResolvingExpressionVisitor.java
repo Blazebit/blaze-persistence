@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.expression.AndExpression;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -36,8 +36,8 @@ import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.expression.NotExpression;
+import com.blazebit.persistence.impl.expression.OrExpression;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -237,6 +237,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(BooleanLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
     	String name = expression.getFunctionName();
     	if ("KEY".equalsIgnoreCase(name)) {
@@ -303,17 +308,17 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
     
     @Override
-    public void visit(AndPredicate predicate) {
+    public void visit(AndExpression predicate) {
         invalid(predicate);
     }
 
     @Override
-    public void visit(OrPredicate predicate) {
+    public void visit(OrExpression predicate) {
         invalid(predicate);
     }
 
     @Override
-    public void visit(NotPredicate predicate) {
+    public void visit(NotExpression predicate) {
         invalid(predicate);
     }
 

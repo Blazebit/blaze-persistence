@@ -120,7 +120,7 @@ public class BetweenBuilderImpl<T> extends SubqueryBuilderListenerImpl<T> implem
     }
 
     @Override
-    public BetweenPredicate getPredicate() {
+    public BetweenPredicate getExpression() {
         return predicate;
     }
 

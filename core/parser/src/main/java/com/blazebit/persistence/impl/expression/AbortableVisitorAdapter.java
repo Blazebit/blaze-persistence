@@ -17,7 +17,6 @@ package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -30,9 +29,6 @@ import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
  *
@@ -163,10 +159,15 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     public Boolean visit(NumericLiteral expression) {
         return false;
     }
-    
+
     @Override
-    public Boolean visit(AndPredicate predicate) {
-        List<Predicate> children = predicate.getChildren();
+    public Boolean visit(BooleanLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(AndExpression predicate) {
+        List<BooleanExpression> children = predicate.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             if (children.get(i).accept(this)) {
@@ -177,8 +178,8 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(OrPredicate predicate) {
-        List<Predicate> children = predicate.getChildren();
+    public Boolean visit(OrExpression predicate) {
+        List<BooleanExpression> children = predicate.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             if (children.get(i).accept(this)) {
@@ -189,8 +190,8 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(NotPredicate predicate) {
-        return predicate.getPredicate().accept(this);
+    public Boolean visit(NotExpression predicate) {
+        return predicate.getExpression().accept(this);
     }
 
     @Override

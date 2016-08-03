@@ -34,12 +34,8 @@ import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredi
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
-import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -56,7 +52,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
 
-    private Predicate whenPredicate;
+    private BooleanExpression whenExpression;
     private GeneralCaseExpression expression;
     private Expression thenExpression;
 
@@ -125,7 +121,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
         thenExpression = expressionFactory.createScalarExpression(expression);
-        whenClauses.add(new WhenClauseExpression(whenPredicate, thenExpression));
+        whenClauses.add(new WhenClauseExpression(whenExpression, thenExpression));
         return this;
     }
 
@@ -135,7 +131,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
             throw new IllegalStateException("Method then/thenExpression called multiple times");
         }
         thenExpression = parameterManager.addParameterExpression(value);
-        whenClauses.add(new WhenClauseExpression(whenPredicate, thenExpression));
+        whenClauses.add(new WhenClauseExpression(whenExpression, thenExpression));
         return this;
     }
 
@@ -180,7 +176,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     @Override
     public void onBuilderEnded(PredicateBuilder o) {
         super.onBuilderEnded(o);
-        this.whenPredicate = o.getPredicate();
+        this.whenExpression = o.getExpression();
         this.thenExpression = null;
     }
 

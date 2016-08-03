@@ -193,12 +193,12 @@ datetime_expression : state_field_path_expression
                     | aggregate_expression
                     | case_expression
                     | function_invocation
-                    | literal_temporal
+                    | temporal_literal
                     ;
 
 boolean_expression : state_field_path_expression
                    | single_element_path_expression
-                   | Boolean_literal
+                   | boolean_literal
                    | Input_parameter
                    | case_expression
                    | function_invocation
@@ -281,10 +281,11 @@ nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
 null_literal : NULL;
 
 literal
-    : Boolean_literal
+    : boolean_literal
     | enum_literal
     | numeric_literal
     | string_literal
+    | temporal_literal
     ;
 
 numeric_literal
@@ -300,7 +301,10 @@ string_literal : String_literal
                | Character_literal
                ;
 
-literal_temporal
+boolean_literal : Boolean_literal
+                ;
+
+temporal_literal
     : Date_literal
     | Time_literal
     | Timestamp_literal

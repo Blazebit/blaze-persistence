@@ -336,17 +336,9 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     @Override
     public void visit(FooExpression expression) {
-        String expressionString = expression.toString();
-        if ("true".equalsIgnoreCase(expressionString) || "false".equalsIgnoreCase(expressionString)) {
-            currentPosition.setCurrentClass(Boolean.class);
-        } else if (isNumber(expressionString)) {
-        	// Maybe use Number?
-        	currentPosition.setCurrentClass(Integer.class);
-        } else {
-            // We can't infer a type here
-            // TODO: Not sure what happens when this is the result node of a case when
-            super.visit(expression);
-        }
+        // We can't infer a type here
+        // TODO: Not sure what happens when this is the result node of a case when
+        super.visit(expression);
     }
 
     @Override
@@ -368,6 +360,11 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
         }
+    }
+
+    @Override
+    public void visit(BooleanLiteral expression) {
+        currentPosition.setCurrentClass(Boolean.class);
     }
 
     private boolean isNumber(String expressionString) {

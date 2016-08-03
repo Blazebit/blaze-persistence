@@ -182,15 +182,19 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testBooleanLiteral(){
-        FooExpression resultFalseUpper = (FooExpression) parse("FALSE");
-        FooExpression resultFalseLower = (FooExpression) parse("false");
-        FooExpression resultTrueUpper = (FooExpression) parse("TRUE");
-        FooExpression resultTrueLower = (FooExpression) parse("true");
-        
-        assertEquals(new FooExpression("FALSE"), resultFalseUpper);
-        assertEquals(new FooExpression("false"), resultFalseLower);
-        assertEquals(new FooExpression("TRUE"), resultTrueUpper);
-        assertEquals(new FooExpression("true"), resultTrueLower);
+        BooleanLiteral resultFalseUpper = (BooleanLiteral) parse("FALSE");
+        BooleanLiteral resultFalseLower = (BooleanLiteral) parse("false");
+        BooleanLiteral resultFalseMixed = (BooleanLiteral) parse("FaLsE");
+        BooleanLiteral resultTrueUpper = (BooleanLiteral) parse("TRUE");
+        BooleanLiteral resultTrueLower = (BooleanLiteral) parse("true");
+        BooleanLiteral resultTrueMixed = (BooleanLiteral) parse("TrUe");
+
+        assertEquals(new BooleanLiteral("FALSE"), resultFalseUpper);
+        assertEquals(new BooleanLiteral("false"), resultFalseLower);
+        assertEquals(new BooleanLiteral("FaLsE"), resultFalseMixed);
+        assertEquals(new BooleanLiteral("TRUE"), resultTrueUpper);
+        assertEquals(new BooleanLiteral("true"), resultTrueLower);
+        assertEquals(new BooleanLiteral("TrUe"), resultTrueMixed);
     }
     
     @Test

@@ -17,7 +17,6 @@ package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -31,9 +30,6 @@ import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.MultinaryPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
@@ -151,19 +147,24 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(AndPredicate predicate) {
-        return visit((MultinaryPredicate) predicate);
+    public Expression visit(BooleanLiteral expression) {
+        return expression;
     }
 
     @Override
-    public Expression visit(OrPredicate predicate) {
-        return visit((MultinaryPredicate) predicate);
+    public Expression visit(AndExpression expression) {
+        return visit((MultinaryBooleanExpression) expression);
     }
 
     @Override
-    public Expression visit(NotPredicate predicate) {
-        predicate.setPredicate((Predicate) predicate.getPredicate().accept(this));
-        return predicate;
+    public Expression visit(OrExpression expression) {
+        return visit((MultinaryBooleanExpression) expression);
+    }
+
+    @Override
+    public Expression visit(NotExpression expression) {
+        expression.setExpression((Predicate) expression.getExpression().accept(this));
+        return expression;
     }
 
     @Override
@@ -238,9 +239,9 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         return predicate;
     }
 
-    private MultinaryPredicate visit(MultinaryPredicate predicate) {
+    private MultinaryBooleanExpression visit(MultinaryBooleanExpression predicate) {
         for (int i = 0; i < predicate.getChildren().size(); i++) {
-            Predicate p = predicate.getChildren().get(i);
+            BooleanExpression p = predicate.getChildren().get(i);
             predicate.getChildren().set(i, (Predicate) p.accept(this));
         }
         return predicate;

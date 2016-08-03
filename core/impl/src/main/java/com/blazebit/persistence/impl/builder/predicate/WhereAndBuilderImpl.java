@@ -30,9 +30,10 @@ import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.expression.BooleanExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.expression.AndExpression;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -47,7 +48,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final AndPredicate predicate;
+    private final AndExpression expression;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
@@ -60,7 +61,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
         this.result = result;
         this.listener = listener;
-        this.predicate = new AndPredicate();
+        this.expression = new AndExpression();
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
         this.parameterManager = parameterManager;
@@ -74,14 +75,14 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public Predicate getPredicate() {
-        return predicate;
+    public BooleanExpression getExpression() {
+        return expression;
     }
 
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
-        predicate.getChildren().add(builder.getPredicate());
+        expression.getChildren().add(builder.getExpression());
     }
 
     @Override

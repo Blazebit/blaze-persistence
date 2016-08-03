@@ -32,9 +32,7 @@ import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -47,7 +45,6 @@ import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
@@ -79,20 +76,20 @@ public abstract class PredicateManager<T> extends AbstractManager {
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, expr, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
-    void restrictExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Predicate predicate) {
-        rootPredicate.verifyBuilderEnded();
-        predicate.accept(parameterManager.getParameterRegistrationVisitor());
-        
-        List<Predicate> children = rootPredicate.getPredicate().getChildren();
-        children.clear();
-        children.add(predicate);
-    }
-
     CaseWhenStarterBuilder<RestrictionBuilder<T>> restrictCase(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
         @SuppressWarnings("unchecked")
         RestrictionBuilder<T> restrictionBuilder = rootPredicate.startBuilder(new RestrictionBuilderImpl<T>((T) builder, rootPredicate, subqueryInitFactory, expressionFactory, parameterManager));
         caseExpressionBuilderListener = new CaseExpressionBuilderListener((RestrictionBuilderImpl<T>) restrictionBuilder);
         return caseExpressionBuilderListener.startBuilder(new CaseWhenBuilderImpl<RestrictionBuilder<T>>(restrictionBuilder, caseExpressionBuilderListener, subqueryInitFactory, expressionFactory, parameterManager));
+    }
+
+    void restrictExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, BooleanExpression expression) {
+        rootPredicate.verifyBuilderEnded();
+        expression.accept(parameterManager.getParameterRegistrationVisitor());
+
+        List<BooleanExpression> children = rootPredicate.getPredicate().getChildren();
+        children.clear();
+        children.add(expression);
     }
 
     SimpleCaseWhenStarterBuilder<RestrictionBuilder<T>> restrictSimpleCase(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder, Expression caseOperand) {
@@ -117,17 +114,17 @@ public abstract class PredicateManager<T> extends AbstractManager {
         return initiator;
     }
 
-    <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X builder, Predicate predicate) {
+    <X> MultipleSubqueryInitiator<X> restrictExpressionSubqueries(X builder, BooleanExpression expression) {
         rootPredicate.verifyBuilderEnded();
-        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        expression.accept(parameterManager.getParameterRegistrationVisitor());
         
-        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, predicate, new ExpressionBuilderEndedListener() {
+        MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>(builder, expression, new ExpressionBuilderEndedListener() {
             
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {
-                List<Predicate> children = rootPredicate.getPredicate().getChildren();
+                List<BooleanExpression> children = rootPredicate.getPredicate().getChildren();
                 children.clear();
-                children.add((Predicate) builder.getExpression());
+                children.add((BooleanExpression) builder.getExpression());
                 currentMultipleSubqueryInitiator = null;
             }
             
@@ -150,7 +147,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
-        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotExpression(new ExistsPredicate())));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 

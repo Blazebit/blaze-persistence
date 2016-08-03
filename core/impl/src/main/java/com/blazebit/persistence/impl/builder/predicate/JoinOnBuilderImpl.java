@@ -27,6 +27,7 @@ import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
+import com.blazebit.persistence.impl.expression.BooleanExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -65,26 +66,26 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     @Override
     public T onExpression(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
-        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, false);
+        booleanExpression.accept(parameterManager.getParameterRegistrationVisitor());
         
-        List<Predicate> children = rootPredicate.getPredicate().getChildren();
+        List<BooleanExpression> children = rootPredicate.getPredicate().getChildren();
         children.clear();
-        children.add(predicate);
+        children.add(booleanExpression);
         return result;
     }
 
     @Override
     public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
-        predicate.accept(parameterManager.getParameterRegistrationVisitor());
+        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, false);
+        booleanExpression.accept(parameterManager.getParameterRegistrationVisitor());
         
-        MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, predicate, new ExpressionBuilderEndedListener() {
+        MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, booleanExpression, new ExpressionBuilderEndedListener() {
             
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {
-                List<Predicate> children = rootPredicate.getPredicate().getChildren();
+                List<BooleanExpression> children = rootPredicate.getPredicate().getChildren();
                 children.clear();
                 children.add((Predicate) builder.getExpression());
                 currentMultipleSubqueryInitiator = null;
@@ -96,7 +97,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     }
 
     @Override
-    public Predicate getPredicate() {
+    public BooleanExpression getExpression() {
         return rootPredicate.getPredicate();
     }
 

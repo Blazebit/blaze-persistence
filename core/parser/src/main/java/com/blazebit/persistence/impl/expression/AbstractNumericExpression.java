@@ -5,7 +5,7 @@ package com.blazebit.persistence.impl.expression;
  * by Moritz Becker (moritz.becker@gmx.at)
  * on 12.07.2016.
  */
-public abstract class AbstractNumericExpression implements NumericExpression {
+public abstract class AbstractNumericExpression extends AbstractExpression implements NumericExpression {
 
     private final NumericType numericType;
 

@@ -17,9 +17,10 @@ package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
+import com.blazebit.persistence.impl.expression.BooleanExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.expression.NotExpression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
@@ -31,42 +32,42 @@ import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
  */
 public class RightHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderListenerImpl<T> implements PredicateBuilder {
 
-    private final Predicate predicate;
+    private final BooleanExpression expression;
     private final PredicateBuilderEndedListener listener;
 
-    public RightHandsideSubqueryPredicateBuilder(PredicateBuilderEndedListener listener, Predicate predicate) {
-        this.predicate = predicate;
+    public RightHandsideSubqueryPredicateBuilder(PredicateBuilderEndedListener listener, BooleanExpression expression) {
+        this.expression = expression;
         this.listener = listener;
     }
 
     @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
-        // set the finished subquery builder on the previously created predicate
-        Predicate pred;
-        if (predicate instanceof NotPredicate) {
-            // unwrap not predicate
-            pred = ((NotPredicate) predicate).getPredicate();
+        // set the finished subquery builder on the previously created expression
+        BooleanExpression expr;
+        if (expression instanceof NotExpression) {
+            // unwrap not expression
+            expr = ((NotExpression) expression).getExpression();
         } else {
-            pred = predicate;
+            expr = expression;
         }
         
-        if (pred instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
+        if (expr instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
         	// Since we render the limit in the subquery as wrapping function, there currently does not seem to be a possibility to support this in JPQL grammars
-        	throw new IllegalArgumentException("Limiting a subquery in an exists predicate is currently unsupported!");
+        	throw new IllegalArgumentException("Limiting a subquery in an exists expression is currently unsupported!");
         }
 
-        if (pred instanceof UnaryExpressionPredicate) {
-            ((UnaryExpressionPredicate) pred).setExpression(new SubqueryExpression(builder));
+        if (expr instanceof UnaryExpressionPredicate) {
+            ((UnaryExpressionPredicate) expr).setExpression(new SubqueryExpression(builder));
         } else {
-            throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
+            throw new IllegalStateException("SubqueryBuilder ended but expression type was unexpected");
         }
 
         listener.onBuilderEnded(this);
     }
 
     @Override
-    public Predicate getPredicate() {
-        return predicate;
+    public BooleanExpression getExpression() {
+        return expression;
     }
 }

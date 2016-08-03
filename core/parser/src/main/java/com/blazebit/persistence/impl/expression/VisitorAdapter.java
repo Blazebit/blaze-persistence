@@ -17,7 +17,6 @@ package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -30,8 +29,6 @@ import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
 /**
@@ -136,8 +133,12 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(AndPredicate predicate) {
-        List<Predicate> children = predicate.getChildren();
+    public void visit(BooleanLiteral expression) {
+    }
+
+    @Override
+    public void visit(AndExpression expression) {
+        List<BooleanExpression> children = expression.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             children.get(i).accept(this);
@@ -145,8 +146,8 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(OrPredicate predicate) {
-        List<Predicate> children = predicate.getChildren();
+    public void visit(OrExpression expression) {
+        List<BooleanExpression> children = expression.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             children.get(i).accept(this);
@@ -154,8 +155,8 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(NotPredicate predicate) {
-        predicate.getPredicate().accept(this);
+    public void visit(NotExpression expression) {
+        expression.getExpression().accept(this);
     }
 
     @Override

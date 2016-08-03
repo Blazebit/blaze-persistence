@@ -16,8 +16,6 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 
 import java.util.ArrayList;
@@ -94,8 +92,8 @@ public class AbstractParserTest {
     	aggregateFunctions = new HashSet<String>();
     }
 
-    protected NotPredicate not(Predicate p) {
-        return new NotPredicate(p);
+    protected NotExpression not(BooleanExpression p) {
+        return new NotExpression(p);
     }
 
     protected CompositeExpression compose(Expression... expr) {
@@ -118,8 +116,8 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
-    protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
-        return ef.createPredicateExpression(expr, allowQuantifiedPredicates);
+    protected BooleanExpression parseBooleanExpression(String expr, boolean allowQuantifiedPredicates) {
+        return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
@@ -208,6 +206,10 @@ public class AbstractParserTest {
 
     protected NumericLiteral _bigdec(String value) {
         return new NumericLiteral(value, NumericType.BIG_DECIMAL);
+    }
+
+    protected BooleanLiteral _boolean(String value) {
+        return new BooleanLiteral(value);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

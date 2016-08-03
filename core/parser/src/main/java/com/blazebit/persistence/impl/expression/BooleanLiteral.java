@@ -3,14 +3,13 @@ package com.blazebit.persistence.impl.expression;
 /**
  * Created
  * by Moritz Becker (moritz.becker@gmx.at)
- * on 12.07.2016.
+ * on 03.08.2016.
  */
-public class NumericLiteral extends AbstractNumericExpression {
+public class BooleanLiteral extends AbstractExpression implements BooleanExpression {
 
     private final String value;
 
-    public NumericLiteral(String value, NumericType numericType) {
-        super(numericType);
+    public BooleanLiteral(String value) {
         this.value = value;
     }
 
@@ -19,8 +18,8 @@ public class NumericLiteral extends AbstractNumericExpression {
     }
 
     @Override
-    public Expression clone() {
-        return new NumericLiteral(value, getNumericType());
+    public BooleanExpression clone() {
+        return new BooleanLiteral(value);
     }
 
     @Override
@@ -36,10 +35,9 @@ public class NumericLiteral extends AbstractNumericExpression {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof NumericLiteral)) return false;
-        if (!super.equals(o)) return false;
+        if (!(o instanceof BooleanLiteral)) return false;
 
-        NumericLiteral that = (NumericLiteral) o;
+        BooleanLiteral that = (BooleanLiteral) o;
 
         return value != null ? value.equals(that.value) : that.value == null;
 
@@ -47,10 +45,6 @@ public class NumericLiteral extends AbstractNumericExpression {
 
     @Override
     public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        return result;
+        return value != null ? value.hashCode() : 0;
     }
-
 }
-

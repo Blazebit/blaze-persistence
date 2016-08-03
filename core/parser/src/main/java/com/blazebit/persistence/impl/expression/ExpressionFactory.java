@@ -41,5 +41,5 @@ public interface ExpressionFactory {
 
     public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions);
 
-    public Predicate createPredicateExpression(String expression, boolean allowQuantifiedPredicates);
+    public BooleanExpression createBooleanExpression(String expression, boolean allowQuantifiedPredicates);
 }

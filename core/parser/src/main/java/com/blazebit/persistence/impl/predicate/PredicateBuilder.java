@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
+import com.blazebit.persistence.impl.expression.BooleanExpression;
+
 /**
  *
  * @author Christian Beikov
@@ -23,5 +25,5 @@ package com.blazebit.persistence.impl.predicate;
  */
 public interface PredicateBuilder {
 
-    public Predicate getPredicate();
+    public BooleanExpression getExpression();
 }

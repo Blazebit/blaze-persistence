@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -28,8 +27,6 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
 
 /**
  *
@@ -73,13 +70,15 @@ public interface Expression {
         public void visit(ArithmeticFactor expression);
 
         public void visit(NumericLiteral expression);
+
+        public void visit(BooleanLiteral expression);
         
         // Predicates
-        public void visit(AndPredicate predicate);
+        public void visit(AndExpression predicate);
 
-        public void visit(OrPredicate predicate);
+        public void visit(OrExpression predicate);
 
-        public void visit(NotPredicate predicate);
+        public void visit(NotExpression predicate);
 
         public void visit(EqPredicate predicate);
 
@@ -141,13 +140,15 @@ public interface Expression {
         public T visit(ArithmeticFactor expression);
 
         public T visit(NumericLiteral expression);
+
+        public T visit(BooleanLiteral expression);
         
         // Predicates
-        public T visit(AndPredicate predicate);
+        public T visit(AndExpression predicate);
 
-        public T visit(OrPredicate predicate);
+        public T visit(OrExpression predicate);
 
-        public T visit(NotPredicate predicate);
+        public T visit(NotExpression predicate);
 
         public T visit(EqPredicate predicate);
 

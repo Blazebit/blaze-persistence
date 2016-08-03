@@ -16,7 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.expression.AndExpression;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
@@ -29,13 +29,12 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LePredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.expression.NotExpression;
+import com.blazebit.persistence.impl.expression.OrExpression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -78,19 +77,19 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(AndPredicate predicate) {
+    public void visit(AndExpression expression) {
         boolean oldConditionalContext = setConditionalContext(true);
-        if (predicate.getChildren().size() == 1) {
-            predicate.getChildren().get(0).accept(this);
+        if (expression.getChildren().size() == 1) {
+            expression.getChildren().get(0).accept(this);
             return;
         }
         final int startLen = sb.length();
         final String and = " AND ";
-        List<Predicate> children = predicate.getChildren();
+        List<BooleanExpression> children = expression.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
-            Predicate child = children.get(i);
-            if (child instanceof OrPredicate) {
+            BooleanExpression child = children.get(i);
+            if (child instanceof OrExpression) {
                 sb.append("(");
                 int len = sb.length();
                 child.accept(this);
@@ -117,18 +116,18 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(OrPredicate predicate) {
+    public void visit(OrExpression expression) {
         boolean oldConditionalContext = setConditionalContext(true);
-        if (predicate.getChildren().size() == 1) {
-            predicate.getChildren().get(0).accept(this);
+        if (expression.getChildren().size() == 1) {
+            expression.getChildren().get(0).accept(this);
             return;
         }
         final String or = " OR ";
-        List<Predicate> children = predicate.getChildren();
+        List<BooleanExpression> children = expression.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
-            Predicate child = children.get(i);
-            if (child instanceof AndPredicate) {
+            BooleanExpression child = children.get(i);
+            if (child instanceof AndExpression) {
                 sb.append("(");
                 int len = sb.length();
                 child.accept(this);
@@ -147,23 +146,23 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 }
             }
         }
-        if (predicate.getChildren().size() > 1) {
+        if (expression.getChildren().size() > 1) {
             sb.delete(sb.length() - or.length(), sb.length());
         }
         setConditionalContext(oldConditionalContext);
     }
 
     @Override
-    public void visit(NotPredicate predicate) {
+    public void visit(NotExpression expression) {
         boolean oldConditionalContext = setConditionalContext(true);
-        boolean requiresParanthesis = predicate.getPredicate() instanceof AndPredicate || predicate.getPredicate() instanceof OrPredicate;
+        boolean requiresParanthesis = expression.getExpression() instanceof AndExpression || expression.getExpression() instanceof OrExpression;
         sb.append("NOT ");
         if (requiresParanthesis) {
             sb.append("(");
-            predicate.getPredicate().accept(this);
+            expression.getExpression().accept(this);
             sb.append(")");
         } else {
-            predicate.getPredicate().accept(this);
+            expression.getExpression().accept(this);
         }
         setConditionalContext(oldConditionalContext);
     }
@@ -548,6 +547,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(NumericLiteral expression) {
+        sb.append(expression.getValue());
+    }
+
+    @Override
+    public void visit(BooleanLiteral expression) {
         sb.append(expression.getValue());
     }
 

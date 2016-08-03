@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.BetweenPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.GtPredicate;
@@ -24,13 +23,11 @@ import com.blazebit.persistence.impl.predicate.IsNullPredicate;
 import com.blazebit.persistence.impl.predicate.LikePredicate;
 import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -405,8 +402,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenSwitchTrue() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN localized[:locale] NOT MEMBER OF supportedLocales THEN true ELSE false END");
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(new MemberOfPredicate(path("localized[:locale]"), path("supportedLocales"), true), foo("true"))),
-                foo("false"));
+                new WhenClauseExpression(new MemberOfPredicate(path("localized[:locale]"), path("supportedLocales"), true), _boolean("true"))),
+                _boolean("false"));
         assertEquals(expected, result);
     }
     
@@ -414,8 +411,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testSimpleCaseWhen() {
     	SimpleCaseExpression result = (SimpleCaseExpression) parse("CASE a.b WHEN 1 THEN true ELSE false END");
     	SimpleCaseExpression expected = new SimpleCaseExpression(path("a", "b"), Arrays.asList(
-                new WhenClauseExpression(_int("1"), foo("true"))),
-                foo("false"));
+                new WhenClauseExpression(_int("1"), _boolean("true"))),
+                _boolean("false"));
         assertEquals(expected, result);
     }
 
@@ -423,9 +420,9 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenMultipleWhenClauses() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x = 2 THEN true WHEN a.x = 3 THEN false ELSE false END");
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("2")), foo("true")),
-                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("3")), foo("false"))
-        ), foo("false"));
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("2")), _boolean("true")),
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("3")), _boolean("false"))
+        ), _boolean("false"));
 
         assertEquals(expected, result);
     }
@@ -465,7 +462,7 @@ public class GeneralParserTest extends AbstractParserTest {
                                 function("CONCAT",
                                         function("NULLIF",
                                                 function("CONCAT",
-                                                        new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrPredicate(
+                                                        new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(
                                                                                         new GtPredicate(function("LENGTH", function("COALESCE", path("zip"), foo("''"))), _int("0")),
                                                                                         new GtPredicate(function("LENGTH", function("COALESCE", path("city"), foo("''"))), _int("0"))
                                                                                 ), function("COALESCE", function("CONCAT", function("NULLIF", path("street"), foo("''")), foo("', '")), foo("''")))),
@@ -726,7 +723,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenAndOr() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN x.a = y.a OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a")), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -734,7 +731,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNot1() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(x.a = y.a) OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a"), true), new AndPredicate(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a"), true), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -750,7 +747,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNot3() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CaSe WHEN NoT(x.a = y.a OR c.a < 9 and b - c = 2) THeN 0 eLsE 1 ENd");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrPredicate(new EqPredicate(path("x", "a"), path("y", "a")), new AndPredicate(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2"))))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a")), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2"))))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
     
@@ -758,7 +755,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBooleanCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = true THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), foo("true")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _boolean("true")), _int("1"))), _int("2"));
         assertEquals(expected, result);
     }
     
@@ -806,7 +803,7 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testConditionalCaseWhen() {
-        Predicate result = parsePredicate("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
+        BooleanExpression result = parseBooleanExpression("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
         
         Predicate expected = new LtPredicate(
             new GeneralCaseExpression(Arrays.asList(

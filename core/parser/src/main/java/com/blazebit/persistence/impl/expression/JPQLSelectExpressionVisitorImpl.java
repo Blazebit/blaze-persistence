@@ -301,12 +301,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
-        Predicate left = (Predicate) ctx.conditional_term().accept(this);
-        if (left instanceof AndPredicate) {
-            ((AndPredicate) left).getChildren().add((Predicate) ctx.conditional_factor().accept(this));
+        BooleanExpression left = (BooleanExpression) ctx.conditional_term().accept(this);
+        if (left instanceof AndExpression) {
+            ((AndExpression) left).getChildren().add((BooleanExpression) ctx.conditional_factor().accept(this));
             return left;
         } else {
-            return new AndPredicate(left, (Predicate) ctx.conditional_factor().accept(this));
+            return new AndExpression(left, (BooleanExpression) ctx.conditional_factor().accept(this));
         }
     }
 
@@ -317,27 +317,27 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditional_factor(JPQLSelectExpressionParser.Conditional_factorContext ctx) {
-        Predicate p = (Predicate) ctx.conditional_primary().accept(this);
+        BooleanExpression expression = (BooleanExpression) ctx.conditional_primary().accept(this);
 
         if (ctx.not != null) {
-            if (p instanceof Negatable) {
-                Negatable n = (Negatable) p;
+            if (expression instanceof Negatable) {
+                Negatable n = (Negatable) expression;
                 n.setNegated(!n.isNegated());
             } else {
-                p = new NotPredicate(p);
+                expression = new NotExpression(expression);
             }
         }
-        return p;
+        return expression;
     }
 
     @Override
     public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
-        Predicate left = (Predicate) ctx.conditional_expression().accept(this);
-        if (left instanceof OrPredicate) {
-            ((OrPredicate) left).getChildren().add((Predicate) ctx.conditional_term().accept(this));
+        BooleanExpression left = (BooleanExpression) ctx.conditional_expression().accept(this);
+        if (left instanceof OrExpression) {
+            ((OrExpression) left).getChildren().add((BooleanExpression) ctx.conditional_term().accept(this));
             return left;
         } else {
-            return new OrPredicate(left, (Predicate) ctx.conditional_term().accept(this));
+            return new OrExpression(left, (BooleanExpression) ctx.conditional_term().accept(this));
         }
     }
 
@@ -385,6 +385,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             throw new IllegalStateException("Could not find literal in context [" + ctx.getText() + "]");
         }
         return new NumericLiteral(value, numericType);
+    }
+
+    @Override
+    public Expression visitBoolean_literal(Boolean_literalContext ctx) {
+        return new BooleanLiteral(ctx.Boolean_literal().getText());
     }
 
     @Override

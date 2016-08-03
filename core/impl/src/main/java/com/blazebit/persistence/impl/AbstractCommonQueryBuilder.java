@@ -16,7 +16,6 @@
 package com.blazebit.persistence.impl;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -40,11 +39,7 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.*;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
 import com.blazebit.persistence.impl.keyset.KeysetImpl;
@@ -52,7 +47,6 @@ import com.blazebit.persistence.impl.keyset.KeysetLink;
 import com.blazebit.persistence.impl.keyset.KeysetManager;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
@@ -745,15 +739,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
-        whereManager.restrictExpression(this, predicate);
+        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, true);
+        whereManager.restrictExpression(this, booleanExpression);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
-        return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
+        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, true);
+        return whereManager.restrictExpressionSubqueries((BuilderType) this, booleanExpression);
     }
 
     /*
@@ -848,14 +842,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
+        BooleanExpression predicate = expressionFactory.createBooleanExpression(expression, true);
         havingManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, true);
+        BooleanExpression predicate = expressionFactory.createBooleanExpression(expression, true);
         return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
 
