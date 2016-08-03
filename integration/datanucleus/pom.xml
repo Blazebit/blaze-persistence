@@ -123,6 +123,10 @@
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
 					<archive>
+						<!--
+						NOTE: We also have a MANIFEST.MF statically defined for the use of a Maven reactor without the packaging phase.
+						Changes to the following section should therefore also be reflected in that file.
+						-->
 						<manifestEntries>
 							<Bundle-ManifestVersion>2</Bundle-ManifestVersion>
 							<Bundle-Name>blaze-persistence-integration-datanucleus</Bundle-Name>
