@@ -26,6 +26,7 @@ import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
@@ -56,7 +57,7 @@ public class JoinNode {
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
-    private AndExpression onPredicate;
+    private CompoundPredicate onPredicate;
     
     // Cache
     private boolean dirty = true;
@@ -149,12 +150,12 @@ public class JoinNode {
             return false;
         }
 
-        BooleanExpression expression = onPredicate.getChildren().get(0);
-        if (!(expression instanceof EqPredicate)) {
+        Predicate predicate = onPredicate.getChildren().get(0);
+        if (!(predicate instanceof EqPredicate)) {
             return false;
         }
 
-        EqPredicate eqPredicate = (EqPredicate) expression;
+        EqPredicate eqPredicate = (EqPredicate) predicate;
         Expression left = eqPredicate.getLeft();
         if (!(left instanceof FunctionExpression)) {
             return false;
@@ -286,11 +287,11 @@ public class JoinNode {
         return correlationPath;
     }
 
-    public AndExpression getOnPredicate() {
+    public CompoundPredicate getOnPredicate() {
         return onPredicate;
     }
 
-    public void setOnPredicate(AndExpression onPredicate) {
+    public void setOnPredicate(CompoundPredicate onPredicate) {
         this.onPredicate = onPredicate;
         onUpdate(StateChange.ON_PREDICATE);
     }

@@ -16,17 +16,20 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.junit.Before;
+import org.junit.BeforeClass;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.LogManager;
-
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.junit.Before;
-import org.junit.BeforeClass;
 
 /**
  *
@@ -92,8 +95,8 @@ public class AbstractParserTest {
     	aggregateFunctions = new HashSet<String>();
     }
 
-    protected NotExpression not(BooleanExpression p) {
-        return new NotExpression(p);
+    protected NotPredicate not(CompoundPredicate p) {
+        return new NotPredicate(p);
     }
 
     protected CompositeExpression compose(Expression... expr) {
@@ -116,7 +119,7 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
-    protected BooleanExpression parseBooleanExpression(String expr, boolean allowQuantifiedPredicates) {
+    protected Predicate parseBooleanExpression(String expr, boolean allowQuantifiedPredicates) {
         return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
     }
 

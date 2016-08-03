@@ -18,22 +18,15 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.atn.ATNConfigSet;
+import org.antlr.v4.runtime.dfa.DFA;
 
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
 
 /**
  *
@@ -184,8 +177,8 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
     
     @Override
-    public BooleanExpression createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
-        return (BooleanExpression) createExpression(new RuleInvoker() {
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
+        return (Predicate) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {

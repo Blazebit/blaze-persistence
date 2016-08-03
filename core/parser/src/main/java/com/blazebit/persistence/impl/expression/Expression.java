@@ -15,18 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -71,14 +60,8 @@ public interface Expression {
 
         public void visit(NumericLiteral expression);
 
-        public void visit(BooleanLiteral expression);
-        
         // Predicates
-        public void visit(AndExpression predicate);
-
-        public void visit(OrExpression predicate);
-
-        public void visit(NotExpression predicate);
+        public void visit(NotPredicate predicate);
 
         public void visit(EqPredicate predicate);
 
@@ -103,6 +86,10 @@ public interface Expression {
         public void visit(LePredicate predicate);
 
         public void visit(ExistsPredicate predicate);
+
+        public void visit(BooleanLiteral predicate);
+
+        public void visit(CompoundPredicate predicate);
 
     }
 
@@ -141,14 +128,8 @@ public interface Expression {
 
         public T visit(NumericLiteral expression);
 
-        public T visit(BooleanLiteral expression);
-        
         // Predicates
-        public T visit(AndExpression predicate);
-
-        public T visit(OrExpression predicate);
-
-        public T visit(NotExpression predicate);
+        public T visit(NotPredicate predicate);
 
         public T visit(EqPredicate predicate);
 
@@ -173,6 +154,10 @@ public interface Expression {
         public T visit(LePredicate predicate);
 
         public T visit(ExistsPredicate predicate);
+
+        public T visit(BooleanLiteral predicate);
+
+        public T visit(CompoundPredicate predicate);
     }
 
     public Expression clone();

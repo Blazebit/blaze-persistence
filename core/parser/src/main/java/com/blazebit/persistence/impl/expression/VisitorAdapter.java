@@ -17,19 +17,7 @@ package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -137,8 +125,8 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(AndExpression expression) {
-        List<BooleanExpression> children = expression.getChildren();
+    public void visit(CompoundPredicate predicate) {
+        List<Predicate> children = predicate.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             children.get(i).accept(this);
@@ -146,17 +134,8 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(OrExpression expression) {
-        List<BooleanExpression> children = expression.getChildren();
-        int size = children.size();
-        for (int i = 0; i < size; i++) {
-            children.get(i).accept(this);
-        }
-    }
-
-    @Override
-    public void visit(NotExpression expression) {
-        expression.getExpression().accept(this);
+    public void visit(NotPredicate expression) {
+        expression.getPredicate().accept(this);
     }
 
     @Override

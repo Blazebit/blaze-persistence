@@ -23,21 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.expression.AndExpression;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.expression.NotExpression;
-import com.blazebit.persistence.impl.expression.OrExpression;
+import com.blazebit.persistence.impl.predicate.*;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -226,17 +212,12 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(AndExpression predicate) {
+    public void visit(CompoundPredicate predicate) {
         invalid(predicate);
     }
 
     @Override
-    public void visit(OrExpression predicate) {
-        invalid(predicate);
-    }
-
-    @Override
-    public void visit(NotExpression predicate) {
+    public void visit(NotPredicate predicate) {
         invalid(predicate);
     }
 

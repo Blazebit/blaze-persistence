@@ -136,11 +136,11 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
-    public BooleanExpression createBooleanExpression(final String expression, final boolean allowQuantifiedPredicates) {
-        return getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", expression, new Supplier<BooleanExpression>() {
+    public Predicate createBooleanExpression(final String expression, final boolean allowQuantifiedPredicates) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", expression, new Supplier<Predicate>() {
 
             @Override
-            public BooleanExpression get() {
+            public Predicate get() {
                 return delegate.createBooleanExpression(expression, allowQuantifiedPredicates);
             }
 

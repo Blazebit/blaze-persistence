@@ -175,7 +175,7 @@ public class LikeBuilderImpl<T> extends SubqueryAndExpressionBuilderListener<T> 
     }
 
     @Override
-    public LikePredicate getExpression() {
+    public LikePredicate getPredicate() {
         return likePredicate;
     }
 

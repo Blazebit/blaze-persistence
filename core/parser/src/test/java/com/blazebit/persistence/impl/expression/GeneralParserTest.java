@@ -15,16 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.predicate.*;
 
 import java.util.Arrays;
 
@@ -462,7 +453,7 @@ public class GeneralParserTest extends AbstractParserTest {
                                 function("CONCAT",
                                         function("NULLIF",
                                                 function("CONCAT",
-                                                        new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(
+                                                        new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new CompoundPredicate(CompoundPredicate.BooleanOperator.OR,
                                                                                         new GtPredicate(function("LENGTH", function("COALESCE", path("zip"), foo("''"))), _int("0")),
                                                                                         new GtPredicate(function("LENGTH", function("COALESCE", path("city"), foo("''"))), _int("0"))
                                                                                 ), function("COALESCE", function("CONCAT", function("NULLIF", path("street"), foo("''")), foo("', '")), foo("''")))),
@@ -723,7 +714,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenAndOr() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN x.a = y.a OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a")), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new CompoundPredicate(CompoundPredicate.BooleanOperator.OR, new EqPredicate(path("x", "a"), path("y", "a")), new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -731,7 +722,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNot1() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN NOT(x.a = y.a) OR c.a < 9 AND b - c = 2 THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a"), true), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new CompoundPredicate(CompoundPredicate.BooleanOperator.OR, new EqPredicate(path("x", "a"), path("y", "a"), true), new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2")))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -747,7 +738,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNot3() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CaSe WHEN NoT(x.a = y.a OR c.a < 9 and b - c = 2) THeN 0 eLsE 1 ENd");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new OrExpression(new EqPredicate(path("x", "a"), path("y", "a")), new AndExpression(new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2"))))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(not(new CompoundPredicate(CompoundPredicate.BooleanOperator.OR, new EqPredicate(path("x", "a"), path("y", "a")), new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, new LtPredicate(path("c", "a"), _int("9")), new EqPredicate(subtract(path("b"), path("c")), _int("2"))))), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
     
@@ -803,7 +794,7 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testConditionalCaseWhen() {
-        BooleanExpression result = parseBooleanExpression("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
+        Predicate result = parseBooleanExpression("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
         
         Predicate expected = new LtPredicate(
             new GeneralCaseExpression(Arrays.asList(

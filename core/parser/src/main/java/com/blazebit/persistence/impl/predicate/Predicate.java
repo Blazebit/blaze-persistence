@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.BooleanExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -24,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public interface Predicate extends BooleanExpression {
+public interface Predicate extends Expression {
 
     @Override
     public Predicate clone();

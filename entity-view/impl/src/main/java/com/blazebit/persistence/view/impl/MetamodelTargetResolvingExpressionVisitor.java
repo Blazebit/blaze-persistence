@@ -27,6 +27,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**

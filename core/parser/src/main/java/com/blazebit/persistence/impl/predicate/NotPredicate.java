@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.expression;
+package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 
 /**
  *
@@ -23,29 +23,29 @@ import com.blazebit.persistence.impl.predicate.Predicate;
  * @author Moritz Becker
  * @since 1.0
  */
-public class NotExpression extends AbstractExpression implements BooleanExpression {
+public class NotPredicate extends AbstractExpression implements Predicate {
 
     /**
-     * This is an expression because we can have NOT (...) and the paranthesis
+     * This is an predicate because we can have NOT (...) and the paranthesis
      * require a CompositeExpression.
      */
-    private BooleanExpression expression;
+    private Predicate predicate;
 
-    public NotExpression(BooleanExpression expression) {
-        this.expression = expression;
+    public NotPredicate(Predicate predicate) {
+        this.predicate = predicate;
     }
 
     @Override
-    public NotExpression clone() {
-        return new NotExpression(expression.clone());
+    public NotPredicate clone() {
+        return new NotPredicate(predicate.clone());
     }
 
-    public BooleanExpression getExpression() {
-        return expression;
+    public Predicate getPredicate() {
+        return predicate;
     }
 
-    public void setExpression(Predicate expression) {
-        this.expression = expression;
+    public void setPredicate(Predicate predicate) {
+        this.predicate = predicate;
     }
 
     @Override
@@ -61,7 +61,7 @@ public class NotExpression extends AbstractExpression implements BooleanExpressi
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 47 * hash + (this.expression != null ? this.expression.hashCode() : 0);
+        hash = 47 * hash + (this.predicate != null ? this.predicate.hashCode() : 0);
         return hash;
     }
 
@@ -73,8 +73,8 @@ public class NotExpression extends AbstractExpression implements BooleanExpressi
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final NotExpression other = (NotExpression) obj;
-        if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
+        final NotPredicate other = (NotPredicate) obj;
+        if (this.predicate != other.predicate && (this.predicate == null || !this.predicate.equals(other.predicate))) {
             return false;
         }
         return true;

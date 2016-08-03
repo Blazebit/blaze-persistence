@@ -39,7 +39,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.expression.AndExpression;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -944,7 +944,7 @@ public class JoinManager extends AbstractManager {
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 
-    private void registerDependencies(final JoinNode joinNode, BooleanExpression onExpression) {
+    private void registerDependencies(final JoinNode joinNode, CompoundPredicate onExpression) {
         onExpression.accept(new VisitorAdapter() {
 
             @Override
@@ -961,7 +961,7 @@ public class JoinManager extends AbstractManager {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
         if (joinNode.getOnPredicate() != null) {
-            AndExpression currentPred = joinNode.getOnPredicate();
+            CompoundPredicate currentPred = joinNode.getOnPredicate();
 
             // Only add the predicate if it isn't contained yet
             if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
@@ -969,7 +969,7 @@ public class JoinManager extends AbstractManager {
                 registerDependencies(joinNode, currentPred);
             }
         } else {
-            AndExpression onAndPredicate = new AndExpression();
+            CompoundPredicate onAndPredicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
             onAndPredicate.getChildren().add(valueKeyFilterPredicate);
             joinNode.setOnPredicate(onAndPredicate);
             registerDependencies(joinNode, onAndPredicate);
@@ -1352,9 +1352,9 @@ public class JoinManager extends AbstractManager {
 
         for (JoinNode node : treeNode.getJoinNodes().values()) {
             Predicate pred = getArrayExpressionPredicate(node, arrayExpression);
-            AndExpression andPredicate = node.getOnPredicate();
+            CompoundPredicate compoundPredicate = node.getOnPredicate();
 
-            if (findPredicate(andPredicate, pred)) {
+            if (findPredicate(compoundPredicate, pred)) {
                 return node;
             }
         }
@@ -1362,9 +1362,9 @@ public class JoinManager extends AbstractManager {
         return null;
     }
 
-    private boolean findPredicate(AndExpression andPredicate, Predicate pred) {
-        if (andPredicate != null) {
-            List<BooleanExpression> children = andPredicate.getChildren();
+    private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred) {
+        if (compoundPredicate != null) {
+            List<Predicate> children = compoundPredicate.getChildren();
             int size = children.size();
             for (int i = 0; i < size; i++) {
                 if (pred.equals(children.get(i))) {
@@ -1426,8 +1426,8 @@ public class JoinManager extends AbstractManager {
         @Override
         public void onBuilderEnded(PredicateBuilder builder) {
             super.onBuilderEnded(builder);
-            BooleanExpression expression = builder.getExpression();
-            expression.accept(new VisitorAdapter() {
+            Predicate predicate = builder.getPredicate();
+            predicate.accept(new VisitorAdapter() {
 
                 private boolean isKeyFunction;
 
@@ -1446,7 +1446,7 @@ public class JoinManager extends AbstractManager {
                 }
 
             });
-            joinNode.setOnPredicate((AndExpression) expression);
+            joinNode.setOnPredicate((CompoundPredicate) predicate);
         }
     }
 }

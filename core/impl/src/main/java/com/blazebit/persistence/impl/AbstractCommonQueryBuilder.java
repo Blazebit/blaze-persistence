@@ -15,44 +15,23 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
+import com.blazebit.persistence.*;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.impl.keyset.*;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.util.PropertyUtils;
+import com.blazebit.persistence.spi.*;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
-
-import com.blazebit.persistence.*;
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
-import com.blazebit.persistence.impl.keyset.KeysetImpl;
-import com.blazebit.persistence.impl.keyset.KeysetLink;
-import com.blazebit.persistence.impl.keyset.KeysetManager;
-import com.blazebit.persistence.impl.keyset.KeysetMode;
-import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
-import com.blazebit.persistence.impl.util.PropertyUtils;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.DbmsModificationState;
-import com.blazebit.persistence.spi.DbmsStatementType;
-import com.blazebit.persistence.spi.QueryTransformer;
-import com.blazebit.persistence.spi.SetOperationType;
+import java.io.Serializable;
+import java.util.*;
+import java.util.logging.Logger;
 
 /**
  *
@@ -739,15 +718,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
-        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, true);
-        whereManager.restrictExpression(this, booleanExpression);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        whereManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> whereExpressionSubqueries(String expression) {
-        BooleanExpression booleanExpression = expressionFactory.createBooleanExpression(expression, true);
-        return whereManager.restrictExpressionSubqueries((BuilderType) this, booleanExpression);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        return whereManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
 
     /*
@@ -842,14 +821,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
-        BooleanExpression predicate = expressionFactory.createBooleanExpression(expression, true);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         havingManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
     public MultipleSubqueryInitiator<BuilderType> havingExpressionSubqueries(String expression) {
-        BooleanExpression predicate = expressionFactory.createBooleanExpression(expression, true);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
         return havingManager.restrictExpressionSubqueries((BuilderType) this, predicate);
     }
 

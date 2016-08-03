@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import static org.junit.Assert.assertEquals;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *

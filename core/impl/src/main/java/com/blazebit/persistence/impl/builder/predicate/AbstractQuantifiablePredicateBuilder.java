@@ -37,11 +37,7 @@ import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -56,7 +52,7 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     private final boolean wrapNot;
     protected final Expression leftExpression;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
-    private BooleanExpression expression;
+    private Predicate predicate;
     protected final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private SubqueryInitiator<T> subqueryInitiator;
@@ -75,14 +71,14 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     protected T chain(Predicate predicate) {
         verifyBuilderEnded();
-        this.expression = wrapNot ? new NotExpression(predicate) : predicate;
+        this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
         listener.onBuilderEnded(this);
         return result;
     }
 
     protected void chainSubbuilder(Predicate predicate) {
         verifyBuilderEnded();
-        this.expression = wrapNot ? new NotExpression(predicate) : predicate;
+        this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
     }
 
     @Override
@@ -207,28 +203,28 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
-        // set the finished subquery builder on the previously created expression
-        BooleanExpression expr;
+        // set the finished subquery builder on the previously created predicate
+        Predicate expr;
         // TODO: is this needed anymore?
-        if (expression instanceof NotExpression) {
-            // unwrap not expression
-            expr = ((NotExpression) expression).getExpression();
+        if (predicate instanceof NotPredicate) {
+            // unwrap not predicate
+            expr = ((NotPredicate) predicate).getPredicate();
         } else {
-            expr = expression;
+            expr = predicate;
         }
 
         if (expr instanceof BinaryExpressionPredicate) {
             ((BinaryExpressionPredicate) expr).setRight(new SubqueryExpression(builder));
         } else {
-            throw new IllegalStateException("SubqueryBuilder ended but expression type was unexpected");
+            throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
         }
 
         listener.onBuilderEnded(this);
     }
 
     @Override
-    public BooleanExpression getExpression() {
-        return expression;
+    public Predicate getPredicate() {
+        return predicate;
     }
 
     protected SubqueryInitiator<T> getSubqueryInitiator() {
@@ -241,10 +237,10 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     @Override
     public void onBuilderEnded(ExpressionBuilder builder) {
         super.onBuilderEnded(builder);
-        if (expression instanceof BinaryExpressionPredicate) {
-            ((BinaryExpressionPredicate) expression).setRight(builder.getExpression());
+        if (predicate instanceof BinaryExpressionPredicate) {
+            ((BinaryExpressionPredicate) predicate).setRight(builder.getExpression());
         } else {
-            throw new IllegalStateException("ExpressionBuilder ended but expression type was unexpected");
+            throw new IllegalStateException("ExpressionBuilder ended but predicate type was unexpected");
         }
 
         listener.onBuilderEnded(AbstractQuantifiablePredicateBuilder.this);

@@ -301,12 +301,23 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
-        BooleanExpression left = (BooleanExpression) ctx.conditional_term().accept(this);
-        if (left instanceof AndExpression) {
-            ((AndExpression) left).getChildren().add((BooleanExpression) ctx.conditional_factor().accept(this));
+        Predicate left = (Predicate) ctx.conditional_term().accept(this);
+        if (left instanceof CompoundPredicate && ((CompoundPredicate) left).getOperator() == CompoundPredicate.BooleanOperator.AND) {
+            ((CompoundPredicate) left).getChildren().add((Predicate) ctx.conditional_factor().accept(this));
             return left;
         } else {
-            return new AndExpression(left, (BooleanExpression) ctx.conditional_factor().accept(this));
+            return new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, left, (Predicate) ctx.conditional_factor().accept(this));
+        }
+    }
+
+    @Override
+    public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
+        Predicate left = (Predicate) ctx.conditional_expression().accept(this);
+        if (left instanceof CompoundPredicate && ((CompoundPredicate) left).getOperator() == CompoundPredicate.BooleanOperator.OR) {
+            ((CompoundPredicate) left).getChildren().add((Predicate) ctx.conditional_term().accept(this));
+            return left;
+        } else {
+            return new CompoundPredicate(CompoundPredicate.BooleanOperator.OR, left, (Predicate) ctx.conditional_term().accept(this));
         }
     }
 
@@ -317,28 +328,17 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditional_factor(JPQLSelectExpressionParser.Conditional_factorContext ctx) {
-        BooleanExpression expression = (BooleanExpression) ctx.conditional_primary().accept(this);
+        Predicate expression = (Predicate) ctx.conditional_primary().accept(this);
 
         if (ctx.not != null) {
             if (expression instanceof Negatable) {
                 Negatable n = (Negatable) expression;
                 n.setNegated(!n.isNegated());
             } else {
-                expression = new NotExpression(expression);
+                expression = new NotPredicate(expression);
             }
         }
         return expression;
-    }
-
-    @Override
-    public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
-        BooleanExpression left = (BooleanExpression) ctx.conditional_expression().accept(this);
-        if (left instanceof OrExpression) {
-            ((OrExpression) left).getChildren().add((BooleanExpression) ctx.conditional_term().accept(this));
-            return left;
-        } else {
-            return new OrExpression(left, (BooleanExpression) ctx.conditional_term().accept(this));
-        }
     }
 
     @Override

@@ -1,11 +1,13 @@
-package com.blazebit.persistence.impl.expression;
+package com.blazebit.persistence.impl.predicate;
+
+import com.blazebit.persistence.impl.expression.AbstractExpression;
 
 /**
  * Created
  * by Moritz Becker (moritz.becker@gmx.at)
  * on 03.08.2016.
  */
-public class BooleanLiteral extends AbstractExpression implements BooleanExpression {
+public class BooleanLiteral extends AbstractExpression implements Predicate {
 
     private final String value;
 
@@ -18,7 +20,7 @@ public class BooleanLiteral extends AbstractExpression implements BooleanExpress
     }
 
     @Override
-    public BooleanExpression clone() {
+    public Predicate clone() {
         return new BooleanLiteral(value);
     }
 

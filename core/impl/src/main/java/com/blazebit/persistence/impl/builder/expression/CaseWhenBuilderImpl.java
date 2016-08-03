@@ -36,6 +36,7 @@ import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPred
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -52,7 +53,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
 
-    private BooleanExpression whenExpression;
+    private Predicate whenExpression;
     private GeneralCaseExpression expression;
     private Expression thenExpression;
 
@@ -176,7 +177,7 @@ public class CaseWhenBuilderImpl<T> extends PredicateAndExpressionBuilderEndedLi
     @Override
     public void onBuilderEnded(PredicateBuilder o) {
         super.onBuilderEnded(o);
-        this.whenExpression = o.getExpression();
+        this.whenExpression = o.getPredicate();
         this.thenExpression = null;
     }
 

@@ -21,11 +21,9 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
-import com.blazebit.persistence.impl.expression.BooleanExpression;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.OrExpression;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -37,7 +35,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final OrExpression expression = new OrExpression();
+    private final CompoundPredicate expression = new CompoundPredicate(CompoundPredicate.BooleanOperator.OR);
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -60,7 +58,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
-        expression.getChildren().add(builder.getExpression());
+        expression.getChildren().add(builder.getPredicate());
     }
 
     @Override
@@ -75,7 +73,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public BooleanExpression getExpression() {
+    public CompoundPredicate getPredicate() {
         return expression;
     }
 
