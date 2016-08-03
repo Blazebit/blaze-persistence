@@ -393,8 +393,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenSwitchTrue() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN localized[:locale] NOT MEMBER OF supportedLocales THEN true ELSE false END");
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(new MemberOfPredicate(path("localized[:locale]"), path("supportedLocales"), true), _boolean("true"))),
-                _boolean("false"));
+                new WhenClauseExpression(new MemberOfPredicate(path("localized[:locale]"), path("supportedLocales"), true), _boolean(true))),
+                _boolean(false));
         assertEquals(expected, result);
     }
     
@@ -402,8 +402,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testSimpleCaseWhen() {
     	SimpleCaseExpression result = (SimpleCaseExpression) parse("CASE a.b WHEN 1 THEN true ELSE false END");
     	SimpleCaseExpression expected = new SimpleCaseExpression(path("a", "b"), Arrays.asList(
-                new WhenClauseExpression(_int("1"), _boolean("true"))),
-                _boolean("false"));
+                new WhenClauseExpression(_int("1"), _boolean(true))),
+                _boolean(false));
         assertEquals(expected, result);
     }
 
@@ -411,9 +411,9 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testCaseWhenMultipleWhenClauses() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x = 2 THEN true WHEN a.x = 3 THEN false ELSE false END");
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("2")), _boolean("true")),
-                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("3")), _boolean("false"))
-        ), _boolean("false"));
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("2")), _boolean(true)),
+                new WhenClauseExpression(new EqPredicate(path("a", "x"), _int("3")), _boolean(false))
+        ), _boolean(false));
 
         assertEquals(expected, result);
     }
@@ -746,7 +746,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBooleanCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = true THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _boolean("true")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _boolean(true)), _int("1"))), _int("2"));
         assertEquals(expected, result);
     }
     

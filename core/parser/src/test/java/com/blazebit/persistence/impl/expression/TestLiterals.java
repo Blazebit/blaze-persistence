@@ -191,12 +191,12 @@ public class TestLiterals extends AbstractParserTest {
         BooleanLiteral resultTrueLower = (BooleanLiteral) parse("true");
         BooleanLiteral resultTrueMixed = (BooleanLiteral) parse("TrUe");
 
-        assertEquals(new BooleanLiteral("FALSE"), resultFalseUpper);
-        assertEquals(new BooleanLiteral("false"), resultFalseLower);
-        assertEquals(new BooleanLiteral("FaLsE"), resultFalseMixed);
-        assertEquals(new BooleanLiteral("TRUE"), resultTrueUpper);
-        assertEquals(new BooleanLiteral("true"), resultTrueLower);
-        assertEquals(new BooleanLiteral("TrUe"), resultTrueMixed);
+        assertEquals(_boolean(false), resultFalseUpper);
+        assertEquals(_boolean(false), resultFalseLower);
+        assertEquals(_boolean(false), resultFalseMixed);
+        assertEquals(_boolean(true), resultTrueUpper);
+        assertEquals(_boolean(true), resultTrueLower);
+        assertEquals(_boolean(true), resultTrueMixed);
     }
     
     @Test

@@ -211,7 +211,7 @@ public class AbstractParserTest {
         return new NumericLiteral(value, NumericType.BIG_DECIMAL);
     }
 
-    protected BooleanLiteral _boolean(String value) {
+    protected BooleanLiteral _boolean(boolean value) {
         return new BooleanLiteral(value);
     }
 

@@ -389,7 +389,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitBoolean_literal(Boolean_literalContext ctx) {
-        return new BooleanLiteral(ctx.Boolean_literal().getText());
+        return new BooleanLiteral(Boolean.parseBoolean(ctx.Boolean_literal().getText()));
     }
 
     @Override

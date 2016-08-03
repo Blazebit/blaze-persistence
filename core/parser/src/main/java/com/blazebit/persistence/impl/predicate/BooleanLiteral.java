@@ -9,13 +9,13 @@ import com.blazebit.persistence.impl.expression.AbstractExpression;
  */
 public class BooleanLiteral extends AbstractExpression implements Predicate {
 
-    private final String value;
+    private final boolean value;
 
-    public BooleanLiteral(String value) {
+    public BooleanLiteral(boolean value) {
         this.value = value;
     }
 
-    public String getValue() {
+    public boolean getValue() {
         return value;
     }
 
@@ -41,12 +41,12 @@ public class BooleanLiteral extends AbstractExpression implements Predicate {
 
         BooleanLiteral that = (BooleanLiteral) o;
 
-        return value != null ? value.equals(that.value) : that.value == null;
+        return value == that.value;
 
     }
 
     @Override
     public int hashCode() {
-        return value != null ? value.hashCode() : 0;
+        return Boolean.valueOf(value).hashCode();
     }
 }
