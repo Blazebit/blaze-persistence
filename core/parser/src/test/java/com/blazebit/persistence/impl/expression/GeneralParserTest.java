@@ -454,23 +454,23 @@ public class GeneralParserTest extends AbstractParserTest {
                                         function("NULLIF",
                                                 function("CONCAT",
                                                         new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new CompoundPredicate(CompoundPredicate.BooleanOperator.OR,
-                                                                                        new GtPredicate(function("LENGTH", function("COALESCE", path("zip"), foo("''"))), _int("0")),
-                                                                                        new GtPredicate(function("LENGTH", function("COALESCE", path("city"), foo("''"))), _int("0"))
-                                                                                ), function("COALESCE", function("CONCAT", function("NULLIF", path("street"), foo("''")), foo("', '")), foo("''")))),
-                                                                function("COALESCE", path("street"), foo("''"))),
+                                                                                        new GtPredicate(function("LENGTH", function("COALESCE", path("zip"), _string(""))), _int("0")),
+                                                                                        new GtPredicate(function("LENGTH", function("COALESCE", path("city"), _string(""))), _int("0"))
+                                                                                ), function("COALESCE", function("CONCAT", function("NULLIF", path("street"), _string("")), _string(", ")), _string("")))),
+                                                                function("COALESCE", path("street"), _string(""))),
                                                         new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(
-                                                                                new GtPredicate(function("LENGTH", function("COALESCE", path("city"), foo("''"))), _int("0")),
-                                                                                function("COALESCE", function("CONCAT", function("NULLIF", path("zip"), foo("''")), foo("' '")), foo("''")))),
-                                                                function("COALESCE", path("zip"), foo("''"))),
-                                                        function("COALESCE", path("city"), foo("''"))
+                                                                                new GtPredicate(function("LENGTH", function("COALESCE", path("city"), _string(""))), _int("0")),
+                                                                                function("COALESCE", function("CONCAT", function("NULLIF", path("zip"), _string("")), _string(" ")), _string("")))),
+                                                                function("COALESCE", path("zip"), _string(""))),
+                                                        function("COALESCE", path("city"), _string(""))
                                                 ),
-                                                foo("''")
+                                                _string("")
                                         ),
-                                        foo("' - '")
+                                        _string(" - ")
                                 ),
-                                foo("''")
+                                _string("")
                         ),
-                        foo("'test'")
+                        _string("test")
                 );
         assertEquals(expected, result);
     }
@@ -510,13 +510,13 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testFunctionInvocation() {
         Expression result = parse("FUNCTION('myfunc', a.b, 'b', 12)");
-        assertEquals(function("FUNCTION", foo("'myfunc'"), path("a", "b"), new FooExpression("'b'"), _int("12")), result);
+        assertEquals(function("FUNCTION", _string("myfunc"), path("a", "b"), _string("b"), _int("12")), result);
     }
 
     @Test
     public void testLength() {
         Expression result = parse("LENGTH('myfunc')");
-        assertEquals(function("LENGTH", new FooExpression("'myfunc'")), result);
+        assertEquals(function("LENGTH", _string("myfunc")), result);
     }
 
     @Test
@@ -539,7 +539,7 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testCoalesce() {
         Expression result = parseSubqueryExpression("COALESCE(a.b.c, a.b, a.a, 'da', 1)");
-        assertEquals(function("COALESCE", path("a", "b", "c"), path("a", "b"), path("a", "a"), new FooExpression("'da'"), _int("1")), result);
+        assertEquals(function("COALESCE", path("a", "b", "c"), path("a", "b"), path("a", "a"), _string("da"), _int("1")), result);
     }
 
     @Test
@@ -578,7 +578,8 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInCharacterLiterals() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN ('1', '2', '3', '4') THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), foo("('1','2','3','4')")), _int("0"))), _int("1"));
+        CompositeExpression inItems = compose(foo("("), _string("1"), foo(","), _string("2"), foo(","), _string("3"), foo(","), _string("4"), foo(")"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), inItems), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -602,7 +603,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLike() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, null), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, null), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -610,7 +611,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeParameter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE :x THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, 'x'), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, 'x'), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -618,7 +619,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testLikeEscapeLiteral() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x LIKE 'abc' ESCAPE 'x' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, 'x'), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, 'x'), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -626,7 +627,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotLike() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT LIKE 'abc' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), parseStringExpr("'abc'"), true, null, true), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new LikePredicate(path("a", "x"), _string("abc"), true, null, true), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -650,7 +651,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenString() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN 'ab' AND 'zb' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'ab'"), foo("'zb'")), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), _string("ab"), _string("zb")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -658,7 +659,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenString() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN 'ab' AND 'zb' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'ab'"), foo("'zb'"), true), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), _string("ab"), _string("zb"), true), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -666,7 +667,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testBetweenCharacter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x BETWEEN 'a' AND 'z' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'a'"), foo("'z'")), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), _string("a"), _string("z")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -674,7 +675,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testNotBetweenCharacter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x NOT BETWEEN 'a' AND 'z' THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), foo("'a'"), foo("'z'"), true), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new BetweenPredicate(path("a", "x"), _string("a"), _string("z"), true), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 

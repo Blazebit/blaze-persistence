@@ -228,6 +228,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(StringLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
     	String name = expression.getFunctionName();
     	if ("KEY".equalsIgnoreCase(name)) {

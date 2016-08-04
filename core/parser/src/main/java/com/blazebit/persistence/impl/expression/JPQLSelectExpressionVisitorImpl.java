@@ -393,6 +393,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitString_literal(String_literalContext ctx) {
+        String literalValue = ctx.String_literal() == null ? ctx.Character_literal().getText() : ctx.String_literal().getText();
+        // strip quotes
+        return new StringLiteral(literalValue.substring(1, literalValue.length() - 1));
+    }
+
+    @Override
     public Expression visitNull_comparison_expression(JPQLSelectExpressionParser.Null_comparison_expressionContext ctx) {
         return new IsNullPredicate(ctx.getChild(0).accept(this), ctx.not != null);
     }

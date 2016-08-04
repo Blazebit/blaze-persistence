@@ -155,6 +155,11 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
+    public Boolean visit(StringLiteral expression) {
+        return false;
+    }
+
+    @Override
     public Boolean visit(CompoundPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();

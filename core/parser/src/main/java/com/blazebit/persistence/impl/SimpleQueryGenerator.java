@@ -501,6 +501,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append(expression.getValue());
     }
 
+    @Override
+    public void visit(StringLiteral expression) {
+        sb.append('\'').append(expression.getValue()).append('\'');
+    }
+
     private void wrapNonSubquery(Expression p, StringBuilder sb) {
         boolean isNotSubquery = !(p instanceof SubqueryExpression);
         if (isNotSubquery) {

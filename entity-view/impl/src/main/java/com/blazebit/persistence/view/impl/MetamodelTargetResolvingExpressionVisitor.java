@@ -368,6 +368,11 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         currentPosition.setCurrentClass(Boolean.class);
     }
 
+    @Override
+    public void visit(StringLiteral expression) {
+        currentPosition.setCurrentClass(String.class);
+    }
+
     private boolean isNumber(String expressionString) {
     	String s = expressionString.trim();
     	

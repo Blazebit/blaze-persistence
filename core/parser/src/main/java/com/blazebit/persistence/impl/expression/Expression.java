@@ -60,6 +60,8 @@ public interface Expression {
 
         public void visit(NumericLiteral expression);
 
+        public void visit(StringLiteral expression);
+
         // Predicates
         public void visit(NotPredicate predicate);
 
@@ -127,6 +129,8 @@ public interface Expression {
         public T visit(ArithmeticFactor expression);
 
         public T visit(NumericLiteral expression);
+
+        public T visit(StringLiteral expression);
 
         // Predicates
         public T visit(NotPredicate predicate);

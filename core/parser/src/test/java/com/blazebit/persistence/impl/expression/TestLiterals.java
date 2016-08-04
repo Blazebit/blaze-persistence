@@ -47,14 +47,14 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testStringLiteral(){
-        FooExpression result = (FooExpression) parse("'abcd'");
-        assertEquals(new FooExpression("'abcd'"), result);
+        StringLiteral result = (StringLiteral) parse("'abcd'");
+        assertEquals(new StringLiteral("abcd"), result);
     }
     
     @Test
     public void testCharacterLiteral(){
-        FooExpression result = (FooExpression) parse("'a'");
-        assertEquals(new FooExpression("'a'"), result);
+        StringLiteral result = (StringLiteral) parse("'a'");
+        assertEquals(new StringLiteral("a"), result);
     }
     
     @Test

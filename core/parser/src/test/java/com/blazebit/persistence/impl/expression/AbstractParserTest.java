@@ -111,10 +111,6 @@ public class AbstractParserTest {
         return ef.createArithmeticExpression(expr);
     }
     
-    protected Expression parseStringExpr(String expr) {
-        return ef.createStringExpression(expr);
-    }
-
     protected Expression parse(String expr) {
         return ef.createSimpleExpression(expr);
     }
@@ -173,13 +169,13 @@ public class AbstractParserTest {
         String base = expr.substring(0, firstIndex);
         String index = expr.substring(firstIndex + 1, lastIndex);
         Expression indexExpr;
-        if (index.startsWith(":")) {
-            indexExpr = new ParameterExpression(index.substring(1));
-        } else if (index.startsWith("\'") || index.matches("\\d+")) {
-            indexExpr = new FooExpression(index);
-        } else {
-            indexExpr = path(index.split("\\."));
-        }
+
+        /**
+         * TODO: change this to not use parse here - we actually do not want to rely on parsing for constructing the
+         * comparison expressions
+         */
+
+        indexExpr = parse(index);
         return new ArrayExpression(new PropertyExpression(base), indexExpr);
     }
 
@@ -213,6 +209,10 @@ public class AbstractParserTest {
 
     protected BooleanLiteral _boolean(boolean value) {
         return new BooleanLiteral(value);
+    }
+
+    protected StringLiteral _string(String value) {
+        return new StringLiteral(value);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

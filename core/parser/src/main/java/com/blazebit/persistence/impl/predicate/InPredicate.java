@@ -22,6 +22,8 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
+ *
+ * TODO: represent in-items as separate expressions
  */
 public class InPredicate extends NegatableBinaryExpressionPredicate {
 

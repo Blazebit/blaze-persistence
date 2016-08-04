@@ -212,6 +212,11 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(StringLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
     public void visit(CompoundPredicate predicate) {
         invalid(predicate);
     }

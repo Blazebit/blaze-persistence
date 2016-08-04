@@ -125,6 +125,10 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
+    public void visit(StringLiteral expression) {
+    }
+
+    @Override
     public void visit(CompoundPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();
