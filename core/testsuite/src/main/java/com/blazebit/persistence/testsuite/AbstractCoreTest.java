@@ -128,10 +128,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return alias + "." + field;
     }
     
-    protected String booleanExpression(boolean value) {
-        return jpaProvider.getBooleanExpression(value);
-    }
-    
     protected String booleanConditionalExpression(boolean value) {
         return jpaProvider.getBooleanConditionalExpression(value);
     }

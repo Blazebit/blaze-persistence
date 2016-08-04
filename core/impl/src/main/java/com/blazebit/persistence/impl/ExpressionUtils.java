@@ -69,7 +69,9 @@ public class ExpressionUtils {
         } else if (expr instanceof FooExpression) {
             // TODO: Not actually sure how we could do that better
             return false;
-        } else if (expr instanceof LiteralExpression) {
+        } else if (expr instanceof EntityLiteral) {
+            return false;
+        } else if (expr instanceof EnumLiteral) {
             return false;
         } else if (expr instanceof NumericLiteral) {
             return false;
@@ -279,7 +281,9 @@ public class ExpressionUtils {
             return isNullable(metamodel, (GeneralCaseExpression) expr);
         } else if (expr instanceof FooExpression) {
             return false;
-        } else if (expr instanceof LiteralExpression) {
+        } else if (expr instanceof EntityLiteral) {
+            return false;
+        } else if (expr instanceof EnumLiteral) {
             return false;
         } else if (expr instanceof NullExpression) {
             return true;

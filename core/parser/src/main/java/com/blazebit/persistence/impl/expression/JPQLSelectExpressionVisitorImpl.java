@@ -44,15 +44,25 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final CommonTokenStream tokens;
     private final Set<String> aggregateFunctions;
     private final boolean optimize;
+    private final Map<String, Class<Enum<?>>> enums;
+    private final Map<String, Class<?>> entities;
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions) {
-        this(tokens, aggregateFunctions, false);
+    private final DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+    private final DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+    private final Pattern datePattern = Pattern.compile("\\{*d\\s*'([^']+)\\s*'\\}");
+    private final Pattern timePattern = Pattern.compile("\\{*t\\s*'([^']+)\\s*'\\}");
+    private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
+
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities) {
+        this(tokens, aggregateFunctions, enums, entities, false);
     }
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, boolean optimize) {
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, boolean optimize) {
         this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
         this.optimize = optimize;
+        this.enums = enums;
+        this.entities = entities;
     }
 
     @Override
@@ -183,6 +193,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitPath_no_array(Path_no_arrayContext ctx) {
+        PathExpression result = new PathExpression();
+        for (Simple_path_elementContext pathElemCtx : ctx.pathElem) {
+            result.getExpressions().add((PathElementExpression) pathElemCtx.accept(this));
+        }
+        return result;
+    }
+
+    @Override
     public Expression visitSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
         return new PathExpression(new ArrayList<PathElementExpression>(Arrays.asList((PathElementExpression) ctx.general_path_start().accept(this))));
     }
@@ -208,7 +227,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitType_discriminator(JPQLSelectExpressionParser.Type_discriminatorContext ctx) {
-        return new FunctionExpression(ctx.getStart().getText(), Arrays.asList(ctx.type_discriminator_arg().accept(this)));
+        return new TypeFunctionExpression(ctx.type_discriminator_arg().accept(this));
     }
 
     @Override
@@ -401,12 +420,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         return new StringLiteral(literalValue.substring(1, literalValue.length() - 1));
     }
 
-    private DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
-    private DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
-    private Pattern datePattern = Pattern.compile("\\{*d\\s*'([^']+)\\s*'\\}");
-    private Pattern timePattern = Pattern.compile("\\{*t\\s*'([^']+)\\s*'\\}");
-    private Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
-
     @Override
     public Expression visitDateLiteral(DateLiteralContext ctx) {
         Date date;
@@ -575,12 +588,42 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
-        return new LiteralExpression("ENUM", ctx.path().accept(this).toString());
+        String enumStr = ctx.path().accept(this).toString();
+        int lastDotIdx = enumStr.lastIndexOf('.');
+        String enumTypeStr = enumStr.substring(0, lastDotIdx);
+        String enumValueStr = enumStr.substring(lastDotIdx + 1);
+        Class<Enum<?>> enumType = enums.get(enumTypeStr);
+        // TODO throw exception if enumType is null
+        return new EnumLiteral(enumType == null ? null : Enum.valueOf((Class) enumType, enumValueStr), enumStr);
     }
 
     @Override
     public Expression visitEntity_type_literal(JPQLSelectExpressionParser.Entity_type_literalContext ctx) {
-        return new LiteralExpression("ENTITY", ctx.identifier().getText());
+        String entityLiteralStr;
+        if (ctx.identifier() != null) {
+            entityLiteralStr = ctx.identifier().getText();
+        } else {
+            entityLiteralStr = ctx.path_no_array().getText();
+        }
+        Class<?> entityType = entities.get(entityLiteralStr);
+        // TODO throw exception if entityType is null
+        return new EntityLiteral(entityType, entityLiteralStr);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_path_type(ComparisonExpression_path_typeContext ctx) {
+        BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
+        pred.setLeft(new EntityLiteral(null, ctx.left.getText()));
+        pred.setRight(ctx.right.accept(this));
+        return pred;
+    }
+
+    @Override
+    public Expression visitComparisonExpression_type_path(ComparisonExpression_type_pathContext ctx) {
+        BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
+        pred.setLeft(ctx.left.accept(this));
+        pred.setRight(new EntityLiteral(null, ctx.right.getText()));
+        return pred;
     }
 
     @Override

@@ -325,11 +325,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
-        sb.append(expression.getLiteral());
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         sb.append("NULL");
     }
@@ -400,6 +395,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
 
         setConditionalContext(oldConditionalContext);
+    }
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        visit((FunctionExpression) expression);
     }
 
     @Override
@@ -536,6 +536,16 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 .append(' ')
                 .append(dfTime.format(value))
                 .append("'}");
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
+        sb.append(expression.getOriginalExpression());
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
+        sb.append(expression.getOriginalExpression());
     }
 
     private void wrapNonSubquery(Expression p, StringBuilder sb) {

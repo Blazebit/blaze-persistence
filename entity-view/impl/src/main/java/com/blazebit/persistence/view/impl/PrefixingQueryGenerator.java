@@ -18,7 +18,6 @@ package com.blazebit.persistence.view.impl;
 import java.util.List;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.expression.LiteralExpression;
 import com.blazebit.persistence.impl.expression.PathExpression;
 
 /**
@@ -41,15 +40,6 @@ public class PrefixingQueryGenerator extends SimpleQueryGenerator {
         }
         
         this.prefix = prefixSb.toString();
-    }
-
-    @Override
-    public void visit(LiteralExpression expression) {
-        // We override this because the resulting string will be parsed by us again
-        sb.append(expression.getWrapperFunction());
-        sb.append('(');
-        sb.append(expression.getLiteral());
-        sb.append(')');
     }
 
     @Override

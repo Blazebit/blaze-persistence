@@ -76,7 +76,12 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
+    public void visit(EntityLiteral expression) {
+        handleExpression(expression);
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
         handleExpression(expression);
     }
 

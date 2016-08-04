@@ -24,6 +24,7 @@ import org.antlr.v4.runtime.dfa.DFA;
 
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,7 +66,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
         return visitor.visit(ctx);
     }
 

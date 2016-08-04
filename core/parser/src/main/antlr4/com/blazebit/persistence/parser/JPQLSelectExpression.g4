@@ -127,6 +127,9 @@ single_valued_object_path_expression : path
 path : general_subpath '.' general_path_element
      ;
 
+path_no_array : pathElem+=simple_path_element ('.' pathElem+=simple_path_element)+
+              ;
+
 collection_valued_path_expression : single_element_path_expression
                                   | path
                                   ;
@@ -226,7 +229,8 @@ entity_type_expression : type_discriminator
                        | entity_type_literal // This is a custom, non JPA compliant literal
                        | Input_parameter
                        ;
-entity_type_literal : ENTITY '(' identifier ')'
+
+entity_type_literal : ENTITY '(' (identifier | path_no_array) ')'
                     ;
 
 type_discriminator : TYPE '(' type_discriminator_arg ')';
@@ -399,6 +403,8 @@ comparison_expression : left=string_expression comparison_operator right=string_
                       | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_arithmetic
                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
                       | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entitytype
+                      | left=path op=equality_comparison_operator right=type_discriminator # ComparisonExpression_path_type
+                      | left=type_discriminator op=equality_comparison_operator right=path # ComparisonExpression_type_path
                       ;
 
 equality_comparison_operator : '=' # EqPredicate

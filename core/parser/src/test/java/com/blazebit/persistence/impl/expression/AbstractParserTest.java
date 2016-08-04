@@ -128,16 +128,16 @@ public class AbstractParserTest {
         return new FooExpression(foo);
     }
     
-    protected LiteralExpression literal(String wrapperFunction, String literal) {
-        return new LiteralExpression(wrapperFunction, literal);
-    }
-
     protected FunctionExpression function(String name, Expression... args) {
     	if (aggregateFunctions.contains(name)) {
     		return new AggregateExpression(false, name, Arrays.asList(args));
     	} else {
     		return new FunctionExpression(name, Arrays.asList(args));
     	}
+    }
+
+    protected TypeFunctionExpression typeFunction(Expression arg) {
+        return new TypeFunctionExpression(arg);
     }
 
     protected AggregateExpression aggregate(String name, PathExpression arg, boolean distinct) {
@@ -238,6 +238,14 @@ public class AbstractParserTest {
         cal.set(Calendar.SECOND, second);
         cal.set(Calendar.MILLISECOND, millisecond);
         return new TimestampLiteral(cal.getTime());
+    }
+
+    protected EnumLiteral _enum(String priginalExpression) {
+        return new EnumLiteral(null, priginalExpression);
+    }
+
+    protected EntityLiteral _entity(String priginalExpression) {
+        return new EntityLiteral(null, priginalExpression);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

@@ -69,11 +69,6 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(LiteralExpression expression) {
-        return expression;
-    }
-
-    @Override
     public Expression visit(NullExpression expression) {
         return expression;
     }
@@ -91,6 +86,11 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
             expressions.get(i).accept(this);
         }
         return expression;
+    }
+
+    @Override
+    public Expression visit(TypeFunctionExpression expression) {
+        return visit((FunctionExpression) expression);
     }
 
     @Override
@@ -155,6 +155,16 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(TimestampLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(EnumLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(EntityLiteral expression) {
         return expression;
     }
 

@@ -63,10 +63,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
-    }
-
-    @Override
     public void visit(NullExpression expression) {
     }
 
@@ -81,6 +77,11 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
+    }
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        visit((FunctionExpression) expression);
     }
 
     @Override
@@ -138,6 +139,14 @@ public abstract class VisitorAdapter implements Expression.Visitor {
 
     @Override
     public void visit(TimestampLiteral expression) {
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
     }
 
     @Override

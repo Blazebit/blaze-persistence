@@ -74,11 +74,6 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(LiteralExpression expression) {
-        return false;
-    }
-
-    @Override
     public Boolean visit(NullExpression expression) {
         return false;
     }
@@ -98,6 +93,11 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
             }
         }
         return false;
+    }
+
+    @Override
+    public Boolean visit(TypeFunctionExpression expression) {
+        return visit((FunctionExpression) expression);
     }
 
     @Override
@@ -171,6 +171,16 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
 
     @Override
     public Boolean visit(TimestampLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(EnumLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(EntityLiteral expression) {
         return false;
     }
 

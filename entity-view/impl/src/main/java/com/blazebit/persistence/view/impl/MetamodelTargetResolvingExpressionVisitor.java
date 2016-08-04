@@ -320,12 +320,6 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
-        // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         // We can't infer a type here
         // TODO: Not sure what happens when this is the result node of a case when

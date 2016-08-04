@@ -188,11 +188,6 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         invalid(expression);
     }
@@ -248,6 +243,16 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(EnumLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
     	String name = expression.getFunctionName();
     	if ("KEY".equalsIgnoreCase(name)) {
@@ -289,7 +294,12 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     		invalid(expression);
     	}
     }
-    
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        invalid(expression);
+    }
+
     private PropertyExpression resolveBase(FunctionExpression expression) {
 		// According to our grammar, we can only get a path here
 		PathExpression path = (PathExpression) expression.getExpressions().get(0);

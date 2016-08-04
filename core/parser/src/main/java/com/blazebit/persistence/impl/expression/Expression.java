@@ -38,8 +38,6 @@ public interface Expression {
 
         public void visit(CompositeExpression expression);
 
-        public void visit(LiteralExpression expression);
-
         public void visit(NullExpression expression);
 
         public void visit(FooExpression expression);
@@ -47,6 +45,8 @@ public interface Expression {
         public void visit(SubqueryExpression expression);
 
         public void visit(FunctionExpression expression);
+
+        public void visit(TypeFunctionExpression expression);
 
         public void visit(WhenClauseExpression expression);
 
@@ -67,6 +67,10 @@ public interface Expression {
         public void visit(TimeLiteral expression);
 
         public void visit(TimestampLiteral expression);
+
+        public void visit(EnumLiteral expression);
+
+        public void visit(EntityLiteral expression);
 
         // Predicates
         public void visit(NotPredicate predicate);
@@ -114,8 +118,6 @@ public interface Expression {
 
         public T visit(CompositeExpression expression);
 
-        public T visit(LiteralExpression expression);
-
         public T visit(NullExpression expression);
 
         public T visit(FooExpression expression);
@@ -123,6 +125,8 @@ public interface Expression {
         public T visit(SubqueryExpression expression);
 
         public T visit(FunctionExpression expression);
+
+        public T visit(TypeFunctionExpression expression);
 
         public T visit(WhenClauseExpression expression);
 
@@ -143,6 +147,10 @@ public interface Expression {
         public T visit(TimeLiteral expression);
 
         public T visit(TimestampLiteral expression);
+
+        public T visit(EnumLiteral expression);
+
+        public T visit(EntityLiteral expression);
 
         // Predicates
         public T visit(NotPredicate predicate);

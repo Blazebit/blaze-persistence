@@ -83,13 +83,13 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testSoftKeywordsTypeAsUpperFunction() {
         Expression result = parse("TYPE(entity.type)");
-        assertEquals(function("TYPE", path("entity", "type")), result);
+        assertEquals(typeFunction(path("entity", "type")), result);
     }
 
     @Test
     public void testSoftKeywordsTypeAsFunction() {
         Expression result = parse("type(entity.type)");
-        assertEquals(function("type", path("entity", "type")), result);
+        assertEquals(typeFunction(path("entity", "type")), result);
     }
     
     @Test
@@ -492,19 +492,19 @@ public class GeneralParserTest extends AbstractParserTest {
     @Test
     public void testTypeFunctionPath() {
         Expression result = parse("TYPE(d.age)");
-        assertEquals(function("TYPE", path("d", "age")), result);
+        assertEquals(typeFunction(path("d", "age")), result);
     }
 
     @Test
     public void testTypeFunctionParameter() {
         Expression result = parse("TYPE(:test)");
-        assertEquals(function("TYPE", parameter("test")), result);
+        assertEquals(typeFunction(parameter("test")), result);
     }
 
     @Test
     public void testTypeFunctionSingleElementPath() {
         Expression result = parse("TYPE(age)");
-        assertEquals(function("TYPE", path("age")), result);
+        assertEquals(typeFunction(path("age")), result);
     }
 
     @Test
@@ -755,7 +755,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testEnumCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN archived = ENUM(a.b.c) THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), literal("ENUM", "a.b.c")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(path("archived"), _enum("ENUM(a.b.c)")), _int("1"))), _int("2"));
         assertEquals(expected, result);
     }
     
@@ -763,7 +763,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testEntityTypeCompare(){
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN TYPE(doc) = ENTITY(Document) THEN 1 ELSE 2 END");
         
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(function("TYPE", path("doc")), literal("ENTITY", "Document")), _int("1"))), _int("2"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new EqPredicate(typeFunction(path("doc")), _entity("ENTITY(Document)")), _int("1"))), _int("2"));
         assertEquals(expected, result);
     }
     
