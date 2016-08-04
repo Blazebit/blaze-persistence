@@ -144,6 +144,21 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
+    public Expression visit(DateLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(TimeLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(TimestampLiteral expression) {
+        return expression;
+    }
+
+    @Override
     public Expression visit(CompoundPredicate predicate) {
         for (int i = 0; i < predicate.getChildren().size(); i++) {
             Predicate p = predicate.getChildren().get(i);

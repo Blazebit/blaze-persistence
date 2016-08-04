@@ -77,6 +77,8 @@ public class ExpressionUtils {
             return false;
         } else if (expr instanceof StringLiteral) {
             return false;
+        } else if (expr instanceof TemporalLiteral) {
+            return false;
         } else if (expr instanceof ArithmeticFactor) {
             return isUnique(metamodel, ((ArithmeticFactor) expr).getExpression());
         } else if (expr instanceof ArithmeticExpression) {
@@ -283,9 +285,11 @@ public class ExpressionUtils {
             return true;
         } else if (expr instanceof NumericLiteral) {
             return false;
-        } else if (expr instanceof BooleanLiteral) {
+        }else if (expr instanceof BooleanLiteral) {
             return false;
         } else if (expr instanceof StringLiteral) {
+            return false;
+        } else if (expr instanceof TemporalLiteral) {
             return false;
         } else if (expr instanceof ArithmeticFactor) {
             return isNullable(metamodel, ((ArithmeticFactor) expr).getExpression());

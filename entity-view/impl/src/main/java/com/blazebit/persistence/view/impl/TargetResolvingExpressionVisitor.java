@@ -233,6 +233,21 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(DateLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
     public void visit(FunctionExpression expression) {
     	String name = expression.getFunctionName();
     	if ("KEY".equalsIgnoreCase(name)) {

@@ -929,6 +929,9 @@ public class JoinManager extends AbstractManager {
         } else if (indexExpr instanceof NumericLiteral) {
             sb.append('_');
             sb.append(((NumericLiteral) indexExpr).getValue());
+        } else if (indexExpr instanceof StringLiteral) {
+            sb.append('_');
+            sb.append(((StringLiteral) indexExpr).getValue());
         } else {
             throw new IllegalStateException("Invalid array index expression " + indexExpr.toString());
         }

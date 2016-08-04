@@ -160,6 +160,21 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
+    public Boolean visit(DateLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(TimeLiteral expression) {
+        return false;
+    }
+
+    @Override
+    public Boolean visit(TimestampLiteral expression) {
+        return false;
+    }
+
+    @Override
     public Boolean visit(CompoundPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();

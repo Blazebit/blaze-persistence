@@ -16,11 +16,7 @@
 package com.blazebit.persistence.view.impl;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.ManagedType;
@@ -371,6 +367,21 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     @Override
     public void visit(StringLiteral expression) {
         currentPosition.setCurrentClass(String.class);
+    }
+
+    @Override
+    public void visit(DateLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
     }
 
     private boolean isNumber(String expressionString) {

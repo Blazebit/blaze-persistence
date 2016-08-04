@@ -201,32 +201,32 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testDateLiteral(){
-        FooExpression result = (FooExpression) parse("{d '1991-05-21'}");
-        assertEquals(new FooExpression("{d '1991-05-21'}"), result);
+        DateLiteral result = (DateLiteral) parse("{d '1991-05-21'}");
+        assertEquals(_date(1991, 5, 21), result);
     }
     
     @Test
     public void testTimeLiteral1(){
-        FooExpression result = (FooExpression) parse("{t '11:59:59.0'}");
-        assertEquals(new FooExpression("{t '11:59:59.0'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.100'}");
+        assertEquals(_time(11, 59, 59, 100), result);
     }
     
     @Test
     public void testTimeLiteral2(){
-        FooExpression result = (FooExpression) parse("{t '11:59:59.'}");
-        assertEquals(new FooExpression("{t '11:59:59.'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.'}");
+        assertEquals(_time(11, 59, 59, 0), result);
     }
     
     @Test
     public void testTimeLiteral3(){
-        FooExpression result = (FooExpression) parse("{t '1:59:59.'}");
-        assertEquals(new FooExpression("{t '1:59:59.'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '1:59:59.'}");
+        assertEquals(_time(1, 59, 59, 0), result);
     }
     
     @Test
     public void testTimestampLiteral(){
-        FooExpression result = (FooExpression) parse("{ts '1991-05-21 11:59:59.0'}");
-        assertEquals(new FooExpression("{ts '1991-05-21 11:59:59.0'}"), result);
+        TimestampLiteral result = (TimestampLiteral) parse("{ts '1991-05-21 11:59:59.100'}");
+        assertEquals(_timestamp(1991, 5, 21, 11, 59, 59, 100), result);
     }
 
 }

@@ -25,10 +25,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.LogManager;
 
 /**
@@ -213,6 +210,34 @@ public class AbstractParserTest {
 
     protected StringLiteral _string(String value) {
         return new StringLiteral(value);
+    }
+
+    protected DateLiteral _date(int year, int month, int day) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(year, month - 1, day);
+        return new DateLiteral(cal.getTime());
+    }
+
+    protected TimeLiteral _time(int hour, int minute, int second, int millisecond) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.HOUR, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millisecond);
+        return new TimeLiteral(cal.getTime());
+    }
+
+    protected TimestampLiteral _timestamp(int year, int month, int day, int hour, int minute, int second, int millisecond) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(year, month - 1, day);
+        cal.set(Calendar.HOUR, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millisecond);
+        return new TimestampLiteral(cal.getTime());
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

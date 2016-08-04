@@ -305,9 +305,9 @@ boolean_literal : Boolean_literal
                 ;
 
 temporal_literal
-    : Date_literal
-    | Time_literal
-    | Timestamp_literal
+    : Date_literal      #DateLiteral
+    | Time_literal      #TimeLiteral
+    | Timestamp_literal #TimestampLiteral
     ;
 
 trim_character : string_literal

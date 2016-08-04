@@ -18,6 +18,9 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -32,6 +35,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     // indicates if the query generator operates in a context where it needs conditional expressions
     private boolean conditionalContext;
+
+    private DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+    private DateFormat dfTime = new SimpleDateFormat("HH:mm:ss.SSS");
 
     public boolean isConditionalContext() {
         return conditionalContext;
@@ -504,6 +510,32 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(StringLiteral expression) {
         sb.append('\'').append(expression.getValue()).append('\'');
+    }
+
+    @Override
+    public void visit(DateLiteral expression) {
+        Date value = expression.getValue();
+        sb.append("{d '")
+                .append(dfDate.format(value))
+                .append("'}");
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        Date value = expression.getValue();
+        sb.append("{t '")
+                .append(dfTime.format(value))
+                .append("'}");
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        Date value = expression.getValue();
+        sb.append("{ts '")
+                .append(dfDate.format(value))
+                .append(' ')
+                .append(dfTime.format(value))
+                .append("'}");
     }
 
     private void wrapNonSubquery(Expression p, StringBuilder sb) {

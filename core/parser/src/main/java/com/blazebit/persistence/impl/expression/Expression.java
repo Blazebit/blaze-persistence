@@ -62,6 +62,12 @@ public interface Expression {
 
         public void visit(StringLiteral expression);
 
+        public void visit(DateLiteral expression);
+
+        public void visit(TimeLiteral expression);
+
+        public void visit(TimestampLiteral expression);
+
         // Predicates
         public void visit(NotPredicate predicate);
 
@@ -131,6 +137,12 @@ public interface Expression {
         public T visit(NumericLiteral expression);
 
         public T visit(StringLiteral expression);
+
+        public T visit(DateLiteral expression);
+
+        public T visit(TimeLiteral expression);
+
+        public T visit(TimestampLiteral expression);
 
         // Predicates
         public T visit(NotPredicate predicate);
