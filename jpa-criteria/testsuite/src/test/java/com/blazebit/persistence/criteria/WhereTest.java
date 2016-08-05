@@ -246,15 +246,15 @@ public class WhereTest extends AbstractCoreTest {
                 // NOTE: we use a third parameter null to mark cases as "problematic"
                 // They are problematic because our parser simplifies negations into some predicates instead of simply wrapping the predicates
                 new String[]{ "1 = 1", "1 <> 1", null},
-                new String[]{ "1 <> 1", "1 = 1", null},
+                new String[]{ "1 <> 1", "1 = 1"},
                 new String[]{ "1 > 1", "1 <= 1"},
                 new String[]{ "1 >= 1", "1 < 1"},
                 new String[]{ "1 < 1", "1 >= 1"},
                 new String[]{ "1 <= 1", "1 > 1"},
                 new String[]{ "document.id IS NULL", "document.id IS NOT NULL", null},
-                new String[]{ "document.id IS NOT NULL", "document.id IS NULL", null},
+                new String[]{ "document.id IS NOT NULL", "document.id IS NULL"},
                 new String[]{ "document.name LIKE :generated_param", "document.name NOT LIKE :generated_param", null},
-                new String[]{ "document.name NOT LIKE :generated_param", "document.name LIKE :generated_param", null},
+                new String[]{ "document.name NOT LIKE :generated_param", "document.name LIKE :generated_param"},
                 new String[]{ "document.id BETWEEN 0L AND 0L", "document.id NOT BETWEEN 0L AND 0L", null},
                 new String[]{ "1 = 1", "1 = 0", "1 <> 1"},
                 new String[]{ "1 = 0", "1 = 1", "1 <> 0"},
@@ -262,9 +262,9 @@ public class WhereTest extends AbstractCoreTest {
                 new String[]{ "document.archived = false", "document.archived = true", "document.archived <> false"},
                 new String[]{ "EXISTS (SELECT 1 FROM Document sub)", "NOT EXISTS (SELECT 1 FROM Document sub)", null},
                 new String[]{ "document.people IS EMPTY", "document.people IS NOT EMPTY", null},
-                new String[]{ "document.people IS NOT EMPTY", "document.people IS EMPTY", null},
+                new String[]{ "document.people IS NOT EMPTY", "document.people IS EMPTY"},
                 new String[]{ "document.owner MEMBER OF document.people", "document.owner NOT MEMBER OF document.people", null},
-                new String[]{ "document.owner NOT MEMBER OF document.people", "document.owner MEMBER OF document.people", null},
+                new String[]{ "document.owner NOT MEMBER OF document.people", "document.owner MEMBER OF document.people"},
                 new String[]{ "document.id IN (0L)", "document.id NOT IN (0L)", null}
         );
 

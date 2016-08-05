@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -90,9 +91,15 @@ public class AbstractParserTest {
     	aggregateFunctions = new HashSet<String>();
     }
 
-    protected <P extends Predicate> P not(P p) {
+    protected Predicate not(Predicate p) {
         p.negate();
         return p;
+    }
+
+    protected Predicate wrapNot(Predicate p) {
+        CompoundPredicate wrapper = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, p);
+        wrapper.negate();
+        return wrapper;
     }
 
     protected CompositeExpression compose(Expression... expr) {
@@ -111,7 +118,7 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
-    protected Predicate parseBooleanExpression(String expr, boolean allowQuantifiedPredicates) {
+    protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
         return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
     }
 

@@ -349,6 +349,10 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         Predicate predicate = (Predicate) ctx.conditional_primary().accept(this);
 
         if (ctx.not != null) {
+            if (predicate.isNegated()) {
+                // wrap in this case to maintain negational structure
+                predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, predicate);
+            }
             predicate.negate();
         }
         return predicate;

@@ -794,7 +794,7 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testConditionalCaseWhen() {
-        Predicate result = parseBooleanExpression("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
+        Predicate result = parsePredicate("CASE WHEN document.age > 12 THEN document.creationDate ELSE CURRENT_TIMESTAMP END < ALL subqueryAlias", true);
         
         Predicate expected = new LtPredicate(
             new GeneralCaseExpression(Arrays.asList(
@@ -807,4 +807,5 @@ public class GeneralParserTest extends AbstractParserTest {
         );
         assertEquals(expected, result);
     }
+
 }

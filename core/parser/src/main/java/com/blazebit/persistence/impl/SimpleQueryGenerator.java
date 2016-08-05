@@ -629,6 +629,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
     }
 
+    // TODO: inefficient, adopt
     private static interface DeferredRenderer {
         public void render();
     }
