@@ -25,10 +25,8 @@ import com.blazebit.persistence.impl.expression.Expression;
  */
 public class EqPredicate extends QuantifiableBinaryExpressionPredicate implements Negatable {
 
-    private boolean negated;
-
     public EqPredicate(boolean negated) {
-        this.negated = negated;
+        this(null, null, negated);
     }
 
     public EqPredicate(Expression left, Expression right) {
@@ -36,8 +34,7 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     }
 
     public EqPredicate(Expression left, Expression right, boolean negated) {
-        super(left, right, PredicateQuantifier.ONE);
-        this.negated = negated;
+        this(left, right, PredicateQuantifier.ONE, negated);
     }
 
     public EqPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
@@ -45,23 +42,12 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     }
 
     public EqPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
-        super(left, right, quantifier);
-        this.negated = negated;
+        super(left, right, quantifier, negated);
     }
 
     @Override
     public EqPredicate clone() {
         return new EqPredicate(left.clone(), right.clone(), quantifier, negated);
-    }
-
-    @Override
-    public boolean isNegated() {
-        return negated;
-    }
-
-    @Override
-    public void setNegated(boolean negated) {
-        this.negated = negated;
     }
 
     @Override
@@ -72,25 +58,6 @@ public class EqPredicate extends QuantifiableBinaryExpressionPredicate implement
     @Override
     public <T> T accept(ResultVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = super.hashCode();
-        hash = 97 * hash + (this.negated ? 1 : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!super.equals(obj)) {
-            return false;
-        }
-        final EqPredicate other = (EqPredicate) obj;
-        if (this.negated != other.negated) {
-            return false;
-        }
-        return true;
     }
 
 }

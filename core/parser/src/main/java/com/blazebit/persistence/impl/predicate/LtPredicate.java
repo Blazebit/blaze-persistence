@@ -29,16 +29,16 @@ public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     public LtPredicate(Expression left, Expression right) {
-        super(left, right, PredicateQuantifier.ONE);
+        this(left, right, PredicateQuantifier.ONE, false);
     }
 
-    public LtPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        super(left, right, quantifier);
+    public LtPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
+        super(left, right, quantifier, negated);
     }
 
     @Override
     public LtPredicate clone() {
-        return new LtPredicate(left.clone(), right.clone(), quantifier);
+        return new LtPredicate(left.clone(), right.clone(), quantifier, negated);
     }
 
     @Override

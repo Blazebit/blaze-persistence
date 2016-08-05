@@ -29,16 +29,16 @@ public class GtPredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     public GtPredicate(Expression left, Expression right) {
-        super(left, right, PredicateQuantifier.ONE);
+        this(left, right, PredicateQuantifier.ONE, false);
     }
 
-    public GtPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        super(left, right, quantifier);
+    public GtPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
+        super(left, right, quantifier, negated);
     }
 
     @Override
     public GtPredicate clone() {
-        return new GtPredicate(left.clone(), right.clone(), quantifier);
+        return new GtPredicate(left.clone(), right.clone(), quantifier, negated);
     }
 
     @Override

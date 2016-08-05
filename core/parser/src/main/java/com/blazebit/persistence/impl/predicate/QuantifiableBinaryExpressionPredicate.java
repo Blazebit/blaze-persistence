@@ -28,15 +28,15 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
     protected PredicateQuantifier quantifier;
 
     public QuantifiableBinaryExpressionPredicate() {
-        this(null, null);
+        this(null, null, false);
     }
 
-    public QuantifiableBinaryExpressionPredicate(Expression left, Expression right) {
-        this(left, right, PredicateQuantifier.ONE);
+    public QuantifiableBinaryExpressionPredicate(Expression left, Expression right, boolean negated) {
+        this(left, right, PredicateQuantifier.ONE, negated);
     }
 
-    public QuantifiableBinaryExpressionPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        super(left, right);
+    public QuantifiableBinaryExpressionPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
+        super(left, right, negated);
         this.quantifier = quantifier;
     }
 
@@ -53,25 +53,21 @@ public abstract class QuantifiableBinaryExpressionPredicate extends BinaryExpres
     }
 
     @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 97 * hash + (this.quantifier != null ? this.quantifier.hashCode() : 0);
-        hash = 97 * hash + super.hashCode();
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof QuantifiableBinaryExpressionPredicate)) return false;
+        if (!super.equals(o)) return false;
+
+        QuantifiableBinaryExpressionPredicate that = (QuantifiableBinaryExpressionPredicate) o;
+
+        return quantifier == that.quantifier;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final QuantifiableBinaryExpressionPredicate other = (QuantifiableBinaryExpressionPredicate) obj;
-        if (this.quantifier != other.quantifier) {
-            return false;
-        }
-        return super.equals(obj);
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (quantifier != null ? quantifier.hashCode() : 0);
+        return result;
     }
 }

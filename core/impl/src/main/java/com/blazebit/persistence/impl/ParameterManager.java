@@ -85,7 +85,7 @@ public class ParameterManager {
 
     public ParameterExpression addParameterExpression(Object o) {
         String name = addParameter(o);
-        return new ParameterExpression(name, o);
+        return new ParameterExpression(name, o, o instanceof Collection);
     }
 
     public String addParameter(Object o) {

@@ -7,11 +7,12 @@ import com.blazebit.persistence.impl.expression.AbstractExpression;
  * by Moritz Becker (moritz.becker@gmx.at)
  * on 03.08.2016.
  */
-public class BooleanLiteral extends AbstractExpression implements Predicate {
+public class BooleanLiteral extends AbstractPredicate {
 
     private final boolean value;
 
     public BooleanLiteral(boolean value) {
+        super(false);
         this.value = value;
     }
 
@@ -38,6 +39,7 @@ public class BooleanLiteral extends AbstractExpression implements Predicate {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof BooleanLiteral)) return false;
+        if (!super.equals(o)) return false;
 
         BooleanLiteral that = (BooleanLiteral) o;
 
@@ -47,6 +49,8 @@ public class BooleanLiteral extends AbstractExpression implements Predicate {
 
     @Override
     public int hashCode() {
-        return Boolean.valueOf(value).hashCode();
+        int result = super.hashCode();
+        result = 31 * result + (value ? 1 : 0);
+        return result;
     }
 }

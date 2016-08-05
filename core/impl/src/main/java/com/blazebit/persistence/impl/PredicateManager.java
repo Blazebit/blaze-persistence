@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.blazebit.persistence.CaseWhenStarterBuilder;
@@ -135,7 +136,7 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     SubqueryInitiator<T> restrictNotExists(T result) {
-        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new NotPredicate(new ExistsPredicate())));
+        rightSubqueryPredicateBuilderListener = rootPredicate.startBuilder(new RightHandsideSubqueryPredicateBuilder<T>(rootPredicate, new ExistsPredicate(true)));
         return subqueryInitFactory.createSubqueryInitiator(result, rightSubqueryPredicateBuilderListener);
     }
 
@@ -263,7 +264,11 @@ public abstract class PredicateManager<T> extends AbstractManager {
     		boolean original = joinRequired;
     		joinRequired = false;
             predicate.setLeft(transformer.transform(predicate.getLeft(), fromClause, joinRequired));
-            predicate.setRight(transformer.transform(predicate.getRight(), fromClause, joinRequired));
+            List<Expression> transformedRight = new ArrayList<Expression>();
+            for (Expression right : predicate.getRight()) {
+                transformedRight.add(transformer.transform(right, fromClause, joinRequired));
+            }
+            predicate.setRight(transformedRight);
             joinRequired = original;
         }
 

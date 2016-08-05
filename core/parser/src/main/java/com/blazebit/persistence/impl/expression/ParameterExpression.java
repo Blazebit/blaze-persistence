@@ -25,14 +25,20 @@ public class ParameterExpression extends AbstractExpression {
 
     private String name;
     private Object value;
+    private boolean collectionValued;
 
     public ParameterExpression(String name) {
-        this.name = name;
+        this(name, null);
     }
 
     public ParameterExpression(String name, Object value) {
+        this(name, value, false);
+    }
+
+    public ParameterExpression(String name, Object value, boolean collectionValued) {
         this.name = name;
         this.value = value;
+        this.collectionValued = collectionValued;
     }
 
     @Override
@@ -62,31 +68,37 @@ public class ParameterExpression extends AbstractExpression {
         return value;
     }
 
+    public boolean isCollectionValued() {
+        return collectionValued;
+    }
+
+    public void setCollectionValued(boolean collectionValued) {
+        this.collectionValued = collectionValued;
+    }
+
     @Override
     public String toString() {
         return ":" + name;
     }
 
     @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 71 * hash + (this.name != null ? this.name.hashCode() : 0);
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ParameterExpression)) return false;
+
+        ParameterExpression that = (ParameterExpression) o;
+
+        if (collectionValued != that.collectionValued) return false;
+        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        return value != null ? value.equals(that.value) : that.value == null;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final ParameterExpression other = (ParameterExpression) obj;
-        if ((this.name == null) ? (other.name != null) : !this.name.equals(other.name)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (value != null ? value.hashCode() : 0);
+        result = 31 * result + (collectionValued ? 1 : 0);
+        return result;
     }
-
 }

@@ -546,7 +546,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInParameter() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (:abc) THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), compose(foo("("), new ParameterExpression("abc"), foo(")"))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -554,7 +554,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInMultipleParameterAndLiteral() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (:abc, :def, 3) THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), compose(foo("("), new ParameterExpression("abc"), foo(","), new ParameterExpression("def"), foo(","), _int("3"), foo(")"))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc"), new ParameterExpression("def"), _int("3")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -562,7 +562,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInParameterNoParanthesis() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN :abc THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc")), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), new ParameterExpression("abc", null, true)), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -570,7 +570,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInNumericLiterals() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN (1, 2, 3, 4) THEN 0 ELSE 1 END");
 
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), compose(foo("("), _int("1"), foo(","), _int("2"), foo(","), _int("3"), foo(","), _int("4"), foo(")"))), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), _int("1"), _int("2"), _int("3"), _int("4")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -578,8 +578,7 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testInCharacterLiterals() {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a.x IN ('1', '2', '3', '4') THEN 0 ELSE 1 END");
 
-        CompositeExpression inItems = compose(foo("("), _string("1"), foo(","), _string("2"), foo(","), _string("3"), foo(","), _string("4"), foo(")"));
-        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), inItems), _int("0"))), _int("1"));
+        GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(new WhenClauseExpression(new InPredicate(path("a", "x"), _string("1"), _string("2"), _string("3"), _string("4")), _int("0"))), _int("1"));
         assertEquals(expected, result);
     }
 
@@ -803,7 +802,8 @@ public class GeneralParserTest extends AbstractParserTest {
                 ), function("CURRENT_TIMESTAMP")
             ),
             foo("subqueryAlias"),
-            PredicateQuantifier.ALL
+            PredicateQuantifier.ALL,
+            false
         );
         assertEquals(expected, result);
     }

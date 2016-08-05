@@ -25,4 +25,6 @@ public interface Negatable {
     public boolean isNegated();
 
     public void setNegated(boolean negated);
+
+    public void negate();
 }

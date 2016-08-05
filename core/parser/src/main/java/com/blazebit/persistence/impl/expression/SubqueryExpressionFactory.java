@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
@@ -87,8 +88,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions) {
-        return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions) {
+        return delegate.createInItemExpressions(parameterOrLiteralExpressions);
     }
 
 }

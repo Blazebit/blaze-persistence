@@ -11,7 +11,7 @@ import java.util.List;
  * by Moritz Becker (moritz.becker@gmx.at)
  * on 03.08.2016.
  */
-public class CompoundPredicate extends AbstractExpression implements Predicate {
+public class CompoundPredicate extends AbstractPredicate {
 
     private final List<Predicate> children;
     private final BooleanOperator operator;
@@ -21,11 +21,13 @@ public class CompoundPredicate extends AbstractExpression implements Predicate {
     }
 
     public CompoundPredicate(BooleanOperator operator, Predicate... children) {
+        super(false);
         this.operator = operator;
         this.children = new ArrayList<Predicate>(Arrays.asList(children));
     }
 
     public CompoundPredicate(BooleanOperator operator, List<Predicate> children) {
+        super(false);
         this.operator = operator;
         this.children = children;
     }
@@ -57,6 +59,7 @@ public class CompoundPredicate extends AbstractExpression implements Predicate {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof CompoundPredicate)) return false;
+        if (!super.equals(o)) return false;
 
         CompoundPredicate that = (CompoundPredicate) o;
 
@@ -67,7 +70,8 @@ public class CompoundPredicate extends AbstractExpression implements Predicate {
 
     @Override
     public int hashCode() {
-        int result = children != null ? children.hashCode() : 0;
+        int result = super.hashCode();
+        result = 31 * result + (children != null ? children.hashCode() : 0);
         result = 31 * result + (operator != null ? operator.hashCode() : 0);
         return result;
     }

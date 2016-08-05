@@ -36,7 +36,7 @@ public class LePredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<
 
     @Override
     protected QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        return new LePredicate(left, right, quantifier);
+        return new LePredicate(left, right, quantifier, false);
     }
 
 }

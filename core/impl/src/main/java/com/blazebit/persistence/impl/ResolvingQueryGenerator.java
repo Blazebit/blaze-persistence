@@ -314,8 +314,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         // Workaround for hibernate
         // TODO: Remove when HHH-7407 is fixed
-        boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.getValue() instanceof List<?>
-            && ((List<?>) expression.getValue()).size() > 1;
+        boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.isCollectionValued();
 
         if (needsBrackets) {
             sb.append('(');

@@ -23,10 +23,7 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.*;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -349,17 +346,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditional_factor(JPQLSelectExpressionParser.Conditional_factorContext ctx) {
-        Predicate expression = (Predicate) ctx.conditional_primary().accept(this);
+        Predicate predicate = (Predicate) ctx.conditional_primary().accept(this);
 
         if (ctx.not != null) {
-            if (expression instanceof Negatable) {
-                Negatable n = (Negatable) expression;
-                n.setNegated(!n.isNegated());
-            } else {
-                expression = new NotPredicate(expression);
-            }
+            predicate.negate();
         }
-        return expression;
+        return predicate;
     }
 
     @Override
@@ -540,22 +532,26 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
-        Expression inExpr;
+        InPredicate inPredicate;
+        Expression left = ctx.getChild(0).accept(this);
         if (ctx.param == null && ctx.right == null) {
-            CompositeExpression compositeInExpr = accept(ctx.in_item(0));
-            compositeInExpr.prepend("(");
-            for (int i = 1; i < ctx.in_item().size(); i++) {
-                compositeInExpr.append(",");
-                acceptAndCompose(compositeInExpr, ctx.in_item(i));
+            List<Expression> inItems= new ArrayList<Expression>();
+            for (In_itemContext inItemCtx : ctx.in_item()) {
+                inItems.add(inItemCtx.accept(this));
             }
-            compositeInExpr.append(")");
-            inExpr = unwrap(compositeInExpr);
+            inPredicate = new InPredicate(left, inItems);
         } else if (ctx.param != null) {
-            inExpr = ctx.Input_parameter().accept(this);
+            ParameterExpression collectionParam = (ParameterExpression) new TerminalNodeImpl(ctx.param).accept(this);
+            collectionParam.setCollectionValued(true);
+            inPredicate = new InPredicate(left, collectionParam);
         } else {
-            inExpr = ctx.Identifier().get(ctx.Identifier().size() - 1).accept(this);
+            Expression inExpr = new TerminalNodeImpl(ctx.right).accept(this);
+            inPredicate = new InPredicate(left, inExpr);
         }
-        return new InPredicate(ctx.getChild(0).accept(this), inExpr, ctx.not != null);
+        if (ctx.not != null) {
+            inPredicate.setNegated(true);
+        }
+        return inPredicate;
     }
 
     @Override

@@ -22,10 +22,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -145,36 +142,20 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
     }
 
     @Override
-    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions) {
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions) {
         if (parameterOrLiteralExpressions == null) {
             throw new NullPointerException("parameterOrLiteralExpressions");
         }
         if (parameterOrLiteralExpressions.length == 0) {
             throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
         }
-        
-        Expression expr = createInItemExpression(parameterOrLiteralExpressions[0]);
-        
-        if (parameterOrLiteralExpressions.length == 1 && expr instanceof ParameterExpression) {
-            return expr;
+
+        List<Expression> inItemExpressions = new ArrayList<Expression>();
+        for (String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression));
         }
-        
-        CompositeExpression composite;
-        if (expr instanceof CompositeExpression) {
-            composite = (CompositeExpression) expr;
-        } else {
-            composite = new CompositeExpression(new ArrayList<Expression>(parameterOrLiteralExpressions.length * 2));
-            composite.append("(");
-            composite.append(expr);
-        }
-        
-        for (int i = 1; i < parameterOrLiteralExpressions.length; i++) {
-            composite.append(",");
-            composite.append(createInItemExpression(parameterOrLiteralExpressions[i]));
-        }
-        
-        composite.append(")");
-        return composite;
+
+        return inItemExpressions;
     }
     
     @Override
@@ -188,7 +169,8 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         }, expression, true, allowQuantifiedPredicates);
     }
 
-    private Expression createInItemExpression(String expression) {
+    @Override
+    public Expression createInItemExpression(String expression) {
         return createExpression(new RuleInvoker() {
 
             @Override

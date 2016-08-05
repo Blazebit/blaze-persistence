@@ -17,6 +17,9 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.predicate.Predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -124,12 +127,21 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
-    public Expression createInPredicateExpression(final String[] parameterOrLiteralExpressions) {
-        return getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpressions, new Supplier<Expression>() {
+    public List<Expression> createInItemExpressions(final String[] parameterOrLiteralExpressions) {
+        List<Expression> inItemExpressions = new ArrayList<Expression>();
+        for (final String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression));
+        }
+        return inItemExpressions;
+    }
+
+    @Override
+    public Expression createInItemExpression(final String parameterOrLiteralExpression) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpression, new Supplier<Expression>() {
 
             @Override
             public Expression get() {
-                return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
+                return delegate.createInItemExpression(parameterOrLiteralExpression);
             }
 
         });

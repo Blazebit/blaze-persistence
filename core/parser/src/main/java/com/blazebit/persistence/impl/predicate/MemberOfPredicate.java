@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class MemberOfPredicate extends NegatableBinaryExpressionPredicate {
+public class MemberOfPredicate extends BinaryExpressionPredicate {
 
     public MemberOfPredicate(Expression left, Expression right) {
         super(left, right);

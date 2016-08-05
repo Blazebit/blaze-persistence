@@ -159,11 +159,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(NotPredicate expression) {
-        expression.getPredicate().accept(this);
-    }
-
-    @Override
     public void visit(EqPredicate predicate) {
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
@@ -201,7 +196,9 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     @Override
     public void visit(InPredicate predicate) {
         predicate.getLeft().accept(this);
-        predicate.getRight().accept(this);
+        for (Expression right : predicate.getRight()) {
+            right.accept(this);
+        }
     }
 
     @Override

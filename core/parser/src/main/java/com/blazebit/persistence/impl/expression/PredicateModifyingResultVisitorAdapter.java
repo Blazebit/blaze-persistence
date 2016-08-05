@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.blazebit.persistence.impl.predicate.*;
@@ -178,12 +179,6 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(NotPredicate expression) {
-        expression.setPredicate((Predicate) expression.getPredicate().accept(this));
-        return expression;
-    }
-
-    @Override
     public Expression visit(EqPredicate predicate) {
         return visit((BinaryExpressionPredicate) predicate);
     }
@@ -220,7 +215,13 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(InPredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        predicate.setLeft(predicate.getLeft().accept(this));
+        List<Expression> newRight = new ArrayList<Expression>();
+        for (Expression right : predicate.getRight()) {
+            newRight.add(right.accept(this));
+        }
+        predicate.setRight(newRight);
+        return predicate;
     }
 
     @Override

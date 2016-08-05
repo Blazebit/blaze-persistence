@@ -73,8 +73,6 @@ public interface Expression {
         public void visit(EntityLiteral expression);
 
         // Predicates
-        public void visit(NotPredicate predicate);
-
         public void visit(EqPredicate predicate);
 
         public void visit(IsNullPredicate predicate);
@@ -153,8 +151,6 @@ public interface Expression {
         public T visit(EntityLiteral expression);
 
         // Predicates
-        public T visit(NotPredicate predicate);
-
         public T visit(EqPredicate predicate);
 
         public T visit(IsNullPredicate predicate);

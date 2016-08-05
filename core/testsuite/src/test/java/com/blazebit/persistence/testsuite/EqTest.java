@@ -159,7 +159,7 @@ public class EqTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").notEq("alias", "1 + alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE NOT d.age = 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age <> 1 + (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
 
@@ -168,7 +168,7 @@ public class EqTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
         crit.where("age").notEq("alias", "alias * alias").from(Person.class, "p").select("COUNT(id)").end();     
         
-        assertEquals("SELECT d FROM Document d WHERE NOT d.age = (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
+        assertEquals("SELECT d FROM Document d WHERE d.age <> (SELECT COUNT(p.id) FROM Person p) * (SELECT COUNT(p.id) FROM Person p)", crit.getQueryString());
         crit.getResultList();
     }
 }

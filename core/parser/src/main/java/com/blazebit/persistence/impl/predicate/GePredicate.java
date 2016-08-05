@@ -29,16 +29,16 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     public GePredicate(Expression left, Expression right) {
-        super(left, right, PredicateQuantifier.ONE);
+        this(left, right, PredicateQuantifier.ONE, false);
     }
 
-    public GePredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        super(left, right, quantifier);
+    public GePredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {
+        super(left, right, quantifier, negated);
     }
 
     @Override
     public GePredicate clone() {
-        return new GePredicate(left.clone(), right.clone(), quantifier);
+        return new GePredicate(left.clone(), right.clone(), quantifier, negated);
     }
 
     @Override

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import java.sql.Timestamp;
 import java.util.*;
 
-import javax.persistence.Parameter;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 
@@ -151,7 +150,7 @@ public class WhereTest extends AbstractCoreTest {
                 "AND document.id IN (:generated_param_1) " +
                 "AND document.id IN (0L) " +
                 "AND document.id IN (SELECT 0L FROM Document sub) " +
-                "AND document.id IN :collectionParam " +
+                "AND document.id IN (:collectionParam) " +
                 "AND (SELECT 0L FROM Document sub) IN (0L)" +
                 "", criteriaBuilder.getQueryString());
     }
@@ -434,7 +433,7 @@ public class WhereTest extends AbstractCoreTest {
         );
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
-        assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L,2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L, 2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
     }

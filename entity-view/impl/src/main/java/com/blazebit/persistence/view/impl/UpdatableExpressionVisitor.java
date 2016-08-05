@@ -247,11 +247,6 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(NotPredicate predicate) {
-        invalid(predicate);
-    }
-
-    @Override
     public void visit(EqPredicate predicate) {
         invalid(predicate);
     }

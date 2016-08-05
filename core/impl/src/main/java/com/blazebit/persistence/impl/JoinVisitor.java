@@ -15,10 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
@@ -128,7 +125,9 @@ public class JoinVisitor extends VisitorAdapter {
 		boolean original = joinRequired;
 		joinRequired = false;
         predicate.getLeft().accept(this);
-        predicate.getRight().accept(this);
+        for (Expression right : predicate.getRight()) {
+            right.accept(this);
+        }
         joinRequired = original;
 	}
 }

@@ -359,7 +359,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
             throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
         }
         
-        return chain(new InPredicate(leftExpression, expressionFactory.createInPredicateExpression(parameterOrLiteralExpressions)));
+        return chain(new InPredicate(leftExpression, expressionFactory.createInItemExpressions(parameterOrLiteralExpressions)));
     }
 
     @Override
@@ -383,8 +383,8 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (parameterOrLiteralExpressions.length == 0) {
             throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
         }
-        
-        return chain(new InPredicate(leftExpression, expressionFactory.createInPredicateExpression(parameterOrLiteralExpressions), true));
+
+        return chain(new InPredicate(true, leftExpression, expressionFactory.createInItemExpressions(parameterOrLiteralExpressions)));
     }
 
     @Override
@@ -392,7 +392,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         if (values == null) {
             throw new NullPointerException("values");
         }
-        return chain(new InPredicate(leftExpression, parameterManager.addParameterExpression(values), true));
+        InPredicate inPredicate = new InPredicate(leftExpression, parameterManager.addParameterExpression(values));
+        inPredicate.setNegated(true);
+        return chain(inPredicate);
     }
 
     @Override
@@ -453,14 +455,14 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     @Override
     public SubqueryInitiator<T> in() {
         verifyBuilderEnded();
-        this.predicate = new InPredicate(leftExpression, null);
+        this.predicate = new InPredicate(leftExpression);
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
     @Override
     public SubqueryInitiator<T> notIn() {
         verifyBuilderEnded();
-        this.predicate = new InPredicate(leftExpression, null, true);
+        this.predicate = new InPredicate(true, leftExpression);
         return subqueryInitFactory.createSubqueryInitiator(result, this);
     }
 
@@ -477,12 +479,9 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
     private SubqueryInitiator<T> in(String subqueryAlias, String expression, boolean negated) {
         verifyBuilderEnded();
 
-        this.predicate = new InPredicate(leftExpression, null, negated);
-        List<Expression> compositeElements = new ArrayList<Expression>();
-        compositeElements.add(new FooExpression("("));
-        compositeElements.add(expressionFactory.createArithmeticExpression(expression));
-        compositeElements.add(new FooExpression(")"));
-        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, new CompositeExpression(compositeElements)) {
+        this.predicate = new InPredicate(negated, leftExpression);
+        Expression superExpression = expressionFactory.createArithmeticExpression(expression);
+        rightSuperExprSubqueryBuilderListener = new SuperExpressionSubqueryBuilderListener<T>(subqueryAlias, superExpression) {
 
             @Override
             public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
@@ -509,7 +508,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         verifyBuilderEnded();
 
         Expression expr = expressionFactory.createSimpleExpression(expression);
-        this.predicate = new InPredicate(leftExpression, null, negated);
+        this.predicate = new InPredicate(negated, leftExpression);
         return new MultipleSubqueryInitiatorImpl<T>(result, expr, new ExpressionBuilderEndedListener() {
             
             @Override
@@ -548,7 +547,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
 
     private void onSubqueryBuilderEnded(Expression rightHandsideExpression) {
         if (predicate instanceof InPredicate) {
-            ((InPredicate) predicate).setRight(rightHandsideExpression);
+            ((InPredicate) predicate).setRight(new ArrayList<Expression>(Arrays.asList(rightHandsideExpression)));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate was not an IN predicate");
         }
@@ -591,14 +590,7 @@ public class RestrictionBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedL
         @Override
         public void onBuilderEnded(PredicateBuilder builder) {
             Predicate expression = builder.getPredicate();
-            BinaryExpressionPredicate binaryPred;
-
-            if (expression instanceof NotPredicate) {
-                binaryPred = (BinaryExpressionPredicate) ((NotPredicate) expression).getPredicate();
-            } else {
-                binaryPred = (BinaryExpressionPredicate) builder.getPredicate();
-            }
-
+            BinaryExpressionPredicate binaryPred = (BinaryExpressionPredicate) builder.getPredicate();
             SubqueryExpression subqueryExpr = (SubqueryExpression) binaryPred.getRight();
             superExpression = ExpressionUtils.replaceSubexpression(superExpression, subqueryAlias, subqueryExpr);
             binaryPred.setRight(superExpression);

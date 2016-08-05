@@ -39,21 +39,13 @@ public class RightHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderLis
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
-        Predicate expr;
-        if (predicate instanceof NotPredicate) {
-            // unwrap not predicate
-            expr = ((NotPredicate) predicate).getPredicate();
-        } else {
-            expr = predicate;
-        }
-        
-        if (expr instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
+        if (predicate instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
         	// Since we render the limit in the subquery as wrapping function, there currently does not seem to be a possibility to support this in JPQL grammars
         	throw new IllegalArgumentException("Limiting a subquery in an exists predicate is currently unsupported!");
         }
 
-        if (expr instanceof UnaryExpressionPredicate) {
-            ((UnaryExpressionPredicate) expr).setExpression(new SubqueryExpression(builder));
+        if (predicate instanceof UnaryExpressionPredicate) {
+            ((UnaryExpressionPredicate) predicate).setExpression(new SubqueryExpression(builder));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
         }

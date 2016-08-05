@@ -568,7 +568,11 @@ public class ExpressionUtils {
             public void visit(InPredicate predicate) {
                 super.visit(predicate);
                 predicate.setLeft(replacementTransformer.transform(predicate.getLeft(), null, false));
-                predicate.setRight(replacementTransformer.transform(predicate.getRight(), null, false));
+                List<Expression> transformedRight = new ArrayList<Expression>();
+                for (Expression right : predicate.getRight()) {
+                    transformedRight.add(replacementTransformer.transform(right, null, false));
+                }
+                predicate.setRight(transformedRight);
             }
 
             @Override

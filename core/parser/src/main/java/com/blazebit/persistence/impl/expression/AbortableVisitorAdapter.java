@@ -197,11 +197,6 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(NotPredicate predicate) {
-        return predicate.getPredicate().accept(this);
-    }
-
-    @Override
     public Boolean visit(EqPredicate predicate) {
         if (predicate.getLeft().accept(this)) {
             return true;
@@ -251,7 +246,12 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
         if (predicate.getLeft().accept(this)) {
             return true;
         }
-        return predicate.getRight().accept(this);
+        for (Expression right : predicate.getRight()) {
+            if (right.accept(this)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

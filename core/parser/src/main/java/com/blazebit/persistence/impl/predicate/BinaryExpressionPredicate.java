@@ -24,12 +24,17 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class BinaryExpressionPredicate extends AbstractExpression implements Predicate {
+public abstract class BinaryExpressionPredicate extends AbstractPredicate {
 
     protected Expression left;
     protected Expression right;
 
     public BinaryExpressionPredicate(Expression left, Expression right) {
+        this(left, right, false);
+    }
+
+    public BinaryExpressionPredicate(Expression left, Expression right, boolean negated) {
+        super(negated);
         this.left = left;
         this.right = right;
     }
@@ -54,28 +59,23 @@ public abstract class BinaryExpressionPredicate extends AbstractExpression imple
     }
 
     @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 17 * hash + (this.left != null ? this.left.hashCode() : 0);
-        hash = 17 * hash + (this.right != null ? this.right.hashCode() : 0);
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BinaryExpressionPredicate)) return false;
+        if (!super.equals(o)) return false;
+
+        BinaryExpressionPredicate that = (BinaryExpressionPredicate) o;
+
+        if (left != null ? !left.equals(that.left) : that.left != null) return false;
+        return right != null ? right.equals(that.right) : that.right == null;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final BinaryExpressionPredicate other = (BinaryExpressionPredicate) obj;
-        if (this.left != other.left && (this.left == null || !this.left.equals(other.left))) {
-            return false;
-        }
-        if (this.right != other.right && (this.right == null || !this.right.equals(other.right))) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (left != null ? left.hashCode() : 0);
+        result = 31 * result + (right != null ? right.hashCode() : 0);
+        return result;
     }
 }

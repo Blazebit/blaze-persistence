@@ -71,14 +71,20 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     protected T chain(Predicate predicate) {
         verifyBuilderEnded();
-        this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
+        if (wrapNot) {
+            predicate.negate();
+        }
+        this.predicate = predicate;
         listener.onBuilderEnded(this);
         return result;
     }
 
     protected void chainSubbuilder(Predicate predicate) {
         verifyBuilderEnded();
-        this.predicate = wrapNot ? new NotPredicate(predicate) : predicate;
+        if (wrapNot) {
+            predicate.negate();
+        }
+        this.predicate = predicate;
     }
 
     @Override
@@ -204,17 +210,8 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
-        Predicate expr;
-        // TODO: is this needed anymore?
-        if (predicate instanceof NotPredicate) {
-            // unwrap not predicate
-            expr = ((NotPredicate) predicate).getPredicate();
-        } else {
-            expr = predicate;
-        }
-
-        if (expr instanceof BinaryExpressionPredicate) {
-            ((BinaryExpressionPredicate) expr).setRight(new SubqueryExpression(builder));
+        if (predicate instanceof BinaryExpressionPredicate) {
+            ((BinaryExpressionPredicate) predicate).setRight(new SubqueryExpression(builder));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
         }
