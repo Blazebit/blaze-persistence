@@ -69,45 +69,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(final CompoundPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(true);
-        handleNegatable(predicate, predicate.getChildren().size() > 1, new DeferredRenderer() {
-            @Override
-            public void render() {
-                if (predicate.getChildren().size() == 1) {
-                    predicate.getChildren().get(0).accept(SimpleQueryGenerator.this);
-                    return;
-                }
-                final int startLen = sb.length();
-                final String and = " " + predicate.getOperator().toString() + " ";
-                List<Predicate> children = predicate.getChildren();
-                int size = children.size();
-                for (int i = 0; i < size; i++) {
-                    Predicate child = children.get(i);
-                    if (child instanceof CompoundPredicate && ((CompoundPredicate) child).getOperator() != predicate.getOperator() && !child.isNegated()) {
-                        sb.append("(");
-                        int len = sb.length();
-                        child.accept(SimpleQueryGenerator.this);
-                        if (len == sb.length()) {
-                            sb.deleteCharAt(len - 1);
-                        } else {
-                            sb.append(")");
-                            sb.append(and);
-                        }
-
-                    } else {
-                        int len = sb.length();
-                        child.accept(SimpleQueryGenerator.this);
-                        if (len < sb.length()) {
-                            sb.append(and);
-                        }
-                    }
-                }
-
-                if (startLen < sb.length()) {
-                    sb.delete(sb.length() - and.length(), sb.length());
-                }
-            }
-        });
-
+        handleNegatable(predicate, predicate.getChildren().size() > 1, compoundPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
@@ -125,39 +87,21 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(IsNullPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        predicate.getExpression().accept(this);
-        if (predicate.isNegated()) {
-            sb.append(" IS NOT NULL");
-        } else {
-            sb.append(" IS NULL");
-        }
+        handleNegatable(predicate, false, isNullPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(IsEmptyPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        predicate.getExpression().accept(this);
-        if (predicate.isNegated()) {
-            sb.append(" IS NOT EMPTY");
-        } else {
-            sb.append(" IS EMPTY");
-        }
+        handleNegatable(predicate, false, isEmptyPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(final MemberOfPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        predicate.getLeft().accept(this);
-        sb.append(" ");
-        handleNegatable(predicate, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append("MEMBER OF ");
-                predicate.getRight().accept(SimpleQueryGenerator.this);
-            }
-        });
+        handleNegatable(predicate, false, memberOfPredicateRenderer);
         setConditionalContext(oldConditionalContext);
 
     }
@@ -165,54 +109,14 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(final LikePredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        if (!predicate.isCaseSensitive()) {
-            sb.append("UPPER(");
-        }
-        predicate.getLeft().accept(this);
-        if (!predicate.isCaseSensitive()) {
-            sb.append(")");
-        }
-        sb.append(" ");
-        handleNegatable(predicate, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append("LIKE ");
-                if (!predicate.isCaseSensitive()) {
-                    sb.append("UPPER(");
-                }
-                predicate.getRight().accept(SimpleQueryGenerator.this);
-                if (!predicate.isCaseSensitive()) {
-                    sb.append(")");
-                }
-                if (predicate.getEscapeCharacter() != null) {
-                    sb.append(" ESCAPE ");
-                    if (!predicate.isCaseSensitive()) {
-                        sb.append("UPPER(");
-                    }
-                    sb.append("'").append(escapeCharacter(predicate.getEscapeCharacter())).append("'");
-                    if (!predicate.isCaseSensitive()) {
-                        sb.append(")");
-                    }
-                }
-            }
-        });
+        handleNegatable(predicate, false, likePredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(final BetweenPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        predicate.getLeft().accept(this);
-        sb.append(" ");
-        handleNegatable(predicate, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append("BETWEEN ");
-                predicate.getStart().accept(SimpleQueryGenerator.this);
-                sb.append(" AND ");
-                predicate.getEnd().accept(SimpleQueryGenerator.this);
-            }
-        });
+        handleNegatable(predicate, false, betweenPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
@@ -240,53 +144,14 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
 
         boolean oldConditionalContext = setConditionalContext(false);
-        predicate.getLeft().accept(this);
-        sb.append(" ");
-        handleNegatable(predicate, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append("IN ");
-
-                boolean paranthesisRequired;
-                if (predicate.getRight().size() == 1) {
-                    // NOTE: other cases are handled by ResolvingQueryGenerator
-                    Expression singleRightExpression = predicate.getRight().get(0);
-                    if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued() || singleRightExpression instanceof SubqueryExpression) {
-                        paranthesisRequired = false;
-                    } else {
-                        paranthesisRequired = true;
-                    }
-                } else {
-                    paranthesisRequired = true;
-                }
-                if (paranthesisRequired) {
-                    sb.append('(');
-                }
-                if (!predicate.getRight().isEmpty()) {
-                    predicate.getRight().get(0).accept(SimpleQueryGenerator.this);
-                    for (int i = 1; i < predicate.getRight().size(); i++) {
-                        sb.append(", ");
-                        predicate.getRight().get(i).accept(SimpleQueryGenerator.this);
-                    }
-                }
-                if (paranthesisRequired) {
-                    sb.append(')');
-                }
-            }
-        });
+        handleNegatable(predicate, false, inPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
     @Override
     public void visit(final ExistsPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
-        handleNegatable(predicate, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append("EXISTS ");
-                predicate.getExpression().accept(SimpleQueryGenerator.this);
-            }
-        });
+        handleNegatable(predicate, false, existsPredicateRenderer);
         setConditionalContext(oldConditionalContext);
     }
 
@@ -305,46 +170,22 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(final GtPredicate predicate) {
-        handleNegatable(predicate, false, new DeferredRenderer() {
-                    @Override
-                    public void render() {
-                        visitQuantifiableBinaryPredicate(predicate, " > ");
-                    }
-                }
-        );
+        handleNegatable(predicate, false, gtPredicateRenderer);
     }
 
     @Override
     public void visit(final GePredicate predicate) {
-        handleNegatable(predicate, false, new DeferredRenderer() {
-                    @Override
-                    public void render() {
-                        visitQuantifiableBinaryPredicate(predicate, " >= ");
-                    }
-                }
-        );
+        handleNegatable(predicate, false, gePredicateRenderer);
     }
 
     @Override
     public void visit(final LtPredicate predicate) {
-        handleNegatable(predicate, false, new DeferredRenderer() {
-                    @Override
-                    public void render() {
-                        visitQuantifiableBinaryPredicate(predicate, " < ");
-                    }
-                }
-        );
+        handleNegatable(predicate, false, ltPredicateRenderer);
     }
 
     @Override
     public void visit(final LePredicate predicate) {
-        handleNegatable(predicate, false, new DeferredRenderer() {
-                    @Override
-                    public void render() {
-                        visitQuantifiableBinaryPredicate(predicate, " <= ");
-                    }
-                }
-        );
+        handleNegatable(predicate, false, lePredicateRenderer);
     }
 
     @Override
@@ -554,12 +395,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
     @Override
     public void visit(final BooleanLiteral expression) {
-        handleNegatable(expression, false, new DeferredRenderer() {
-            @Override
-            public void render() {
-                sb.append(expression.getValue());
-            }
-        });
+        handleNegatable(expression, false, booleanLiteralPredicateRenderer);
     }
 
     @Override
@@ -603,18 +439,19 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append(expression.getOriginalExpression());
     }
 
-    private void handleNegatable(Negatable negatable, boolean paranthesisRequired, DeferredRenderer renderer) {
+    private <T extends Negatable> void handleNegatable(T negatable, boolean paranthesisRequired, NegatableRenderer<T> renderer) {
+        renderer.renderPreNegation(negatable);
         if (negatable.isNegated()) {
             sb.append("NOT ");
             if (paranthesisRequired) {
                 sb.append('(');
             }
-            renderer.render();
+            renderer.renderPostNegation(negatable);
             if (paranthesisRequired) {
                 sb.append(')');
             }
         } else {
-            renderer.render();
+            renderer.renderPostNegation(negatable);
         }
     }
 
@@ -629,9 +466,224 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         }
     }
 
-    // TODO: inefficient, adopt
-    private static interface DeferredRenderer {
-        public void render();
+    private interface NegatableRenderer<E extends Negatable> {
+        public void renderPreNegation(E expression);
+        public void renderPostNegation(E expression);
     }
+
+    private abstract class AbstractNegatableRenderer<E extends Negatable> implements NegatableRenderer<E> {
+        @Override
+        public void renderPreNegation(E expression) {
+        }
+
+        @Override
+        public void renderPostNegation(E expression) {
+        }
+    }
+
+    private class QuantifiableBinaryPredicateRenderer<E extends QuantifiableBinaryExpressionPredicate> extends AbstractNegatableRenderer<E> {
+        private final String operator;
+
+        public QuantifiableBinaryPredicateRenderer(String operator) {
+            this.operator = " " + operator + " ";
+        }
+
+        @Override
+        public void renderPostNegation(E predicate) {
+            visitQuantifiableBinaryPredicate(predicate, operator);
+        }
+    }
+
+    private final NegatableRenderer compoundPredicateRenderer = new AbstractNegatableRenderer<CompoundPredicate>() {
+        @Override
+        public void renderPostNegation(CompoundPredicate predicate) {
+            if (predicate.getChildren().size() == 1) {
+                predicate.getChildren().get(0).accept(SimpleQueryGenerator.this);
+                return;
+            }
+            final int startLen = sb.length();
+            final String and = " " + predicate.getOperator().toString() + " ";
+            List<Predicate> children = predicate.getChildren();
+            int size = children.size();
+            for (int i = 0; i < size; i++) {
+                Predicate child = children.get(i);
+                if (child instanceof CompoundPredicate && ((CompoundPredicate) child).getOperator() != predicate.getOperator() && !child.isNegated()) {
+                    sb.append("(");
+                    int len = sb.length();
+                    child.accept(SimpleQueryGenerator.this);
+                    if (len == sb.length()) {
+                        sb.deleteCharAt(len - 1);
+                    } else {
+                        sb.append(")");
+                        sb.append(and);
+                    }
+
+                } else {
+                    int len = sb.length();
+                    child.accept(SimpleQueryGenerator.this);
+                    if (len < sb.length()) {
+                        sb.append(and);
+                    }
+                }
+            }
+
+            if (startLen < sb.length()) {
+                sb.delete(sb.length() - and.length(), sb.length());
+            }
+        }
+    };
+
+    private final NegatableRenderer memberOfPredicateRenderer = new AbstractNegatableRenderer<MemberOfPredicate>() {
+        @Override
+        public void renderPreNegation(MemberOfPredicate predicate) {
+            predicate.getLeft().accept(SimpleQueryGenerator.this);
+            sb.append(" ");
+        }
+
+        @Override
+        public void renderPostNegation(MemberOfPredicate predicate) {
+            sb.append("MEMBER OF ");
+            predicate.getRight().accept(SimpleQueryGenerator.this);
+        }
+    };
+
+    private final NegatableRenderer isEmptyPredicateRenderer = new AbstractNegatableRenderer<IsEmptyPredicate>() {
+        @Override
+        public void renderPreNegation(IsEmptyPredicate predicate) {
+            predicate.getExpression().accept(SimpleQueryGenerator.this);
+            sb.append(" IS ");
+        }
+
+        @Override
+        public void renderPostNegation(IsEmptyPredicate predicate) {
+            sb.append("EMPTY");
+        }
+    };
+
+    private final NegatableRenderer likePredicateRenderer = new AbstractNegatableRenderer<LikePredicate>() {
+        @Override
+        public void renderPreNegation(LikePredicate predicate) {
+            if (!predicate.isCaseSensitive()) {
+                sb.append("UPPER(");
+            }
+            predicate.getLeft().accept(SimpleQueryGenerator.this);
+            if (!predicate.isCaseSensitive()) {
+                sb.append(")");
+            }
+            sb.append(" ");
+        }
+
+        @Override
+        public void renderPostNegation(LikePredicate predicate) {
+            sb.append("LIKE ");
+            if (!predicate.isCaseSensitive()) {
+                sb.append("UPPER(");
+            }
+            predicate.getRight().accept(SimpleQueryGenerator.this);
+            if (!predicate.isCaseSensitive()) {
+                sb.append(")");
+            }
+            if (predicate.getEscapeCharacter() != null) {
+                sb.append(" ESCAPE ");
+                if (!predicate.isCaseSensitive()) {
+                    sb.append("UPPER(");
+                }
+                sb.append("'").append(escapeCharacter(predicate.getEscapeCharacter())).append("'");
+                if (!predicate.isCaseSensitive()) {
+                    sb.append(")");
+                }
+            }
+        }
+    };
+
+    private final NegatableRenderer betweenPredicateRenderer = new AbstractNegatableRenderer<BetweenPredicate>() {
+        @Override
+        public void renderPreNegation(BetweenPredicate predicate) {
+            predicate.getLeft().accept(SimpleQueryGenerator.this);
+            sb.append(" ");
+        }
+
+        @Override
+        public void renderPostNegation(BetweenPredicate predicate) {
+            sb.append("BETWEEN ");
+            predicate.getStart().accept(SimpleQueryGenerator.this);
+            sb.append(" AND ");
+            predicate.getEnd().accept(SimpleQueryGenerator.this);
+        }
+    };
+
+    private final NegatableRenderer inPredicateRenderer = new AbstractNegatableRenderer<InPredicate>() {
+        @Override
+        public void renderPreNegation(InPredicate predicate) {
+            predicate.getLeft().accept(SimpleQueryGenerator.this);
+            sb.append(" ");
+        }
+
+        @Override
+        public void renderPostNegation(InPredicate predicate) {
+            sb.append("IN ");
+            boolean paranthesisRequired;
+            if (predicate.getRight().size() == 1) {
+                // NOTE: other cases are handled by ResolvingQueryGenerator
+                Expression singleRightExpression = predicate.getRight().get(0);
+                if (singleRightExpression instanceof ParameterExpression && ((ParameterExpression) singleRightExpression).isCollectionValued() || singleRightExpression instanceof SubqueryExpression) {
+                    paranthesisRequired = false;
+                } else {
+                    paranthesisRequired = true;
+                }
+            } else {
+                paranthesisRequired = true;
+            }
+            if (paranthesisRequired) {
+                sb.append('(');
+            }
+            if (!predicate.getRight().isEmpty()) {
+                predicate.getRight().get(0).accept(SimpleQueryGenerator.this);
+                for (int i = 1; i < predicate.getRight().size(); i++) {
+                    sb.append(", ");
+                    predicate.getRight().get(i).accept(SimpleQueryGenerator.this);
+                }
+            }
+            if (paranthesisRequired) {
+                sb.append(')');
+            }
+        }
+    };
+
+    private final NegatableRenderer existsPredicateRenderer = new AbstractNegatableRenderer<ExistsPredicate>() {
+        @Override
+        public void renderPostNegation(ExistsPredicate predicate) {
+            sb.append("EXISTS ");
+            predicate.getExpression().accept(SimpleQueryGenerator.this);
+        }
+    };
+
+    private final NegatableRenderer isNullPredicateRenderer = new AbstractNegatableRenderer<IsNullPredicate>() {
+        @Override
+        public void renderPreNegation(IsNullPredicate predicate) {
+            predicate.getExpression().accept(SimpleQueryGenerator.this);
+            sb.append(" IS ");
+        }
+
+        @Override
+        public void renderPostNegation(IsNullPredicate predicate) {
+            sb.append("NULL");
+        }
+    };
+
+    private final NegatableRenderer booleanLiteralPredicateRenderer = new AbstractNegatableRenderer<BooleanLiteral>() {
+        @Override
+        public void renderPostNegation(BooleanLiteral predicate) {
+            sb.append(predicate.getValue());
+        }
+    };
+
+    private final NegatableRenderer gtPredicateRenderer = new QuantifiableBinaryPredicateRenderer<GtPredicate>(">");
+    private final NegatableRenderer gePredicateRenderer = new QuantifiableBinaryPredicateRenderer<GtPredicate>(">=");
+    private final NegatableRenderer ltPredicateRenderer = new QuantifiableBinaryPredicateRenderer<GtPredicate>("<");
+    private final NegatableRenderer lePredicateRenderer = new QuantifiableBinaryPredicateRenderer<GtPredicate>("<=");
+
+
+
 
 }
