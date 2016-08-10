@@ -25,8 +25,13 @@ import java.util.*;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.*;
 
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.googlecode.catchexception.CatchException;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -39,6 +44,15 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
  * @since 1.2.0
  */
 public class WhereTest extends AbstractCoreTest {
+
+    private CriteriaBuilderFactory cbfUnoptimized;
+
+    @Before
+    public void initNonOptimized() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config.getProperties().setProperty(ConfigurationProperties.EXPRESSION_OPTIMIZATION, "false");
+        cbfUnoptimized = config.createCriteriaBuilderFactory(emf);
+    }
 
     @Test
     public void singularAttributeWithLiterals() {
@@ -201,7 +215,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void multipleNegations() {
-        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbf, Integer.class);
+        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbfUnoptimized, Integer.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Integer> one = cb.literal(1);

@@ -49,7 +49,7 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public final class MetamodelUtils {
     
-    private static final ExpressionFactory expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
+    private static final ExpressionFactory expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true));
     
     public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
         return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));

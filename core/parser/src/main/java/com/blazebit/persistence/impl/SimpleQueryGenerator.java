@@ -112,7 +112,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(EqPredicate predicate) {
+    public void visit(final EqPredicate predicate) {
         boolean oldConditionalContext = setConditionalContext(false);
         if (predicate.isNegated()) {
             visitQuantifiableBinaryPredicate(predicate, " <> ");
