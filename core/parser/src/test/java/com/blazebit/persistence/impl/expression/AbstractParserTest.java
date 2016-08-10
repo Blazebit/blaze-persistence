@@ -131,11 +131,11 @@ public class AbstractParserTest {
     }
     
     protected Expression parse(String expr) {
-        return ef.createSimpleExpression(expr);
+        return ef.createSimpleExpression(expr, false);
     }
 
     protected Expression parseOptimized(String expr) {
-        return optimizingEf.createSimpleExpression(expr);
+        return optimizingEf.createSimpleExpression(expr, false);
     }
 
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
@@ -147,7 +147,7 @@ public class AbstractParserTest {
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return subqueryEf.createSimpleExpression(expr);
+        return subqueryEf.createSimpleExpression(expr, false);
     }
     
     protected PathExpression parsePath(String expr){

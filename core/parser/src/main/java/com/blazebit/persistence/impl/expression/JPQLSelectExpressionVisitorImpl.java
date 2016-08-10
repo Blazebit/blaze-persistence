@@ -695,6 +695,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitIdentifier(IdentifierContext ctx) {
+        List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+        pathElems.add(new PropertyExpression(ctx.Identifier().getText()));
+        return new PathExpression(pathElems);
+    }
+
+    @Override
     public Expression visitEqPredicate(JPQLSelectExpressionParser.EqPredicateContext ctx) {
         return new EqPredicate(false);
     }

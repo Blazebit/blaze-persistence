@@ -88,7 +88,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePath();
             }
-        }, expression);
+        }, expression, false, false);
         return (PathExpression) comp.getExpressions().get(0);
     }
 
@@ -100,12 +100,12 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseOrderByClause();
             }
-        }, expression, false, true);
+        }, expression, false, false);
     }
 
     @Override
-    public Expression createSimpleExpression(String expression) {
-        return createExpression(getSimpleExpressionRuleInvoker(), expression);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
+        return createExpression(getSimpleExpressionRuleInvoker(), expression, true, allowQuantifiedPredicates);
     }
 
     @Override
@@ -116,7 +116,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseCaseOperandExpression();
             }
-        }, expression);
+        }, expression, false, false);
     }
 
     @Override
@@ -127,7 +127,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseScalarExpression();
             }
-        }, expression, false, true);
+        }, expression, false, false);
     }
 
     @Override
@@ -138,7 +138,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseArithmeticExpression();
             }
-        }, expression, false, true);
+        }, expression, false, false);
     }
 
     @Override
@@ -149,7 +149,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseStringExpression();
             }
-        }, expression, false, true);
+        }, expression, false, false);
     }
 
     @Override
@@ -188,7 +188,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseInItemExpression();
             }
-        }, expression, false, true);
+        }, expression, false, false);
     }
 
     protected void configureLexer(JPQLSelectExpressionLexer lexer) {

@@ -55,12 +55,12 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
-    public Expression createSimpleExpression(final String expression) {
+    public Expression createSimpleExpression(final String expression, final boolean allowQuantifiedPredicates) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", expression, new Supplier<Expression>() {
 
             @Override
             public Expression get() {
-                return delegate.createSimpleExpression(expression);
+                return delegate.createSimpleExpression(expression, allowQuantifiedPredicates);
             }
 
         });

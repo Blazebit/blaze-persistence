@@ -390,19 +390,19 @@ simple_entity_or_value_expression : identifier
                                   ;
 
 comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
-                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_string
+                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_string
                       | left=boolean_expression op=equality_comparison_operator right=boolean_expression # ComparisonExpression_boolean
-                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_boolean
+                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_boolean
                       | left=enum_expression op=equality_comparison_operator right=enum_expression # ComparisonExpression_enum
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
-                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entity
+                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entity
                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
-                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_arithmetic
+                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_arithmetic
                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
-                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entitytype
+                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entitytype
                       | left=path op=equality_comparison_operator right=type_discriminator # ComparisonExpression_path_type
                       | left=type_discriminator op=equality_comparison_operator right=path # ComparisonExpression_type_path
                       ;

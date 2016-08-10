@@ -29,7 +29,7 @@ public interface ExpressionFactory {
 
     public PathExpression createPathExpression(String expression);
 
-    public Expression createSimpleExpression(String expression);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);
 

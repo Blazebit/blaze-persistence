@@ -46,8 +46,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
-    public Expression createSimpleExpression(String expression) {
-        return super.createSimpleExpression(expression);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
+        return super.createSimpleExpression(expression, allowQuantifiedPredicates);
     }
 
     @Override

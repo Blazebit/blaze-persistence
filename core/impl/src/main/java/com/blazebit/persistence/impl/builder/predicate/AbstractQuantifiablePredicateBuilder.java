@@ -94,12 +94,12 @@ public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAn
 
     @Override
     public T expression(String expression) {
-        return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression), PredicateQuantifier.ONE));
+        return chain(createPredicate(leftExpression, expressionFactory.createSimpleExpression(expression, false), PredicateQuantifier.ONE));
     }
 
     @Override
     public MultipleSubqueryInitiator<T> subqueries(String expression) {
-        return new MultipleSubqueryInitiatorImpl<T>(result, expressionFactory.createSimpleExpression(expression), new ExpressionBuilderEndedListener() {
+        return new MultipleSubqueryInitiatorImpl<T>(result, expressionFactory.createSimpleExpression(expression, true), new ExpressionBuilderEndedListener() {
             
             @Override
             public void onBuilderEnded(ExpressionBuilder builder) {

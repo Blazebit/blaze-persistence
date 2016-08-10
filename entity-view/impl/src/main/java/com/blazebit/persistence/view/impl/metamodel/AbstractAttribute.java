@@ -118,7 +118,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         }
         
     	CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, metamodel);
-        expressionFactory.createSimpleExpression(mapping).accept(visitor);
+        expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         Set<String> mappings = new HashSet<String>();
         
         for (String s : visitor.getPaths()) {
@@ -180,7 +180,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         MetamodelTargetResolvingExpressionVisitor visitor = new MetamodelTargetResolvingExpressionVisitor(managedType, metamodel);
         
         try {
-            expressionFactory.createSimpleExpression(mapping).accept(visitor);
+            expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         } catch (SyntaxErrorException ex) {
             return "Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage();
         } catch (IllegalArgumentException ex) {

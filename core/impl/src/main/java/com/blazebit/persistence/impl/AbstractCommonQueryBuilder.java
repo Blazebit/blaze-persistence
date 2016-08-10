@@ -607,7 +607,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType select(String expression, String selectAlias) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, false);
         if (selectAlias != null && selectAlias.isEmpty()) {
             throw new IllegalArgumentException("selectAlias");
         }
@@ -655,7 +655,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new IllegalArgumentException("Expression [" + expression + "] does not contain subquery alias [" + subqueryAlias + "]");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression), selectAlias);
+        return selectManager.selectSubquery((BuilderType) this, subqueryAlias, expressionFactory.createSimpleExpression(expression, false), selectAlias);
     }
 
     public MultipleSubqueryInitiator<BuilderType> selectSubqueries(String expression) {
@@ -671,14 +671,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new NullPointerException("expression");
         }
         verifyBuilderEnded();
-        return selectManager.selectSubqueries((BuilderType) this, expressionFactory.createSimpleExpression(expression), selectAlias);
+        return selectManager.selectSubqueries((BuilderType) this, expressionFactory.createSimpleExpression(expression, false), selectAlias);
     }
 
     /*
      * Where methods
      */
     public RestrictionBuilder<BuilderType> where(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return whereManager.restrict(this, expr);
     }
 
@@ -718,7 +718,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType whereExpression(String expression) {
-        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         whereManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
@@ -747,7 +747,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
         } else {
-        	expr = expressionFactory.createSimpleExpression(expression);
+        	expr = expressionFactory.createSimpleExpression(expression, false);
         	if (!(expr instanceof PathExpression) && dbmsDialect.supportsComplexGroupBy()) {
         		throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
         	}
@@ -766,7 +766,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (groupByManager.isEmpty()) {
             throw new IllegalStateException("Having without group by");
         }
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return havingManager.restrict(this, expr);
     }
 
@@ -821,7 +821,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     @SuppressWarnings("unchecked")
     public BuilderType havingExpression(String expression) {
-        Predicate predicate = expressionFactory.createBooleanExpression(expression, true);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         havingManager.restrictExpression(this, predicate);
         return (BuilderType) this;
     }
@@ -857,7 +857,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isCompatibleModeEnabled()) {
             expr = expressionFactory.createOrderByExpression(expression);
         } else {
-            expr = expressionFactory.createSimpleExpression(expression);
+            expr = expressionFactory.createSimpleExpression(expression, false);
         }
         _orderBy(expr, ascending, nullFirst);
         return (BuilderType) this;

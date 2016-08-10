@@ -355,7 +355,7 @@ public final class EntityViewSettingHelper {
 
     private static String getPrefixedExpression(ExpressionFactory ef, List<String> subviewPrefixParts, String mappingExpression) {
         if (subviewPrefixParts != null && subviewPrefixParts.size() > 0) {
-            Expression expr = ef.createSimpleExpression(mappingExpression);
+            Expression expr = ef.createSimpleExpression(mappingExpression, false);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(subviewPrefixParts);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);

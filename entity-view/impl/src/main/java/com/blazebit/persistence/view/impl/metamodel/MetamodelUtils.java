@@ -125,7 +125,7 @@ public final class MetamodelUtils {
         }
         
         TargetResolvingExpressionVisitor visitor = new TargetResolvingExpressionVisitor(entityClass);
-        expressionFactory.createSimpleExpression(mapping).accept(visitor);
+        expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         Map<Method, Class<?>> possibleTargets = visitor.getPossibleTargets();
         Iterator<Map.Entry<Method, Class<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already
