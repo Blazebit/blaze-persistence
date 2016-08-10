@@ -30,8 +30,8 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
 public abstract class AbstractTestExpressionFactory extends AbstractExpressionFactory {
 
     
-    public AbstractTestExpressionFactory(Set<String> aggregateFunctions) {
-		super(aggregateFunctions);
+    public AbstractTestExpressionFactory(Set<String> aggregateFunctions, boolean optimize) {
+		super(aggregateFunctions, optimize);
 	}
 
 	@Override

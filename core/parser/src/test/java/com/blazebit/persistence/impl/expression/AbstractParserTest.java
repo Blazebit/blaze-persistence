@@ -41,7 +41,7 @@ public class AbstractParserTest {
 		}
 		
 	};
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate) {
+    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -57,7 +57,23 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate) {
+    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, true) {
+
+        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseSimpleExpression();
+            }
+        };
+
+        @Override
+        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+            return simpleExpressionRuleInvoker;
+        }
+
+    };
+    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -118,8 +134,16 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
+    protected Expression parseOptimized(String expr) {
+        return optimizingEf.createSimpleExpression(expr);
+    }
+
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
         return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
+    }
+
+    protected Predicate parsePredicateOptimized(String expr, boolean allowQuantifiedPredicates) {
+        return optimizingEf.createBooleanExpression(expr, allowQuantifiedPredicates);
     }
 
     protected Expression parseSubqueryExpression(String expr) {

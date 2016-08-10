@@ -78,7 +78,15 @@ public class CompoundPredicate extends AbstractPredicate {
 
     public enum BooleanOperator {
         AND,
-        OR
+        OR;
+
+        public BooleanOperator invert() {
+            if (this == AND) {
+                return OR;
+            } else {
+                return AND;
+            }
+        }
     }
 
 }

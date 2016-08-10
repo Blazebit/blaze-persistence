@@ -36,9 +36,16 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     private final Set<String> aggregateFunctions;
+    private final boolean optimize;
+    private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
     protected AbstractExpressionFactory(Set<String> aggregateFunctions) {
+        this(aggregateFunctions, true);
+    }
+
+    protected AbstractExpressionFactory(Set<String> aggregateFunctions, boolean optimize) {
         this.aggregateFunctions = aggregateFunctions;
+        this.optimize = optimize;
     }
 
     private Expression createExpression(RuleInvoker ruleInvoker, String expression) {
@@ -64,7 +71,11 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         }
 
         JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
-        return visitor.visit(ctx);
+        Expression parsedExpression = visitor.visit(ctx);
+        if (optimize) {
+            parsedExpression = parsedExpression.accept(optimizer);
+        }
+        return parsedExpression;
     }
 
     protected abstract RuleInvoker getSimpleExpressionRuleInvoker();

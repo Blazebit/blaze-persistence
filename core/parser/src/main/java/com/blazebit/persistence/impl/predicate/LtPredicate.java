@@ -29,7 +29,11 @@ public class LtPredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     public LtPredicate(Expression left, Expression right) {
-        this(left, right, PredicateQuantifier.ONE, false);
+        this(left, right, false);
+    }
+
+    public LtPredicate(Expression left, Expression right, boolean negated) {
+        this(left, right, PredicateQuantifier.ONE, negated);
     }
 
     public LtPredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {

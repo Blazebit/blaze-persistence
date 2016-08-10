@@ -29,7 +29,11 @@ public class GePredicate extends QuantifiableBinaryExpressionPredicate {
     }
 
     public GePredicate(Expression left, Expression right) {
-        this(left, right, PredicateQuantifier.ONE, false);
+        this(left, right, false);
+    }
+
+    public GePredicate(Expression left, Expression right, boolean negated) {
+        this(left, right, PredicateQuantifier.ONE, negated);
     }
 
     public GePredicate(Expression left, Expression right, PredicateQuantifier quantifier, boolean negated) {

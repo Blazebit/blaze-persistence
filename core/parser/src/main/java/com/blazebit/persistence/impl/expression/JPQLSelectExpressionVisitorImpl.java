@@ -40,7 +40,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     private final CommonTokenStream tokens;
     private final Set<String> aggregateFunctions;
-    private final boolean optimize;
     private final Map<String, Class<Enum<?>>> enums;
     private final Map<String, Class<?>> entities;
 
@@ -51,13 +50,8 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
 
     public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities) {
-        this(tokens, aggregateFunctions, enums, entities, false);
-    }
-
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, boolean optimize) {
         this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
-        this.optimize = optimize;
         this.enums = enums;
         this.entities = entities;
     }
@@ -364,13 +358,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             Expression expression = (Expression) ctx.arithmetic_primary().accept(this);
 
             boolean invertSignum = "-".equals(ctx.signum.getText());
-            if (optimize && expression instanceof ArithmeticFactor && invertSignum) {
-                ArithmeticFactor arithmeticFactor = (ArithmeticFactor) expression;
-                arithmeticFactor.setInvertSignum(!arithmeticFactor.isInvertSignum());
-                return arithmeticFactor;
-            } else {
-                return new ArithmeticFactor(expression, invertSignum);
-            }
+            return new ArithmeticFactor(expression, invertSignum);
         } else {
             return ctx.arithmetic_primary().accept(this);
         }
