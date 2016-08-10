@@ -541,7 +541,11 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         if (expression.isNegated()) {
             sb.append(" NOT ");
         }
-        sb.append(expression.getValue());
+        if (conditionalContext) {
+            sb.append(getBooleanConditionalExpression(expression.getValue()));
+        } else {
+            sb.append(getBooleanExpression(expression.getValue()));
+        }
     }
 
     @Override
