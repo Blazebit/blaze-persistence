@@ -188,11 +188,6 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(FooExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
     public void visit(SubqueryExpression expression) {
         invalid(expression);
     }

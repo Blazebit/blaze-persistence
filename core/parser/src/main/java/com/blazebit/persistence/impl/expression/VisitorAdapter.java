@@ -50,10 +50,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(FooExpression expression) {
-    }
-
-    @Override
     public void visit(NullExpression expression) {
     }
 

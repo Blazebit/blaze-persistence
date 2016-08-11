@@ -64,9 +64,6 @@ public class ExpressionUtils {
             return false;
         } else if (expr instanceof GeneralCaseExpression) {
             return isUnique(metamodel, (GeneralCaseExpression) expr);
-        } else if (expr instanceof FooExpression) {
-            // TODO: Not actually sure how we could do that better
-            return false;
         } else if (expr instanceof EntityLiteral) {
             return false;
         } else if (expr instanceof EnumLiteral) {
@@ -266,8 +263,6 @@ public class ExpressionUtils {
             return true;
         } else if (expr instanceof GeneralCaseExpression) {
             return isNullable(metamodel, (GeneralCaseExpression) expr);
-        } else if (expr instanceof FooExpression) {
-            return false;
         } else if (expr instanceof EntityLiteral) {
             return false;
         } else if (expr instanceof EnumLiteral) {

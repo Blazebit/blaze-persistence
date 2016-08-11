@@ -917,9 +917,6 @@ public class JoinManager extends AbstractManager {
                 sb.append('_');
                 sb.append(indexPathExpr.getField().replaceAll("\\.", "_"));
             }
-        } else if (indexExpr instanceof FooExpression){
-            sb.append('_');
-            sb.append(indexExpr.toString().replaceAll("\\.", "_"));
         } else if (indexExpr instanceof NumericLiteral) {
             sb.append('_');
             sb.append(((NumericLiteral) indexExpr).getValue());

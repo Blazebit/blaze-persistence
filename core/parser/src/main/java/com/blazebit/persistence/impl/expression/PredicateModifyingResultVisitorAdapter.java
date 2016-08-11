@@ -55,11 +55,6 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(FooExpression expression) {
-        return expression;
-    }
-
-    @Override
     public Expression visit(NullExpression expression) {
         return expression;
     }

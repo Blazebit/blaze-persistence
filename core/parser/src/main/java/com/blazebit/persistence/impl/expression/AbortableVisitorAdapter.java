@@ -57,11 +57,6 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(FooExpression expression) {
-        return false;
-    }
-
-    @Override
     public Boolean visit(NullExpression expression) {
         return false;
     }

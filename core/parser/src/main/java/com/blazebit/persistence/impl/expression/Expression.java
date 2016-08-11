@@ -38,8 +38,6 @@ public interface Expression {
 
         public void visit(NullExpression expression);
 
-        public void visit(FooExpression expression);
-
         public void visit(SubqueryExpression expression);
 
         public void visit(FunctionExpression expression);
@@ -115,8 +113,6 @@ public interface Expression {
         public T visit(ArrayExpression expression);
 
         public T visit(NullExpression expression);
-
-        public T visit(FooExpression expression);
 
         public T visit(SubqueryExpression expression);
 

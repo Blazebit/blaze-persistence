@@ -41,11 +41,6 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     }
 
     @Override
-    public Expression visit(FooExpression expression) {
-        return expression;
-    }
-
-    @Override
     public Expression visit(SubqueryExpression expression) {
         return expression;
     }

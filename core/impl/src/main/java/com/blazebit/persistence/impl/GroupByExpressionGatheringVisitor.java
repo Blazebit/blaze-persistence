@@ -61,11 +61,6 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(FooExpression expression) {
-        // We skip this, because foo expressions as part of a predicate is not grouping relevant
-    }
-
-    @Override
     public void visit(EntityLiteral expression) {
         handleExpression(expression);
     }

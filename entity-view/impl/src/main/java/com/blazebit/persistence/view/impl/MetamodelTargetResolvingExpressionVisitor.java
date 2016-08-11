@@ -321,13 +321,6 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(FooExpression expression) {
-        // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
-        super.visit(expression);
-    }
-
-    @Override
     public void visit(ArithmeticExpression expression) {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentClass(expression.getNumericType().getJavaType());

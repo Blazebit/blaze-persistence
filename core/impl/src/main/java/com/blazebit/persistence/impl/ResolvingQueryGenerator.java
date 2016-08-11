@@ -82,34 +82,38 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     @Override
 	public void visit(SubqueryExpression expression) {
         sb.append('(');
-        
-        final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
-        final boolean hasFirstResult = subquery.getFirstResult() != 0;
-        final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
-        final boolean hasLimit = hasFirstResult || hasMaxResults;
-        final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
-        final boolean isSimple = !hasLimit && !hasSetOperations;
-        
-        if (isSimple) {
-        	sb.append(subquery.getQueryString());
-        } else if (hasSetOperations) {
-            asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+
+        if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
+            final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
+            final boolean hasFirstResult = subquery.getFirstResult() != 0;
+            final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
+            final boolean hasLimit = hasFirstResult || hasMaxResults;
+            final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
+            final boolean isSimple = !hasLimit && !hasSetOperations;
+
+            if (isSimple) {
+                sb.append(subquery.getQueryString());
+            } else if (hasSetOperations) {
+                asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+            } else {
+                List<Expression> arguments = new ArrayList<Expression>(3);
+                arguments.add(new StringLiteral("LIMIT"));
+                arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
+
+                if (!hasMaxResults) {
+                    throw new IllegalArgumentException("First result without max results is not supported!");
+                } else {
+                    arguments.add(new NumericLiteral(Integer.toString(subquery.getMaxResults()), NumericType.INTEGER));
+                }
+
+                if (hasFirstResult) {
+                    arguments.add(new NumericLiteral(Integer.toString(subquery.getFirstResult()), NumericType.INTEGER));
+                }
+
+                renderFunctionFunction("LIMIT", arguments);
+            }
         } else {
-        	List<Expression> arguments = new ArrayList<Expression>(3);
-        	arguments.add(new StringLiteral("LIMIT"));
-        	arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
-        	
-        	if (!hasMaxResults) {
-        		throw new IllegalArgumentException("First result without max results is not supported!");
-        	} else {
-        		arguments.add(new NumericLiteral(Integer.toString(subquery.getMaxResults()), NumericType.INTEGER));
-        	}
-        	
-        	if (hasFirstResult) {
-        		arguments.add(new NumericLiteral(Integer.toString(subquery.getFirstResult()), NumericType.INTEGER));
-        	}
-        	
-        	renderFunctionFunction("LIMIT", arguments);
+            sb.append(expression.getSubquery().getQueryString());
         }
         
         sb.append(')');
@@ -166,11 +170,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
 
         String queryString = queryBuilder.getQueryString();
-        StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
-        subquerySb.append('(');
+        final StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
         subquerySb.append(queryString);
-        subquerySb.append(')');
-        return new FooExpression(subquerySb.toString());
+        return new SubqueryExpression(new Subquery() {
+            @Override
+            public String getQueryString() {
+                return subquerySb.toString();
+            }
+        });
     }
 
 	protected void renderFunctionFunction(String functionName, List<Expression> arguments) {

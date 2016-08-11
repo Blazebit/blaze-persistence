@@ -330,11 +330,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(FooExpression expression) {
-        sb.append(expression.toString());
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         sb.append("NULL");
     }
