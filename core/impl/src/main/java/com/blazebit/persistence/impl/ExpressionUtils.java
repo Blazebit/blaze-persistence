@@ -54,9 +54,7 @@ public class ExpressionUtils {
     private final static Logger LOG = Logger.getLogger(ExpressionUtils.class.getName());
 
     public static boolean isUnique(Metamodel metamodel, Expression expr) {
-        if (expr instanceof CompositeExpression) {
-            return isUnique(metamodel, (CompositeExpression) expr);
-        } else if (expr instanceof FunctionExpression) {
+        if (expr instanceof FunctionExpression) {
             return isUnique(metamodel, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
             return isUnique(metamodel, (PathExpression) expr);
@@ -91,15 +89,6 @@ public class ExpressionUtils {
         } else {
             throw new IllegalArgumentException("The expression of type '" + expr.getClass().getName() + "' can not be analyzed for uniqueness!");
         }
-    }
-
-    private static boolean isUnique(Metamodel metamodel, CompositeExpression expr) {
-        if (expr.getExpressions().size() > 1) {
-            // Maybe the analysis can be done but we actually don't need so accurate results right now
-            return false;
-        }
-
-        return isUnique(metamodel, expr.getExpressions().get(0));
     }
 
     private static boolean isUnique(Metamodel metamodel, FunctionExpression expr) {
@@ -267,9 +256,7 @@ public class ExpressionUtils {
     }
 
     public static boolean isNullable(Metamodel metamodel, Expression expr) {
-        if (expr instanceof CompositeExpression) {
-            return isNullable(metamodel, (CompositeExpression) expr);
-        } else if (expr instanceof FunctionExpression) {
+        if (expr instanceof FunctionExpression) {
             return isNullable(metamodel, (FunctionExpression) expr);
         } else if (expr instanceof PathExpression) {
             return isNullable(metamodel, (PathExpression) expr);
@@ -306,21 +293,6 @@ public class ExpressionUtils {
 
     private static boolean isNullable(Metamodel metamodel, ArithmeticExpression arithmeticExpression) {
         return isNullable(metamodel, arithmeticExpression.getLeft()) || isNullable(metamodel, arithmeticExpression.getRight());
-    }
-
-    private static boolean isNullable(Metamodel metamodel, CompositeExpression expr) {
-        boolean nullable;
-        List<Expression> expressions = expr.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            nullable = isNullable(metamodel, expressions.get(i));
-
-            if (nullable) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     private static boolean isNullable(Metamodel metamodel, GeneralCaseExpression expr) {
@@ -508,19 +480,6 @@ public class ExpressionUtils {
         VisitorAdapter transformationVisitor = new VisitorAdapter() {
 
             @Override
-            public void visit(CompositeExpression expression) {
-                super.visit(expression);
-                List<Expression> transformed = new ArrayList<Expression>();
-                List<Expression> expressions = expression.getExpressions();
-                int size = expressions.size();
-                for (int i = 0; i < size; i++) {
-                    transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
-                }
-                expression.getExpressions().clear();
-                expression.getExpressions().addAll(transformed);
-            }
-
-            @Override
             public void visit(FunctionExpression expression) {
                 super.visit(expression);
                 List<Expression> transformed = new ArrayList<Expression>();
@@ -530,6 +489,17 @@ public class ExpressionUtils {
                     transformed.add(replacementTransformer.transform(expressions.get(i), null, false));
                 }
                 expression.setExpressions(transformed);
+            }
+
+            @Override
+            public void visit(TypeFunctionExpression expression) {
+                visit((FunctionExpression) expression);
+            }
+
+            @Override
+            public void visit(TrimExpression expression) {
+                super.visit(expression);
+                expression.setTrimSource(replacementTransformer.transform(expression.getTrimSource(), null, false));
             }
 
             @Override

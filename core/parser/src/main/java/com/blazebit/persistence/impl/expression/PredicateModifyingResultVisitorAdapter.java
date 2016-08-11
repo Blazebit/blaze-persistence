@@ -55,16 +55,6 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-        return expression;
-    }
-
-    @Override
     public Expression visit(FooExpression expression) {
         return expression;
     }
@@ -92,6 +82,12 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     @Override
     public Expression visit(TypeFunctionExpression expression) {
         return visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public Expression visit(TrimExpression expression) {
+        expression.getTrimSource().accept(this);
+        return expression;
     }
 
     @Override

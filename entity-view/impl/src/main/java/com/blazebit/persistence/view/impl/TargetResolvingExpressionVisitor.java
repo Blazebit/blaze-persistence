@@ -183,11 +183,6 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         invalid(expression);
     }
@@ -298,6 +293,11 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     @Override
     public void visit(TypeFunctionExpression expression) {
         invalid(expression);
+    }
+
+    @Override
+    public void visit(TrimExpression expression) {
+        expression.getTrimSource().accept(this);
     }
 
     private PropertyExpression resolveBase(FunctionExpression expression) {

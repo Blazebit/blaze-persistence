@@ -16,22 +16,18 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.CompositeExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
@@ -48,7 +44,6 @@ import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.util.MetamodelUtils;
 import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -117,14 +112,6 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         this.orderBySelectClause = orderBySelectClause;
     }
     
-    @Override
-    public Expression visit(CompositeExpression expression) {
-        for (int i = 0; i < expression.getExpressions().size(); i++) {
-            expression.getExpressions().set(i, expression.getExpressions().get(i).accept(this));
-        }
-        return expression;
-    }
-
     @Override
     public Expression visit(WhenClauseExpression expression) {
         expression.getCondition().accept(this);

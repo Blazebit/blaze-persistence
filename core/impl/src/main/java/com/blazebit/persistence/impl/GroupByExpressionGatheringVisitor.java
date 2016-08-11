@@ -61,16 +61,6 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        if (handleExpression(expression)) {
-            // TODO: This is wrong, but something similar would be needed
-            // for (Expression expr : expression.getExpressions()) {
-            // expr.accept(this);
-            // }
-        }
-    }
-
-    @Override
     public void visit(FooExpression expression) {
         // We skip this, because foo expressions as part of a predicate is not grouping relevant
     }

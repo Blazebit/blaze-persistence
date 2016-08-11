@@ -720,12 +720,6 @@ public class JoinManager extends AbstractManager {
             } else {
                 pathExpression.setPathReference(new SimplePathReference(result.baseNode, result.field));
             }
-        } else if (expression instanceof CompositeExpression) {
-            List<Expression> expressions = ((CompositeExpression) expression).getExpressions();
-            int size = expressions.size();
-            for (int i = 0; i < size; i++) {
-                implicitJoin(expressions.get(i), objectLeafAllowed, fromClause, fromSubquery, fromSelectAlias, joinRequired);
-            }
         } else if (expression instanceof FunctionExpression) {
             List<Expression> expressions = ((FunctionExpression) expression).getExpressions();
             int size = expressions.size();

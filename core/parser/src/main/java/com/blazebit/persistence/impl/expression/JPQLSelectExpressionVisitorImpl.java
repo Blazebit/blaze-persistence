@@ -244,27 +244,27 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitArrayExpressionParameterIndex(JPQLSelectExpressionParser.ArrayExpressionParameterIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Input_parameter().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.Input_parameter().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionPathIndex(JPQLSelectExpressionParser.ArrayExpressionPathIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.state_field_path_expression().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.state_field_path_expression().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionSingleElementPathIndex(ArrayExpressionSingleElementPathIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.single_element_path_expression().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.single_element_path_expression().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionIntegerLiteralIndex(ArrayExpressionIntegerLiteralIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Integer_literal().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), new NumericLiteral(ctx.Integer_literal().getText(), NumericType.INTEGER));
     }
 
     @Override
     public Expression visitArrayExpressionStringLiteralIndex(ArrayExpressionStringLiteralIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.string_literal().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.string_literal().accept(this));
     }
 
     @Override
@@ -355,7 +355,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitArithmetic_factor(JPQLSelectExpressionParser.Arithmetic_factorContext ctx) {
         if (ctx.signum != null) {
-            Expression expression = (Expression) ctx.arithmetic_primary().accept(this);
+            Expression expression = ctx.arithmetic_primary().accept(this);
 
             boolean invertSignum = "-".equals(ctx.signum.getText());
             return new ArithmeticFactor(expression, invertSignum);
@@ -401,7 +401,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     public Expression visitString_literal(String_literalContext ctx) {
         String literalValue = ctx.String_literal() == null ? ctx.Character_literal().getText() : ctx.String_literal().getText();
         // strip quotes
-        return new StringLiteral(literalValue.substring(1, literalValue.length() - 1));
+        return new StringLiteral(unquote(literalValue));
     }
 
     @Override
@@ -486,6 +486,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitEscape_character(Escape_characterContext ctx) {
+        if (ctx.Character_literal() != null) {
+            return new StringLiteral(unquote(ctx.Character_literal().getText()));
+        } else {
+            return super.visitEscape_character(ctx);
+        }
+    }
+
+    @Override
     public Expression visitGeneral_case_expression(JPQLSelectExpressionParser.General_case_expressionContext ctx) {
         List<WhenClauseExpression> whenClauses = new ArrayList<WhenClauseExpression>();
         for (JPQLSelectExpressionParser.When_clauseContext whenClause : ctx.when_clause()) {
@@ -525,7 +534,14 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
         InPredicate inPredicate;
-        Expression left = ctx.getChild(0).accept(this);
+        Expression left;
+        if (ctx.left == null) {
+            left = ctx.getChild(0).accept(this);
+        } else {
+            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+            pathElems.add(new PropertyExpression(ctx.left.getText()));
+            left = new PathExpression(pathElems);
+        }
         if (ctx.param == null && ctx.right == null) {
             List<Expression> inItems= new ArrayList<Expression>();
             for (In_itemContext inItemCtx : ctx.in_item()) {
@@ -537,7 +553,9 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             collectionParam.setCollectionValued(true);
             inPredicate = new InPredicate(left, collectionParam);
         } else {
-            Expression inExpr = new TerminalNodeImpl(ctx.right).accept(this);
+            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+            pathElems.add(new PropertyExpression(ctx.right.getText()));
+            Expression inExpr = new PathExpression(pathElems);
             inPredicate = new InPredicate(left, inExpr);
         }
         if (ctx.not != null) {
@@ -555,18 +573,18 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             case JPQLSelectExpressionLexer.Input_parameter:
                 return new ParameterExpression(node.getText().substring(1));
             default:
-                return new FooExpression(node.getText());
+                throw new IllegalStateException("Terminal node '" + node.getText() + "' not handled");
         }
     }
 
     @Override
     public Expression visitParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
-        return unwrap(super.visitParseSimpleExpression(ctx));
+        return super.visitParseSimpleExpression(ctx);
     }
 
     @Override
     public Expression visitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
-        return unwrap(super.visitParseSimpleSubqueryExpression(ctx));
+        return super.visitParseSimpleSubqueryExpression(ctx);
     }
 
     @Override
@@ -737,88 +755,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitChildren(RuleNode node) {
-        CompositeExpression result = null;
-        int n = node.getChildCount();
-
-        if (shouldVisitNextChild(node, result)) {
-            if (n > 0 && shouldVisitNextChild(node, result)) {
-                if (n == 1) {
-                    return node.getChild(0).accept(this);
-                } else {
-                    result = accept(node.getChild(0));
-                    for (int i = 1; i < n; i++) {
-                        if (!shouldVisitNextChild(node, result)) {
-                            break;
-                        }
-
-                        ParseTree c = node.getChild(i);
-                        acceptAndCompose(result, c);
-                    }
-                }
-            }
-        }
-
-        return result;
+    protected Expression aggregateResult(Expression aggregate, Expression nextResult) {
+        return aggregate == null ? nextResult : aggregate;
     }
 
-    private StringBuilder getTextWithSurroundingHiddenTokens(Token token) {
-        StringBuilder sb = new StringBuilder();
-        List<Token> hiddenTokens = tokens.getHiddenTokensToLeft(token.getTokenIndex());
-        if (hiddenTokens != null) {
-            for (Token t : hiddenTokens) {
-                sb.append(t.getText());
-            }
-        }
-        sb.append(token.getText());
-        hiddenTokens = tokens.getHiddenTokensToRight(token.getTokenIndex());
-        if (hiddenTokens != null) {
-            for (Token t : hiddenTokens) {
-                sb.append(t.getText());
-            }
-        }
-        return sb;
-    }
-
-    private CompositeExpression acceptAndCompose(CompositeExpression composite, ParseTree ruleContext) {
-        Expression expr = ruleContext.accept(this);
-        if (expr != null) {
-            composite.append(expr);
-        }
-
-        return composite;
-    }
-
-    private CompositeExpression accept(ParseTree ruleContext) {
-        Expression expr = ruleContext.accept(this);
-        CompositeExpression composite;
-        if (expr instanceof CompositeExpression) {
-            composite = (CompositeExpression) expr;
-        } else {
-            composite = new CompositeExpression(new ArrayList<Expression>(Arrays.asList(expr)));
-        }
-        return composite;
-    }
-
-    private StringBuilder tokenListToString(List<Token> tokens) {
-        StringBuilder sb = new StringBuilder();
-        if (tokens != null) {
-            for (Token t : tokens) {
-                sb.append(t.getText());
-            }
-        }
-        return sb;
-    }
-
-    private Expression unwrap(Expression expr) {
-        if (expr instanceof CompositeExpression) {
-            CompositeExpression composite = (CompositeExpression) expr;
-            if (composite.getExpressions().size() == 1) {
-                // recursion should not be necessary;
-                return composite.getExpressions().get(0);
-            }
-        }
-        return expr;
+    private String unquote(String literal) {
+        return literal.substring(1, literal.length() - 1);
     }
 
     private PredicateQuantifier toQuantifier(Token token) {

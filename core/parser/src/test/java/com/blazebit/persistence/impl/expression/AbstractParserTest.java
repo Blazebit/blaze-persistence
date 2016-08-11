@@ -118,10 +118,6 @@ public class AbstractParserTest {
         return wrapper;
     }
 
-    protected CompositeExpression compose(Expression... expr) {
-        return new CompositeExpression(Arrays.asList(expr));
-    }
-
     protected Expression parseOrderBy(String expr) {
         return ef.createOrderByExpression(expr);
     }
@@ -154,10 +150,6 @@ public class AbstractParserTest {
         return ef.createPathExpression(expr);
     }
 
-    protected FooExpression foo(String foo) {
-        return new FooExpression(foo);
-    }
-    
     protected FunctionExpression function(String name, Expression... args) {
     	if (aggregateFunctions.contains(name)) {
     		return new AggregateExpression(false, name, Arrays.asList(args));

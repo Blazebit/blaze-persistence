@@ -330,15 +330,6 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-    }
-
-    @Override
     public void visit(FooExpression expression) {
         sb.append(expression.toString());
     }
@@ -419,6 +410,20 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(TypeFunctionExpression expression) {
         visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public void visit(TrimExpression expression) {
+        sb.append("TRIM(").append(expression.getTrimspec().name()).append(' ');
+
+        if (expression.getTrimCharacter() != null) {
+            expression.getTrimCharacter().accept(this);
+            sb.append(' ');
+        }
+
+        sb.append("FROM ");
+        expression.getTrimSource().accept(this);
+        sb.append(')');
     }
 
     @Override

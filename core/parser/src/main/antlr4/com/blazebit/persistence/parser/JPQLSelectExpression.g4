@@ -350,7 +350,7 @@ between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithm
                    ;
 
 // TODO: the cases for identifier are actually not JPA compliant and is only required for managing a placeholder that is later replaced by a subquery
-in_expression : (/* Placeholder case */ Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
+in_expression : (/* Placeholder case */ left=Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
               ;
 
 in_item : literal

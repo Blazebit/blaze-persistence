@@ -50,15 +50,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-    }
-
-    @Override
     public void visit(FooExpression expression) {
     }
 
@@ -82,6 +73,14 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     @Override
     public void visit(TypeFunctionExpression expression) {
         visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public void visit(TrimExpression expression) {
+        if (expression.getTrimCharacter() != null) {
+            expression.getTrimCharacter().accept(this);
+        }
+        expression.getTrimSource().accept(this);
     }
 
     @Override

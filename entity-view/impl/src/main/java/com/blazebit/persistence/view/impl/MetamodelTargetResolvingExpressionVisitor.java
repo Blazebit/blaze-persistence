@@ -288,11 +288,6 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    @Override
-    public void visit(CompositeExpression expression) {
-        resolveToAny(expression.getExpressions(), false);
-    }
-    
     private void resolveToAny(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<PathPosition>();
@@ -448,7 +443,12 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
             resolveToAny(expression.getExpressions(), true);
     	}
     }
-    
+
+    @Override
+    public void visit(TrimExpression expression) {
+        currentPosition.setCurrentClass(String.class);
+    }
+
     private PropertyExpression resolveBase(FunctionExpression expression) {
 		// According to our grammar, we can only get a path here
 		PathExpression path = (PathExpression) expression.getExpressions().get(0);

@@ -21,15 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
@@ -104,17 +96,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
         } else {
         	List<Expression> arguments = new ArrayList<Expression>(3);
-        	arguments.add(new FooExpression("'LIMIT'"));
+        	arguments.add(new StringLiteral("LIMIT"));
         	arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
         	
         	if (!hasMaxResults) {
         		throw new IllegalArgumentException("First result without max results is not supported!");
         	} else {
-        		arguments.add(new FooExpression(Integer.toString(subquery.getMaxResults())));
+        		arguments.add(new NumericLiteral(Integer.toString(subquery.getMaxResults()), NumericType.INTEGER));
         	}
         	
         	if (hasFirstResult) {
-        		arguments.add(new FooExpression(Integer.toString(subquery.getFirstResult())));
+        		arguments.add(new NumericLiteral(Integer.toString(subquery.getFirstResult()), NumericType.INTEGER));
         	}
         	
         	renderFunctionFunction("LIMIT", arguments);
@@ -134,12 +126,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             
             List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
             StringBuilder nameSb = new StringBuilder();
-            nameSb.append('\'');
             // Use prefix because hibernate uses UNION as keyword
             nameSb.append("SET_");
             nameSb.append(operationManager.getOperator().name());
-            nameSb.append('\'');
-            setOperationArgs.add(new FooExpression(nameSb));
+            setOperationArgs.add(new StringLiteral(nameSb.toString()));
             setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
 
             List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
@@ -150,26 +140,24 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             
             List<? extends OrderByElement> orderByElements = operationBuilder.getOrderByElements();
             if (orderByElements.size() > 0) {
-                setOperationArgs.add(new FooExpression("'ORDER_BY'"));
+                setOperationArgs.add(new StringLiteral("ORDER_BY"));
                 
                 int orderByElementsSize = orderByElements.size();
                 for (int i = 0; i < orderByElementsSize; i++) {
                     StringBuilder argSb = new StringBuilder(20);
-                    argSb.append('\'');
                     argSb.append(orderByElements.get(i).toString());
-                    argSb.append('\'');
-                    setOperationArgs.add(new FooExpression(argSb));
+                    setOperationArgs.add(new StringLiteral(argSb.toString()));
                 }
             }
             
             if (operationBuilder.hasLimit()) {
                 if (operationBuilder.maxResults != Integer.MAX_VALUE) {
-                    setOperationArgs.add(new FooExpression("'LIMIT'"));
-                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.maxResults)));
+                    setOperationArgs.add(new StringLiteral("LIMIT"));
+                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.maxResults), NumericType.INTEGER));
                 }
                 if (operationBuilder.firstResult != 0) {
-                    setOperationArgs.add(new FooExpression("'OFFSET'"));
-                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.firstResult)));
+                    setOperationArgs.add(new StringLiteral("OFFSET"));
+                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.firstResult), NumericType.INTEGER));
                 }
             }
             

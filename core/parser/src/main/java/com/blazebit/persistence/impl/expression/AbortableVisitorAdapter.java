@@ -57,18 +57,6 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
-    public Boolean visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            if (expressions.get(i).accept(this)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
     public Boolean visit(FooExpression expression) {
         return false;
     }
@@ -98,6 +86,14 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     @Override
     public Boolean visit(TypeFunctionExpression expression) {
         return visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public Boolean visit(TrimExpression expression) {
+        if (expression.getTrimCharacter() != null && expression.getTrimCharacter().accept(this)) {
+            return true;
+        }
+        return expression.getTrimSource().accept(this);
     }
 
     @Override

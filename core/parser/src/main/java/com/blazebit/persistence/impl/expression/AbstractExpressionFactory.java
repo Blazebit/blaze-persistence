@@ -82,14 +82,14 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     @Override
     public PathExpression createPathExpression(String expression) {
-        CompositeExpression comp = (CompositeExpression) createExpression(new RuleInvoker() {
+        PathExpression path = (PathExpression) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePath();
             }
         }, expression, false, false);
-        return (PathExpression) comp.getExpressions().get(0);
+        return path;
     }
 
     @Override

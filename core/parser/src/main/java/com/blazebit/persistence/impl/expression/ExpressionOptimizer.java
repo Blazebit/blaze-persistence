@@ -36,14 +36,6 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     }
 
     @Override
-    public Expression visit(CompositeExpression expression) {
-        for (Expression compositePart : expression.getExpressions()) {
-            compositePart.accept(this);
-        }
-        return expression;
-    }
-
-    @Override
     public Expression visit(NullExpression expression) {
         return expression;
     }
@@ -69,6 +61,12 @@ public class ExpressionOptimizer implements Expression.ResultVisitor<Expression>
     @Override
     public Expression visit(TypeFunctionExpression expression) {
         return visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public Expression visit(TrimExpression expression) {
+        expression.getTrimSource().accept(this);
+        return expression;
     }
 
     @Override

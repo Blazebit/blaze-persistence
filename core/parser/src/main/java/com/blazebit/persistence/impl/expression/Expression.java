@@ -36,8 +36,6 @@ public interface Expression {
 
         public void visit(ArrayExpression expression);
 
-        public void visit(CompositeExpression expression);
-
         public void visit(NullExpression expression);
 
         public void visit(FooExpression expression);
@@ -47,6 +45,8 @@ public interface Expression {
         public void visit(FunctionExpression expression);
 
         public void visit(TypeFunctionExpression expression);
+
+        public void visit(TrimExpression expression);
 
         public void visit(WhenClauseExpression expression);
 
@@ -114,8 +114,6 @@ public interface Expression {
 
         public T visit(ArrayExpression expression);
 
-        public T visit(CompositeExpression expression);
-
         public T visit(NullExpression expression);
 
         public T visit(FooExpression expression);
@@ -125,6 +123,8 @@ public interface Expression {
         public T visit(FunctionExpression expression);
 
         public T visit(TypeFunctionExpression expression);
+
+        public T visit(TrimExpression expression);
 
         public T visit(WhenClauseExpression expression);
 
