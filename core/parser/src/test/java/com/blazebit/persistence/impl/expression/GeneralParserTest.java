@@ -808,4 +808,10 @@ public class GeneralParserTest extends AbstractParserTest {
         assertEquals(expected, result);
     }
 
+    @Test
+    public void testNestedCaseWhenBooleanLiteral() {
+        Expression result = parse("CASE WHEN a > b THEN CASE WHEN true=true THEN false ELSE true END ELSE CASE WHEN true = true THEN false ELSE true END END");
+        assertEquals("CASE WHEN a > b THEN CASE WHEN true = true THEN false ELSE true END ELSE CASE WHEN true = true THEN false ELSE true END END", result.toString());
+    }
+
 }

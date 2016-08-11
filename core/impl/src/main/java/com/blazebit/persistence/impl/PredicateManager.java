@@ -194,9 +194,9 @@ public abstract class PredicateManager<T> extends AbstractManager {
     protected abstract ClauseType getClauseType();
 
     void applyPredicate(ResolvingQueryGenerator queryGenerator) {
-        boolean conditionalContext = queryGenerator.setConditionalContext(true);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
         rootPredicate.getPredicate().accept(queryGenerator);
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     // TODO: needs equals-hashCode implementation

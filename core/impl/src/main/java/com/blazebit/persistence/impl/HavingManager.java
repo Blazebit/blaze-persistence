@@ -53,13 +53,12 @@ public class HavingManager<T> extends PredicateManager<T> {
         }
 
         // TODO: No idea yet how to actually handle this
-        boolean conditionalContext = queryGenerator.isConditionalContext();
         GroupByExpressionGatheringVisitor visitor = new GroupByExpressionGatheringVisitor();
         rootPredicate.getPredicate().accept(visitor);
         
         StringBuilder sb = new StringBuilder();
         queryGenerator.setQueryBuffer(sb);
-        queryGenerator.setConditionalContext(true);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
         
         for (Expression expr : visitor.getExpressions()) {
         	expr.accept(queryGenerator);
@@ -67,6 +66,6 @@ public class HavingManager<T> extends PredicateManager<T> {
         	sb.setLength(0);
         }
         
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 }

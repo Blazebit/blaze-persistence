@@ -172,7 +172,7 @@ public class SelectManager<T> extends AbstractManager {
      * @return
      */
     void buildGroupByClauses(final Metamodel m, Set<String> clauses) {
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
         Set<PathExpression> componentPaths = new LinkedHashSet<PathExpression>();
@@ -227,7 +227,7 @@ public class SelectManager<T> extends AbstractManager {
             }
         }
 
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     void buildSelect(StringBuilder sb) {
@@ -250,7 +250,7 @@ public class SelectManager<T> extends AbstractManager {
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);
-            boolean conditionalContext = queryGenerator.setConditionalContext(false);
+            SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
             
             for (int i = 0; i < size; i++) {
                 if (i != 0) {
@@ -260,7 +260,7 @@ public class SelectManager<T> extends AbstractManager {
                 applySelect(queryGenerator, sb, infos.get(i));
             }
             
-            queryGenerator.setConditionalContext(conditionalContext);
+            queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
         }
     }
 
