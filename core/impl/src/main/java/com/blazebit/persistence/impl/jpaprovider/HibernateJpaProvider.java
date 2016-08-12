@@ -74,6 +74,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String getNullExpression() {
+        return "NULLIF(1,1)";
+    }
+
+    @Override
     public String escapeCharacter(char character) {
         if (character == '\\' && db == DB.MY_SQL) {
             return "\\\\";

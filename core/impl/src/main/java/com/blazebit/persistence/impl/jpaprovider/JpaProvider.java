@@ -32,6 +32,8 @@ public interface JpaProvider {
 
     public String getBooleanConditionalExpression(boolean value);
 
+    public String getNullExpression();
+
     public String getOnClause();
 
     public String getCollectionValueFunction();

@@ -48,12 +48,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(NullExpression expression) {
-        // TODO: extract to jpa provider
-        if (jpaProvider instanceof HibernateJpaProvider) {
-            sb.append("NULLIF(1,1)");
-        } else {
-            super.visit(expression);
-        }
+        sb.append(jpaProvider.getNullExpression());
     }
 
     @Override

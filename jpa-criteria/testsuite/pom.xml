@@ -23,6 +23,12 @@
 			<artifactId>blaze-persistence-core-testsuite</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -635,14 +641,6 @@
 					<groupId>${project.groupId}</groupId>
 					<artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
 					<scope>test</scope>
-				</dependency>
-				<!-- IntelliJ apparently needs the annotation processor here -->
-				<!-- The old version has a bug when generating the static metamodel for PolymorphicPropertyMapBase -->
-				<dependency>
-					<groupId>org.datanucleus</groupId>
-					<artifactId>datanucleus-jpa-query</artifactId>
-					<version>${version.datanucleus.jpa-5}</version>
-					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 			<build>

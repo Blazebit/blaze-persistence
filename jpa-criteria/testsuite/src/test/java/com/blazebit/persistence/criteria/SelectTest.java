@@ -104,7 +104,7 @@ public class SelectTest extends AbstractCoreTest {
                 contacts.key().type()
         );
 
-        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(contact), TYPE(partner), TYPE(KEY(contact)) FROM Document document JOIN document.contacts contact JOIN document.partners partner JOIN document.people myPerson", cq.getQueryString());
+        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(" + joinAliasValue("contact") + "), TYPE(partner), TYPE(KEY(contact)) FROM Document document JOIN document.contacts contact JOIN document.partners partner JOIN document.people myPerson", cq.getQueryString());
     }
 
     @Test
@@ -126,6 +126,7 @@ public class SelectTest extends AbstractCoreTest {
                 Document d = new Document("abc", p);
                 em.persist(p);
                 em.persist(d);
+                em.flush(); // required for datanucleus
                 return d.getId();
             }
         });
@@ -268,7 +269,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(cb.nullLiteral(Integer.class));
 
-        assertEquals("SELECT NULLIF(1,1) FROM Document document", cq.getQueryString());
+        assertEquals("SELECT " + staticJpaProvider.getNullExpression()+ " FROM Document document", cq.getQueryString());
     }
 
     @Test
@@ -364,7 +365,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(root.get(Document_.contacts));
 
-        assertEquals("SELECT contacts_1 FROM Document document LEFT JOIN document.contacts contacts_1", cq.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_1") + " FROM Document document LEFT JOIN document.contacts contacts_1", cq.getQueryString());
     }
 
     @Test

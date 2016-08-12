@@ -15,28 +15,29 @@
  */
 package com.blazebit.persistence.criteria;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.sql.Timestamp;
-import java.util.*;
-
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
-
 import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.testsuite.entity.*;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document_;
+import com.blazebit.persistence.testsuite.entity.NameObject_;
+import com.blazebit.persistence.testsuite.entity.Person;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
+import java.sql.Timestamp;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  *
@@ -85,6 +86,8 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/35
+    @Category(NoDatanucleus.class)
     public void embeddablePaths() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -477,6 +480,8 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/36
+    @Category(NoDatanucleus.class)
     public void parametersAndArrays() {
         BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(em, cbf, Document.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
