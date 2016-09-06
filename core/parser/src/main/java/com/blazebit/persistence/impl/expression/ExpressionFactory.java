@@ -27,6 +27,8 @@ public interface ExpressionFactory {
 
     public PathExpression createPathExpression(String expression);
 
+    public Expression createJoinPathExpression(String expression);
+
     public Expression createSimpleExpression(String expression);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);

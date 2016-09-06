@@ -363,7 +363,9 @@ public class PaginationTest extends AbstractCoreTest {
     }
 
     @Test
-    @Ignore("We haven't handeled SIZE transformations for all clauses yet")
+    // NOTE: We haven't handeled SIZE transformations for all clauses yet
+    // TODO: 188
+    @Ignore("#188")
     public void testOrderBySize() {
         PaginatedCriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)")

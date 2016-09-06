@@ -50,7 +50,7 @@ public class InheritanceTest extends AbstractCoreTest {
     }
     
 	@Test
-	@Ignore("There is a bug in the metamodel generation when used in eclipse so we skip this test for now")
+	// NOTE: There is a bug in the metamodel generation when used in eclipse: HHH-10265
     public void testInheritanceWithEntityName() {
 	    @SuppressWarnings("rawtypes")
         CriteriaBuilder<Project> cb = cbf.create(em, Project.class, "p");
@@ -60,7 +60,7 @@ public class InheritanceTest extends AbstractCoreTest {
     }
     
     @Test
-    @Ignore("There is a bug in the metamodel generation when used in eclipse so we skip this test for now")
+    // NOTE: There is a bug in the metamodel generation when used in eclipse: HHH-10265
     public void testJoinPolymorphicEntity() {
         @SuppressWarnings("rawtypes")
         CriteriaBuilder<Project> cb = cbf.create(em, Project.class, "p")
@@ -71,7 +71,7 @@ public class InheritanceTest extends AbstractCoreTest {
     }
     
     @Test
-    @Ignore("There is a bug in the metamodel generation when used in eclipse so we skip this test for now")
+    // NOTE: There is a bug in the metamodel generation when used in eclipse: HHH-10265
     public void testImplicitJoinPolymorphicEntity() {
         CriteriaBuilder<Long> cb = cbf.create(em, Long.class)
                 .from(Project.class, "p")

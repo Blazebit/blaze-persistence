@@ -37,8 +37,8 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
         }
     };
 
-    public ExpressionFactoryImpl(Set<String> aggregateFunctions) {
-        super(aggregateFunctions);
+    public ExpressionFactoryImpl(Set<String> aggregateFunctions, boolean allowTreatJoinExtension) {
+        super(aggregateFunctions, allowTreatJoinExtension);
     }
 
     @Override

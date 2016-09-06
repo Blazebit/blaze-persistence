@@ -139,4 +139,14 @@ public class HibernateJpaProvider implements JpaProvider {
         return functionName + "(";
     }
 
+    @Override
+    public boolean supportsRootTreat() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsSubtypePropertyResolving() {
+        return true;
+    }
+
 }

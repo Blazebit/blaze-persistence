@@ -21,15 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.FooExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.NullExpression;
-import com.blazebit.persistence.impl.expression.ParameterExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
@@ -219,6 +211,18 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
+    public void visit(TreatExpression expression) {
+        if (jpaProvider.supportsRootTreat()) {
+            super.visit(expression);
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            // NOTE: this might be wrong when having multiple same named properties
+            expression.getExpression().accept(this);
+        } else {
+            throw new IllegalArgumentException("Can not render treat expression[" + expression.toString() + "] as the JPA provider does not support it!");
+        }
+    }
+
+    @Override
     public void visit(PathExpression expression) {
         if (resolveSelectAliases) {
             // if path expression should not be replaced by select aliases we
@@ -259,24 +263,29 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
                 sb.append(')');
             }
         } else {
-            // Dereferencing after a value function does not seem to work for datanucleus?
-//            boolean valueFunction = false;
-            boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
+            if (expression.hasTreatedSubpath()) {
+                // Actually we know that the treated subpath must be the first part of the path
+                expression.getExpressions().get(0).accept(this);
+            } else {
+                // Dereferencing after a value function does not seem to work for datanucleus?
+                //            boolean valueFunction = false;
+                boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
 
-            if (valueFunction) {
-                sb.append(jpaProvider.getCollectionValueFunction());
-                sb.append('(');
-            }
+                if (valueFunction) {
+                    sb.append(jpaProvider.getCollectionValueFunction());
+                    sb.append('(');
+                }
 
-            if (aliasPrefix != null) {
-                sb.append(aliasPrefix);
-            }
+                if (aliasPrefix != null) {
+                    sb.append(aliasPrefix);
+                }
 
-            JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            sb.append(baseNode.getAliasInfo().getAlias());
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
+                sb.append(baseNode.getAliasInfo().getAlias());
 
-            if (valueFunction) {
-                sb.append(')');
+                if (valueFunction) {
+                    sb.append(')');
+                }
             }
 
             sb.append(".").append(expression.getField());

@@ -39,8 +39,8 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
         }
     };
 
-    public SubqueryExpressionFactory(Set<String> aggregateFunctions, ExpressionFactory delegate) {
-        super(aggregateFunctions);
+    public SubqueryExpressionFactory(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, ExpressionFactory delegate) {
+        super(aggregateFunctions, allowTreatJoinExtension);
         this.delegate = delegate;
     }
 
@@ -59,6 +59,11 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     @Override
     public PathExpression createPathExpression(String expression) {
         return delegate.createPathExpression(expression);
+    }
+
+    @Override
+    public Expression createJoinPathExpression(String expression) {
+        return delegate.createJoinPathExpression(expression);
     }
 
     @Override

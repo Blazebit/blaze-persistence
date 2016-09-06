@@ -13,4 +13,7 @@ public interface PathReference {
     public Object getBaseNode();
     
     public String getField();
+
+    public String getTreatTypeName();
+
 }

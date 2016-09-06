@@ -24,6 +24,7 @@ import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.UpdatableEntityView;
 import com.blazebit.persistence.view.ViewFilter;
@@ -46,8 +47,8 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     private final MethodAttribute<? super X, ?> idAttribute;
     private final Map<String, ViewFilterMapping> viewFilters;
 
-    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, Metamodel metamodel) {
-        super(clazz, getEntityClass(clazz, metamodel), entityViews);
+    public ViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+        super(clazz, getEntityClass(clazz, metamodel), entityViews, metamodel, expressionFactory);
 
         EntityView entityViewAnnot = AnnotationUtils.findAnnotation(clazz, EntityView.class);
 

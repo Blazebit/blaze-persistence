@@ -74,7 +74,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
         PathExpression path = (PathExpression) ((FunctionExpression) original).getExpressions().get(0);
 
         if (joinManager.getParent() != null) {
-            joinManager.getParent().implicitJoin(path, true, fromClause, false, true, joinRequired, false);
+            joinManager.getParent().implicitJoin(path, true, null, fromClause, false, true, joinRequired, false);
         }
 
         return original;

@@ -20,6 +20,7 @@ import java.util.Set;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.annotation.AnnotationUtils;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.EmbeddableEntityView;
 import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 
@@ -31,8 +32,8 @@ import com.blazebit.persistence.view.metamodel.EmbeddableViewType;
 public class EmbeddableViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements EmbeddableViewType<X> {
 
 
-    public EmbeddableViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, Metamodel metamodel) {
-        super(clazz, getEntityClass(clazz, metamodel), entityViews);
+    public EmbeddableViewTypeImpl(Class<? extends X> clazz, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+        super(clazz, getEntityClass(clazz, metamodel), entityViews, metamodel, expressionFactory);
     }
     
     private static Class<?> getEntityClass(Class<?> clazz, Metamodel metamodel) {

@@ -42,6 +42,11 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     }
 
     @Override
+    public void visit(TreatExpression expression) {
+        handleExpression(expression);
+    }
+
+    @Override
     public void visit(PropertyExpression expression) {
         handleExpression(expression);
     }

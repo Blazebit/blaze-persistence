@@ -164,7 +164,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitGeneral_subpath(JPQLSelectExpressionParser.General_subpathContext ctx) {
+    public Expression visitSimple_subpath(JPQLSelectExpressionParser.Simple_subpathContext ctx) {
         List<PathElementExpression> pathElements = new ArrayList<PathElementExpression>();
         pathElements.add((PathElementExpression) ctx.general_path_start().accept(this));
         for (JPQLSelectExpressionParser.General_path_elementContext generalPathElem : ctx.general_path_element()) {
@@ -174,8 +174,30 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitTreated_subpath(Treated_subpathContext ctx) {
+        TreatExpression treatExpression = new TreatExpression(ctx.general_subpath().accept(this), ctx.subtype().getText());
+        List<General_path_elementContext> followingPaths = ctx.general_path_element();
+        Expression finalExpression = treatExpression;
+
+        if (followingPaths.size() > 0) {
+            List<PathElementExpression> pathProperties = new ArrayList<PathElementExpression>(followingPaths.size() + 1);
+            PathExpression path = new PathExpression(pathProperties);
+            pathProperties.add(treatExpression);
+
+            for (int i = 0; i < followingPaths.size(); i++) {
+                // TODO: Can here be arrays or is it just path elements?
+                pathProperties.add((PathElementExpression) followingPaths.get(i).accept(this));
+            }
+
+            finalExpression = path;
+        }
+
+        return finalExpression;
+    }
+
+    @Override
     public Expression visitPath(JPQLSelectExpressionParser.PathContext ctx) {
-        PathExpression result = (PathExpression) ctx.general_subpath().accept(this);
+        PathExpression result = wrapPath(ctx.general_subpath().accept(this));
         result.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
         return result;
     }
@@ -221,6 +243,50 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         PathExpression collectionPath = (PathExpression) ctx.collection_valued_path_expression().accept(this);
         collectionPath.setCollectionKeyPath(true);
         return new FunctionExpression(ctx.name.getText(), Arrays.asList(collectionPath));
+    }
+
+    @Override
+    public Expression visitTreated_key_value_expression(Treated_key_value_expressionContext ctx) {
+        return new TreatExpression(ctx.key_value_expression().accept(this), ctx.subtype().getText());
+    }
+
+    @Override
+    public Expression visitSimpleJoinPathExpression(SimpleJoinPathExpressionContext ctx) {
+        PathExpression path = (PathExpression) ctx.simple_subpath().accept(this);
+        path.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
+        return path;
+    }
+
+    @Override
+    public Expression visitExtendedJoinPathExpression(ExtendedJoinPathExpressionContext ctx) {
+        PathExpression path = wrapPath(ctx.treated_subpath().accept(this));
+        path.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
+        return path;
+    }
+
+    @Override
+    public Expression visitSingleJoinElementExpression(SingleJoinElementExpressionContext ctx) {
+        return ctx.single_element_path_expression().accept(this);
+    }
+
+    @Override
+    public Expression visitTreatJoinPathExpression(TreatJoinPathExpressionContext ctx) {
+        return new TreatExpression(ctx.join_path_expression().accept(this), ctx.subtype().getText());
+    }
+
+    @Override
+    public Expression visitSimplePath(SimplePathContext ctx) {
+        PathExpression path = (PathExpression) ctx.simple_subpath().accept(this);
+        path.getExpressions().add((PathElementExpression) ctx.general_path_element().accept(this));
+        return path;
+    }
+
+    @Override
+    public Expression visitTreatedRootPath(TreatedRootPathContext ctx) {
+        TreatExpression treatExpression = new TreatExpression(wrapPath(new PropertyExpression(ctx.identifier().getText())), ctx.subtype().getText());
+        PathExpression path = (PathExpression) ctx.simple_subpath().accept(this);
+        path.getExpressions().add(0, treatExpression);
+        return path;
     }
 
     @Override
@@ -480,6 +546,11 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitParseJoinPath(JPQLSelectExpressionParser.ParseJoinPathContext ctx) {
+        return unwrap(super.visitParseJoinPath(ctx));
+    }
+
+    @Override
     public Expression visitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
         return unwrap(super.visitParseSimpleSubqueryExpression(ctx));
     }
@@ -686,6 +757,16 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             }
         }
         return sb;
+    }
+
+    private PathExpression wrapPath(Expression expression) {
+        if (expression instanceof PathExpression) {
+            return (PathExpression) expression;
+        }
+
+        PathExpression p = new PathExpression();
+        p.getExpressions().add((PathElementExpression) expression);
+        return p;
     }
 
     private Expression unwrap(Expression expr) {

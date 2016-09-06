@@ -35,9 +35,9 @@ import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
-import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
-import com.blazebit.persistence.view.impl.MetamodelTargetResolvingExpressionVisitor.TargetType;
+import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
@@ -128,7 +128,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return mappings;
     }
 
-    public String checkAttribute(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel) {
+    public String checkAttribute(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel) {
         if (mapping == null || queryParameter) {
             // Subqueries and parameters can't be checked
             return null;
@@ -177,7 +177,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             expressionType = subviewType.getEntityClass();
         }
 
-        MetamodelTargetResolvingExpressionVisitor visitor = new MetamodelTargetResolvingExpressionVisitor(managedType, metamodel);
+        ScalarTargetResolvingExpressionVisitor visitor = new ScalarTargetResolvingExpressionVisitor(managedType, metamodel);
         
         try {
             expressionFactory.createSimpleExpression(mapping).accept(visitor);

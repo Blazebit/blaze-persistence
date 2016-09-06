@@ -496,8 +496,9 @@ public class WhereTest extends AbstractCoreTest {
         assertEquals(expected, crit.getQueryString());
         crit.getResultList(); 
     }
-    
-    @Ignore("Not yet implemented")
+
+    // TODO: #188
+    @Ignore("#188")
     @Test
     public void testWhereSizeSingle() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");
@@ -507,8 +508,9 @@ public class WhereTest extends AbstractCoreTest {
         final String expected = "SELECT d.id, d.name FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, d.name HAVING COUNT(versions_1) > 2";
         assertEquals(expected, crit.getQueryString());
     }
-    
-    @Ignore("Not yet implemented")
+
+    // TODO: #188
+    @Ignore("#188")
     @Test
     public void testWhereSizeMultiple() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d");

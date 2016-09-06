@@ -125,6 +125,10 @@ MEMBER: [Mm][Ee][Mm][Bb][Ee][Rr];
 
 OF: [Oo][Ff];
 
+TREAT: [Tt] [Rr] [Ee] [Aa] [Tt];
+
+AS: [Aa] [Ss];
+
 Outer_function : [Oo][Uu][Tt][Ee][Rr];
  
 Star_operator : '*';

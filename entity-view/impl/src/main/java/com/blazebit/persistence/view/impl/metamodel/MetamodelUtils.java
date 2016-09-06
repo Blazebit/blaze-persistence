@@ -38,7 +38,7 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.Mapping;
 import com.blazebit.persistence.view.MappingParameter;
 import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.impl.TargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -48,8 +48,6 @@ import com.blazebit.reflection.ReflectionUtils;
  * @since 1.0
  */
 public final class MetamodelUtils {
-    
-    private static final ExpressionFactory expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
     
     public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
         return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));
@@ -109,7 +107,7 @@ public final class MetamodelUtils {
         }
     }
 
-    public static boolean isIndexedList(Class<?> entityClass, Annotation mappingAnnotation) {
+    public static boolean isIndexedList(EntityMetamodel metamodel, ExpressionFactory expressionFactory, Class<?> entityClass, Annotation mappingAnnotation) {
         if (mappingAnnotation instanceof MappingSubquery || mappingAnnotation instanceof MappingParameter) {
             return false;
         }
@@ -123,8 +121,8 @@ public final class MetamodelUtils {
         } else {
             throw new IllegalArgumentException("Unkown mapping encountered: " + mappingAnnotation);
         }
-        
-        TargetResolvingExpressionVisitor visitor = new TargetResolvingExpressionVisitor(entityClass);
+
+        PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass);
         expressionFactory.createSimpleExpression(mapping).accept(visitor);
         Map<Method, Class<?>> possibleTargets = visitor.getPossibleTargets();
         Iterator<Map.Entry<Method, Class<?>>> iter = possibleTargets.entrySet().iterator();

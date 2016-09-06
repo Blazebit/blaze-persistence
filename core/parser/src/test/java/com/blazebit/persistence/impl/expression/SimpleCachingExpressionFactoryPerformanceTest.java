@@ -40,8 +40,8 @@ public class SimpleCachingExpressionFactoryPerformanceTest {
     
     @Rule
     public TestRule benchmarkRun = new BenchmarkRule();
-    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
-    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>());
+    private final ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true));
+    private final ExpressionFactory nonCachingExpressionFactory = new ExpressionFactoryImpl(new HashSet<String>(), true);
     
     @BeforeClass
     public static void beforeClass() {

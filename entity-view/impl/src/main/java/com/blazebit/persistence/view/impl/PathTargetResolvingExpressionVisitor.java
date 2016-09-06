@@ -38,15 +38,21 @@ import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.predicate.NotPredicate;
 import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.Metamodel;
+
 /**
+ * A visitor that can determine possible target types of a path expression.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class TargetResolvingExpressionVisitor implements Expression.Visitor {
+public class PathTargetResolvingExpressionVisitor implements Expression.Visitor {
 
+    private final EntityMetamodel metamodel;
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
 
@@ -101,7 +107,8 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
         }
     }
 
-    public TargetResolvingExpressionVisitor(Class<?> startClass) {
+    public PathTargetResolvingExpressionVisitor(EntityMetamodel metamodel, Class<?> startClass) {
+        this.metamodel = metamodel;
         this.pathPositions = new ArrayList<PathPosition>();
         this.pathPositions.add(currentPosition = new PathPosition(startClass, null));
     }
@@ -189,6 +196,14 @@ public class TargetResolvingExpressionVisitor implements Expression.Visitor {
     public void visit(ArrayExpression expression) {
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
+    }
+
+    @Override
+    public void visit(TreatExpression expression) {
+        EntityType<?> type = metamodel.getEntity(expression.getType());
+        currentPosition.setMethod(null);
+        currentPosition.setCurrentClass(type.getJavaType());
+        currentPosition.setValueClass(type.getJavaType());
     }
 
     @Override

@@ -190,7 +190,7 @@ public class SelectManager<T> extends AbstractManager {
         	String rootAlias = rootNode.getAliasInfo().getAlias();
         	
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
-            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null), false, false));
+            resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, null), false, false));
 
             for (PathExpression pathExpr : componentPaths) {
                 sb.setLength(0);

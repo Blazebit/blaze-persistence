@@ -35,7 +35,6 @@ import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
 
-import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -497,6 +496,15 @@ public class SimpleQueryGenerator extends VisitorAdapter {
         sb.append('[');
         expression.getIndex().accept(this);
         sb.append(']');
+    }
+
+    @Override
+    public void visit(TreatExpression expression) {
+        sb.append("TREAT(");
+        expression.getExpression().accept(this);
+        sb.append(" AS ");
+        sb.append(expression.getType());
+        sb.append(')');
     }
 
     @Override

@@ -62,6 +62,11 @@ public abstract class AbortableVisitorAdapter implements Expression.ResultVisito
     }
 
     @Override
+    public Boolean visit(TreatExpression expression) {
+        return expression.getExpression().accept(this);
+    }
+
+    @Override
     public Boolean visit(PropertyExpression expression) {
         return false;
     }

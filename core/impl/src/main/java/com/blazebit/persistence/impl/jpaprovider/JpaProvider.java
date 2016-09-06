@@ -45,4 +45,8 @@ public interface JpaProvider {
     public boolean supportsNullPrecedenceExpression();
 
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls);
+
+    public boolean supportsRootTreat();
+
+    public boolean supportsSubtypePropertyResolving();
 }

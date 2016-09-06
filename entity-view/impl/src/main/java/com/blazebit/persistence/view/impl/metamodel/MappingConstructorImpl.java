@@ -55,7 +55,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     private final Constructor<X> javaConstructor;
     private final List<AbstractParameterAttribute<? super X, ?>> parameters;
 
-    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews) {
+    public MappingConstructorImpl(ManagedViewType<X> viewType, String name, Constructor<X> constructor, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         this.name = name;
         this.declaringType = viewType;
         this.javaConstructor = constructor;
@@ -69,14 +69,14 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         List<AbstractParameterAttribute<? super X, ?>> parameters = new ArrayList<AbstractParameterAttribute<? super X, ?>>(parameterCount);
         for (int i = 0; i < parameterCount; i++) {
             AbstractParameterAttribute.validate(this, i);
-            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, entityViews);
+            AbstractParameterAttribute<? super X, ?> parameter = createParameterAttribute(this, i, entityViews, metamodel, expressionFactory);
             parameters.add(parameter);
         }
 
         this.parameters = Collections.unmodifiableList(parameters);
     }
     
-    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
+    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
             String error = parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel);
             
@@ -107,7 +107,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     }
 
     // If you change something here don't forget to also update ViewTypeImpl#createMethodAttribute
-    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews) {
+    private static <X> AbstractParameterAttribute<? super X, ?> createParameterAttribute(MappingConstructor<X> constructor, int index, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         Annotation mapping = AbstractParameterAttribute.getMapping(constructor, index);
         if (mapping == null) {
             return null;
@@ -138,7 +138,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         if (Collection.class == attributeType) {
             return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (List.class == attributeType) {
-            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {

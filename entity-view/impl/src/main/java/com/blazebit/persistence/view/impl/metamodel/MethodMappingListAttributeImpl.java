@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
@@ -32,13 +33,13 @@ public class MethodMappingListAttributeImpl<X, Y> extends AbstractMethodMappingP
 
     private final boolean isIndexed;
     
-    public MethodMappingListAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews) {
+    public MethodMappingListAttributeImpl(ManagedViewType<X> viewType, Method method, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         super(viewType, method, mapping, entityViews, false);
         
         if (isIgnoreIndex()) {
         	this.isIndexed = false;
         } else {
-        	this.isIndexed = MetamodelUtils.isIndexedList(viewType.getEntityClass(), mapping);
+        	this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, viewType.getEntityClass(), mapping);
         }
     }
 

@@ -214,6 +214,11 @@ public abstract class PredicateManager<T> extends AbstractManager {
     }
 
     // TODO: needs equals-hashCode implementation
+
+    /**
+     * The transformation visitor's job is to let expressions from predicates be replaced by results of transformers.
+     * Since it is only ever applied to a predicate, we don't need to consider the visit methods for expressions.
+     */
     static class TransformationVisitor extends VisitorAdapter {
 
         private final ExpressionTransformer transformer;

@@ -64,7 +64,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     protected final Map<String, AttributeFilterMapping> attributeFilters;
 
     @SuppressWarnings("unchecked")
-    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews) {
+    public ManagedViewTypeImpl(Class<? extends X> clazz, Class<?> entityClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         this.javaType = (Class<X>) clazz;
         this.entityClass = entityClass;
 
@@ -82,7 +82,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             for (Method method : c.getDeclaredMethods()) {
                 if (Modifier.isPublic(method.getModifiers())) {
                     if (handledMethods.add(method.getName())) {
-                        handleMethod(method, entityViews);
+                        handleMethod(method, entityViews, metamodel, expressionFactory);
                     }
                 }
             }
@@ -97,17 +97,17 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             if (constructorIndex.containsKey(constructorName)) {
                 constructorName += constructorIndex.size();
             }
-            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews);
+            MappingConstructorImpl<X> mappingConstructor = new MappingConstructorImpl<X>(this, constructorName, (Constructor<X>) constructor, entityViews, metamodel, expressionFactory);
             constructors.put(new ParametersKey(constructor.getParameterTypes()), mappingConstructor);
             constructorIndex.put(constructorName, mappingConstructor);
         }
     }
     
-    private void handleMethod(Method method, Set<Class<?>> entityViews) {
+    private void handleMethod(Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         String attributeName = AbstractMethodAttribute.validate(this, method);
 
         if (attributeName != null && !attributes.containsKey(attributeName)) {
-            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews);
+            AbstractMethodAttribute<? super X, ?> attribute = createMethodAttribute(this, method, entityViews, metamodel, expressionFactory);
             if (attribute != null) {
                 attributes.put(attribute.getName(), attribute);
                 addAttributeFilters(attribute);
@@ -115,7 +115,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
     }
     
-    public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, Metamodel metamodel, Set<String> errors) {
+    public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Set<String> errors) {
         ManagedType<?> managedType = metamodel.managedType(entityClass);
         Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
         
@@ -196,7 +196,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     }
 
     // If you change something here don't forget to also update MappingConstructorImpl#createMethodAttribute
-    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, Set<Class<?>> entityViews) {
+    private static <X> AbstractMethodAttribute<? super X, ?> createMethodAttribute(ManagedViewType<X> viewType, Method method, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         Annotation mapping = AbstractMethodAttribute.getMapping(viewType, method);
         if (mapping == null) {
             return null;
@@ -212,7 +212,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         if (Collection.class == attributeType) {
             return new MethodMappingCollectionAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (List.class == attributeType) {
-            return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
+            return new MethodMappingListAttributeImpl<X, Object>(viewType, method, mapping, entityViews, metamodel, expressionFactory);
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
             return new MethodMappingSetAttributeImpl<X, Object>(viewType, method, mapping, entityViews);
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {

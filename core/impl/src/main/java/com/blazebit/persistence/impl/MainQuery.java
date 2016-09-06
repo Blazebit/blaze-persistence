@@ -15,6 +15,7 @@ public class MainQuery {
 
     final CriteriaBuilderFactoryImpl cbf;
     final EntityManager em;
+    final EntityMetamodel metamodel;
     final JpaProvider jpaProvider;
     final DbmsDialect dbmsDialect;
     final Set<String> registeredFunctions;
@@ -26,6 +27,7 @@ public class MainQuery {
         super();
         this.cbf = cbf;
         this.em = em;
+        this.metamodel = cbf.getMetamodel();
         this.jpaProvider = jpaProvider;
         this.dbmsDialect = dbmsDialect;
         this.registeredFunctions = registeredFunctions;

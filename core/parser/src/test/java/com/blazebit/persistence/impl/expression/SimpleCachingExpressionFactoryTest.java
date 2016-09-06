@@ -29,7 +29,7 @@ public class SimpleCachingExpressionFactoryTest {
 
     @Test
     public void testCreateSimpleExpressionCache() {
-        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>()));
+        ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true));
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         
         Expression expr1 = ef.createSimpleExpression(expressionString);

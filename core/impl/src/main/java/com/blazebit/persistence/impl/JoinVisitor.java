@@ -15,10 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
@@ -53,9 +50,14 @@ public class JoinVisitor extends VisitorAdapter {
 
     @Override
     public void visit(PathExpression expression) {
-        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, fromClause, false, false, joinRequired);
+        joinManager.implicitJoin(expression, joinWithObjectLeafAllowed, null, fromClause, false, false, joinRequired);
     }
-    
+
+    @Override
+    public void visit(TreatExpression expression) {
+        throw new IllegalArgumentException("Treat should not be a root of an expression: " + expression.toString());
+    }
+
     public boolean isJoinRequired() {
         return joinRequired;
     }

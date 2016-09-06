@@ -31,7 +31,7 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
 
     
     public AbstractTestExpressionFactory(Set<String> aggregateFunctions) {
-		super(aggregateFunctions);
+		super(aggregateFunctions, true);
 	}
 
 	@Override

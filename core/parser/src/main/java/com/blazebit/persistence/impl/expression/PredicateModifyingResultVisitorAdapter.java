@@ -61,6 +61,12 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
+    public Expression visit(TreatExpression expression) {
+        expression.getExpression().accept(this);
+        return expression;
+    }
+
+    @Override
     public Expression visit(PropertyExpression expression) {
         return expression;
     }

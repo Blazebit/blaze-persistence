@@ -118,6 +118,10 @@ public class AbstractParserTest {
         return ef.createSimpleExpression(expr);
     }
 
+    protected Expression parseJoin(String expr) {
+        return ef.createJoinPathExpression(expr);
+    }
+
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
         return ef.createPredicateExpression(expr, allowQuantifiedPredicates);
     }
@@ -166,6 +170,23 @@ public class AbstractParserTest {
         return p;
     }
 
+    protected PathExpression path(Object... pathElements) {
+        PathExpression p = new PathExpression(new ArrayList<PathElementExpression>());
+        for (Object pathElem : pathElements) {
+            if (pathElem instanceof String) {
+                String property = (String) pathElem;
+                if (property.contains("[")) {
+                    p.getExpressions().add(array(property));
+                } else {
+                    p.getExpressions().add(new PropertyExpression(property));
+                }
+            } else {
+                p.getExpressions().add((PathElementExpression) pathElem);
+            }
+        }
+        return p;
+    }
+
     protected ArrayExpression array(String expr) {
         int firstIndex = expr.indexOf('[');
         int lastIndex = expr.indexOf(']');
@@ -180,6 +201,10 @@ public class AbstractParserTest {
             indexExpr = path(index.split("\\."));
         }
         return new ArrayExpression(new PropertyExpression(base), indexExpr);
+    }
+
+    protected TreatExpression treat(PathExpression path, String type) {
+        return new TreatExpression(path, type);
     }
 
     protected ParameterExpression parameter(String name) {

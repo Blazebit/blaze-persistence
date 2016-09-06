@@ -22,10 +22,12 @@ import JPQL_lexer;
 private boolean allowOuter = false;
 private boolean allowCaseWhen = false;
 private boolean allowQuantifiedPredicates = false;
-public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen, boolean allowQuantifiedPredicates){
+private boolean allowTreatJoinExtension = false;
+public JPQLSelectExpressionParser(TokenStream input, boolean allowCaseWhen, boolean allowQuantifiedPredicates, boolean allowTreatJoinExtension){
        this(input);
        this.allowCaseWhen = allowCaseWhen;
        this.allowQuantifiedPredicates = allowQuantifiedPredicates;
+       this.allowTreatJoinExtension = allowTreatJoinExtension;
 }
 
 }
@@ -38,6 +40,25 @@ parseOrderByClause : state_field_path_expression EOF
 parsePath : state_field_path_expression EOF
           | single_element_path_expression EOF
           ;
+
+parseJoinPath : join_association_path_expression EOF
+              ;
+
+join_association_path_expression
+          : simple_subpath '.' general_path_element                                             #SimpleJoinPathExpression
+          // TODO: I am not sure this is actually necessary. Maybe we leave it in the grammar but the treated_subpath will be replaced by a join node
+          | {allowTreatJoinExtension == true}? treated_subpath  '.' general_path_element        #ExtendedJoinPathExpression
+          | single_element_path_expression                                                      #SingleJoinElementExpression
+          | TREAT '(' join_path_expression AS subtype ')'                                       #TreatJoinPathExpression
+          ;
+
+join_path_expression
+    : simple_subpath '.' general_path_element                                                    #SimplePath
+	| {allowTreatJoinExtension == true}? TREAT '(' identifier AS subtype ')' '.' simple_subpath  #TreatedRootPath
+	;
+
+subtype : identifier
+        ;
 
 parseSimpleExpression
     : simple_expression EOF 
@@ -78,13 +99,20 @@ key_value_expression : name=KEY '('collection_valued_path_expression')'
                      | name=VALUE '('collection_valued_path_expression')'
                      ;
 
+treated_key_value_expression
+    :
+    // I think this is an error in the JPQL grammar as it doesn't make sense to do TREAT(ENTRY(...))
+    //| TREAT '(' qualified_identification_variable AS subtype ')'
+    | TREAT '(' key_value_expression AS subtype ')'
+    ;
+
 qualified_identification_variable : name=ENTRY '('collection_valued_path_expression')' # EntryFunction
                                   | key_value_expression #KeyValueExpression
                                   ;
 
 single_valued_path_expression
     : qualified_identification_variable
-    // TODO: Add treat here
+    | treated_key_value_expression
     | state_field_path_expression
     | single_element_path_expression
     ;
@@ -113,7 +141,14 @@ array_expression : simple_path_element '[' Input_parameter ']' #ArrayExpressionP
 
 
 
-general_subpath : general_path_start('.'general_path_element)*
+general_subpath : simple_subpath
+                | treated_subpath
+                ;
+
+simple_subpath : general_path_start ('.'general_path_element)*
+               ;
+
+treated_subpath : TREAT '(' general_subpath AS subtype ')' ('.'general_path_element)*
                 ;
 
 state_field_path_expression : path
@@ -485,6 +520,8 @@ keyword :KEY
        | EMPTY
        | MEMBER
        | OF
+       | TREAT
+       | AS
        | Outer_function
        ;
 

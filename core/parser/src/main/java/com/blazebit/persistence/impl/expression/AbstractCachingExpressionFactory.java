@@ -52,6 +52,18 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
+    public Expression createJoinPathExpression(final String expression) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.JoinPathExpression", expression, new Supplier<Expression>() {
+
+            @Override
+            public Expression get() {
+                return delegate.createJoinPathExpression(expression);
+            }
+
+        });
+    }
+
+    @Override
     public Expression createSimpleExpression(final String expression) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", expression, new Supplier<Expression>() {
 

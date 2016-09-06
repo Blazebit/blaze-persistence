@@ -34,8 +34,7 @@ import javax.persistence.OneToMany;
  * @author Moritz Becker
  * @since 1.0
  */
-//TODO: Re-enable when HHH-10265 is fixed
-//@Entity
+@Entity
 @Inheritance
 @DiscriminatorColumn(name = "project_leader_type")
 public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>>> implements Serializable {

@@ -74,7 +74,7 @@ public class ParserPerformanceTest {
     private void doTest(String expression) {
         JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
         CommonTokenStream tokens = new CommonTokenStream(l);
-        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, true, true);
+        JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, true, true, true);
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
         p.setErrorHandler(new BailErrorStrategy());
         

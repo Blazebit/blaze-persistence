@@ -177,6 +177,36 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 		return sb.toString();
 	}
 
+	protected String treatRoot(String path, Class<?> type, String property) {
+	    if (jpaProvider.supportsRootTreat()) {
+	        return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            return path + "." + property;
+        }
+
+        throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+    }
+
+    protected String treatJoin(String path, Class<?> type) {
+        if (jpaProvider.supportsRootTreat()) {
+            return "TREAT(" + path + " AS " + type.getSimpleName() + ")";
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            return path;
+        }
+
+        throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+    }
+
+    protected String treatJoin(String path, Class<?> type, String property) {
+        if (jpaProvider.supportsRootTreat()) {
+            return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
+        } else if (jpaProvider.supportsSubtypePropertyResolving()) {
+            return path + "." + property;
+        }
+
+        throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
+    }
+
     protected String renderNullPrecedence(String expression, String order, String nulls) {
     	return renderNullPrecedence(expression, expression, order, nulls);
     }

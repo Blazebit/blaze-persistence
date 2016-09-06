@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Set;
 
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 
@@ -31,13 +32,13 @@ public class ParameterMappingListAttributeImpl<X, Y> extends AbstractParameterMa
 
     private final boolean isIndexed;
     
-    public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews) {
+    public ParameterMappingListAttributeImpl(MappingConstructor<X> mappingConstructor, int index, Annotation mapping, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         super(mappingConstructor, index, mapping, entityViews, false);
         
         if (isIgnoreIndex()) {
         	this.isIndexed = false;
         } else {
-        	this.isIndexed = MetamodelUtils.isIndexedList(mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+        	this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, mappingConstructor.getDeclaringType().getEntityClass(), mapping);
         }
     }
 

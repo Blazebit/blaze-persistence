@@ -207,6 +207,7 @@ public class GeneralParserTest extends AbstractParserTest {
         assertEquals(path("versions[test.x.y]"), result);
     }
 
+    // TODO: #210
     @Ignore("#210")
     @Test
     public void testArrayIndexArithmetic() {
@@ -219,6 +220,7 @@ public class GeneralParserTest extends AbstractParserTest {
         assertEquals(expected, result);
     }
 
+    // TODO: #210
     @Ignore("#210")
     @Test
     public void testArrayIndexArithmeticMixed() {
@@ -231,6 +233,7 @@ public class GeneralParserTest extends AbstractParserTest {
         assertEquals(expected, result);
     }
 
+    // TODO: #210
     @Ignore("#210")
     @Test
     public void testArrayIndexArithmeticLiteral() {
@@ -816,6 +819,138 @@ public class GeneralParserTest extends AbstractParserTest {
             foo("subqueryAlias"),
             PredicateQuantifier.ALL
         );
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatPredicate1() {
+        Predicate result = parsePredicate("TREAT(d AS GoodDocument).name IS NOT NULL", false);
+
+        Predicate expected = new IsNullPredicate(path(treat(path("d"), "GoodDocument"), "name"), true);
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatPredicate2() {
+        Predicate result = parsePredicate(":param = TREAT(d AS GoodDocument).name", false);
+
+        Predicate expected = new EqPredicate(parameter("param"), path(treat(path("d"), "GoodDocument"), "name"));
+        assertEquals(expected, result);
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testInvalidTreatRootPathOnly() {
+        // Can't have treat node as expression root
+        parse("TREAT(d AS GoodDocument)");
+    }
+
+    @Test
+    public void testTreatRootPathDerference() {
+        Expression result = parse("TREAT(d AS GoodDocument).goodName");
+
+        Expression expected = path(treat(path("d"), "GoodDocument"), "goodName");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatRootPathMultipleDerference() {
+        Expression result = parse("TREAT(d AS GoodDocument).embeddable.goodName");
+
+        Expression expected = path(treat(path("d"), "GoodDocument"), "embeddable", "goodName");
+        assertEquals(expected, result);
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testInvalidTreatSubpathPathOnly() {
+        // Can't have treat node as expression root
+        parse("TREAT(d.people AS Employee)");
+    }
+
+    @Test
+    public void testTreatSubpathPathDerference() {
+        Expression result = parse("TREAT(d.people AS Employee).name");
+
+        Expression expected = path(treat(path("d", "people"), "Employee"), "name");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatSubpathPathMultipleDerference() {
+        Expression result = parse("TREAT(d.people AS Employee).embeddable.name");
+
+        Expression expected = path(treat(path("d", "people"), "Employee"), "embeddable", "name");
+        assertEquals(expected, result);
+    }
+
+    @Test(expected = SyntaxErrorException.class)
+    public void testTreatDeepSubpathPathOnly() {
+        // Can't have treat node as expression root
+        parse("TREAT(d.embeddable.people AS Employee)");
+    }
+
+    @Test
+    public void testTreatDeepSubpathPathDerference() {
+        Expression result = parse("TREAT(d.embeddable.people AS Employee).name");
+
+        Expression expected = path(treat(path("d", "embeddable", "people"), "Employee"), "name");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatDeepSubpathPathMultipleDerference() {
+        Expression result = parse("TREAT(d.embeddable.people AS Employee).embeddable.name");
+
+        Expression expected = path(treat(path("d", "embeddable", "people"), "Employee"), "embeddable", "name");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatJoin() {
+        Expression result = parseJoin("TREAT(d.people AS Employee)");
+
+        Expression expected = treat(path("d", "people"), "Employee");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatJoinDeep() {
+        Expression result = parseJoin("TREAT(d.embeddable.people AS Employee)");
+
+        Expression expected = treat(path("d", "embeddable", "people"), "Employee");
+        assertEquals(expected, result);
+    }
+
+    /* NOTE: this is not JPA standard */
+
+    @Test
+    public void testJoinTreated() {
+        Expression result = parseJoin("TREAT(d AS GoodDocument).people");
+
+        Expression expected = path(treat(path("d"), "GoodDocument"), "people");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testDeepJoinTreated() {
+        Expression result = parseJoin("TREAT(d AS GoodDocument).embeddable.people");
+
+        Expression expected = path(treat(path("d"), "GoodDocument"), "embeddable", "people");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testTreatJoinTreated() {
+        Expression result = parseJoin("TREAT(TREAT(d AS GoodDocument).people AS Employee)");
+
+        Expression expected = treat(path(treat(path("d"), "GoodDocument"), "people"), "Employee");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testDeepTreatJoinTreated() {
+        Expression result = parseJoin("TREAT(TREAT(d AS GoodDocument).embeddable.people AS Employee)");
+
+        Expression expected = treat(path(treat(path("d"), "GoodDocument"), "embeddable", "people"), "Employee");
         assertEquals(expected, result);
     }
 }

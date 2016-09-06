@@ -50,6 +50,7 @@ import com.blazebit.persistence.spi.QueryTransformer;
  */
 public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
+    private final EntityMetamodel metamodel;
     private final List<QueryTransformer> queryTransformers;
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Map<String, DbmsDialect> dbmsDialects;
@@ -63,12 +64,15 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final Set<String> configuredRegisteredFunctions;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
+        final boolean compatibleMode = Boolean.valueOf(config.getProperty(ConfigurationProperties.COMPATIBLE_MODE));
+
+        this.metamodel = new EntityMetamodel(entityManagerFactory.getMetamodel());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
-        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions));
-        this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, expressionFactory);
+        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode));
+        this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, expressionFactory);
         this.properties = copyProperties(config.getProperties());
         
         EntityManagerFactory emf = entityManagerFactory;
@@ -100,6 +104,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             }
         }
         return aggregateFunctions;
+    }
+
+    public EntityMetamodel getMetamodel() {
+        return metamodel;
     }
 
     public List<QueryTransformer> getQueryTransformers() {

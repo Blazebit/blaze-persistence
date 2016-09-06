@@ -23,7 +23,7 @@ import javax.persistence.Entity;
  * @author Christian Beikov
  * @since 1.0
  */
-//@Entity
+@Entity
 @DiscriminatorValue("L")
 public class LargeProject extends Project<SeniorProjectLeader> {
 

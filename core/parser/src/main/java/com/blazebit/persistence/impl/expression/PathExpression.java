@@ -30,6 +30,7 @@ public class PathExpression extends AbstractExpression implements Expression {
     private PathReference pathReference;
     private boolean usedInCollectionFunction = false;
     private boolean collectionKeyPath;
+    private boolean hasTreatedSubpath;
 
     public PathExpression() {
         this(new ArrayList<PathElementExpression>(), false);
@@ -52,7 +53,7 @@ public class PathExpression extends AbstractExpression implements Expression {
     }
 
     @Override
-    public Expression clone() {
+    public PathExpression clone() {
         int size = pathProperties.size();
         List<PathElementExpression> newPathProperties = new ArrayList<PathElementExpression>(size);
 
@@ -121,10 +122,18 @@ public class PathExpression extends AbstractExpression implements Expression {
         this.collectionKeyPath = collectionKeyPath;
     }
 
+    public boolean hasTreatedSubpath() {
+        return hasTreatedSubpath;
+    }
+
+    public void setHasTreatedSubpath(boolean hasTreatedSubpath) {
+        this.hasTreatedSubpath = hasTreatedSubpath;
+    }
+
     /*
-     * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
-     * reference the same object, are equal.
-     */
+         * The following equals and hashCode implementation makes it possible that expressions which have different path properties but
+         * reference the same object, are equal.
+         */
     @Override
     public int hashCode() {
         int hash = 3;

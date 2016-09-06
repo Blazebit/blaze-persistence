@@ -197,7 +197,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                 pathElementExpr.add(new PropertyExpression(rootAlias));
                 pathElementExpr.add(new PropertyExpression(rootId));
                 PathExpression groupByExpr = new PathExpression(pathElementExpr);
-                joinManager.implicitJoin(groupByExpr, true, null, false, false, false);
+                joinManager.implicitJoin(groupByExpr, true, null, null, false, false, false);
                 
                 if (groupByManager.hasGroupBys() && !groupByManager.existsGroupBy(groupByExpr)) {
                     return generateSubquery(sizeArg, startClass);
@@ -212,11 +212,11 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                 String nodeLookupKey = originalNode.getAliasInfo().getAbsolutePath() + "." + sizeArg.getField();
                 PathReference generatedJoin = generatedJoins.get(nodeLookupKey);
                 if (generatedJoin == null) { 
-                    joinManager.implicitJoin(sizeArg, true, clause, false, false, true);
+                    joinManager.implicitJoin(sizeArg, true, null, clause, false, false, true);
                     generatedJoin = sizeArg.getPathReference();
                     generatedJoins.put(((JoinNode) generatedJoin.getBaseNode()).getAliasInfo().getAbsolutePath(), generatedJoin);
                 } else {
-                    sizeArg.setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField()));
+                    sizeArg.setPathReference(new SimplePathReference(generatedJoin.getBaseNode(), generatedJoin.getField(), null));
                 }
                 
                 if (distinctRequired == false) { 

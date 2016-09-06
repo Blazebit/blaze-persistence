@@ -57,6 +57,11 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
+    public void visit(TreatExpression expression) {
+        expression.getExpression().accept(this);
+    }
+
+    @Override
     public void visit(PropertyExpression expression) {
     }
 

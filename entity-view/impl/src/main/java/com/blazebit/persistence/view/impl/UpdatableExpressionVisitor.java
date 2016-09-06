@@ -156,6 +156,12 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
+    public void visit(TreatExpression expression) {
+        // NOTE: JPQL does not support treat in the SET clause
+        invalid(expression);
+    }
+
+    @Override
     public void visit(ParameterExpression expression) {
         invalid(expression);
     }

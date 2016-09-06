@@ -97,4 +97,14 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         return "OPERATOR('" + functionName + "',";
     }
 
+    @Override
+    public boolean supportsRootTreat() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsSubtypePropertyResolving() {
+        return false;
+    }
+
 }

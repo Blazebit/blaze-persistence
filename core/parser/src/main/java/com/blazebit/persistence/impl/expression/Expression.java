@@ -50,6 +50,8 @@ public interface Expression {
 
         public void visit(ArrayExpression expression);
 
+        public void visit(TreatExpression expression);
+
         public void visit(CompositeExpression expression);
 
         public void visit(LiteralExpression expression);
@@ -117,6 +119,8 @@ public interface Expression {
         public T visit(ParameterExpression expression);
 
         public T visit(ArrayExpression expression);
+
+        public T visit(TreatExpression expression);
 
         public T visit(CompositeExpression expression);
 

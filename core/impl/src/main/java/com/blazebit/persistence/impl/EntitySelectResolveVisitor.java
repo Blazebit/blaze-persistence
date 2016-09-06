@@ -12,17 +12,12 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.impl.expression.AggregateExpression;
-import com.blazebit.persistence.impl.expression.FunctionExpression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 
 /**
  * This visitor resolves entity references to their attributes. This is needed for entity references
  * in the select clause when used in combination with aggregate functions. We have to decompose the
- * entity and add the components to the group by because all component will end up in the select clause.
+ * entity and add the components to the group by because all components will end up in the select clause.
  * 
  * @author Christian Beikov
  * @since 1.0.5
@@ -80,6 +75,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
                 }
 
             });
+            // TODO: a polymorphic query will fail because we don't collect subtype properties
             sortedAttributes.addAll(entityType.getAttributes());
             for (Attribute<?, ?> attr : sortedAttributes) {
                 boolean resolve = false;
@@ -94,7 +90,7 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
                 if (resolve) {
                     PathExpression attrPath = new PathExpression(new ArrayList<PathElementExpression>(expression.getExpressions()));
-                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName()));
+                    attrPath.setPathReference(new SimplePathReference(baseNode, attr.getName(), null));
                     pathExpressions.add(attrPath);
                 }
             }

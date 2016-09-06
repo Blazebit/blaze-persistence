@@ -23,21 +23,24 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
+ * A visitor that can determine possible target types of a scalar expressions.
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
+public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 
     private final ManagedType<?> managedType;
-    private final Metamodel metamodel;
+    private final EntityMetamodel metamodel;
     private boolean parametersAllowed;
     private PathPosition currentPosition;
     private List<PathPosition> pathPositions;
@@ -103,7 +106,7 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    public MetamodelTargetResolvingExpressionVisitor(ManagedType<?> managedType, Metamodel metamodel) {
+    public ScalarTargetResolvingExpressionVisitor(ManagedType<?> managedType, EntityMetamodel metamodel) {
         this.managedType = managedType;
         this.metamodel = metamodel;
         this.parametersAllowed = false;
@@ -277,6 +280,14 @@ public class MetamodelTargetResolvingExpressionVisitor extends VisitorAdapter {
     
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
+    }
+
+    @Override
+    public void visit(TreatExpression expression) {
+        EntityType<?> type = metamodel.getEntity(expression.getType());
+        currentPosition.setMethod(null);
+        currentPosition.setCurrentClass(type.getJavaType());
+        currentPosition.setValueClass(type.getJavaType());
     }
 
     @Override

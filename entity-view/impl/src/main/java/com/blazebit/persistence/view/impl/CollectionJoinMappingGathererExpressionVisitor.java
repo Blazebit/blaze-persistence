@@ -25,12 +25,7 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import com.blazebit.persistence.impl.expression.ArrayExpression;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 
@@ -118,7 +113,7 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
     	}
     }
 
-    @Override
+	@Override
     public void visit(IsEmptyPredicate predicate) {
     	// NOTE: not sure if we should skip expressions of this predicate
         super.visit(predicate);
