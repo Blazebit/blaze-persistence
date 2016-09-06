@@ -16,15 +16,13 @@
 package com.blazebit.persistence.view.impl;
 
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CriteriaBuilder;
@@ -78,7 +76,7 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public class EntityViewManagerImpl implements EntityViewManager {
 
-    private final ViewMetamodel metamodel;
+    private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
     private final Map<String, Object> properties;
     private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
@@ -141,7 +139,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder) {
-        return EntityViewSettingHelper.apply(setting, this, criteriaBuilder);
+        return EntityViewSettingHelper.apply(setting, this, criteriaBuilder, null);
+    }
+
+    @Override
+    public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
+        return EntityViewSettingHelper.apply(setting, this, criteriaBuilder, entityViewRoot);
     }
 
 	public boolean isUnsafeDisabled() {
@@ -231,40 +234,54 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-	public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
+	public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, String entityViewRoot, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         if (viewType == null) {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
+    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, String entityViewRoot, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters) {
         ViewType<T> viewType = getMetamodel().view(clazz);
         if (viewType == null) {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
 
-    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
-        if (!viewType.getEntityClass().isAssignableFrom(criteriaBuilder.getResultType())) {
+    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
+        Class<?> entityClazz;
+        if (entityViewRoot != null && entityViewRoot.length() > 0) {
+            ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
+            PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), criteriaBuilder.getResultType());
+            ef.createPathExpression(entityViewRoot).accept(visitor);
+            Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
+            if (possibleTypes.size() > 1) {
+                throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + criteriaBuilder.getResultType() + "'!");
+            }
+            // It must have one, otherwise a parse error would have been thrown already
+            entityClazz = possibleTypes.iterator().next();
+        } else {
+            entityClazz = criteriaBuilder.getResultType();
+        }
+        if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
 
-        criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
+        criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor, entityViewRoot).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 
     @SuppressWarnings("unchecked")
-    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(FullQueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor) {
+    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(FullQueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot) {
     	ExpressionFactory ef = cb.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor);
+    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor, entityViewRoot);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {

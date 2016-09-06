@@ -17,11 +17,7 @@ package com.blazebit.persistence.view.impl.objectbuilder;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
@@ -297,21 +293,21 @@ public class ViewTypeObjectBuilderTemplate<T> {
             applySubqueryMapping((SubqueryAttribute<? super T, ?>) attribute, mappingList, parameterMappingList);
         } else {
             MappingAttribute<? super T, ?> mappingAttribute = (MappingAttribute<? super T, ?>) attribute;
-            if (attribute.isCollection()) {
-                PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) attribute;
-                boolean listKey = pluralAttribute.isIndexed() && attribute instanceof ListAttribute<?, ?>;
-                boolean mapKey = pluralAttribute.isIndexed() && attribute instanceof MapAttribute<?, ?, ?>;
+            if (mappingAttribute.isCollection()) {
+                PluralAttribute<? super T, ?, ?> pluralAttribute = (PluralAttribute<? super T, ?, ?>) mappingAttribute;
+                boolean listKey = pluralAttribute.isIndexed() && pluralAttribute instanceof ListAttribute<?, ?>;
+                boolean mapKey = pluralAttribute.isIndexed() && pluralAttribute instanceof MapAttribute<?, ?, ?>;
                 int startIndex = tupleOffset + mappingList.size();
 
                 if (listKey) {
                     featuresFound[FEATURE_INDEXED_COLLECTIONS] = true;
-                    applyCollectionFunctionMapping("INDEX", "_KEY", mappingAttribute, attribute, mappingList, parameterMappingList);
+                    applyCollectionFunctionMapping("INDEX", "_KEY", pluralAttribute, mappingList, parameterMappingList);
                 } else if (mapKey) {
                     featuresFound[FEATURE_INDEXED_COLLECTIONS] = true;
-                    applyCollectionFunctionMapping("KEY", "_KEY", mappingAttribute, attribute, mappingList, parameterMappingList);
+                    applyCollectionFunctionMapping("KEY", "_KEY", pluralAttribute, mappingList, parameterMappingList);
                 }
 
-                if (attribute.isSubview()) {
+                if (pluralAttribute.isSubview()) {
                     featuresFound[FEATURE_SUBVIEWS] = true;
 
                     int[] newIdPositions;
@@ -324,19 +320,18 @@ public class ViewTypeObjectBuilderTemplate<T> {
                         newIdPositions = idPositions;
                     }
 
-                    applySubviewMapping(attribute, newIdPositions, pluralAttribute.getElementType(), mappingAttribute, mappingList, parameterMappingList);
+                    applySubviewMapping(pluralAttribute, newIdPositions, pluralAttribute.getElementType(), mappingList, parameterMappingList);
                 } else if (mapKey) {
-                    applyCollectionFunctionMapping("VALUE", "", mappingAttribute, attribute, mappingList, parameterMappingList);
-//                    applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
+                    applyCollectionFunctionMapping("VALUE", "", pluralAttribute, mappingList, parameterMappingList);
                 } else {
-                    applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
+                    applyBasicMapping(pluralAttribute, mappingList, parameterMappingList);
                 }
 
                 if (listKey) {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                        if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                             tupleTransformatorFactory.add(new UpdatableIndexedListTupleListTransformer(idPositions, startIndex));
                         } else {
                             tupleTransformatorFactory.add(new IndexedListTupleListTransformer(idPositions, startIndex));
@@ -344,19 +339,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     }
                 } else if (mapKey) {
                     if (pluralAttribute.isSorted()) {
-                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                        if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                             tupleTransformatorFactory.add(new UpdatableSortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                         } else {
                             tupleTransformatorFactory.add(new SortedMapTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                         }
                     } else if (pluralAttribute.isOrdered()) {
-                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                        if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                             tupleTransformatorFactory.add(new UpdatableOrderedMapTupleListTransformer(idPositions, startIndex));
                         } else {
                             tupleTransformatorFactory.add(new OrderedMapTupleListTransformer(idPositions, startIndex));
                         }
                     } else {
-                        if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                        if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                             tupleTransformatorFactory.add(new UpdatableMapTupleListTransformer(idPositions, startIndex));
                         } else {
                             tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex));
@@ -368,7 +363,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                                     tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
                                 } else {
                                     tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
@@ -379,7 +374,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             if (pluralAttribute.isSorted()) {
                                 throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                             } else {
-                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                                     tupleTransformatorFactory.add(new UpdatableOrderedListTupleListTransformer(idPositions, startIndex));
                                 } else {
                                     tupleTransformatorFactory.add(new OrderedListTupleListTransformer(idPositions, startIndex));
@@ -388,19 +383,19 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             break;
                         case SET:
                             if (pluralAttribute.isSorted()) {
-                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                                     tupleTransformatorFactory.add(new UpdatableSortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                                 } else {
                                     tupleTransformatorFactory.add(new SortedSetTupleListTransformer(idPositions, startIndex, pluralAttribute.getComparator()));
                                 }
                             } else if (pluralAttribute.isOrdered()) {
-                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                                     tupleTransformatorFactory.add(new UpdatableOrderedSetTupleListTransformer(idPositions, startIndex));
                                 } else {
                                     tupleTransformatorFactory.add(new OrderedSetTupleListTransformer(idPositions, startIndex));
                                 }
                             } else {
-                                if (attribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) attribute).isUpdatable()) {
+                                if (pluralAttribute instanceof MethodAttribute<?, ?> && ((MethodAttribute<?, ?>) pluralAttribute).isUpdatable()) {
                                     tupleTransformatorFactory.add(new UpdatableSetTupleListTransformer(idPositions, startIndex));
                                 } else {
                                     tupleTransformatorFactory.add(new SetTupleListTransformer(idPositions, startIndex));
@@ -411,34 +406,34 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             throw new IllegalArgumentException("Ignoring the index on the attribute '" + pluralAttribute + "' is not possible!");
                     }
                 }
-            } else if (((SingularAttribute<?, ?>) attribute).isQueryParameter()) {
+            } else if (((SingularAttribute<?, ?>) mappingAttribute).isQueryParameter()) {
                 featuresFound[FEATURE_PARAMETERS] = true;
                 applyQueryParameterMapping(mappingAttribute, mappingList, parameterMappingList);
-            } else if (attribute.isSubview()) {
+            } else if (mappingAttribute.isSubview()) {
                 featuresFound[FEATURE_SUBVIEWS] = true;
-                applySubviewMapping(attribute, idPositions, attribute.getJavaType(), mappingAttribute, mappingList, parameterMappingList);
+                applySubviewMapping(mappingAttribute, idPositions, mappingAttribute.getJavaType(), mappingList, parameterMappingList);
             } else {
-                applyBasicMapping(mappingAttribute, attribute, mappingList, parameterMappingList);
+                applyBasicMapping(mappingAttribute, mappingList, parameterMappingList);
             }
         }
     }
 
-    private void applyCollectionFunctionMapping(String function, String aliasSuffix, MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {
+    private void applyCollectionFunctionMapping(String function, String aliasSuffix, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         Object[] mapping = new Object[2];
         mapping[0] = function + "(" + getMapping(mappingPrefix, mappingAttribute) + ")";
-        String alias = getAlias(aliasPrefix, attribute);
+        String alias = getAlias(aliasPrefix, mappingAttribute);
         mapping[1] = alias == null ? null : alias + aliasSuffix;
         mappingList.add(mapping);
         parameterMappingList.add(null);
     }
 
-    private void applySubviewMapping(Attribute<?, ?> attribute, int[] idPositions, Class<?> subviewClass, MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
+    private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, int[] idPositions, Class<?> subviewClass, List<Object> mappingList, List<String> parameterMappingList) {
         @SuppressWarnings("unchecked")
 		ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
 
 		if (managedViewType instanceof ViewType<?>) {
             ViewType<Object[]> subviewType = (ViewType<Object[]>) managedViewType;
-            String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
+            String subviewAliasPrefix = getAlias(aliasPrefix, mappingAttribute);
             List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
             String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
             int[] subviewIdPositions = new int[idPositions.length + 1];
@@ -455,7 +450,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             tupleTransformatorFactory.add(template.tupleTransformatorFactory);
             tupleTransformatorFactory.add(new SubviewTupleTransformerFactory(template));
 		} else {
-            String subviewAliasPrefix = getAlias(aliasPrefix, attribute);
+            String subviewAliasPrefix = getAlias(aliasPrefix, mappingAttribute);
             List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
             String subviewIdPrefix = getMapping(idPrefix, mappingAttribute);
             int[] subviewIdPositions = idPositions;
@@ -472,10 +467,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
 		}
     }
 
-    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, Attribute<?, ?> attribute, List<Object> mappingList, List<String> parameterMappingList) {
+    private void applyBasicMapping(MappingAttribute<? super T, ?> mappingAttribute, List<Object> mappingList, List<String> parameterMappingList) {
         Object[] mapping = new Object[2];
         mapping[0] = getMapping(mappingPrefix, mappingAttribute);
-        mapping[1] = getAlias(aliasPrefix, attribute);
+        mapping[1] = getAlias(aliasPrefix, mappingAttribute);
         mappingList.add(mapping);
         parameterMappingList.add(null);
     }
@@ -611,16 +606,22 @@ public class ViewTypeObjectBuilderTemplate<T> {
     	private final ExpressionFactory ef;
         private final ViewType<T> viewType;
         private final MappingConstructor<T> constructor;
+        private final String entityViewRoot;
 
-        public Key(ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> constructor) {
+        public Key(ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> constructor, String entityViewRoot) {
         	this.ef = ef;
             this.viewType = viewType;
             this.constructor = constructor;
+            this.entityViewRoot = entityViewRoot;
         }
 
         public ViewTypeObjectBuilderTemplate<T> createValue(Metamodel metamodel, EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[]{ 0 };
-            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), null, null, idPositions, 0, metamodel, evm, ef, viewType, constructor, proxyFactory);
+            List<String> mappingPrefixes = null;
+            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                mappingPrefixes = Arrays.asList(entityViewRoot);
+            }
+            return new ViewTypeObjectBuilderTemplate<T>(viewType.getName(), mappingPrefixes, entityViewRoot, idPositions, 0, metamodel, evm, ef, viewType, constructor, proxyFactory);
         }
 
         @Override
@@ -629,6 +630,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             hash = 83 * hash + (this.ef != null ? this.ef.hashCode() : 0);
             hash = 83 * hash + (this.viewType != null ? this.viewType.hashCode() : 0);
             hash = 83 * hash + (this.constructor != null ? this.constructor.hashCode() : 0);
+            hash = 83 * hash + (this.entityViewRoot != null ? this.entityViewRoot.hashCode() : 0);
             return hash;
         }
 
@@ -648,6 +650,9 @@ public class ViewTypeObjectBuilderTemplate<T> {
                 return false;
             }
             if (this.constructor != other.constructor && (this.constructor == null || !this.constructor.equals(other.constructor))) {
+                return false;
+            }
+            if (this.entityViewRoot != other.entityViewRoot && (this.entityViewRoot == null || !this.entityViewRoot.equals(other.entityViewRoot))) {
                 return false;
             }
             return true;

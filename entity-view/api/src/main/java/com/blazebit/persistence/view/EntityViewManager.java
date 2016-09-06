@@ -67,4 +67,18 @@ public interface EntityViewManager {
      *         {@linkplain CriteriaBuilder} otherwise
      */
     public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder);
+
+    /**
+     * Applies the entity view setting to the given entity view root of the criteria builder.
+     *
+     * @param setting         The setting that should be applied
+     * @param criteriaBuilder The criteria builder on which the setting should be applied
+     * @param entityViewRoot  The relation from which the entity view should be materialized
+     * @param <T>             The type of the entity view
+     * @param <Q>             {@linkplain PaginatedCriteriaBuilder} if paginated, {@linkplain CriteriaBuilder} otherwise
+     * @return {@linkplain PaginatedCriteriaBuilder} if paginated,
+     *         {@linkplain CriteriaBuilder} otherwise
+     * @since 1.2.0
+     */
+    public <T, Q extends FullQueryBuilder<T, Q>> Q applySetting(EntityViewSetting<T, Q> setting, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot);
 }

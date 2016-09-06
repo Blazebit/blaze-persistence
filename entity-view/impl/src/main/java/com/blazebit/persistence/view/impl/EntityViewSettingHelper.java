@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -50,11 +51,11 @@ import com.blazebit.persistence.view.metamodel.ViewType;
 public final class EntityViewSettingHelper {
 
     @SuppressWarnings("unchecked")
-    public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder) {
+    public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-    	applyAttributeFilters(setting, evm, criteriaBuilder, ef);
-        applyAttributeSorters(setting, evm, criteriaBuilder, ef);
-        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), criteriaBuilder, setting.getOptionalParameters());
+    	applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        applyAttributeSorters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, criteriaBuilder, setting.getOptionalParameters());
         applyOptionalParameters(setting, normalCb);
 
         if (setting.isPaginated()) {
@@ -87,7 +88,7 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static void applyFilter(Object key, AttributeFilterProvider filterProvider, EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb) {
+    private static void applyFilter(String entityViewRoot, Object key, AttributeFilterProvider filterProvider, EntityViewSetting<?, ?> setting, CriteriaBuilder<?> cb, ExpressionFactory ef) {
         if (key instanceof SubqueryAttribute<?, ?>) {
             SubqueryAttribute<?, ?> subqueryAttribute = (SubqueryAttribute<?, ?>) key;
             SubqueryProvider provider = SubqueryProviderHelper.getFactory(subqueryAttribute.getSubqueryProvider()).create(cb, setting.getOptionalParameters());
@@ -95,24 +96,38 @@ public final class EntityViewSettingHelper {
             if (subqueryAttribute.getSubqueryExpression().isEmpty()) {
                 filterProvider.apply(cb, null, null, provider);
             } else {
+                if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                    // TODO: need to prefix the subqueryExpression with entityViewRoot
+                    throw new UnsupportedOperationException("Filtering by a subquery that is applied on an entity view with a custom root is not yet supported!");
+                }
+
                 filterProvider.apply(cb, subqueryAttribute.getSubqueryAlias(), subqueryAttribute.getSubqueryExpression(), provider);
             }
         } else {
-            filterProvider.apply(cb, (String) key);
+            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                Expression expr = ef.createSimpleExpression((String) key, false);
+                SimpleQueryGenerator generator = new PrefixingQueryGenerator(Arrays.asList(entityViewRoot));
+                StringBuilder sb = new StringBuilder();
+                generator.setQueryBuffer(sb);
+                expr.accept(generator);
+                filterProvider.apply(cb, sb.toString());
+            } else {
+                filterProvider.apply(cb, (String) key);
+            }
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef) {
+    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, String entityViewRoot) {
         ViewMetamodel metamodel = evm.getMetamodel();
         Metamodel jpaMetamodel = cb.getMetamodel();
         ViewType<?> viewType = metamodel.view(setting.getEntityViewClass());
 
-        applyAttributeFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType);
-        applyAttributeNamedFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType);
-        applyViewFilters(setting, evm, cb, viewType);
+        applyAttributeFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType, entityViewRoot);
+        applyAttributeNamedFilters(setting, evm, cb, ef, metamodel, jpaMetamodel, viewType, entityViewRoot);
+        applyViewFilters(setting, evm, cb, viewType, entityViewRoot);
     }
 
-    private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ViewType<?> viewType) throws IllegalArgumentException {
+    private static void applyViewFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
         // Add named view filter
         for (String filterName : setting.getViewFilters()) {
             ViewFilterMapping filterMapping = viewType.getViewFilter(filterName);
@@ -122,14 +137,19 @@ public final class EntityViewSettingHelper {
                     + "' in the entity view type '" + viewType.getJavaType()
                         .getName() + "'");
             }
-            
+
+            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                // TODO: need to prefix all paths with entityViewRoot
+                throw new UnsupportedOperationException("Applying a view filter on an entity view with a custom root is not yet supported!");
+            }
+
             // TODO: allow parameter injection
             ViewFilterProvider provider = evm.createViewFilter(filterMapping.getFilterClass());
             provider.apply(cb);
         }
     }
 
-    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType) throws IllegalArgumentException {
+    private static void applyAttributeFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
         for (Map.Entry<String, Object> attributeFilterEntry : setting.getAttributeFilters().entrySet()) {
             String attributeName = attributeFilterEntry.getKey();
             Object filterValue = attributeFilterEntry.getValue();
@@ -171,11 +191,11 @@ public final class EntityViewSettingHelper {
             }
 
             AttributeFilterProvider filter = evm.createAttributeFilter(filterClass, expectedType, filterValue);
-            applyFilter(expression, filter, setting, cb);
+            applyFilter(entityViewRoot, expression, filter, setting, cb, ef);
         }
     }
 
-    private static void applyAttributeNamedFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType) throws IllegalArgumentException {
+    private static void applyAttributeNamedFilters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, ViewMetamodel metamodel, Metamodel jpaMetamodel, ViewType<?> viewType, String entityViewRoot) throws IllegalArgumentException {
         for (String filterName : setting.getAttributeNamedFilters()) {
             AttributeFilterMapping filterMapping = viewType.getAttributeFilter(filterName);
 
@@ -203,11 +223,11 @@ public final class EntityViewSettingHelper {
                 expression = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             }
             
-            applyFilter(expression, provider, setting, cb);
+            applyFilter(entityViewRoot, expression, provider, setting, cb, ef);
         }
     }
     
-    private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef) {
+    private static void applyAttributeSorters(EntityViewSetting<?, ?> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> cb, ExpressionFactory ef, String entityViewRoot) {
         ViewMetamodel metamodel = evm.getMetamodel();
         Metamodel jpaMetamodel = cb.getMetamodel();
         ViewType<?> viewType = metamodel.view(setting.getEntityViewClass());
@@ -221,16 +241,28 @@ public final class EntityViewSettingHelper {
             if (attributeInfo.entityAttribute) {
                 mapping = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
             } else {
-                mapping = resolveAttributeAlias(viewType, attributeSorterEntry.getKey());
+                mapping = resolveAttributeAlias(viewType, entityViewRoot, attributeSorterEntry.getKey());
             }
 
+            if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                mapping = entityViewRoot + '.' + mapping;
+            }
+
+            // TODO: order by subquery? #195
             sorter.apply(cb, mapping);
         }
     }
 
-    private static String resolveAttributeAlias(ViewType<?> viewType, String attributeName) {
+    private static String resolveAttributeAlias(ViewType<?> viewType, String entityViewRoot, String attributeName) {
         String viewTypeName = viewType.getName();
-        StringBuilder sb = new StringBuilder(viewTypeName.length() + attributeName.length() + 1);
+        StringBuilder sb;
+        if (entityViewRoot != null && entityViewRoot.length() > 0) {
+            sb = new StringBuilder(entityViewRoot.length() + viewTypeName.length() + attributeName.length() + 2);
+            sb.append(entityViewRoot)
+                    .append('_');
+        } else {
+            sb = new StringBuilder(viewTypeName.length() + attributeName.length() + 1);
+        }
         sb.append(viewTypeName)
             .append('_');
 

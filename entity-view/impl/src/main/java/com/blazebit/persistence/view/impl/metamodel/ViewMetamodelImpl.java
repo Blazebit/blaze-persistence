@@ -116,6 +116,10 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         }
     }
 
+    public EntityMetamodel getEntityMetamodel() {
+        return metamodel;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
     public <X> ViewType<X> view(Class<X> clazz) {

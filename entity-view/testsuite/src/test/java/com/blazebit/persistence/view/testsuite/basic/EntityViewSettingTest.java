@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.view.testsuite.basic.model.CustomRootPersonView;
+import com.blazebit.persistence.view.testsuite.basic.model.PersonView;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +38,8 @@ import com.blazebit.persistence.view.testsuite.basic.model.DocumentWithEntityVie
 import com.blazebit.persistence.view.testsuite.basic.model.FilteredDocument;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
+
+import java.util.List;
 
 /**
  *
@@ -160,6 +164,29 @@ public class EntityViewSettingTest extends AbstractEntityViewTest {
         } catch (IllegalArgumentException ex) {
             // Ok
         }
+    }
+
+    @Test
+    public void testEntityViewSettingCustomRoot() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(CustomRootPersonView.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+
+        // Base setting
+        EntityViewSetting<CustomRootPersonView, CriteriaBuilder<CustomRootPersonView>> setting = EntityViewSetting.create(CustomRootPersonView.class);
+
+        // Query
+        CriteriaBuilder<Document> cb = cbf.create(em, Document.class);
+        setting.addAttributeFilter("name", "pers1");
+        CriteriaBuilder<CustomRootPersonView> criteriaBuilder = evm.applySetting(setting, cb, "owner");
+        assertEquals("SELECT document.owner.id AS CustomRootPersonView_id, owner_1.name AS CustomRootPersonView_name " +
+                        "FROM Document document JOIN document.owner owner_1 " +
+                        "WHERE owner_1.name <> :param_0", criteriaBuilder.getQueryString());
+        List<CustomRootPersonView> result = criteriaBuilder.getResultList();
+
+        assertEquals(2, result.size());
+        assertEquals("pers2", result.get(0).getName());
+        assertEquals("pers2", result.get(1).getName());
     }
     
     // TODO: needs more tests
