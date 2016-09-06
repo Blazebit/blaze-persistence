@@ -54,6 +54,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public String getNullExpression() {
+        return "NULL";
+    }
+
+    @Override
     public String escapeCharacter(char character) {
         return Character.toString(character);
     }

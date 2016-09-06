@@ -22,6 +22,7 @@ import com.blazebit.persistence.Keyset;
 import com.blazebit.persistence.impl.OrderByExpression;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.ResolvingQueryGenerator;
+import com.blazebit.persistence.impl.SimpleQueryGenerator;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -66,7 +67,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
         boolean generateEqualPredicate = true;
         int brackets = 0;
 
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
 
         // We wrap the whole thing in brackets
         brackets++;
@@ -132,7 +133,7 @@ public class KeysetManager extends AbstractKeysetBuilderEndedListener {
             sb.append(')');
         }
 
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     private void applyKeysetNotNullableItem(OrderByExpression orderByExpr, StringBuilder sb, Expression expr, int i, Serializable[] key, KeysetMode keysetMode) {

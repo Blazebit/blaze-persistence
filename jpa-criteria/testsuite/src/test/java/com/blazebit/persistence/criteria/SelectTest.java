@@ -104,7 +104,7 @@ public class SelectTest extends AbstractCoreTest {
                 contacts.key().type()
         );
 
-        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(contact), TYPE(partner), TYPE(KEY(contact)) FROM Document document JOIN document.contacts contact JOIN document.partners partner JOIN document.people myPerson", cq.getQueryString());
+        assertEquals("SELECT TYPE(document), TYPE(document.id), TYPE(myPerson), TYPE(" + joinAliasValue("contact") + "), TYPE(partner), TYPE(KEY(contact)) FROM Document document JOIN document.contacts contact JOIN document.partners partner JOIN document.people myPerson", cq.getQueryString());
     }
 
     @Test
@@ -126,6 +126,7 @@ public class SelectTest extends AbstractCoreTest {
                 Document d = new Document("abc", p);
                 em.persist(p);
                 em.persist(d);
+                em.flush(); // required for datanucleus
                 return d.getId();
             }
         });
@@ -241,10 +242,10 @@ public class SelectTest extends AbstractCoreTest {
                 + caseWhenAge("1.0D", "2.0D") + ", "
                 + caseWhenAge("1.1BD", "2.1BD") + ", "
                 + caseWhenAge("1BI", "2BI") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
-                + caseWhenAge("{ts '2016-01-01 00:00:00'}", "{ts '2016-10-10 00:00:00'}") + ", "
+                + caseWhenAge("{ts '2016-01-01 00:00:00.000'}", "{ts '2016-10-10 00:00:00.000'}") + ", "
+                + caseWhenAge("{ts '2016-01-01 00:00:00.000'}", "{ts '2016-10-10 00:00:00.000'}") + ", "
                 + caseWhenAge("{d '2016-01-01'}", "{d '2016-10-10'}") + ", "
-                + caseWhenAge("{t '01:01:01'}", "{t '10:10:10'}") + ", "
+                + caseWhenAge("{t '01:01:01.000'}", "{t '10:10:10.000'}") + ", "
                 + caseWhenAge("'1'", "'2'")
                 + " FROM Document document", cq.getQueryString());
     }
@@ -268,7 +269,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(cb.nullLiteral(Integer.class));
 
-        assertEquals("SELECT NULLIF(1,1) FROM Document document", cq.getQueryString());
+        assertEquals("SELECT " + staticJpaProvider.getNullExpression()+ " FROM Document document", cq.getQueryString());
     }
 
     @Test
@@ -364,7 +365,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(root.get(Document_.contacts));
 
-        assertEquals("SELECT contacts_1 FROM Document document LEFT JOIN document.contacts contacts_1", cq.getQueryString());
+        assertEquals("SELECT " + joinAliasValue("contacts_1") + " FROM Document document LEFT JOIN document.contacts contacts_1", cq.getQueryString());
     }
 
     @Test

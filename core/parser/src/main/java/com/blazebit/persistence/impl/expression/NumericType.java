@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 12.07.2016.
+ *
+ * @author Moritz Becker
+ * @since 1.2
  */
 public enum NumericType {
 

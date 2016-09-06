@@ -36,7 +36,7 @@ public class GePredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<
 
     @Override
     protected QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        return new GePredicate(left, right, quantifier);
+        return new GePredicate(left, right, quantifier, false);
     }
 
 }

@@ -27,6 +27,7 @@ import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -58,14 +59,14 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
 
     @Override
     public RestrictionBuilder<JoinOnBuilder<T>> on(String expression) {
-        Expression leftExpression = expressionFactory.createSimpleExpression(expression);
+        Expression leftExpression = expressionFactory.createSimpleExpression(expression, false);
         return rootPredicate.startBuilder(new RestrictionBuilderImpl<JoinOnBuilder<T>>(this, rootPredicate, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
     public T onExpression(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         predicate.accept(parameterManager.getParameterRegistrationVisitor());
         
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
@@ -77,7 +78,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     @Override
     public MultipleSubqueryInitiator<T> onExpressionSubqueries(String expression) {
         rootPredicate.verifyBuilderEnded();
-        Predicate predicate = expressionFactory.createPredicateExpression(expression, false);
+        Predicate predicate = expressionFactory.createBooleanExpression(expression, false);
         predicate.accept(parameterManager.getParameterRegistrationVisitor());
         
         MultipleSubqueryInitiator<T> initiator = new MultipleSubqueryInitiatorImpl<T>(result, predicate, new ExpressionBuilderEndedListener() {
@@ -96,7 +97,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     }
 
     @Override
-    public Predicate getPredicate() {
+    public CompoundPredicate getPredicate() {
         return rootPredicate.getPredicate();
     }
 

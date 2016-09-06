@@ -25,7 +25,7 @@ if [ "$TRAVIS_REPO_SLUG" == "Blazebit/blaze-persistence" ] &&
     [ "$RDBMS" == "h2" ]; then
   exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install
 else
- exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite" -am
+ exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am
 fi
 
 

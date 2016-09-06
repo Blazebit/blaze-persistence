@@ -24,7 +24,9 @@ import javax.persistence.Tuple;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
+import javax.persistence.metamodel.Attribute;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.googlecode.catchexception.CatchException;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,6 +38,7 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Person_;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -115,6 +118,8 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/35
+    @Category(NoDatanucleus.class)
     public void listStringMapEmbeddableJoinWithFunctions() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

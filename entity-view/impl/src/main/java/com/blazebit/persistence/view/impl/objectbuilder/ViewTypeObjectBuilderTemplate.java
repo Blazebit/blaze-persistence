@@ -514,7 +514,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private String getMapping(List<String> prefixParts, String mapping) {
         if (prefixParts != null && prefixParts.size() > 0) {
-            Expression expr = ef.createSimpleExpression(mapping);
+            Expression expr = ef.createSimpleExpression(mapping, false);
             SimpleQueryGenerator generator = new PrefixingQueryGenerator(prefixParts);
             StringBuilder sb = new StringBuilder();
             generator.setQueryBuffer(sb);

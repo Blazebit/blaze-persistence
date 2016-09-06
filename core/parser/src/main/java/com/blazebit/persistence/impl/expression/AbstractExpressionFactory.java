@@ -18,22 +18,13 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
+
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -45,11 +36,14 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     private final boolean allowTreatJoinExtension;
+    private final boolean optimize;
     private final Set<String> aggregateFunctions;
+    private final ExpressionOptimizer optimizer = new ExpressionOptimizer();
 
-    protected AbstractExpressionFactory(Set<String> aggregateFunctions, boolean allowTreatJoinExtension) {
+    protected AbstractExpressionFactory(Set<String> aggregateFunctions, boolean allowTreatJoinExtension, boolean optimize) {
         this.aggregateFunctions = aggregateFunctions;
         this.allowTreatJoinExtension = allowTreatJoinExtension;
+        this.optimize = optimize;
     }
 
     private Expression createExpression(RuleInvoker ruleInvoker, String expression) {
@@ -74,22 +68,26 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             LOG.finest(ctx.toStringTree());
         }
 
-        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions);
-        return visitor.visit(ctx);
+        JPQLSelectExpressionVisitorImpl visitor = new JPQLSelectExpressionVisitorImpl(tokens, aggregateFunctions, Collections.EMPTY_MAP, Collections.EMPTY_MAP);
+        Expression parsedExpression = visitor.visit(ctx);
+        if (optimize) {
+            parsedExpression = parsedExpression.accept(optimizer);
+        }
+        return parsedExpression;
     }
 
     protected abstract RuleInvoker getSimpleExpressionRuleInvoker();
 
     @Override
     public PathExpression createPathExpression(String expression) {
-        CompositeExpression comp = (CompositeExpression) createExpression(new RuleInvoker() {
+        PathExpression path = (PathExpression) createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parsePath();
             }
-        }, expression);
-        return (PathExpression) comp.getExpressions().get(0);
+        }, expression, false, false, false);
+        return path;
     }
 
     @Override
@@ -111,12 +109,12 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseOrderByClause();
             }
-        }, expression, false, true, false);
+        }, expression, false, false, false);
     }
 
     @Override
-    public Expression createSimpleExpression(String expression) {
-        return createExpression(getSimpleExpressionRuleInvoker(), expression);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
+        return createExpression(getSimpleExpressionRuleInvoker(), expression, true, allowQuantifiedPredicates, false);
     }
 
     @Override
@@ -127,7 +125,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseCaseOperandExpression();
             }
-        }, expression);
+        }, expression, false, false, false);
     }
 
     @Override
@@ -138,7 +136,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseScalarExpression();
             }
-        }, expression, false, true, false);
+        }, expression, false, false, false);
     }
 
     @Override
@@ -149,7 +147,7 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseArithmeticExpression();
             }
-        }, expression, false, true, false);
+        }, expression, false, false, false);
     }
 
     @Override
@@ -160,44 +158,28 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseStringExpression();
             }
-        }, expression, false, true, false);
+        }, expression, false, false, false);
     }
 
     @Override
-    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions) {
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions) {
         if (parameterOrLiteralExpressions == null) {
             throw new NullPointerException("parameterOrLiteralExpressions");
         }
         if (parameterOrLiteralExpressions.length == 0) {
             throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
         }
-        
-        Expression expr = createInItemExpression(parameterOrLiteralExpressions[0]);
-        
-        if (parameterOrLiteralExpressions.length == 1 && expr instanceof ParameterExpression) {
-            return expr;
+
+        List<Expression> inItemExpressions = new ArrayList<Expression>();
+        for (String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression));
         }
-        
-        CompositeExpression composite;
-        if (expr instanceof CompositeExpression) {
-            composite = (CompositeExpression) expr;
-        } else {
-            composite = new CompositeExpression(new ArrayList<Expression>(parameterOrLiteralExpressions.length * 2));
-            composite.append("(");
-            composite.append(expr);
-        }
-        
-        for (int i = 1; i < parameterOrLiteralExpressions.length; i++) {
-            composite.append(",");
-            composite.append(createInItemExpression(parameterOrLiteralExpressions[i]));
-        }
-        
-        composite.append(")");
-        return composite;
+
+        return inItemExpressions;
     }
     
     @Override
-    public Predicate createPredicateExpression(String expression, boolean allowQuantifiedPredicates) {
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
         return (Predicate) createExpression(new RuleInvoker() {
 
             @Override
@@ -207,14 +189,15 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
         }, expression, true, allowQuantifiedPredicates, false);
     }
 
-    private Expression createInItemExpression(String expression) {
+    @Override
+    public Expression createInItemExpression(String expression) {
         return createExpression(new RuleInvoker() {
 
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseInItemExpression();
             }
-        }, expression, false, true, false);
+        }, expression, false, false, false);
     }
 
     protected void configureLexer(JPQLSelectExpressionLexer lexer) {

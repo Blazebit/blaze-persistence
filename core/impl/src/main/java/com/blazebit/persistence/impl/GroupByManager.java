@@ -56,7 +56,7 @@ public class GroupByManager extends AbstractManager {
             return;
         }
 
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
         for (NodeInfo info : groupByInfos) {
@@ -65,7 +65,7 @@ public class GroupByManager extends AbstractManager {
             info.getExpression().accept(queryGenerator);
             clauses.add(sb.toString());
         }
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     void buildGroupBy(StringBuilder sb, Set<String> clauses) {

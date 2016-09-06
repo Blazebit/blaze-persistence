@@ -159,7 +159,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         clearCache();
         checkFetchJoinAllowed();
         verifyBuilderEnded();
-        joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, null, false, false, true, true);
+        joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, false, false, true, true);
         return (X) this;
     }
 
@@ -171,7 +171,7 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         verifyBuilderEnded();
 
         for (String path : paths) {
-            joinManager.implicitJoin(expressionFactory.createSimpleExpression(path), true, null, null, false, false, true, true);
+            joinManager.implicitJoin(expressionFactory.createPathExpression(path), true, null, null, false, false, true, true);
         }
 
         return (X) this;

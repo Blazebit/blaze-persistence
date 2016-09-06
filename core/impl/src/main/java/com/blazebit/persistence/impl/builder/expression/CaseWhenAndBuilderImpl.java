@@ -30,11 +30,10 @@ import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedList
 import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
 import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -49,7 +48,7 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
-    private final AndPredicate predicate = new AndPredicate();
+    private final CompoundPredicate predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
     private final PredicateBuilderEndedListener listener;
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
@@ -64,7 +63,7 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
 
     @Override
     public RestrictionBuilder<CaseWhenAndBuilder<T>> and(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, expr, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
@@ -77,7 +76,7 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndBuilder<T>>> andSubquery(String subqueryAlias, String expression) {
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         RestrictionBuilder<CaseWhenAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
@@ -125,7 +124,7 @@ public class CaseWhenAndBuilderImpl<T> extends PredicateBuilderEndedListenerImpl
     }
 
     @Override
-    public Predicate getPredicate() {
+    public CompoundPredicate getPredicate() {
         return predicate;
     }
 

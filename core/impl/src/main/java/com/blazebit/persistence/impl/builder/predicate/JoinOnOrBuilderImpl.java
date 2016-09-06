@@ -21,10 +21,9 @@ import com.blazebit.persistence.RestrictionBuilder;
 import com.blazebit.persistence.impl.ParameterManager;
 import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -36,7 +35,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final OrPredicate predicate = new OrPredicate();
+    private final CompoundPredicate expression = new CompoundPredicate(CompoundPredicate.BooleanOperator.OR);
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private final SubqueryInitiatorFactory subqueryInitFactory;
@@ -59,7 +58,7 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
-        predicate.getChildren().add(builder.getPredicate());
+        expression.getChildren().add(builder.getPredicate());
     }
 
     @Override
@@ -69,13 +68,13 @@ public class JoinOnOrBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     @Override
     public RestrictionBuilder<JoinOnOrBuilder<T>> on(String expression) {
-        Expression leftExpression = expressionFactory.createSimpleExpression(expression);
+        Expression leftExpression = expressionFactory.createSimpleExpression(expression, false);
         return startBuilder(new RestrictionBuilderImpl<JoinOnOrBuilder<T>>(this, this, leftExpression, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
     @Override
-    public Predicate getPredicate() {
-        return predicate;
+    public CompoundPredicate getPredicate() {
+        return expression;
     }
 
 }

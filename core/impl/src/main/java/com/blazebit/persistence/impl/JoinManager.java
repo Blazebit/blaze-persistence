@@ -39,7 +39,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
@@ -345,9 +345,9 @@ public class JoinManager extends AbstractManager {
             if (node.getOnPredicate() != null && !node.getOnPredicate().getChildren().isEmpty()) {
                 sb.append(joinRestrictionKeyword);
                 queryGenerator.setQueryBuffer(sb);
-                boolean conditionalContext = queryGenerator.setConditionalContext(true);
+                SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
                 node.getOnPredicate().accept(queryGenerator);
-                queryGenerator.setConditionalContext(conditionalContext);
+                queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
             }
             renderedJoins.add(node);
         }
@@ -808,12 +808,6 @@ public class JoinManager extends AbstractManager {
             if (result.hasTreatedSubpath) {
                 pathExpression.setHasTreatedSubpath(true);
             }
-        } else if (expression instanceof CompositeExpression) {
-            List<Expression> expressions = ((CompositeExpression) expression).getExpressions();
-            int size = expressions.size();
-            for (int i = 0; i < size; i++) {
-                implicitJoin(expressions.get(i), objectLeafAllowed, null, fromClause, fromSubquery, fromSelectAlias, joinRequired);
-            }
         } else if (expression instanceof FunctionExpression) {
             List<Expression> expressions = ((FunctionExpression) expression).getExpressions();
             int size = expressions.size();
@@ -1027,12 +1021,12 @@ public class JoinManager extends AbstractManager {
                 sb.append('_');
                 sb.append(indexPathExpr.getField().replaceAll("\\.", "_"));
             }
-        } else if (indexExpr instanceof FooExpression) {
-            sb.append('_');
-            sb.append(indexExpr.toString().replaceAll("\\.", "_"));
         } else if (indexExpr instanceof NumericLiteral) {
             sb.append('_');
             sb.append(((NumericLiteral) indexExpr).getValue());
+        } else if (indexExpr instanceof StringLiteral) {
+            sb.append('_');
+            sb.append(((StringLiteral) indexExpr).getValue());
         } else {
             throw new IllegalStateException("Invalid array index expression " + indexExpr.toString());
         }
@@ -1048,8 +1042,8 @@ public class JoinManager extends AbstractManager {
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 
-    private void registerDependencies(final JoinNode joinNode, Predicate onPredicate) {
-        onPredicate.accept(new VisitorAdapter() {
+    private void registerDependencies(final JoinNode joinNode, CompoundPredicate onExpression) {
+        onExpression.accept(new VisitorAdapter() {
 
             @Override
             public void visit(PathExpression pathExpr) {
@@ -1066,7 +1060,7 @@ public class JoinManager extends AbstractManager {
         EqPredicate valueKeyFilterPredicate = getArrayExpressionPredicate(joinNode, arrayExpr);
 
         if (joinNode.getOnPredicate() != null) {
-            AndPredicate currentPred = joinNode.getOnPredicate();
+            CompoundPredicate currentPred = joinNode.getOnPredicate();
 
             // Only add the predicate if it isn't contained yet
             if (!findPredicate(currentPred, valueKeyFilterPredicate)) {
@@ -1074,7 +1068,7 @@ public class JoinManager extends AbstractManager {
                 registerDependencies(joinNode, currentPred);
             }
         } else {
-            AndPredicate onAndPredicate = new AndPredicate();
+            CompoundPredicate onAndPredicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
             onAndPredicate.getChildren().add(valueKeyFilterPredicate);
             joinNode.setOnPredicate(onAndPredicate);
             registerDependencies(joinNode, onAndPredicate);
@@ -1500,9 +1494,9 @@ public class JoinManager extends AbstractManager {
 
         for (JoinNode node : treeNode.getJoinNodes().values()) {
             Predicate pred = getArrayExpressionPredicate(node, arrayExpression);
-            AndPredicate andPredicate = node.getOnPredicate();
+            CompoundPredicate compoundPredicate = node.getOnPredicate();
 
-            if (findPredicate(andPredicate, pred)) {
+            if (findPredicate(compoundPredicate, pred)) {
                 return node;
             }
         }
@@ -1510,9 +1504,9 @@ public class JoinManager extends AbstractManager {
         return null;
     }
 
-    private boolean findPredicate(AndPredicate andPredicate, Predicate pred) {
-        if (andPredicate != null) {
-            List<Predicate> children = andPredicate.getChildren();
+    private boolean findPredicate(CompoundPredicate compoundPredicate, Predicate pred) {
+        if (compoundPredicate != null) {
+            List<Predicate> children = compoundPredicate.getChildren();
             int size = children.size();
             for (int i = 0; i < size; i++) {
                 if (pred.equals(children.get(i))) {
@@ -1609,7 +1603,7 @@ public class JoinManager extends AbstractManager {
                 }
 
             });
-            joinNode.setOnPredicate((AndPredicate) predicate);
+            joinNode.setOnPredicate((CompoundPredicate) predicate);
         }
     }
 }

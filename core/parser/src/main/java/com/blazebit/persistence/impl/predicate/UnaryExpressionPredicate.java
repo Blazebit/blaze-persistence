@@ -24,12 +24,12 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class UnaryExpressionPredicate extends AbstractExpression implements Predicate, Negatable {
+public abstract class UnaryExpressionPredicate extends AbstractPredicate {
 
-    protected boolean negated;
     protected Expression expression;
 
     public UnaryExpressionPredicate(Expression expression, boolean negated) {
+        super(negated);
         this.expression = expression;
         this.negated = negated;
     }
@@ -50,34 +50,21 @@ public abstract class UnaryExpressionPredicate extends AbstractExpression implem
     }
 
     @Override
-    public boolean isNegated() {
-        return negated;
-    }
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UnaryExpressionPredicate)) return false;
+        if (!super.equals(o)) return false;
 
-    @Override
-    public void setNegated(boolean negated) {
-        this.negated = negated;
+        UnaryExpressionPredicate that = (UnaryExpressionPredicate) o;
+
+        return expression != null ? expression.equals(that.expression) : that.expression == null;
+
     }
 
     @Override
     public int hashCode() {
-        int hash = 7;
-        hash = 29 * hash + (this.expression != null ? this.expression.hashCode() : 0);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final UnaryExpressionPredicate other = (UnaryExpressionPredicate) obj;
-        if (this.expression != other.expression && (this.expression == null || !this.expression.equals(other.expression))) {
-            return false;
-        }
-        return true;
+        int result = super.hashCode();
+        result = 31 * result + (expression != null ? expression.hashCode() : 0);
+        return result;
     }
 }

@@ -79,6 +79,15 @@ public final class ConfigurationProperties {
      * @since 1.1.0
      */
     public static final String IMPLICIT_GROUP_BY_FROM_ORDER_BY = "com.blazebit.persistence.implicit_group_by_from_order_by";
+
+    /**
+     * If set to false, no expression optimization takes place.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * Default is <code>true</code>
+     *
+     * @since 1.1.0
+     */
+    public static final String EXPRESSION_OPTIMIZATION = "com.blazebit.persistence.expression_optimization";
     
     private ConfigurationProperties() {
     }

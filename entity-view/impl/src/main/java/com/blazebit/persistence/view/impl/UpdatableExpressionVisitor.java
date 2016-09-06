@@ -23,21 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.*;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -167,22 +153,7 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
-    public void visit(LiteralExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
     public void visit(NullExpression expression) {
-        invalid(expression);
-    }
-
-    @Override
-    public void visit(FooExpression expression) {
         invalid(expression);
     }
 
@@ -193,6 +164,16 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
 
     @Override
     public void visit(FunctionExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TrimExpression expression) {
         invalid(expression);
     }
 
@@ -227,17 +208,42 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
     }
 
     @Override
-    public void visit(AndPredicate predicate) {
-        invalid(predicate);
+    public void visit(BooleanLiteral expression) {
+        invalid(expression);
     }
 
     @Override
-    public void visit(OrPredicate predicate) {
-        invalid(predicate);
+    public void visit(StringLiteral expression) {
+        invalid(expression);
     }
 
     @Override
-    public void visit(NotPredicate predicate) {
+    public void visit(DateLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
+        invalid(expression);
+    }
+
+    @Override
+    public void visit(CompoundPredicate predicate) {
         invalid(predicate);
     }
 

@@ -48,12 +48,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(NullExpression expression) {
-        // TODO: extract to jpa provider
-        if (jpaProvider instanceof HibernateJpaProvider) {
-            sb.append("NULLIF(1,1)");
-        } else {
-            super.visit(expression);
-        }
+        sb.append(jpaProvider.getNullExpression());
     }
 
     @Override
@@ -82,34 +77,38 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     @Override
 	public void visit(SubqueryExpression expression) {
         sb.append('(');
-        
-        final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
-        final boolean hasFirstResult = subquery.getFirstResult() != 0;
-        final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
-        final boolean hasLimit = hasFirstResult || hasMaxResults;
-        final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
-        final boolean isSimple = !hasLimit && !hasSetOperations;
-        
-        if (isSimple) {
-        	sb.append(subquery.getQueryString());
-        } else if (hasSetOperations) {
-            asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+
+        if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
+            final SubqueryInternalBuilder<?> subquery = (SubqueryInternalBuilder<?>) expression.getSubquery();
+            final boolean hasFirstResult = subquery.getFirstResult() != 0;
+            final boolean hasMaxResults = subquery.getMaxResults() != Integer.MAX_VALUE;
+            final boolean hasLimit = hasFirstResult || hasMaxResults;
+            final boolean hasSetOperations = subquery instanceof BaseFinalSetOperationBuilder<?, ?>;
+            final boolean isSimple = !hasLimit && !hasSetOperations;
+
+            if (isSimple) {
+                sb.append(subquery.getQueryString());
+            } else if (hasSetOperations) {
+                asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery).accept(this);
+            } else {
+                List<Expression> arguments = new ArrayList<Expression>(3);
+                arguments.add(new StringLiteral("LIMIT"));
+                arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
+
+                if (!hasMaxResults) {
+                    throw new IllegalArgumentException("First result without max results is not supported!");
+                } else {
+                    arguments.add(new NumericLiteral(Integer.toString(subquery.getMaxResults()), NumericType.INTEGER));
+                }
+
+                if (hasFirstResult) {
+                    arguments.add(new NumericLiteral(Integer.toString(subquery.getFirstResult()), NumericType.INTEGER));
+                }
+
+                renderFunctionFunction("LIMIT", arguments);
+            }
         } else {
-        	List<Expression> arguments = new ArrayList<Expression>(3);
-        	arguments.add(new FooExpression("'LIMIT'"));
-        	arguments.add(asExpression((AbstractCommonQueryBuilder<?, ?, ?, ?, ?>) subquery));
-        	
-        	if (!hasMaxResults) {
-        		throw new IllegalArgumentException("First result without max results is not supported!");
-        	} else {
-        		arguments.add(new FooExpression(Integer.toString(subquery.getMaxResults())));
-        	}
-        	
-        	if (hasFirstResult) {
-        		arguments.add(new FooExpression(Integer.toString(subquery.getFirstResult())));
-        	}
-        	
-        	renderFunctionFunction("LIMIT", arguments);
+            sb.append(expression.getSubquery().getQueryString());
         }
         
         sb.append(')');
@@ -126,12 +125,10 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             
             List<Expression> setOperationArgs = new ArrayList<Expression>(operationManager.getSetOperations().size() + 2);
             StringBuilder nameSb = new StringBuilder();
-            nameSb.append('\'');
             // Use prefix because hibernate uses UNION as keyword
             nameSb.append("SET_");
             nameSb.append(operationManager.getOperator().name());
-            nameSb.append('\'');
-            setOperationArgs.add(new FooExpression(nameSb));
+            setOperationArgs.add(new StringLiteral(nameSb.toString()));
             setOperationArgs.add(asExpression(operationManager.getStartQueryBuilder()));
 
             List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperands = operationManager.getSetOperations();
@@ -142,26 +139,24 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             
             List<? extends OrderByElement> orderByElements = operationBuilder.getOrderByElements();
             if (orderByElements.size() > 0) {
-                setOperationArgs.add(new FooExpression("'ORDER_BY'"));
+                setOperationArgs.add(new StringLiteral("ORDER_BY"));
                 
                 int orderByElementsSize = orderByElements.size();
                 for (int i = 0; i < orderByElementsSize; i++) {
                     StringBuilder argSb = new StringBuilder(20);
-                    argSb.append('\'');
                     argSb.append(orderByElements.get(i).toString());
-                    argSb.append('\'');
-                    setOperationArgs.add(new FooExpression(argSb));
+                    setOperationArgs.add(new StringLiteral(argSb.toString()));
                 }
             }
             
             if (operationBuilder.hasLimit()) {
                 if (operationBuilder.maxResults != Integer.MAX_VALUE) {
-                    setOperationArgs.add(new FooExpression("'LIMIT'"));
-                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.maxResults)));
+                    setOperationArgs.add(new StringLiteral("LIMIT"));
+                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.maxResults), NumericType.INTEGER));
                 }
                 if (operationBuilder.firstResult != 0) {
-                    setOperationArgs.add(new FooExpression("'OFFSET'"));
-                    setOperationArgs.add(new FooExpression(Integer.toString(operationBuilder.firstResult)));
+                    setOperationArgs.add(new StringLiteral("OFFSET"));
+                    setOperationArgs.add(new NumericLiteral(Integer.toString(operationBuilder.firstResult), NumericType.INTEGER));
                 }
             }
             
@@ -170,11 +165,14 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
 
         String queryString = queryBuilder.getQueryString();
-        StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
-        subquerySb.append('(');
+        final StringBuilder subquerySb = new StringBuilder(queryString.length() + 2);
         subquerySb.append(queryString);
-        subquerySb.append(')');
-        return new FooExpression(subquerySb.toString());
+        return new SubqueryExpression(new Subquery() {
+            @Override
+            public String getQueryString() {
+                return subquerySb.toString();
+            }
+        });
     }
 
 	protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
@@ -323,8 +321,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         // Workaround for hibernate
         // TODO: Remove when HHH-7407 is fixed
-        boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.getValue() instanceof List<?>
-            && ((List<?>) expression.getValue()).size() > 1;
+        boolean needsBrackets = jpaProvider.needsBracketsForListParamter() && expression.isCollectionValued();
 
         if (needsBrackets) {
             sb.append('(');

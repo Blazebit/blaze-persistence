@@ -48,7 +48,7 @@ import com.blazebit.reflection.ReflectionUtils;
  * @since 1.0
  */
 public final class MetamodelUtils {
-    
+
     public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
         return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));
     }
@@ -123,7 +123,7 @@ public final class MetamodelUtils {
         }
 
         PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel, entityClass);
-        expressionFactory.createSimpleExpression(mapping).accept(visitor);
+        expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         Map<Method, Class<?>> possibleTargets = visitor.getPossibleTargets();
         Iterator<Map.Entry<Method, Class<?>>> iter = possibleTargets.entrySet().iterator();
         // It must have one, otherwise a parse error would have been thrown already

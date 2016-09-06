@@ -47,7 +47,7 @@ import com.blazebit.persistence.testsuite.tx.TxWork;
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
-    private static final JpaProvider staticJpaProvider;
+    protected static final JpaProvider staticJpaProvider;
     private CriteriaBuilderConfiguration config;
     private JpaProvider jpaProvider;
     private String dbms;
@@ -126,10 +126,6 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
             return alias;
         }
         return alias + "." + field;
-    }
-    
-    protected String booleanExpression(boolean value) {
-        return jpaProvider.getBooleanExpression(value);
     }
     
     protected String booleanConditionalExpression(boolean value) {

@@ -37,6 +37,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
@@ -65,14 +66,15 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
         final boolean compatibleMode = Boolean.valueOf(config.getProperty(ConfigurationProperties.COMPATIBLE_MODE));
+        final boolean optimize = PropertyUtils.getAsBooleanProperty(config.getProperties(), ConfigurationProperties.EXPRESSION_OPTIMIZATION, true);
 
         this.metamodel = new EntityMetamodel(entityManagerFactory.getMetamodel());
         this.queryTransformers = new ArrayList<QueryTransformer>(config.getQueryTransformers());
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
-        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode));
-        this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, expressionFactory);
+        this.expressionFactory = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize));
+        this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, expressionFactory);
         this.properties = copyProperties(config.getProperties());
         
         EntityManagerFactory emf = entityManagerFactory;

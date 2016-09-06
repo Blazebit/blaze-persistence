@@ -130,7 +130,9 @@ public class JoinVisitor extends VisitorAdapter {
 		boolean original = joinRequired;
 		joinRequired = false;
         predicate.getLeft().accept(this);
-        predicate.getRight().accept(this);
+        for (Expression right : predicate.getRight()) {
+            right.accept(this);
+        }
         joinRequired = original;
 	}
 }

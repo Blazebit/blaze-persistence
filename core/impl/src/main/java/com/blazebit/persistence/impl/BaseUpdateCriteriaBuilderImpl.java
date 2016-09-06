@@ -84,7 +84,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
         verifySubqueryBuilderEnded();
         checkAttribute(attribute);
         this.currentAttribute = attribute;
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, true);
         MultipleSubqueryInitiator<X> initiator = new MultipleSubqueryInitiatorImpl<X>((X) this, expr, this, subqueryInitFactory);
         return initiator;
     }
@@ -163,7 +163,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 		sbSelectFrom.append(" SET ");
 
         queryGenerator.setQueryBuffer(sbSelectFrom);
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         
         Iterator<Entry<String, Expression>> setAttributeIter = setAttributes.entrySet().iterator();
         if (setAttributeIter.hasNext()) {
@@ -180,7 +180,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
 			}
         }
 
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     	appendWhereClause(sbSelectFrom);
 	}
 

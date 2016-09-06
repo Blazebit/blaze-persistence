@@ -17,12 +17,8 @@ package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInternalBuilder;
+import com.blazebit.persistence.impl.predicate.*;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
-import com.blazebit.persistence.impl.predicate.PredicateBuilder;
-import com.blazebit.persistence.impl.predicate.UnaryExpressionPredicate;
 
 /**
  *
@@ -43,21 +39,13 @@ public class RightHandsideSubqueryPredicateBuilder<T> extends SubqueryBuilderLis
     public void onBuilderEnded(SubqueryInternalBuilder<T> builder) {
         super.onBuilderEnded(builder);
         // set the finished subquery builder on the previously created predicate
-        Predicate pred;
-        if (predicate instanceof NotPredicate) {
-            // unwrap not predicate
-            pred = ((NotPredicate) predicate).getPredicate();
-        } else {
-            pred = predicate;
-        }
-        
-        if (pred instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
+        if (predicate instanceof ExistsPredicate && builder.getMaxResults() != Integer.MAX_VALUE) {
         	// Since we render the limit in the subquery as wrapping function, there currently does not seem to be a possibility to support this in JPQL grammars
         	throw new IllegalArgumentException("Limiting a subquery in an exists predicate is currently unsupported!");
         }
 
-        if (pred instanceof UnaryExpressionPredicate) {
-            ((UnaryExpressionPredicate) pred).setExpression(new SubqueryExpression(builder));
+        if (predicate instanceof UnaryExpressionPredicate) {
+            ((UnaryExpressionPredicate) predicate).setExpression(new SubqueryExpression(builder));
         } else {
             throw new IllegalStateException("SubqueryBuilder ended but predicate type was unexpected");
         }

@@ -74,7 +74,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
         }
 
         verifySubqueryBuilderEnded();
-        Expression exp = expressionFactory.createSimpleExpression(expression);
+        Expression exp = expressionFactory.createSimpleExpression(expression, false);
         expressions.put(expressions.size(), new AbstractMap.SimpleEntry<Expression, String>(exp, alias));
         return this;
     }
@@ -90,7 +90,7 @@ public class SelectObjectBuilderImpl<T extends FullQueryBuilder<?, T>> extends S
             throw new IllegalStateException("Argument for position " + position + " already specified");
         }
         verifySubqueryBuilderEnded();
-        Expression exp = expressionFactory.createSimpleExpression(expression);
+        Expression exp = expressionFactory.createSimpleExpression(expression, false);
         expressions.put(position, new AbstractMap.SimpleEntry<Expression, String>(exp, alias));
         return this;
     }

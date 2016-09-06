@@ -23,15 +23,14 @@ import com.blazebit.persistence.parser.JPQLSelectExpressionParser.*;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -41,16 +40,20 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     private final CommonTokenStream tokens;
     private final Set<String> aggregateFunctions;
-    private final boolean optimize;
+    private final Map<String, Class<Enum<?>>> enums;
+    private final Map<String, Class<?>> entities;
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions) {
-        this(tokens, aggregateFunctions, false);
-    }
+    private final DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+    private final DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
+    private final Pattern datePattern = Pattern.compile("\\{*d\\s*'([^']+)\\s*'\\}");
+    private final Pattern timePattern = Pattern.compile("\\{*t\\s*'([^']+)\\s*'\\}");
+    private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, boolean optimize) {
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities) {
         this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
-        this.optimize = optimize;
+        this.enums = enums;
+        this.entities = entities;
     }
 
     @Override
@@ -203,6 +206,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitPath_no_array(Path_no_arrayContext ctx) {
+        PathExpression result = new PathExpression();
+        for (Simple_path_elementContext pathElemCtx : ctx.pathElem) {
+            result.getExpressions().add((PathElementExpression) pathElemCtx.accept(this));
+        }
+        return result;
+    }
+
+    @Override
     public Expression visitSingle_element_path_expression(JPQLSelectExpressionParser.Single_element_path_expressionContext ctx) {
         return new PathExpression(new ArrayList<PathElementExpression>(Arrays.asList((PathElementExpression) ctx.general_path_start().accept(this))));
     }
@@ -228,7 +240,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitType_discriminator(JPQLSelectExpressionParser.Type_discriminatorContext ctx) {
-        return new FunctionExpression(ctx.getStart().getText(), Arrays.asList(ctx.type_discriminator_arg().accept(this)));
+        return new TypeFunctionExpression(ctx.type_discriminator_arg().accept(this));
     }
 
     @Override
@@ -298,27 +310,27 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitArrayExpressionParameterIndex(JPQLSelectExpressionParser.ArrayExpressionParameterIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Input_parameter().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.Input_parameter().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionPathIndex(JPQLSelectExpressionParser.ArrayExpressionPathIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.state_field_path_expression().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.state_field_path_expression().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionSingleElementPathIndex(ArrayExpressionSingleElementPathIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.single_element_path_expression().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.single_element_path_expression().accept(this));
     }
 
     @Override
     public Expression visitArrayExpressionIntegerLiteralIndex(ArrayExpressionIntegerLiteralIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.Integer_literal().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), new NumericLiteral(ctx.Integer_literal().getText(), NumericType.INTEGER));
     }
 
     @Override
     public Expression visitArrayExpressionStringLiteralIndex(ArrayExpressionStringLiteralIndexContext ctx) {
-        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), unwrap(ctx.string_literal().accept(this)));
+        return new ArrayExpression((PropertyExpression) ctx.simple_path_element().accept(this), ctx.string_literal().accept(this));
     }
 
     @Override
@@ -368,11 +380,22 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitConditionalTerm_and(JPQLSelectExpressionParser.ConditionalTerm_andContext ctx) {
         Predicate left = (Predicate) ctx.conditional_term().accept(this);
-        if (left instanceof AndPredicate) {
-            ((AndPredicate) left).getChildren().add((Predicate) ctx.conditional_factor().accept(this));
+        if (left instanceof CompoundPredicate && ((CompoundPredicate) left).getOperator() == CompoundPredicate.BooleanOperator.AND) {
+            ((CompoundPredicate) left).getChildren().add((Predicate) ctx.conditional_factor().accept(this));
             return left;
         } else {
-            return new AndPredicate(left, (Predicate) ctx.conditional_factor().accept(this));
+            return new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, left, (Predicate) ctx.conditional_factor().accept(this));
+        }
+    }
+
+    @Override
+    public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
+        Predicate left = (Predicate) ctx.conditional_expression().accept(this);
+        if (left instanceof CompoundPredicate && ((CompoundPredicate) left).getOperator() == CompoundPredicate.BooleanOperator.OR) {
+            ((CompoundPredicate) left).getChildren().add((Predicate) ctx.conditional_term().accept(this));
+            return left;
+        } else {
+            return new CompoundPredicate(CompoundPredicate.BooleanOperator.OR, left, (Predicate) ctx.conditional_term().accept(this));
         }
     }
 
@@ -383,43 +406,25 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitConditional_factor(JPQLSelectExpressionParser.Conditional_factorContext ctx) {
-        Predicate p = (Predicate) ctx.conditional_primary().accept(this);
+        Predicate predicate = (Predicate) ctx.conditional_primary().accept(this);
 
         if (ctx.not != null) {
-            if (p instanceof Negatable) {
-                Negatable n = (Negatable) p;
-                n.setNegated(!n.isNegated());
-            } else {
-                p = new NotPredicate(p);
+            if (predicate.isNegated()) {
+                // wrap in this case to maintain negational structure
+                predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, predicate);
             }
+            predicate.negate();
         }
-        return p;
-    }
-
-    @Override
-    public Expression visitConditionalExpression_or(JPQLSelectExpressionParser.ConditionalExpression_orContext ctx) {
-        Predicate left = (Predicate) ctx.conditional_expression().accept(this);
-        if (left instanceof OrPredicate) {
-            ((OrPredicate) left).getChildren().add((Predicate) ctx.conditional_term().accept(this));
-            return left;
-        } else {
-            return new OrPredicate(left, (Predicate) ctx.conditional_term().accept(this));
-        }
+        return predicate;
     }
 
     @Override
     public Expression visitArithmetic_factor(JPQLSelectExpressionParser.Arithmetic_factorContext ctx) {
         if (ctx.signum != null) {
-            Expression expression = (Expression) ctx.arithmetic_primary().accept(this);
+            Expression expression = ctx.arithmetic_primary().accept(this);
 
             boolean invertSignum = "-".equals(ctx.signum.getText());
-            if (optimize && expression instanceof ArithmeticFactor && invertSignum) {
-                ArithmeticFactor arithmeticFactor = (ArithmeticFactor) expression;
-                arithmeticFactor.setInvertSignum(!arithmeticFactor.isInvertSignum());
-                return arithmeticFactor;
-            } else {
-                return new ArithmeticFactor(expression, invertSignum);
-            }
+            return new ArithmeticFactor(expression, invertSignum);
         } else {
             return ctx.arithmetic_primary().accept(this);
         }
@@ -454,6 +459,82 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitBoolean_literal(Boolean_literalContext ctx) {
+        return new BooleanLiteral(Boolean.parseBoolean(ctx.Boolean_literal().getText()));
+    }
+
+    @Override
+    public Expression visitString_literal(String_literalContext ctx) {
+        String literalValue = ctx.String_literal() == null ? ctx.Character_literal().getText() : ctx.String_literal().getText();
+        // strip quotes
+        return new StringLiteral(unquote(literalValue));
+    }
+
+    @Override
+    public Expression visitDateLiteral(DateLiteralContext ctx) {
+        Date date;
+        try {
+            String dateString = extractTemporalValueString(ctx.Date_literal().getText(), datePattern);
+            date = dfDate.parse(dateString);
+        } catch (ParseException e) {
+            throw new SyntaxErrorException(e);
+        }
+        return new DateLiteral(date);
+    }
+
+    @Override
+    public Expression visitTimeLiteral(TimeLiteralContext ctx) {
+        Date date;
+        try {
+            String timeString = extractTemporalValueString(ctx.Time_literal().getText(), timePattern);
+            date = dfTime.parse(timeString);
+            String[] timeParts = timeString.split("\\.");
+            if (timeParts.length > 1) {
+                date.setTime(date.getTime() + Integer.parseInt(timeParts[1]));
+            }
+        } catch (ParseException e) {
+            throw new SyntaxErrorException(e);
+        }
+        return new TimeLiteral(date);
+    }
+
+    @Override
+    public Expression visitTimestampLiteral(TimestampLiteralContext ctx) {
+        Date timestamp;
+        try {
+            String timestampString = extractTemporalValueString(ctx.Timestamp_literal().getText(), timestampPattern);
+            String[] timestampParts = timestampString.split(" ");
+            String[] timeParts = timestampParts[1].split("\\.");
+            Date time = dfTime.parse(timeParts[0]);
+            Date date = dfDate.parse(timestampParts[0]);
+
+            Calendar calTime = Calendar.getInstance();
+            Calendar calDate = Calendar.getInstance();
+            calTime.setTime(time);
+            calDate.setTime(date);
+            calTime.set(calDate.get(Calendar.YEAR), calDate.get(Calendar.MONTH), calDate.get(Calendar.DAY_OF_MONTH));
+            if (timeParts.length > 1) {
+                calTime.set(Calendar.MILLISECOND, Integer.parseInt(timeParts[1]));
+            }
+            timestamp = calTime.getTime();
+
+
+        } catch (ParseException e) {
+            throw new SyntaxErrorException(e);
+        }
+        return new TimestampLiteral(timestamp);
+    }
+
+    private String extractTemporalValueString(String input, Pattern pattern) {
+        Matcher m = pattern.matcher(input);
+        if (m.matches()) {
+            return m.group(1);
+        } else {
+            throw new SyntaxErrorException("Input [" + input + "] does not match date pattern");
+        }
+    }
+
+    @Override
     public Expression visitNull_comparison_expression(JPQLSelectExpressionParser.Null_comparison_expressionContext ctx) {
         return new IsNullPredicate(ctx.getChild(0).accept(this), ctx.not != null);
     }
@@ -468,6 +549,15 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
                 ctx.escape_character() != null ? ctx.escape_character().accept(this).toString().charAt(1) : null,
                 ctx.not != null);
         // @formatter:on
+    }
+
+    @Override
+    public Expression visitEscape_character(Escape_characterContext ctx) {
+        if (ctx.Character_literal() != null) {
+            return new StringLiteral(unquote(ctx.Character_literal().getText()));
+        } else {
+            return super.visitEscape_character(ctx);
+        }
     }
 
     @Override
@@ -509,22 +599,35 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitIn_expression(JPQLSelectExpressionParser.In_expressionContext ctx) {
-        Expression inExpr;
-        if (ctx.param == null && ctx.right == null) {
-            CompositeExpression compositeInExpr = accept(ctx.in_item(0));
-            compositeInExpr.prepend("(");
-            for (int i = 1; i < ctx.in_item().size(); i++) {
-                compositeInExpr.append(",");
-                acceptAndCompose(compositeInExpr, ctx.in_item(i));
-            }
-            compositeInExpr.append(")");
-            inExpr = unwrap(compositeInExpr);
-        } else if (ctx.param != null) {
-            inExpr = ctx.Input_parameter().accept(this);
+        InPredicate inPredicate;
+        Expression left;
+        if (ctx.left == null) {
+            left = ctx.getChild(0).accept(this);
         } else {
-            inExpr = ctx.Identifier().get(ctx.Identifier().size() - 1).accept(this);
+            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+            pathElems.add(new PropertyExpression(ctx.left.getText()));
+            left = new PathExpression(pathElems);
         }
-        return new InPredicate(ctx.getChild(0).accept(this), inExpr, ctx.not != null);
+        if (ctx.param == null && ctx.right == null) {
+            List<Expression> inItems= new ArrayList<Expression>();
+            for (In_itemContext inItemCtx : ctx.in_item()) {
+                inItems.add(inItemCtx.accept(this));
+            }
+            inPredicate = new InPredicate(left, inItems);
+        } else if (ctx.param != null) {
+            ParameterExpression collectionParam = (ParameterExpression) new TerminalNodeImpl(ctx.param).accept(this);
+            collectionParam.setCollectionValued(true);
+            inPredicate = new InPredicate(left, collectionParam);
+        } else {
+            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+            pathElems.add(new PropertyExpression(ctx.right.getText()));
+            Expression inExpr = new PathExpression(pathElems);
+            inPredicate = new InPredicate(left, inExpr);
+        }
+        if (ctx.not != null) {
+            inPredicate.setNegated(true);
+        }
+        return inPredicate;
     }
 
     @Override
@@ -536,23 +639,18 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             case JPQLSelectExpressionLexer.Input_parameter:
                 return new ParameterExpression(node.getText().substring(1));
             default:
-                return new FooExpression(node.getText());
+                throw new IllegalStateException("Terminal node '" + node.getText() + "' not handled");
         }
     }
 
     @Override
     public Expression visitParseSimpleExpression(JPQLSelectExpressionParser.ParseSimpleExpressionContext ctx) {
-        return unwrap(super.visitParseSimpleExpression(ctx));
-    }
-
-    @Override
-    public Expression visitParseJoinPath(JPQLSelectExpressionParser.ParseJoinPathContext ctx) {
-        return unwrap(super.visitParseJoinPath(ctx));
+        return super.visitParseSimpleExpression(ctx);
     }
 
     @Override
     public Expression visitParseSimpleSubqueryExpression(JPQLSelectExpressionParser.ParseSimpleSubqueryExpressionContext ctx) {
-        return unwrap(super.visitParseSimpleSubqueryExpression(ctx));
+        return super.visitParseSimpleSubqueryExpression(ctx);
     }
 
     @Override
@@ -562,12 +660,42 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
 
     @Override
     public Expression visitEnum_literal(JPQLSelectExpressionParser.Enum_literalContext ctx) {
-        return new LiteralExpression("ENUM", ctx.path().accept(this).toString());
+        String enumStr = ctx.path().accept(this).toString();
+        int lastDotIdx = enumStr.lastIndexOf('.');
+        String enumTypeStr = enumStr.substring(0, lastDotIdx);
+        String enumValueStr = enumStr.substring(lastDotIdx + 1);
+        Class<Enum<?>> enumType = enums.get(enumTypeStr);
+        // TODO throw exception if enumType is null
+        return new EnumLiteral(enumType == null ? null : Enum.valueOf((Class) enumType, enumValueStr), enumStr);
     }
 
     @Override
     public Expression visitEntity_type_literal(JPQLSelectExpressionParser.Entity_type_literalContext ctx) {
-        return new LiteralExpression("ENTITY", ctx.identifier().getText());
+        String entityLiteralStr;
+        if (ctx.identifier() != null) {
+            entityLiteralStr = ctx.identifier().getText();
+        } else {
+            entityLiteralStr = ctx.path_no_array().getText();
+        }
+        Class<?> entityType = entities.get(entityLiteralStr);
+        // TODO throw exception if entityType is null
+        return new EntityLiteral(entityType, entityLiteralStr);
+    }
+
+    @Override
+    public Expression visitComparisonExpression_path_type(ComparisonExpression_path_typeContext ctx) {
+        BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
+        pred.setLeft(new EntityLiteral(null, ctx.left.getText()));
+        pred.setRight(ctx.right.accept(this));
+        return pred;
+    }
+
+    @Override
+    public Expression visitComparisonExpression_type_path(ComparisonExpression_type_pathContext ctx) {
+        BinaryExpressionPredicate pred = (EqPredicate) ctx.equality_comparison_operator().accept(this);
+        pred.setLeft(ctx.left.accept(this));
+        pred.setRight(new EntityLiteral(null, ctx.right.getText()));
+        return pred;
     }
 
     @Override
@@ -651,6 +779,13 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
+    public Expression visitIdentifier(IdentifierContext ctx) {
+        List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+        pathElems.add(new PropertyExpression(ctx.Identifier().getText()));
+        return new PathExpression(pathElems);
+    }
+
+    @Override
     public Expression visitEqPredicate(JPQLSelectExpressionParser.EqPredicateContext ctx) {
         return new EqPredicate(false);
     }
@@ -686,77 +821,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     }
 
     @Override
-    public Expression visitChildren(RuleNode node) {
-        CompositeExpression result = null;
-        int n = node.getChildCount();
-
-        if (shouldVisitNextChild(node, result)) {
-            if (n > 0 && shouldVisitNextChild(node, result)) {
-                if (n == 1) {
-                    return node.getChild(0).accept(this);
-                } else {
-                    result = accept(node.getChild(0));
-                    for (int i = 1; i < n; i++) {
-                        if (!shouldVisitNextChild(node, result)) {
-                            break;
-                        }
-
-                        ParseTree c = node.getChild(i);
-                        acceptAndCompose(result, c);
-                    }
-                }
-            }
-        }
-
-        return result;
+    protected Expression aggregateResult(Expression aggregate, Expression nextResult) {
+        return aggregate == null ? nextResult : aggregate;
     }
 
-    private StringBuilder getTextWithSurroundingHiddenTokens(Token token) {
-        StringBuilder sb = new StringBuilder();
-        List<Token> hiddenTokens = tokens.getHiddenTokensToLeft(token.getTokenIndex());
-        if (hiddenTokens != null) {
-            for (Token t : hiddenTokens) {
-                sb.append(t.getText());
-            }
-        }
-        sb.append(token.getText());
-        hiddenTokens = tokens.getHiddenTokensToRight(token.getTokenIndex());
-        if (hiddenTokens != null) {
-            for (Token t : hiddenTokens) {
-                sb.append(t.getText());
-            }
-        }
-        return sb;
-    }
-
-    private CompositeExpression acceptAndCompose(CompositeExpression composite, ParseTree ruleContext) {
-        Expression expr = ruleContext.accept(this);
-        if (expr != null) {
-            composite.append(expr);
-        }
-
-        return composite;
-    }
-
-    private CompositeExpression accept(ParseTree ruleContext) {
-        Expression expr = ruleContext.accept(this);
-        CompositeExpression composite;
-        if (expr instanceof CompositeExpression) {
-            composite = (CompositeExpression) expr;
-        } else {
-            composite = new CompositeExpression(new ArrayList<Expression>(Arrays.asList(expr)));
-        }
-        return composite;
-    }
-
-    private StringBuilder tokenListToString(List<Token> tokens) {
-        StringBuilder sb = new StringBuilder();
-        if (tokens != null) {
-            for (Token t : tokens) {
-                sb.append(t.getText());
-            }
-        }
-        return sb;
+    private String unquote(String literal) {
+        return literal.substring(1, literal.length() - 1);
     }
 
     private PathExpression wrapPath(Expression expression) {
@@ -767,17 +837,6 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         PathExpression p = new PathExpression();
         p.getExpressions().add((PathElementExpression) expression);
         return p;
-    }
-
-    private Expression unwrap(Expression expr) {
-        if (expr instanceof CompositeExpression) {
-            CompositeExpression composite = (CompositeExpression) expr;
-            if (composite.getExpressions().size() == 1) {
-                // recursion should not be necessary;
-                return composite.getExpressions().get(0);
-            }
-        }
-        return expr;
     }
 
     private PredicateQuantifier toQuantifier(Token token) {

@@ -77,7 +77,8 @@ public class SelectNewObjectBuilderTest extends AbstractCoreTest {
                     queryBuilder
                         .select("name", "name")
                         .select("UPPER(name)", "upperName")
-                        .select("LOWER(name)", "lowerName");
+                        .select("LOWER(name)", "lowerName")
+                        .select("false");
                 }
 
                 @Override
@@ -90,7 +91,7 @@ public class SelectNewObjectBuilderTest extends AbstractCoreTest {
                     return list;
                 }
             });
-        assertEquals("SELECT d.name AS name, UPPER(d.name) AS upperName, LOWER(d.name) AS lowerName FROM Document d", criteria.getQueryString());
+        assertEquals("SELECT d.name AS name, UPPER(d.name) AS upperName, LOWER(d.name) AS lowerName, " + staticJpaProvider.getBooleanExpression(false)+ " FROM Document d", criteria.getQueryString());
         List<String[]> actual = criteria.getQuery().getResultList();
 
         assertArrayEquals(new String[]{ "Doc1", "DOC1", "doc1" }, actual.get(0));

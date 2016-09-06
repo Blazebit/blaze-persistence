@@ -1,11 +1,9 @@
 package com.blazebit.persistence.impl.expression;
 
-import java.util.Arrays;
-
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 12.07.2016.
+ *
+ * @author Moritz Becker
+ * @since 1.2
  */
 public enum ArithmeticOperator {
 

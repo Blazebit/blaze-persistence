@@ -23,7 +23,7 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class LikePredicate extends NegatableBinaryExpressionPredicate {
+public class LikePredicate extends BinaryExpressionPredicate {
 
     private final boolean caseSensitive;
     private final Character escapeCharacter;
@@ -64,30 +64,23 @@ public class LikePredicate extends NegatableBinaryExpressionPredicate {
     }
 
     @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 89 * hash + (this.caseSensitive ? 1 : 0);
-        hash = 89 * hash + (this.escapeCharacter != null ? this.escapeCharacter.hashCode() : 0);
-        hash = 89 * hash + super.hashCode();
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof LikePredicate)) return false;
+        if (!super.equals(o)) return false;
+
+        LikePredicate that = (LikePredicate) o;
+
+        if (caseSensitive != that.caseSensitive) return false;
+        return escapeCharacter != null ? escapeCharacter.equals(that.escapeCharacter) : that.escapeCharacter == null;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final LikePredicate other = (LikePredicate) obj;
-        if (this.caseSensitive != other.caseSensitive) {
-            return false;
-        }
-        if (this.escapeCharacter != other.escapeCharacter && (this.escapeCharacter == null || !this.escapeCharacter.equals(other.escapeCharacter))) {
-            return false;
-        }
-        return super.equals(obj);
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (caseSensitive ? 1 : 0);
+        result = 31 * result + (escapeCharacter != null ? escapeCharacter.hashCode() : 0);
+        return result;
     }
-
 }

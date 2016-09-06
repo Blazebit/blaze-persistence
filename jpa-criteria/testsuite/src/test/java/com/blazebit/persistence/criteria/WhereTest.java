@@ -15,24 +15,29 @@
  */
 package com.blazebit.persistence.criteria;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.criteria.impl.BlazeCriteria;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Document_;
+import com.blazebit.persistence.testsuite.entity.NameObject_;
+import com.blazebit.persistence.testsuite.entity.Person;
+import com.googlecode.catchexception.CatchException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.*;
 import java.sql.Timestamp;
 import java.util.*;
 
-import javax.persistence.Parameter;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
-
-import com.blazebit.persistence.testsuite.entity.*;
-import com.googlecode.catchexception.CatchException;
-import org.junit.Test;
-
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.impl.BlazeCriteria;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -40,6 +45,15 @@ import com.blazebit.persistence.testsuite.AbstractCoreTest;
  * @since 1.2.0
  */
 public class WhereTest extends AbstractCoreTest {
+
+    private CriteriaBuilderFactory cbfUnoptimized;
+
+    @Before
+    public void initNonOptimized() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        config.getProperties().setProperty(ConfigurationProperties.EXPRESSION_OPTIMIZATION, "false");
+        cbfUnoptimized = config.createCriteriaBuilderFactory(emf);
+    }
 
     @Test
     public void singularAttributeWithLiterals() {
@@ -72,6 +86,8 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/35
+    @Category(NoDatanucleus.class)
     public void embeddablePaths() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -151,7 +167,7 @@ public class WhereTest extends AbstractCoreTest {
                 "AND document.id IN (:generated_param_1) " +
                 "AND document.id IN (0L) " +
                 "AND document.id IN (SELECT 0L FROM Document sub) " +
-                "AND document.id IN :collectionParam " +
+                "AND document.id IN (:collectionParam) " +
                 "AND (SELECT 0L FROM Document sub) IN (0L)" +
                 "", criteriaBuilder.getQueryString());
     }
@@ -202,7 +218,7 @@ public class WhereTest extends AbstractCoreTest {
 
     @Test
     public void multipleNegations() {
-        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbf, Integer.class);
+        BlazeCriteriaQuery<Integer> cq = BlazeCriteria.get(em, cbfUnoptimized, Integer.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
         Root<Document> root = cq.from(Document.class, "document");
         Expression<Integer> one = cb.literal(1);
@@ -247,15 +263,15 @@ public class WhereTest extends AbstractCoreTest {
                 // NOTE: we use a third parameter null to mark cases as "problematic"
                 // They are problematic because our parser simplifies negations into some predicates instead of simply wrapping the predicates
                 new String[]{ "1 = 1", "1 <> 1", null},
-                new String[]{ "1 <> 1", "1 = 1", null},
+                new String[]{ "1 <> 1", "1 = 1"},
                 new String[]{ "1 > 1", "1 <= 1"},
                 new String[]{ "1 >= 1", "1 < 1"},
                 new String[]{ "1 < 1", "1 >= 1"},
                 new String[]{ "1 <= 1", "1 > 1"},
                 new String[]{ "document.id IS NULL", "document.id IS NOT NULL", null},
-                new String[]{ "document.id IS NOT NULL", "document.id IS NULL", null},
+                new String[]{ "document.id IS NOT NULL", "document.id IS NULL"},
                 new String[]{ "document.name LIKE :generated_param", "document.name NOT LIKE :generated_param", null},
-                new String[]{ "document.name NOT LIKE :generated_param", "document.name LIKE :generated_param", null},
+                new String[]{ "document.name NOT LIKE :generated_param", "document.name LIKE :generated_param"},
                 new String[]{ "document.id BETWEEN 0L AND 0L", "document.id NOT BETWEEN 0L AND 0L", null},
                 new String[]{ "1 = 1", "1 = 0", "1 <> 1"},
                 new String[]{ "1 = 0", "1 = 1", "1 <> 0"},
@@ -263,9 +279,9 @@ public class WhereTest extends AbstractCoreTest {
                 new String[]{ "document.archived = false", "document.archived = true", "document.archived <> false"},
                 new String[]{ "EXISTS (SELECT 1 FROM Document sub)", "NOT EXISTS (SELECT 1 FROM Document sub)", null},
                 new String[]{ "document.people IS EMPTY", "document.people IS NOT EMPTY", null},
-                new String[]{ "document.people IS NOT EMPTY", "document.people IS EMPTY", null},
+                new String[]{ "document.people IS NOT EMPTY", "document.people IS EMPTY"},
                 new String[]{ "document.owner MEMBER OF document.people", "document.owner NOT MEMBER OF document.people", null},
-                new String[]{ "document.owner NOT MEMBER OF document.people", "document.owner MEMBER OF document.people", null},
+                new String[]{ "document.owner NOT MEMBER OF document.people", "document.owner MEMBER OF document.people"},
                 new String[]{ "document.id IN (0L)", "document.id NOT IN (0L)", null}
         );
 
@@ -434,7 +450,7 @@ public class WhereTest extends AbstractCoreTest {
         );
         
         CriteriaBuilder<?> criteriaBuilder = cq.createCriteriaBuilder();
-        assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L,2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
+        assertEquals("SELECT document.id FROM Document document WHERE document.id IN (1L, 2L) OR document.id <> :idParam OR " + function("YEAR", "document.creationDate") + " > 2015 OR " + function("CAST_TIMESTAMP", "CASE WHEN document.age > 12L THEN document.creationDate ELSE CURRENT_TIMESTAMP END") + " < ALL(SELECT " + function("CAST_TIMESTAMP", "subDoc.lastModified") + " FROM Document subDoc)", criteriaBuilder.getQueryString());
         assertNotNull(criteriaBuilder.getParameter("idParam"));
         assertEquals(Long.class, criteriaBuilder.getParameter("idParam").getParameterType());
     }
@@ -464,6 +480,8 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/36
+    @Category(NoDatanucleus.class)
     public void parametersAndArrays() {
         BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(em, cbf, Document.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

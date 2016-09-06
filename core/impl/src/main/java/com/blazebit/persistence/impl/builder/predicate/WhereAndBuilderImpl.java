@@ -30,11 +30,10 @@ import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
 import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
 /**
@@ -47,7 +46,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     private final T result;
     private final PredicateBuilderEndedListener listener;
-    private final AndPredicate predicate;
+    private final CompoundPredicate predicate;
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
@@ -60,7 +59,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     public WhereAndBuilderImpl(T result, PredicateBuilderEndedListener listener, SubqueryInitiatorFactory subqueryInitFactory, ExpressionFactory expressionFactory, ParameterManager parameterManager) {
         this.result = result;
         this.listener = listener;
-        this.predicate = new AndPredicate();
+        this.predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
         this.subqueryInitFactory = subqueryInitFactory;
         this.expressionFactory = expressionFactory;
         this.parameterManager = parameterManager;
@@ -74,7 +73,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     }
 
     @Override
-    public Predicate getPredicate() {
+    public CompoundPredicate getPredicate() {
         return predicate;
     }
 
@@ -91,7 +90,7 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
 
     @Override
     public RestrictionBuilder<WhereAndBuilder<T>> where(String expression) {
-        Expression exp = expressionFactory.createSimpleExpression(expression);
+        Expression exp = expressionFactory.createSimpleExpression(expression, false);
         return startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, exp, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
@@ -130,14 +129,14 @@ public class WhereAndBuilderImpl<T> extends PredicateAndSubqueryBuilderEndedList
     @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public SubqueryInitiator<RestrictionBuilder<WhereAndBuilder<T>>> whereSubquery(String subqueryAlias, String expression) {
-        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         RestrictionBuilder<WhereAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }
 
     @Override
     public MultipleSubqueryInitiator<RestrictionBuilder<WhereAndBuilder<T>>> whereSubqueries(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, true);
         RestrictionBuilderImpl<WhereAndBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<WhereAndBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         // We don't need a listener or marker here, because the resulting restriction builder can only be ended, when the initiator is ended
         MultipleSubqueryInitiator<RestrictionBuilder<WhereAndBuilder<T>>> initiator = new MultipleSubqueryInitiatorImpl<RestrictionBuilder<WhereAndBuilder<T>>>(restrictionBuilder, expr, new RestrictionBuilderExpressionBuilderListener(restrictionBuilder), subqueryInitFactory);

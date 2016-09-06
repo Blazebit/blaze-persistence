@@ -16,8 +16,10 @@
 
 package com.blazebit.persistence.impl.expression;
 
-import static org.junit.Assert.assertEquals;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -33,26 +35,26 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testEnumLiteral(){
-        LiteralExpression result = (LiteralExpression) parse("ENUM(a.x.y)");
-        assertEquals(new LiteralExpression("ENUM", "a.x.y"), result);
+        EnumLiteral result = (EnumLiteral) parse("ENUM(a.x.y)");
+        assertEquals(_enum("ENUM(a.x.y)"), result);
     }
     
     @Test
-    public void testEntityTypeLiteral(){
-        LiteralExpression result = (LiteralExpression) parse("ENTITY(Entity)");
-        assertEquals(new LiteralExpression("ENTITY", "Entity"), result);
+    public void testEntityLiteral(){
+        EntityLiteral result = (EntityLiteral) parse("ENTITY(Entity)");
+        assertEquals(_entity("ENTITY(Entity)"), result);
     }
     
     @Test
     public void testStringLiteral(){
-        FooExpression result = (FooExpression) parse("'abcd'");
-        assertEquals(new FooExpression("'abcd'"), result);
+        StringLiteral result = (StringLiteral) parse("'abcd'");
+        assertEquals(new StringLiteral("abcd"), result);
     }
     
     @Test
     public void testCharacterLiteral(){
-        FooExpression result = (FooExpression) parse("'a'");
-        assertEquals(new FooExpression("'a'"), result);
+        StringLiteral result = (StringLiteral) parse("'a'");
+        assertEquals(new StringLiteral("a"), result);
     }
     
     @Test
@@ -182,45 +184,49 @@ public class TestLiterals extends AbstractParserTest {
     
     @Test
     public void testBooleanLiteral(){
-        FooExpression resultFalseUpper = (FooExpression) parse("FALSE");
-        FooExpression resultFalseLower = (FooExpression) parse("false");
-        FooExpression resultTrueUpper = (FooExpression) parse("TRUE");
-        FooExpression resultTrueLower = (FooExpression) parse("true");
-        
-        assertEquals(new FooExpression("FALSE"), resultFalseUpper);
-        assertEquals(new FooExpression("false"), resultFalseLower);
-        assertEquals(new FooExpression("TRUE"), resultTrueUpper);
-        assertEquals(new FooExpression("true"), resultTrueLower);
+        BooleanLiteral resultFalseUpper = (BooleanLiteral) parse("FALSE");
+        BooleanLiteral resultFalseLower = (BooleanLiteral) parse("false");
+        BooleanLiteral resultFalseMixed = (BooleanLiteral) parse("FaLsE");
+        BooleanLiteral resultTrueUpper = (BooleanLiteral) parse("TRUE");
+        BooleanLiteral resultTrueLower = (BooleanLiteral) parse("true");
+        BooleanLiteral resultTrueMixed = (BooleanLiteral) parse("TrUe");
+
+        assertEquals(_boolean(false), resultFalseUpper);
+        assertEquals(_boolean(false), resultFalseLower);
+        assertEquals(_boolean(false), resultFalseMixed);
+        assertEquals(_boolean(true), resultTrueUpper);
+        assertEquals(_boolean(true), resultTrueLower);
+        assertEquals(_boolean(true), resultTrueMixed);
     }
     
     @Test
     public void testDateLiteral(){
-        FooExpression result = (FooExpression) parse("{d '1991-05-21'}");
-        assertEquals(new FooExpression("{d '1991-05-21'}"), result);
+        DateLiteral result = (DateLiteral) parse("{d '1991-05-21'}");
+        assertEquals(_date(1991, 5, 21), result);
     }
     
     @Test
     public void testTimeLiteral1(){
-        FooExpression result = (FooExpression) parse("{t '11:59:59.0'}");
-        assertEquals(new FooExpression("{t '11:59:59.0'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.100'}");
+        assertEquals(_time(11, 59, 59, 100), result);
     }
     
     @Test
     public void testTimeLiteral2(){
-        FooExpression result = (FooExpression) parse("{t '11:59:59.'}");
-        assertEquals(new FooExpression("{t '11:59:59.'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '11:59:59.'}");
+        assertEquals(_time(11, 59, 59, 0), result);
     }
     
     @Test
     public void testTimeLiteral3(){
-        FooExpression result = (FooExpression) parse("{t '1:59:59.'}");
-        assertEquals(new FooExpression("{t '1:59:59.'}"), result);
+        TimeLiteral result = (TimeLiteral) parse("{t '1:59:59.'}");
+        assertEquals(_time(1, 59, 59, 0), result);
     }
     
     @Test
     public void testTimestampLiteral(){
-        FooExpression result = (FooExpression) parse("{ts '1991-05-21 11:59:59.0'}");
-        assertEquals(new FooExpression("{ts '1991-05-21 11:59:59.0'}"), result);
+        TimestampLiteral result = (TimestampLiteral) parse("{ts '1991-05-21 11:59:59.100'}");
+        assertEquals(_timestamp(1991, 5, 21, 11, 59, 59, 100), result);
     }
 
 }

@@ -42,16 +42,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
 
     @Override
     public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
-        if (original instanceof CompositeExpression) {
-            CompositeExpression compExpr = (CompositeExpression) original;
-            CompositeExpression transformed = new CompositeExpression(new ArrayList<Expression>());
-            List<Expression> expressions = compExpr.getExpressions();
-            int size = expressions.size();
-            for (int i = 0; i < size; i++) {
-                transformed.getExpressions().add(transform(expressions.get(i), fromClause, joinRequired));
-            }
-            return transformed;
-        } else if (original instanceof ArithmeticExpression) {
+        if (original instanceof ArithmeticExpression) {
             ArithmeticExpression arithmeticExpression = (ArithmeticExpression) original;
             Expression transformedLeft = transform(arithmeticExpression.getLeft(), fromClause, joinRequired);
             Expression transformedRight = transform(arithmeticExpression.getRight(), fromClause, joinRequired);

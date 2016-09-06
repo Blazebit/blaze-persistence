@@ -15,21 +15,7 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -52,17 +38,15 @@ public interface Expression {
 
         public void visit(TreatExpression expression);
 
-        public void visit(CompositeExpression expression);
-
-        public void visit(LiteralExpression expression);
-
         public void visit(NullExpression expression);
-
-        public void visit(FooExpression expression);
 
         public void visit(SubqueryExpression expression);
 
         public void visit(FunctionExpression expression);
+
+        public void visit(TypeFunctionExpression expression);
+
+        public void visit(TrimExpression expression);
 
         public void visit(WhenClauseExpression expression);
 
@@ -75,14 +59,20 @@ public interface Expression {
         public void visit(ArithmeticFactor expression);
 
         public void visit(NumericLiteral expression);
-        
+
+        public void visit(StringLiteral expression);
+
+        public void visit(DateLiteral expression);
+
+        public void visit(TimeLiteral expression);
+
+        public void visit(TimestampLiteral expression);
+
+        public void visit(EnumLiteral expression);
+
+        public void visit(EntityLiteral expression);
+
         // Predicates
-        public void visit(AndPredicate predicate);
-
-        public void visit(OrPredicate predicate);
-
-        public void visit(NotPredicate predicate);
-
         public void visit(EqPredicate predicate);
 
         public void visit(IsNullPredicate predicate);
@@ -107,6 +97,10 @@ public interface Expression {
 
         public void visit(ExistsPredicate predicate);
 
+        public void visit(BooleanLiteral predicate);
+
+        public void visit(CompoundPredicate predicate);
+
     }
 
     public static interface ResultVisitor<T> {
@@ -122,17 +116,15 @@ public interface Expression {
 
         public T visit(TreatExpression expression);
 
-        public T visit(CompositeExpression expression);
-
-        public T visit(LiteralExpression expression);
-
         public T visit(NullExpression expression);
-
-        public T visit(FooExpression expression);
 
         public T visit(SubqueryExpression expression);
 
         public T visit(FunctionExpression expression);
+
+        public T visit(TypeFunctionExpression expression);
+
+        public T visit(TrimExpression expression);
 
         public T visit(WhenClauseExpression expression);
 
@@ -145,14 +137,20 @@ public interface Expression {
         public T visit(ArithmeticFactor expression);
 
         public T visit(NumericLiteral expression);
-        
+
+        public T visit(StringLiteral expression);
+
+        public T visit(DateLiteral expression);
+
+        public T visit(TimeLiteral expression);
+
+        public T visit(TimestampLiteral expression);
+
+        public T visit(EnumLiteral expression);
+
+        public T visit(EntityLiteral expression);
+
         // Predicates
-        public T visit(AndPredicate predicate);
-
-        public T visit(OrPredicate predicate);
-
-        public T visit(NotPredicate predicate);
-
         public T visit(EqPredicate predicate);
 
         public T visit(IsNullPredicate predicate);
@@ -176,6 +174,10 @@ public interface Expression {
         public T visit(LePredicate predicate);
 
         public T visit(ExistsPredicate predicate);
+
+        public T visit(BooleanLiteral predicate);
+
+        public T visit(CompoundPredicate predicate);
     }
 
     public Expression clone();

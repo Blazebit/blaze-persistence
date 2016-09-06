@@ -16,19 +16,16 @@
 package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.SimpleQueryGenerator;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.LogManager;
-
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.junit.Before;
 import org.junit.BeforeClass;
+
+import java.util.*;
+import java.util.logging.LogManager;
 
 /**
  *
@@ -44,7 +41,7 @@ public class AbstractParserTest {
 		}
 		
 	};
-    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate) {
+    protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -60,7 +57,23 @@ public class AbstractParserTest {
         }
 
     };
-    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate) {
+    protected ExpressionFactory optimizingEf = new AbstractTestExpressionFactory(setDelegate, true) {
+
+        private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseSimpleExpression();
+            }
+        };
+
+        @Override
+        protected AbstractExpressionFactory.RuleInvoker getSimpleExpressionRuleInvoker() {
+            return simpleExpressionRuleInvoker;
+        }
+
+    };
+    protected ExpressionFactory subqueryEf = new AbstractTestExpressionFactory(setDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
 
@@ -94,12 +107,15 @@ public class AbstractParserTest {
     	aggregateFunctions = new HashSet<String>();
     }
 
-    protected NotPredicate not(Predicate p) {
-        return new NotPredicate(p);
+    protected Predicate not(Predicate p) {
+        p.negate();
+        return p;
     }
 
-    protected CompositeExpression compose(Expression... expr) {
-        return new CompositeExpression(Arrays.asList(expr));
+    protected Predicate wrapNot(Predicate p) {
+        CompoundPredicate wrapper = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND, p);
+        wrapper.negate();
+        return wrapper;
     }
 
     protected Expression parseOrderBy(String expr) {
@@ -110,12 +126,12 @@ public class AbstractParserTest {
         return ef.createArithmeticExpression(expr);
     }
     
-    protected Expression parseStringExpr(String expr) {
-        return ef.createStringExpression(expr);
+    protected Expression parse(String expr) {
+        return ef.createSimpleExpression(expr, false);
     }
 
-    protected Expression parse(String expr) {
-        return ef.createSimpleExpression(expr);
+    protected Expression parseOptimized(String expr) {
+        return optimizingEf.createSimpleExpression(expr, false);
     }
 
     protected Expression parseJoin(String expr) {
@@ -123,23 +139,19 @@ public class AbstractParserTest {
     }
 
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
-        return ef.createPredicateExpression(expr, allowQuantifiedPredicates);
+        return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
+    }
+
+    protected Predicate parsePredicateOptimized(String expr, boolean allowQuantifiedPredicates) {
+        return optimizingEf.createBooleanExpression(expr, allowQuantifiedPredicates);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return subqueryEf.createSimpleExpression(expr);
+        return subqueryEf.createSimpleExpression(expr, false);
     }
     
     protected PathExpression parsePath(String expr){
         return ef.createPathExpression(expr);
-    }
-
-    protected FooExpression foo(String foo) {
-        return new FooExpression(foo);
-    }
-    
-    protected LiteralExpression literal(String wrapperFunction, String literal) {
-        return new LiteralExpression(wrapperFunction, literal);
     }
 
     protected FunctionExpression function(String name, Expression... args) {
@@ -148,6 +160,10 @@ public class AbstractParserTest {
     	} else {
     		return new FunctionExpression(name, Arrays.asList(args));
     	}
+    }
+
+    protected TypeFunctionExpression typeFunction(Expression arg) {
+        return new TypeFunctionExpression(arg);
     }
 
     protected AggregateExpression aggregate(String name, PathExpression arg, boolean distinct) {
@@ -193,13 +209,13 @@ public class AbstractParserTest {
         String base = expr.substring(0, firstIndex);
         String index = expr.substring(firstIndex + 1, lastIndex);
         Expression indexExpr;
-        if (index.startsWith(":")) {
-            indexExpr = new ParameterExpression(index.substring(1));
-        } else if (index.startsWith("\'") || index.matches("\\d+")) {
-            indexExpr = new FooExpression(index);
-        } else {
-            indexExpr = path(index.split("\\."));
-        }
+
+        /**
+         * TODO: change this to not use parse here - we actually do not want to rely on parsing for constructing the
+         * comparison expressions
+         */
+
+        indexExpr = parse(index);
         return new ArrayExpression(new PropertyExpression(base), indexExpr);
     }
 
@@ -233,6 +249,50 @@ public class AbstractParserTest {
 
     protected NumericLiteral _bigdec(String value) {
         return new NumericLiteral(value, NumericType.BIG_DECIMAL);
+    }
+
+    protected BooleanLiteral _boolean(boolean value) {
+        return new BooleanLiteral(value);
+    }
+
+    protected StringLiteral _string(String value) {
+        return new StringLiteral(value);
+    }
+
+    protected DateLiteral _date(int year, int month, int day) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(year, month - 1, day);
+        return new DateLiteral(cal.getTime());
+    }
+
+    protected TimeLiteral _time(int hour, int minute, int second, int millisecond) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(Calendar.HOUR, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millisecond);
+        return new TimeLiteral(cal.getTime());
+    }
+
+    protected TimestampLiteral _timestamp(int year, int month, int day, int hour, int minute, int second, int millisecond) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(year, month - 1, day);
+        cal.set(Calendar.HOUR, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millisecond);
+        return new TimestampLiteral(cal.getTime());
+    }
+
+    protected EnumLiteral _enum(String priginalExpression) {
+        return new EnumLiteral(null, priginalExpression);
+    }
+
+    protected EntityLiteral _entity(String priginalExpression) {
+        return new EntityLiteral(null, priginalExpression);
     }
 
     protected ArithmeticExpression add(Expression left, Expression right) {

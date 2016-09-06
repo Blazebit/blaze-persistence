@@ -17,22 +17,7 @@ package com.blazebit.persistence.impl.expression;
 
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -70,23 +55,6 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-    }
-
-    @Override
-    public void visit(FooExpression expression) {
-    }
-
-    @Override
-    public void visit(LiteralExpression expression) {
-    }
-
-    @Override
     public void visit(NullExpression expression) {
     }
 
@@ -101,6 +69,19 @@ public abstract class VisitorAdapter implements Expression.Visitor {
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
+    }
+
+    @Override
+    public void visit(TypeFunctionExpression expression) {
+        visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public void visit(TrimExpression expression) {
+        if (expression.getTrimCharacter() != null) {
+            expression.getTrimCharacter().accept(this);
+        }
+        expression.getTrimSource().accept(this);
     }
 
     @Override
@@ -141,26 +122,40 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     }
 
     @Override
-    public void visit(AndPredicate predicate) {
+    public void visit(BooleanLiteral expression) {
+    }
+
+    @Override
+    public void visit(StringLiteral expression) {
+    }
+
+    @Override
+    public void visit(DateLiteral expression) {
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+    }
+
+    @Override
+    public void visit(EnumLiteral expression) {
+    }
+
+    @Override
+    public void visit(EntityLiteral expression) {
+    }
+
+    @Override
+    public void visit(CompoundPredicate predicate) {
         List<Predicate> children = predicate.getChildren();
         int size = children.size();
         for (int i = 0; i < size; i++) {
             children.get(i).accept(this);
         }
-    }
-
-    @Override
-    public void visit(OrPredicate predicate) {
-        List<Predicate> children = predicate.getChildren();
-        int size = children.size();
-        for (int i = 0; i < size; i++) {
-            children.get(i).accept(this);
-        }
-    }
-
-    @Override
-    public void visit(NotPredicate predicate) {
-        predicate.getPredicate().accept(this);
     }
 
     @Override
@@ -201,7 +196,9 @@ public abstract class VisitorAdapter implements Expression.Visitor {
     @Override
     public void visit(InPredicate predicate) {
         predicate.getLeft().accept(this);
-        predicate.getRight().accept(this);
+        for (Expression right : predicate.getRight()) {
+            right.accept(this);
+        }
     }
 
     @Override

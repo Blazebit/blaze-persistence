@@ -1,9 +1,9 @@
 package com.blazebit.persistence.impl.expression;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 12.07.2016.
+ *
+ * @author Moritz Becker
+ * @since 1.2
  */
 public class NumericLiteral extends AbstractNumericExpression {
 
@@ -52,9 +52,5 @@ public class NumericLiteral extends AbstractNumericExpression {
         return result;
     }
 
-    @Override
-    public String toString() {
-        return super.toString();
-    }
 }
 

@@ -15,26 +15,10 @@
  */
 package com.blazebit.persistence.impl.expression;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.blazebit.persistence.impl.predicate.AndPredicate;
-import com.blazebit.persistence.impl.predicate.BetweenPredicate;
-import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
-import com.blazebit.persistence.impl.predicate.EqPredicate;
-import com.blazebit.persistence.impl.predicate.ExistsPredicate;
-import com.blazebit.persistence.impl.predicate.GePredicate;
-import com.blazebit.persistence.impl.predicate.GtPredicate;
-import com.blazebit.persistence.impl.predicate.InPredicate;
-import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
-import com.blazebit.persistence.impl.predicate.IsNullPredicate;
-import com.blazebit.persistence.impl.predicate.LePredicate;
-import com.blazebit.persistence.impl.predicate.LikePredicate;
-import com.blazebit.persistence.impl.predicate.LtPredicate;
-import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
-import com.blazebit.persistence.impl.predicate.MultinaryPredicate;
-import com.blazebit.persistence.impl.predicate.NotPredicate;
-import com.blazebit.persistence.impl.predicate.OrPredicate;
-import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.*;
 
 /**
  *
@@ -77,26 +61,6 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(CompositeExpression expression) {
-        List<Expression> expressions = expression.getExpressions();
-        int size = expressions.size();
-        for (int i = 0; i < size; i++) {
-            expressions.get(i).accept(this);
-        }
-        return expression;
-    }
-
-    @Override
-    public Expression visit(FooExpression expression) {
-        return expression;
-    }
-
-    @Override
-    public Expression visit(LiteralExpression expression) {
-        return expression;
-    }
-
-    @Override
     public Expression visit(NullExpression expression) {
         return expression;
     }
@@ -113,6 +77,17 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         for (int i = 0; i < size; i++) {
             expressions.get(i).accept(this);
         }
+        return expression;
+    }
+
+    @Override
+    public Expression visit(TypeFunctionExpression expression) {
+        return visit((FunctionExpression) expression);
+    }
+
+    @Override
+    public Expression visit(TrimExpression expression) {
+        expression.getTrimSource().accept(this);
         return expression;
     }
 
@@ -157,18 +132,46 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
     }
 
     @Override
-    public Expression visit(AndPredicate predicate) {
-        return visit((MultinaryPredicate) predicate);
+    public Expression visit(BooleanLiteral expression) {
+        return expression;
     }
 
     @Override
-    public Expression visit(OrPredicate predicate) {
-        return visit((MultinaryPredicate) predicate);
+    public Expression visit(StringLiteral expression) {
+        return expression;
     }
 
     @Override
-    public Expression visit(NotPredicate predicate) {
-        predicate.setPredicate((Predicate) predicate.getPredicate().accept(this));
+    public Expression visit(DateLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(TimeLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(TimestampLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(EnumLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(EntityLiteral expression) {
+        return expression;
+    }
+
+    @Override
+    public Expression visit(CompoundPredicate predicate) {
+        for (int i = 0; i < predicate.getChildren().size(); i++) {
+            Predicate p = predicate.getChildren().get(i);
+            predicate.getChildren().set(i, (Predicate) p.accept(this));
+        }
         return predicate;
     }
 
@@ -209,7 +212,13 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
 
     @Override
     public Expression visit(InPredicate predicate) {
-        return visit((BinaryExpressionPredicate) predicate);
+        predicate.setLeft(predicate.getLeft().accept(this));
+        List<Expression> newRight = new ArrayList<Expression>();
+        for (Expression right : predicate.getRight()) {
+            newRight.add(right.accept(this));
+        }
+        predicate.setRight(newRight);
+        return predicate;
     }
 
     @Override
@@ -244,11 +253,4 @@ public abstract class PredicateModifyingResultVisitorAdapter implements Expressi
         return predicate;
     }
 
-    private MultinaryPredicate visit(MultinaryPredicate predicate) {
-        for (int i = 0; i < predicate.getChildren().size(); i++) {
-            Predicate p = predicate.getChildren().get(i);
-            predicate.getChildren().set(i, (Predicate) p.accept(this));
-        }
-        return predicate;
-    }
 }

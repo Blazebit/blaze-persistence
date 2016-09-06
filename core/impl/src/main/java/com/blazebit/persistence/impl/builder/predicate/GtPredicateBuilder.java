@@ -36,7 +36,7 @@ public class GtPredicateBuilder<T> extends AbstractQuantifiablePredicateBuilder<
 
     @Override
     protected QuantifiableBinaryExpressionPredicate createPredicate(Expression left, Expression right, PredicateQuantifier quantifier) {
-        return new GtPredicate(left, right, quantifier);
+        return new GtPredicate(left, right, quantifier, false);
     }
 
 }

@@ -27,32 +27,32 @@ import java.util.List;
  * @author Moritz Becker
  * @since 1.2.0
  */
-public class TrimExpression extends FunctionExpression {
+public class TrimExpression extends AbstractExpression {
 
     private final Trimspec trimspec;
     private final Expression trimCharacter;
-    private final Expression trimSource;
+    private Expression trimSource;
 
     public TrimExpression(Trimspec trimspec, Expression trimCharacter, Expression trimSource) {
-        super("TRIM", trimArguments(trimspec, trimCharacter, trimSource));
         this.trimspec = trimspec;
         this.trimCharacter = trimCharacter;
         this.trimSource = trimSource;
     }
-    
-    private static List<Expression> trimArguments(Trimspec trimspec, Expression trimCharacter, Expression trimSource) {
-        CompositeExpression compositeExpression = new CompositeExpression(new ArrayList<Expression>());
-        compositeExpression.append(trimspec.name() + " ");
-        
-        if (trimCharacter != null) {
-            compositeExpression.append(trimCharacter);
-            compositeExpression.append(" ");
-        }
-        
-        compositeExpression.append("FROM ");
-        compositeExpression.append(trimSource);
-        
-        return Arrays.asList((Expression) compositeExpression);
+
+    public Trimspec getTrimspec() {
+        return trimspec;
+    }
+
+    public Expression getTrimCharacter() {
+        return trimCharacter;
+    }
+
+    public Expression getTrimSource() {
+        return trimSource;
+    }
+
+    public void setTrimSource(Expression trimSource) {
+        this.trimSource = trimSource;
     }
 
     @Override

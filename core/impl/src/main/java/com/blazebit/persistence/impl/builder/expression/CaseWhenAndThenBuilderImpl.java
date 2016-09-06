@@ -33,7 +33,7 @@ import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsi
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.ExistsPredicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -49,7 +49,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
-    private final AndPredicate predicate = new AndPredicate();
+    private final CompoundPredicate predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
     private final ExpressionBuilderEndedListener listener;
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private final SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> leftSubqueryPredicateBuilderListener = new LeftHandsideSubqueryPredicateBuilderListener();
@@ -65,7 +65,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
 
     @Override
     public RestrictionBuilder<CaseWhenAndThenBuilder<T>> and(String expression) {
-        Expression expr = expressionFactory.createSimpleExpression(expression);
+        Expression expr = expressionFactory.createSimpleExpression(expression, false);
         return startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, expr, subqueryInitFactory, expressionFactory, parameterManager));
     }
 
@@ -78,7 +78,7 @@ public class CaseWhenAndThenBuilderImpl<T extends CaseWhenBuilder<?>> extends Pr
     @Override
     public SubqueryInitiator<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> andSubquery(String subqueryAlias, String expression) {
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression));
+        SubqueryBuilderListenerImpl<RestrictionBuilder<CaseWhenAndThenBuilder<T>>> superExprLeftSubqueryPredicateBuilderListener = new SuperExpressionLeftHandsideSubqueryPredicateBuilder(subqueryAlias, expressionFactory.createSimpleExpression(expression, true));
         RestrictionBuilder<CaseWhenAndThenBuilder<T>> restrictionBuilder = startBuilder(new RestrictionBuilderImpl<CaseWhenAndThenBuilder<T>>(this, this, subqueryInitFactory, expressionFactory, parameterManager));
         return subqueryInitFactory.createSubqueryInitiator(restrictionBuilder, superExprLeftSubqueryPredicateBuilderListener);
     }

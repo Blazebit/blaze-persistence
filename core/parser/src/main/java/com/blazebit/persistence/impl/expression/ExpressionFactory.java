@@ -17,6 +17,8 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.predicate.Predicate;
 
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -29,7 +31,7 @@ public interface ExpressionFactory {
 
     public Expression createJoinPathExpression(String expression);
 
-    public Expression createSimpleExpression(String expression);
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);
 
@@ -41,7 +43,9 @@ public interface ExpressionFactory {
 
     public Expression createOrderByExpression(String expression);
 
-    public Expression createInPredicateExpression(String[] parameterOrLiteralExpressions);
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions);
 
-    public Predicate createPredicateExpression(String expression, boolean allowQuantifiedPredicates);
+    public Expression createInItemExpression(String parameterOrLiteralExpression);
+
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates);
 }

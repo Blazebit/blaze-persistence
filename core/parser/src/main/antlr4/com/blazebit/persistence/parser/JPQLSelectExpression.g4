@@ -162,6 +162,9 @@ single_valued_object_path_expression : path
 path : general_subpath '.' general_path_element
      ;
 
+path_no_array : pathElem+=simple_path_element ('.' pathElem+=simple_path_element)+
+              ;
+
 collection_valued_path_expression : single_element_path_expression
                                   | path
                                   ;
@@ -228,12 +231,12 @@ datetime_expression : state_field_path_expression
                     | aggregate_expression
                     | case_expression
                     | function_invocation
-                    | literal_temporal
+                    | temporal_literal
                     ;
 
 boolean_expression : state_field_path_expression
                    | single_element_path_expression
-                   | Boolean_literal
+                   | boolean_literal
                    | Input_parameter
                    | case_expression
                    | function_invocation
@@ -261,7 +264,8 @@ entity_type_expression : type_discriminator
                        | entity_type_literal // This is a custom, non JPA compliant literal
                        | Input_parameter
                        ;
-entity_type_literal : ENTITY '(' identifier ')'
+
+entity_type_literal : ENTITY '(' (identifier | path_no_array) ')'
                     ;
 
 type_discriminator : TYPE '(' type_discriminator_arg ')';
@@ -316,10 +320,11 @@ nullif_expression : NULLIF '('scalar_expression',' scalar_expression')';
 null_literal : NULL;
 
 literal
-    : Boolean_literal
+    : boolean_literal
     | enum_literal
     | numeric_literal
     | string_literal
+    | temporal_literal
     ;
 
 numeric_literal
@@ -335,10 +340,13 @@ string_literal : String_literal
                | Character_literal
                ;
 
-literal_temporal
-    : Date_literal
-    | Time_literal
-    | Timestamp_literal
+boolean_literal : Boolean_literal
+                ;
+
+temporal_literal
+    : Date_literal      #DateLiteral
+    | Time_literal      #TimeLiteral
+    | Timestamp_literal #TimestampLiteral
     ;
 
 trim_character : string_literal
@@ -377,7 +385,7 @@ between_expression : expr=arithmetic_expression (not=NOT)? BETWEEN bound1=arithm
                    ;
 
 // TODO: the cases for identifier are actually not JPA compliant and is only required for managing a placeholder that is later replaced by a subquery
-in_expression : (/* Placeholder case */ Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
+in_expression : (/* Placeholder case */ left=Identifier | state_field_path_expression | type_discriminator) (not=NOT)? IN ( '(' inItems+=in_item (',' inItems+=in_item)* ')' | param=Input_parameter | /* Placeholder case */ right=Identifier )
               ;
 
 in_item : literal
@@ -417,19 +425,21 @@ simple_entity_or_value_expression : identifier
                                   ;
 
 comparison_expression : left=string_expression comparison_operator right=string_expression # ComparisonExpression_string
-                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_string
+                      | {allowQuantifiedPredicates == true}? left=string_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_string
                       | left=boolean_expression op=equality_comparison_operator right=boolean_expression # ComparisonExpression_boolean
-                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_boolean
+                      | {allowQuantifiedPredicates == true}? left=boolean_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_boolean
                       | left=enum_expression op=equality_comparison_operator right=enum_expression # ComparisonExpression_enum
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=datetime_expression comparison_operator right=datetime_expression # ComparisonExpression_datetime
-                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_datetime
+                      | {allowQuantifiedPredicates == true}? left=datetime_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_datetime
                       | left=entity_expression op=equality_comparison_operator right=entity_expression # ComparisonExpression_entity
-                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entity
+                      | {allowQuantifiedPredicates == true}? left=entity_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entity
                       | left=arithmetic_expression comparison_operator right=arithmetic_expression # ComparisonExpression_arithmetic
-                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_arithmetic
+                      | {allowQuantifiedPredicates == true}? left=arithmetic_expression comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_arithmetic
                       | left=entity_type_expression op=equality_comparison_operator right=entity_type_expression # ComparisonExpression_entitytype
-                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME)? right=identifier # QuantifiedComparisonExpression_entitytype
+                      | {allowQuantifiedPredicates == true}? left=entity_type_expression op=equality_comparison_operator quantifier=(ALL | ANY | SOME) ('(' right=identifier ')' | right=identifier) # QuantifiedComparisonExpression_entitytype
+                      | left=path op=equality_comparison_operator right=type_discriminator # ComparisonExpression_path_type
+                      | left=type_discriminator op=equality_comparison_operator right=path # ComparisonExpression_type_path
                       ;
 
 equality_comparison_operator : '=' # EqPredicate

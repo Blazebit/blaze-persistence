@@ -163,7 +163,7 @@ public class OrderByManager extends AbstractManager {
         }
 
         queryGenerator.setQueryBuffer(sb);
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
 
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
@@ -185,7 +185,7 @@ public class OrderByManager extends AbstractManager {
             }
         }
 
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     /**
@@ -198,7 +198,7 @@ public class OrderByManager extends AbstractManager {
             return;
         }
 
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         StringBuilder sb = new StringBuilder();
 
         List<OrderByInfo> infos = orderByInfos;
@@ -227,7 +227,7 @@ public class OrderByManager extends AbstractManager {
             }
         }
 
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     void buildOrderBy(StringBuilder sb, boolean inverseOrder, boolean resolveSelectAliases) {
@@ -236,8 +236,8 @@ public class OrderByManager extends AbstractManager {
         }
         queryGenerator.setQueryBuffer(sb);
         sb.append(" ORDER BY ");
-        
-        boolean conditionalContext = queryGenerator.setConditionalContext(false);
+
+        SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
 
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
@@ -248,7 +248,7 @@ public class OrderByManager extends AbstractManager {
             
             applyOrderBy(sb, infos.get(i), inverseOrder, resolveSelectAliases);
         }
-        queryGenerator.setConditionalContext(conditionalContext);
+        queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
     }
 
     private void applyOrderBy(StringBuilder sb, OrderByInfo orderBy, boolean inverseOrder, boolean resolveSelectAliases) {

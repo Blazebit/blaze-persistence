@@ -46,6 +46,7 @@ import org.junit.BeforeClass;
  */
 public abstract class AbstractJpaPersistenceTest {
 
+    protected EntityManagerFactory emf;
     protected EntityManager em;
     protected CriteriaBuilderFactory cbf;
 
@@ -61,12 +62,12 @@ public abstract class AbstractJpaPersistenceTest {
 
     @Before
     public void init() {
-        EntityManagerFactory factory = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
-        em = factory.createEntityManager();
+        emf = createEntityManagerFactory("TestsuiteBase", createProperties("drop-and-create"));
+        em = emf.createEntityManager();
 
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         config = configure(config);
-        cbf = config.createCriteriaBuilderFactory(factory);
+        cbf = config.createCriteriaBuilderFactory(emf);
     }
 
     @After

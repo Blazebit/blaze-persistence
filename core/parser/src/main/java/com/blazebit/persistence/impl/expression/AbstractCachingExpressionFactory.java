@@ -17,6 +17,9 @@ package com.blazebit.persistence.impl.expression;
 
 import com.blazebit.persistence.impl.predicate.Predicate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author Christian Beikov
@@ -64,12 +67,12 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
-    public Expression createSimpleExpression(final String expression) {
+    public Expression createSimpleExpression(final String expression, final boolean allowQuantifiedPredicates) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.SimpleExpression", expression, new Supplier<Expression>() {
 
             @Override
             public Expression get() {
-                return delegate.createSimpleExpression(expression);
+                return delegate.createSimpleExpression(expression, allowQuantifiedPredicates);
             }
 
         });
@@ -136,24 +139,33 @@ public abstract class AbstractCachingExpressionFactory implements ExpressionFact
     }
 
     @Override
-    public Expression createInPredicateExpression(final String[] parameterOrLiteralExpressions) {
-        return getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpressions, new Supplier<Expression>() {
+    public List<Expression> createInItemExpressions(final String[] parameterOrLiteralExpressions) {
+        List<Expression> inItemExpressions = new ArrayList<Expression>();
+        for (final String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression));
+        }
+        return inItemExpressions;
+    }
+
+    @Override
+    public Expression createInItemExpression(final String parameterOrLiteralExpression) {
+        return getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateExpression", parameterOrLiteralExpression, new Supplier<Expression>() {
 
             @Override
             public Expression get() {
-                return delegate.createInPredicateExpression(parameterOrLiteralExpressions);
+                return delegate.createInItemExpression(parameterOrLiteralExpression);
             }
 
         });
     }
 
     @Override
-    public Predicate createPredicateExpression(final String expression, final boolean allowQuantifiedPredicates) {
+    public Predicate createBooleanExpression(final String expression, final boolean allowQuantifiedPredicates) {
         return getOrDefault("com.blazebit.persistence.parser.expression.cache.PredicateExpression", expression, new Supplier<Predicate>() {
 
             @Override
             public Predicate get() {
-                return delegate.createPredicateExpression(expression, allowQuantifiedPredicates);
+                return delegate.createBooleanExpression(expression, allowQuantifiedPredicates);
             }
 
         });

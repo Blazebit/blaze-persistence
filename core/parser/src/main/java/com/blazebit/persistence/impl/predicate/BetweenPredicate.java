@@ -24,19 +24,18 @@ import com.blazebit.persistence.impl.expression.Expression;
  * @author Moritz Becker
  * @since 1.0
  */
-public class BetweenPredicate extends AbstractExpression implements Predicate, Negatable {
+public class BetweenPredicate extends AbstractPredicate {
 
     private Expression left;
     private Expression start;
     private Expression end;
-    private boolean negated;
 
     public BetweenPredicate(Expression left, Expression start, Expression end) {
         this(left, start, end, false);
     }
 
     public BetweenPredicate(Expression left, Expression start, Expression end, boolean negated) {
-        this.negated = negated;
+        super(negated);
         this.left = left;
         this.start = start;
         this.end = end;
@@ -45,16 +44,6 @@ public class BetweenPredicate extends AbstractExpression implements Predicate, N
     @Override
     public BetweenPredicate clone() {
         return new BetweenPredicate(left.clone(), start.clone(), end.clone(), negated);
-    }
-
-    @Override
-    public boolean isNegated() {
-        return negated;
-    }
-
-    @Override
-    public void setNegated(boolean negated) {
-        this.negated = negated;
     }
 
     public Expression getLeft() {
@@ -92,37 +81,25 @@ public class BetweenPredicate extends AbstractExpression implements Predicate, N
     }
 
     @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 61 * hash + (this.left != null ? this.left.hashCode() : 0);
-        hash = 61 * hash + (this.start != null ? this.start.hashCode() : 0);
-        hash = 61 * hash + (this.end != null ? this.end.hashCode() : 0);
-        hash = 61 * hash + (this.negated ? 1 : 0);
-        return hash;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BetweenPredicate)) return false;
+        if (!super.equals(o)) return false;
+
+        BetweenPredicate that = (BetweenPredicate) o;
+
+        if (left != null ? !left.equals(that.left) : that.left != null) return false;
+        if (start != null ? !start.equals(that.start) : that.start != null) return false;
+        return end != null ? end.equals(that.end) : that.end == null;
+
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final BetweenPredicate other = (BetweenPredicate) obj;
-        if (this.left != other.left && (this.left == null || !this.left.equals(other.left))) {
-            return false;
-        }
-        if (this.start != other.start && (this.start == null || !this.start.equals(other.start))) {
-            return false;
-        }
-        if (this.end != other.end && (this.end == null || !this.end.equals(other.end))) {
-            return false;
-        }
-        if (this.negated != other.negated) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (left != null ? left.hashCode() : 0);
+        result = 31 * result + (start != null ? start.hashCode() : 0);
+        result = 31 * result + (end != null ? end.hashCode() : 0);
+        return result;
     }
-
 }

@@ -26,7 +26,7 @@ import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
@@ -57,7 +57,7 @@ public class JoinNode {
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
 
-    private AndPredicate onPredicate;
+    private CompoundPredicate onPredicate;
     
     // Cache
     private boolean dirty = true;
@@ -287,11 +287,11 @@ public class JoinNode {
         return correlationPath;
     }
 
-    public AndPredicate getOnPredicate() {
+    public CompoundPredicate getOnPredicate() {
         return onPredicate;
     }
 
-    public void setOnPredicate(AndPredicate onPredicate) {
+    public void setOnPredicate(CompoundPredicate onPredicate) {
         this.onPredicate = onPredicate;
         onUpdate(StateChange.ON_PREDICATE);
     }

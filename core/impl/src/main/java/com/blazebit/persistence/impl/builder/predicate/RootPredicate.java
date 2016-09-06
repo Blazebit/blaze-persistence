@@ -16,8 +16,8 @@
 package com.blazebit.persistence.impl.builder.predicate;
 
 import com.blazebit.persistence.impl.ParameterManager;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.predicate.AndPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 
@@ -29,26 +29,26 @@ import com.blazebit.persistence.impl.predicate.PredicateBuilder;
  */
 public class RootPredicate extends PredicateBuilderEndedListenerImpl {
 
-    private final AndPredicate predicate;
+    private final CompoundPredicate predicate;
 
     private final VisitorAdapter parameterRegistrationVisitor;
 
     public RootPredicate(ParameterManager parameterManager) {
-        this.predicate = new AndPredicate();
+        this.predicate = new CompoundPredicate(CompoundPredicate.BooleanOperator.AND);
         this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
     }
 
     @Override
     public void onBuilderEnded(PredicateBuilder builder) {
         super.onBuilderEnded(builder);
-        Predicate pred = builder.getPredicate();
+        Predicate predicate = builder.getPredicate();
 
         // register parameter expressions
-        pred.accept(parameterRegistrationVisitor);
-        predicate.getChildren().add(pred);
+        predicate.accept(parameterRegistrationVisitor);
+        this.predicate.getChildren().add(predicate);
     }
 
-    public AndPredicate getPredicate() {
+    public CompoundPredicate getPredicate() {
         return predicate;
     }
 }

@@ -3,10 +3,12 @@ package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteria;
 import com.blazebit.persistence.testsuite.AbstractCoreTest;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Document_;
 import com.blazebit.persistence.testsuite.entity.Person;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.Calendar;
 
@@ -32,6 +34,8 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-core/issues/119
+    @Category(NoDatanucleus.class)
     public void setSubquery() {
         BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");
@@ -49,6 +53,8 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     @Test
+    // TODO: https://github.com/datanucleus/datanucleus-core/issues/119
+    @Category(NoDatanucleus.class)
     public void setCorrelatedSubqueryExpression() {
         BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");

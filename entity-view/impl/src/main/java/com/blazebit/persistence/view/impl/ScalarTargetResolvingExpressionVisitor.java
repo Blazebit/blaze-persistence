@@ -16,11 +16,7 @@
 package com.blazebit.persistence.view.impl;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
@@ -28,6 +24,7 @@ import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -302,11 +299,6 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
     }
 
-    @Override
-    public void visit(CompositeExpression expression) {
-        resolveToAny(expression.getExpressions(), false);
-    }
-    
     private void resolveToAny(List<Expression> expressions, boolean allowParams) {
         List<PathPosition> currentPositions = pathPositions;
         List<PathPosition> newPositions = new ArrayList<PathPosition>();
@@ -334,30 +326,9 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     @Override
-    public void visit(LiteralExpression expression) {
-        // We can't infer a type here
-        // TODO: Not sure what happens when this is the result node of a case when
-    }
-
-    @Override
     public void visit(NullExpression expression) {
         // We can't infer a type here
         // TODO: Not sure what happens when this is the result node of a case when
-    }
-
-    @Override
-    public void visit(FooExpression expression) {
-        String expressionString = expression.toString();
-        if ("true".equalsIgnoreCase(expressionString) || "false".equalsIgnoreCase(expressionString)) {
-            currentPosition.setCurrentClass(Boolean.class);
-        } else if (isNumber(expressionString)) {
-        	// Maybe use Number?
-        	currentPosition.setCurrentClass(Integer.class);
-        } else {
-            // We can't infer a type here
-            // TODO: Not sure what happens when this is the result node of a case when
-            super.visit(expression);
-        }
     }
 
     @Override
@@ -379,6 +350,31 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         if (expression.getNumericType() != null) {
             currentPosition.setCurrentClass(expression.getNumericType().getJavaType());
         }
+    }
+
+    @Override
+    public void visit(BooleanLiteral expression) {
+        currentPosition.setCurrentClass(Boolean.class);
+    }
+
+    @Override
+    public void visit(StringLiteral expression) {
+        currentPosition.setCurrentClass(String.class);
+    }
+
+    @Override
+    public void visit(DateLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
+    }
+
+    @Override
+    public void visit(TimeLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
+    }
+
+    @Override
+    public void visit(TimestampLiteral expression) {
+        currentPosition.setCurrentClass(Date.class);
     }
 
     private boolean isNumber(String expressionString) {
@@ -451,7 +447,12 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             resolveToAny(expression.getExpressions(), true);
     	}
     }
-    
+
+    @Override
+    public void visit(TrimExpression expression) {
+        currentPosition.setCurrentClass(String.class);
+    }
+
     private PropertyExpression resolveBase(FunctionExpression expression) {
 		// According to our grammar, we can only get a path here
 		PathExpression path = (PathExpression) expression.getExpressions().get(0);
