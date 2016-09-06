@@ -202,15 +202,18 @@ public class ProxyFactory {
 
             Set<MappingConstructor<T>> constructors = managedViewType.getConstructors();
 
+            // EmbeddableEntityView does not have an id #219
+            int idParameterCount = viewType != null ? 1 : 0;
+
             for (MappingConstructor<?> constructor : constructors) {
                 // Copy default constructor parameters
-                int constructorParameterCount = 1 + attributes.size() + constructor.getParameterAttributes().size();
+                int constructorParameterCount = idParameterCount + attributes.size() + constructor.getParameterAttributes().size();
                 CtClass[] constructorAttributeTypes = new CtClass[constructorParameterCount];
-                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, 1 + attributes.size());
+                System.arraycopy(attributeTypes, 0, constructorAttributeTypes, 0, idParameterCount + attributes.size());
 
                 // Append super constructor parameters to default constructor parameters
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
-                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, 1 + attributes.size(), superConstructor.getParameterTypes().length);
+                System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, idParameterCount + attributes.size(), superConstructor.getParameterTypes().length);
 
                 cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }

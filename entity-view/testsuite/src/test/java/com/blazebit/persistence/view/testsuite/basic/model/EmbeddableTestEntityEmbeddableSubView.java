@@ -25,9 +25,9 @@ import com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntityEmbedd
  * @since 1.0
  */
 @EmbeddableEntityView(EmbeddableTestEntityEmbeddable.class)
-public interface EmbeddableTestEntityEmbeddableSubView {
+public abstract class EmbeddableTestEntityEmbeddableSubView {
 
     @Mapping("name")
-    public String getName();
+    public abstract String getName();
     
 }
