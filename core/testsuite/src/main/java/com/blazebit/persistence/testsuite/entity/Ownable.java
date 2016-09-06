@@ -24,7 +24,7 @@ import javax.persistence.MappedSuperclass;
  * @author Christian
  */
 @MappedSuperclass
-public abstract class Ownable implements Serializable {
+public abstract class Ownable extends SequenceBaseEntity<Long> implements Serializable {
     
 	private static final long serialVersionUID = 1L;
 	

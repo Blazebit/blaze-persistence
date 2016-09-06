@@ -54,6 +54,8 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     
     @Test
 //    @Ignore("Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits")
+    // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
+    @Category({ NoDatanucleus.class })
     public void testSelectSubProperty() {
         // TODO: Maybe this test should be a negative test, as a usage like this should not be supported but only by using treat
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");

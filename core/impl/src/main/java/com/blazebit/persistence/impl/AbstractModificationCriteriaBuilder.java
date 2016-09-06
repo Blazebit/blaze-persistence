@@ -273,15 +273,15 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         if (attribute.isEmpty()) {
             throw new IllegalArgumentException("Invalid empty attribute");
         }
-        
-        List<Attribute<?,?>> attrPath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
-        
-        if (!type.isAssignableFrom(attrPath.get(attrPath.size() - 1).getJavaType())) {
-            throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.get(attrPath.size() - 1).getJavaType().getName());
+
+        AttributePath attrPath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attribute);
+
+        if (!type.isAssignableFrom(attrPath.getAttributeClass())) {
+            throw new IllegalArgumentException("The given expected field type is not of the expected type: " + attrPath.getAttributeClass().getName());
         }
 
         List<List<Attribute<?, ?>>> attributes = new ArrayList<List<Attribute<?, ?>>>();
-        attributes.add(attrPath);
+        attributes.add(attrPath.getAttributes());
         
         Query exampleQuery = getExampleQuery(attributes);
         Query baseQuery = getBaseQuery();
@@ -379,8 +379,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
             modificationQueryAttribute = idAttribute.getName();
         } else {
-            List<Attribute<?, ?>> queryAttrs = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
-            queryAttrType = queryAttrs.get(queryAttrs.size() - 1).getJavaType();
+            AttributePath queryAttributePath = JpaUtils.getBasicAttributePath(getMetamodel(), entityType, modificationQueryAttribute);
+            queryAttrType = queryAttributePath.getAttributeClass();
         }
         
         // NOTE: Actually we would check if the dbms supports returning this kind of attribute,
@@ -423,7 +423,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 throw new IllegalArgumentException("empty attribute at position " + i);
             }
             
-            attrs.add(JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]));
+            attrs.add(JpaUtils.getBasicAttributePath(getMetamodel(), entityType, attributes[i]).getAttributes());
         }
         
         return attrs;

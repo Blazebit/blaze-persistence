@@ -18,9 +18,7 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1252,7 +1250,7 @@ public class JoinManager extends AbstractManager {
                 baseNodeType = metamodel.managedType(baseNodeClass);
             }
 
-            Attribute<?, ?> attr = getSimpleAttributeForImplicitJoining(baseNodeType, attributeName);
+            Attribute<?, ?> attr = JpaUtils.getSimpleAttributeForImplicitJoining(metamodel, baseNodeType, attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within managed type " + typeName);
             }
@@ -1275,7 +1273,7 @@ public class JoinManager extends AbstractManager {
             }
         } else {
             Class<?> baseNodeType = baseNode.getPropertyClass();
-            Attribute<?, ?> attr = getSimpleAttributeForImplicitJoining(metamodel.managedType(baseNodeType), attributeName);
+            Attribute<?, ?> attr = JpaUtils.getSimpleAttributeForImplicitJoining(metamodel, metamodel.managedType(baseNodeType), attributeName);
             if (attr == null) {
                 throw new IllegalArgumentException("Field with name " + attributeName + " was not found within class " + baseNodeType.getName());
             }
@@ -1286,58 +1284,6 @@ public class JoinManager extends AbstractManager {
             field = attributeName;
         }
         return new JoinResult(newBaseNode, field, lazy, hasTreatedSubpath);
-    }
-
-    private Attribute<?, ?> getSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
-        Attribute<?, ?> attr;
-        if (attributeName.indexOf('.') < 0) {
-            attr = getPolymorphicSimpleAttributeForImplicitJoining(type, attributeName);
-            return attr;
-        }
-
-        String[] attributeParts = attributeName.split("\\.");
-        attr = getPolymorphicSimpleAttributeForImplicitJoining(type, attributeParts[0]);
-
-        for (int i = 1; i < attributeParts.length; i++) {
-            type = metamodel.managedType(JpaUtils.resolveFieldClass(type.getJavaType(), attr));
-            attr = getPolymorphicAttributeForJoining(type, attributeParts[i]);
-        }
-
-        return attr;
-    }
-
-    private Attribute<?, ?> getPolymorphicSimpleAttributeForImplicitJoining(ManagedType<?> type, String attributeName) {
-        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
-        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
-
-        if (resolvedAttributes.size() > 1) {
-            // If there is more than one resolved attribute we can still save the user some trouble
-            Attribute<?, ?> simpleAttribute = null;
-            Set<Attribute<?, ?>> amiguousAttributes = new HashSet<Attribute<?, ?>>();
-
-            for (Attribute<?, ?> attr : resolvedAttributes) {
-                if (JpaUtils.isJoinable(attr)) {
-                    amiguousAttributes.add(attr);
-                } else {
-                    simpleAttribute = attr;
-                }
-            }
-
-            if (simpleAttribute == null) {
-                return null;
-            } else {
-                for (Attribute<?, ?> a : amiguousAttributes) {
-                    LOG.warning("The attribute [" + attributeName + "] of the class [" + a.getDeclaringType().getJavaType().getName()
-                            + "] is ambiguous for polymorphic implicit joining on the type [" + type.getJavaType().getName() + "]");
-                }
-
-                return simpleAttribute;
-            }
-        } else if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
-        }
     }
 
     private void updateClauseDependencies(JoinNode baseNode, ClauseType clauseDependency) {
@@ -1366,80 +1312,15 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private static class AttributeJoinResult {
-        private final Attribute<?, ?> attribute;
-        private final Class<?> containingClass;
-
-        public AttributeJoinResult(Attribute<?, ?> attribute, Class<?> containingClass) {
-            this.attribute = attribute;
-            this.containingClass = containingClass;
-        }
-    }
-
-    private AttributeJoinResult getAttributeForJoining(ManagedType<?> type, String attributeName) {
-        Attribute<?, ?> attr;
-        if (attributeName.indexOf('.') < 0) {
-            attr = getPolymorphicAttributeForJoining(type, attributeName);
-            return new AttributeJoinResult(attr, type.getJavaType());
-        }
-
-        String[] attributeParts = attributeName.split("\\.");
-        attr = getPolymorphicAttributeForJoining(type, attributeParts[0]);
-
-        for (int i = 1; i < attributeParts.length; i++) {
-            type = metamodel.managedType(JpaUtils.resolveFieldClass(type.getJavaType(), attr));
-            attr = getPolymorphicAttributeForJoining(type, attributeParts[i]);
-        }
-
-        return new AttributeJoinResult(attr, type.getJavaType());
-    }
-
-    private Attribute<?, ?> getPolymorphicAttributeForJoining(ManagedType<?> type, String attributeName) {
-        Set<Attribute<?, ?>> resolvedAttributes = JpaUtils.getAttributesPolymorphic(metamodel, type, attributeName);
-        Iterator<Attribute<?, ?>> iter = resolvedAttributes.iterator();
-
-        if (resolvedAttributes.size() > 1) {
-            // If there is more than one resolved attribute we can still save the user some trouble
-            Attribute<?, ?> joinableAttribute = null;
-            Attribute<?, ?> attr = null;
-
-            // Multiple non-joinable attributes would be fine since we only care for OUR join manager here
-            // Multiple joinable attributes are only fine if they all have the same type
-            while (iter.hasNext()) {
-                attr = iter.next();
-                if (JpaUtils.isJoinable(attr)) {
-                    if (joinableAttribute != null && !joinableAttribute.getJavaType().equals(attr.getJavaType())) {
-                        throw new IllegalArgumentException("Multiple joinable attributes with the name [" + attributeName
-                                + "] but different java types in the types [" + joinableAttribute.getDeclaringType().getJavaType().getName()
-                                + "] and [" + attr.getDeclaringType().getJavaType().getName() + "] found!");
-                    } else {
-                        joinableAttribute = attr;
-                    }
-                }
-            }
-
-            // We return the joinable attribute because OUR join manager needs it's type for further joining
-            if (joinableAttribute != null) {
-                return joinableAttribute;
-            }
-
-            return attr;
-        } else if (iter.hasNext()) {
-            return iter.next();
-        } else {
-            return null;
-        }
-    }
-
     private JoinResult createOrUpdateNode(JoinNode baseNode, String baseNodeTreatType, String joinRelationName, String treatType, String alias, JoinType joinType, boolean implicit, boolean defaultJoin) {
         Class<?> baseNodeType = baseNode.getPropertyClass();
         ManagedType<?> type = metamodel.managedType(baseNodeType);
-        AttributeJoinResult attrJoinResult = getAttributeForJoining(type, joinRelationName);
-        Attribute<?, ?> attr = attrJoinResult.attribute;
+        AttributeJoinResult attrJoinResult = JpaUtils.getAttributeForJoining(metamodel, type, joinRelationName);
+        Attribute<?, ?> attr = attrJoinResult.getAttribute();
         if (attr == null) {
             throw new IllegalArgumentException("Field with name " + joinRelationName + " was not found within class " + baseNodeType.getName());
         }
-        Class<?> resolvedFieldClass = JpaUtils.resolveFieldClass(attrJoinResult.containingClass, attr);
+        Class<?> resolvedFieldClass = JpaUtils.resolveFieldClass(attrJoinResult.getContainingClass(), attr);
 
         if (!JpaUtils.isJoinable(attr)) {
             if (LOG.isLoggable(Level.FINE)) {
