@@ -22,8 +22,7 @@ import java.util.Set;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
 
 /**
@@ -67,7 +66,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @SuppressWarnings("unchecked")
     protected void renderCountStar() {
-        if (jpaProvider instanceof HibernateJpaProvider) {
+        if (jpaProvider.supportsCountStar()) {
             sb.append("COUNT(*)");
         } else {
             renderFunctionFunction("COUNT_STAR", (List<Expression>) (List<?>) Collections.emptyList());

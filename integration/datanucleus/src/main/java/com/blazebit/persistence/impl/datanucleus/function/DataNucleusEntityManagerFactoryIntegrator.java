@@ -25,8 +25,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import com.blazebit.persistence.impl.datanucleus.DataNucleusJpaProvider;
+import com.blazebit.persistence.spi.*;
 import org.datanucleus.NucleusContext;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.rdbms.RDBMSStoreManager;
@@ -34,9 +37,6 @@ import org.datanucleus.store.rdbms.sql.expression.SQLExpressionFactory;
 import org.datanucleus.store.rdbms.sql.method.SQLMethod;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 /**
  *
@@ -69,6 +69,23 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
 	public String getDbms(EntityManagerFactory entityManagerFactory) {
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
     	return vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
+	}
+
+	@Override
+	public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
+		String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
+
+		String[] versionParts = version.split("[\\.-]");
+		final int major = Integer.parseInt(versionParts[0]);
+		final int minor = Integer.parseInt(versionParts[1]);
+		final int fix = Integer.parseInt(versionParts[2]);
+
+		return new JpaProviderFactory() {
+			@Override
+			public JpaProvider createJpaProvider(EntityManager em) {
+				return new DataNucleusJpaProvider(em, major, minor, fix);
+			}
+		};
 	}
 
 	@SuppressWarnings("unchecked")

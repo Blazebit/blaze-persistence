@@ -50,7 +50,9 @@ public class JoinNode {
 
     private final JoinNode correlationParent;
     private final String correlationPath;
+    private final String parentTreatType;
     private final Class<?> propertyClass;
+    private final String treatType;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
 
@@ -63,25 +65,29 @@ public class JoinNode {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
-    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass) {
+    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, String treatType) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
+        this.parentTreatType = parentTreatType;
         this.aliasInfo = aliasInfo;
         this.type = type;
         this.propertyClass = propertyClass;
+        this.treatType = treatType;
         this.correlationParent = null;
         this.correlationPath = null;
         onUpdate(null);
     }
 
-    public JoinNode(JoinNode correlationParent, String correlationPath, JoinAliasInfo aliasInfo, Class<?> propertyClass) {
+    public JoinNode(JoinNode correlationParent, String correlationPath, String parentTreatType, JoinAliasInfo aliasInfo, Class<?> propertyClass, String treatType) {
         this.parent = null;
         this.parentTreeNode = null;
         this.type = null;
         this.correlationParent = correlationParent;
         this.correlationPath = correlationPath;
+        this.parentTreatType = parentTreatType;
         this.aliasInfo = aliasInfo;
         this.propertyClass = propertyClass;
+        this.treatType = treatType;
         onUpdate(null);
     }
     
@@ -275,8 +281,16 @@ public class JoinNode {
         return node;
     }
 
+    public String getParentTreatType() {
+        return parentTreatType;
+    }
+
     public Class<?> getPropertyClass() {
         return propertyClass;
+    }
+
+    public String getTreatType() {
+        return treatType;
     }
 
     public JoinNode getCorrelationParent() {

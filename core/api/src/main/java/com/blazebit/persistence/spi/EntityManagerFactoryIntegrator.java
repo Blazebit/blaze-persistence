@@ -40,6 +40,15 @@ public interface EntityManagerFactoryIntegrator {
 	 */
 	public String getDbms(EntityManagerFactory entityManagerFactory);
 
+	/**
+	 * Returns the jpa provider factory for the jpa provider of the given entity manager factory.
+	 *
+	 * @param entityManagerFactory Then entity manager factory for which to retrieve jpa provider factory for
+	 * @return The jpa provider factory
+	 * @since 1.2.0
+	 */
+	public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory);
+
     /**
      * Registers the given functions under the given names on the given entity manager factory.
      * The dbmsFunctions map the function name to a map of dbms specific functions.

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.jpaprovider;
+package com.blazebit.persistence.impl.eclipselink;
+
+import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
 
@@ -22,9 +24,9 @@ import javax.persistence.EntityManager;
  * @author Christian Beikov
  * @since 1.0
  */
-public class DataNucleusJpaProvider implements JpaProvider {
+public class EclipseLinkJpaProvider implements JpaProvider {
 
-    public DataNucleusJpaProvider(EntityManager em) {
+    public EclipseLinkJpaProvider(EntityManager em) {
 
     }
 
@@ -89,22 +91,42 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public Class<?> getDefaultQueryResultType() {
-        return null;
+        return Object.class;
     }
 
     @Override
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
     	// Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
-        return functionName + "(";
+        if (argumentCount == 0) {
+            return "OPERATOR('" + functionName + "'";
+        }
+
+        return "OPERATOR('" + functionName + "',";
     }
 
     @Override
     public boolean supportsRootTreat() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public boolean supportsTreatJoin() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsRootTreatJoin() {
+        return true;
     }
 
     @Override
     public boolean supportsSubtypePropertyResolving() {
-        return true;
+        return false;
     }
+
+    @Override
+    public boolean supportsCountStar() {
+        return false;
+    }
+
 }

@@ -25,7 +25,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.spi.JpaProvider;
 
 /**
  *

@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.jpaprovider;
+package com.blazebit.persistence.impl.hibernate;
+
+import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
 
@@ -150,7 +152,22 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsTreatJoin() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsRootTreatJoin() {
+        return false;
+    }
+
+    @Override
     public boolean supportsSubtypePropertyResolving() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsCountStar() {
         return true;
     }
 

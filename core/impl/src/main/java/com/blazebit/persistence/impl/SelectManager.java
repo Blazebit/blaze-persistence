@@ -54,7 +54,7 @@ import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
 import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
+import com.blazebit.persistence.spi.JpaProvider;
 
 /**
  *

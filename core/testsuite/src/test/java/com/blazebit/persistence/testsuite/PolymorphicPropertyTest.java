@@ -18,11 +18,11 @@ package com.blazebit.persistence.testsuite;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import org.junit.Test;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.entity.PolymorphicBase;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertyBase;
@@ -30,6 +30,7 @@ import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicPropertySub2;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub1;
 import com.blazebit.persistence.testsuite.entity.PolymorphicSub2;
+import org.junit.experimental.categories.Category;
 
 /**
  *
@@ -54,7 +55,7 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
     @Test
 //    @Ignore("Actually this kind of query is dangerous because hibernate chooses one subtype of PolymorphicPropertyBase and goes on with that assumption instead of searching for the subtype that fits")
     public void testSelectSubProperty() {
-        // NOTE: Maybe this test should be a negative test, as a usage like this should not be supported but only by using treat
+        // TODO: Maybe this test should be a negative test, as a usage like this should not be supported but only by using treat
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("propBase.base.relation1");
         cb.where("TYPE(base)").eq(PolymorphicSub1.class);
@@ -62,9 +63,11 @@ public class PolymorphicPropertyTest extends AbstractCoreTest {
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
-    
-    // NOTE: This is JPA 2.1 specific
+
     @Test
+    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
+    // NOTE: Datanucleus5 reports: org.datanucleus.store.rdbms.sql.expression.TypeConverterLiteral cannot be cast to org.datanucleus.store.rdbms.sql.expression.StringLiteral
+    @Category({ NoDatanucleus4.class, NoDatanucleus.class})
     public void testSelectSubPropertyWithTreat() {
         CriteriaBuilder<PolymorphicPropertyBase> cb = cbf.create(em, PolymorphicPropertyBase.class, "propBase");
         cb.select("relation1");

@@ -803,7 +803,7 @@
 		<profile>
 			<id>datanucleus-4</id>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoDatanucleus,com.blazebit.persistence.testsuite.base.category.NoDatanucleus4</jpa.excludedGroups>
 			</properties>
 			<repositories>
 				<repository>

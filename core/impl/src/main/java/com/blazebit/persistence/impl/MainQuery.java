@@ -6,8 +6,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 
@@ -46,6 +45,6 @@ public class MainQuery {
         
         ParameterManager parameterManager = new ParameterManager();
         Map<String, String> inheritedProperties = new HashMap<String, String>(cbf.getProperties());
-        return new MainQuery(cbf, em, JpaProviders.resolveJpaProvider(em, dbms), dbmsDialect, registeredFunctions, parameterManager, inheritedProperties);
+        return new MainQuery(cbf, em, cbf.createJpaProvider(em), dbmsDialect, registeredFunctions, parameterManager, inheritedProperties);
     }
 }

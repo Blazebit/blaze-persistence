@@ -15,18 +15,10 @@
  */
 package com.blazebit.persistence.testsuite;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
-import com.blazebit.persistence.impl.jpaprovider.JpaProvider;
-import com.blazebit.persistence.impl.jpaprovider.JpaProviders;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.*;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
@@ -54,13 +46,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected String ON_CLAUSE;
     
     static {
-        staticJpaProvider = JpaProviders.resolveJpaProvider(null, null);
+        EntityManagerFactoryIntegrator integrator = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();
+        staticJpaProvider = integrator.getJpaProviderFactory(null).createJpaProvider(null);
     }
 
     @Override
     public void init() {
         super.init();
-        jpaProvider = JpaProviders.resolveJpaProvider(em, dbms);
+        jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
         ON_CLAUSE = jpaProvider.getOnClause();
     }
     
@@ -143,7 +136,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
     
     protected String countStar() {
-    	if (jpaProvider instanceof HibernateJpaProvider) {
+    	if (jpaProvider.supportsCountStar()) {
     		return "COUNT(*)";
     	} else {
     		return function("COUNT_STAR");
@@ -156,7 +149,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 		
 		if (!distinct) {
 	    	String countStar;
-	    	if (jpaProvider instanceof HibernateJpaProvider) {
+	    	if (jpaProvider.supportsCountStar()) {
 	    		countStar = "COUNT(*";
 	    	} else {
 	    		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
@@ -184,7 +177,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String treatJoin(String path, Class<?> type) {
-        if (jpaProvider.supportsRootTreat()) {
+        if (jpaProvider.supportsTreatJoin()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")";
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
             return path;
@@ -193,8 +186,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
     }
 
-    protected String treatJoin(String path, Class<?> type, String property) {
-        if (jpaProvider.supportsRootTreat()) {
+    protected String treatRootJoin(String path, Class<?> type, String property) {
+        if (jpaProvider.supportsRootTreatJoin()) {
             return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
             return path + "." + property;

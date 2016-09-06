@@ -38,11 +38,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
 import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.util.PropertyUtils;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.persistence.spi.QueryTransformer;
+import com.blazebit.persistence.spi.*;
 
 /**
  *
@@ -63,6 +59,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final String configuredDbms;
     private final DbmsDialect configuredDbmsDialect;
     private final Set<String> configuredRegisteredFunctions;
+    private final JpaProviderFactory configuredJpaProviderFactory;
 
     public CriteriaBuilderFactoryImpl(CriteriaBuilderConfigurationImpl config, EntityManagerFactory entityManagerFactory) {
         final boolean compatibleMode = Boolean.valueOf(config.getProperty(ConfigurationProperties.COMPATIBLE_MODE));
@@ -77,15 +74,17 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.subqueryExpressionFactory = new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, expressionFactory);
         this.properties = copyProperties(config.getProperties());
         
-        EntityManagerFactory emf = entityManagerFactory;
-        Set<String> registeredFunctions = new HashSet<String>();
-        String dbms = null;
-        for (EntityManagerFactoryIntegrator integrator : config.getEntityManagerIntegrators()) {
-            emf = integrator.registerFunctions(emf, config.getFunctions());
-            registeredFunctions.addAll(integrator.getRegisteredFunctions(emf));
-            dbms = integrator.getDbms(emf);
+        List<EntityManagerFactoryIntegrator> integrators = config.getEntityManagerIntegrators();
+        if (integrators.size() < 1) {
+            throw new IllegalArgumentException("No EntityManagerFactoryIntegrator was found on the classpath! Please check if an integration for your JPA provider is visible on the classpath!");
         }
-
+        if (integrators.size() > 1) {
+            throw new IllegalArgumentException("Multiple EntityManagerFactoryIntegrator were found on the classpath! Please remove the wrong integrations from the classpath!");
+        }
+        EntityManagerFactoryIntegrator integrator = integrators.get(0);
+        EntityManagerFactory emf = integrator.registerFunctions(entityManagerFactory, config.getFunctions());
+        Set<String> registeredFunctions = new HashSet<String>(integrator.getRegisteredFunctions(emf));
+        String dbms = integrator.getDbms(emf);
         DbmsDialect dialect = dbmsDialects.get(dbms);
         
         // Use the default dialect
@@ -96,6 +95,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.configuredDbms = dbms;
         this.configuredDbmsDialect = dialect;
         this.configuredRegisteredFunctions = registeredFunctions;
+        this.configuredJpaProviderFactory = integrator.getJpaProviderFactory(emf);
     }
 
     private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {
@@ -106,6 +106,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             }
         }
         return aggregateFunctions;
+    }
+
+    public JpaProvider createJpaProvider(EntityManager em) {
+        return configuredJpaProviderFactory.createJpaProvider(em);
     }
 
     public EntityMetamodel getMetamodel() {
@@ -218,6 +222,8 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             return (T) expressionFactory;
         } else if (DbmsDialect.class.equals(serviceClass)) {
             return (T) configuredDbmsDialect;
+        } else if (JpaProviderFactory.class.equals(serviceClass)) {
+            return (T) configuredJpaProviderFactory;
         }
 
         return null;

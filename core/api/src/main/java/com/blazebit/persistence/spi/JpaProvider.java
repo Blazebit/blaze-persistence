@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.jpaprovider;
+package com.blazebit.persistence.spi;
 
 /**
+ * TODO: documentation
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
 public interface JpaProvider {
 
@@ -50,5 +51,11 @@ public interface JpaProvider {
 
     public boolean supportsRootTreat();
 
+    public boolean supportsTreatJoin();
+
+    public boolean supportsRootTreatJoin();
+
     public boolean supportsSubtypePropertyResolving();
+
+    public boolean supportsCountStar();
 }

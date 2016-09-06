@@ -16,19 +16,11 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.JoinType;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.base.category.NoDB2;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
-import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityTransaction;
-import javax.persistence.Tuple;
-import java.util.List;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
@@ -36,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 /**
  *
  * @author Christian Beikov
- * @since 1.2
+ * @since 1.2.0
  */
 public class TreatTest extends AbstractCoreTest {
 
@@ -51,6 +43,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    @Category({ NoDatanucleus.class })
     public void implicitJoinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -69,6 +63,8 @@ public class TreatTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus4 reports: We do not currently support JOIN to TREAT
+    @Category({ NoDatanucleus4.class })
     public void joinTreatedRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
@@ -80,23 +76,27 @@ public class TreatTest extends AbstractCoreTest {
 
     @Test
     // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
-    public void treatJoinTreatedRootRelation() {
-        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
-        criteria.from(PolymorphicBase.class, "p");
-        criteria.select("polymorphicSub1.sub1Value");
-        criteria.innerJoin("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)", "polymorphicSub1");
-        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin(treatJoin("p", PolymorphicSub1.class) + ".parent1", PolymorphicSub1.class) + " polymorphicSub1", criteria.getQueryString());
-        criteria.getResultList();
-    }
-
-    @Test
-    // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
+    // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    @Category({ NoDatanucleus.class })
     public void joinTreatedRoot() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
         criteria.select("parent1.name");
         criteria.innerJoin("TREAT(p AS PolymorphicSub1).parent1", "parent1");
-        assertEquals("SELECT parent1.name FROM PolymorphicBase p JOIN " + treatJoin("p", PolymorphicSub1.class, "parent1") + " parent1", criteria.getQueryString());
+        assertEquals("SELECT parent1.name FROM PolymorphicBase p JOIN " + treatRootJoin("p", PolymorphicSub1.class, "parent1") + " parent1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
+    // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    @Category({ NoDatanucleus.class })
+    public void treatJoinTreatedRootRelation() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("polymorphicSub1.sub1Value");
+        criteria.innerJoin("TREAT(TREAT(p AS PolymorphicSub1).parent1 AS PolymorphicSub1)", "polymorphicSub1");
+        assertEquals("SELECT polymorphicSub1.sub1Value FROM PolymorphicBase p JOIN " + treatJoin(treatRootJoin("p", PolymorphicSub1.class, "parent1"), PolymorphicSub1.class) + " polymorphicSub1", criteria.getQueryString());
         criteria.getResultList();
     }
 }

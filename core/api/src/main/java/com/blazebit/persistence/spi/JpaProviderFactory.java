@@ -13,29 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl.jpaprovider;
+package com.blazebit.persistence.spi;
 
 import javax.persistence.EntityManager;
 
 /**
+ * TODO: documentation
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.2.0
  */
-public class HibernateJpa21Provider extends HibernateJpaProvider {
+public interface JpaProviderFactory {
 
-    public HibernateJpa21Provider(EntityManager em, String dbms) {
-        super(em, dbms);
-    }
-
-    @Override
-    public boolean supportsJpa21() {
-        return true;
-    }
-
-    @Override
-    public String getOnClause() {
-        return "ON";
-    }
-
+    public JpaProvider createJpaProvider(EntityManager em);
 }

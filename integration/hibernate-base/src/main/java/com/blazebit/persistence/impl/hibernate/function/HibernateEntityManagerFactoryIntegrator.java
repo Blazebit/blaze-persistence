@@ -24,6 +24,9 @@ import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
+import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
+import com.blazebit.persistence.spi.*;
 import org.hibernate.Session;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
@@ -44,9 +47,6 @@ import org.hibernate.dialect.function.SQLFunctionRegistry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 /**
  *
@@ -61,6 +61,10 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     
     @Override
 	public String getDbms(EntityManagerFactory entityManagerFactory) {
+        if (entityManagerFactory == null) {
+            return null;
+        }
+
         EntityManager em = null;
         
         try {
@@ -74,7 +78,35 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
             }
         }
     }
-    
+
+    @Override
+    public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
+        if (isJpa21()) {
+            return new JpaProviderFactory() {
+                @Override
+                public JpaProvider createJpaProvider(EntityManager em) {
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory));
+                }
+            };
+        } else {
+            return new JpaProviderFactory() {
+                @Override
+                public JpaProvider createJpaProvider(EntityManager em) {
+                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory));
+                }
+            };
+        }
+    }
+
+    private boolean isJpa21() {
+        try {
+            EntityManagerFactory.class.getMethod("unwrap", Class.class);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
     private String getDbmsName(Dialect dialect) {
         if (dialect instanceof MySQLDialect) {
         	return "mysql";

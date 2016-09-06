@@ -36,7 +36,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
-import com.blazebit.persistence.impl.jpaprovider.HibernateJpaProvider;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPageImpl;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
@@ -422,7 +421,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         	int idx = sbSelectFrom.indexOf(countString);
         	int endIdx = idx + countString.length() - 1;
         	String countStar;
-        	if (jpaProvider instanceof HibernateJpaProvider) {
+        	if (jpaProvider.supportsCountStar()) {
         		countStar = "COUNT(*";
         	} else {
         		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);

@@ -20,17 +20,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import com.blazebit.persistence.impl.eclipselink.EclipseLinkJpaProvider;
+import com.blazebit.persistence.spi.*;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
 import org.eclipse.persistence.jpa.JpaHelper;
 import org.eclipse.persistence.platform.database.DatabasePlatform;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 /**
  *
@@ -54,7 +54,34 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
 		return null;
 	}
 
-	@Override
+    @Override
+    public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
+        boolean eclipseLink24;
+        String version;
+        try {
+            Class<?> versionClass = Class.forName("org.eclipse.persistence.Version");
+            version = (String) versionClass.getMethod("getVersion").invoke(null);
+            String[] versionParts = version.split("\\.");
+            int major = Integer.parseInt(versionParts[0]);
+            int minor = Integer.parseInt(versionParts[1]);
+
+            eclipseLink24 = major > 2 || (major == 2 && minor >= 4);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Unsupported EclipseLink version", ex);
+        }
+
+        if (!eclipseLink24) {
+            throw new IllegalArgumentException("Unsupported EclipseLink version " + version + "!");
+        }
+        return new JpaProviderFactory() {
+            @Override
+            public JpaProvider createJpaProvider(EntityManager em) {
+                return new EclipseLinkJpaProvider(em);
+            }
+        };
+    }
+
+    @Override
     public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
         @SuppressWarnings("unchecked")
