@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import java.lang.reflect.Constructor;
 
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.FullQueryBuilder;
@@ -104,7 +105,8 @@ public abstract class AbstractFullQueryBuilder<T, X extends FullQueryBuilder<T, 
         }
 
         EntityType<?> entityType = em.getMetamodel().entity(joinManager.getRootNodeOrFail("Paginated queries do not support multiple from clause elements!").getPropertyClass());
-        Class<?> idType = entityType.getIdType().getJavaType();
+        Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(entityType);
+        Class<?> idType = JpaUtils.resolveFieldClass(entityType.getJavaType(), idAttribute);
 
         if (!idType.isInstance(entityId)) {
             throw new IllegalArgumentException("The type of the given entity id '" + entityId.getClass().getName()

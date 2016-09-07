@@ -9,24 +9,24 @@ Blaze Persistence - Criteria API for JPA backends
 :copyrighttext:   Copyright (C) 2014 Blazebit
 :new:             image:images/smallnew.png[]
 
-include::01_getting_started.ad[]
+include::01_getting_started.adoc[]
 
-include::02_architecture.ad[]
+include::02_architecture.adoc[]
 
-include::03_configuration.ad[]
+include::03_configuration.adoc[]
 
-include::04_join_clause.ad[]
+include::04_join_clause.adoc[]
 
-include::05_predicate_builder.ad[]
+include::05_predicate_builder.adoc[]
 
-include::06_where_clause.ad[]
+include::06_where_clause.adoc[]
 
-include::07_group_by_having_clause.ad[]
+include::07_group_by_having_clause.adoc[]
 
-include::08_order_by_clause.ad[]
+include::08_order_by_clause.adoc[]
 
-include::09_select_clause.ad[]
+include::09_select_clause.adoc[]
 
-include::10_pagination.ad[]
+include::10_pagination.adoc[]
 
-include::11_cte.ad[]
+include::11_cte.adoc[]
