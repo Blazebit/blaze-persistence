@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.JpqlMacro;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -137,6 +139,16 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * @since 1.2.0
      */
     public X setParameterType(String name, Class<?> type);
+
+    /**
+     * Registers the given jpql macro for this query builder.
+     *
+     * @param macroName The name of the macro
+     * @param jpqlMacro The jpql macro
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X registerMacro(String macroName, JpqlMacro jpqlMacro);
     
     /**
      * Sets a configuration property with the given propertyName to the given propertyValue.
@@ -144,6 +156,7 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * 
      * @param propertyName The name of the property
      * @param propertyValue The value of the property
+     * @return The query builder for chaining calls
      * @since 1.1.0
      */
     public X setProperty(String propertyName, String propertyValue);
@@ -152,6 +165,7 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * Overwrites the properties with the given set of properties
      * 
      * @param properties The new properties
+     * @return The query builder for chaining calls
      * @since 1.1.0
      */
     public X setProperties(Map<String, String> properties);

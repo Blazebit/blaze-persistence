@@ -91,6 +91,7 @@ public class AbstractParserTest {
     };
     
     protected Set<String> aggregateFunctions;
+    protected MacroConfiguration macroConfiguration;
 
     @BeforeClass
     public static void initLogging() {
@@ -105,6 +106,7 @@ public class AbstractParserTest {
     @Before
     public void initTest() {
     	aggregateFunctions = new HashSet<String>();
+        macroConfiguration = null;
     }
 
     protected Predicate not(Predicate p) {
@@ -119,39 +121,39 @@ public class AbstractParserTest {
     }
 
     protected Expression parseOrderBy(String expr) {
-        return ef.createOrderByExpression(expr);
+        return ef.createOrderByExpression(expr, macroConfiguration);
     }
     
     protected Expression parseArithmeticExpr(String expr) {
-        return ef.createArithmeticExpression(expr);
+        return ef.createArithmeticExpression(expr, macroConfiguration);
     }
     
     protected Expression parse(String expr) {
-        return ef.createSimpleExpression(expr, false);
+        return ef.createSimpleExpression(expr, false, macroConfiguration);
     }
 
     protected Expression parseOptimized(String expr) {
-        return optimizingEf.createSimpleExpression(expr, false);
+        return optimizingEf.createSimpleExpression(expr, false, macroConfiguration);
     }
 
     protected Expression parseJoin(String expr) {
-        return ef.createJoinPathExpression(expr);
+        return ef.createJoinPathExpression(expr, macroConfiguration);
     }
 
     protected Predicate parsePredicate(String expr, boolean allowQuantifiedPredicates) {
-        return ef.createBooleanExpression(expr, allowQuantifiedPredicates);
+        return ef.createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration);
     }
 
     protected Predicate parsePredicateOptimized(String expr, boolean allowQuantifiedPredicates) {
-        return optimizingEf.createBooleanExpression(expr, allowQuantifiedPredicates);
+        return optimizingEf.createBooleanExpression(expr, allowQuantifiedPredicates, macroConfiguration);
     }
 
     protected Expression parseSubqueryExpression(String expr) {
-        return subqueryEf.createSimpleExpression(expr, false);
+        return subqueryEf.createSimpleExpression(expr, false, macroConfiguration);
     }
     
     protected PathExpression parsePath(String expr){
-        return ef.createPathExpression(expr);
+        return ef.createPathExpression(expr, macroConfiguration);
     }
 
     protected FunctionExpression function(String name, Expression... args) {

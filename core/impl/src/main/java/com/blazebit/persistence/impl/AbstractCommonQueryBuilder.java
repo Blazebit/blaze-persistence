@@ -16,10 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.*;
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -195,7 +192,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, FinalSetReturn finalSetOperationBuilder) {
-        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.cbf.getExpressionFactory(), finalSetOperationBuilder);
+        this(mainQuery, isMainQuery, statementType, resultClazz, alias, null, null, mainQuery.expressionFactory, finalSetOperationBuilder);
     }
 
     public AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias) {
@@ -214,11 +211,19 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return (T) em;
         } else if (DbmsDialect.class.equals(serviceClass)) {
             return (T) dbmsDialect;
+        } else if (SubqueryExpressionFactory.class.equals(serviceClass)) {
+            return (T) mainQuery.subqueryExpressionFactory;
         } else if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
-            return (T) cbf.getExpressionFactory();
+            return (T) mainQuery.expressionFactory;
         }
         
-        return null;
+        return cbf.getService(serviceClass);
+    }
+
+    @SuppressWarnings("unchecked")
+    public BuilderType registerMacro(String macroName, JpqlMacro jpqlMacro) {
+        this.mainQuery.registerMacro(macroName, jpqlMacro);
+        return (BuilderType) this;
     }
     
     @SuppressWarnings("unchecked")
@@ -471,6 +476,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     	}
     	
         return (BuilderType) this;
+    }
+
+    public Set<Root> getRoots() {
+        return new LinkedHashSet<Root>(joinManager.getRoots());
+    }
+
+    public Root getRoot() {
+        return joinManager.getRootNodeOrFail("This should never happen. Please report this error!");
     }
 
 	@SuppressWarnings("unchecked")

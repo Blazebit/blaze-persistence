@@ -118,13 +118,7 @@ import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.impl.function.treat.TreatFunction;
-import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
-import com.blazebit.persistence.spi.JpqlFunctionGroup;
-import com.blazebit.persistence.spi.QueryTransformer;
-import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.*;
 
 /**
  *
@@ -136,6 +130,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
     private final Map<String, DbmsDialect> dbmsDialects = new HashMap<String, DbmsDialect>();
     private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
+    private final Map<String, JpqlMacro> macros = new HashMap<String, JpqlMacro>();
     private final List<EntityManagerFactoryIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerFactoryIntegrator>();
     private Properties properties = new Properties();
     private ExtendedQuerySupport extendedQuerySupport;
@@ -430,13 +425,28 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         return this;
     }
 
-	public Map<String, JpqlFunctionGroup> getFunctions() {
+    @Override
+    public CriteriaBuilderConfiguration registerMacro(String macroName, JpqlMacro jpqlMacro) {
+        macros.put(macroName.toUpperCase(), jpqlMacro);
+        return this;
+    }
+
+    public Map<String, JpqlFunctionGroup> getFunctions() {
         return functions;
     }
 
     @Override
     public Set<String> getFunctionNames() {
         return functions.keySet();
+    }
+
+    public Map<String, JpqlMacro> getMacros() {
+        return macros;
+    }
+
+    @Override
+    public Set<String> getMacroNames() {
+        return macros.keySet();
     }
 
     @Override

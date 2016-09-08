@@ -42,6 +42,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final Set<String> aggregateFunctions;
     private final Map<String, Class<Enum<?>>> enums;
     private final Map<String, Class<?>> entities;
+    private final Map<String, MacroFunction> macros;
 
     private final DateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
     private final DateFormat dfTime = new SimpleDateFormat("HH:mm:ss");
@@ -49,11 +50,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     private final Pattern timePattern = Pattern.compile("\\{*t\\s*'([^']+)\\s*'\\}");
     private final Pattern timestampPattern = Pattern.compile("\\{*ts\\s*'([^']+)\\s*'\\}");
 
-    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities) {
+    public JPQLSelectExpressionVisitorImpl(CommonTokenStream tokens, Set<String> aggregateFunctions, Map<String, Class<Enum<?>>> enums, Map<String, Class<?>> entities, Map<String, MacroFunction> macros) {
         this.tokens = tokens;
         this.aggregateFunctions = aggregateFunctions;
         this.enums = enums;
         this.entities = entities;
+        this.macros = macros;
     }
 
     @Override
@@ -64,6 +66,23 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitOuter_expression(JPQLSelectExpressionParser.Outer_expressionContext ctx) {
         return handleFunction(ctx.getStart().getText(), ctx);
+    }
+
+    @Override
+    public Expression visitMacro_expression(Macro_expressionContext ctx) {
+        List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
+        for (int i = 0; i < ctx.getChildCount(); i++) {
+            if (!(ctx.getChild(i) instanceof TerminalNode)) {
+                funcArgs.add(ctx.getChild(i).accept(this));
+            }
+        }
+
+        final String macroName = ctx.macroName.getText().toUpperCase();
+        MacroFunction macro = macros.get(macroName);
+        if (macro == null) {
+            throw new SyntaxErrorException("The macro '" + macroName + "' could not be found in the macro map!");
+        }
+        return macro.apply(funcArgs);
     }
 
     @Override

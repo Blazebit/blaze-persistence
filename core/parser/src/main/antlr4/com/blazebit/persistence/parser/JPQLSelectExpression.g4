@@ -153,6 +153,7 @@ treated_subpath : TREAT '(' general_subpath AS subtype ')' ('.'general_path_elem
 
 state_field_path_expression : path
                             | {allowOuter == true}? outer_expression
+                            | macro_expression
                             ;
 
 single_valued_object_path_expression : path
@@ -191,6 +192,9 @@ scalar_expression : arithmetic_expression
                   ;
 
 outer_expression : Outer_function '(' single_valued_path_expression  ')'
+                 ;
+
+macro_expression : macroName=MACRO '(' (simple_expression (',' simple_expression)*)?  ')'
                  ;
 
 arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm
@@ -533,6 +537,7 @@ keyword :KEY
        | TREAT
        | AS
        | Outer_function
+       | MACRO
        ;
 
 identifier : Identifier

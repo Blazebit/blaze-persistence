@@ -53,9 +53,9 @@ public final class EntityViewSettingHelper {
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-    	applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
-        applyAttributeSorters(setting, evm, criteriaBuilder, ef, entityViewRoot);
         CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, criteriaBuilder, setting.getOptionalParameters());
+    	applyAttributeFilters(setting, evm, normalCb, ef, entityViewRoot);
+        applyAttributeSorters(setting, evm, normalCb, ef, entityViewRoot);
         applyOptionalParameters(setting, normalCb);
 
         if (setting.isPaginated()) {
@@ -240,12 +240,12 @@ public final class EntityViewSettingHelper {
 
             if (attributeInfo.entityAttribute) {
                 mapping = getPrefixedExpression(ef, attributeInfo.subviewPrefixParts, attributeInfo.mapping.toString());
-            } else {
-                mapping = resolveAttributeAlias(viewType, entityViewRoot, attributeSorterEntry.getKey());
-            }
 
-            if (entityViewRoot != null && entityViewRoot.length() > 0) {
-                mapping = entityViewRoot + '.' + mapping;
+                if (entityViewRoot != null && entityViewRoot.length() > 0) {
+                    mapping = entityViewRoot + '.' + mapping;
+                }
+            } else {
+                mapping = resolveAttributeAlias(viewType, attributeSorterEntry.getKey());
             }
 
             // TODO: order by subquery? #195
@@ -253,16 +253,9 @@ public final class EntityViewSettingHelper {
         }
     }
 
-    private static String resolveAttributeAlias(ViewType<?> viewType, String entityViewRoot, String attributeName) {
+    private static String resolveAttributeAlias(ViewType<?> viewType, String attributeName) {
         String viewTypeName = viewType.getName();
-        StringBuilder sb;
-        if (entityViewRoot != null && entityViewRoot.length() > 0) {
-            sb = new StringBuilder(entityViewRoot.length() + viewTypeName.length() + attributeName.length() + 2);
-            sb.append(entityViewRoot)
-                    .append('_');
-        } else {
-            sb = new StringBuilder(viewTypeName.length() + attributeName.length() + 1);
-        }
+        StringBuilder sb = new StringBuilder(viewTypeName.length() + attributeName.length() + 1);
         sb.append(viewTypeName)
             .append('_');
 

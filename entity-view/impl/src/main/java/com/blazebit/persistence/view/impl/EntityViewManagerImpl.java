@@ -25,10 +25,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
@@ -58,6 +55,7 @@ import com.blazebit.persistence.view.impl.filter.LessThanFilterImpl;
 import com.blazebit.persistence.view.impl.filter.NullFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithFilterImpl;
 import com.blazebit.persistence.view.impl.filter.StartsWithIgnoreCaseFilterImpl;
+import com.blazebit.persistence.view.impl.macro.ViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.metamodel.ViewMetamodelImpl;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
@@ -257,25 +255,63 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
         Class<?> entityClazz;
-        if (entityViewRoot != null && entityViewRoot.length() > 0) {
+        Set<Root> roots = criteriaBuilder.getRoots();
+        Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
+        Root root = rootEntry.getKey();
+        entityViewRoot = rootEntry.getValue();
+        if (entityViewRoot != null) {
             ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-            PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), criteriaBuilder.getResultType());
-            ef.createPathExpression(entityViewRoot).accept(visitor);
+            PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), root.getType());
+            ef.createPathExpression(entityViewRoot.substring(root.getAlias().length() + 1)).accept(visitor);
             Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
             if (possibleTypes.size() > 1) {
-                throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + criteriaBuilder.getResultType() + "'!");
+                throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + root.getType() + "'!");
             }
             // It must have one, otherwise a parse error would have been thrown already
             entityClazz = possibleTypes.iterator().next();
+
+            if (entityClazz == null) {
+                throw new IllegalArgumentException("Could not resolve the expression '" + entityViewRoot + "' in the context of the type '" + root.getType() + "'!");
+            }
         } else {
-            entityClazz = criteriaBuilder.getResultType();
+            entityClazz = rootEntry.getKey().getType();
         }
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
 
+        criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
         criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor, entityViewRoot).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
+    }
+
+    private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {
+        if (entityViewRoot == null || entityViewRoot.isEmpty()) {
+            if (roots.size() > 1) {
+                throw new IllegalArgumentException("Can not apply entity view to given criteria builder because it has multiple query roots! Please specify the entity view root!");
+            }
+
+            return new AbstractMap.SimpleEntry<Root, String>(roots.iterator().next(), null);
+        }
+
+        if (roots.size() == 1) {
+            Root r = roots.iterator().next();
+            String alias = r.getAlias();
+            if (entityViewRoot.startsWith(alias) && entityViewRoot.length() > alias.length() && entityViewRoot.charAt(alias.length()) == '.') {
+                return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
+            } else {
+                return new AbstractMap.SimpleEntry<Root, String>(r, alias + '.' + entityViewRoot);
+            }
+        }
+
+        for (Root r : roots) {
+            String alias = r.getAlias();
+            if (entityViewRoot.startsWith(alias) && entityViewRoot.length() > alias.length() && entityViewRoot.charAt(alias.length()) == '.') {
+                return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
+            }
+        }
+
+        throw new IllegalArgumentException("Entity view root '" + entityViewRoot + "' must be an absolute path when multiple criteria builder roots are possible!");
     }
 
     @SuppressWarnings("unchecked")

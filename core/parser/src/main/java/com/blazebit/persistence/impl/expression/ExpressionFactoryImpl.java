@@ -46,4 +46,11 @@ public final class ExpressionFactoryImpl extends AbstractExpressionFactory {
         return simpleExpressionRuleInvoker;
     }
 
+    @Override
+    public <T extends ExpressionFactory> T unwrap(Class<T> clazz) {
+        if (clazz.isAssignableFrom(ExpressionFactoryImpl.class)) {
+            return (T) this;
+        }
+        return null;
+    }
 }

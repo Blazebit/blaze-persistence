@@ -315,7 +315,7 @@ public class JoinManager extends AbstractManager {
 
     private void renderJoinNode(StringBuilder sb, JoinAliasInfo joinBase, JoinNode node, String aliasPrefix) {
         if (!renderedJoins.contains(node)) {
-            switch (node.getType()) {
+            switch (node.getJoinType()) {
                 case INNER:
                     sb.append(" JOIN ");
                     break;
@@ -1300,7 +1300,7 @@ public class JoinManager extends AbstractManager {
     }
 
     private JoinType getModelAwareType(JoinNode baseNode, Attribute<?, ?> attr) {
-        if (baseNode.getType() == JoinType.LEFT) {
+        if (baseNode.getJoinType() == JoinType.LEFT) {
             return JoinType.LEFT;
         }
 
@@ -1404,7 +1404,7 @@ public class JoinManager extends AbstractManager {
                     nodeAliasInfo.setAlias(alias);
                     nodeAliasInfo.setImplicit(false);
                     // We can only change the join type if the existing node is implicit and the update on the node is not implicit
-                    node.setType(type);
+                    node.setJoinType(type);
 
                     aliasManager.registerAliasInfo(nodeAliasInfo);
                 } else if (!nodeAliasInfo.isImplicit() && !implicit) {

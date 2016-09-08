@@ -27,25 +27,49 @@ import java.util.List;
  */
 public interface ExpressionFactory {
 
+    public <T extends ExpressionFactory> T unwrap(Class<T> clazz);
+
     public PathExpression createPathExpression(String expression);
+
+    public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration);
 
     public Expression createJoinPathExpression(String expression);
 
+    public Expression createJoinPathExpression(String expression, MacroConfiguration macroConfiguration);
+
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates);
+
+    public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration);
 
     public Expression createCaseOperandExpression(String caseOperandExpression);
 
+    public Expression createCaseOperandExpression(String caseOperandExpression, MacroConfiguration macroConfiguration);
+
     public Expression createScalarExpression(String expression);
+
+    public Expression createScalarExpression(String expression, MacroConfiguration macroConfiguration);
 
     public Expression createArithmeticExpression(String expression);
 
+    public Expression createArithmeticExpression(String expression, MacroConfiguration macroConfiguration);
+
     public Expression createStringExpression(String expression);
+
+    public Expression createStringExpression(String expression, MacroConfiguration macroConfiguration);
 
     public Expression createOrderByExpression(String expression);
 
+    public Expression createOrderByExpression(String expression, MacroConfiguration macroConfiguration);
+
     public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions);
+
+    public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions, MacroConfiguration macroConfiguration);
 
     public Expression createInItemExpression(String parameterOrLiteralExpression);
 
+    public Expression createInItemExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration);
+
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates);
+
+    public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration);
 }

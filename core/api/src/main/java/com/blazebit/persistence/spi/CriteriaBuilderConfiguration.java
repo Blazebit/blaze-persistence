@@ -52,6 +52,16 @@ public interface CriteriaBuilderConfiguration {
      * @return this for method chaining
      */
     public CriteriaBuilderConfiguration registerFunction(JpqlFunctionGroup jpqlFunctionGroup);
+
+    /**
+     * Registers the given jpql macro in the configuration.
+     *
+     * @param macroName The name of the macro
+     * @param jpqlMacro The jpql macro
+     * @return this for method chaining
+     * @since 1.2.0
+     */
+    public CriteriaBuilderConfiguration registerMacro(String macroName, JpqlMacro jpqlMacro);
     
     /**
      * Registers the given dialect for the given dbms name.
@@ -69,6 +79,13 @@ public interface CriteriaBuilderConfiguration {
      * @return the set of registered functions
      */
     public Set<String> getFunctionNames();
+
+    /**
+     * Returns the set of registered macros.
+     *
+     * @return the set of registered macros
+     */
+    public Set<String> getMacroNames();
 
     /**
      * Registers the given entity manager enricher in the configuration.

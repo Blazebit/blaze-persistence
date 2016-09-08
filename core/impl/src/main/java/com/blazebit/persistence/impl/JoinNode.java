@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Root;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
@@ -36,10 +37,10 @@ import com.blazebit.persistence.impl.predicate.Predicate;
  * @author Moritz Becker
  * @since 1.0
  */
-public class JoinNode {
+public class JoinNode implements Root {
 
     private JoinAliasInfo aliasInfo;
-    private JoinType type = JoinType.LEFT;
+    private JoinType joinType = JoinType.LEFT;
     private boolean fetch = false;
 
     // We need this for count and id queries where we do not need all the joins
@@ -65,12 +66,12 @@ public class JoinNode {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
-    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType type, Class<?> propertyClass, String treatType) {
+    public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType joinType, Class<?> propertyClass, String treatType) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
         this.parentTreatType = parentTreatType;
         this.aliasInfo = aliasInfo;
-        this.type = type;
+        this.joinType = joinType;
         this.propertyClass = propertyClass;
         this.treatType = treatType;
         this.correlationParent = null;
@@ -81,7 +82,7 @@ public class JoinNode {
     public JoinNode(JoinNode correlationParent, String correlationPath, String parentTreatType, JoinAliasInfo aliasInfo, Class<?> propertyClass, String treatType) {
         this.parent = null;
         this.parentTreeNode = null;
-        this.type = null;
+        this.joinType = null;
         this.correlationParent = correlationParent;
         this.correlationPath = correlationPath;
         this.parentTreatType = parentTreatType;
@@ -114,13 +115,13 @@ public class JoinNode {
     
     private void updateCardinalityMandatory() {
         boolean computedMandatory = false;
-        if (type == JoinType.INNER) {
+        if (joinType == JoinType.INNER) {
             // If the relation is optional/nullable or the join has a condition
             // the join is mandatory, because doing omitting it might change the semantics result set 
             if (parentTreeNode.isOptional() || !isEmptyCondition()) {
                 computedMandatory = true;
             }
-        } else if (type == JoinType.LEFT) {
+        } else if (joinType == JoinType.LEFT) {
             // If the join has a condition which is not an array expression condition
             // we definitively need the join
             // NOTE: an array expression condition with a left join will always produce 1 row
@@ -249,12 +250,12 @@ public class JoinNode {
         this.aliasInfo = aliasInfo;
     }
 
-    public JoinType getType() {
-        return type;
+    public JoinType getJoinType() {
+        return joinType;
     }
 
-    public void setType(JoinType type) {
-        this.type = type;
+    public void setJoinType(JoinType joinType) {
+        this.joinType = joinType;
         onUpdate(StateChange.JOIN_TYPE);
     }
 
@@ -357,5 +358,17 @@ public class JoinNode {
         JOIN_TYPE,
         ON_PREDICATE,
         CHILD;
+    }
+
+    /* Implementation of Root interface */
+
+    @Override
+    public String getAlias() {
+        return aliasInfo.getAlias();
+    }
+
+    @Override
+    public Class<?> getType() {
+        return propertyClass;
     }
 }

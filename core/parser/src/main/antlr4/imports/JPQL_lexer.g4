@@ -14,6 +14,46 @@
  * limitations under the License.
  */
 lexer grammar JPQL_lexer;
+
+
+@lexer::members {
+
+    private char[][] macros;
+
+    public JPQLSelectExpressionLexer(CharStream input, java.util.NavigableSet<String> macros) {
+        this(input);
+        if (macros != null && macros.size() > 0) {
+            this.macros = new char[macros.size()][];
+            java.util.Iterator<String> iter = macros.descendingIterator();
+            for (int i = 0; i < macros.size(); i++) {
+                this.macros[i] = iter.next().toUpperCase().toCharArray();
+            }
+        }
+    }
+
+    boolean tryMacro() {
+        if (macros == null) {
+            return false;
+        }
+
+        OUTER: for (int i = 0; i < macros.length; i++) {
+            for (int j = 0; j < macros[i].length; j++) {
+                if (Character.toUpperCase(_input.LA(j + 1)) != macros[i][j]) {
+                    continue OUTER;
+                }
+            }
+
+            // Since we found the text, increase the CharStream's index.
+            _input.seek(_input.index() + macros[i].length - 1);
+            return true;
+        }
+
+        return false;
+    }
+}
+
+// The `.` is needed because a lexer rule must match at least 1 char.
+MACRO: { tryMacro() }? . ;
  
 KEY: [Kk][Ee][Yy];
 

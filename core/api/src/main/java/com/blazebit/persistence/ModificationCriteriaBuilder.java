@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import java.util.Set;
 
 /**
  * A builder for modification queries.
@@ -26,6 +27,14 @@ import javax.persistence.Tuple;
  * @since 1.1.0
  */
 public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuilder<X>> extends Executable, CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X>, CTEBuilder<X> {
+
+    /**
+     * Returns the query root
+     *
+     * @return The root of this query
+     * @since 1.2.0
+     */
+    public Root getRoot();
 
     // TODO: documentation
     public ReturningResult<Tuple> executeWithReturning(String... attributes);

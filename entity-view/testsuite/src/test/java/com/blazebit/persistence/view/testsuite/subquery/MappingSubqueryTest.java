@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.view.testsuite.subquery.model.DocumentWithSubqueryViewRoot;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -170,5 +171,37 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
         assertEquals(2, list.getTotalSize());
         assertEquals("doc2", list.get(0).getName());
         assertEquals(Long.valueOf(2), list.get(0).getContactCount());
+    }
+
+    @Test
+    public void testSubqueryViewRootEntityViewSettings() {
+        EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(DocumentWithSubqueryViewRoot.class);
+        EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+
+        CriteriaBuilder<Person> cb = cbf.create(em, Person.class);
+        EntityViewSetting<DocumentWithSubqueryViewRoot, CriteriaBuilder<DocumentWithSubqueryViewRoot>> setting = EntityViewSetting
+                .create(DocumentWithSubqueryViewRoot.class);
+        setting.addOptionalParameter("optionalParameter", 1);
+        setting.addAttributeSorter("name", Sorters.ascending());
+        List<DocumentWithSubqueryViewRoot> list = evm.applySetting(setting, cb, "partnerDocument").getResultList();
+
+        assertEquals("SELECT " +
+                "person.partnerDocument.id AS DocumentWithSubqueryViewRoot_id, " +
+                "(SELECT COUNT(person_1.id) " +
+                    "FROM Person person_1 " +
+                    "WHERE person_1.partnerDocument.id = person.partnerDocument.id" +
+                ") AS DocumentWithSubqueryViewRoot_contactCount, " +
+                "partnerDocument_1.name AS DocumentWithSubqueryViewRoot_name " +
+                "FROM Person person " +
+                "LEFT JOIN person.partnerDocument partnerDocument_1 " +
+                "ORDER BY DocumentWithSubqueryViewRoot_name ASC NULLS LAST", cb.getQueryString());
+        assertEquals(3, list.size());
+        assertEquals("doc1", list.get(0).getName());
+        assertEquals(Long.valueOf(1), list.get(0).getContactCount());
+        assertEquals("doc2", list.get(1).getName());
+        assertEquals(Long.valueOf(2), list.get(1).getContactCount());
+        assertEquals("doc2", list.get(2).getName());
+        assertEquals(Long.valueOf(2), list.get(2).getContactCount());
     }
 }

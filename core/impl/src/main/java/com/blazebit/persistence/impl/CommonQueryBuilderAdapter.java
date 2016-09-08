@@ -11,6 +11,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.spi.JpqlMacro;
 
 public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<BuilderType>> implements CommonQueryBuilder<BuilderType> {
 
@@ -79,6 +80,11 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     @Override
     public Object getParameterValue(String name) {
         return builder.getParameterValue(name);
+    }
+
+    @Override
+    public BuilderType registerMacro(String macroName, JpqlMacro jpqlMacro) {
+        return builder.registerMacro(macroName, jpqlMacro);
     }
 
     @Override

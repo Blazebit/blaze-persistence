@@ -41,7 +41,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         this.mainQuery = mainQuery;
         this.aliasManager = aliasManager;
         this.parentJoinManager = parentJoinManager;
-        this.expressionFactory = mainQuery.cbf.getSubqueryExpressionFactory();
+        this.expressionFactory = mainQuery.subqueryExpressionFactory;
         this.result = result;
         this.listener = listener;
     }
@@ -53,7 +53,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(Class<?> clazz, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.cbf.getSubqueryExpressionFactory(), result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         subqueryBuilder.from(clazz, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;
@@ -66,7 +66,7 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
 
     @Override
     public SubqueryBuilder<X> from(String correlationPath, String alias) {
-        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.cbf.getSubqueryExpressionFactory(), result, listener);
+        SubqueryBuilderImpl<X> subqueryBuilder = new SubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, mainQuery.subqueryExpressionFactory, result, listener);
         subqueryBuilder.from(correlationPath, alias);
         listener.onBuilderStarted(subqueryBuilder);
         return subqueryBuilder;

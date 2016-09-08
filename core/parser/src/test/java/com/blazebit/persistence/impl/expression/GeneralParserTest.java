@@ -18,6 +18,8 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.impl.predicate.*;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -947,6 +949,20 @@ public class GeneralParserTest extends AbstractParserTest {
         Expression result = parseJoin("TREAT(TREAT(d AS GoodDocument).embeddable.people AS Employee)");
 
         Expression expected = treat(path(treat(path("d"), "GoodDocument"), "embeddable", "people"), "Employee");
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testMacro() {
+        macroConfiguration = MacroConfiguration.of(Collections.singletonMap("test", (MacroFunction) new MacroFunction() {
+            @Override
+            public Expression apply(List<Expression> expressions) {
+                return new ArithmeticExpression(expressions.get(0), new NumericLiteral("1", NumericType.INTEGER), ArithmeticOperator.ADDITION);
+            }
+        }));
+        Expression result = parse("TEST(123)");
+
+        Expression expected = add(_int("123"), _int("1"));
         assertEquals(expected, result);
     }
 }

@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence;
 
+import java.util.Set;
+
 /**
  * An interface for builders that support the from clause.
  *
@@ -23,6 +25,14 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface FromBuilder<X extends FromBuilder<X>> {
+
+    /**
+     * Returns the query roots
+     *
+     * @return The roots of this query
+     * @since 1.2.0
+     */
+    public Set<Root> getRoots();
 
     /**
      * Like {@link FromBuilder#from(Class, String))} with the

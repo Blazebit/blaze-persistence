@@ -32,8 +32,8 @@ public class SimpleCachingExpressionFactoryTest {
         ExpressionFactory ef = new SimpleCachingExpressionFactory(new ExpressionFactoryImpl(new HashSet<String>(), true, true));
         String expressionString = "SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e]) + SIZE(Hello.world[:hahaha].criteria[1].api.lsls[a.b.c.d.e])";
         
-        Expression expr1 = ef.createSimpleExpression(expressionString, true);
-        Expression expr2 = ef.createSimpleExpression(expressionString, true);
+        Expression expr1 = ef.createSimpleExpression(expressionString, true, null);
+        Expression expr2 = ef.createSimpleExpression(expressionString, true, null);
         
         Assert.assertFalse(expr1 == expr2);
         Assert.assertEquals(expr1, expr2);

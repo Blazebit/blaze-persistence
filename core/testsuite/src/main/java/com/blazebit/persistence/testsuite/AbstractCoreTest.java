@@ -27,6 +27,7 @@ import com.blazebit.persistence.testsuite.entity.Version;
 import com.blazebit.persistence.testsuite.entity.Workflow;
 import com.blazebit.persistence.testsuite.function.ConcatenateFunction;
 import com.blazebit.persistence.testsuite.function.ZeroFunction;
+import com.blazebit.persistence.testsuite.macro.PrefixJpqlMacro;
 import com.blazebit.persistence.testsuite.tx.TxSupport;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 import com.blazebit.persistence.testsuite.tx.TxWork;
@@ -56,12 +57,14 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
         ON_CLAUSE = jpaProvider.getOnClause();
     }
-    
+
     @Override
     protected CriteriaBuilderConfiguration configure(CriteriaBuilderConfiguration config) {
         config = super.configure(config);
         config.registerFunction(new JpqlFunctionGroup("zero", new ZeroFunction()));
         config.registerFunction(new JpqlFunctionGroup("concatenate", new ConcatenateFunction()));
+
+        config.registerMacro("prefix", new PrefixJpqlMacro());
 
         dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
         if ("postgresql".equals(dbms)) {

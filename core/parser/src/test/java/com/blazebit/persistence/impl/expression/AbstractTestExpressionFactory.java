@@ -51,4 +51,11 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
         parser.getInterpreter().setPredictionMode(PredictionMode.LL_EXACT_AMBIG_DETECTION);
     }
 
+    @Override
+    public <T extends ExpressionFactory> T unwrap(Class<T> clazz) {
+        if (clazz.isAssignableFrom(AbstractTestExpressionFactory.class)) {
+            return (T) this;
+        }
+        return null;
+    }
 }
