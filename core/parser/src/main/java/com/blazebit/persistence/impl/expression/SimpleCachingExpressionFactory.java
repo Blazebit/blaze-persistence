@@ -15,13 +15,11 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  *
- * @author cpbec
+ * @author Christian Beikov
+ * @since 1.2.0
  */
 public class SimpleCachingExpressionFactory extends AbstractCachingExpressionFactory {
 

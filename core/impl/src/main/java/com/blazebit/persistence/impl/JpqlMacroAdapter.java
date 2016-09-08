@@ -5,6 +5,7 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,10 +19,12 @@ public class JpqlMacroAdapter implements MacroFunction {
 
     private final JpqlMacro macro;
     private final ExpressionFactory expressionFactory;
+    private final Object[] state;
 
     public JpqlMacroAdapter(JpqlMacro macro, ExpressionFactory expressionFactory) {
         this.macro = macro;
         this.expressionFactory = expressionFactory;
+        this.state = new Object[]{ macro, expressionFactory };
     }
 
     public static Map<String, MacroFunction> createMacros(Map<String, JpqlMacro> jpqlMacros, ExpressionFactory expressionFactory) {
@@ -39,4 +42,23 @@ public class JpqlMacroAdapter implements MacroFunction {
         return expressionFactory.createSimpleExpression(context.renderToString(), false);
     }
 
+    @Override
+    public Object[] getState() {
+        return state;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof JpqlMacroAdapter)) return false;
+
+        JpqlMacroAdapter that = (JpqlMacroAdapter) o;
+
+        return Arrays.equals(getState(), that.getState());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(getState());
+    }
 }

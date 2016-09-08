@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractExpressionFactory extends AbstractExpressionFactoryAdapter {
+public abstract class AbstractExpressionFactory extends AbstractExpressionFactoryMacroAdapter {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
     private final boolean allowTreatJoinExtension;

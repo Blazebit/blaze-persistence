@@ -25,13 +25,7 @@ import java.util.Set;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.view.AttributeFilter;
-import com.blazebit.persistence.view.AttributeFilters;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.UpdatableMapping;
+import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -59,6 +53,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         this.name = StringUtils.firstToLower(method.getName().substring(3));
 
         UpdatableMapping updatableMapping = AnnotationUtils.findAnnotation(method, UpdatableMapping.class);
+        // TODO: maybe we should only consider abstract setters?
         boolean hasSetter = ReflectionUtils.getSetter(viewType.getJavaType(), name) != null;
 
         // TODO: this is not correct for collections, maybe collections should be mutable by default?
@@ -224,6 +219,12 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
 
             if (mappingSubquery != null) {
                 return mappingSubquery;
+            }
+
+            MappingCorrelated mappingCorrelated = AnnotationUtils.findAnnotation(m, MappingCorrelated.class);
+
+            if (mappingCorrelated != null) {
+                return mappingCorrelated;
             }
 
             // Implicit mapping

@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -29,11 +30,7 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.SubqueryProvider;
+import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
@@ -55,6 +52,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
+    protected final Class<? extends CorrelationProvider> correlationProvider;
+    protected final String correlationExpression;
+    protected final CorrelationStrategy correlationStrategy;
     protected final boolean queryParameter;
     protected final boolean id;
     protected final boolean subqueryMapping;
@@ -77,6 +77,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
+            this.correlationExpression = null;
+            this.correlationProvider = null;
+            this.correlationStrategy = null;
         } else if (mapping instanceof Mapping) {
             this.mapping = ((Mapping) mapping).value();
             this.subqueryProvider = null;
@@ -85,6 +88,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
+            this.correlationExpression = null;
+            this.correlationProvider = null;
+            this.correlationStrategy = null;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
             this.subqueryProvider = null;
@@ -93,6 +99,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
+            this.correlationExpression = null;
+            this.correlationProvider = null;
+            this.correlationStrategy = null;
         } else if (mapping instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             this.mapping = null;
@@ -102,9 +111,31 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = true;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
+            this.correlationExpression = null;
+            this.correlationProvider = null;
+            this.correlationStrategy = null;
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 throw new IllegalArgumentException("The subquery alias is empty although the subquery expression is not " + errorLocation);
+            }
+            if (subqueryProvider.getEnclosingClass() != null && !Modifier.isStatic(subqueryProvider.getModifiers())) {
+                throw new IllegalArgumentException("The subquery provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
+            }
+        } else if (mapping instanceof MappingCorrelated) {
+            MappingCorrelated mappingCorrelated = (MappingCorrelated) mapping;
+            this.mapping = null;
+            this.subqueryProvider = null;
+            this.id = false;
+            this.queryParameter = false;
+            this.subqueryMapping = false;
+            this.subqueryExpression = null;
+            this.subqueryAlias = null;
+            this.correlationExpression = mappingCorrelated.expression();
+            this.correlationProvider = mappingCorrelated.correlator();
+            this.correlationStrategy = mappingCorrelated.strategy();
+
+            if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
+                throw new IllegalArgumentException("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
             }
         } else {
             throw new IllegalArgumentException("No mapping annotation could be found " + errorLocation);
@@ -258,6 +289,18 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public String getSubqueryAlias() {
         return subqueryAlias;
+    }
+
+    public Class<? extends CorrelationProvider> getCorrelationProvider() {
+        return correlationProvider;
+    }
+
+    public String getCorrelationExpression() {
+        return correlationExpression;
+    }
+
+    public CorrelationStrategy getCorrelationStrategy() {
+        return correlationStrategy;
     }
 
     @Override

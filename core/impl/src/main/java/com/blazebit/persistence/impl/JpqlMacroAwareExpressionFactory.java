@@ -32,8 +32,13 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
     }
 
     @Override
+    public MacroConfiguration getDefaultMacroConfiguration() {
+        return macroStorage.getMacroConfiguration();
+    }
+
+    @Override
     public PathExpression createPathExpression(String expression) {
-        return expressionFactory.createPathExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createPathExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -43,7 +48,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createJoinPathExpression(String expression) {
-        return expressionFactory.createJoinPathExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createJoinPathExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -53,7 +58,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createSimpleExpression(String expression, boolean allowQuantifiedPredicates) {
-        return expressionFactory.createSimpleExpression(expression, allowQuantifiedPredicates, macroStorage.getMacroConfiguration());
+        return expressionFactory.createSimpleExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -63,7 +68,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createCaseOperandExpression(String caseOperandExpression) {
-        return expressionFactory.createCaseOperandExpression(caseOperandExpression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createCaseOperandExpression(caseOperandExpression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -73,7 +78,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createScalarExpression(String expression) {
-        return expressionFactory.createScalarExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createScalarExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -83,7 +88,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createArithmeticExpression(String expression) {
-        return expressionFactory.createArithmeticExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createArithmeticExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -93,7 +98,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createStringExpression(String expression) {
-        return expressionFactory.createStringExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createStringExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -103,7 +108,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createOrderByExpression(String expression) {
-        return expressionFactory.createOrderByExpression(expression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createOrderByExpression(expression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -113,7 +118,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public List<Expression> createInItemExpressions(String[] parameterOrLiteralExpressions) {
-        return expressionFactory.createInItemExpressions(parameterOrLiteralExpressions, macroStorage.getMacroConfiguration());
+        return expressionFactory.createInItemExpressions(parameterOrLiteralExpressions, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -123,7 +128,7 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Expression createInItemExpression(String parameterOrLiteralExpression) {
-        return expressionFactory.createInItemExpression(parameterOrLiteralExpression, macroStorage.getMacroConfiguration());
+        return expressionFactory.createInItemExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration());
     }
 
     @Override
@@ -133,11 +138,33 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
-        return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, macroStorage.getMacroConfiguration());
+        return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
     }
 
     @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
         return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration);
+    }
+
+    /*  WARNING: Be careful when changing the implementation of equals and hashCode. Extensions rely on the the logic for efficient caching.  */
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o instanceof ExpressionFactory) {
+            ExpressionFactory that = (ExpressionFactory) o;
+            ExpressionFactory thatExpressionFactory = that.unwrap(expressionFactory.getClass());
+            if (thatExpressionFactory == null || !expressionFactory.equals(thatExpressionFactory)) return false;
+            return getDefaultMacroConfiguration() != null ? getDefaultMacroConfiguration().equals(that.getDefaultMacroConfiguration()) : that.getDefaultMacroConfiguration() == null;
+        }
+
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = expressionFactory != null ? expressionFactory.hashCode() : 0;
+        result = 31 * result + (getDefaultMacroConfiguration() != null ? getDefaultMacroConfiguration().hashCode() : 0);
+        return result;
     }
 }

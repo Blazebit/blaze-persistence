@@ -959,6 +959,11 @@ public class GeneralParserTest extends AbstractParserTest {
             public Expression apply(List<Expression> expressions) {
                 return new ArithmeticExpression(expressions.get(0), new NumericLiteral("1", NumericType.INTEGER), ArithmeticOperator.ADDITION);
             }
+
+            @Override
+            public Object[] getState() {
+                return new Object[0];
+            }
         }));
         Expression result = parse("TEST(123)");
 

@@ -506,6 +506,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 		return maxResults;
 	}
 
+	public EntityManager getEntityManager() {
+	    return em;
+    }
+
 	public Metamodel getMetamodel() {
         return em.getMetamodel();
     }

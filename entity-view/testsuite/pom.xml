@@ -30,6 +30,12 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>blaze-persistence-core-testsuite</artifactId>
+			<version>${project.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>blaze-persistence-entity-view-api</artifactId>
 			<scope>test</scope>
 		</dependency>

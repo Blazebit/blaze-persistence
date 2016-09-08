@@ -33,6 +33,14 @@ public final class ConfigurationProperties {
 	 */
 	public static final String PROXY_EAGER_LOADING = "com.blazebit.persistence.view.proxy.eager_loading";
 	/**
+	 * We added a flag to make it possible to prepare all view template caches on startup.
+	 * By default the eager loading of the view templates is disabled to have a better startup performance.
+	 * Valid values for this property are <code>true</code> or <code>false</code>.
+	 *
+	 * @since 1.2.0
+	 */
+	public static final String TEMPLATE_EAGER_LOADING = "com.blazebit.persistence.view.eager_loading";
+	/**
 	 * We added a flag to make it possible to disable unsafe proxy generation.
 	 * By default the unsafe proxies are allowed to be able to make use of the features.
 	 * Valid values for this property are <code>true</code> or <code>false</code>.

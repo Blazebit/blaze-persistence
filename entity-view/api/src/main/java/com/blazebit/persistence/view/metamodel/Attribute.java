@@ -59,4 +59,11 @@ public interface Attribute<X, Y> {
      * @return True if this attribute is a subview, otherwise false
      */
     public boolean isSubview();
+
+    /**
+     * Returns true if this attribute is correlated, otherwise false.
+     *
+     * @return True if this attribute is correlated, otherwise false
+     */
+    public boolean isCorrelated();
 }

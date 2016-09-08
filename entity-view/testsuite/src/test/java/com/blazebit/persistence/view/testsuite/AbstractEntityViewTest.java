@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -28,7 +29,7 @@ import com.blazebit.persistence.view.testsuite.entity.Version;
  * @author Christian Beikov
  * @since 1.0
  */
-public class AbstractEntityViewTest extends AbstractPersistenceTest {
+public class AbstractEntityViewTest extends AbstractCoreTest {
 
     @Override
     protected Class<?>[] getEntityClasses() {

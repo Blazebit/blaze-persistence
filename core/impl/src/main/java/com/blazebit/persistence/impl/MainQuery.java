@@ -6,10 +6,7 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.MacroConfiguration;
-import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
-import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpqlMacro;
@@ -17,8 +14,9 @@ import com.blazebit.persistence.spi.JpqlMacro;
 
 public class MainQuery {
 
+    private final JpqlMacroStorage macroStorage;
+
     final CriteriaBuilderFactoryImpl cbf;
-    final JpqlMacroStorage macroStorage;
     final ExpressionFactory expressionFactory;
     final ExpressionFactory subqueryExpressionFactory;
     final EntityManager em;
@@ -34,9 +32,10 @@ public class MainQuery {
     private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager, Map<String, String> properties) {
         super();
         this.cbf = cbf;
-        this.macroStorage = new JpqlMacroStorage(cbf.getExpressionFactory(), cbf.getMacroConfiguration());
-        this.expressionFactory = new JpqlMacroAwareExpressionFactory(cbf.getExpressionFactory(), macroStorage);
-        this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cbf.getSubqueryExpressionFactory(), macroStorage);
+        // NOTE: we unwrap the ExpressionFactory as it is a JpqlMacroAwareExpressionFactory and we need the caching one
+        this.macroStorage = new JpqlMacroStorage(cbf.getExpressionFactory().unwrap(AbstractCachingExpressionFactory.class), cbf.getMacroConfiguration());
+        this.expressionFactory = new JpqlMacroAwareExpressionFactory(cbf.getExpressionFactory().unwrap(AbstractCachingExpressionFactory.class), macroStorage);
+        this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cbf.getSubqueryExpressionFactory().unwrap(AbstractCachingExpressionFactory.class), macroStorage);
         this.em = em;
         this.metamodel = cbf.getMetamodel();
         this.jpaProvider = jpaProvider;

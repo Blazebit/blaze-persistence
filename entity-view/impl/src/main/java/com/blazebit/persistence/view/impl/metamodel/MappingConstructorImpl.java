@@ -31,13 +31,10 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSingular;
-import com.blazebit.persistence.view.MappingSubquery;
-import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.impl.metamodel.attribute.*;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -123,7 +120,7 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         }
         
         if (mapping instanceof MappingParameter) {
-            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
         }
         
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
@@ -131,22 +128,46 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
         for (Annotation a : annotations) {
             // Force singular mapping
             if (MappingSingular.class == a.annotationType()) {
-                return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+                if (mapping instanceof MappingCorrelated) {
+                    return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                } else {
+                    return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+                }
             }
         }
 
         if (Collection.class == attributeType) {
-            return new ParameterMappingCollectionAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            if (mapping instanceof MappingCorrelated) {
+                return new CorrelatedParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews);
+            } else {
+                return new DefaultParameterMappingCollectionAttribute<X, Object>(constructor, index, mapping, entityViews);
+            }
         } else if (List.class == attributeType) {
-            return new ParameterMappingListAttributeImpl<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
+            if (mapping instanceof MappingCorrelated) {
+                return new CorrelatedParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
+            } else {
+                return new DefaultParameterMappingListAttribute<X, Object>(constructor, index, mapping, entityViews, metamodel, expressionFactory);
+            }
         } else if (Set.class == attributeType || SortedSet.class == attributeType || NavigableSet.class == attributeType) {
-            return new ParameterMappingSetAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            if (mapping instanceof MappingCorrelated) {
+                return new CorrelatedParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews);
+            } else {
+                return new DefaultParameterMappingSetAttribute<X, Object>(constructor, index, mapping, entityViews);
+            }
         } else if (Map.class == attributeType || SortedMap.class == attributeType || NavigableMap.class == attributeType) {
-            return new ParameterMappingMapAttributeImpl<X, Object, Object>(constructor, index, mapping, entityViews);
+            if (mapping instanceof MappingCorrelated) {
+                throw new IllegalArgumentException("Map type unsupported for correlated mappings!");
+            } else {
+                return new DefaultParameterMappingMapAttribute<X, Object, Object>(constructor, index, mapping, entityViews);
+            }
         } else if (mapping instanceof MappingSubquery) {
-            return new ParameterSubquerySingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            return new DefaultParameterSubquerySingularAttribute<X, Object>(constructor, index, mapping, entityViews);
         } else {
-            return new ParameterMappingSingularAttributeImpl<X, Object>(constructor, index, mapping, entityViews);
+            if (mapping instanceof MappingCorrelated) {
+                return new CorrelatedParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+            } else {
+                return new DefaultParameterMappingSingularAttribute<X, Object>(constructor, index, mapping, entityViews);
+            }
         }
     }
 

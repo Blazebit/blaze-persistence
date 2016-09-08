@@ -45,5 +45,4 @@ public final class JpqlMacroStorage {
         scopedMacros.put(macroName.toUpperCase(), jpqlMacro);
         dirty = true;
     }
-
 }

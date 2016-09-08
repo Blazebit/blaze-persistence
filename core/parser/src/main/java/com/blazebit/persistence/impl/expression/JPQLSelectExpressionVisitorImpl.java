@@ -71,9 +71,12 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
     @Override
     public Expression visitMacro_expression(Macro_expressionContext ctx) {
         List<Expression> funcArgs = new ArrayList<Expression>(ctx.getChildCount());
-        for (int i = 0; i < ctx.getChildCount(); i++) {
-            if (!(ctx.getChild(i) instanceof TerminalNode)) {
-                funcArgs.add(ctx.getChild(i).accept(this));
+        // Special handling of empty invocation, the position 2 contains an empty child node
+        if (ctx.getChildCount() != 4 || !ctx.getChild(2).getText().isEmpty()) {
+            for (int i = 0; i < ctx.getChildCount(); i++) {
+                if (!(ctx.getChild(i) instanceof TerminalNode)) {
+                    funcArgs.add(ctx.getChild(i).accept(this));
+                }
             }
         }
 

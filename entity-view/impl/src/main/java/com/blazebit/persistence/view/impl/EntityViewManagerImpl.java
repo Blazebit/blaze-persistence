@@ -26,7 +26,10 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.*;
+import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.MacroConfiguration;
+import com.blazebit.persistence.impl.expression.MacroFunction;
 import com.blazebit.persistence.view.AttributeFilterProvider;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
@@ -63,6 +66,7 @@ import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
 import com.blazebit.persistence.view.impl.update.EntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -96,14 +100,27 @@ public class EntityViewManagerImpl implements EntityViewManager {
         
         this.unsafeDisabled = !Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_UNSAFE_ALLOWED)));
         
-        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
+        if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
+            MacroConfiguration originalMacroConfiguration = cbf.getService(MacroConfiguration.class);
+            ExpressionFactory cachingExpressionFactory = cbf.getService(ExpressionFactory.class).unwrap(AbstractCachingExpressionFactory.class);
         	for (ViewType<?> view : metamodel.getViews()) {
-        		if (view.getConstructors().isEmpty() || unsafeDisabled) {
-        			proxyFactory.getProxy(view);
-        		} else {
-        			proxyFactory.getUnsafeProxy(view);
-        		}
+                MacroFunction macro = new JpqlMacroAdapter(new ViewRootJpqlMacro(null), cachingExpressionFactory);
+        	    MacroConfiguration macroConfiguration = originalMacroConfiguration.with(Collections.singletonMap("view_root", macro));
+        	    ExpressionFactory expressionFactory = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+                getTemplate(expressionFactory, view, null, null);
+
+                for (MappingConstructor<?> constructor : view.getConstructors()) {
+                    getTemplate(expressionFactory, view, (MappingConstructor) constructor, null);
+                }
         	}
+        } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
+            for (ViewType<?> view : metamodel.getViews()) {
+                if (view.getConstructors().isEmpty() || unsafeDisabled) {
+                    proxyFactory.getProxy(view);
+                } else {
+                    proxyFactory.getUnsafeProxy(view);
+                }
+            }
         }
     }
 
@@ -238,7 +255,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
@@ -249,32 +266,37 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
 
-    private <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
+    public <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
         Class<?> entityClazz;
         Set<Root> roots = criteriaBuilder.getRoots();
         Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
         Root root = rootEntry.getKey();
         entityViewRoot = rootEntry.getValue();
+        ExpressionFactory ef = criteriaBuilder.getService(ExpressionFactory.class);
         if (entityViewRoot != null) {
-            ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-            PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), root.getType());
-            ef.createPathExpression(entityViewRoot.substring(root.getAlias().length() + 1)).accept(visitor);
-            Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
-            if (possibleTypes.size() > 1) {
-                throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + root.getType() + "'!");
-            }
-            // It must have one, otherwise a parse error would have been thrown already
-            entityClazz = possibleTypes.iterator().next();
+            if (root.getAlias().equals(entityViewRoot)) {
+                entityClazz = root.getType();
+            } else {
+                PathTargetResolvingExpressionVisitor visitor = new PathTargetResolvingExpressionVisitor(metamodel.getEntityMetamodel(), root.getType());
+                ef.createPathExpression(entityViewRoot.substring(root.getAlias().length() + 1)).accept(visitor);
+                Collection<Class<?>> possibleTypes = visitor.getPossibleTargets().values();
+                if (possibleTypes.size() > 1) {
+                    throw new IllegalArgumentException("The expression '" + entityViewRoot + "' is ambiguous in the context of the type '" + root.getType() + "'!");
+                }
+                // It must have one, otherwise a parse error would have been thrown already
+                entityClazz = possibleTypes.iterator().next();
 
-            if (entityClazz == null) {
-                throw new IllegalArgumentException("Could not resolve the expression '" + entityViewRoot + "' in the context of the type '" + root.getType() + "'!");
+                if (entityClazz == null) {
+                    throw new IllegalArgumentException("Could not resolve the expression '" + entityViewRoot + "' in the context of the type '" + root.getType() + "'!");
+                }
             }
         } else {
-            entityClazz = rootEntry.getKey().getType();
+            entityClazz = root.getType();
+            entityViewRoot = root.getAlias();
         }
         if (!viewType.getEntityClass().isAssignableFrom(entityClazz)) {
             throw new IllegalArgumentException("The given view type with the entity type '" + viewType.getEntityClass().getName()
@@ -282,7 +304,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         }
 
         criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
-        criteriaBuilder.selectNew(getTemplate(criteriaBuilder, viewType, mappingConstructor, entityViewRoot).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
+        criteriaBuilder.selectNew(getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 
     private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {
@@ -297,7 +319,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (roots.size() == 1) {
             Root r = roots.iterator().next();
             String alias = r.getAlias();
-            if (entityViewRoot.startsWith(alias) && entityViewRoot.length() > alias.length() && entityViewRoot.charAt(alias.length()) == '.') {
+            if (entityViewRoot.startsWith(alias) && (entityViewRoot.length() == alias.length() || entityViewRoot.charAt(alias.length()) == '.')) {
                 return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
             } else {
                 return new AbstractMap.SimpleEntry<Root, String>(r, alias + '.' + entityViewRoot);
@@ -306,7 +328,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
         for (Root r : roots) {
             String alias = r.getAlias();
-            if (entityViewRoot.startsWith(alias) && entityViewRoot.length() > alias.length() && entityViewRoot.charAt(alias.length()) == '.') {
+            if (entityViewRoot.startsWith(alias) && (entityViewRoot.length() == alias.length() || entityViewRoot.charAt(alias.length()) == '.')) {
                 return new AbstractMap.SimpleEntry<Root, String>(r, entityViewRoot);
             }
         }
@@ -315,14 +337,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> ViewTypeObjectBuilderTemplate<T> getTemplate(FullQueryBuilder<?, ?> cb, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot) {
-    	ExpressionFactory ef = cb.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor, entityViewRoot);
+    public <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot) {
+        return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot);
+    }
+
+    public <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ExpressionFactory ef, ManagedViewType<T> viewType, MappingConstructor<T> mappingConstructor, String name, String entityViewRoot) {
+    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor, name, entityViewRoot);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
-        	Metamodel jpaMetamodel = cb.getMetamodel();
-            value = key.createValue(jpaMetamodel, this, proxyFactory);
+            value = key.createValue(metamodel.getEntityMetamodel(), this, proxyFactory);
             ViewTypeObjectBuilderTemplate<?> oldValue = objectBuilderCache.putIfAbsent(key, value);
 
             if (oldValue != null) {

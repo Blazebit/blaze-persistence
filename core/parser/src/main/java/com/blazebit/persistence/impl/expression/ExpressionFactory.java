@@ -29,6 +29,8 @@ public interface ExpressionFactory {
 
     public <T extends ExpressionFactory> T unwrap(Class<T> clazz);
 
+    public MacroConfiguration getDefaultMacroConfiguration();
+
     public PathExpression createPathExpression(String expression);
 
     public PathExpression createPathExpression(String expression, MacroConfiguration macroConfiguration);

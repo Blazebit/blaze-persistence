@@ -75,8 +75,12 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize);
         this.expressionCache = new ConcurrentHashMapExpressionCache();
-        this.expressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
-        this.subqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, originalExpressionFactory));
+        ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
+        ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, originalExpressionFactory));
+        this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
+        JpqlMacroStorage macroStorage = new JpqlMacroStorage(null, macroConfiguration);
+        this.expressionFactory = new JpqlMacroAwareExpressionFactory(cachingExpressionFactory, macroStorage);
+        this.subqueryExpressionFactory = new JpqlMacroAwareExpressionFactory(cachingSubqueryExpressionFactory, macroStorage);
         this.properties = copyProperties(config.getProperties());
         
         List<EntityManagerFactoryIntegrator> integrators = config.getEntityManagerIntegrators();
@@ -97,7 +101,6 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
             dialect = dbmsDialects.get(null);
         }
 
-        this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), expressionFactory));
         this.configuredDbms = dbms;
         this.configuredDbmsDialect = dialect;
         this.configuredRegisteredFunctions = registeredFunctions;

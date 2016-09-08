@@ -26,7 +26,7 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.0
  */
-public abstract class AbstractCachingExpressionFactory extends AbstractDelegatingExpressionFactory {
+public abstract class AbstractCachingExpressionFactory extends AbstractExpressionFactoryMacroAdapter {
 
     private final ExpressionFactory delegate;
     private final ExpressionCache expressionCache;
@@ -44,8 +44,9 @@ public abstract class AbstractCachingExpressionFactory extends AbstractDelegatin
         return delegate.unwrap(clazz);
     }
 
-    public ExpressionFactory getDelegate() {
-        return delegate;
+    @Override
+    public MacroConfiguration getDefaultMacroConfiguration() {
+        return delegate.getDefaultMacroConfiguration();
     }
 
     public ExpressionCache getExpressionCache() {
@@ -180,5 +181,4 @@ public abstract class AbstractCachingExpressionFactory extends AbstractDelegatin
 
         });
     }
-
 }

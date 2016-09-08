@@ -16,6 +16,8 @@
 package com.blazebit.persistence;
 
 
+import javax.persistence.EntityManager;
+
 /**
  * A base interface for builders that support normal query functionality.
  * This interface is shared between the criteria builder and paginated criteria builder.
@@ -26,4 +28,12 @@ package com.blazebit.persistence;
  * @since 1.0
  */
 public interface QueryBuilder<T, X extends QueryBuilder<T, X>> extends BaseQueryBuilder<T, X>, Queryable<T, X> {
+
+    /**
+     * Returns the associated entity manager.
+     *
+     * @return The associated entity manager
+     * @since 1.2.0
+     */
+    public EntityManager getEntityManager();
 }

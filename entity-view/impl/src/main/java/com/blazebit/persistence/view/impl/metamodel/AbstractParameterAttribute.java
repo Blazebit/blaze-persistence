@@ -18,10 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import com.blazebit.persistence.view.IdMapping;
-import com.blazebit.persistence.view.Mapping;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
@@ -66,7 +63,8 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         for (Annotation a : annotations) {
             if (MappingParameter.class.isInstance(a)
                     || Mapping.class.isInstance(a)
-                    || MappingSubquery.class.isInstance(a)) {
+                    || MappingSubquery.class.isInstance(a)
+                    || MappingCorrelated.class.isInstance(a)) {
                 foundAnnotation = true;
                 break;
             }
@@ -89,6 +87,8 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
             } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingParameter.class)) {
                 return annotations[i];
             } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingSubquery.class)) {
+                return annotations[i];
+            } else if (ReflectionUtils.isSubtype(annotations[i].annotationType(), MappingCorrelated.class)) {
                 return annotations[i];
             }
         }

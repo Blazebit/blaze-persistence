@@ -11,4 +11,7 @@ public interface MacroFunction {
 
     public Expression apply(List<Expression> expressions);
 
+    // Equals and hashCode must be based on this state
+    public Object[] getState();
+
 }
