@@ -204,7 +204,7 @@
 		<profile>
 			<id>hibernate-4.3</id>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate43</jpa.excludedGroups>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -284,7 +284,7 @@
 		<profile>
 			<id>hibernate-5.0</id>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate50</jpa.excludedGroups>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -364,7 +364,7 @@
 		<profile>
 			<id>hibernate-5.1</id>
 			<properties>
-				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate</jpa.excludedGroups>
+				<jpa.excludedGroups>com.blazebit.persistence.testsuite.base.category.NoHibernate,com.blazebit.persistence.testsuite.base.category.NoHibernate51</jpa.excludedGroups>
 			</properties>
 			<dependencies>
 				<dependency>

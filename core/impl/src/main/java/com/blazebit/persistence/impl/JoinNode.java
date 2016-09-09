@@ -15,12 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.EnumSet;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.persistence.metamodel.Attribute;
 
@@ -56,6 +51,7 @@ public class JoinNode implements Root {
     private final String treatType;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
+    private final Set<JoinNode> entityJoinNodes = new LinkedHashSet<JoinNode>();
 
     // contains other join nodes which this node depends on
     private final Set<JoinNode> dependencies = new HashSet<JoinNode>();
@@ -208,6 +204,9 @@ public class JoinNode implements Root {
                 joinNode.accept(visitor);
             }
         }
+        for (JoinNode joinNode : entityJoinNodes) {
+            joinNode.accept(visitor);
+        }
     }
 
     public <T> T accept(AbortableResultJoinNodeVisitor<T> visitor) {
@@ -224,6 +223,13 @@ public class JoinNode implements Root {
                 if (visitor.getStopValue().equals(result)) {
                     return result;
                 }
+            }
+        }
+        for (JoinNode joinNode : entityJoinNodes) {
+            result = joinNode.accept(visitor);
+
+            if (visitor.getStopValue().equals(result)) {
+                return result;
             }
         }
 
@@ -282,6 +288,14 @@ public class JoinNode implements Root {
         return node;
     }
 
+    public Set<JoinNode> getEntityJoinNodes() {
+        return entityJoinNodes;
+    }
+
+    public void addEntityJoin(JoinNode entityJoinNode) {
+        entityJoinNodes.add(entityJoinNode);
+    }
+
     public String getParentTreatType() {
         return parentTreatType;
     }
@@ -316,11 +330,19 @@ public class JoinNode implements Root {
     }
 
     public boolean hasCollections() {
-        Stack<JoinTreeNode> stack = new Stack<JoinTreeNode>();
+        if (!entityJoinNodes.isEmpty()) {
+            return false;
+        }
+
+        List<JoinTreeNode> stack = new ArrayList<JoinTreeNode>();
         stack.addAll(nodes.values());
 
+        for (JoinNode node : entityJoinNodes) {
+            stack.addAll(node.getNodes().values());
+        }
+
         while (!stack.isEmpty()) {
-            JoinTreeNode treeNode = stack.pop();
+            JoinTreeNode treeNode = stack.remove(stack.size() - 1);
 
             if (treeNode.isCollection()) {
                 return true;
@@ -336,11 +358,19 @@ public class JoinNode implements Root {
     
     Set<JoinNode> getCollectionJoins() {
         Set<JoinNode> collectionJoins = new HashSet<JoinNode>();
-        Stack<JoinTreeNode> stack = new Stack<JoinTreeNode>();
+        List<JoinTreeNode> stack = new ArrayList<JoinTreeNode>();
         stack.addAll(nodes.values());
 
+        // TODO: Fix this with #216
+        // For now we say entity joins are also collection joins because that affects size to count transformations
+        for (JoinNode node : entityJoinNodes) {
+            stack.addAll(node.getNodes().values());
+        }
+
+        collectionJoins.addAll(entityJoinNodes);
+
         while (!stack.isEmpty()) {
-            JoinTreeNode treeNode = stack.pop();
+            JoinTreeNode treeNode = stack.remove(stack.size() - 1);
 
             if (treeNode.isCollection()) {
                 collectionJoins.addAll(treeNode.getJoinNodes().values());
@@ -350,10 +380,11 @@ public class JoinNode implements Root {
                 stack.addAll(joinNode.nodes.values());
             }
         }
-        
+
+
         return collectionJoins;
     }
-    
+
     private static enum StateChange {
         JOIN_TYPE,
         ON_PREDICATE,

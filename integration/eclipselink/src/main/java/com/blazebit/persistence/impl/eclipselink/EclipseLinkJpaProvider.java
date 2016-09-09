@@ -36,6 +36,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsEntityJoin() {
+        return true;
+    }
+
+    @Override
     public boolean supportsInsertStatement() {
         return false;
     }

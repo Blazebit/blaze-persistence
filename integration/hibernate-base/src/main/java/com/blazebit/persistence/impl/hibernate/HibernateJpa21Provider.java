@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.impl.hibernate;
 
+import org.hibernate.Version;
+
 import javax.persistence.EntityManager;
 
 /**
@@ -24,13 +26,24 @@ import javax.persistence.EntityManager;
  */
 public class HibernateJpa21Provider extends HibernateJpaProvider {
 
-    public HibernateJpa21Provider(EntityManager em, String dbms) {
+    private final int major;
+    private final int minor;
+    private final int fix;
+
+    public HibernateJpa21Provider(EntityManager em, String dbms, int major, int minor, int fix) {
         super(em, dbms);
+        this.major = major;
+        this.minor = minor;
+        this.fix = fix;
     }
 
     @Override
     public boolean supportsJpa21() {
         return true;
+    }
+    @Override
+    public boolean supportsEntityJoin() {
+        return major > 5 || major == 5 && minor >= 1;
     }
 
     @Override

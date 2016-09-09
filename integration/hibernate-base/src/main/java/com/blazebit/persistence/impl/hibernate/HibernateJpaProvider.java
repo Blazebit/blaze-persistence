@@ -56,6 +56,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsEntityJoin() {
+        return false;
+    }
+
+    @Override
     public boolean supportsInsertStatement() {
         return true;
     }

@@ -89,7 +89,7 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
     public void testSubqueryCorrelation() {
         testCorrelation(DocumentCorrelationViewSubquery.class);
     }
-
+//
 //    @Test
 //    public void testBatchCorrelation() {
 //        testCorrelation(DocumentCorrelationViewJoin.class);

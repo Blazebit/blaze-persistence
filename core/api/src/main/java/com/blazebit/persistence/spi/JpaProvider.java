@@ -25,6 +25,8 @@ public interface JpaProvider {
 
     public boolean supportsJpa21();
 
+    public boolean supportsEntityJoin();
+
     public boolean supportsInsertStatement();
 
     public boolean needsBracketsForListParamter();

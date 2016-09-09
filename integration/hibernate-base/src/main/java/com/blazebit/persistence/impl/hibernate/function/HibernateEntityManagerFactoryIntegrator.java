@@ -28,6 +28,7 @@ import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
 import com.blazebit.persistence.spi.*;
 import org.hibernate.Session;
+import org.hibernate.Version;
 import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
@@ -58,6 +59,18 @@ import com.blazebit.apt.service.ServiceProvider;
 public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFactoryIntegrator {
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
+
+    private static final int major;
+    private static final int minor;
+    private static final int fix;
+
+    static {
+        String versionString = Version.getVersionString();
+        String[] parts = versionString.split("\\.");
+        major = Integer.parseInt(parts[0]);
+        minor = Integer.parseInt(parts[1]);
+        fix = Integer.parseInt(parts[2]);
+    }
     
     @Override
 	public String getDbms(EntityManagerFactory entityManagerFactory) {
@@ -81,11 +94,11 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
 
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
-        if (isJpa21()) {
+        if (major > 4 || major == 4 && minor >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory));
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), major, minor, fix);
                 }
             };
         } else {
@@ -95,15 +108,6 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                     return new HibernateJpaProvider(em, getDbms(entityManagerFactory));
                 }
             };
-        }
-    }
-
-    private boolean isJpa21() {
-        try {
-            EntityManagerFactory.class.getMethod("unwrap", Class.class);
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
         }
     }
 

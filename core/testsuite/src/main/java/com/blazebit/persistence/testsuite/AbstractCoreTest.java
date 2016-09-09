@@ -42,7 +42,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
     protected static final JpaProvider staticJpaProvider;
     private CriteriaBuilderConfiguration config;
-    private JpaProvider jpaProvider;
+    protected JpaProvider jpaProvider;
     private String dbms;
     protected String ON_CLAUSE;
     

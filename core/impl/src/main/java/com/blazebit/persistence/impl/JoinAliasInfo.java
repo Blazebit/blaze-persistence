@@ -26,14 +26,16 @@ public class JoinAliasInfo implements AliasInfo {
     private String alias;
     private JoinNode joinNode;
     private boolean implicit;
+    private final boolean rootNode;
     // The absolute normalized path with the root as implicit base
     private final String absolutePath;
     private final AliasManager aliasOwner;
 
-    public JoinAliasInfo(String alias, String absolutePath, boolean implicit, AliasManager aliasOwner) {
+    public JoinAliasInfo(String alias, String absolutePath, boolean implicit, boolean rootNode, AliasManager aliasOwner) {
         this.alias = alias;
         this.absolutePath = absolutePath;
         this.implicit = implicit;
+        this.rootNode = rootNode;
         this.aliasOwner = aliasOwner;
     }
 
@@ -68,6 +70,10 @@ public class JoinAliasInfo implements AliasInfo {
 
     public void setImplicit(boolean implicit) {
         this.implicit = implicit;
+    }
+
+    public boolean isRootNode() {
+        return rootNode;
     }
 
     @Override

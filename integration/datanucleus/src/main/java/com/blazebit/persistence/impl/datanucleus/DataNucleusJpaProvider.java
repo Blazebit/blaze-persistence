@@ -42,6 +42,11 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean supportsEntityJoin() {
+        return major >= 5;
+    }
+
+    @Override
     public boolean supportsInsertStatement() {
         return false;
     }

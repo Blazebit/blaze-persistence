@@ -14,7 +14,7 @@ public class OwnerRelatedIdCorrelationProvider implements CorrelationProvider {
     @Override
     public String applyCorrelation(BaseQueryBuilder<?, ?> queryBuilder, String correlationExpression) {
         queryBuilder.from(Document.class, "correlatedDocument");
-        queryBuilder.where("correlatedDocument.owner").eqExpression(correlationExpression);
+        queryBuilder.where("correlatedDocument.owner").inExpressions(correlationExpression);
         queryBuilder.where("correlatedDocument").notEqExpression("VIEW_ROOT()");
         queryBuilder.select("correlatedDocument.id");
         queryBuilder.orderByAsc("correlatedDocument.id");

@@ -195,7 +195,7 @@ public class MappingSubqueryTest extends AbstractEntityViewTest {
                 "partnerDocument_1.name AS DocumentWithSubqueryViewRoot_name " +
                 "FROM Person person " +
                 "LEFT JOIN person.partnerDocument partnerDocument_1 " +
-                "ORDER BY " + renderNullPrecedence("DocumentWithSubqueryViewRoot_name", "ASC", "LAST"), cb.getQueryString());
+                "ORDER BY " + renderNullPrecedence("DocumentWithSubqueryViewRoot_name", "partnerDocument_1.name", "ASC", "LAST"), cb.getQueryString());
         assertEquals(3, list.size());
         assertEquals("doc1", list.get(0).getName());
         assertEquals(Long.valueOf(1), list.get(0).getContactCount());

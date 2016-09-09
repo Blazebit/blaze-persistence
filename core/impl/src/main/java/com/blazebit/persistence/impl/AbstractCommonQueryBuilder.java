@@ -955,12 +955,35 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinManager.joinOn((BuilderType) this, path, alias, type, true);
     }
 
+    @SuppressWarnings("unchecked")
+    public JoinOnBuilder<BuilderType> joinOn(Class<?> clazz, String alias, JoinType type) {
+        return joinOn(joinManager.getRootNodeOrFail("An explicit base join node is required when multiple root nodes are used!").getAlias(), clazz, alias, type);
+    }
+
+    @SuppressWarnings("unchecked")
+    public JoinOnBuilder<BuilderType> joinOn(String base, Class<?> entityClass, String alias, JoinType type) {
+        clearCache();
+        checkJoinPreconditions(base, alias, type);
+        if (entityClass == null) {
+            throw new NullPointerException("entityClass");
+        }
+        return joinManager.joinOn((BuilderType) this, base, entityClass, alias, type);
+    }
+
     public JoinOnBuilder<BuilderType> innerJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.INNER);
     }
 
     public JoinOnBuilder<BuilderType> innerJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.INNER);
+    }
+
+    public JoinOnBuilder<BuilderType> innerJoinOn(Class<?> clazz, String alias) {
+        return joinOn(clazz, alias, JoinType.INNER);
+    }
+
+    public JoinOnBuilder<BuilderType> innerJoinOn(String base, Class<?> clazz, String alias) {
+        return joinOn(base, clazz, alias, JoinType.INNER);
     }
 
     public JoinOnBuilder<BuilderType> leftJoinOn(String path, String alias) {
@@ -971,12 +994,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinDefaultOn(path, alias, JoinType.LEFT);
     }
 
+    public JoinOnBuilder<BuilderType> leftJoinOn(Class<?> clazz, String alias) {
+        return joinOn(clazz, alias, JoinType.LEFT);
+    }
+
+    public JoinOnBuilder<BuilderType> leftJoinOn(String base, Class<?> clazz, String alias) {
+        return joinOn(base, clazz, alias, JoinType.LEFT);
+    }
+
     public JoinOnBuilder<BuilderType> rightJoinOn(String path, String alias) {
         return joinOn(path, alias, JoinType.RIGHT);
     }
 
     public JoinOnBuilder<BuilderType> rightJoinDefaultOn(String path, String alias) {
         return joinDefaultOn(path, alias, JoinType.RIGHT);
+    }
+
+    public JoinOnBuilder<BuilderType> rightJoinOn(Class<?> clazz, String alias) {
+        return joinOn(clazz, alias, JoinType.RIGHT);
+    }
+
+    public JoinOnBuilder<BuilderType> rightJoinOn(String base, Class<?> clazz, String alias) {
+        return joinOn(base, clazz, alias, JoinType.RIGHT);
     }
 
     private void checkJoinPreconditions(String path, String alias, JoinType type) {

@@ -55,6 +55,11 @@ public class Person implements Serializable {
         this.name = name;
     }
 
+    public Person(String name, long age) {
+        this.name = name;
+        this.age = age;
+    }
+
     @Id
     @GeneratedValue
     public Long getId() {

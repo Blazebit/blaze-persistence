@@ -67,6 +67,11 @@ public class Document extends Ownable implements Serializable {
     public Document(String name) {
         this.name = name;
     }
+
+    public Document(String name, long age) {
+        this.name = name;
+        this.age = age;
+    }
     
     public Document(String name, DocumentType documentType) {
         this(name);

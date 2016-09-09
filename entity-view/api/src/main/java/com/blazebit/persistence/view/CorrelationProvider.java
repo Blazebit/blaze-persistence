@@ -27,6 +27,14 @@ public interface CorrelationProvider {
 
     /**
      * Applies a correlation to a query builder.
+     * Depending on the correlation strategy, the <i>correlationExpression</i> may be one of the following:
+     * <ul>
+     *     <li>{@link CorrelationStrategy#SUBQUERY} - A named parameter</li>
+     *     <li>{@link CorrelationStrategy#BATCH} - A named collection parameter</li>
+     *     <li>{@link CorrelationStrategy#JOIN} - The correlation expression</li>
+     * </ul>
+     *
+     * To be able to make use of all strategies it is best if you use the IN predicate in conjunction with the <i>correlationExpression</i>.
      *
      * @param queryBuilder          The query builder on which the correlation should be applied
      * @param correlationExpression The correlation expression from the outer query on which to correlate

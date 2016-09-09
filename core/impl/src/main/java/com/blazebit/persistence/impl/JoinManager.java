@@ -93,7 +93,7 @@ public class JoinManager extends AbstractManager {
                 rootAlias = aliasManager.generatePostfixedAlias(alias);
             }
         }
-        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
         JoinNode rootNode = new JoinNode(null, null, null, rootAliasInfo, null, clazz.getJavaType(), null);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
@@ -136,7 +136,7 @@ public class JoinManager extends AbstractManager {
         }
         // TODO: Implement treat support for correlated subqueries
         String treatType = null;
-        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, aliasManager);
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
         JoinNode rootNode = new JoinNode(correlationParent, correlationProperty, treatType, rootAliasInfo, attributeType, null);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
@@ -199,7 +199,8 @@ public class JoinManager extends AbstractManager {
         List<JoinNode> nodes = rootNodes;
         int size = nodes.size();
         for (int i = 0; i < size; i++) {
-            if (!nodes.get(i).getNodes().isEmpty()) {
+            JoinNode n = nodes.get(i);
+            if (!n.getNodes().isEmpty() || !n.getEntityJoinNodes().isEmpty()) {
                 return true;
             }
         }
@@ -274,6 +275,11 @@ public class JoinManager extends AbstractManager {
             // TODO: not sure if needed since applyImplicitJoins will already invoke that
             rootNode.registerDependencies();
             applyJoins(sb, rootNode.getAliasInfo(), rootNode.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
+            if (!rootNode.getEntityJoinNodes().isEmpty()) {
+                // TODO: Fix this with #216
+                boolean isCollection = true;
+                applyJoins(sb, rootNode.getAliasInfo(), new ArrayList<JoinNode>(rootNode.getEntityJoinNodes()), isCollection, clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
+            }
         }
 
         return collectionJoinNodes;
@@ -347,6 +353,8 @@ public class JoinManager extends AbstractManager {
                 } else {
                     throw new IllegalArgumentException("Treat should not be used as the JPA provider does not support subtype property access!");
                 }
+            } else if (node.getAliasInfo().isRootNode()) {
+                sb.append(metamodel.entity(node.getPropertyClass()).getName()).append(' ');
             } else {
                 renderParentAlias(sb, node, joinBase.getAlias());
                 sb.append(node.getParentTreeNode().getRelationName()).append(' ');
@@ -412,30 +420,39 @@ public class JoinManager extends AbstractManager {
     private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, Map<String, JoinTreeNode> nodes, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes) {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
+            List<JoinNode> stack = new ArrayList<JoinNode>();
+            stack.addAll(treeNode.getJoinNodes().values());
 
-            for (JoinNode node : treeNode.getJoinNodes().values()) {
-                // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
-                if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
-                    continue;
-                }
+            applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
+        }
+    }
 
-                // We have to render any dependencies this join node has before actually rendering itself 
-                if (!node.getDependencies().isEmpty()) {
-                    renderReverseDependency(sb, node, aliasPrefix);
-                }
+    private void applyJoins(StringBuilder sb, JoinAliasInfo joinBase, List<JoinNode> stack, boolean isCollection, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes) {
+        while (!stack.isEmpty()) {
+            JoinNode node = stack.remove(stack.size() - 1);
+            // If the clauses in which a join node occurs are all excluded or the join node is not mandatory for the cardinality, we skip it
+            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
+                continue;
+            }
 
-                // Collect the join nodes referring to collections
-                if (collectCollectionJoinNodes && treeNode.isCollection()) {
-                    collectionJoinNodes.add(node);
-                }
+            stack.addAll(node.getEntityJoinNodes());
 
-                // Finally render this join node
-                renderJoinNode(sb, joinBase, node, aliasPrefix);
+            // We have to render any dependencies this join node has before actually rendering itself
+            if (!node.getDependencies().isEmpty()) {
+                renderReverseDependency(sb, node, aliasPrefix);
+            }
 
-                // Render child nodes recursively
-                if (!node.getNodes().isEmpty()) {
-                    applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
-                }
+            // Collect the join nodes referring to collections
+            if (collectCollectionJoinNodes && isCollection) {
+                collectionJoinNodes.add(node);
+            }
+
+            // Finally render this join node
+            renderJoinNode(sb, joinBase, node, aliasPrefix);
+
+            // Render child nodes recursively
+            if (!node.getNodes().isEmpty()) {
+                applyJoins(sb, node.getAliasInfo(), node.getNodes(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
             }
         }
     }
@@ -533,6 +550,34 @@ public class JoinManager extends AbstractManager {
         }
 
         return false;
+    }
+
+    <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type) {
+        AliasInfo aliasInfo = aliasManager.getAliasInfo(base);
+
+        if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
+            throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+        }
+
+        EntityType<?> entityType = metamodel.entity(clazz);
+
+        if (alias == null || alias.isEmpty()) {
+            throw new IllegalArgumentException("Invalid empty alias!");
+        }
+        if (type != JoinType.INNER && !mainQuery.jpaProvider.supportsEntityJoin()) {
+            throw new IllegalArgumentException("The JPA provider does not support entity joins and an emulation for non-inner entity joins is not implemented!");
+        }
+
+        JoinNode baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
+
+        JoinAliasInfo joinAliasInfo = new JoinAliasInfo(alias, null, false, true, aliasManager);
+        JoinNode entityJoinNode = new JoinNode(baseNode, null, null, joinAliasInfo, type, entityType.getJavaType(), null);
+        joinAliasInfo.setJoinNode(entityJoinNode);
+        baseNode.addEntityJoin(entityJoinNode);
+        aliasManager.registerAliasInfo(joinAliasInfo);
+
+        joinOnBuilderListener.joinNode = entityJoinNode;
+        return joinOnBuilderListener.startBuilder(new JoinOnBuilderImpl<X>(result, joinOnBuilderListener, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String path, String alias, JoinType type, boolean defaultJoin) {
@@ -1385,7 +1430,7 @@ public class JoinManager extends AbstractManager {
                 alias = aliasManager.generatePostfixedAlias(alias);
             }
 
-            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, aliasManager);
+            JoinAliasInfo newAliasInfo = new JoinAliasInfo(alias, currentJoinPath, implicit, false, aliasManager);
             aliasManager.registerAliasInfo(newAliasInfo);
             node = new JoinNode(baseNode, treeNode, baseNodeTreatType, newAliasInfo, type, joinRelationClass, treatType);
             newAliasInfo.setJoinNode(node);
