@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Map;
@@ -29,13 +28,13 @@ import java.util.Map;
  */
 public abstract class AbstractCorrelatedBasicSubqueryTupleTransformerFactory extends AbstractCorrelatedSubqueryTupleTransformerFactory<Object> {
 
-    public AbstractCorrelatedBasicSubqueryTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, CorrelationProviderFactory correlationProviderFactory, int tupleIndex) {
-        super(criteriaBuilderResult, viewRoot, correlationProviderFactory, tupleIndex);
+    public AbstractCorrelatedBasicSubqueryTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity) {
+        super(criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisEntity);
     }
 
     @Override
-    protected final CriteriaBuilder<Object> finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot) {
-        return (CriteriaBuilder<Object>) criteriaBuilder;
+    protected final void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot) {
+        criteriaBuilder.select(correlationRoot);
     }
 
 }

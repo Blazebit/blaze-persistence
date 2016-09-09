@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Map;
@@ -29,17 +29,17 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedBasicSubquerySetTupleTransformerFactory extends AbstractCorrelatedBasicSubqueryTupleTransformerFactory {
+public class CorrelatedBasicSubqueryTupleTransformerFactory extends AbstractCorrelatedBasicSubqueryTupleTransformerFactory {
 
-    public CorrelatedBasicSubquerySetTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, CorrelationProviderFactory correlationProviderFactory, int tupleIndex) {
-        super(criteriaBuilderResult, viewRoot, correlationProviderFactory, tupleIndex);
+    public CorrelatedBasicSubqueryTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity) {
+        super(criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisEntity);
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         String paramName = generateCorrelationParamName(queryBuilder, optionalParameters);
         Map.Entry<CriteriaBuilder<Object>, CorrelatedSubqueryViewRootJpqlMacro> entry = createCriteriaBuilder(queryBuilder, optionalParameters, paramName);
-        return new CorrelatedSetTupleTransformer(entry.getKey(), entry.getValue(), paramName, tupleIndex);
+        return new CorrelatedBasicTupleTransformer(entry.getKey(), entry.getValue(), paramName, tupleIndex, correlationBasisEntity);
     }
 
 }

@@ -53,7 +53,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final String subqueryExpression;
     protected final String subqueryAlias;
     protected final Class<? extends CorrelationProvider> correlationProvider;
-    protected final String correlationExpression;
+    protected final String correlationBasis;
+    protected final String correlationResult;
     protected final CorrelationStrategy correlationStrategy;
     protected final boolean queryParameter;
     protected final boolean id;
@@ -77,7 +78,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            this.correlationExpression = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
             this.correlationProvider = null;
             this.correlationStrategy = null;
         } else if (mapping instanceof Mapping) {
@@ -88,7 +90,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            this.correlationExpression = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
             this.correlationProvider = null;
             this.correlationStrategy = null;
         } else if (mapping instanceof MappingParameter) {
@@ -99,7 +102,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            this.correlationExpression = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
             this.correlationProvider = null;
             this.correlationStrategy = null;
         } else if (mapping instanceof MappingSubquery) {
@@ -111,7 +115,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = true;
             this.subqueryExpression = mappingSubquery.expression();
             this.subqueryAlias = mappingSubquery.subqueryAlias();
-            this.correlationExpression = null;
+            this.correlationBasis = null;
+            this.correlationResult = null;
             this.correlationProvider = null;
             this.correlationStrategy = null;
 
@@ -130,7 +135,8 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.subqueryMapping = false;
             this.subqueryExpression = null;
             this.subqueryAlias = null;
-            this.correlationExpression = mappingCorrelated.expression();
+            this.correlationBasis = mappingCorrelated.correlationBasis();
+            this.correlationResult = mappingCorrelated.correlationResult();
             this.correlationProvider = mappingCorrelated.correlator();
             this.correlationStrategy = mappingCorrelated.strategy();
 
@@ -161,6 +167,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
 
     public String checkAttribute(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel) {
         if (mapping == null || queryParameter) {
+            if (correlationProvider != null) {
+                if (correlationBasis.isEmpty()) {
+                    return "Illegal empty correlation basis in the " + getLocation();
+                }
+            }
             // Subqueries and parameters can't be checked
             return null;
         }
@@ -295,8 +306,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return correlationProvider;
     }
 
-    public String getCorrelationExpression() {
-        return correlationExpression;
+    public String getCorrelationBasis() {
+        return correlationBasis;
+    }
+
+    public String getCorrelationResult() {
+        return correlationResult;
     }
 
     public CorrelationStrategy getCorrelationStrategy() {

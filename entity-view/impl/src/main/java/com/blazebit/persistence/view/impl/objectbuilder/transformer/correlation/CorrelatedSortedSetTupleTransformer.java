@@ -13,28 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.TupleReuse;
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedBasicTupleTransformer extends AbstractCorrelatedTupleTransformer {
+public class CorrelatedSortedSetTupleTransformer extends AbstractCorrelatedTupleTransformer {
 
-    public CorrelatedBasicTupleTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex) {
-        super(criteriaBuilder, viewRootJpqlMacro, correlationParamName, tupleIndex);
+    private final Comparator<?> comparator;
+
+    public CorrelatedSortedSetTupleTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex, Class<?> correlationBasisEntity, Comparator<?> comparator) {
+        super(criteriaBuilder, viewRootJpqlMacro, correlationParamName, tupleIndex, correlationBasisEntity);
+        this.comparator = comparator;
     }
 
     @Override
     public Object transform(CriteriaBuilder<?> cb) {
-        return cb.getSingleResult();
+        Set<Object> s = new TreeSet<Object>((Comparator<? super Object>) comparator);
+        s.addAll(cb.getResultList());
+        return s;
     }
 
 }

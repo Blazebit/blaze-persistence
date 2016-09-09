@@ -30,10 +30,10 @@ import java.util.List;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewBatch extends DocumentCorrelationView {
 
-    @MappingCorrelated(expression = "owner", correlator = OwnerRelatedIdCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "id", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
     public List<Long> getOwnerRelatedDocumentIds();
 
-    @MappingCorrelated(expression = "owner", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
+    @MappingCorrelated(correlationBasis = "owner", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
     public List<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

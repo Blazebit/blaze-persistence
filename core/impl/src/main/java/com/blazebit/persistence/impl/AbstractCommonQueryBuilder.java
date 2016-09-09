@@ -213,8 +213,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return (T) dbmsDialect;
         } else if (SubqueryExpressionFactory.class.equals(serviceClass)) {
             return (T) mainQuery.subqueryExpressionFactory;
-        } else if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
+        } else if (ExpressionFactory.class.equals(serviceClass)) {
             return (T) mainQuery.expressionFactory;
+        } else if (JoinOnBuilder.class.equals(serviceClass)) {
+            // TODO: We should think of a better way to expose a where builder to clients as an on builder
+            return (T) whereManager.startOnBuilder(this);
         }
         
         return cbf.getService(serviceClass);
@@ -248,7 +251,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
-        
+
         return cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
@@ -257,7 +260,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
-        
+
 		return cteManager.with(cteClass, (BuilderType) this);
 	}
 
@@ -266,7 +269,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
-        
+
 		return cteManager.withRecursive(cteClass, (BuilderType) this);
 	}
 
@@ -278,7 +281,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!dbmsDialect.supportsModificationQueryInWithClause()) {
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
-        
+
 		return cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
@@ -415,6 +418,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (!(this instanceof SubqueryBuilder<?>)) {
             throw new IllegalStateException("Cannot use a correlation path in a non-subquery!");
         }
+        clearCache();
         joinManager.addRoot(correlationPath, alias);
         return (BuilderType) this;
     }
@@ -453,6 +457,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
+        clearCache();
     	if (!fromClassExplicitelySet) {
     		// When from is explicitly called we have to revert the implicit root
     		if (joinManager.getRoots().size() > 0) {

@@ -125,7 +125,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @Override
-    public ViewMetamodel getMetamodel() {
+    public ViewMetamodelImpl getMetamodel() {
         return metamodel;
     }
 
@@ -255,7 +255,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters, true);
         return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
     }
 
@@ -266,11 +266,11 @@ public class EntityViewManagerImpl implements EntityViewManager {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters);
+        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters, true);
         return (CriteriaBuilder<T>) criteriaBuilder;
     }
 
-    public <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters) {
+    public <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, boolean registerMacro) {
         Class<?> entityClazz;
         Set<Root> roots = criteriaBuilder.getRoots();
         Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
@@ -303,7 +303,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
                 + "' can not be applied to the query builder with result type '" + criteriaBuilder.getResultType().getName() + "'");
         }
 
-        criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
+        //
+        if (registerMacro) {
+            criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
+        }
         criteriaBuilder.selectNew(getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters)));
     }
 

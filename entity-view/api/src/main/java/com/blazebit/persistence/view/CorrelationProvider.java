@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.view;
 
-import com.blazebit.persistence.BaseQueryBuilder;
-
 /**
  * Provides correlation functionality for entity views.
  *
@@ -36,9 +34,8 @@ public interface CorrelationProvider {
      *
      * To be able to make use of all strategies it is best if you use the IN predicate in conjunction with the <i>correlationExpression</i>.
      *
-     * @param queryBuilder          The query builder on which the correlation should be applied
+     * @param correlationBuilder    The correlation builder to create the correlation
      * @param correlationExpression The correlation expression from the outer query on which to correlate
-     * @return The alias to the correlation root
      */
-    public String applyCorrelation(BaseQueryBuilder<?, ?> queryBuilder, String correlationExpression);
+    public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression);
 }

@@ -553,12 +553,7 @@ public class JoinManager extends AbstractManager {
     }
 
     <X> JoinOnBuilder<X> joinOn(X result, String base, Class<?> clazz, String alias, JoinType type) {
-        AliasInfo aliasInfo = aliasManager.getAliasInfo(base);
-
-        if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
-            throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
-        }
-
+        PathExpression basePath = expressionFactory.createPathExpression(base);
         EntityType<?> entityType = metamodel.entity(clazz);
 
         if (alias == null || alias.isEmpty()) {
@@ -568,7 +563,38 @@ public class JoinManager extends AbstractManager {
             throw new IllegalArgumentException("The JPA provider does not support entity joins and an emulation for non-inner entity joins is not implemented!");
         }
 
-        JoinNode baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
+        List<PathElementExpression> propertyExpressions = basePath.getExpressions();
+        JoinNode baseNode;
+        if (propertyExpressions.size() > 1) {
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(propertyExpressions.get(0).toString());
+
+            if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
+                throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+            }
+
+            baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
+            for (int i = 1; i < propertyExpressions.size(); i++) {
+                String relationName = propertyExpressions.get(i).toString();
+                JoinTreeNode treeNode = baseNode.getNodes().get(relationName);
+                if (treeNode == null) {
+                    break;
+                }
+                baseNode = treeNode.getDefaultNode();
+                if (baseNode == null) {
+                    break;
+                }
+            }
+            if (baseNode == null) {
+                throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+            }
+        } else {
+            AliasInfo aliasInfo = aliasManager.getAliasInfo(base);
+
+            if (aliasInfo == null || !(aliasInfo instanceof JoinAliasInfo)) {
+                throw new IllegalArgumentException("The base '" + base + "' is not a valid join alias!");
+            }
+            baseNode = ((JoinAliasInfo) aliasInfo).getJoinNode();
+        }
 
         JoinAliasInfo joinAliasInfo = new JoinAliasInfo(alias, null, false, true, aliasManager);
         JoinNode entityJoinNode = new JoinNode(baseNode, null, null, joinAliasInfo, type, entityType.getJavaType(), null);

@@ -373,4 +373,5 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @since 1.2.0
      */
     public JoinOnBuilder<X> rightJoinOn(String base, Class<?> entityClass, String alias);
+
 }

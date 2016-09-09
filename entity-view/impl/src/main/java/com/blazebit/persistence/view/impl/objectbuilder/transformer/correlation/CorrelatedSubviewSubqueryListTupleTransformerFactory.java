@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
-import java.util.Comparator;
 import java.util.Map;
 
 /**
@@ -30,20 +31,17 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedBasicSubquerySortedSetTupleTransformerFactory extends AbstractCorrelatedBasicSubqueryTupleTransformerFactory {
+public class CorrelatedSubviewSubqueryListTupleTransformerFactory<T> extends AbstractCorrelatedSubviewSubqueryTupleTransformerFactory<T> {
 
-    private final Comparator<?> comparator;
-
-    public CorrelatedBasicSubquerySortedSetTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Comparator<?> comparator) {
-        super(criteriaBuilderResult, viewRoot, correlationProviderFactory, tupleIndex);
-        this.comparator = comparator;
+    public CorrelatedSubviewSubqueryListTupleTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName) {
+        super(managedViewType, viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisEntity, evm, ef, viewName);
     }
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         String paramName = generateCorrelationParamName(queryBuilder, optionalParameters);
-        Map.Entry<CriteriaBuilder<Object>, CorrelatedSubqueryViewRootJpqlMacro> entry = createCriteriaBuilder(queryBuilder, optionalParameters, paramName);
-        return new CorrelatedSortedSetTupleTransformer(entry.getKey(), entry.getValue(), paramName, tupleIndex, comparator);
+        Map.Entry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro> entry = createCriteriaBuilder(queryBuilder, optionalParameters, paramName);
+        return new CorrelatedListTupleTransformer(entry.getKey(), entry.getValue(), paramName, tupleIndex, correlationBasisEntity);
     }
 
 }

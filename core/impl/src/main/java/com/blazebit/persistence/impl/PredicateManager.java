@@ -18,21 +18,12 @@ package com.blazebit.persistence.impl;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.blazebit.persistence.CaseWhenStarterBuilder;
-import com.blazebit.persistence.MultipleSubqueryInitiator;
-import com.blazebit.persistence.RestrictionBuilder;
-import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
-import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
-import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
-import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
-import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
-import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
-import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.builder.predicate.*;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.*;
 
@@ -197,6 +188,10 @@ public abstract class PredicateManager<T> extends AbstractManager {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
         rootPredicate.getPredicate().accept(queryGenerator);
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
+    }
+
+    public JoinOnBuilder<?> startOnBuilder(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> builder) {
+        return rootPredicate.startBuilder(new JoinOnBuilderImpl<Object>(builder, rootPredicate, parameterManager, expressionFactory, subqueryInitFactory));
     }
 
     // TODO: needs equals-hashCode implementation

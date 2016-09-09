@@ -36,11 +36,18 @@ public interface CorrelatedAttribute<X, Y> extends Attribute<X, Y> {
     public Class<? extends CorrelationProvider> getCorrelationProvider();
 
     /**
-     * Returns the correlation expression of the attribute.
+     * Returns the correlation basis of the attribute.
      *
-     * @return The correlation expression of the attribute
+     * @return The correlation basis of the attribute
      */
-    public String getCorrelationExpression();
+    public String getCorrelationBasis();
+
+    /**
+     * Returns the correlation result of the attribute.
+     *
+     * @return The correlation result of the attribute
+     */
+    public String getCorrelationResult();
 
     /**
      * Returns the correlation strategy of the attribute.

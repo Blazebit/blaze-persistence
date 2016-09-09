@@ -28,10 +28,10 @@ import java.util.List;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewSubquery extends DocumentCorrelationView {
 
-    @MappingCorrelated(expression = "owner", correlator = OwnerRelatedIdCorrelationProvider.class, strategy = CorrelationStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner", correlationResult = "id", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.SUBQUERY)
     public List<Long> getOwnerRelatedDocumentIds();
 
-    @MappingCorrelated(expression = "owner", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.SUBQUERY)
     public List<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

@@ -85,6 +85,7 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
             throw new RuntimeException(e);
         }
     }
+
     @Test
     public void testSubqueryCorrelation() {
         testCorrelation(DocumentCorrelationViewSubquery.class);
@@ -94,11 +95,11 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
 //    public void testBatchCorrelation() {
 //        testCorrelation(DocumentCorrelationViewJoin.class);
 //    }
-//
-//    @Test
-//    public void testJoinCorrelation() {
-//        testCorrelation(DocumentCorrelationViewJoin.class);
-//    }
+
+    @Test
+    public void testJoinCorrelation() {
+        testCorrelation(DocumentCorrelationViewJoin.class);
+    }
 
     private <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView) {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();

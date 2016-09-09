@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import java.util.AbstractMap;
 import java.util.Map;
 
 /**
@@ -44,8 +36,8 @@ public abstract class AbstractCorrelatedSubviewSubqueryTupleTransformerFactory<T
     private final ExpressionFactory ef;
     private final String viewName;
 
-    public AbstractCorrelatedSubviewSubqueryTupleTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName) {
-        super(managedViewType.getEntityClass(), viewRootType, correlationProviderFactory, tupleIndex);
+    public AbstractCorrelatedSubviewSubqueryTupleTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName) {
+        super(managedViewType.getEntityClass(), viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisEntity);
         this.managedViewType = managedViewType;
         this.evm = evm;
         this.ef = ef;
@@ -53,9 +45,8 @@ public abstract class AbstractCorrelatedSubviewSubqueryTupleTransformerFactory<T
     }
 
     @Override
-    protected CriteriaBuilder<T> finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot) {
-        evm.applyObjectBuilder((ViewType<T>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, optionalParameters);
-        return (CriteriaBuilder<T>) criteriaBuilder;
+    protected void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot) {
+        evm.applyObjectBuilder((ViewType<T>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, optionalParameters, false);
     }
 
 }

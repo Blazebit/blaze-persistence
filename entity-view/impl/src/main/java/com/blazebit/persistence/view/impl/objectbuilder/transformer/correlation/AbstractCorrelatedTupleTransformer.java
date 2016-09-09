@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.impl.objectbuilder.transformer;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 
 /**
  *
@@ -29,17 +30,23 @@ public abstract class AbstractCorrelatedTupleTransformer implements TupleTransfo
     private final CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
     private final String correlationParamName;
     private final int tupleIndex;
+    private final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedTupleTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex) {
+    public AbstractCorrelatedTupleTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex, Class<?> correlationBasisEntity) {
         this.criteriaBuilder = criteriaBuilder;
         this.viewRootJpqlMacro = viewRootJpqlMacro;
         this.correlationParamName = correlationParamName;
         this.tupleIndex = tupleIndex;
+        this.correlationBasisEntity = correlationBasisEntity;
     }
 
     @Override
     public Object[] transform(Object[] tuple) {
-        criteriaBuilder.setParameter(correlationParamName, tuple[tupleIndex]);
+        if (correlationBasisEntity != null) {
+            criteriaBuilder.setParameter(correlationParamName, criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, tuple[tupleIndex]));
+        } else {
+            criteriaBuilder.setParameter(correlationParamName, tuple[tupleIndex]);
+        }
         // The id of the view root is always on position 0
         viewRootJpqlMacro.setParameters(tuple[0]);
         tuple[tupleIndex] = transform(criteriaBuilder);
