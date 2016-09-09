@@ -421,7 +421,7 @@ public class JoinManager extends AbstractManager {
         for (Map.Entry<String, JoinTreeNode> nodeEntry : nodes.entrySet()) {
             JoinTreeNode treeNode = nodeEntry.getValue();
             List<JoinNode> stack = new ArrayList<JoinNode>();
-            stack.addAll(treeNode.getJoinNodes().values());
+            stack.addAll(treeNode.getJoinNodes().descendingMap().values());
 
             applyJoins(sb, joinBase, stack, treeNode.isCollection(), clauseExclusions, aliasPrefix, collectCollectionJoinNodes);
         }

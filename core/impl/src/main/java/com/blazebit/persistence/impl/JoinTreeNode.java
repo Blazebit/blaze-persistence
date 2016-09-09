@@ -16,6 +16,8 @@
 package com.blazebit.persistence.impl;
 
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 import javax.persistence.metamodel.Attribute;
@@ -34,7 +36,7 @@ public class JoinTreeNode {
     private final boolean map;
     private final boolean optional;
     /* maps join aliases to join nodes */
-    private final Map<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
+    private final NavigableMap<String, JoinNode> joinNodes = new TreeMap<String, JoinNode>();
 
     public JoinTreeNode(String relationName, Attribute<?, ?> attribute) {
         this.relationName = relationName;
@@ -60,7 +62,7 @@ public class JoinTreeNode {
         this.defaultNode = defaultNode;
     }
 
-    public Map<String, JoinNode> getJoinNodes() {
+    public NavigableMap<String, JoinNode> getJoinNodes() {
         return joinNodes;
     }
 
