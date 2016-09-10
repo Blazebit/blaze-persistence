@@ -21,7 +21,7 @@ How to use it?
 Blaze-Persistence is split up into different modules. We recommend that you define a version property in your parent pom that you can use for all artifacts. Modules are all released in one batch so you can safely increment just that property.
 
 	<properties>
-		<blaze-persistence.version>1.1.0</blaze-persistence.version>
+		<blaze-persistence.version>1.2.0-SNAPSHOT</blaze-persistence.version>
 	</properties>
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
@@ -59,24 +59,53 @@ Blaze-Persistence Entity-View module dependencies
 
 Blaze-Persistence JPA provider integration module dependencies
 
+Hibernate 5.2
+
 	<dependency>
 		<groupId>com.blazebit</groupId>
-		<artifactId>blaze-persistence-integration-hibernate</artifactId>
+		<artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
+	
+Hibernate 5+
+	
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
+	
+Hibernate 4.2+
+	
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
+	
+Datanucleus
+	
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-integration-datanucleus</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
+	
+EclipseLink
+	
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-integration-eclipselink</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
+	
+OpenJPA
+	
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-integration-openjpa</artifactId>

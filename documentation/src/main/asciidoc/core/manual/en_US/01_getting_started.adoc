@@ -18,7 +18,7 @@ An instance of `CriteriaBuilderFactory` can be obtained as follows:
 ----
 CriteriaBuilderConfiguration config = Criteria.getDefault();
 // optionally, perform dynamic configuration
-CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory();
+CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory(entityManagerFactory);
 ----
 
 The `Criteria.getDefault()` method uses the `java.util.ServiceLoader` to locate
