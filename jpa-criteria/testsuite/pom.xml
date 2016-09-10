@@ -26,8 +26,8 @@
 			<exclusions>
 				<!-- I honestly don't know why, but the default profile seems to be actived for that dependency -->
 				<exclusion>
-					<groupId>org.hibernate</groupId>
-					<artifactId>hibernate-entitymanager</artifactId>
+					<groupId>*</groupId>
+					<artifactId>*</artifactId>
 				</exclusion>
 			</exclusions>
 		</dependency>
