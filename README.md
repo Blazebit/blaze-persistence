@@ -61,7 +61,7 @@ Blaze-Persistence JPA provider integration module dependencies
 
 	<dependency>
 		<groupId>com.blazebit</groupId>
-		<artifactId>blaze-persistence-integration-hibernate</artifactId>
+		<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
