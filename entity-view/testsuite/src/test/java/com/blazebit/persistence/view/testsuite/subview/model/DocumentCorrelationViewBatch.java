@@ -21,6 +21,7 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -30,10 +31,12 @@ import java.util.List;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewBatch extends DocumentCorrelationView {
 
-    @MappingCorrelated(correlationBasis = "owner", correlationResult = "id", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
-    public List<Long> getOwnerRelatedDocumentIds();
+    // TODO: need to use owner.id instead of owner because of HHH-2772
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProvider.class, strategy = CorrelationStrategy.BATCH)
+    public Set<Long> getOwnerRelatedDocumentIds();
 
-    @MappingCorrelated(correlationBasis = "owner", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
-    public List<DocumentRelatedView> getOwnerRelatedDocuments();
+    // TODO: need to use owner.id instead of owner because of HHH-2772
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProvider.class, strategy = CorrelationStrategy.BATCH)
+    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

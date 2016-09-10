@@ -18,12 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -37,6 +32,7 @@ import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor.TargetType;
 import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 
 /**
@@ -165,15 +161,38 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return mappings;
     }
 
-    public String checkAttribute(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel) {
+    public void checkAttributeCorrelationUsage(Collection<String> errors, Map<Class<?>, String> seenCorrelationProviders, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Set<ManagedViewType<?>> seenViewTypes, Set<MappingConstructor<?>> seenConstructors) {
+        if (correlationProvider != null) {
+            String usageLocation = seenCorrelationProviders.put(correlationProvider, getLocation());
+            if (usageLocation != null) {
+                errors.add("Illegal multiple usages of correlation provider '" + correlationProvider.getName() + "' in the following locations:\n\t" + getLocation() + "\n\t" + usageLocation);
+            }
+        }
+
+        if (isSubview()) {
+            ManagedViewTypeImpl<?> subviewType;
+            if (isCollection()) {
+                subviewType = managedViews.get(((PluralAttribute<?, ?, ?>) this).getElementType());
+            } else {
+                subviewType = managedViews.get(javaType);
+            }
+            subviewType.checkAttributesCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+        }
+    }
+
+    public List<String> checkAttribute(ManagedType<?> managedType, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel) {
+        List<String> errors = new ArrayList<String>();
         if (mapping == null || queryParameter) {
             if (correlationProvider != null) {
                 if (correlationBasis.isEmpty()) {
-                    return "Illegal empty correlation basis in the " + getLocation();
+                    errors.add("Illegal empty correlation basis in the " + getLocation());
+                }
+                if (correlationResult.isEmpty()) {
+                    errors.add("Illegal empty correlation result in the " + getLocation());
                 }
             }
             // Subqueries and parameters can't be checked
-            return null;
+            return errors;
         }
         
         if (isUpdatable()) {
@@ -183,16 +202,16 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 Map<Method, Class<?>[]> possibleTargets = visitor.getPossibleTargets();
                 
                 if (possibleTargets.size() > 1) {
-                    return "Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets;
+                    errors.add("Multiple possible target type for the mapping in the " + getLocation() + ": " + possibleTargets);
                 } else {
                     // TODO: further type checks like
                     // * collection type is same
                     // * collection value type is compatible
                 }
             } catch (SyntaxErrorException ex) {
-                return "Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage();
+                errors.add("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
             } catch (IllegalArgumentException ex) {
-                return "There is an error for the " + getLocation() + ": " + ex.getMessage();
+                errors.add("There is an error for the " + getLocation() + ": " + ex.getMessage());
             }
         }
         
@@ -224,9 +243,9 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         try {
             expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         } catch (SyntaxErrorException ex) {
-            return "Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage();
+            errors.add("Syntax error in mapping expression '" + mapping + "' of the " + getLocation() + ": " + ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            return "An error occurred while trying to resolve " + getLocation() + ": " + ex.getMessage();
+            errors.add("An error occurred while trying to resolve " + getLocation() + ": " + ex.getMessage());
         }
         
         List<TargetType> possibleTargets = visitor.getPossibleTargets();
@@ -257,11 +276,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                 
                 sb.setLength(sb.length() - 2);
                 sb.append(']');
-                return "The resolved possible types " + sb.toString() + " are not assignable to the given expression type '" + getJavaType().getName() + "' of the expression declared by the " + getLocation() + "!";
+                errors.add("The resolved possible types " + sb.toString() + " are not assignable to the given expression type '" + getJavaType().getName() + "' of the expression declared by the " + getLocation() + "!");
             }
         }
-        
-        return null;
+
+        return errors;
     }
     
     public boolean isUpdatable() {

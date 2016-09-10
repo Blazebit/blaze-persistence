@@ -22,6 +22,7 @@ import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -35,8 +36,8 @@ public interface DocumentCorrelationView {
 
     public String getName();
 
-    public List<Long> getOwnerRelatedDocumentIds();
+    public Set<Long> getOwnerRelatedDocumentIds();
 
-    public List<DocumentRelatedView> getOwnerRelatedDocuments();
+    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

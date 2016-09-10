@@ -38,11 +38,11 @@ public @interface MappingCorrelated {
     String correlationBasis();
 
     /**
-     * The expression result mapping of the correlation.
+     * The absolute expression result mapping of the correlation.
      *
      * @return The expression
      */
-    String correlationResult() default "";
+    String correlationResult();
 
     /**
      * The class which provides the correlation provider.

@@ -19,16 +19,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.NavigableSet;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
+import java.util.*;
 
 import javax.persistence.metamodel.ManagedType;
 
@@ -72,15 +63,22 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
 
         this.parameters = Collections.unmodifiableList(parameters);
     }
-    
-    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
+
+    public void checkParameterCorrelationUsage(Collection<String> errors, HashMap<Class<?>, String> seenCorrelationProviders, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, HashSet<ManagedViewType<?>> seenViewTypes, HashSet<MappingConstructor<?>> seenConstructors) {
+        if (seenConstructors.contains(this)) {
+            return;
+        }
+
+        seenConstructors.add(this);
         for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
-            String error = parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel);
-            
-            if (error != null) {
-                errors.add(error);
-            }
-            
+            parameter.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+        }
+    }
+    
+    public void checkParameters(ManagedType<?> managedType, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Map<String, List<String>> collectionMappings, Set<String> errors) {
+        for (AbstractParameterAttribute<? super X, ?> parameter : parameters) {
+            errors.addAll(parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel));
+
             for (String mapping : parameter.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
             	List<String> locations = collectionMappings.get(mapping);
             	if (locations == null) {
@@ -196,4 +194,5 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
     public ParameterAttribute<? super X, ?> getParameterAttribute(int index) {
         return parameters.get(index);
     }
+
 }

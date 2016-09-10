@@ -137,6 +137,11 @@ public class SubqueryExpressionFactory extends AbstractExpressionFactory {
     }
 
     @Override
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration) {
+        return delegate.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
+    }
+
+    @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
         return delegate.createBooleanExpression(expression, allowQuantifiedPredicates);
     }

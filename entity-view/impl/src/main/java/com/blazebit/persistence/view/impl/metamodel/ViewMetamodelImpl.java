@@ -43,25 +43,25 @@ public class ViewMetamodelImpl implements ViewMetamodel {
     private final EntityMetamodel metamodel;
     private final Map<Class<?>, ViewType<?>> views;
     private final Map<Class<?>, EmbeddableViewType<?>> embeddableViews;
-    private final Map<Class<?>, ManagedViewType<?>> managedViews;
+    private final Map<Class<?>, ManagedViewTypeImpl<?>> managedViews;
 
     public ViewMetamodelImpl(Set<Class<?>> entityViews, boolean validateExpressions, ExpressionFactory expressionFactory, Metamodel metamodel) {
         this.metamodel = new EntityMetamodel(metamodel);
         this.views = new HashMap<Class<?>, ViewType<?>>(entityViews.size());
         this.embeddableViews = new HashMap<Class<?>, EmbeddableViewType<?>>(entityViews.size());
-        this.managedViews = new HashMap<Class<?>, ManagedViewType<?>>(entityViews.size());
+        this.managedViews = new HashMap<Class<?>, ManagedViewTypeImpl<?>>(entityViews.size());
 
         Set<String> errors = new HashSet<String>();
         
         for (Class<?> entityViewClass : entityViews) {
-            ManagedViewType<?> managedView;
+            ManagedViewTypeImpl<?> managedView;
             
             if (!isEmbeddableViewType(entityViewClass)) {
-                ViewType<?> viewType = getViewType(entityViewClass, entityViews, this.metamodel, expressionFactory);
+                ViewTypeImpl<?> viewType = getViewType(entityViewClass, entityViews, this.metamodel, expressionFactory);
                 views.put(entityViewClass, viewType);
                 managedView = viewType;
             } else {
-                EmbeddableViewType<?> embeddableViewType = getEmbeddableViewType(entityViewClass, entityViews, this.metamodel, expressionFactory);
+                EmbeddableViewTypeImpl<?> embeddableViewType = getEmbeddableViewType(entityViewClass, entityViews, this.metamodel, expressionFactory);
                 embeddableViews.put(entityViewClass, embeddableViewType);
                 managedView = embeddableViewType;
             }
@@ -157,11 +157,11 @@ public class ViewMetamodelImpl implements ViewMetamodel {
         return AnnotationUtils.findAnnotation(entityViewClass, EmbeddableEntityView.class) != null;
     }
 
-    private ViewType<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    private ViewTypeImpl<?> getViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         return new ViewTypeImpl<Object>(entityViewClass, entityViews, metamodel, expressionFactory);
     }
 
-    private EmbeddableViewType<?> getEmbeddableViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
+    private EmbeddableViewTypeImpl<?> getEmbeddableViewType(Class<?> entityViewClass, Set<Class<?>> entityViews, EntityMetamodel metamodel, ExpressionFactory expressionFactory) {
         return new EmbeddableViewTypeImpl<Object>(entityViewClass, entityViews, metamodel, expressionFactory);
     }
 

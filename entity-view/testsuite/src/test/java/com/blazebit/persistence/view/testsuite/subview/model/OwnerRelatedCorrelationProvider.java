@@ -14,10 +14,19 @@ public class OwnerRelatedCorrelationProvider implements CorrelationProvider {
 
     @Override
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
-        BaseQueryBuilder<?, ?> queryBuilder = correlationBuilder.correlate(Document.class, "correlatedDocument")
-                .on("correlatedDocument.owner").inExpressions(correlationExpression)
+        BaseQueryBuilder<?, ?> queryBuilder = correlationBuilder.correlate(Document.class, "correlatedDocumentForSubview")
+                .onExpressionSubqueries("alias IN " + correlationExpression + " AND correlatedDocumentForSubview != VIEW_ROOT()")
+                    .with("alias")
+                        .from(Document.class, "o")
+                        .select("o.owner.id")
+                        .where("o.id").eqExpression("correlatedDocumentForSubview.id")
+                    .end()
+                // Workaround for HHH-2772
+//                .on("correlatedDocumentForSubview.owner").inExpressions(correlationExpression)
                 .end();
-        queryBuilder.where("correlatedDocument").notEqExpression("VIEW_ROOT()");
-        queryBuilder.orderByAsc("correlatedDocument.id");
+        // TODO: I think it would be better if we do not allow WHERE at all
+        // Only join, from, and parameter handling make sense I think
+//        queryBuilder.where("correlatedDocumentForSubview").notEqExpression("VIEW_ROOT()");
+//        queryBuilder.orderByAsc("correlatedDocumentForSubview.id");
     }
 }

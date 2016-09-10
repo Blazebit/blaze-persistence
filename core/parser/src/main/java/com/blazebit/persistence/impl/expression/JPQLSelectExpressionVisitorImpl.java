@@ -630,7 +630,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             pathElems.add(new PropertyExpression(ctx.left.getText()));
             left = new PathExpression(pathElems);
         }
-        if (ctx.param == null && ctx.right == null) {
+        if (ctx.param == null && !ctx.in_item().isEmpty()) {
             List<Expression> inItems= new ArrayList<Expression>();
             for (In_itemContext inItemCtx : ctx.in_item()) {
                 inItems.add(inItemCtx.accept(this));
@@ -641,9 +641,10 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             collectionParam.setCollectionValued(true);
             inPredicate = new InPredicate(left, collectionParam);
         } else {
-            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
-            pathElems.add(new PropertyExpression(ctx.right.getText()));
-            Expression inExpr = new PathExpression(pathElems);
+//            List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
+//            pathElems.add(new PropertyExpression(ctx.right.getText()));
+//            Expression inExpr = new PathExpression(pathElems);
+            Expression inExpr = ctx.getChild(ctx.not == null ? 2 : 3).accept(this);
             inPredicate = new InPredicate(left, inExpr);
         }
         if (ctx.not != null) {

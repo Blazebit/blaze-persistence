@@ -66,6 +66,11 @@ public abstract class AbstractExpressionFactoryMacroAdapter implements Expressio
     }
 
     @Override
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression) {
+        return createInItemOrPathExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration());
+    }
+
+    @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
         return createBooleanExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
     }

@@ -115,18 +115,36 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             }
         }
     }
+
+    public void checkAttributesCorrelationUsage(Collection<String> errors, Map<Class<?>, String> seenCorrelationProviders, Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, Set<ManagedViewType<?>> seenViewTypes, Set<MappingConstructor<?>> seenConstructors) {
+        if (seenViewTypes.contains(this)) {
+            return;
+        }
+
+        seenViewTypes.add(this);
+        for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
+            attribute.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+        }
+
+        if (!constructors.isEmpty()) {
+            for (MappingConstructorImpl<X> constructor : constructors.values()) {
+                constructor.checkParameterCorrelationUsage(errors, new HashMap<Class<?>, String>(seenCorrelationProviders), managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors));
+            }
+        }
+    }
     
-    public void checkAttributes(Map<Class<?>, ManagedViewType<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Set<String> errors) {
+    public void checkAttributes(Map<Class<?>, ManagedViewTypeImpl<?>> managedViews, ExpressionFactory expressionFactory, EntityMetamodel metamodel, Set<String> errors) {
         ManagedType<?> managedType = metamodel.managedType(entityClass);
         Map<String, List<String>> collectionMappings = new HashMap<String, List<String>>();
+        Map<Class<?>, String> seenCorrelationProviders = new HashMap<Class<?>, String>();
+        Set<ManagedViewType<?>> seenViewTypes = new HashSet<ManagedViewType<?>>();
+        Set<MappingConstructor<?>> seenConstructors = new HashSet<MappingConstructor<?>>();
+        seenViewTypes.add(this);
         
         for (AbstractMethodAttribute<? super X, ?> attribute : attributes.values()) {
-            String error = attribute.checkAttribute(managedType, managedViews, expressionFactory, metamodel);
-            
-            if (error != null) {
-                errors.add(error);
-            }
-            
+            errors.addAll(attribute.checkAttribute(managedType, managedViews, expressionFactory, metamodel));
+            attribute.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
+
             for (String mapping : attribute.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
             	List<String> locations = collectionMappings.get(mapping);
             	if (locations == null) {
@@ -147,7 +165,8 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 	            }
 	        	
 	            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
-	
+                constructor.checkParameterCorrelationUsage(errors, new HashMap<Class<?>, String>(seenCorrelationProviders), managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors));
+
 	    		StringBuilder sb = new StringBuilder();
 	            for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
 	            	List<String> locations = locationsEntry.getValue();

@@ -16,6 +16,7 @@
 package com.blazebit.persistence.view.testsuite.subview;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
@@ -23,21 +24,28 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.subview.model.*;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationView;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationViewJoin;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationViewSubquery;
+import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityTransaction;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0
  */
-public class SubviewCorrelationTest extends AbstractEntityViewTest {
+public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     private Document doc1;
     private Document doc2;
@@ -97,7 +105,15 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
 //    }
 
     @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
     public void testJoinCorrelation() {
+        // TODO: implement property to disable rewriting to this kind of usage
+//        em.createQuery("SELECT d \n" +
+//                "FROM com.blazebit.persistence.view.testsuite.entity.Document d \n" +
+//                "LEFT JOIN d.contacts correlatedDocumentForId \n" +
+//                "ON (SELECT o.owner.id FROM Document o WHERE o.id = correlatedDocumentForId.id) = d.owner.id\n");
+        // NOTE: can not use sub-property of a joined relation in on clause
         testCorrelation(DocumentCorrelationViewJoin.class);
     }
 
@@ -108,7 +124,8 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
         EntityViewManager evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
-        CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(entityView), criteria);
+        EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);
+        CriteriaBuilder<T> cb = evm.applySetting(setting, criteria);
         List<T> results = cb.getResultList();
 
         assertEquals(4, results.size());
@@ -120,28 +137,47 @@ public class SubviewCorrelationTest extends AbstractEntityViewTest {
         // Doc2
         assertEquals(doc2.getName(), results.get(1).getName());
         assertEquals(2, results.get(1).getOwnerRelatedDocuments().size());
-        assertEquals(doc3.getName(), results.get(1).getOwnerRelatedDocuments().get(0).getName());
-        assertEquals(doc4.getName(), results.get(1).getOwnerRelatedDocuments().get(1).getName());
+        assertRemovedByName(doc3.getName(), results.get(1).getOwnerRelatedDocuments());
+        assertRemovedByName(doc4.getName(), results.get(1).getOwnerRelatedDocuments());
         assertEquals(2, results.get(1).getOwnerRelatedDocumentIds().size());
-        assertEquals(doc3.getId(), results.get(1).getOwnerRelatedDocumentIds().get(0));
-        assertEquals(doc4.getId(), results.get(1).getOwnerRelatedDocumentIds().get(1));
+        assertRemoved(doc3.getId(), results.get(1).getOwnerRelatedDocumentIds());
+        assertRemoved(doc4.getId(), results.get(1).getOwnerRelatedDocumentIds());
 
         // Doc3
         assertEquals(doc3.getName(), results.get(2).getName());
         assertEquals(2, results.get(2).getOwnerRelatedDocuments().size());
-        assertEquals(doc2.getName(), results.get(2).getOwnerRelatedDocuments().get(0).getName());
-        assertEquals(doc4.getName(), results.get(2).getOwnerRelatedDocuments().get(1).getName());
+        assertRemovedByName(doc2.getName(), results.get(2).getOwnerRelatedDocuments());
+        assertRemovedByName(doc4.getName(), results.get(2).getOwnerRelatedDocuments());
         assertEquals(2, results.get(2).getOwnerRelatedDocumentIds().size());
-        assertEquals(doc2.getId(), results.get(2).getOwnerRelatedDocumentIds().get(0));
-        assertEquals(doc4.getId(), results.get(2).getOwnerRelatedDocumentIds().get(1));
+        assertRemoved(doc2.getId(), results.get(2).getOwnerRelatedDocumentIds());
+        assertRemoved(doc4.getId(), results.get(2).getOwnerRelatedDocumentIds());
 
         // Doc4
         assertEquals(doc4.getName(), results.get(3).getName());
         assertEquals(2, results.get(3).getOwnerRelatedDocuments().size());
-        assertEquals(doc2.getName(), results.get(3).getOwnerRelatedDocuments().get(0).getName());
-        assertEquals(doc3.getName(), results.get(3).getOwnerRelatedDocuments().get(1).getName());
+        assertRemovedByName(doc2.getName(), results.get(3).getOwnerRelatedDocuments());
+        assertRemovedByName(doc3.getName(), results.get(3).getOwnerRelatedDocuments());
         assertEquals(2, results.get(3).getOwnerRelatedDocumentIds().size());
-        assertEquals(doc2.getId(), results.get(3).getOwnerRelatedDocumentIds().get(0));
-        assertEquals(doc3.getId(), results.get(3).getOwnerRelatedDocumentIds().get(1));
+        assertRemoved(doc2.getId(), results.get(3).getOwnerRelatedDocumentIds());
+        assertRemoved(doc3.getId(), results.get(3).getOwnerRelatedDocumentIds());
+    }
+
+    private void assertRemovedByName(String expectedName, Collection<DocumentRelatedView> views) {
+        Iterator<DocumentRelatedView> iter = views.iterator();
+        while (iter.hasNext()) {
+            DocumentRelatedView v = iter.next();
+            if (expectedName.equals(v.getName())) {
+                iter.remove();
+                return;
+            }
+        }
+
+        Assert.fail("Could not find '" + expectedName + "' in: " + views);
+    }
+
+    private <T> void assertRemoved(T expectedValue, Collection<T> collection) {
+        if (!collection.remove(expectedValue)) {
+            Assert.fail("Could not find '" + expectedValue + "' in: " + collection);
+        }
     }
 }

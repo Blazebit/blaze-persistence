@@ -84,6 +84,11 @@ public class MacroConfigurationExpressionFactory extends AbstractExpressionFacto
     }
 
     @Override
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration) {
+        return expressionFactory.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
+    }
+
+    @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration) {
         return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, macroConfiguration);
     }

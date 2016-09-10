@@ -151,10 +151,23 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
 
     @Override
     public List<Expression> createInItemExpressions(final String[] parameterOrLiteralExpressions, final MacroConfiguration macroConfiguration) {
-        List<Expression> inItemExpressions = new ArrayList<Expression>();
-        for (final String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
-            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+        if (parameterOrLiteralExpressions == null) {
+            throw new NullPointerException("parameterOrLiteralExpressions");
         }
+        if (parameterOrLiteralExpressions.length == 0) {
+            throw new IllegalArgumentException("empty parameterOrLiteralExpressions");
+        }
+
+        List<Expression> inItemExpressions = new ArrayList<Expression>();
+
+        if (parameterOrLiteralExpressions.length == 1) {
+            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration));
+        } else {
+            for (final String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+            }
+        }
+
         return inItemExpressions;
     }
 
@@ -165,6 +178,18 @@ public abstract class AbstractCachingExpressionFactory extends AbstractExpressio
             @Override
             public Expression get() {
                 return delegate.createInItemExpression(parameterOrLiteralExpression, macroConfiguration);
+            }
+
+        });
+    }
+
+    @Override
+    public Expression createInItemOrPathExpression(final String parameterOrLiteralExpression, final MacroConfiguration macroConfiguration) {
+        return expressionCache.getOrDefault("com.blazebit.persistence.parser.expression.cache.InPredicateSingleExpression", parameterOrLiteralExpression, macroConfiguration, new Supplier<Expression>() {
+
+            @Override
+            public Expression get() {
+                return delegate.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
             }
 
         });

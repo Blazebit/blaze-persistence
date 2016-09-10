@@ -17,6 +17,9 @@ package com.blazebit.persistence.view;
 
 /**
  * Provides correlation functionality for entity views.
+ * Beware that correlation providers may only be used once for an entity view hierarchy.
+ * Also note that aliases defined in the query builder will contribute to the main query
+ * when using {@link CorrelationStrategy#JOIN}, so be careful and choose rather unique names.
  *
  * @author Christian Beikov
  * @since 1.2.0

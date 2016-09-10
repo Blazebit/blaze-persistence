@@ -137,6 +137,16 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
     }
 
     @Override
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression) {
+        return expressionFactory.createInItemOrPathExpression(parameterOrLiteralExpression, getDefaultMacroConfiguration());
+    }
+
+    @Override
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration) {
+        return expressionFactory.createInItemOrPathExpression(parameterOrLiteralExpression, macroConfiguration);
+    }
+
+    @Override
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates) {
         return expressionFactory.createBooleanExpression(expression, allowQuantifiedPredicates, getDefaultMacroConfiguration());
     }

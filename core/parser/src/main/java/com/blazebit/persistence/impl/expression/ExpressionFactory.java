@@ -71,6 +71,10 @@ public interface ExpressionFactory {
 
     public Expression createInItemExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration);
 
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression);
+
+    public Expression createInItemOrPathExpression(String parameterOrLiteralExpression, MacroConfiguration macroConfiguration);
+
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates);
 
     public Predicate createBooleanExpression(String expression, boolean allowQuantifiedPredicates, MacroConfiguration macroConfiguration);

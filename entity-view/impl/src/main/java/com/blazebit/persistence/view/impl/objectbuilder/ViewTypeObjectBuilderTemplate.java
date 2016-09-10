@@ -361,7 +361,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             tupleTransformatorFactory.add(new MapTupleListTransformer(idPositions, startIndex));
                         }
                     }
-                } else if (!pluralAttribute.isCorrelated()) {
+                } else if (!pluralAttribute.isCorrelated() || ((CorrelatedAttribute<?, ?>) pluralAttribute).getCorrelationStrategy() == CorrelationStrategy.JOIN) {
                     switch (pluralAttribute.getCollectionType()) {
                         case COLLECTION:
                             if (pluralAttribute.isSorted()) {

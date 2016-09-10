@@ -48,7 +48,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
     private final SubqueryInitiatorFactory subqueryInitFactory;
     private MultipleSubqueryInitiator<?> currentMultipleSubqueryInitiator;
 
-    public JoinOnBuilderImpl(T result, PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
+    public JoinOnBuilderImpl(T result, final PredicateBuilderEndedListener listener, ParameterManager parameterManager, ExpressionFactory expressionFactory, SubqueryInitiatorFactory subqueryInitFactory) {
         this.result = result;
         this.listener = listener;
         this.rootPredicate = new RootPredicate(parameterManager);
@@ -72,6 +72,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
         List<Predicate> children = rootPredicate.getPredicate().getChildren();
         children.clear();
         children.add(predicate);
+        listener.onBuilderEnded(JoinOnBuilderImpl.this);
         return result;
     }
 
@@ -89,6 +90,7 @@ public class JoinOnBuilderImpl<T> implements JoinOnBuilder<T>, PredicateBuilder 
                 children.clear();
                 children.add((Predicate) builder.getExpression());
                 currentMultipleSubqueryInitiator = null;
+                listener.onBuilderEnded(JoinOnBuilderImpl.this);
             }
             
         }, subqueryInitFactory);

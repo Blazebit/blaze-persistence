@@ -167,8 +167,13 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         }
 
         List<Expression> inItemExpressions = new ArrayList<Expression>();
-        for (String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
-            inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+
+        if (parameterOrLiteralExpressions.length == 1) {
+            inItemExpressions.add(createInItemOrPathExpression(parameterOrLiteralExpressions[0], macroConfiguration));
+        } else {
+            for (String parameterOrLiteralExpression : parameterOrLiteralExpressions) {
+                inItemExpressions.add(createInItemExpression(parameterOrLiteralExpression, macroConfiguration));
+            }
         }
 
         return inItemExpressions;
@@ -192,6 +197,17 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
             @Override
             public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
                 return parser.parseInItemExpression();
+            }
+        }, expression, false, false, false, macroConfiguration);
+    }
+
+    @Override
+    public Expression createInItemOrPathExpression(String expression, MacroConfiguration macroConfiguration) {
+        return createExpression(new RuleInvoker() {
+
+            @Override
+            public ParserRuleContext invokeRule(JPQLSelectExpressionParser parser) {
+                return parser.parseInItemOrPathExpression();
             }
         }, expression, false, false, false, macroConfiguration);
     }
