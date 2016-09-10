@@ -33,6 +33,13 @@
 			<artifactId>blaze-persistence-core-testsuite</artifactId>
 			<version>${project.version}</version>
 			<scope>test</scope>
+			<exclusions>
+				<!-- I honestly don't know why, but the default profile seems to be actived for that dependency -->
+				<exclusion>
+					<groupId>org.hibernate</groupId>
+					<artifactId>hibernate-entitymanager</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
