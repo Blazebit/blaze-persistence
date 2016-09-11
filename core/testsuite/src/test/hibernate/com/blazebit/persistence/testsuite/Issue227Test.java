@@ -2,23 +2,8 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.impl.hibernate.CustomOneToManyPersister;
-import org.hibernate.Hibernate;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Persister;
-import org.hibernate.cache.CacheException;
-import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
-import org.hibernate.engine.spi.*;
-import org.hibernate.loader.JoinWalker;
-import org.hibernate.loader.collection.CollectionInitializer;
-import org.hibernate.loader.collection.OneToManyJoinWalker;
-import org.hibernate.loader.collection.SubselectOneToManyLoader;
-import org.hibernate.mapping.Collection;
-import org.hibernate.persister.collection.OneToManyPersister;
-import org.hibernate.persister.collection.QueryableCollection;
-import org.hibernate.persister.spi.PersisterCreationContext;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,7 +19,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
