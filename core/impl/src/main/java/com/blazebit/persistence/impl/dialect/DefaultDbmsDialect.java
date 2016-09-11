@@ -266,6 +266,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
 		return true;
 	}
 
+    @Override
+    public boolean supportsComplexJoinOn() {
+        return true;
+    }
+
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         if (offset == null) {
             sqlSb.append(" limit ").append(limit);

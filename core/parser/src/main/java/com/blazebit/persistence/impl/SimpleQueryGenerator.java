@@ -205,23 +205,40 @@ public class SimpleQueryGenerator extends VisitorAdapter {
     @Override
     public void visit(final InPredicate predicate) {
         // we have to render false if the parameter list for IN is empty
-        if (predicate.getRight().size() == 1 && predicate.getRight().get(0) instanceof ParameterExpression) {
-            ParameterExpression parameterExpr = (ParameterExpression) predicate.getRight().get(0);
-            
-            // We might have named parameters
-            if (parameterExpr.getValue() != null && parameterExpr.isCollectionValued()) {
-                Object collection = parameterExpr.getValue();
-                if (((Collection<?>) collection).isEmpty()) {
-                    // we have to distinguish between conditional and non conditional context since hibernate parser does not support
-                    // literal
-                    // and the workarounds like 1 = 0 or case when only work in specific contexts
-                    if (booleanLiteralRenderingContext == BooleanLiteralRenderingContext.PREDICATE) {
-                        sb.append(getBooleanConditionalExpression(predicate.isNegated()));
-                    } else {
-                        sb.append(getBooleanExpression(predicate.isNegated()));
+        if (predicate.getRight().size() == 1) {
+            Expression right = predicate.getRight().get(0);
+            if (right instanceof ParameterExpression) {
+                ParameterExpression parameterExpr = (ParameterExpression) right;
+
+                // We might have named parameters
+                if (parameterExpr.getValue() != null && parameterExpr.isCollectionValued()) {
+                    Object collection = parameterExpr.getValue();
+                    if (((Collection<?>) collection).isEmpty()) {
+                        // we have to distinguish between conditional and non conditional context since hibernate parser does not support
+                        // literal
+                        // and the workarounds like 1 = 0 or case when only work in specific contexts
+                        if (booleanLiteralRenderingContext == BooleanLiteralRenderingContext.PREDICATE) {
+                            sb.append(getBooleanConditionalExpression(predicate.isNegated()));
+                        } else {
+                            sb.append(getBooleanExpression(predicate.isNegated()));
+                        }
+                        return;
                     }
-                    return;
                 }
+            } else if (right instanceof PathExpression) {
+                // NOTE: this is a special case where we can transform an IN predicate to an equality predicate
+                BooleanLiteralRenderingContext oldConditionalContext = setBooleanLiteralRenderingContext(BooleanLiteralRenderingContext.PLAIN);
+                predicate.getLeft().accept(SimpleQueryGenerator.this);
+
+                if (predicate.isNegated()) {
+                    sb.append(" <> ");
+                } else {
+                    sb.append(" = ");
+                }
+
+                right.accept(SimpleQueryGenerator.this);
+                setBooleanLiteralRenderingContext(oldConditionalContext);
+                return;
             }
         }
 

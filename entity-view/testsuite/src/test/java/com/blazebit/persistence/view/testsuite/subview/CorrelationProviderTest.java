@@ -24,10 +24,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.entity.Document;
 import com.blazebit.persistence.view.testsuite.entity.Person;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationView;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationViewJoin;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentCorrelationViewSubquery;
-import com.blazebit.persistence.view.testsuite.subview.model.DocumentRelatedView;
+import com.blazebit.persistence.view.testsuite.subview.model.*;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -101,20 +98,30 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 //
 //    @Test
 //    public void testBatchCorrelation() {
-//        testCorrelation(DocumentCorrelationViewJoin.class);
+//        testCorrelation(DocumentCorrelationViewBatch.class);
 //    }
 
     @Test
     // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
-    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
-    public void testJoinCorrelation() {
-        // TODO: implement property to disable rewriting to this kind of usage
-//        em.createQuery("SELECT d \n" +
-//                "FROM com.blazebit.persistence.view.testsuite.entity.Document d \n" +
-//                "LEFT JOIN d.contacts correlatedDocumentForId \n" +
-//                "ON (SELECT o.owner.id FROM Document o WHERE o.id = correlatedDocumentForId.id) = d.owner.id\n");
-        // NOTE: can not use sub-property of a joined relation in on clause
-        testCorrelation(DocumentCorrelationViewJoin.class);
+    // Since hibernate does not support relation access in on clause because of HHH-2772, we skip it
+    @Category({ NoHibernate.class, NoDatanucleus4.class, NoOpenJPA.class})
+    public void testJoinCorrelationNormal() {
+        testCorrelation(DocumentCorrelationViewJoinNormal.class);
+    }
+
+    // TODO: implement property to disable rewriting to this kind of usage
+    //        em.createQuery("SELECT d \n" +
+    //                "FROM com.blazebit.persistence.view.testsuite.entity.Document d \n" +
+    //                "LEFT JOIN d.contacts correlatedDocumentForId \n" +
+    //                "ON (SELECT o.owner.id FROM Document o WHERE o.id = correlatedDocumentForId.id) = d.owner.id\n");
+    @Test
+    // NOTE: Requires entity joins which are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    // NOTE: DB2 does not support subqueries in the on clause
+    // TODO: Report that Datanucleus does not support subqueries in the on clause
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoOpenJPA.class, NoDB2.class })
+    public void testJoinCorrelationSubquery() {
+        // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
+        testCorrelation(DocumentCorrelationViewJoinSubquery.class);
     }
 
     private <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView) {

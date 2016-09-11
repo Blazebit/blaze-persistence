@@ -143,6 +143,14 @@ public interface DbmsDialect {
      * @since 1.1.0
      */
     public boolean supportsComplexGroupBy();
+
+    /**
+     * Returns true if the dbms supports complex expressions like subqueries in the join on clause, false otherwise.
+     *
+     * @return Whether complex join on clauses are supported by the dbms
+     * @since 1.2.0
+     */
+    public boolean supportsComplexJoinOn();
     
     /**
      * Returns true if the dbms supports the set operation UNION, false otherwise.
