@@ -99,6 +99,11 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
         String dbms = vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
 
+        // Register compatibility functions
+        if (!exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
+            exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
+        }
+
         // DataNucleus4 uses a month function that is 0 based which conflicts with ANSI EXTRACT(MONTH)
         if (major < 5 && !(exprFactory.getMethod("java.util.Date", "getMonth", null) instanceof DataNucleusJpqlFunctionAdapter)) {
             LOG.warning("Overriding DataNucleus native 'MONTH' function to return months 1-based like ANSI EXTRACT instead of 0-based!");

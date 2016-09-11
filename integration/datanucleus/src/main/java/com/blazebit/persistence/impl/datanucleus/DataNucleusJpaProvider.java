@@ -133,6 +133,6 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsCountStar() {
-        return true;
+        return false;
     }
 }

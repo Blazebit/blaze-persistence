@@ -7,15 +7,7 @@ import java.util.logging.Logger;
 import org.datanucleus.store.rdbms.mapping.java.JavaTypeMapping;
 import org.datanucleus.store.rdbms.mapping.java.TemporalMapping;
 import org.datanucleus.store.rdbms.sql.SQLText;
-import org.datanucleus.store.rdbms.sql.expression.AggregateNumericExpression;
-import org.datanucleus.store.rdbms.sql.expression.AggregateTemporalExpression;
-import org.datanucleus.store.rdbms.sql.expression.BooleanExpression;
-import org.datanucleus.store.rdbms.sql.expression.ByteExpression;
-import org.datanucleus.store.rdbms.sql.expression.CharacterExpression;
-import org.datanucleus.store.rdbms.sql.expression.NumericExpression;
-import org.datanucleus.store.rdbms.sql.expression.SQLExpression;
-import org.datanucleus.store.rdbms.sql.expression.StringExpression;
-import org.datanucleus.store.rdbms.sql.expression.TemporalExpression;
+import org.datanucleus.store.rdbms.sql.expression.*;
 import org.datanucleus.store.rdbms.sql.method.AbstractSQLMethod;
 
 import com.blazebit.persistence.spi.JpqlFunction;
@@ -88,6 +80,13 @@ public class DataNucleusJpqlFunctionAdapter extends AbstractSQLMethod {
 						return sqlText;
 					}
 	    		};
+			} else if (String.class.isAssignableFrom(returnTypeMapping.getJavaType())) {
+				return new AggregateStringExpression(stmt, returnTypeMapping, "", null) {
+					@Override
+					public SQLText toSQLText() {
+						return sqlText;
+					}
+				};
         	} else {
         		LOG.warning("Aggregate type [" + returnType + "] could not be represented as aggregate. Please report this so we can support the type! Falling back to normal expression.");
         	}
