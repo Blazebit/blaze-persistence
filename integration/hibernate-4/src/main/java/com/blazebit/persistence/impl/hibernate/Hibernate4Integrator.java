@@ -1,12 +1,17 @@
 package com.blazebit.persistence.impl.hibernate;
 
 import java.util.Iterator;
+import java.util.logging.Logger;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import com.blazebit.apt.service.ServiceProvider;
@@ -14,6 +19,8 @@ import com.blazebit.persistence.CTE;
 
 @ServiceProvider(Integrator.class)
 public class Hibernate4Integrator implements Integrator {
+
+	private static final Logger LOG = Logger.getLogger(Hibernate4Integrator.class.getName());
 
 	@Override
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
@@ -27,6 +34,7 @@ public class Hibernate4Integrator implements Integrator {
 				// TODO: check that no collections are mapped
 			}
 		}
+		CommonHibernateUtils.setCollectionPersisterClass(configuration.getClassMappings(), CustomOneToManyPersister.class);
 	}
 
 	@Override

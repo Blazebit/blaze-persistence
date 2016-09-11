@@ -2,9 +2,24 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.impl.hibernate.CustomOneToManyPersister;
 import org.hibernate.Hibernate;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Persister;
+import org.hibernate.cache.CacheException;
+import org.hibernate.cache.spi.access.CollectionRegionAccessStrategy;
+import org.hibernate.engine.spi.*;
+import org.hibernate.loader.JoinWalker;
+import org.hibernate.loader.collection.CollectionInitializer;
+import org.hibernate.loader.collection.OneToManyJoinWalker;
+import org.hibernate.loader.collection.SubselectOneToManyLoader;
+import org.hibernate.mapping.Collection;
+import org.hibernate.persister.collection.OneToManyPersister;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.spi.PersisterCreationContext;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -19,10 +34,12 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * @author Jan-Willem Gmelig Meyling
+ * @since 1.2.0
  */
 public class Issue227Test extends AbstractCoreTest {
 
@@ -67,24 +84,25 @@ public class Issue227Test extends AbstractCoreTest {
     public void testFetchModeSubselectOnCteQueryResult() throws Exception {
         CriteriaBuilder<RecursiveEntityCte> cb = cbf.create(em, RecursiveEntityCte.class)
             .withRecursive(RecursiveEntityCte.class)
-            .from(RecursiveEntity.class, "recEntity")
-            .bind("id").select("recEntity.id")
-            .bind("name").select("recEntity.name")
-            .bind("parent").select("recEntity.parent")
-            .where("recEntity.parent").isNotNull()
+                .from(RecursiveEntity.class, "recEntity")
+                .bind("id").select("recEntity.id")
+                .bind("name").select("recEntity.name")
+                .bind("parent").select("recEntity.parent")
+                .where("recEntity.parent").isNotNull()
             .unionAll()
-            .from(RecursiveEntity.class, "recEntity")
-            .from(RecursiveEntityCte.class, "parentRecEntity")
-            .bind("id").select("recEntity.id")
-            .bind("name").select("recEntity.name")
-            .bind("parent").select("recEntity.parent")
-            .where("recEntity.id").eqExpression("parentRecEntity.parent.id")
+                .from(RecursiveEntity.class, "recEntity")
+                .from(RecursiveEntityCte.class, "parentRecEntity")
+                .bind("id").select("recEntity.id")
+                .bind("name").select("recEntity.name")
+                .bind("parent").select("recEntity.parent")
+                .where("recEntity.id").eqExpression("parentRecEntity.parent.id")
             .end()
-            .fetch("parent");
+            .fetch("parent")
+            .orderByAsc("name");
 
         List<RecursiveEntityCte> result = cb.getResultList();
         RecursiveEntity firstParent = result.get(0).getParent();
-        Hibernate.initialize(firstParent.getChildren());
+        Assert.assertEquals(2, firstParent.getChildren().size());
     }
 
     /**
