@@ -379,7 +379,7 @@
 						<artifactId>build-helper-maven-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-source</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>add-source</goal>
@@ -391,7 +391,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-test-source-hibernate</id>
 								<phase>generate-test-sources</phase>
 								<goals>
 									<goal>add-test-source</goal>
@@ -483,7 +483,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-test-source-hibernate</id>
 								<phase>generate-test-sources</phase>
 								<goals>
 									<goal>add-test-source</goal>
@@ -563,7 +563,7 @@
 						<artifactId>build-helper-maven-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-source</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>add-source</goal>
@@ -575,7 +575,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-test-source-hibernate</id>
 								<phase>generate-test-sources</phase>
 								<goals>
 									<goal>add-test-source</goal>
@@ -667,7 +667,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-test-source-hibernate</id>
 								<phase>generate-test-sources</phase>
 								<goals>
 									<goal>add-test-source</goal>
@@ -759,7 +759,7 @@
 								</configuration>
 							</execution>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-test-source-hibernate</id>
 								<phase>generate-test-sources</phase>
 								<goals>
 									<goal>add-test-source</goal>
@@ -969,7 +969,7 @@
 						<artifactId>build-helper-maven-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-source</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>add-source</goal>
@@ -1155,7 +1155,7 @@
 						<artifactId>build-helper-maven-plugin</artifactId>
 						<executions>
 							<execution>
-								<id>add-test-source</id>
+								<id>add-source</id>
 								<phase>generate-sources</phase>
 								<goals>
 									<goal>add-source</goal>
