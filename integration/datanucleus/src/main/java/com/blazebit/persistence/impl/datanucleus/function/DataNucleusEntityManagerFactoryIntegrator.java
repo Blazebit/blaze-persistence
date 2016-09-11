@@ -47,6 +47,10 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
 
     private static final Logger LOG = Logger.getLogger(DataNucleusEntityManagerFactoryIntegrator.class.getName());
 	private static final Map<String, String> vendorToDbmsMapping = new HashMap<String, String>();
+	private static final String version;
+	private static final int major;
+	private static final int minor;
+	private static final int fix;
 	
 	static {
 		vendorToDbmsMapping.put("h2", "h2");
@@ -63,6 +67,13 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
 		vendorToDbmsMapping.put("informix", "informix");
 //		vendorToDbmsMapping.put("", "ingres");
 //		vendorToDbmsMapping.put("", "interbase");
+
+		version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
+
+		String[] versionParts = version.split("[\\.-]");
+		major = Integer.parseInt(versionParts[0]);
+		minor = Integer.parseInt(versionParts[1]);
+		fix = Integer.parseInt(versionParts[2]);
 	}
 
     @Override
@@ -73,13 +84,6 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
 
 	@Override
 	public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
-		String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
-
-		String[] versionParts = version.split("[\\.-]");
-		final int major = Integer.parseInt(versionParts[0]);
-		final int minor = Integer.parseInt(versionParts[1]);
-		final int fix = Integer.parseInt(versionParts[2]);
-
 		return new JpaProviderFactory() {
 			@Override
 			public JpaProvider createJpaProvider(EntityManager em) {
@@ -94,14 +98,9 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
         String dbms = vendorToDbmsMapping.get(storeMgr.getDatastoreAdapter().getVendorID());
-        
-        // Register compatibility functions
-        if (!exprFactory.isMethodRegistered(null, "COUNT_STAR")) {
-            exprFactory.registerMethod(null, "COUNT_STAR", new DataNucleusJpqlFunctionAdapter(new CountStarFunction(), true), true);
-        }
-        
-        // DataNucleus uses a month function that is 0 based which conflicts with ANSI EXTRACT(MONTH)
-        if (!(exprFactory.getMethod("java.util.Date", "getMonth", null) instanceof DataNucleusJpqlFunctionAdapter)) {
+
+        // DataNucleus4 uses a month function that is 0 based which conflicts with ANSI EXTRACT(MONTH)
+        if (major < 5 && !(exprFactory.getMethod("java.util.Date", "getMonth", null) instanceof DataNucleusJpqlFunctionAdapter)) {
             LOG.warning("Overriding DataNucleus native 'MONTH' function to return months 1-based like ANSI EXTRACT instead of 0-based!");
             
             JpqlFunctionGroup dbmsFunctionGroup = dbmsFunctions.get("month");
@@ -144,12 +143,6 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
     public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         RDBMSStoreManager storeMgr = (RDBMSStoreManager) entityManagerFactory.unwrap(StoreManager.class);
         SQLExpressionFactory exprFactory = storeMgr.getSQLExpressionFactory();
-        String version = readMavenPropertiesVersion("META-INF/maven/org.datanucleus/datanucleus-core/pom.properties");
-
-//        String[] versionParts = version.split("\\.");
-//        int major = Integer.parseInt(versionParts[0]);
-//        int minor = Integer.parseInt(versionParts[1]);
-//        int fix = Integer.parseInt(versionParts[2]);
         
         Set<Object> methodKeys = fieldGet("methodNamesSupported", exprFactory, version);
         
@@ -166,7 +159,7 @@ public class DataNucleusEntityManagerFactoryIntegrator implements EntityManagerF
         return functions;
     }
     
-    private String readMavenPropertiesVersion(String name) {
+    private static String readMavenPropertiesVersion(String name) {
     	InputStream is = null;
     	try {
     		is = NucleusContext.class.getClassLoader().getResourceAsStream(name);
