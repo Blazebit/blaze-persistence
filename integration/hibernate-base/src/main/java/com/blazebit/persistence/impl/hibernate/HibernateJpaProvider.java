@@ -61,11 +61,6 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean supportsRelationAccessInOnClause() {
-        return false;
-    }
-
-    @Override
     public boolean supportsInsertStatement() {
         return true;
     }

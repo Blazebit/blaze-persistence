@@ -27,8 +27,6 @@ public interface JpaProvider {
 
     public boolean supportsEntityJoin();
 
-    public boolean supportsRelationAccessInOnClause();
-
     public boolean supportsInsertStatement();
 
     public boolean needsBracketsForListParamter();

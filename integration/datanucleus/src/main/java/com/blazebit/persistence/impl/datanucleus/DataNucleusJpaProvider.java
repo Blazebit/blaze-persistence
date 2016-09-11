@@ -47,11 +47,6 @@ public class DataNucleusJpaProvider implements JpaProvider {
     }
 
     @Override
-    public boolean supportsRelationAccessInOnClause() {
-        return true;
-    }
-
-    @Override
     public boolean supportsInsertStatement() {
         return false;
     }

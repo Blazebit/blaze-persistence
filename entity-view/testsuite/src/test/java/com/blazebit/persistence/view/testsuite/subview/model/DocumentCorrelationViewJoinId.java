@@ -28,14 +28,12 @@ import java.util.Set;
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface DocumentCorrelationViewJoinSubquery extends DocumentCorrelationView {
+public interface DocumentCorrelationViewJoinId extends DocumentCorrelationView {
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderSubquery.class, strategy = CorrelationStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, strategy = CorrelationStrategy.JOIN)
     public Set<Long> getOwnerRelatedDocumentIds();
 
-    // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderSubquery.class, strategy = CorrelationStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, strategy = CorrelationStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }
