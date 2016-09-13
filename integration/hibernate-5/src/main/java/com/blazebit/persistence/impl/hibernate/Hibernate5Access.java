@@ -12,6 +12,7 @@ import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
@@ -27,6 +28,9 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 
 import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.type.Type;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
 
 @ServiceProvider(HibernateAccess.class)
 public class Hibernate5Access implements HibernateAccess {
@@ -199,6 +203,25 @@ public class Hibernate5Access implements HibernateAccess {
                 f.setAccessible(false);
             }
         }
+    }
+
+    private HibernateEntityManagerImplementor getEntityManager(EntityManager em) {
+        return (HibernateEntityManagerImplementor) em.unwrap(EntityManager.class);
+    }
+
+    @Override
+    public RuntimeException convert(EntityManager em, HibernateException e) {
+        return getEntityManager(em).convert(e);
+    }
+
+    @Override
+    public void handlePersistenceException(EntityManager em, PersistenceException e) {
+        getEntityManager(em).handlePersistenceException(e);
+    }
+
+    @Override
+    public void throwPersistenceException(EntityManager em, HibernateException e) {
+        getEntityManager(em).throwPersistenceException(e);
     }
 
 }

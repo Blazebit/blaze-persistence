@@ -93,6 +93,9 @@ matrix:
       jdk: oraclejdk8
 #    - env: JPAPROVIDER=hibernate-5.2 RDBMS=sqlite
 #      jdk: oraclejdk8
+# hibernate-6.0
+#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+#      jdk: oraclejdk8
 # datanucleus-5
     - env: JPAPROVIDER=datanucleus-5 RDBMS=h2
       jdk: oraclejdk8
@@ -203,3 +206,5 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
 #      sudo: true
+#    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
+#      jdk: oraclejdk8

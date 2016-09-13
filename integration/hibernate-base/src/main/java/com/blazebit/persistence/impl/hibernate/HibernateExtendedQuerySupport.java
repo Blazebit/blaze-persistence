@@ -28,10 +28,7 @@ import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.query.spi.QueryPlanCache;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -50,10 +47,8 @@ import org.hibernate.hql.internal.ast.exec.StatementExecutor;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
-import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.hql.spi.ParameterTranslations;
 import org.hibernate.hql.spi.QueryTranslator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.param.ParameterSpecification;
@@ -112,7 +107,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         
         Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(hibernateQuery));
         String queryString = hibernateAccess.expandParameterLists(session, hibernateQuery, namedParams);
-        return sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+        return sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
     }
 
     @Override
@@ -232,7 +227,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
 		    LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw getEntityManager(em).convert(he);
+			throw hibernateAccess.convert(em, he);
 		}
 	}
 	
@@ -245,13 +240,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
 			if (result.size() == 0) {
 				NoResultException nre = new NoResultException("No entity found for query");
-				getEntityManager(em).handlePersistenceException(nre);
+				hibernateAccess.handlePersistenceException(em, nre);
 				throw nre;
 			} else if (result.size() > 1) {
 				final Set uniqueResult = new HashSet(result);
 				if (uniqueResult.size() > 1) {
 					NonUniqueResultException nure = new NonUniqueResultException("result returns more than one element");
-					getEntityManager(em).handlePersistenceException(nure);
+					hibernateAccess.handlePersistenceException(em, nure);
 					throw nure;
 				} else {
 					return uniqueResult.iterator().next();
@@ -267,7 +262,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 			throw new IllegalArgumentException(e);
 		} catch (HibernateException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw getEntityManager(em).convert(he);
+			throw hibernateAccess.convert(em, he);
 		}
 	}
 
@@ -345,7 +340,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             throw new IllegalArgumentException(e);
         } catch (HibernateException he) {
             LOG.severe("Could not execute the following SQL query: " + finalSql);
-            getEntityManager(em).throwPersistenceException(he);
+            hibernateAccess.throwPersistenceException(em, he);
             return 0;
         }
     }
@@ -422,7 +417,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 throw new IllegalArgumentException(e);
             } catch (HibernateException he) {
                 LOG.severe("Could not execute the following SQL query: " + finalSql);
-                throw getEntityManager(em).convert(he);
+                throw hibernateAccess.convert(em, he);
             } finally {
                 hibernateAccess.afterTransaction(session, success);
             }
@@ -610,12 +605,12 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             
             org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
-            hibernateQuery.setResultTransformer(null);
+//            hibernateQuery.setResultTransformer(null);
             
             Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(hibernateQuery));
             String queryString = hibernateAccess.expandParameterLists(session, hibernateQuery, namedParams);
             
-            HQLQueryPlan queryPlan = sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+            HQLQueryPlan queryPlan = sfi.getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
 
             if (queryPlan.getTranslators().length > 1) {
                 throw new IllegalArgumentException("No support for multiple translators yet!");
@@ -676,13 +671,13 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 if (executor == null && isModification) {
                     // We have to set an executor
                     org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
-                    lastHibernateQuery.setResultTransformer(null);
+//                    lastHibernateQuery.setResultTransformer(null);
                     
                     Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(lastHibernateQuery));
                     String queryString = hibernateAccess.expandParameterLists(session, lastHibernateQuery, namedParams);
                     
                     // Extract the executor from the last query which is the actual main query
-                    HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.emptyMap());
+                    HQLQueryPlan lastQueryPlan = session.getFactory().getQueryPlanCache().getHQLQueryPlan(queryString, false, Collections.EMPTY_MAP);
                     if (lastQueryPlan.getTranslators().length > 1) {
                         throw new IllegalArgumentException("No support for multiple translators yet!");
                     }
@@ -742,7 +737,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private HQLQueryPlan createQueryPlan(SessionFactoryImplementor sfi, Query query) {
         org.hibernate.Query hibernateQuery = query.unwrap(org.hibernate.Query.class);
         String queryString = hibernateQuery.getQueryString();
-        return new HQLQueryPlan(queryString, false, Collections.emptyMap(), sfi);
+        return new HQLQueryPlan(queryString, false, Collections.EMPTY_MAP, sfi);
     }
     
     private BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan> getQueryPlanCache(SessionFactoryImplementor sfi) {
@@ -838,10 +833,6 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return fromCache;
         }
     }
-	
-	private HibernateEntityManagerImplementor getEntityManager(EntityManager em) {
-		return (HibernateEntityManagerImplementor) em.unwrap(EntityManager.class);
-	}
     
     @SuppressWarnings("unchecked")
     private <T> T getField(Object object, String field) {
