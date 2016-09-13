@@ -43,4 +43,7 @@ public interface DocumentValidationView extends IdHolderView<Long> {
 
     @MappingParameter("contactPersonNumber")
     public Integer getContactPersonNumber2();
+
+    @Mapping("CASE WHEN partners IS NOT EMPTY THEN true ELSE false END")
+    public Boolean getExistsPartners();
 }
