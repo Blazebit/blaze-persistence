@@ -2,11 +2,16 @@ package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CTE;
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoMySQL;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;
@@ -65,6 +70,8 @@ public class Issue227Test extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: MySQL has no CTE support
+    @Category({ NoMySQL.class })
     public void testFetchModeSubselectOnCteQueryResult() throws Exception {
         CriteriaBuilder<RecursiveEntityCte> cb = cbf.create(em, RecursiveEntityCte.class)
             .withRecursive(RecursiveEntityCte.class)
