@@ -20,6 +20,7 @@ import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.EntityViewSetting;
 import com.blazebit.persistence.view.EntityViews;
+import com.blazebit.persistence.view.impl.ConfigurationProperties;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import com.blazebit.persistence.view.testsuite.AbstractEntityViewTest;
 import com.blazebit.persistence.view.testsuite.entity.Document;
@@ -93,12 +94,17 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
     @Test
     public void testSubqueryCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubquery.class);
+        testCorrelation(DocumentCorrelationViewSubquery.class, null);
     }
-//
+
 //    @Test
-//    public void testBatchCorrelation() {
-//        testCorrelation(DocumentCorrelationViewBatch.class);
+//    public void testSubqueryBatchedCorrelation() {
+//        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
+//    }
+
+//    @Test
+//    public void testSubselectCorrelation() {
+//        testCorrelation(DocumentCorrelationViewSubselect.class);
 //    }
 
     @Test
@@ -106,7 +112,7 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     // Since hibernate does not support relation access in on clause because of HHH-2772, we skip it
     @Category({ NoHibernate.class, NoDatanucleus4.class, NoOpenJPA.class})
     public void testJoinCorrelationNormal() {
-        testCorrelation(DocumentCorrelationViewJoinNormal.class);
+        testCorrelation(DocumentCorrelationViewJoinNormal.class, null);
     }
 
     @Test
@@ -114,10 +120,10 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
     @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus4.class, NoOpenJPA.class})
     public void testJoinCorrelationId() {
         // NOTE: can not use sub-property of a joined relation in on clause because of HHH-2772
-        testCorrelation(DocumentCorrelationViewJoinId.class);
+        testCorrelation(DocumentCorrelationViewJoinId.class, null);
     }
 
-    private <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView) {
+    private <T extends DocumentCorrelationView> void testCorrelation(Class<T> entityView, Integer batchSize) {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
         cfg.addEntityView(entityView);
         cfg.addEntityView(DocumentRelatedView.class);
@@ -125,6 +131,9 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
 
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         EntityViewSetting<T, CriteriaBuilder<T>> setting = EntityViewSetting.create(entityView);
+        if (batchSize != null) {
+            setting.setProperty(ConfigurationProperties.DEFAULT_BATCH_SIZE + ".ownerRelatedDocumentIds", batchSize);
+        }
         CriteriaBuilder<T> cb = evm.applySetting(setting, criteria);
         List<T> results = cb.getResultList();
 

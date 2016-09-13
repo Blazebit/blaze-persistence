@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.FetchStrategy;
+
 import java.util.Set;
 
 /**
@@ -39,6 +41,15 @@ public interface ManagedViewType<X> {
      * @return The entity class that the entity view uses
      */
     public Class<?> getEntityClass();
+
+    /**
+     * Returns the default batch size for the attributes of this view type.
+     * If no default batch size is configured, returns -1.
+     *
+     * @return The default batch size for the attributes
+     * @since 1.2.0
+     */
+    public int getDefaultBatchSize();
 
     /**
      * Returns the attributes of the entity view.

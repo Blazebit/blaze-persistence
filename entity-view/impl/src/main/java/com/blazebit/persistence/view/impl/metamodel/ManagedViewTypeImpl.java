@@ -38,10 +38,7 @@ import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.MappingCorrelated;
-import com.blazebit.persistence.view.MappingParameter;
-import com.blazebit.persistence.view.MappingSingular;
-import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.impl.metamodel.attribute.*;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
@@ -59,6 +56,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
     protected final Class<X> javaType;
     protected final Class<?> entityClass;
+    protected final int defaultBatchSize;
     protected final Map<String, AbstractMethodAttribute<? super X, ?>> attributes;
     protected final Map<ParametersKey, MappingConstructorImpl<X>> constructors;
     protected final Map<String, MappingConstructor<X>> constructorIndex;
@@ -71,6 +69,15 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
 
         if (!clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers())) {
             throw new IllegalArgumentException("Only interfaces or abstract classes are allowed as entity views. '" + clazz.getName() + "' is neither of those.");
+        }
+
+        BatchFetch batchFetch = AnnotationUtils.findAnnotation(clazz, BatchFetch.class);
+        if (batchFetch == null || batchFetch.size() == -1) {
+            this.defaultBatchSize = -1;
+        } else if (batchFetch.size() < 1) {
+            throw new IllegalArgumentException("Illegal batch fetch size defined at '" + clazz.getName() + "'! Use a value greater than 0 or -1!");
+        } else {
+            this.defaultBatchSize = batchFetch.size();
         }
         
         // We use a tree map to get a deterministic attribute order
@@ -274,6 +281,11 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
     @Override
     public Class<?> getEntityClass() {
         return entityClass;
+    }
+
+    @Override
+    public int getDefaultBatchSize() {
+        return defaultBatchSize;
     }
 
     @Override

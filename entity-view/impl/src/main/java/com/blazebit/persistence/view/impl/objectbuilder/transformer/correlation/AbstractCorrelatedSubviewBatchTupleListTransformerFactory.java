@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.ViewType;
@@ -29,15 +30,15 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedSubviewSubqueryTupleTransformerFactory<T> extends AbstractCorrelatedSubqueryTupleTransformerFactory<T> {
+public abstract class AbstractCorrelatedSubviewBatchTupleListTransformerFactory<T> extends AbstractCorrelatedBatchTupleListTransformerFactory<T> {
 
     private final ManagedViewType<T> managedViewType;
     private final EntityViewManagerImpl evm;
     private final ExpressionFactory ef;
     private final String viewName;
 
-    public AbstractCorrelatedSubviewSubqueryTupleTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName) {
-        super(managedViewType.getEntityClass(), viewRootType, correlationResult, correlationProviderFactory, tupleIndex, correlationBasisEntity);
+    public AbstractCorrelatedSubviewBatchTupleListTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName) {
+        super(managedViewType.getEntityClass(), viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity);
         this.managedViewType = managedViewType;
         this.evm = evm;
         this.ef = ef;
@@ -45,8 +46,10 @@ public abstract class AbstractCorrelatedSubviewSubqueryTupleTransformerFactory<T
     }
 
     @Override
-    protected void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot) {
-        evm.applyObjectBuilder((ViewType<T>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, optionalParameters, false);
+    protected void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int batchSize, String correlationRoot) {
+        // We have the correlation key on the first position if we do batching
+        int offset = batchSize > 1 ? 1 : 0;
+        evm.applyObjectBuilder((ViewType<T>) managedViewType, null, viewName, correlationRoot, criteriaBuilder, optionalParameters, entityViewConfiguration, offset, false);
     }
 
 }

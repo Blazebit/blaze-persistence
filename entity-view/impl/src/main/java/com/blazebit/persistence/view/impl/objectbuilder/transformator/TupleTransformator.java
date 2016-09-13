@@ -51,11 +51,10 @@ public class TupleTransformator {
     }
 
     private List<Object[]> transform(int level, List<Object[]> tupleList) {
-        List<TupleListTransformer> tupleListTransformers = transformatorLevels.get(level).tupleListTransformers;
-        List<Object[]> currentTuples = tupleList;
-        for (int i = 0; i < tupleListTransformers.size(); i++) {
-            currentTuples = tupleListTransformers.get(i).transform(currentTuples);
+        TupleListTransformer tupleListTransformer = transformatorLevels.get(level).tupleListTransformer;
+        if (tupleListTransformer == null) {
+            return tupleList;
         }
-        return currentTuples;
+        return tupleListTransformer.transform(tupleList);
     }
 }

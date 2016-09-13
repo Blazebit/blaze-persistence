@@ -18,20 +18,27 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedListTupleTransformer extends AbstractCorrelatedTupleTransformer {
+public class CorrelatedOrderedSetTupleListTransformer extends AbstractCorrelatedCollectionTupleListTransformer {
 
-    public CorrelatedListTupleTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex, Class<?> correlationBasisEntity) {
-        super(criteriaBuilder, viewRootJpqlMacro, correlationParamName, tupleIndex, correlationBasisEntity);
+    public CorrelatedOrderedSetTupleListTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
+        super(criteriaBuilder, viewRootJpqlMacro, correlationParamName, tupleIndex, batchSize, correlationBasisEntity);
     }
 
     @Override
-    public Object transform(CriteriaBuilder<?> cb) {
-        return cb.getResultList();
+    protected Collection<Object> createCollection(int size) {
+        if (size < 1) {
+            return new LinkedHashSet<Object>();
+        }
+        return new LinkedHashSet<Object>(size);
     }
 
 }

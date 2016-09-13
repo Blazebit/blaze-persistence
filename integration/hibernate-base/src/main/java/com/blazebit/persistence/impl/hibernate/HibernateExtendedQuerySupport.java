@@ -250,7 +250,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 			} else if (result.size() > 1) {
 				final Set uniqueResult = new HashSet(result);
 				if (uniqueResult.size() > 1) {
-					NonUniqueResultException nure = new NonUniqueResultException("result returns more than one elements");
+					NonUniqueResultException nure = new NonUniqueResultException("result returns more than one element");
 					getEntityManager(em).handlePersistenceException(nure);
 					throw nure;
 				} else {

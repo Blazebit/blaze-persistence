@@ -6,6 +6,9 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 import javax.persistence.metamodel.EntityType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,12 +43,28 @@ public class CorrelatedSubqueryViewRootJpqlMacro implements JpqlMacro {
             criteriaBuilder.from(viewRootEntityType, CORRELATION_VIEW_ROOT_ALIAS);
         }
         if (viewRootParamName != null) {
-            Object viewRootEntity = criteriaBuilder.getEntityManager().getReference(viewRootEntityType, viewRootId);
-            criteriaBuilder.setParameter(viewRootParamName, viewRootEntity);
+            if (viewRootId instanceof Collection) {
+                Collection<Object> paramCollection = (Collection<Object>) viewRootId;
+                List<Object> viewRootEntities = new ArrayList<Object>(paramCollection.size());
+                for (Object paramValue : paramCollection) {
+                    if (paramValue != null) {
+                        viewRootEntities.add(criteriaBuilder.getEntityManager().getReference(viewRootEntityType, paramValue));
+                    }
+                }
+
+                criteriaBuilder.setParameter(viewRootParamName, viewRootEntities);
+            } else {
+                Object viewRootEntity = criteriaBuilder.getEntityManager().getReference(viewRootEntityType, viewRootId);
+                criteriaBuilder.setParameter(viewRootParamName, viewRootEntity);
+            }
         }
         if (viewRootIdParamName != null) {
             criteriaBuilder.setParameter(viewRootIdParamName, viewRootId);
         }
+    }
+
+    public boolean usesViewRoot() {
+        return viewRootParamName != null || viewRootIdParamName != null;
     }
 
     private String getViewRootParamName() {

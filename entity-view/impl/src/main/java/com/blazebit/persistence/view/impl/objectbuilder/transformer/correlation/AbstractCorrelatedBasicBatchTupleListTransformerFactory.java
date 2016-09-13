@@ -27,9 +27,9 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedBasicSubqueryTupleTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory<Object> {
+public abstract class AbstractCorrelatedBasicBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory<Object> {
 
-    public AbstractCorrelatedBasicSubqueryTupleTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedBasicBatchTupleListTransformerFactory(Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
         super(criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity);
     }
 

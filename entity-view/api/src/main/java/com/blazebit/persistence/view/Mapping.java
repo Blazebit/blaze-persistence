@@ -56,4 +56,11 @@ public @interface Mapping {
      * @return The JPQL expression mapping
      */
     String value();
+
+    /**
+     * The fetch strategy to use for the attribute.
+     *
+     * @return The fetch strategy
+     */
+    FetchStrategy fetch() default FetchStrategy.JOIN;
 }

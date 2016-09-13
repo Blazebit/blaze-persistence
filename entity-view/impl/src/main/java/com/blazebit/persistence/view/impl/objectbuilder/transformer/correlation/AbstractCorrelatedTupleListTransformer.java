@@ -1,0 +1,418 @@
+/*
+ * Copyright 2014 Blazebit.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
+
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleId;
+import com.blazebit.persistence.view.impl.objectbuilder.TupleIndexValue;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
+
+import java.util.*;
+
+/**
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
+public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTransformer {
+
+    protected final int batchSize;
+    private final CriteriaBuilder<?> criteriaBuilder;
+    private final CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
+    private final String correlationParamName;
+    private final Class<?> correlationBasisEntity;
+
+    public AbstractCorrelatedTupleListTransformer(CriteriaBuilder<?> criteriaBuilder, CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro, String correlationParamName, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
+        super(tupleIndex);
+        this.batchSize = batchSize;
+        this.criteriaBuilder = criteriaBuilder;
+        this.viewRootJpqlMacro = viewRootJpqlMacro;
+        this.correlationParamName = correlationParamName;
+        this.correlationBasisEntity = correlationBasisEntity;
+    }
+
+    @Override
+    public List<Object[]> transform(List<Object[]> tuples) {
+        FixedArrayList correlationParams = new FixedArrayList(batchSize);
+        // Implementation detail: the tuple list is a LinkedList
+        Iterator<Object[]> tupleListIter = tuples.iterator();
+
+        // If view root is used, we have to decide whether we do batches for each view root id or correlation param
+        if (viewRootJpqlMacro.usesViewRoot()) {
+            tupleListIter = tuples.iterator();
+            int totalSize = tuples.size();
+            Map<Object, Map<Object, TuplePromise>> viewRoots = new HashMap<Object, Map<Object, TuplePromise>>(totalSize);
+            Map<Object, Map<Object, TuplePromise>> correlationValues = new HashMap<Object, Map<Object, TuplePromise>>(totalSize);
+
+            while (tupleListIter.hasNext()) {
+                Object[] tuple = tupleListIter.next();
+                Object viewRootKey = tuple[0];
+                Object correlationValueKey = tuple[startIndex];
+
+                Map<Object, TuplePromise> viewRootCorrelationValues = viewRoots.get(viewRootKey);
+                if (viewRootCorrelationValues == null) {
+                    viewRootCorrelationValues = new HashMap<Object, TuplePromise>();
+                    viewRoots.put(viewRootKey, viewRootCorrelationValues);
+                }
+                TuplePromise viewRootPromise = viewRootCorrelationValues.get(correlationValueKey);
+                if (viewRootPromise == null) {
+                    viewRootPromise = new TuplePromise(startIndex);
+                    viewRootCorrelationValues.put(correlationValueKey, viewRootPromise);
+                }
+                viewRootPromise.add(tuple);
+
+                Map<Object, TuplePromise> correlationValueViewRoots = correlationValues.get(correlationValueKey);
+                if (correlationValueViewRoots == null) {
+                    correlationValueViewRoots = new HashMap<Object, TuplePromise>();
+                    correlationValues.put(correlationValueKey, correlationValueViewRoots);
+                }
+                TuplePromise correlationValuePromise = correlationValueViewRoots.get(viewRootKey);
+                if (correlationValuePromise == null) {
+                    correlationValuePromise = new TuplePromise(startIndex);
+                    correlationValueViewRoots.put(viewRootKey, correlationValuePromise);
+                }
+                correlationValuePromise.add(tuple);
+            }
+
+            boolean batchCorrelationValues = viewRoots.size() <= correlationValues.size();
+            FixedArrayList viewRootIds = new FixedArrayList(batchSize);
+
+            if (batchCorrelationValues) {
+                for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : viewRoots.entrySet()) {
+                    Map<Object, TuplePromise> batchValues = batchEntry.getValue();
+                    for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
+                        if (correlationBasisEntity != null) {
+                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchValueEntry.getKey()));
+                        } else {
+                            correlationParams.add(batchValueEntry.getKey());
+                        }
+
+                        if (batchSize == correlationParams.realSize()) {
+                            viewRootIds.add(batchEntry.getKey());
+                            batchLoad(batchValues, correlationParams, viewRootIds, correlationParams.get(0));
+                        }
+                    }
+
+                    if (correlationParams.realSize() > 0) {
+                        viewRootIds.add(batchEntry.getKey());
+                        batchLoad(batchValues, correlationParams, viewRootIds, null);
+                    }
+                }
+            } else {
+                for (Map.Entry<Object, Map<Object, TuplePromise>> batchEntry : correlationValues.entrySet()) {
+                    Map<Object, TuplePromise> batchValues = batchEntry.getValue();
+                    for (Map.Entry<Object, TuplePromise> batchValueEntry : batchValues.entrySet()) {
+                        viewRootIds.add(batchValueEntry.getKey());
+
+                        if (batchSize == viewRootIds.realSize()) {
+                            if (correlationBasisEntity != null) {
+                                correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
+                            } else {
+                                correlationParams.add(batchEntry.getKey());
+                            }
+                            batchLoad(batchValues, correlationParams, viewRootIds, viewRootIds.get(0));
+                        }
+                    }
+
+                    if (viewRootIds.realSize() > 0) {
+                        if (correlationBasisEntity != null) {
+                            correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, batchEntry.getKey()));
+                        } else {
+                            correlationParams.add(batchEntry.getKey());
+                        }
+                        batchLoad(batchValues, correlationParams, viewRootIds, null);
+                    }
+                }
+            }
+        } else {
+            Map<Object, TuplePromise> correlationValues = new HashMap<Object, TuplePromise>(tuples.size());
+            while (tupleListIter.hasNext()) {
+                Object[] tuple = tupleListIter.next();
+                Object correlationValue = tuple[startIndex];
+                TuplePromise tupleIndexValue = correlationValues.get(correlationValue);
+
+                if (tupleIndexValue == null) {
+                    tupleIndexValue = new TuplePromise(startIndex);
+                    tupleIndexValue.add(tuple);
+                    correlationValues.put(correlationValue, tupleIndexValue);
+
+                    if (correlationBasisEntity != null) {
+                        correlationParams.add(criteriaBuilder.getEntityManager().getReference(correlationBasisEntity, tuple[startIndex]));
+                    } else {
+                        correlationParams.add(tuple[startIndex]);
+                    }
+
+                    if (batchSize == correlationParams.realSize()) {
+                        batchLoad(correlationValues, correlationParams, null, correlationParams.get(0));
+                    }
+                } else {
+                    tupleIndexValue.add(tuple);
+                }
+            }
+
+            if (correlationParams.realSize() > 0) {
+                batchLoad(correlationValues, correlationParams, null, null);
+            }
+        }
+
+        return tuples;
+    }
+
+    private void batchLoad(Map<Object, TuplePromise> correlationValues, FixedArrayList batchParameters, FixedArrayList viewRootIds, Object defaultKey) {
+        batchParameters.clearRest();
+        criteriaBuilder.setParameter(correlationParamName, batchParameters);
+        if (viewRootIds != null) {
+            viewRootIds.clearRest();
+            viewRootJpqlMacro.setParameters(viewRootIds);
+        }
+
+        populateResult(correlationValues, defaultKey, (List<Object[]>) criteriaBuilder.getResultList());
+
+        batchParameters.reset();
+        if (viewRootIds != null) {
+            viewRootIds.reset();
+        }
+    }
+
+    protected abstract void populateResult(Map<Object, TuplePromise> correlationValues, Object defaultKey, List<Object[]> list);
+
+    protected static class TuplePromise {
+
+        private final int index;
+        private Object result;
+        private boolean hasResult;
+        private List<Object[]> tuples = new ArrayList<Object[]>();
+
+        public TuplePromise(int index) {
+            this.index = index;
+        }
+
+        public void add(Object[] tuple) {
+            if (hasResult) {
+                tuple[index] = result;
+            } else {
+                tuples.add(tuple);
+            }
+        }
+
+        public void onResult(Object result) {
+            hasResult = true;
+            this.result = result;
+            for (int i = 0; i < tuples.size(); i++) {
+                tuples.get(i)[index] = result;
+            }
+        }
+    }
+
+    private static final class FixedArrayList implements List<Object> {
+
+        private final Object[] array;
+        private int size;
+
+        public FixedArrayList(int size) {
+            this.array = new Object[size];
+        }
+
+        public Object get(int index) {
+            return array[index];
+        }
+
+        public Object set(int index, Object value) {
+            array[index] = value;
+            return null;
+        }
+
+        public boolean add(Object value) {
+            array[size++] = value;
+            return true;
+        }
+
+        public int size() {
+            return array.length;
+        }
+
+        public int realSize() {
+            return size;
+        }
+
+        public void reset() {
+            size = 0;
+        }
+
+        public void clearRest() {
+            for (int i = size; i < array.length; i++) {
+                array[i] = null;
+            }
+        }
+
+        /* List implementation */
+
+        @Override
+        public boolean isEmpty() {
+            return false;
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            return indexOf(o) != -1;
+        }
+
+        @Override
+        public Iterator<Object> iterator() {
+            return listIterator();
+        }
+
+        @Override
+        public Object[] toArray() {
+            return array;
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean addAll(Collection<?> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean addAll(int index, Collection<?> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void add(int index, Object element) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Object remove(int index) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public int indexOf(Object o) {
+            for (int i = 0; i < array.length; i++) {
+                if (o.equals(array[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        @Override
+        public int lastIndexOf(Object o) {
+            for (int i = array.length - 1; i > -1; i--) {
+                if (o.equals(array[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        @Override
+        public ListIterator<Object> listIterator() {
+            return listIterator(0);
+        }
+
+        @Override
+        public ListIterator<Object> listIterator(final int index) {
+            return new ListIterator<Object>() {
+
+                private int cursor = index;
+
+                @Override
+                public boolean hasNext() {
+                    return cursor < array.length;
+                }
+
+                @Override
+                public Object next() {
+                    return array[cursor++];
+                }
+
+                @Override
+                public boolean hasPrevious() {
+                    return cursor > 0;
+                }
+
+                @Override
+                public Object previous() {
+                    return array[--cursor];
+                }
+
+                @Override
+                public int nextIndex() {
+                    return cursor;
+                }
+
+                @Override
+                public int previousIndex() {
+                    return cursor - 1;
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public void set(Object o) {
+                    array[cursor - 1] = 0;
+                }
+
+                @Override
+                public void add(Object o) {
+                    throw new UnsupportedOperationException();
+                }
+            };
+        }
+
+        @Override
+        public List<Object> subList(int fromIndex, int toIndex) {
+            throw new UnsupportedOperationException();
+        }
+    }
+}

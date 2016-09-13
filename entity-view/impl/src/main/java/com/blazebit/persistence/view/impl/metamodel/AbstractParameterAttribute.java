@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.view.*;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -39,6 +40,7 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
               (Class<Y>) constructor.getJavaConstructor().getParameterTypes()[index],
               mapping,
               entityViews,
+              findAnnotation(constructor.getJavaConstructor().getParameterAnnotations()[index], BatchFetch.class),
               "for the parameter of the constructor '" + constructor.getJavaConstructor().toString() + "' at the index '" + index + "'!");
         this.index = index;
         this.declaringConstructor = constructor;
@@ -47,6 +49,16 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
             throw new IllegalArgumentException("Illegal empty mapping for the parameter of the constructor '" + declaringConstructor.getJavaConstructor().toString()
                 + "' at the index '" + index + "'!");
         }
+    }
+
+    private static <T extends Annotation> T findAnnotation(Annotation[] parameterAnnotations, Class<T> annotationClass) {
+        for (Annotation a : parameterAnnotations) {
+            if (a.annotationType() == annotationClass) {
+                return (T) a;
+            }
+        }
+
+        return null;
     }
 
     public static void validate(MappingConstructor<?> constructor, int index) {

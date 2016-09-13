@@ -8,11 +8,11 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransfo
 class TupleTransformatorLevel {
 
     final List<TupleTransformer> tupleTransformers;
-    final List<TupleListTransformer> tupleListTransformers;
+    final TupleListTransformer tupleListTransformer;
     
 	public TupleTransformatorLevel(List<TupleTransformer> tupleTransformers,
-			List<TupleListTransformer> tupleListTransformers) {
+			TupleListTransformer tupleListTransformer) {
 		this.tupleTransformers = tupleTransformers;
-		this.tupleListTransformers = tupleListTransformers;
+		this.tupleListTransformer = tupleListTransformer;
 	}
 }

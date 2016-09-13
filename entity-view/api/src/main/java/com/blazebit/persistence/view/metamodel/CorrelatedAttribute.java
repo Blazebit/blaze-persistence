@@ -16,7 +16,7 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.CorrelationProvider;
-import com.blazebit.persistence.view.CorrelationStrategy;
+import com.blazebit.persistence.view.FetchStrategy;
 
 /**
  * Instances of the type {@linkplain CorrelatedAttribute} represents single-valued properties or fields.
@@ -49,10 +49,4 @@ public interface CorrelatedAttribute<X, Y> extends Attribute<X, Y> {
      */
     public String getCorrelationResult();
 
-    /**
-     * Returns the correlation strategy of the attribute.
-     *
-     * @return The correlation strategy of the attribute
-     */
-    public CorrelationStrategy getCorrelationStrategy();
 }

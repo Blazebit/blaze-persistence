@@ -19,11 +19,8 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.KeysetPage;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * A {@linkplain EntityViewSetting} is a set of filters and sorters that can be
@@ -50,6 +47,7 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
     private final Map<String, Sorter> attributeSorters = new LinkedHashMap<String, Sorter>();
     private final Map<String, Object> attributeFilters = new LinkedHashMap<String, Object>();
     private final Map<String, Object> optionalParameters = new HashMap<String, Object>();
+    private final Map<String, Object> properties = new HashMap<String, Object>();
     
     private KeysetPage keysetPage;
     private boolean keysetPaginated;
@@ -415,5 +413,28 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      */
     public Map<String, Object> getOptionalParameters() {
         return optionalParameters;
+    }
+
+    /**
+     * Set a entity view property or hint.
+     * If a property or hint is not recognized, it is silently ignored.
+     * @param propertyName name of property or hint
+     * @param value  value for property or hint
+     * @throws IllegalArgumentException if the second argument is
+     *         not valid for the implementation
+     * @since 1.2.0
+     */
+    public void setProperty(String propertyName, Object value) {
+        properties.put(propertyName, value);
+    }
+
+    /**
+     * Get the properties and hints and associated values that are in effect
+     * for the entity view setting.
+     * @return map of properties and hints in effect for entity view stting
+     * @since 1.2.0
+     */
+    public Map<String, Object> getProperties() {
+        return Collections.unmodifiableMap(properties);
     }
 }

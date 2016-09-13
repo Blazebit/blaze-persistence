@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 
 /**
@@ -35,8 +36,8 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
     }
 
     @Override
-    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
-    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, true);
+    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
+    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new SubviewTupleTransformer(template, objectBuilder);
     }
 

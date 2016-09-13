@@ -18,6 +18,7 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 import java.util.Map;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 
 /**
  *
@@ -26,5 +27,5 @@ import com.blazebit.persistence.FullQueryBuilder;
  */
 public interface TupleTransformerFactory {
 
-    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters);
+    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration);
 }

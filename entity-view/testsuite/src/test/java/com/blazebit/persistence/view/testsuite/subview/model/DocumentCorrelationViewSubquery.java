@@ -29,11 +29,11 @@ import java.util.Set;
 public interface DocumentCorrelationViewSubquery extends DocumentCorrelationView {
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, strategy = CorrelationStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBQUERY)
     public Set<Long> getOwnerRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, strategy = CorrelationStrategy.SUBQUERY)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBQUERY)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

@@ -49,6 +49,7 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
               (Class<Y>) ReflectionUtils.getResolvedMethodReturnType(viewType.getJavaType(), method),
               mapping,
               entityViews,
+              AnnotationUtils.findAnnotation(method, BatchFetch.class),
               "for the attribute '" + StringUtils.firstToLower(method.getName().substring(3)) + "' of the class '" + viewType.getJavaType().getName() + "'!");
         this.name = StringUtils.firstToLower(method.getName().substring(3));
 

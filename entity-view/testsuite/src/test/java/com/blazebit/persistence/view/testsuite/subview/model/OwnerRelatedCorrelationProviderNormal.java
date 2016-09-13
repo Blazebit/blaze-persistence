@@ -17,7 +17,7 @@ public class OwnerRelatedCorrelationProviderNormal implements CorrelationProvide
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
         BaseQueryBuilder<?, ?> queryBuilder = correlationBuilder.correlate(Document.class, "correlatedDocumentForSubview")
                 .on("correlatedDocumentForSubview.owner").inExpressions(correlationExpression)
-                .on("correlatedDocumentForSubview").notEqExpression("VIEW_ROOT()")
+                .on("correlatedDocumentForSubview").notInExpressions("VIEW_ROOT()")
                 .end();
         // TODO: I think it would be better if we do not allow WHERE at all
         // Only join, from, and parameter handling make sense I think

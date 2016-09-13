@@ -13,26 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.view.testsuite.subview.model;
+package com.blazebit.persistence.view.impl.objectbuilder.transformer;
 
-import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 
-import java.util.Set;
+import java.util.Map;
 
 /**
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-public interface DocumentCorrelationView {
+public interface TupleListTransformerFactory {
 
-    @IdMapping("id")
-    public Long getId();
-
-    public String getName();
-
-    public Set<Long> getOwnerRelatedDocumentIds();
-
-    public Set<DocumentRelatedView> getOwnerRelatedDocuments();
-
+    public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration);
 }

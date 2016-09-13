@@ -17,6 +17,7 @@ package com.blazebit.persistence.view.impl.metamodel;
 
 import java.lang.annotation.Annotation;
 
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.Mapping;
 
 /**
@@ -27,14 +28,21 @@ import com.blazebit.persistence.view.Mapping;
 public class MappingLiteral implements Mapping {
 
     private final String value;
+    private final FetchStrategy fetch;
 
     public MappingLiteral(String value) {
         this.value = value;
+        this.fetch = FetchStrategy.JOIN;
     }
 
     @Override
     public String value() {
         return value;
+    }
+
+    @Override
+    public FetchStrategy fetch() {
+        return fetch;
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.util.*;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
+import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.view.*;
@@ -45,29 +46,41 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     protected final ManagedViewType<X> declaringType;
     protected final Class<Y> javaType;
     protected final String mapping;
+    protected final FetchStrategy fetchStrategy;
+    protected final int batchSize;
     protected final Class<? extends SubqueryProvider> subqueryProvider;
     protected final String subqueryExpression;
     protected final String subqueryAlias;
     protected final Class<? extends CorrelationProvider> correlationProvider;
     protected final String correlationBasis;
     protected final String correlationResult;
-    protected final CorrelationStrategy correlationStrategy;
     protected final boolean queryParameter;
     protected final boolean id;
     protected final boolean subqueryMapping;
     protected final boolean subview;
 
-    public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, String errorLocation) {
+    public AbstractAttribute(ManagedViewType<X> declaringType, Class<Y> javaType, Annotation mapping, Set<Class<?>> entityViews, BatchFetch batchFetch, String errorLocation) {
         if (javaType == null) {
             throw new IllegalArgumentException("The attribute type is not resolvable " + errorLocation);
         }
-        
+
+        int batchSize;
+        if (batchFetch == null || batchFetch.size() == -1) {
+            batchSize = -1;
+        } else if (batchFetch.size() < 1) {
+            throw new IllegalArgumentException("Illegal batch fetch size defined at '" + errorLocation + "'! Use a value greater than 0!");
+        } else {
+            batchSize = batchFetch.size();
+        }
+
         this.declaringType = declaringType;
         this.javaType = javaType;
         this.subview = entityViews.contains(javaType);
 
         if (mapping instanceof IdMapping) {
             this.mapping = ((IdMapping) mapping).value();
+            this.fetchStrategy = FetchStrategy.JOIN;
+            this.batchSize = -1;
             this.subqueryProvider = null;
             this.id = true;
             this.queryParameter = false;
@@ -77,9 +90,11 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
-            this.correlationStrategy = null;
         } else if (mapping instanceof Mapping) {
-            this.mapping = ((Mapping) mapping).value();
+            Mapping m = (Mapping) mapping;
+            this.mapping = m.value();
+            this.fetchStrategy = m.fetch();
+            this.batchSize = batchSize;
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = false;
@@ -89,9 +104,10 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
-            this.correlationStrategy = null;
         } else if (mapping instanceof MappingParameter) {
             this.mapping = ((MappingParameter) mapping).value();
+            this.fetchStrategy = FetchStrategy.JOIN;
+            this.batchSize = -1;
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = true;
@@ -101,11 +117,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
-            this.correlationStrategy = null;
         } else if (mapping instanceof MappingSubquery) {
             MappingSubquery mappingSubquery = (MappingSubquery) mapping;
             this.mapping = null;
             this.subqueryProvider = mappingSubquery.value();
+            this.fetchStrategy = FetchStrategy.JOIN;
+            this.batchSize = -1;
             this.id = false;
             this.queryParameter = false;
             this.subqueryMapping = true;
@@ -114,7 +131,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = null;
             this.correlationResult = null;
             this.correlationProvider = null;
-            this.correlationStrategy = null;
 
             if (!subqueryExpression.isEmpty() && subqueryAlias.isEmpty()) {
                 throw new IllegalArgumentException("The subquery alias is empty although the subquery expression is not " + errorLocation);
@@ -125,6 +141,14 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         } else if (mapping instanceof MappingCorrelated) {
             MappingCorrelated mappingCorrelated = (MappingCorrelated) mapping;
             this.mapping = null;
+            this.fetchStrategy = mappingCorrelated.fetch();
+
+            if (fetchStrategy == FetchStrategy.SUBQUERY) {
+                this.batchSize = batchSize;
+            } else {
+                this.batchSize = -1;
+            }
+
             this.subqueryProvider = null;
             this.id = false;
             this.queryParameter = false;
@@ -134,7 +158,6 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             this.correlationBasis = mappingCorrelated.correlationBasis();
             this.correlationResult = mappingCorrelated.correlationResult();
             this.correlationProvider = mappingCorrelated.correlator();
-            this.correlationStrategy = mappingCorrelated.strategy();
 
             if (correlationProvider.getEnclosingClass() != null && !Modifier.isStatic(correlationProvider.getModifiers())) {
                 throw new IllegalArgumentException("The correlation provider is defined as non-static inner class. Make it static, otherwise it can't be instantiated: " + errorLocation);
@@ -333,8 +356,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
         return correlationResult;
     }
 
-    public CorrelationStrategy getCorrelationStrategy() {
-        return correlationStrategy;
+    public FetchStrategy getFetchStrategy() {
+        return fetchStrategy;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 
     @Override

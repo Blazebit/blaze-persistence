@@ -16,7 +16,7 @@ public class OwnerRelatedCorrelationIdProviderId implements CorrelationProvider 
     public void applyCorrelation(CorrelationBuilder correlationBuilder, String correlationExpression) {
         BaseQueryBuilder<?, ?> queryBuilder = correlationBuilder.correlate(Document.class, "correlatedDocumentForId")
                 .on("correlatedDocumentForId.owner.id").inExpressions(correlationExpression)
-                .on("correlatedDocumentForId.id").notEqExpression("VIEW_ROOT(id)")
+                .on("correlatedDocumentForId.id").notInExpressions("VIEW_ROOT(id)")
                 .end();
 
         // TODO: I think it would be better if we do not allow WHERE at all

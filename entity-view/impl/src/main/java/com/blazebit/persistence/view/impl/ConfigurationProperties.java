@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.view.MappingCorrelated;
+
 /**
  *
  * @author Christian Beikov
@@ -56,6 +58,19 @@ public final class ConfigurationProperties {
      * @since 1.1.0
      */
     public static final String EXPRESSION_VALIDATION_DISABLED = "com.blazebit.persistence.view.expression_validation_disabled";
+	/**
+	 * An integer value that defines the default batch size for entity view attributes.
+	 * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
+	 * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
+	 *
+	 * To specify the batch size of a specific property, append the property name after the "batch_size" like
+	 * e.g. <code>com.blazebit.persistence.view.batch_size.subProperty</code>
+	 *
+	 * Valid values for this property are <code>true</code> or <code>false</code>.
+	 *
+	 * @since 1.2.0
+	 */
+	public static final String DEFAULT_BATCH_SIZE = "com.blazebit.persistence.view.batch_size";
 
 	private ConfigurationProperties() {
 	}

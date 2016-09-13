@@ -53,7 +53,8 @@ public final class EntityViewSettingHelper {
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, criteriaBuilder, setting.getOptionalParameters());
+        EntityViewConfiguration configuration = new EntityViewConfiguration(setting.getProperties());
+        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, criteriaBuilder, setting.getOptionalParameters(), configuration);
     	applyAttributeFilters(setting, evm, normalCb, ef, entityViewRoot);
         applyAttributeSorters(setting, evm, normalCb, ef, entityViewRoot);
         applyOptionalParameters(setting, normalCb);

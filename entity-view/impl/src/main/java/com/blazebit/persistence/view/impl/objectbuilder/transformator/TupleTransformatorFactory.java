@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
 
@@ -39,7 +41,8 @@ public class TupleTransformatorFactory {
     }
 
 	public boolean hasTransformers() {
-        return transformatorLevels.get(0).tupleListTransformers.size() > 0
+        return transformatorLevels.get(0).tupleListTransformer != null
+            || transformatorLevels.get(0).tupleListTransformerFactory != null
             || transformatorLevels.get(0).tupleTransformerFactories.size() > 0;
     }
 
@@ -56,7 +59,8 @@ public class TupleTransformatorFactory {
             TupleTransformatorFactoryLevel thisLevel = transformatorLevels.get(currentLevel);
             TupleTransformatorFactoryLevel otherLevel = tupleTransformator.transformatorLevels.get(i);
             thisLevel.tupleTransformerFactories.addAll(otherLevel.tupleTransformerFactories);
-            thisLevel.tupleListTransformers.addAll(otherLevel.tupleListTransformers);
+            thisLevel.tupleListTransformer = otherLevel.tupleListTransformer;
+            thisLevel.tupleListTransformerFactory = otherLevel.tupleListTransformerFactory;
         }
     }
 
@@ -66,7 +70,12 @@ public class TupleTransformatorFactory {
     }
 
     public void add(TupleListTransformer tupleListTransformer) {
-        transformatorLevels.get(currentLevel).tupleListTransformers.add(tupleListTransformer);
+        transformatorLevels.get(currentLevel).tupleListTransformer = tupleListTransformer;
+        incrementLevel();
+    }
+
+    public void add(TupleListTransformerFactory tupleListTransformerFactory) {
+        transformatorLevels.get(currentLevel).tupleListTransformerFactory = tupleListTransformerFactory;
         incrementLevel();
     }
 
@@ -74,18 +83,24 @@ public class TupleTransformatorFactory {
         transformatorLevels.get(currentLevel).tupleTransformerFactories.add(tupleTransformerFactory);
     }
 
-    public TupleTransformator create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+    public TupleTransformator create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
     	List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
             final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>(thisLevel.tupleTransformerFactories.size());
             // No need to copy this, because TupleListTransformer are not context sensitive
-            final List<TupleListTransformer> tupleListTransformers = thisLevel.tupleListTransformers;
+            final TupleListTransformer tupleListTransformer;
+
+            if (thisLevel.tupleListTransformerFactory != null) {
+                tupleListTransformer = thisLevel.tupleListTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration);
+            } else {
+                tupleListTransformer = thisLevel.tupleListTransformer;
+            }
             
             for (TupleTransformerFactory tupleTransformerFactory : thisLevel.tupleTransformerFactories) {
-            	tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters));
+            	tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration));
             }
 
-        	newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformers));
+        	newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
         }
         
         return new TupleTransformator(newTransformatorLevels);

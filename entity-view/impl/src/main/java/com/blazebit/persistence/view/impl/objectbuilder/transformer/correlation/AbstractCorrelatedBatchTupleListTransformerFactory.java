@@ -19,14 +19,17 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubqueryCorrelationBuilder;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import javax.persistence.metamodel.IdentifiableType;
 import javax.persistence.metamodel.ManagedType;
 import java.util.AbstractMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,7 +37,7 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedSubqueryTupleTransformerFactory<T> implements TupleTransformerFactory {
+public abstract class AbstractCorrelatedBatchTupleListTransformerFactory<T> implements TupleListTransformerFactory {
 
     private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
 
@@ -42,19 +45,27 @@ public abstract class AbstractCorrelatedSubqueryTupleTransformerFactory<T> imple
     private final ManagedViewType<?> viewRootType;
     private final String correlationResult;
     private final CorrelationProviderFactory correlationProviderFactory;
+    private final String attributePath;
+    private final int batchSize;
     protected final int tupleIndex;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedSubqueryTupleTransformerFactory(Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, int tupleIndex, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedBatchTupleListTransformerFactory(Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
         this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
         this.correlationResult = correlationResult;
         this.correlationProviderFactory = correlationProviderFactory;
         this.tupleIndex = tupleIndex;
+        this.batchSize = batchSize;
+        this.attributePath = attributePath;
         this.correlationBasisEntity = correlationBasisEntity;
     }
 
-    protected final Map.Entry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro> createCriteriaBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, String paramName) {
+    protected final int getBatchSize(EntityViewConfiguration configuration) {
+        return configuration.getBatchSize(attributePath, batchSize);
+    }
+
+    protected final Map.Entry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro> createCriteriaBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int batchSize, String paramName) {
         CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
         CriteriaBuilder<?> cb = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), criteriaBuilderRoot);
 
@@ -67,14 +78,14 @@ public abstract class AbstractCorrelatedSubqueryTupleTransformerFactory<T> imple
 
         CorrelatedSubqueryViewRootJpqlMacro macro = new CorrelatedSubqueryViewRootJpqlMacro(cb, optionalParameters, viewRootType.getEntityClass(), idAttributePath);
         cb.registerMacro("view_root", macro);
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(cb, optionalParameters, this, correlationResult);
+        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(cb, optionalParameters, entityViewConfiguration, this, batchSize, correlationResult);
         provider.applyCorrelation(correlationBuilder, ':' + paramName);
         // TODO: take special care when handling parameters. some must be copied, others should probably be moved to optional parameters
 
         return new AbstractMap.SimpleEntry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro>((CriteriaBuilder<T>) cb, macro);
     }
 
-    protected abstract void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, String correlationRoot);
+    protected abstract void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int batchSize, String correlationRoot);
 
     protected final String generateCorrelationParamName(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
         int paramNumber = 0;

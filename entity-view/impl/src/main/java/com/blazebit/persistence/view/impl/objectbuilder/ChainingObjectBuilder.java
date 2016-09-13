@@ -22,6 +22,7 @@ import java.util.Map;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformator;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
 
@@ -35,8 +36,8 @@ public class ChainingObjectBuilder<T> implements ObjectBuilder<T> {
     private final TupleTransformator transformator;
     private final ObjectBuilder<T> objectBuilder;
 
-    public ChainingObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, int startIndex) {
-        this.transformator = transformatorFactory.create(queryBuilder, optionalParameters);
+    public ChainingObjectBuilder(TupleTransformatorFactory transformatorFactory, ObjectBuilder<T> objectBuilder, FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int startIndex) {
+        this.transformator = transformatorFactory.create(queryBuilder, optionalParameters, entityViewConfiguration);
         this.objectBuilder = objectBuilder;
     }
 

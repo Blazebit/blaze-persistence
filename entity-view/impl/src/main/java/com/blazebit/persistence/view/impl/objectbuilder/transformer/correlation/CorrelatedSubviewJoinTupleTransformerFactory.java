@@ -19,6 +19,7 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
 import com.blazebit.persistence.view.impl.objectbuilder.ViewTypeObjectBuilderTemplate;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
@@ -45,12 +46,12 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
     }
 
     @Override
-    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
+    public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
         CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
 
         provider.applyCorrelation(new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null), correlationBasis);
 
-    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, true);
+    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);
     }
 

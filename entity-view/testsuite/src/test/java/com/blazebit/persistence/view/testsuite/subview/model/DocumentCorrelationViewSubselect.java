@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence.view.testsuite.subview.model;
 
-import com.blazebit.persistence.view.CorrelationStrategy;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
@@ -28,14 +28,14 @@ import java.util.Set;
  * @since 1.2.0
  */
 @EntityView(Document.class)
-public interface DocumentCorrelationViewBatch extends DocumentCorrelationView {
+public interface DocumentCorrelationViewSubselect extends DocumentCorrelationView {
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, strategy = CorrelationStrategy.BATCH)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<Long> getOwnerRelatedDocumentIds();
 
     // TODO: need to use owner.id instead of owner because of HHH-2772
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, strategy = CorrelationStrategy.BATCH)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.SUBSELECT)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }

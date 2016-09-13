@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
+import com.blazebit.persistence.view.FetchStrategy;
+
 /**
  * Represents an attribute of a view type.
  *
@@ -66,4 +68,21 @@ public interface Attribute<X, Y> {
      * @return True if this attribute is correlated, otherwise false
      */
     public boolean isCorrelated();
+
+    /**
+     * Returns the fetch strategy of the attribute.
+     *
+     * @return The fetch strategy of the attribute
+     * @since 1.2.0
+     */
+    public FetchStrategy getFetchStrategy();
+
+    /**
+     * Returns the default batch size of the attribute.
+     * If no default batch size is configured, returns -1.
+     *
+     * @return The default batch size of the attribute
+     * @since 1.2.0
+     */
+    public int getBatchSize();
 }

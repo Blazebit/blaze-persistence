@@ -21,40 +21,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Maps the annotated attribute as correlation attribute.
+ * If {@link FetchStrategy#SUBQUERY} is used on a property, this annotation configures the default batching.
+ * Beware that if multiple properties of an entity view use {@link FetchStrategy#SUBQUERY},
+ * they will only be loaded together in one batch if the batch sizes match.
+ *
+ * The batch fetch annotation can also be applied on the entity view class level which makes it's value the default for all properties.
  *
  * @author Christian Beikov
  * @since 1.2.0
  */
-@Target({ ElementType.METHOD, ElementType.PARAMETER })
+@Target({ ElementType.METHOD, ElementType.PARAMETER, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MappingCorrelated {
+public @interface BatchFetch {
 
     /**
-     * The expression which is the basis for correlation.
+     * The size of the batch
      *
-     * @return The expression
+     * @return The batch size
      */
-    String correlationBasis();
-
-    /**
-     * The absolute expression result mapping of the correlation.
-     *
-     * @return The expression
-     */
-    String correlationResult();
-
-    /**
-     * The class which provides the correlation provider.
-     *
-     * @return The correlation provider
-     */
-    Class<? extends CorrelationProvider> correlator();
-
-    /**
-     * The fetch strategy to use for correlation.
-     *
-     * @return The correlation fetch strategy
-     */
-    FetchStrategy fetch() default FetchStrategy.JOIN;
+    int size();
 }

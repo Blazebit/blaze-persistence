@@ -15,7 +15,7 @@
  */
 package com.blazebit.persistence.view.testsuite.subview.model;
 
-import com.blazebit.persistence.view.CorrelationStrategy;
+import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.EntityView;
 import com.blazebit.persistence.view.MappingCorrelated;
 import com.blazebit.persistence.view.testsuite.entity.Document;
@@ -30,10 +30,10 @@ import java.util.Set;
 @EntityView(Document.class)
 public interface DocumentCorrelationViewJoinId extends DocumentCorrelationView {
 
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, strategy = CorrelationStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForId.id", correlator = OwnerRelatedCorrelationIdProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<Long> getOwnerRelatedDocumentIds();
 
-    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, strategy = CorrelationStrategy.JOIN)
+    @MappingCorrelated(correlationBasis = "owner.id", correlationResult = "correlatedDocumentForSubview", correlator = OwnerRelatedCorrelationProviderId.class, fetch = FetchStrategy.JOIN)
     public Set<DocumentRelatedView> getOwnerRelatedDocuments();
 
 }
