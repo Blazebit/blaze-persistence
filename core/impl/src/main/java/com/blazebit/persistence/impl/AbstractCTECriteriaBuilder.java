@@ -68,8 +68,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
     }
 
     @Override
-    protected void getCteQueryString1(StringBuilder sbSelectFrom) {
-        getQueryString1(sbSelectFrom);
+    protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
+        buildBaseQueryString(sbSelectFrom, true);
         applyJpaLimit(sbSelectFrom);
     }
 
@@ -79,7 +79,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         
         if (hasLimit()) {
             // We need to change the underlying sql when doing a limit
-            query = em.createQuery(getBaseQueryString());
+            query = em.createQuery(getBaseQueryStringWithCheck());
             List<Query> participatingQueries = Arrays.asList(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
@@ -88,7 +88,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
             
             query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, null);
         } else {
-            query = em.createQuery(getBaseQueryString());
+            query = em.createQuery(getBaseQueryStringWithCheck());
         }
         
         parameterizeQuery(query);

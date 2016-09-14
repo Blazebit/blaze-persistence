@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class H2DbmsDialect extends DefaultDbmsDialect {
     
@@ -69,4 +70,8 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         return false;
     }
 
+    @Override
+    public ValuesStrategy getValuesStrategy() {
+        return ValuesStrategy.SELECT_VALUES;
+    }
 }

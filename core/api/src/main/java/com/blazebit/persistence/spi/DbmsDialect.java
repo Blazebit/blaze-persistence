@@ -195,4 +195,20 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public String getSqlType(Class<?> castType);
+
+    /**
+     * Returns the strategy to use for values generation.
+     *
+     * @return The VALUES strategy
+     * @since 1.2.0
+     */
+    public ValuesStrategy getValuesStrategy();
+
+    /**
+     * Returns the name of a dummy table like DUAL in Oracle or null if none is required.
+     *
+     * @return The dummy table name or null
+     * @since 1.2.0
+     */
+    public String getDummyTable();
 }

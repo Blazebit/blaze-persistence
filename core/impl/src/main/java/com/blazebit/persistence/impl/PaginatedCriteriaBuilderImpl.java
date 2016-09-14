@@ -199,16 +199,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     public String getQueryString() {
         prepareAndCheck();
-        return getQueryString0();
+        return getBaseQueryString();
     }
 
     @Override
-    protected String getQueryString0() {
+    protected String getBaseQueryString() {
         if (cachedQueryString == null) {
             if (!joinManager.hasCollections()) {
                 cachedQueryString = getObjectQueryString1();
             } else {
-                cachedQueryString = getQueryString1();
+                cachedQueryString = buildBaseQueryString(false);
             }
         }
 
@@ -255,7 +255,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @SuppressWarnings("unchecked")
     private PagedList<T> getResultListViaObjectQuery(long totalSize) {
-        String queryString = getQueryString0();
+        String queryString = getBaseQueryString();
         Class<?> expectedResultType;
 
         // When the keyset is included the query obviously produces an array
@@ -371,7 +371,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @SuppressWarnings("unchecked")
     private List<T> getQueryResultList() {
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getQueryString0(), selectManager.getExpectedQueryResultType());
+        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
@@ -385,8 +385,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass()));
         String idName = idAttribute.getName();
-        String rootAlias = rootNode.getAliasInfo().getAlias();
-        String idClause = new StringBuilder(rootAlias).append('.').append(idName).toString();
+        StringBuilder idClause = new StringBuilder(100);
+        rootNode.appendAlias(idClause, idName);
         // Spaces are important to be able to reuse the string builder without copying
         String countString = "COUNT(DISTINCT " + idClause + "   )";
         sbSelectFrom.append("SELECT ").append(countString);
@@ -406,7 +406,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, false);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
         
@@ -443,16 +443,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
-        String rootAlias = rootNode.getAliasInfo().getAlias();
-        StringBuilder idClause = new StringBuilder(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX).append(rootAlias)
-            .append('.')
-            .append(idName);
+        StringBuilder idClause = new StringBuilder(PAGE_POSITION_ID_QUERY_ALIAS_PREFIX);
+        rootNode.appendAlias(idClause, idName);
 
         sbSelectFrom.append("SELECT ").append(idClause);
         // TODO: actually we should add the select clauses needed for order bys
         // TODO: if we do so, the page position function has to omit select items other than the first
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false);
         whereManager.buildClause(sbSelectFrom);
 
         Set<String> clauses = new LinkedHashSet<String>();
@@ -472,8 +470,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         StringBuilder sbSelectFrom = new StringBuilder();
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
-        String rootAlias = rootNode.getAliasInfo().getAlias();
-        StringBuilder idClause = new StringBuilder(rootAlias).append('.').append(idName);
+        StringBuilder idClause = new StringBuilder(100);
+        rootNode.appendAlias(idClause, idName);
 
         sbSelectFrom.append("SELECT ").append(idClause);
 
@@ -481,7 +479,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, false);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -512,11 +510,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @Override
-    protected String getQueryString1() {
+    protected String buildBaseQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
-        String rootAlias = rootNode.getAliasInfo().getAlias();
 
         selectManager.buildSelect(sbSelectFrom);
 
@@ -526,8 +523,10 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * more and therefore we can also omit any joins which the SELECT or the
          * ORDER_BY clause do not depend on
          */
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false);
-        sbSelectFrom.append(" WHERE ").append(rootAlias).append('.').append(idName).append(" IN :").append(idParamName).append("");
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, false);
+        sbSelectFrom.append(" WHERE ");
+        rootNode.appendAlias(sbSelectFrom, idName);
+        sbSelectFrom.append(" IN :").append(idParamName).append("");
 
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
@@ -554,7 +553,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, true);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, false);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

@@ -6,11 +6,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.Date;
 
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.DbmsModificationState;
-import com.blazebit.persistence.spi.DbmsStatementType;
-import com.blazebit.persistence.spi.OrderByElement;
-import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.*;
 
 public class DefaultDbmsDialect implements DbmsDialect {
 
@@ -269,6 +265,16 @@ public class DefaultDbmsDialect implements DbmsDialect {
     @Override
     public boolean supportsComplexJoinOn() {
         return true;
+    }
+
+    @Override
+    public ValuesStrategy getValuesStrategy() {
+        return ValuesStrategy.VALUES;
+    }
+
+    @Override
+    public String getDummyTable() {
+        return null;
     }
 
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {

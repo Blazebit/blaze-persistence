@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 
 public class HSQLDbmsDialect extends DefaultDbmsDialect {
@@ -16,6 +17,12 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public boolean supportsReturningColumns() {
         return true;
+    }
+
+    @Override
+    public ValuesStrategy getValuesStrategy() {
+        // NOTE: this is only supported in HSQL 2.0+
+        return ValuesStrategy.VALUES;
     }
 
     @Override

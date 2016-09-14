@@ -49,6 +49,7 @@ public class JoinNode implements Root {
     private final String parentTreatType;
     private final Class<?> propertyClass;
     private final String treatType;
+    private final Collection<?> values;
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
     private final Set<JoinNode> entityJoinNodes = new LinkedHashSet<JoinNode>();
@@ -62,6 +63,20 @@ public class JoinNode implements Root {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
+    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String treatType, Collection<?> values) {
+        this.parent = null;
+        this.parentTreeNode = null;
+        this.parentTreatType = null;
+        this.aliasInfo = aliasInfo;
+        this.joinType = null;
+        this.propertyClass = propertyClass;
+        this.treatType = treatType;
+        this.values = values;
+        this.correlationParent = null;
+        this.correlationPath = null;
+        onUpdate(null);
+    }
+
     public JoinNode(JoinNode parent, JoinTreeNode parentTreeNode, String parentTreatType, JoinAliasInfo aliasInfo, JoinType joinType, Class<?> propertyClass, String treatType) {
         this.parent = parent;
         this.parentTreeNode = parentTreeNode;
@@ -70,6 +85,7 @@ public class JoinNode implements Root {
         this.joinType = joinType;
         this.propertyClass = propertyClass;
         this.treatType = treatType;
+        this.values = null;
         this.correlationParent = null;
         this.correlationPath = null;
         onUpdate(null);
@@ -85,6 +101,7 @@ public class JoinNode implements Root {
         this.aliasInfo = aliasInfo;
         this.propertyClass = propertyClass;
         this.treatType = treatType;
+        this.values = null;
         onUpdate(null);
     }
     
@@ -308,6 +325,10 @@ public class JoinNode implements Root {
         return treatType;
     }
 
+    public Collection<?> getValues() {
+        return values;
+    }
+
     public JoinNode getCorrelationParent() {
         return correlationParent;
     }
@@ -389,6 +410,34 @@ public class JoinNode implements Root {
         JOIN_TYPE,
         ON_PREDICATE,
         CHILD;
+    }
+
+    public void appendAlias(StringBuilder sb, String property) {
+        if (treatType != null) {
+            if (values != null) {
+                // NOTE: property should always be null
+                sb.append(treatType).append('(');
+                sb.append(aliasInfo.getAlias());
+                sb.append(".value");
+                sb.append(')');
+            } else {
+                sb.append("TREAT(");
+                sb.append(aliasInfo.getAlias());
+                sb.append(" AS ");
+                sb.append(treatType);
+                sb.append(')');
+
+                if (property != null) {
+                    sb.append('.').append(property);
+                }
+            }
+        } else {
+            sb.append(aliasInfo.getAlias());
+
+            if (property != null) {
+                sb.append('.').append(property);
+            }
+        }
     }
 
     /* Implementation of Root interface */

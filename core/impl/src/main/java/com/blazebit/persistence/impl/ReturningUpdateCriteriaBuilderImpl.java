@@ -30,8 +30,8 @@ public class ReturningUpdateCriteriaBuilderImpl<T, Y> extends BaseUpdateCriteria
     }
 
     @Override
-    protected void getCteQueryString1(StringBuilder sbSelectFrom) {
-        super.getCteQueryString1(sbSelectFrom);
+    protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
+        super.buildExternalQueryString(sbSelectFrom);
         applyJpaReturning(sbSelectFrom);
     }
 

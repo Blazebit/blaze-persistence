@@ -6,12 +6,12 @@ import java.lang.reflect.Method;
 import org.hibernate.engine.spi.SessionImplementor;
 
 
-public class Hibernate52SessionInvocationHandler implements InvocationHandler {
+public class Hibernate60SessionInvocationHandler implements InvocationHandler {
     
     private final SessionImplementor delegate;
     private final Object jdbcCoordinatorProxy;
 
-    public Hibernate52SessionInvocationHandler(SessionImplementor delegate, Object jdbcCoordinatorProxy) {
+    public Hibernate60SessionInvocationHandler(SessionImplementor delegate, Object jdbcCoordinatorProxy) {
         this.delegate = delegate;
         this.jdbcCoordinatorProxy = jdbcCoordinatorProxy;
     }

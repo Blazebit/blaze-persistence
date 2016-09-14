@@ -144,12 +144,12 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         Query query;
         
-        if (hasLimit() || cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
+        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
             List<Query> participatingQueries = new ArrayList<Query>();
             
-            query = em.createQuery(getBaseQueryString());
+            query = em.createQuery(getBaseQueryStringWithCheck());
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
             boolean isEmbedded = this instanceof ReturningBuilder;
@@ -162,13 +162,13 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             participatingQueries.add(query);
 
             // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
-            if (cteManager.hasCtes() && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
+            if (mainQuery.cteManager.hasCtes() && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
                 query = getCountExampleQuery();
             }
             
             query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
         } else {
-            query = em.createQuery(getBaseQueryString());
+            query = em.createQuery(getBaseQueryStringWithCheck());
         }
         
         parameterizeQuery(query);
@@ -176,7 +176,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	}
 	
 	protected Query getBaseQuery() {
-	    Query query = em.createQuery(getBaseQueryString());
+	    Query query = em.createQuery(getBaseQueryStringWithCheck());
         parameterizeQuery(query);
         return query;
 	}

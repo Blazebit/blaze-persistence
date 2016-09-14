@@ -30,8 +30,8 @@ public class ReturningInsertCriteriaBuilderImpl<T, Y> extends BaseInsertCriteria
     }
 
     @Override
-    protected void getCteQueryString1(StringBuilder sbSelectFrom) {
-        super.getCteQueryString1(sbSelectFrom);
+    protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
+        super.buildExternalQueryString(sbSelectFrom);
         applyJpaReturning(sbSelectFrom);
     }
 

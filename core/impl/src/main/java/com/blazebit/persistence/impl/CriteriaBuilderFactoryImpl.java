@@ -15,13 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -52,6 +46,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     private final ExtendedQuerySupport extendedQuerySupport;
     private final Map<String, DbmsDialect> dbmsDialects;
     private final Set<String> aggregateFunctions;
+    private final Map<Class<?>, String> treatFunctions;
     private final ExpressionCache expressionCache;
     private final ExpressionFactory expressionFactory;
     private final ExpressionFactory subqueryExpressionFactory;
@@ -72,6 +67,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.extendedQuerySupport = config.getExtendedQuerySupport();
         this.dbmsDialects = new HashMap<String, DbmsDialect>(config.getDbmsDialects());
         this.aggregateFunctions = resolveAggregateFunctions(config.getFunctions());
+        this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize);
         this.expressionCache = new ConcurrentHashMapExpressionCache();
@@ -117,6 +113,14 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         return aggregateFunctions;
     }
 
+    private static Map<Class<?>, String> resolveTreatTypes(Map<String, Class<?>> treatTypes) {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>(treatTypes.size());
+        for (Map.Entry<String, Class<?>> entry : treatTypes.entrySet()) {
+            types.put(entry.getValue(), "TREAT_" + entry.getKey().toUpperCase());
+        }
+        return Collections.unmodifiableMap(types);
+    }
+
     public JpaProvider createJpaProvider(EntityManager em) {
         return configuredJpaProviderFactory.createJpaProvider(em);
     }
@@ -147,6 +151,10 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
 
     public Set<String> getAggregateFunctions() {
         return aggregateFunctions;
+    }
+
+    public Map<Class<?>, String> getTreatFunctions() {
+        return treatFunctions;
     }
 
     public ExpressionCache getExpressionCache() {

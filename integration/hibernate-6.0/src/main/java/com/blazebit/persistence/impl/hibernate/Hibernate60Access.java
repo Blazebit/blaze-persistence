@@ -24,7 +24,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 @ServiceProvider(HibernateAccess.class)
-public class Hibernate52Access implements HibernateAccess {
+public class Hibernate60Access implements HibernateAccess {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
     
@@ -33,7 +33,7 @@ public class Hibernate52Access implements HibernateAccess {
         JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
         
         Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
-        Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate52SessionInvocationHandler(session, jdbcCoordinatorProxy));
+        Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate60SessionInvocationHandler(session, jdbcCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
     }
 

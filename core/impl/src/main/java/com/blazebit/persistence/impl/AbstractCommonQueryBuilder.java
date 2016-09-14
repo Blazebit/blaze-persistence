@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -24,7 +25,9 @@ import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.*;
 
 import javax.persistence.*;
+import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 import java.io.Serializable;
 import java.util.*;
@@ -62,7 +65,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final OrderByManager orderByManager;
     protected final JoinManager joinManager;
     protected final KeysetManager keysetManager;
-	protected final CTEManager cteManager;
     protected final ResolvingQueryGenerator queryGenerator;
     protected final SubqueryInitiatorFactory subqueryInitFactory;
     
@@ -90,7 +92,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     // Cache
     protected String cachedQueryString;
-    protected String cachedCteQueryString;
+    protected String cachedExternalQueryString;
     protected boolean hasGroupBy = false;
 
     /**
@@ -111,7 +113,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.havingManager = (HavingManager<BuilderType>) builder.havingManager;
         this.groupByManager = builder.groupByManager;
         this.keysetManager = builder.keysetManager;
-        this.cteManager = builder.cteManager;
         this.joinManager = builder.joinManager;
         this.queryGenerator = builder.queryGenerator;
         this.em = builder.em;
@@ -143,7 +144,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.statementType = statementType;
         this.cbf = mainQuery.cbf;
         this.parameterManager = mainQuery.parameterManager;
-        this.cteManager = mainQuery.cteManager;
         this.em = mainQuery.em;
         this.dbmsDialect = mainQuery.dbmsDialect;
         this.jpaProvider = mainQuery.jpaProvider;
@@ -252,7 +252,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-        return cteManager.withStartSet(cteClass, (BuilderType) this);
+        return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
 	@SuppressWarnings("unchecked")
@@ -261,7 +261,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-		return cteManager.with(cteClass, (BuilderType) this);
+		return mainQuery.cteManager.with(cteClass, (BuilderType) this);
 	}
 
     @SuppressWarnings("unchecked")
@@ -270,7 +270,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-		return cteManager.withRecursive(cteClass, (BuilderType) this);
+		return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
 	}
 
     @SuppressWarnings("unchecked")
@@ -282,7 +282,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
 
-		return cteManager.withReturning(cteClass, (BuilderType) this);
+		return mainQuery.cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
     public SetReturn union() {
@@ -453,6 +453,32 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public BuilderType fromNew(Class<?> clazz, String alias) {
         return from(clazz, alias, DbmsModificationState.NEW);
+    }
+
+    public <T> BuilderType fromValues(Class<T> clazz, String alias, Collection<T> values) {
+        clearCache();
+        if (!fromClassExplicitelySet) {
+            // When from is explicitly called we have to revert the implicit root
+            if (joinManager.getRoots().size() > 0) {
+                joinManager.removeRoot();
+            }
+        }
+
+        Class<?> valuesClazz = clazz;
+        ManagedType<T> type = mainQuery.metamodel.getManagedType(clazz);
+        String treatFunction = null;
+        if (type == null) {
+            treatFunction = cbf.getTreatFunctions().get(clazz);
+            if (treatFunction == null) {
+                throw new IllegalArgumentException("Unsupported type for VALUES clause: " + clazz.getName());
+            }
+
+            valuesClazz = ValuesEntity.class;
+        }
+        joinManager.addRootValues(valuesClazz, alias, values, treatFunction);
+        fromClassExplicitelySet = true;
+
+        return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
@@ -887,7 +913,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     protected void verifyBuilderEnded() {
         if (isMainQuery) {
-            cteManager.verifyBuilderEnded();
+            mainQuery.cteManager.verifyBuilderEnded();
         }
         
         whereManager.verifyBuilderEnded();
@@ -1151,30 +1177,25 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     public String getQueryString() {
         prepareAndCheck();
-        return getCteQueryString0();
+        return getExternalQueryString();
     }
     
-    protected String getBaseQueryString() {
+    protected String getBaseQueryStringWithCheck() {
         prepareAndCheck();
-        return getQueryString0();
-    }
-    
-    protected String getCteQueryString() {
-        prepareAndCheck();
-        return getCteQueryString0();
+        return getBaseQueryString();
     }
 
     protected TypedQuery<QueryResultType> getTypedQuery() {
         // If we have no ctes, there is nothing to do
-        if (!isMainQuery || cteManager.getCtes().isEmpty()) {
-            return getTypedQuery(getBaseQueryString());
+        if (!isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions())) {
+            return getTypedQuery(getBaseQueryStringWithCheck());
         }
 
-        TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryString());
+        TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
         List<Query> participatingQueries = new ArrayList<Query>();
         
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = new StringBuilder(sqlQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
@@ -1251,26 +1272,26 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return (BuilderType) this;
     }
 
-    protected String getQueryString0() {
+    protected String getBaseQueryString() {
         if (cachedQueryString == null) {
-            cachedQueryString = getQueryString1();
+            cachedQueryString = buildBaseQueryString(false);
         }
 
         return cachedQueryString;
     }
 
-    protected String getCteQueryString0() {
-        if (cachedCteQueryString == null) {
-            cachedCteQueryString = getCteQueryString1();
+    protected String getExternalQueryString() {
+        if (cachedExternalQueryString == null) {
+            cachedExternalQueryString = buildExternalQueryString();
         }
 
-        return cachedCteQueryString;
+        return cachedExternalQueryString;
     }
 
     protected void clearCache() {
         needsCheck = true;
         cachedQueryString = null;
-        cachedCteQueryString = null;
+        cachedExternalQueryString = null;
         implicitJoinsApplied = false;
     }
 
@@ -1306,39 +1327,39 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         needsCheck = false;
     }
 
-    protected String getQueryString1() {
+    protected String buildBaseQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
-        getQueryString1(sbSelectFrom);
+        buildBaseQueryString(sbSelectFrom, externalRepresentation);
         return sbSelectFrom.toString();
     }
 
-    protected void getQueryString1(StringBuilder sbSelectFrom) {
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
     	appendSelectClause(sbSelectFrom);
-    	appendFromClause(sbSelectFrom);
+    	appendFromClause(sbSelectFrom, externalRepresentation);
     	appendWhereClause(sbSelectFrom);
     	appendGroupByClause(sbSelectFrom);
     	appendOrderByClause(sbSelectFrom);
     }
 
-    protected String getCteQueryString1() {
+    protected String buildExternalQueryString() {
         StringBuilder sbSelectFrom = new StringBuilder();
-        getCteQueryString1(sbSelectFrom);
+        buildExternalQueryString(sbSelectFrom);
         return sbSelectFrom.toString();
     }
 
-    protected void getCteQueryString1(StringBuilder sbSelectFrom) {
+    protected void buildExternalQueryString(StringBuilder sbSelectFrom) {
         if (isMainQuery) {
-            cteManager.buildClause(sbSelectFrom);
+            mainQuery.cteManager.buildClause(sbSelectFrom);
         }
-        getQueryString1(sbSelectFrom);
+        buildBaseQueryString(sbSelectFrom, true);
     }
 
     protected void appendSelectClause(StringBuilder sbSelectFrom) {
         selectManager.buildSelect(sbSelectFrom);
     }
 
-    protected void appendFromClause(StringBuilder sbSelectFrom) {
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false);
+    protected void appendFromClause(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation);
     }
 
     protected void appendWhereClause(StringBuilder sbSelectFrom) {
@@ -1419,22 +1440,240 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         return firstCte;
     }
+
+    private StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, List<Query> participatingQueries) {
+        if (!isMainQuery || !joinManager.hasEntityFunctions()) {
+            return new StringBuilder(sqlQuery);
+        }
+
+        ValuesStrategy strategy = dbmsDialect.getValuesStrategy();
+        String dummyTable = dbmsDialect.getDummyTable();
+
+        // TODO: find a better size estimate
+        StringBuilder sb = new StringBuilder(sqlQuery.length() + joinManager.getEntityFunctionNodes().size() * 100);
+        sb.append(sqlQuery);
+        for (JoinNode node : joinManager.getEntityFunctionNodes()) {
+            // TODO: we should do batching to avoid filling query caches
+            Collection<?> values = node.getValues();
+            Set<Attribute<?, ?>> attributeSet = (Set<Attribute<?, ?>>) mainQuery.metamodel.getManagedType(node.getPropertyClass()).getAttributes();
+            Attribute<?, ?>[] attributes = attributeSet.toArray(new Attribute[attributeSet.size()]);
+
+            StringBuilder valuesSb = new StringBuilder(20 + values.size() * attributeSet.size() * 3);
+            Query valuesExampleQuery = getValuesExampleQuery(node.getPropertyClass(), node.getAlias(), node.getTreatType(), values, attributes, valuesSb, strategy, dummyTable);
+
+            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
+            String exampleQuerySql = cbf.getExtendedQuerySupport().getSql(em, valuesExampleQuery);
+            String exampleQuerySqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, valuesExampleQuery, "e");
+            String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributes.length, exampleQuerySql, strategy, dummyTable);
+
+            if (strategy == ValuesStrategy.SELECT_VALUES) {
+                valuesSb.insert(0, valuesAliases);
+                valuesSb.append(')');
+                valuesAliases = null;
+            } else if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.insert(0, valuesAliases);
+                valuesSb.append(')');
+                valuesAliases = null;
+            }
+
+            // TODO: this is a hibernate specific integration detail
+            // Replace the subview subselect that is generated for this subselect
+            String entityName = node.getPropertyClass().getSimpleName();
+            final String subselect = "( select * from " + entityName + " )";
+            int subselectIndex = 0;
+            while ((subselectIndex = sb.indexOf(subselect, subselectIndex)) > -1) {
+                sb.replace(subselectIndex, subselectIndex + subselect.length(), entityName);
+            }
+
+            applyTableNameRemapping(sb, valuesTableSqlAlias, valuesSb.toString(), valuesAliases);
+            participatingQueries.add(valuesExampleQuery);
+        }
+
+        return sb;
+    }
+
+    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, ValuesStrategy strategy, String dummyTable) {
+        final String select = "select ";
+        int startIndex = exampleQuerySql.indexOf(select) + select.length();
+        int endIndex = exampleQuerySql.indexOf(" from ");
+
+        StringBuilder sb;
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append('(');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb = new StringBuilder(endIndex - startIndex);
+            sb.append("(select ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append("(select ");
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        // Search for table alias usages
+        final String searchAlias = tableAlias + ".";
+        int searchIndex = startIndex;
+        int attributeNumber = 1;
+        while ((searchIndex = exampleQuerySql.indexOf(searchAlias, searchIndex)) > -1 && searchIndex < endIndex) {
+            searchIndex += searchAlias.length();
+
+            if (strategy == ValuesStrategy.SELECT_VALUES) {
+                // TODO: This naming is actually H2 specific
+                sb.append('c');
+                sb.append(attributeNumber++);
+                sb.append(' ');
+            } else if (strategy == ValuesStrategy.SELECT_UNION) {
+                sb.append("null as ");
+            }
+
+            // Append chars until non-identifier char was found
+            for (; searchIndex < endIndex; searchIndex++) {
+                final char c = exampleQuerySql.charAt(searchIndex);
+                // NOTE: We expect users to be sane and only allow letters, numbers and underscore in an identifier
+                if (Character.isLetterOrDigit(c) || c == '_') {
+                    sb.append(c);
+                } else {
+                    sb.append(',');
+                    break;
+                }
+            }
+        }
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb.setCharAt(sb.length() - 1, ')');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            sb.append(" from ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            if (dummyTable != null) {
+                sb.append(" from ");
+                sb.append(dummyTable);
+                sb.append(' ');
+            }
+            sb.append("where 1=0");
+        }
+
+        return sb.toString();
+    }
+
+    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, Collection<?> values, Attribute<?, ?>[] attributes, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
+        Map<String, Object> parameters = new HashMap<String, Object>(attributes.length * values.size());
+        // This size estimation roughly assumes a maximum attribute name length of 15
+        StringBuilder sb = new StringBuilder(50 + values.size() * prefix.length() * attributes.length * 50);
+        sb.append("SELECT ");
+
+        for (int i = 0; i < attributes.length; i++) {
+            sb.append("e.");
+            sb.append(attributes[i].getName());
+            sb.append(',');
+        }
+
+        sb.setCharAt(sb.length() - 1, ' ');
+        sb.append("FROM ");
+        sb.append(clazz.getName());
+        sb.append(" e WHERE 1=1");
+
+        if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
+            valuesSb.append("(VALUES ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            // Nothing to do here
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        Iterator<Object> iter = (Iterator<Object>) values.iterator();
+        for (int i = 0; iter.hasNext(); i++) {
+            final Object value = iter.next();
+
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.append(" union all select ");
+            } else {
+                valuesSb.append('(');
+            }
+
+            for (int j = 0; j < attributes.length; j++) {
+                sb.append(" OR ");
+                if (treatFunction != null) {
+                    sb.append(treatFunction);
+                    sb.append('(');
+                    sb.append("e.");
+                    sb.append(attributes[j].getName());
+                    sb.append(')');
+                } else {
+                    sb.append("e.");
+                    sb.append(attributes[j].getName());
+                }
+
+                sb.append(" = ");
+
+                sb.append(':');
+                int start = sb.length();
+
+                sb.append(prefix);
+                sb.append('_');
+                sb.append(attributes[j].getName());
+                sb.append('_').append(i);
+
+                String paramName = sb.substring(start, sb.length());
+                parameters.put(paramName, extractAttributeValue(value, attributes[j]));
+
+                valuesSb.append("?,");
+            }
+
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+                if (dummyTable != null) {
+                    valuesSb.append(" from ");
+                    valuesSb.append(dummyTable);
+                }
+            } else {
+                valuesSb.setCharAt(valuesSb.length() - 1, ')');
+                valuesSb.append(',');
+            }
+        }
+
+        if (strategy == ValuesStrategy.SELECT_UNION) {
+            valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+        } else {
+            valuesSb.setCharAt(valuesSb.length() - 1, ')');
+        }
+
+        String exampleQueryString = sb.toString();
+        Query q = em.createQuery(exampleQueryString);
+
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            q.setParameter(entry.getKey(), entry.getValue());
+        }
+
+        return q;
+    }
+
+    private Object extractAttributeValue(Object o, Attribute<?, ?> attribute) {
+        // TODO: we can do much better here but for now it has to be enough
+        if (attribute.getDeclaringType().getJavaType() == ValuesEntity.class) {
+            return o;
+        }
+        return com.blazebit.reflection.ExpressionUtils.getValue(o, attribute.getName());
+    }
     
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
-        if (!isMainQuery || isSubquery || !cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
+        if (!isMainQuery || isSubquery || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
             return null;
         }
 
         // EntityAlias -> CteName
         Map<String, String> tableNameRemapping = new LinkedHashMap<String, String>(0);
         
-        StringBuilder sb = new StringBuilder(cteManager.getCtes().size() * 100);
-        sb.append(dbmsDialect.getWithClause(cteManager.isRecursive()));
+        StringBuilder sb = new StringBuilder(mainQuery.cteManager.getCtes().size() * 100);
+        sb.append(dbmsDialect.getWithClause(mainQuery.cteManager.isRecursive()));
         sb.append(" ");
 
         boolean firstCte = true;
-        for (CTEInfo cteInfo : cteManager.getCtes()) {
+        for (CTEInfo cteInfo : mainQuery.cteManager.getCtes()) {
             // Build queries and add as participating queries
             Map<DbmsModificationState, String> modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
             Query nonRecursiveQuery = cteInfo.nonRecursiveCriteriaBuilder.getQuery(modificationStates);
@@ -1524,7 +1763,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return null;
         }
 
-        for (CTEInfo cteInfo : cteManager.getCtes()) {
+        for (CTEInfo cteInfo : mainQuery.cteManager.getCtes()) {
             String cteName = cteInfo.cteType.getName();
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this cte
@@ -1547,7 +1786,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, tableNameRemappingEntry.getKey());
             String newCteName = tableNameRemappingEntry.getValue();
 
-            applyTableNameRemapping(sqlSb, sqlAlias, newCteName);
+            applyTableNameRemapping(sqlSb, sqlAlias, newCteName, null);
         }
         
         return sb;
@@ -1584,7 +1823,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return firstCte;
     }
     
-    private void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName) {
+    private void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension) {
         final String searchAs = " as";
         final String searchAlias = " " + sqlAlias;
         int searchIndex = 0;
@@ -1605,6 +1844,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 int oldLength = indexRange[1] - indexRange[0];
                 // Replace table name with cte name
                 sb.replace(indexRange[0], indexRange[1], newCteName);
+
+                if (aliasExtension != null) {
+                    sb.insert(searchIndex + searchAlias.length() + (newCteName.length() - oldLength), aliasExtension);
+                    searchIndex += aliasExtension.length();
+                }
+
                 // Adjust index after replacing
                 searchIndex += newCteName.length() - oldLength;
             }

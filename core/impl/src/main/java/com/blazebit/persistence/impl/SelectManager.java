@@ -180,6 +180,7 @@ public class SelectManager<T> extends AbstractManager {
 
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
+            // TODO: Not sure if this branch is ever possible. It's problematic because it's not aware of VALUES clause
             List<JoinNode> roots = joinManager.getRoots();
             
             if (roots.size() > 1) {
@@ -245,8 +246,8 @@ public class SelectManager<T> extends AbstractManager {
             if (roots.size() > 1) {
             	throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
             }
-            
-            sb.append(roots.get(0).getAliasInfo().getAlias());
+
+            roots.get(0).appendAlias(sb, null);
         } else {
             // we must not replace select alias since we would loose the original expressions
             queryGenerator.setQueryBuffer(sb);

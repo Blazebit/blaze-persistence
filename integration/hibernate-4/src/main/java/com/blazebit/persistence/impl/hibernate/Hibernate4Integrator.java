@@ -1,21 +1,16 @@
 package com.blazebit.persistence.impl.hibernate;
 
-import java.util.Iterator;
-import java.util.logging.Logger;
-
+import com.blazebit.apt.service.ServiceProvider;
+import com.blazebit.persistence.CTE;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.mapping.Collection;
-import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.source.MetadataImplementor;
-import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
-import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.CTE;
+import java.util.Iterator;
+import java.util.logging.Logger;
 
 @ServiceProvider(Integrator.class)
 public class Hibernate4Integrator implements Integrator {
@@ -24,6 +19,13 @@ public class Hibernate4Integrator implements Integrator {
 
 	@Override
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		try {
+			configuration.addAnnotatedClass(Class.forName("com.blazebit.persistence.impl.function.entity.ValuesEntity"));
+			configuration.buildMappings();
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Are you missing blaze-persistence-core-impl on the classpath?", e);
+		}
+
 		Iterator<PersistentClass> iter = configuration.getClassMappings();
 		while (iter.hasNext()) {
 			PersistentClass clazz = iter.next();

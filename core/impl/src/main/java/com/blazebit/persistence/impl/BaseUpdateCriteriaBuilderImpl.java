@@ -156,7 +156,7 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     }
 
     @Override
-	protected void getQueryString1(StringBuilder sbSelectFrom) {
+	protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
 		sbSelectFrom.append("UPDATE ");
 		sbSelectFrom.append(entityType.getName()).append(' ');
 	    sbSelectFrom.append(entityAlias);

@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -109,6 +110,17 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @since 1.1.0
      */
     public X fromNew(Class<?> entityClass, String alias);
+
+    /**
+     * Add a VALUES clause for values of the given entity class to the from clause.
+     *
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
+     * @param values The values to use for the values clause
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public <T> X fromValues(Class<T> entityClass, String alias, Collection<T> values);
 
     /*
      * Join methods

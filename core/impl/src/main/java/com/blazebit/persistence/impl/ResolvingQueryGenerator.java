@@ -254,38 +254,42 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             }
 
             JoinNode baseNode = (JoinNode) expression.getBaseNode();
-            sb.append(baseNode.getAliasInfo().getAlias());
+            baseNode.appendAlias(sb, null);
 
             if (valueFunction) {
                 sb.append(')');
             }
         } else {
+            // Thats e.g. TREAT(TREAT(alias).property)
             if (expression.hasTreatedSubpath()) {
                 // Actually we know that the treated subpath must be the first part of the path
                 expression.getExpressions().get(0).accept(this);
+                sb.append(".").append(expression.getField());
             } else {
                 // Dereferencing after a value function does not seem to work for datanucleus?
                 //            boolean valueFunction = false;
                 boolean valueFunction = needsValueFunction(expression) && jpaProvider.getCollectionValueFunction() != null;
+                JoinNode baseNode = (JoinNode) expression.getBaseNode();
 
                 if (valueFunction) {
                     sb.append(jpaProvider.getCollectionValueFunction());
                     sb.append('(');
-                }
 
-                if (aliasPrefix != null) {
-                    sb.append(aliasPrefix);
-                }
+                    if (aliasPrefix != null) {
+                        sb.append(aliasPrefix);
+                    }
 
-                JoinNode baseNode = (JoinNode) expression.getBaseNode();
-                sb.append(baseNode.getAliasInfo().getAlias());
-
-                if (valueFunction) {
+                    baseNode.appendAlias(sb, null);
                     sb.append(')');
+                    sb.append(".").append(expression.getField());
+                } else {
+                    if (aliasPrefix != null) {
+                        sb.append(aliasPrefix);
+                    }
+
+                    baseNode.appendAlias(sb, expression.getField());
                 }
             }
-
-            sb.append(".").append(expression.getField());
 
         }
     }

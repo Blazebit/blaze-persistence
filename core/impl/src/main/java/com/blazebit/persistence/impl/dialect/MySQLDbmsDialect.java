@@ -2,6 +2,7 @@ package com.blazebit.persistence.impl.dialect;
 
 import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import com.blazebit.persistence.spi.OrderByElement;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class MySQLDbmsDialect extends DefaultDbmsDialect {
     
@@ -72,6 +73,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     protected void appendOrderByElement(StringBuilder sqlSb, OrderByElement element) {
         appendEmulatedOrderByElementWithNulls(sqlSb, element);
+    }
+
+    @Override
+    public ValuesStrategy getValuesStrategy() {
+        return ValuesStrategy.SELECT_UNION;
     }
 
 }

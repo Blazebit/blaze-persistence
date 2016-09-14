@@ -15,13 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,6 +30,7 @@ import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -53,7 +48,8 @@ public class JoinManager extends AbstractManager {
     // hence we need a List of NodeInfos.
     // e.g. SELECT a.X, a.Y FROM A a
     // a is unresolved for both X and Y
-    private List<JoinNode> rootNodes = new ArrayList<JoinNode>(1);
+    private final List<JoinNode> rootNodes = new ArrayList<JoinNode>(1);
+    private final Set<JoinNode> entityFunctionNodes = new LinkedHashSet<JoinNode>();
     // root entity class
     private final String joinRestrictionKeyword;
     private final MainQuery mainQuery;
@@ -78,6 +74,20 @@ public class JoinManager extends AbstractManager {
         this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
         this.expressionFactory = expressionFactory;
+    }
+
+    String addRootValues(Class<?> clazz, String rootAlias, Collection<?> values, String treatFunction) {
+        if (rootAlias == null) {
+            throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
+        }
+        JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
+        JoinNode rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, values);
+        rootAliasInfo.setJoinNode(rootNode);
+        rootNodes.add(rootNode);
+        // register root alias in aliasManager
+        aliasManager.registerAliasInfo(rootAliasInfo);
+        entityFunctionNodes.add(rootNode);
+        return rootAlias;
     }
 
     String addRoot(EntityType<?> clazz, String rootAlias) {
@@ -208,6 +218,10 @@ public class JoinManager extends AbstractManager {
         return false;
     }
 
+    boolean hasEntityFunctions() {
+        return entityFunctionNodes.size() > 0;
+    }
+
     Set<JoinNode> getCollectionJoins() {
         if (rootNodes.isEmpty()) {
             return Collections.EMPTY_SET;
@@ -218,6 +232,10 @@ public class JoinManager extends AbstractManager {
             }
             return collectionJoins;
         }
+    }
+
+    Set<JoinNode> getEntityFunctionNodes() {
+        return entityFunctionNodes;
     }
 
     private void fillCollectionJoinsNodesRec(JoinNode node, Set<JoinNode> collectionNodes) {
@@ -239,7 +257,7 @@ public class JoinManager extends AbstractManager {
         this.subqueryInitFactory = subqueryInitFactory;
     }
 
-    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes) {
+    Set<JoinNode> buildClause(StringBuilder sb, Set<ClauseType> clauseExclusions, String aliasPrefix, boolean collectCollectionJoinNodes, boolean externalRepresenation) {
         collectionJoinNodes.clear();
         renderedJoins.clear();
         sb.append(" FROM ");
@@ -255,13 +273,39 @@ public class JoinManager extends AbstractManager {
             JoinNode rootNode = nodes.get(i);
             JoinNode correlationParent = rootNode.getCorrelationParent();
 
-            if (correlationParent != null) {
-                sb.append(correlationParent.getAliasInfo().getAlias());
-                sb.append('.');
-                sb.append(rootNode.getCorrelationPath());
+            if (externalRepresenation && rootNode.getValues() != null) {
+                ManagedType<?> type = metamodel.getManagedType(rootNode.getPropertyClass());
+                int count = type.getAttributes().size();
+                if (rootNode.getPropertyClass() != ValuesEntity.class) {
+                    if (type instanceof EntityType<?>) {
+                        sb.append(((EntityType) type).getName());
+                    } else {
+                        sb.append(type.getJavaType().getSimpleName());
+                    }
+                }
+                sb.append("(VALUES");
+
+                for (Object value : rootNode.getValues()) {
+                    sb.append(" (");
+
+                    for (int j = 0; j < count; j++) {
+                        sb.append("?,");
+                    }
+
+                    sb.setCharAt(sb.length() - 1, ')');
+                    sb.append(',');
+                }
+
+                sb.setCharAt(sb.length() - 1, ')');
             } else {
-                EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
-                sb.append(type.getName());
+                if (correlationParent != null) {
+                    sb.append(correlationParent.getAliasInfo().getAlias());
+                    sb.append('.');
+                    sb.append(rootNode.getCorrelationPath());
+                } else {
+                    EntityType<?> type = metamodel.entity(rootNode.getPropertyClass());
+                    sb.append(type.getName());
+                }
             }
 
             sb.append(' ');
@@ -340,7 +384,7 @@ public class JoinManager extends AbstractManager {
                 sb.append(aliasPrefix);
             }
 
-            if (node.getTreatType() != null) {
+            if (node.getTreatType() != null && node.getValues() == null) {
                 if (mainQuery.jpaProvider.supportsTreatJoin()) {
                     sb.append("TREAT(");
                     renderParentAlias(sb, node, joinBase.getAlias());
@@ -1323,7 +1367,7 @@ public class JoinManager extends AbstractManager {
 
             Attribute<?, ?> attr = JpaUtils.getSimpleAttributeForImplicitJoining(metamodel, baseNodeType, attributeName);
             if (attr == null) {
-                throw new IllegalArgumentException("Field with name " + attributeName + " was not found within managed type " + typeName);
+                throw new IllegalArgumentException("Field with name '" + attributeName + "' was not found within managed type " + typeName);
             }
 
             if (joinRequired || attr.isCollection()) {
@@ -1485,6 +1529,7 @@ public class JoinManager extends AbstractManager {
             }
 
             if (treatType != null) {
+                // TODO: give a better message for when doing TREAT on VALUES
                 if (!treatType.equals(node.getTreatType())) {
                     throw new IllegalArgumentException("A join node [" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + "] "
                             + "for treat type [" + treatType + "] conflicts with the existing treat type [" + node.getTreatType() + "]");

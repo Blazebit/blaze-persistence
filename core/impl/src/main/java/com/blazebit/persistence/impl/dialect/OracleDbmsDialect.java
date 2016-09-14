@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 
 public class OracleDbmsDialect extends DefaultDbmsDialect {
@@ -65,6 +66,16 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
             sqlSb.insert(0, "select * from ( select row_.*, rownum rownum_ from (");
             sqlSb.append(") row_ ) where rownum_ <= ").append(limit).append(" and rownum_ > ").append(offset);
         }
+    }
+
+    @Override
+    public ValuesStrategy getValuesStrategy() {
+        return ValuesStrategy.SELECT_UNION;
+    }
+
+    @Override
+    public String getDummyTable() {
+        return "dual";
     }
 
 //	@Override

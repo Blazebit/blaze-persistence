@@ -130,6 +130,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private final List<QueryTransformer> queryTransformers = new ArrayList<QueryTransformer>();
     private final Map<String, DbmsDialect> dbmsDialects = new HashMap<String, DbmsDialect>();
     private final Map<String, JpqlFunctionGroup> functions = new HashMap<String, JpqlFunctionGroup>();
+    private final Map<String, Class<?>> treatTypes = new HashMap<String, Class<?>>();
     private final Map<String, JpqlMacro> macros = new HashMap<String, JpqlMacro>();
     private final List<EntityManagerFactoryIntegrator> entityManagerIntegrators = new ArrayList<EntityManagerFactoryIntegrator>();
     private Properties properties = new Properties();
@@ -185,24 +186,28 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         
         // treat
 
-        registerFunction(new JpqlFunctionGroup("treat_boolean", new TreatFunction(Boolean.class)));
-        registerFunction(new JpqlFunctionGroup("treat_byte", new TreatFunction(Byte.class)));
-        registerFunction(new JpqlFunctionGroup("treat_short", new TreatFunction(Short.class)));
-        registerFunction(new JpqlFunctionGroup("treat_integer", new TreatFunction(Integer.class)));
-        registerFunction(new JpqlFunctionGroup("treat_long", new TreatFunction(Long.class)));
-        registerFunction(new JpqlFunctionGroup("treat_float", new TreatFunction(Float.class)));
-        registerFunction(new JpqlFunctionGroup("treat_double", new TreatFunction(Double.class)));
+        treatTypes.put("boolean", Boolean.class);
+        treatTypes.put("byte", Byte.class);
+        treatTypes.put("short", Short.class);
+        treatTypes.put("integer", Integer.class);
+        treatTypes.put("long", Long.class);
+        treatTypes.put("float", Float.class);
+        treatTypes.put("double", Double.class);
 
-        registerFunction(new JpqlFunctionGroup("treat_character", new TreatFunction(Character.class)));
-        registerFunction(new JpqlFunctionGroup("treat_string", new TreatFunction(String.class)));
+        treatTypes.put("character", Character.class);
+        treatTypes.put("string", String.class);
 
-        registerFunction(new JpqlFunctionGroup("treat_biginteger", new TreatFunction(BigInteger.class)));
-        registerFunction(new JpqlFunctionGroup("treat_bigdecimal", new TreatFunction(BigDecimal.class)));
+        treatTypes.put("biginteger", BigInteger.class);
+        treatTypes.put("bigdecimal", BigDecimal.class);
 
-        registerFunction(new JpqlFunctionGroup("treat_time", new TreatFunction(Time.class)));
-        registerFunction(new JpqlFunctionGroup("treat_date", new TreatFunction(java.sql.Date.class)));
-        registerFunction(new JpqlFunctionGroup("treat_timestamp", new TreatFunction(Timestamp.class)));
-        registerFunction(new JpqlFunctionGroup("treat_calendar", new TreatFunction(Calendar.class)));
+        treatTypes.put("time", Time.class);
+        treatTypes.put("date", java.sql.Date.class);
+        treatTypes.put("timestamp", Timestamp.class);
+        treatTypes.put("calendar", Calendar.class);
+
+        for (Map.Entry<String, Class<?>> entry : treatTypes.entrySet()) {
+            registerFunction(new JpqlFunctionGroup("treat_" + entry.getKey(), new TreatFunction(entry.getValue())));
+        }
 
         // cast
 
@@ -447,6 +452,10 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     @Override
     public Set<String> getMacroNames() {
         return macros.keySet();
+    }
+
+    public Map<String, Class<?>> getTreatTypes() {
+        return treatTypes;
     }
 
     @Override
