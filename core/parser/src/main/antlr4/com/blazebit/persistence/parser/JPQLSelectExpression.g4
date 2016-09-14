@@ -201,7 +201,7 @@ outer_expression : Outer_function '(' single_valued_path_expression  ')'
                  ;
 
 // Careful before you change something, an empty invocation will produce a child, which is specially handled in JPQLSelectExpressionVisitorImpl
-macro_expression : macroName=MACRO '(' (simple_expression (',' simple_expression)*)?  ')'
+macro_expression : macroName=Identifier '(' (simple_expression (',' simple_expression)*)?  ')'
                  ;
 
 arithmetic_expression : arithmetic_term # ArithmeticExpressionTerm

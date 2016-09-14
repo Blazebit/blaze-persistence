@@ -53,7 +53,7 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         if (expression.isEmpty()) {
             throw new IllegalArgumentException("expression");
         }
-        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression), macroConfiguration == null ? null : macroConfiguration.macros.keySet());
+        JPQLSelectExpressionLexer l = new JPQLSelectExpressionLexer(new ANTLRInputStream(expression));
         configureLexer(l);
         CommonTokenStream tokens = new CommonTokenStream(l);
         JPQLSelectExpressionParser p = new JPQLSelectExpressionParser(tokens, allowCaseWhen, allowQuantifiedPredicates, allowTreatJoinExtension);
