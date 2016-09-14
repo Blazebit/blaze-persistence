@@ -97,9 +97,13 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
 				hasCollectionJoin = true;
 			}
 		}
-		
+
+        Class<?> getValueClass() {
+            return valueClass;
+        }
+
         PathPosition copy() {
-            return new PathPosition(currentClass, valueClass, method,hasCollectionJoin);
+            return new PathPosition(currentClass, valueClass, method, hasCollectionJoin);
         }
     }
 
@@ -277,6 +281,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
+        currentPosition.setCurrentClass(currentPosition.getValueClass());
     }
 
     @Override

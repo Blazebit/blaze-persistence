@@ -19,10 +19,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.*;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.persistence.JoinOnBuilder;
@@ -1192,7 +1189,14 @@ public class JoinManager extends AbstractManager {
         PathExpression keyPath = new PathExpression(new ArrayList<PathElementExpression>(), true);
         keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
         keyPath.setPathReference(new SimplePathReference(joinNode, null, null));
-        FunctionExpression keyExpression = new FunctionExpression("KEY", Arrays.asList((Expression) keyPath));
+        final String accessFunction;
+        Attribute<?, ?> arrayBaseAttribute = metamodel.getManagedType(joinNode.getParent().getPropertyClass()).getAttribute(arrayExpr.getBase().getProperty());
+        if (arrayBaseAttribute instanceof ListAttribute && List.class.isAssignableFrom(arrayBaseAttribute.getJavaType())) {
+            accessFunction = "INDEX";
+        } else {
+            accessFunction = "KEY";
+        }
+        FunctionExpression keyExpression = new FunctionExpression(accessFunction, Arrays.asList((Expression) keyPath));
         return new EqPredicate(keyExpression, arrayExpr.getIndex());
     }
 

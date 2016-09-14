@@ -69,7 +69,7 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
         	if (e instanceof ArrayExpression) {
         		ArrayExpression arrayExpression = (ArrayExpression) e;
         		arrayExpression.getIndex().accept(this);
-        		baseName = arrayExpression.getBase().toString();
+				continue;
         	} else {
         		baseName = e.toString();
         	}
@@ -115,14 +115,10 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
 
 	@Override
     public void visit(IsEmptyPredicate predicate) {
-    	// NOTE: not sure if we should skip expressions of this predicate
-        super.visit(predicate);
     }
 
     @Override
     public void visit(MemberOfPredicate predicate) {
-    	// NOTE: not sure if we should skip expressions of this predicate
-        super.visit(predicate);
     }
 
 }
