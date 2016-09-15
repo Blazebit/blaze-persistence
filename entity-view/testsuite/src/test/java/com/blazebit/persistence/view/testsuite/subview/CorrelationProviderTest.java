@@ -97,10 +97,10 @@ public class CorrelationProviderTest extends AbstractEntityViewTest {
         testCorrelation(DocumentCorrelationViewSubquery.class, null);
     }
 
-    @Test
-    public void testSubqueryBatchedCorrelation() {
-        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
-    }
+//    @Test
+//    public void testSubqueryBatchedCorrelation() {
+//        testCorrelation(DocumentCorrelationViewSubquery.class, 2);
+//    }
 
 //    @Test
 //    public void testSubselectCorrelation() {

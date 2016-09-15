@@ -1459,7 +1459,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             Attribute<?, ?>[] attributes = attributeSet.toArray(new Attribute[attributeSet.size()]);
 
             StringBuilder valuesSb = new StringBuilder(20 + values.size() * attributeSet.size() * 3);
-            Query valuesExampleQuery = getValuesExampleQuery(node.getPropertyClass(), node.getAlias(), node.getTreatType(), values, attributes, valuesSb, strategy, dummyTable);
+            Query valuesExampleQuery = getValuesExampleQuery(node.getPropertyClass(), node.getAlias(), node.getValuesFunction(), values, attributes, valuesSb, strategy, dummyTable);
 
             String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
             String exampleQuerySql = cbf.getExtendedQuerySupport().getSql(em, valuesExampleQuery);

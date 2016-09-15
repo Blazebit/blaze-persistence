@@ -381,7 +381,7 @@ public class JoinManager extends AbstractManager {
                 sb.append(aliasPrefix);
             }
 
-            if (node.getTreatType() != null && node.getValues() == null) {
+            if (node.getTreatType() != null) {
                 if (mainQuery.jpaProvider.supportsTreatJoin()) {
                     sb.append("TREAT(");
                     renderParentAlias(sb, node, joinBase.getAlias());
@@ -1533,7 +1533,6 @@ public class JoinManager extends AbstractManager {
             }
 
             if (treatType != null) {
-                // TODO: give a better message for when doing TREAT on VALUES
                 if (!treatType.equals(node.getTreatType())) {
                     throw new IllegalArgumentException("A join node [" + nodeAliasInfo.getAlias() + "=" + nodeAliasInfo.getAbsolutePath() + "] "
                             + "for treat type [" + treatType + "] conflicts with the existing treat type [" + node.getTreatType() + "]");
