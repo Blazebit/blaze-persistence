@@ -5,6 +5,9 @@ import com.blazebit.persistence.impl.expression.AggregateExpression;
 import com.blazebit.persistence.impl.expression.FunctionExpression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 
+/**
+ * Returns false if expression is usable in groupBy, true otherwise
+ */
 class GroupByUsableDetectionVisitor extends AbortableVisitorAdapter {
 	
 	private final boolean treatSizeAsAggreagte;

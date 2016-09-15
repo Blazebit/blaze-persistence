@@ -43,6 +43,7 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.JpaProvider;
 
 /**
  *
@@ -59,6 +60,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     private boolean hasGroupBySelects;
     private boolean hasComplexGroupBySelects;
     private final DbmsDialect dbmsDialect;
+    private final JpaProvider jpaProvider;
 //    private final SelectManager<?> selectManager;
     
     // state
@@ -69,7 +71,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     // maps absolute paths to join nodes
     private final Map<String, PathReference> generatedJoins = new HashMap<String, PathReference>();
     
-    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect) {
+    public SizeTransformationVisitor(MainQuery mainQuery, AliasManager aliasManager, SubqueryInitiatorFactory subqueryInitFactory, JoinManager joinManager, GroupByManager groupByManager, DbmsDialect dbmsDialect, JpaProvider jpaProvider) {
         this.metamodel = mainQuery.em.getMetamodel();
         this.aliasManager = aliasManager;
         this.subqueryInitFactory = subqueryInitFactory;
@@ -77,6 +79,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         this.groupByManager = groupByManager;
         this.properties = mainQuery.properties;
         this.dbmsDialect = dbmsDialect;
+        this.jpaProvider = jpaProvider;
     }
     
     public ClauseType getClause() {
@@ -154,9 +157,10 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     public Expression visit(FunctionExpression expression) {
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
             PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
+            String property = sizeArg.getPathReference().getField();
             Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
-            ManagedType<?> managedTargetType = MetamodelUtils.resolveManagedTargetType(metamodel, startClass, sizeArg.getPathReference().getField());
+            ManagedType<?> managedTargetType = MetamodelUtils.resolveManagedTargetType(metamodel, startClass, property);
             
             PersistenceType collectionIdType;
             if (managedTargetType instanceof EntityType<?>) {
@@ -171,7 +175,8 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             		clause == ClauseType.JOIN || 
             		!isCountTransformationEnabled() || 
             		(hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) || 
-            		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled())) {
+            		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
+                    jpaProvider.hasJoinTable(startClass, property) /* due to https://hibernate.atlassian.net/browse/HHH-1615 */) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause

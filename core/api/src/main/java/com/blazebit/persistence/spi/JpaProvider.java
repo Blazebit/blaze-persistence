@@ -60,4 +60,7 @@ public interface JpaProvider {
     public boolean supportsSubtypePropertyResolving();
 
     public boolean supportsCountStar();
+
+    public boolean hasJoinTable(Class<?> entityType, String property);
+
 }
