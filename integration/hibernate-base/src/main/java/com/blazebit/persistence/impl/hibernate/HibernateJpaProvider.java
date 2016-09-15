@@ -104,11 +104,6 @@ public class HibernateJpaProvider implements JpaProvider {
         return db != DB.MY_SQL && db != DB.DB2;
     }
 
-    public boolean isJoinTable(Class<?> entityClass, String attributeName) {
-
-        return false;
-    }
-
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
         if (nulls != null) {
