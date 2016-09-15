@@ -16,8 +16,11 @@
 package com.blazebit.persistence.impl.hibernate;
 
 import com.blazebit.persistence.spi.JpaProvider;
+import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.persister.collection.CollectionPersister;
 
 import javax.persistence.EntityManager;
+import java.util.Map;
 
 /**
  *
@@ -27,6 +30,7 @@ import javax.persistence.EntityManager;
 public class HibernateJpaProvider implements JpaProvider {
 
     private final DB db;
+    private final Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
         OTHER,
@@ -34,7 +38,7 @@ public class HibernateJpaProvider implements JpaProvider {
         DB2;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms) {
+    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters) {
         try {
             if (em == null) {
                 db = DB.OTHER;
@@ -45,6 +49,7 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 db = DB.OTHER;
             }
+            this.collectionPersisters = collectionPersisters;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -97,6 +102,11 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean supportsNullPrecedenceExpression() {
         return db != DB.MY_SQL && db != DB.DB2;
+    }
+
+    public boolean isJoinTable(Class<?> entityClass, String attributeName) {
+
+        return false;
     }
 
     @Override
