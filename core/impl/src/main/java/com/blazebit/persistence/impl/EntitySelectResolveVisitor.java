@@ -42,7 +42,13 @@ public class EntitySelectResolveVisitor extends VisitorAdapter {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (!(expression instanceof AggregateExpression)) {
+        /**
+         * Only functions returning an entity should be further resolved here in which case
+         * the resulting entity's fields would belong into the group by.
+         * Only until grouping by entities is resolved: https://hibernate.atlassian.net/browse/HHH-1615
+         */
+        if (com.blazebit.persistence.impl.util.ExpressionUtils.isValueFunction(expression) ||
+                com.blazebit.persistence.impl.util.ExpressionUtils.isEntryFunction(expression)) {
             super.visit(expression);
         }
     }

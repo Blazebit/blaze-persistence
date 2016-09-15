@@ -45,15 +45,9 @@ import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
-import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.PathElementExpression;
-import com.blazebit.persistence.impl.expression.PathExpression;
-import com.blazebit.persistence.impl.expression.PropertyExpression;
-import com.blazebit.persistence.impl.expression.SimplePathReference;
-import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 
 /**

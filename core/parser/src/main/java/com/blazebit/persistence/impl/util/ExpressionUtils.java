@@ -25,4 +25,12 @@ public class ExpressionUtils {
         return "OUTER".equalsIgnoreCase(e.getFunctionName());
     }
 
+    public static boolean isValueFunction(FunctionExpression e) {
+        return "VALUE".equalsIgnoreCase(e.getFunctionName());
+    }
+
+    public static boolean isEntryFunction(FunctionExpression e) {
+        return "ENTRY".equalsIgnoreCase(e.getFunctionName());
+    }
+
 }

@@ -186,4 +186,9 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public boolean hasJoinTable(Class<?> entityType, String property) {
+        return true;
+    }
+
 }

@@ -183,7 +183,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager, dbmsDialect);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager, dbmsDialect, jpaProvider);
         this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor, selectManager));
         this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
         this.resultType = resultClazz;
