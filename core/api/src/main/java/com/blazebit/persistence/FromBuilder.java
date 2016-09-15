@@ -113,6 +113,20 @@ public interface FromBuilder<X extends FromBuilder<X>> {
 
     /**
      * Add a VALUES clause for values of the given entity class to the from clause.
+     * This introduces a parameter named like the given alias
+     * To set the values invoke {@link CommonQueryBuilder#setParameter(String, Object)} with
+     *
+     * @param entityClass The entity class which should be queried
+     * @param alias The alias for the entity
+     * @param valueCount The number of values to use for the values clause
+     * @return The query builder for chaining calls
+     * @since 1.2.0
+     */
+    public X fromValues(Class<?> entityClass, String alias, int valueCount);
+
+    /**
+     * Like {@link FromBuilder#fromValues(Class, String, int)} but passes the collection size
+     * as valueCount and directly binds the collection as parameter via {@link CommonQueryBuilder#setParameter(String, Object)}.
      *
      * @param entityClass The entity class which should be queried
      * @param alias The alias for the entity

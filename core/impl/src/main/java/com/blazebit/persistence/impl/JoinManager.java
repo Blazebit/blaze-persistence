@@ -19,9 +19,11 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.Query;
 import javax.persistence.metamodel.*;
 
 import com.blazebit.lang.StringUtils;
+import com.blazebit.lang.ValueRetriever;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
@@ -32,6 +34,8 @@ import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.spi.ValuesStrategy;
+import com.blazebit.reflection.PropertyPathExpression;
 
 /**
  * @author Moritz Becker
@@ -73,18 +77,219 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
-    String addRootValues(Class<?> clazz, String rootAlias, Collection<?> values, String treatFunction) {
+    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
         }
+
+        ValuesStrategy strategy = mainQuery.dbmsDialect.getValuesStrategy();
+        String dummyTable = mainQuery.dbmsDialect.getDummyTable();
+
+        // TODO: we should do batching to avoid filling query caches
+        Set<Attribute<?, ?>> attributeSet = (Set<Attribute<?, ?>>) mainQuery.metamodel.getManagedType(clazz).getAttributes();
+
+        String[][] parameterNames = new String[valueCount][attributeSet.size()];
+        ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
+
+        StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributeSet.size() * 3);
+        Query valuesExampleQuery = getValuesExampleQuery(clazz, rootAlias, treatFunction, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
+        parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions);
+
+        String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
+        String exampleQuerySqlAlias = mainQuery.cbf.getExtendedQuerySupport().getSqlAlias(mainQuery.em, valuesExampleQuery, "e");
+        String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributeSet.size(), exampleQuerySql, strategy, dummyTable);
+
+        if (strategy == ValuesStrategy.SELECT_VALUES) {
+            valuesSb.insert(0, valuesAliases);
+            valuesSb.append(')');
+            valuesAliases = null;
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            valuesSb.insert(0, valuesAliases);
+            valuesSb.append("limit 1,");
+            valuesSb.append(valueCount);
+            valuesSb.append(')');
+            valuesAliases = null;
+        }
+
+        String valuesClause = valuesSb.toString();
+
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, values);
+        JoinNode rootNode = new JoinNode(rootAliasInfo, clazz, treatFunction, valueCount, valuesExampleQuery, valuesClause, valuesAliases);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
         aliasManager.registerAliasInfo(rootAliasInfo);
         entityFunctionNodes.add(rootNode);
         return rootAlias;
+    }
+
+    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, ValuesStrategy strategy, String dummyTable) {
+        final String select = "select ";
+        int startIndex = exampleQuerySql.indexOf(select) + select.length();
+        int endIndex = exampleQuerySql.indexOf(" from ");
+
+        StringBuilder sb;
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append('(');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb = new StringBuilder(endIndex - startIndex);
+            sb.append("(select ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
+            sb.append("(select ");
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        // Search for table alias usages
+        final String searchAlias = tableAlias + ".";
+        int searchIndex = startIndex;
+        int attributeNumber = 1;
+        while ((searchIndex = exampleQuerySql.indexOf(searchAlias, searchIndex)) > -1 && searchIndex < endIndex) {
+            searchIndex += searchAlias.length();
+
+            if (strategy == ValuesStrategy.SELECT_VALUES) {
+                // TODO: This naming is actually H2 specific
+                sb.append('c');
+                sb.append(attributeNumber++);
+                sb.append(' ');
+            } else if (strategy == ValuesStrategy.SELECT_UNION) {
+                sb.append("null as ");
+            }
+
+            // Append chars until non-identifier char was found
+            for (; searchIndex < endIndex; searchIndex++) {
+                final char c = exampleQuerySql.charAt(searchIndex);
+                // NOTE: We expect users to be sane and only allow letters, numbers and underscore in an identifier
+                if (Character.isLetterOrDigit(c) || c == '_') {
+                    sb.append(c);
+                } else {
+                    sb.append(',');
+                    break;
+                }
+            }
+        }
+
+        if (strategy == ValuesStrategy.VALUES) {
+            sb.setCharAt(sb.length() - 1, ')');
+        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            sb.append(" from ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            sb.setCharAt(sb.length() - 1, ' ');
+            if (dummyTable != null) {
+                sb.append(" from ");
+                sb.append(dummyTable);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    static class SimpleValueRetriever implements ValueRetriever<Object, Object> {
+        @Override
+        public Object getValue(Object target) {
+            return target;
+        }
+    }
+
+    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
+        int valueCount = parameterNames.length;
+        String[] attributes = new String[attributeSet.size()];
+        // This size estimation roughly assumes a maximum attribute name length of 15
+        StringBuilder sb = new StringBuilder(50 + valueCount * prefix.length() * attributeSet.size() * 50);
+        sb.append("SELECT ");
+
+        if (clazz == ValuesEntity.class) {
+            sb.append("e.");
+            attributes[0] = attributeSet.iterator().next().getName();
+            pathExpressions[0] = new SimpleValueRetriever();
+            sb.append(attributes[0]);
+            sb.append(',');
+        } else {
+            Iterator<Attribute<?, ?>> iter = attributeSet.iterator();
+            for (int i = 0; i < attributes.length; i++) {
+                sb.append("e.");
+                attributes[i] = iter.next().getName();
+                pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
+                sb.append(attributes[i]);
+                sb.append(',');
+            }
+        }
+
+        sb.setCharAt(sb.length() - 1, ' ');
+        sb.append("FROM ");
+        sb.append(clazz.getName());
+        sb.append(" e WHERE 1=1");
+
+        if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
+            valuesSb.append("(VALUES ");
+        } else if (strategy == ValuesStrategy.SELECT_UNION) {
+            // Nothing to do here
+        } else {
+            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
+        }
+
+        for (int i = 0; i < valueCount; i++) {
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.append(" union all select ");
+            } else {
+                valuesSb.append('(');
+            }
+
+            for (int j = 0; j < attributes.length; j++) {
+                sb.append(" OR ");
+                if (treatFunction != null) {
+                    sb.append(treatFunction);
+                    sb.append('(');
+                    sb.append("e.");
+                    sb.append(attributes[j]);
+                    sb.append(')');
+                } else {
+                    sb.append("e.");
+                    sb.append(attributes[j]);
+                }
+
+                sb.append(" = ");
+
+                sb.append(':');
+                int start = sb.length();
+
+                sb.append(prefix);
+                sb.append('_');
+                sb.append(attributes[j]);
+                sb.append('_').append(i);
+
+                String paramName = sb.substring(start, sb.length());
+                parameterNames[i][j] = paramName;
+
+                valuesSb.append("?,");
+            }
+
+            if (strategy == ValuesStrategy.SELECT_UNION) {
+                valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+                if (dummyTable != null) {
+                    valuesSb.append(" from ");
+                    valuesSb.append(dummyTable);
+                }
+            } else {
+                valuesSb.setCharAt(valuesSb.length() - 1, ')');
+                valuesSb.append(',');
+            }
+        }
+
+        if (strategy == ValuesStrategy.SELECT_UNION) {
+            valuesSb.setCharAt(valuesSb.length() - 1, ' ');
+        } else {
+            valuesSb.setCharAt(valuesSb.length() - 1, ')');
+        }
+
+        String exampleQueryString = sb.toString();
+        Query q = mainQuery.em.createQuery(exampleQueryString);
+
+        return q;
     }
 
     String addRoot(EntityType<?> clazz, String rootAlias) {
@@ -270,7 +475,7 @@ public class JoinManager extends AbstractManager {
             JoinNode rootNode = nodes.get(i);
             JoinNode correlationParent = rootNode.getCorrelationParent();
 
-            if (externalRepresenation && rootNode.getValues() != null) {
+            if (externalRepresenation && rootNode.getValueCount() > 0) {
                 ManagedType<?> type = metamodel.getManagedType(rootNode.getPropertyClass());
                 int count = type.getAttributes().size();
                 if (rootNode.getPropertyClass() != ValuesEntity.class) {
@@ -282,7 +487,7 @@ public class JoinManager extends AbstractManager {
                 }
                 sb.append("(VALUES");
 
-                for (Object value : rootNode.getValues()) {
+                for (int valueNumber = 0; valueNumber < rootNode.getValueCount(); valueNumber++) {
                     sb.append(" (");
 
                     for (int j = 0; j < count; j++) {

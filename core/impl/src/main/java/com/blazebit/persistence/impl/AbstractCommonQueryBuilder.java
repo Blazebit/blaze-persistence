@@ -23,6 +23,7 @@ import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.*;
+import com.blazebit.reflection.*;
 
 import javax.persistence.*;
 import javax.persistence.metamodel.Attribute;
@@ -456,6 +457,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public <T> BuilderType fromValues(Class<T> clazz, String alias, Collection<T> values) {
+        BuilderType result = fromValues(clazz, alias, values.size());
+        setParameter(alias, values);
+        return result;
+    }
+
+    public BuilderType fromValues(Class<?> clazz, String alias, int valueCount) {
         clearCache();
         if (!fromClassExplicitelySet) {
             // When from is explicitly called we have to revert the implicit root
@@ -465,7 +472,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         Class<?> valuesClazz = clazz;
-        ManagedType<T> type = mainQuery.metamodel.getManagedType(clazz);
+        ManagedType<?> type = mainQuery.metamodel.getManagedType(clazz);
         String treatFunction = null;
         if (type == null) {
             treatFunction = cbf.getTreatFunctions().get(clazz);
@@ -475,7 +482,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
             valuesClazz = ValuesEntity.class;
         }
-        joinManager.addRootValues(valuesClazz, alias, values, treatFunction);
+        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction);
+        // TODO: query must be bound here
         fromClassExplicitelySet = true;
 
         return (BuilderType) this;
@@ -545,21 +553,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return em.getMetamodel();
     }
 
-    void parameterizeQuery(Query q) {
-        for (Parameter<?> p : q.getParameters()) {
-            Object paramValue = parameterManager.getParameterValue(p.getName());
-            if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
-                ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
-                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
-            } else if (paramValue instanceof ParameterManager.TemporalDateParameterWrapper) {
-                ParameterManager.TemporalDateParameterWrapper wrappedValue = (ParameterManager.TemporalDateParameterWrapper) paramValue;
-                q.setParameter(p.getName(), wrappedValue.getValue(), wrappedValue.getType());
-            } else {
-                q.setParameter(p.getName(), paramValue);
-            }
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public BuilderType setParameter(String name, Object value) {
         parameterManager.satisfyParameter(name, value);
@@ -568,13 +561,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
     @SuppressWarnings("unchecked")
     public BuilderType setParameter(String name, Calendar value, TemporalType temporalType) {
-        parameterManager.satisfyParameter(name, new ParameterManager.TemporalCalendarParameterWrapper(value, temporalType));
+        parameterManager.satisfyParameter(name, value, temporalType);
         return (BuilderType) this;
     }
 
     @SuppressWarnings("unchecked")
     public BuilderType setParameter(String name, Date value, TemporalType temporalType) {
-        parameterManager.satisfyParameter(name, new ParameterManager.TemporalDateParameterWrapper(value, temporalType));
+        parameterManager.satisfyParameter(name, value, temporalType);
         return (BuilderType) this;
     }
 
@@ -595,16 +588,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     public Object getParameterValue(String name) {
-        Object paramValue = parameterManager.getParameterValue(name);
-        if (paramValue instanceof ParameterManager.TemporalCalendarParameterWrapper) {
-            ParameterManager.TemporalCalendarParameterWrapper wrappedValue = (ParameterManager.TemporalCalendarParameterWrapper) paramValue;
-            return wrappedValue.getValue();
-        } else if (paramValue instanceof ParameterManager.TemporalDateParameterWrapper) {
-            ParameterManager.TemporalDateParameterWrapper wrappedValue = (ParameterManager.TemporalDateParameterWrapper) paramValue;
-            return wrappedValue.getValue();
-        } else {
-            return paramValue;
-        }
+        return parameterManager.getParameterValue(name);
     }
 
     @SuppressWarnings("unchecked")
@@ -1200,6 +1184,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
         String finalQuery = sqlSb.toString();
+
+        for (Query q : participatingQueries) {
+            parameterManager.parameterizeQuery(q);
+        }
+
         participatingQueries.add(baseQuery);
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
         
@@ -1232,7 +1221,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             query = transformQuery(query);
         }
 
-        parameterizeQuery(query);
+        parameterManager.parameterizeQuery(query);
         return query;
     }
 
@@ -1446,35 +1435,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return new StringBuilder(sqlQuery);
         }
 
-        ValuesStrategy strategy = dbmsDialect.getValuesStrategy();
-        String dummyTable = dbmsDialect.getDummyTable();
-
         // TODO: find a better size estimate
         StringBuilder sb = new StringBuilder(sqlQuery.length() + joinManager.getEntityFunctionNodes().size() * 100);
         sb.append(sqlQuery);
         for (JoinNode node : joinManager.getEntityFunctionNodes()) {
-            // TODO: we should do batching to avoid filling query caches
-            Collection<?> values = node.getValues();
-            Set<Attribute<?, ?>> attributeSet = (Set<Attribute<?, ?>>) mainQuery.metamodel.getManagedType(node.getPropertyClass()).getAttributes();
-            Attribute<?, ?>[] attributes = attributeSet.toArray(new Attribute[attributeSet.size()]);
-
-            StringBuilder valuesSb = new StringBuilder(20 + values.size() * attributeSet.size() * 3);
-            Query valuesExampleQuery = getValuesExampleQuery(node.getPropertyClass(), node.getAlias(), node.getValuesFunction(), values, attributes, valuesSb, strategy, dummyTable);
-
-            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
-            String exampleQuerySql = cbf.getExtendedQuerySupport().getSql(em, valuesExampleQuery);
-            String exampleQuerySqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, valuesExampleQuery, "e");
-            String valuesAliases = getValuesAliases(exampleQuerySqlAlias, attributes.length, exampleQuerySql, strategy, dummyTable);
-
-            if (strategy == ValuesStrategy.SELECT_VALUES) {
-                valuesSb.insert(0, valuesAliases);
-                valuesSb.append(')');
-                valuesAliases = null;
-            } else if (strategy == ValuesStrategy.SELECT_UNION) {
-                valuesSb.insert(0, valuesAliases);
-                valuesSb.append(')');
-                valuesAliases = null;
-            }
+            String valuesClause = node.getValuesClause();
+            String valuesAliases = node.getValuesAliases();
 
             // TODO: this is a hibernate specific integration detail
             // Replace the subview subselect that is generated for this subselect
@@ -1485,178 +1451,12 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 sb.replace(subselectIndex, subselectIndex + subselect.length(), entityName);
             }
 
-            applyTableNameRemapping(sb, valuesTableSqlAlias, valuesSb.toString(), valuesAliases);
-            participatingQueries.add(valuesExampleQuery);
+            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
+            applyTableNameRemapping(sb, valuesTableSqlAlias, valuesClause, valuesAliases);
+            participatingQueries.add(node.getValueQuery());
         }
 
         return sb;
-    }
-
-    private String getValuesAliases(String tableAlias, int attributeCount, String exampleQuerySql, ValuesStrategy strategy, String dummyTable) {
-        final String select = "select ";
-        int startIndex = exampleQuerySql.indexOf(select) + select.length();
-        int endIndex = exampleQuerySql.indexOf(" from ");
-
-        StringBuilder sb;
-
-        if (strategy == ValuesStrategy.VALUES) {
-            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
-            sb.append('(');
-        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
-            sb = new StringBuilder(endIndex - startIndex);
-            sb.append("(select ");
-        } else if (strategy == ValuesStrategy.SELECT_UNION) {
-            sb = new StringBuilder((endIndex - startIndex) - (tableAlias.length() + 3) * attributeCount);
-            sb.append("(select ");
-        } else {
-            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
-        }
-
-        // Search for table alias usages
-        final String searchAlias = tableAlias + ".";
-        int searchIndex = startIndex;
-        int attributeNumber = 1;
-        while ((searchIndex = exampleQuerySql.indexOf(searchAlias, searchIndex)) > -1 && searchIndex < endIndex) {
-            searchIndex += searchAlias.length();
-
-            if (strategy == ValuesStrategy.SELECT_VALUES) {
-                // TODO: This naming is actually H2 specific
-                sb.append('c');
-                sb.append(attributeNumber++);
-                sb.append(' ');
-            } else if (strategy == ValuesStrategy.SELECT_UNION) {
-                sb.append("null as ");
-            }
-
-            // Append chars until non-identifier char was found
-            for (; searchIndex < endIndex; searchIndex++) {
-                final char c = exampleQuerySql.charAt(searchIndex);
-                // NOTE: We expect users to be sane and only allow letters, numbers and underscore in an identifier
-                if (Character.isLetterOrDigit(c) || c == '_') {
-                    sb.append(c);
-                } else {
-                    sb.append(',');
-                    break;
-                }
-            }
-        }
-
-        if (strategy == ValuesStrategy.VALUES) {
-            sb.setCharAt(sb.length() - 1, ')');
-        } else if (strategy == ValuesStrategy.SELECT_VALUES) {
-            sb.setCharAt(sb.length() - 1, ' ');
-            sb.append(" from ");
-        } else if (strategy == ValuesStrategy.SELECT_UNION) {
-            sb.setCharAt(sb.length() - 1, ' ');
-            if (dummyTable != null) {
-                sb.append(" from ");
-                sb.append(dummyTable);
-                sb.append(' ');
-            }
-            sb.append("where 1=0");
-        }
-
-        return sb.toString();
-    }
-
-    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, Collection<?> values, Attribute<?, ?>[] attributes, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
-        Map<String, Object> parameters = new HashMap<String, Object>(attributes.length * values.size());
-        // This size estimation roughly assumes a maximum attribute name length of 15
-        StringBuilder sb = new StringBuilder(50 + values.size() * prefix.length() * attributes.length * 50);
-        sb.append("SELECT ");
-
-        for (int i = 0; i < attributes.length; i++) {
-            sb.append("e.");
-            sb.append(attributes[i].getName());
-            sb.append(',');
-        }
-
-        sb.setCharAt(sb.length() - 1, ' ');
-        sb.append("FROM ");
-        sb.append(clazz.getName());
-        sb.append(" e WHERE 1=1");
-
-        if (strategy == ValuesStrategy.SELECT_VALUES || strategy == ValuesStrategy.VALUES) {
-            valuesSb.append("(VALUES ");
-        } else if (strategy == ValuesStrategy.SELECT_UNION) {
-            // Nothing to do here
-        } else {
-            throw new IllegalArgumentException("Unsupported values strategy: " + strategy);
-        }
-
-        Iterator<Object> iter = (Iterator<Object>) values.iterator();
-        for (int i = 0; iter.hasNext(); i++) {
-            final Object value = iter.next();
-
-            if (strategy == ValuesStrategy.SELECT_UNION) {
-                valuesSb.append(" union all select ");
-            } else {
-                valuesSb.append('(');
-            }
-
-            for (int j = 0; j < attributes.length; j++) {
-                sb.append(" OR ");
-                if (treatFunction != null) {
-                    sb.append(treatFunction);
-                    sb.append('(');
-                    sb.append("e.");
-                    sb.append(attributes[j].getName());
-                    sb.append(')');
-                } else {
-                    sb.append("e.");
-                    sb.append(attributes[j].getName());
-                }
-
-                sb.append(" = ");
-
-                sb.append(':');
-                int start = sb.length();
-
-                sb.append(prefix);
-                sb.append('_');
-                sb.append(attributes[j].getName());
-                sb.append('_').append(i);
-
-                String paramName = sb.substring(start, sb.length());
-                parameters.put(paramName, extractAttributeValue(value, attributes[j]));
-
-                valuesSb.append("?,");
-            }
-
-            if (strategy == ValuesStrategy.SELECT_UNION) {
-                valuesSb.setCharAt(valuesSb.length() - 1, ' ');
-                if (dummyTable != null) {
-                    valuesSb.append(" from ");
-                    valuesSb.append(dummyTable);
-                }
-            } else {
-                valuesSb.setCharAt(valuesSb.length() - 1, ')');
-                valuesSb.append(',');
-            }
-        }
-
-        if (strategy == ValuesStrategy.SELECT_UNION) {
-            valuesSb.setCharAt(valuesSb.length() - 1, ' ');
-        } else {
-            valuesSb.setCharAt(valuesSb.length() - 1, ')');
-        }
-
-        String exampleQueryString = sb.toString();
-        Query q = em.createQuery(exampleQueryString);
-
-        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-            q.setParameter(entry.getKey(), entry.getValue());
-        }
-
-        return q;
-    }
-
-    private Object extractAttributeValue(Object o, Attribute<?, ?> attribute) {
-        // TODO: we can do much better here but for now it has to be enough
-        if (attribute.getDeclaringType().getJavaType() == ValuesEntity.class) {
-            return o;
-        }
-        return com.blazebit.reflection.ExpressionUtils.getValue(o, attribute.getName());
     }
     
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {

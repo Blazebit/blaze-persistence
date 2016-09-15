@@ -18,10 +18,15 @@ package com.blazebit.persistence.impl;
 import java.util.*;
 
 import javax.persistence.Parameter;
+import javax.persistence.Query;
 import javax.persistence.TemporalType;
+import javax.persistence.metamodel.Attribute;
 
+import com.blazebit.lang.ValueRetriever;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.reflection.PropertyPathExpression;
 
 /**
  *
@@ -33,6 +38,7 @@ public class ParameterManager {
     private static final String prefix = "param_";
     private int counter;
     private final Map<String, ParameterImpl<?>> parameters = new HashMap<String, ParameterImpl<?>>();
+    private final Map<String, String> valuesParameters = new HashMap<String, String>();
     private final VisitorAdapter parameterRegistrationVisitor;
 
     public ParameterManager() {
@@ -41,6 +47,31 @@ public class ParameterManager {
 
     public VisitorAdapter getParameterRegistrationVisitor() {
         return parameterRegistrationVisitor;
+    }
+
+    void parameterizeQuery(Query q) {
+        Set<String> requestedValueParameters = new HashSet<String>();
+        for (Parameter<?> p : q.getParameters()) {
+            String parameterName = p.getName();
+            ParameterImpl<?> parameter = parameters.get(parameterName);
+            if (parameter == null) {
+                String valuesParameter = valuesParameters.get(parameterName);
+                if (valuesParameter == null) {
+                    throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+                }
+
+                // Skip binding the sub-parameter, we will do that in one go at the end
+                requestedValueParameters.add(valuesParameter);
+                continue;
+            }
+
+            parameter.bind(q);
+        }
+
+        for (String parameterName : requestedValueParameters) {
+            ParameterImpl<?> parameter = parameters.get(parameterName);
+            parameter.bind(q);
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -113,6 +144,21 @@ public class ParameterManager {
         }
     }
 
+    public void registerValuesParameter(String parameterName, Class<?> type, String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        if (parameters.containsKey(parameterName)) {
+            throw new IllegalArgumentException("Can't register parameter for VALUES clause because there already exists a parameter with the name: " + parameterName);
+        }
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, new ValuesParameterWrapper(type, parameterNames, pathExpressions)));
+        for (int i = 0; i < parameterNames.length; i++) {
+            for (int j = 0; j < parameterNames[i].length; j++) {
+                valuesParameters.put(parameterNames[i][j], parameterName);
+            }
+        }
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void satisfyParameter(String parameterName, Object parameterValue) {
         if (parameterName == null) {
@@ -125,6 +171,30 @@ public class ParameterManager {
         parameter.setValue(parameterValue);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void satisfyParameter(String parameterName, Calendar value, TemporalType temporalType) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        ParameterImpl parameter = parameters.get(parameterName);
+        if (parameter == null) {
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+        }
+        parameter.setValue(new TemporalCalendarParameterWrapper(temporalType, value));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public void satisfyParameter(String parameterName, Date value, TemporalType temporalType) {
+        if (parameterName == null) {
+            throw new NullPointerException("parameterName");
+        }
+        ParameterImpl parameter = parameters.get(parameterName);
+        if (parameter == null) {
+            throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
+        }
+        parameter.setValue(new TemporalDateParameterWrapper(temporalType, value));
+    }
+
     @SuppressWarnings({ "unchecked" })
     public void setParameterType(String parameterName, Class<?> type) {
         if (parameterName == null) {
@@ -134,12 +204,13 @@ public class ParameterManager {
         if (parameter == null) {
             throw new IllegalArgumentException(String.format("Parameter name \"%s\" does not exist", parameterName));
         }
+        // TODO: maybe we should do some checks here?
         parameter.setParameterType((Class) type);
     }
 
     // TODO: needs equals-hashCode implementation
 
-    private static class ParameterImpl<T> implements Parameter<T> {
+    static final class ParameterImpl<T> implements Parameter<T> {
 
         private final String name;
         private final Integer position;
@@ -177,20 +248,34 @@ public class ParameterManager {
         }
 
         public T getValue() {
+            if (value instanceof ParamerterValue) {
+                return (T) ((ParamerterValue) value).getValue();
+            }
+
             return value;
         }
 
         @SuppressWarnings({ "unchecked" })
         public void setValue(T value) {
-            this.value = value;
-            if (value != null) {
-                if (value instanceof TemporalCalendarParameterWrapper) {
-                    parameterType = (Class<T>) Calendar.class;
-                } else if (value instanceof TemporalDateParameterWrapper) {
-                    parameterType = (Class<T>) Date.class;
-                } else {
-                    parameterType = (Class<T>) value.getClass();
+            if (this.value instanceof ParamerterValue) {
+                this.value = (T) ((ParamerterValue) this.value).withValue(value);
+            } else {
+                this.value = value;
+                if (value != null) {
+                    if (value instanceof ParamerterValue) {
+                        parameterType = (Class<T>) ((ParamerterValue) value).getValueType();
+                    } else {
+                        parameterType = (Class<T>) value.getClass();
+                    }
                 }
+            }
+        }
+
+        public void bind(Query q) {
+            if (value instanceof ParamerterValue) {
+                ((ParamerterValue) value).bind(q, name);
+            } else {
+                q.setParameter(name, value);
             }
         }
 
@@ -213,41 +298,138 @@ public class ParameterManager {
         }
     }
 
-    static class TemporalCalendarParameterWrapper<T> {
+    static interface ParamerterValue {
 
-        private final Calendar value;
+        public Class<?> getValueType();
+
+        public Object getValue();
+
+        public ParamerterValue withValue(Object value);
+
+        public void bind(Query query, String name);
+
+    }
+
+    static final class TemporalCalendarParameterWrapper implements ParamerterValue {
+
         private final TemporalType type;
+        private Calendar value;
 
-        public TemporalCalendarParameterWrapper(Calendar value, TemporalType type) {
-            this.value = value;
+        public TemporalCalendarParameterWrapper(TemporalType type, Calendar value) {
             this.type = type;
+            this.value = value;
         }
 
+        @Override
         public Calendar getValue() {
             return value;
         }
 
-        public TemporalType getType() {
-            return type;
+        @Override
+        public ParamerterValue withValue(Object value) {
+            this.value = (Calendar) value;
+            return this;
+        }
+
+        @Override
+        public Class<?> getValueType() {
+            return Calendar.class;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            query.setParameter(name, value, type);
         }
     }
 
-    static class TemporalDateParameterWrapper {
+    static final class TemporalDateParameterWrapper implements ParamerterValue {
 
-        private final Date value;
         private final TemporalType type;
+        private Date value;
 
-        public TemporalDateParameterWrapper(Date value, TemporalType type) {
-            this.value = value;
+        public TemporalDateParameterWrapper(TemporalType type, Date value) {
             this.type = type;
+            this.value = value;
         }
 
+        @Override
         public Date getValue() {
             return value;
         }
 
-        public TemporalType getType() {
-            return type;
+        @Override
+        public ParamerterValue withValue(Object value) {
+            this.value = (Date) value;
+            return this;
+        }
+
+        @Override
+        public Class<?> getValueType() {
+            return Date.class;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            query.setParameter(name, value, type);
+        }
+    }
+
+    static final class ValuesParameterWrapper implements ParamerterValue {
+
+        private final Class<?> type;
+        private final String[][] parameterNames;
+        private final ValueRetriever<Object, Object>[] pathExpressions;
+        private Collection<Object> value;
+
+        public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions) {
+            this.type = type;
+            this.parameterNames = parameterNames;
+            this.pathExpressions = pathExpressions;
+        }
+
+        @Override
+        public Object getValue() {
+            return value;
+        }
+
+        @Override
+        public Class<?> getValueType() {
+            return Collection.class;
+        }
+
+        @Override
+        public ParamerterValue withValue(Object value) {
+            if (value == null) {
+                throw new IllegalArgumentException("null not allowed for VALUES parameter!");
+            }
+            if (!(value instanceof Collection<?>)) {
+                throw new IllegalArgumentException("Value for VALUES parameter must be a collection! Unsupported type: " + value.getClass());
+            }
+
+            // NOTE: be careful when changing this, there might be code that depends on this not being copied for performance
+            this.value = (Collection<Object>) value;
+            return this;
+        }
+
+        @Override
+        public void bind(Query query, String name) {
+            if (value == null) {
+                throw new IllegalArgumentException("No values are bound for parameter with name: " + name);
+            }
+
+            Iterator<Object> iterator = value.iterator();
+            for (int i = 0; i < parameterNames.length; i++) {
+                if (iterator.hasNext()) {
+                    Object element = iterator.next();
+                    for (int j = 0; j < parameterNames[i].length; j++) {
+                        query.setParameter(parameterNames[i][j], pathExpressions[j].getValue(element));
+                    }
+                } else {
+                    for (int j = 0; j < parameterNames[i].length; j++) {
+                        query.setParameter(parameterNames[i][j], null);
+                    }
+                }
+            }
         }
     }
 }

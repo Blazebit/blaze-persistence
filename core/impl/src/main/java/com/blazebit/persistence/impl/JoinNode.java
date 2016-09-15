@@ -17,6 +17,7 @@ package com.blazebit.persistence.impl;
 
 import java.util.*;
 
+import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.persistence.JoinType;
@@ -50,7 +51,11 @@ public class JoinNode implements Root {
     private final Class<?> propertyClass;
     private final String treatType;
     private final String valuesFunction;
-    private final Collection<?> values;
+    private final int valueCount;
+    private final Query valueQuery;
+    private final String valuesClause;
+    private final String valuesAliases;
+
     private final Map<String, JoinTreeNode> nodes = new TreeMap<String, JoinTreeNode>(); // Use TreeMap so that joins get applied
                                                                                          // alphabetically for easier testing
     private final Set<JoinNode> entityJoinNodes = new LinkedHashSet<JoinNode>();
@@ -64,7 +69,7 @@ public class JoinNode implements Root {
     private boolean dirty = true;
     private boolean cardinalityMandatory;
 
-    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, Collection<?> values) {
+    public JoinNode(JoinAliasInfo aliasInfo, Class<?> propertyClass, String valuesFunction, int valueCount, Query valueQuery, String valuesClause, String valuesAliases) {
         this.parent = null;
         this.parentTreeNode = null;
         this.parentTreatType = null;
@@ -73,7 +78,10 @@ public class JoinNode implements Root {
         this.propertyClass = propertyClass;
         this.treatType = null;
         this.valuesFunction = valuesFunction;
-        this.values = values;
+        this.valueCount = valueCount;
+        this.valueQuery = valueQuery;
+        this.valuesClause = valuesClause;
+        this.valuesAliases = valuesAliases;
         this.correlationParent = null;
         this.correlationPath = null;
         onUpdate(null);
@@ -88,7 +96,10 @@ public class JoinNode implements Root {
         this.propertyClass = propertyClass;
         this.treatType = treatType;
         this.valuesFunction = null;
-        this.values = null;
+        this.valueCount = 0;
+        this.valueQuery = null;
+        this.valuesClause = null;
+        this.valuesAliases = null;
         this.correlationParent = null;
         this.correlationPath = null;
         onUpdate(null);
@@ -105,7 +116,10 @@ public class JoinNode implements Root {
         this.propertyClass = propertyClass;
         this.treatType = treatType;
         this.valuesFunction = null;
-        this.values = null;
+        this.valueCount = 0;
+        this.valueQuery = null;
+        this.valuesClause = null;
+        this.valuesAliases = null;
         onUpdate(null);
     }
     
@@ -329,12 +343,20 @@ public class JoinNode implements Root {
         return treatType;
     }
 
-    public String getValuesFunction() {
-        return valuesFunction;
+    public int getValueCount() {
+        return valueCount;
     }
 
-    public Collection<?> getValues() {
-        return values;
+    public Query getValueQuery() {
+        return valueQuery;
+    }
+
+    public String getValuesClause() {
+        return valuesClause;
+    }
+
+    public String getValuesAliases() {
+        return valuesAliases;
     }
 
     public JoinNode getCorrelationParent() {

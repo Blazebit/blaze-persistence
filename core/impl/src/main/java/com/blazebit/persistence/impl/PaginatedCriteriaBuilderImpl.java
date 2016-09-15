@@ -135,13 +135,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (entityId == null) {
             // No reference entity id, so just do a simple count query
             TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
-            parameterizeQuery(countQuery);
+            parameterManager.parameterizeQuery(countQuery);
 
             totalSize = countQuery.getSingleResult();
         } else {
             // There is a reference entity id, so we need to extract the page position
             TypedQuery<Object[]> countQuery = em.createQuery(countQueryString, Object[].class);
-            parameterizeQuery(countQuery);
+            parameterManager.parameterizeQuery(countQuery);
 
             Object[] result = countQuery.getSingleResult();
             totalSize = (Long) result[0];
@@ -292,7 +292,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
-        parameterizeQuery(query);
+        parameterManager.parameterizeQuery(query);
         List<T> result = query.getResultList();
 
         if (result.isEmpty()) {
@@ -325,7 +325,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             idQuery.setFirstResult(firstRow);
         }
 
-        parameterizeQuery(idQuery);
+        parameterManager.parameterizeQuery(idQuery);
         List<?> ids = idQuery.getResultList();
 
         if (ids.isEmpty()) {
@@ -376,7 +376,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             query = transformQuery(query);
         }
 
-        parameterizeQuery(query);
+        parameterManager.parameterizeQuery(query);
         return query.getResultList();
     }
 

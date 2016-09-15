@@ -19,6 +19,8 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.*;
 import com.blazebit.persistence.testsuite.entity.*;
+import com.googlecode.catchexception.CatchException;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -140,5 +143,66 @@ public class EntityFunctionTest extends AbstractCoreTest {
 
         assertEquals("docX", resultList.get(1).get(0));
         assertNull(resultList.get(1).get(1));
+    }
+
+    @Test
+    // NOTE: Entity joins are supported since Hibernate 5.1, Datanucleus 5 and latest Eclipselink
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionParameter() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(IntIdEntity.class, "intEntity", 1);
+        cb.leftJoinOn(Document.class, "doc")
+                .on("doc.name").eqExpression("intEntity.name")
+        .end();
+        cb.select("intEntity.name");
+        cb.select("doc.name");
+        cb.orderByAsc("intEntity.name");
+
+        String expected = ""
+                + "SELECT intEntity.name, doc.name FROM IntIdEntity(VALUES (?,?)) intEntity LEFT JOIN Document doc ON doc.name = intEntity.name" +
+                " ORDER BY " + renderNullPrecedence("intEntity.name", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
+
+        List<Tuple> resultList;
+
+        // Didn't bind parameters
+        CatchException.verifyException(cb, IllegalArgumentException.class).getResultList();
+
+        // Bind wrong values parameter type
+        try {
+            // Unfortunately the setParameter method does not seem to get proxied..
+//            CatchException.verifyException(cb, IllegalArgumentException.class).setParameter("intEntity", Collections.emptyList());
+            cb.setParameter("intEntity", 1L);
+            Assert.fail("Expected IllegalArgumentException!");
+        } catch (IllegalArgumentException ex) {}
+
+        // Bind wrong parameter types
+        cb.setParameter("intEntity", Arrays.asList(1L));
+        CatchException.verifyException(cb, IllegalArgumentException.class).getResultList();
+
+        // Values with matching entry
+        cb.setParameter("intEntity", Arrays.asList(new IntIdEntity("doc1")));
+        resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals("doc1", resultList.get(0).get(1));
+
+        // Values with no matching entry
+        cb.setParameter("intEntity", Arrays.asList(new IntIdEntity("docX")));
+        resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertEquals("docX", resultList.get(0).get(0));
+        assertNull(resultList.get(0).get(1));
+
+        // Empty values
+        cb.setParameter("intEntity", Collections.emptyList());
+        resultList = cb.getResultList();
+        assertEquals(1, resultList.size());
+
+        assertNull(resultList.get(0).get(0));
+        assertNull(resultList.get(0).get(1));
     }
 }

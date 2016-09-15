@@ -593,8 +593,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             }
             
             org.hibernate.Query hibernateQuery = q.unwrap(org.hibernate.Query.class);
-//            hibernateQuery.setResultTransformer(null);
-            
+
             Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(hibernateQuery));
             String queryString = hibernateAccess.expandParameterLists(session, hibernateQuery, namedParams);
             
@@ -659,8 +658,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
                 if (executor == null && isModification) {
                     // We have to set an executor
                     org.hibernate.Query lastHibernateQuery = lastQuery.unwrap(org.hibernate.Query.class);
-//                    lastHibernateQuery.setResultTransformer(null);
-                    
+
                     Map<String, TypedValue> namedParams = new HashMap<String, TypedValue>(hibernateAccess.getNamedParams(lastHibernateQuery));
                     String queryString = hibernateAccess.expandParameterLists(session, lastHibernateQuery, namedParams);
                     

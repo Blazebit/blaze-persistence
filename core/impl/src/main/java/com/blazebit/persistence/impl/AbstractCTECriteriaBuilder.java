@@ -90,8 +90,8 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
         }
-        
-        parameterizeQuery(query);
+
+        parameterManager.parameterizeQuery(query);
         return query;
     }
 

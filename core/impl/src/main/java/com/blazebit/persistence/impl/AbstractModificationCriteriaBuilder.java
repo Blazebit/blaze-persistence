@@ -170,14 +170,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
         }
-        
-        parameterizeQuery(query);
+
+        parameterManager.parameterizeQuery(query);
         return query;
 	}
 	
 	protected Query getBaseQuery() {
 	    Query query = em.createQuery(getBaseQueryStringWithCheck());
-        parameterizeQuery(query);
+        parameterManager.parameterizeQuery(query);
         return query;
 	}
 
