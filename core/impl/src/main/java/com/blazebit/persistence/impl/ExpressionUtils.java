@@ -513,21 +513,6 @@ public class ExpressionUtils {
         return superExpression;
     }
 
-    public static boolean isSizeFunction(Expression expression) {
-        if (expression instanceof FunctionExpression) {
-            return isSizeFunction((FunctionExpression) expression);
-        }
-        return false;
-    }
-
-    public static boolean isSizeFunction(FunctionExpression expression) {
-        return "SIZE".equalsIgnoreCase(expression.getFunctionName());
-    }
-
-    public static boolean isOuterFunction(FunctionExpression e) {
-        return "OUTER".equalsIgnoreCase(e.getFunctionName());
-    }
-
     private static final AbortableVisitorAdapter subqueryExpressionDetector = new AbortableVisitorAdapter() {
 
         @Override
@@ -540,7 +525,7 @@ public class ExpressionUtils {
 
         @Override
         public Boolean visit(FunctionExpression expression) {
-            return ExpressionUtils.isSizeFunction(expression);
+            return com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression);
         }
     };
 }

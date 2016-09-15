@@ -39,7 +39,7 @@ public class SizeSelectInfoTransformer implements SelectInfoTransformer {
         boolean[] groupBySelectStatus = selectManager.containsGroupBySelect(true);
         sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
         sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
-        if (ExpressionUtils.isSizeFunction(info.getExpression())) {
+        if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(info.getExpression())) {
             info.setExpression(info.getExpression().accept(sizeTransformationVisitor));
         } else {
             info.getExpression().accept(sizeTransformationVisitor);

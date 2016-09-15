@@ -47,7 +47,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
             Expression transformedLeft = transform(arithmeticExpression.getLeft(), fromClause, joinRequired);
             Expression transformedRight = transform(arithmeticExpression.getRight(), fromClause, joinRequired);
             return new ArithmeticExpression(transformedLeft, transformedRight, arithmeticExpression.getOp());
-        } else if (original instanceof FunctionExpression && !ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
+        } else if (original instanceof FunctionExpression && !com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction((FunctionExpression) original)) {
             FunctionExpression func = (FunctionExpression) original;
             List<Expression> transformed = new ArrayList<Expression>();
             List<Expression> expressions = func.getExpressions();

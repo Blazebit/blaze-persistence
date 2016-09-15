@@ -69,7 +69,7 @@ public class JoinVisitor extends VisitorAdapter {
     @Override
     public void visit(FunctionExpression expression) {
         // do not join outer expressions
-        if (!ExpressionUtils.isOuterFunction(expression)) {
+        if (!com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
             super.visit(expression);
         }
     }

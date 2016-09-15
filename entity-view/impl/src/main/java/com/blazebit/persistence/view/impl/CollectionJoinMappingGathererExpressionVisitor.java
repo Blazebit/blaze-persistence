@@ -28,6 +28,7 @@ import javax.persistence.metamodel.Type;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.util.ExpressionUtils;
 
 /**
  *
@@ -121,4 +122,10 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
     public void visit(MemberOfPredicate predicate) {
     }
 
+	@Override
+	public void visit(FunctionExpression expression) {
+		if (!ExpressionUtils.isSizeFunction(expression)) {
+			super.visit(expression);
+		}
+	}
 }

@@ -52,7 +52,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
     @Override
     public void visit(FunctionExpression expression) {
-        if (ExpressionUtils.isOuterFunction(expression)) {
+        if (com.blazebit.persistence.impl.util.ExpressionUtils.isOuterFunction(expression)) {
             expression.getExpressions().get(0).accept(this);
         } else if (ExpressionUtils.isFunctionFunctionExpression(expression)) {
             String functionName = ExpressionUtils.unwrapStringLiteral(expression.getExpressions().get(0).toString());

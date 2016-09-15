@@ -21,10 +21,10 @@ import java.util.*;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
@@ -445,6 +445,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         } else if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
             resolveToAny(expression.getExpressions().subList(1, expression.getExpressions().size()), true);
+        } else if (ExpressionUtils.isSizeFunction(expression)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            currentPosition.setCurrentClass(Long.class);
         } else {
             // TODO: we could do better here by checking the actual return types of the functions or put a list of other "known" functions here, at least make it extendible
     	    // We can't just say it's invalid, we might just not know the function

@@ -15,7 +15,7 @@ class GroupByUsableDetectionVisitor extends AbortableVisitorAdapter {
 
 	@Override
     public Boolean visit(FunctionExpression expression) {
-        if (expression instanceof AggregateExpression || (treatSizeAsAggreagte && ExpressionUtils.isSizeFunction(expression))) {
+        if (expression instanceof AggregateExpression || (treatSizeAsAggreagte && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
             return true;
         }
         return super.visit(expression);

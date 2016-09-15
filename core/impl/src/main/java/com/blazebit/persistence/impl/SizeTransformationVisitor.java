@@ -41,8 +41,7 @@ import com.blazebit.persistence.impl.expression.SimplePathReference;
 import com.blazebit.persistence.impl.expression.Subquery;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.WhenClauseExpression;
-import com.blazebit.persistence.impl.util.MetamodelUtils;
-import com.blazebit.persistence.impl.util.PropertyUtils;
+import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.DbmsDialect;
 
 /**
@@ -153,7 +152,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
 
     @Override
     public Expression visit(FunctionExpression expression) {
-        if (ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
+        if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression) && clause != ClauseType.WHERE) {
             PathExpression sizeArg = (PathExpression) expression.getExpressions().get(0);
             Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
