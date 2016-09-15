@@ -53,24 +53,24 @@ public final class EntityViewSettingHelper {
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
-        EntityViewConfiguration configuration = new EntityViewConfiguration(setting.getProperties());
-        CriteriaBuilder<T> normalCb = evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, criteriaBuilder, setting.getOptionalParameters(), configuration);
-    	applyAttributeFilters(setting, evm, normalCb, ef, entityViewRoot);
-        applyAttributeSorters(setting, evm, normalCb, ef, entityViewRoot);
-        applyOptionalParameters(setting, normalCb);
+        EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, setting.getOptionalParameters(), setting.getProperties());
+        evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
+    	applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        applyAttributeSorters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        applyOptionalParameters(setting, criteriaBuilder);
 
         if (setting.isPaginated()) {
             if (setting.isKeysetPaginated()) {
                 if (setting.getFirstResult() == -1) {
-                    return (Q) normalCb.page(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
+                    return (Q) criteriaBuilder.page(setting.getEntityId(), setting.getMaxResults()).withKeysetExtraction(true);
                 } else {
-                    return (Q) normalCb.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
+                    return (Q) criteriaBuilder.page(setting.getKeysetPage(), setting.getFirstResult(), setting.getMaxResults());
                 }
             } else {
                 if (setting.getFirstResult() == -1) {
-                    return (Q) normalCb.page(0, setting.getMaxResults());
+                    return (Q) criteriaBuilder.page(0, setting.getMaxResults());
                 } else {
-                    return (Q) normalCb.page(setting.getFirstResult(), setting.getMaxResults());
+                    return (Q) criteriaBuilder.page(setting.getFirstResult(), setting.getMaxResults());
                 }
             }
         } else {

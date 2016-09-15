@@ -37,20 +37,20 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public abstract class AbstractCorrelatedBatchTupleListTransformerFactory<T> implements TupleListTransformerFactory {
+public abstract class AbstractCorrelatedBatchTupleListTransformerFactory implements TupleListTransformerFactory {
 
-    private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
-
-    private final Class<?> criteriaBuilderRoot;
-    private final ManagedViewType<?> viewRootType;
-    private final String correlationResult;
-    private final CorrelationProviderFactory correlationProviderFactory;
-    private final String attributePath;
-    private final int batchSize;
+    protected final Correlator correlator;
+    protected final Class<?> criteriaBuilderRoot;
+    protected final ManagedViewType<?> viewRootType;
+    protected final String correlationResult;
+    protected final CorrelationProviderFactory correlationProviderFactory;
+    protected final String attributePath;
+    protected final int batchSize;
     protected final int tupleIndex;
     protected final Class<?> correlationBasisEntity;
 
-    public AbstractCorrelatedBatchTupleListTransformerFactory(Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
+    public AbstractCorrelatedBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity) {
+        this.correlator = correlator;
         this.criteriaBuilderRoot = criteriaBuilderRoot;
         this.viewRootType = viewRootType;
         this.correlationResult = correlationResult;
@@ -59,47 +59,6 @@ public abstract class AbstractCorrelatedBatchTupleListTransformerFactory<T> impl
         this.batchSize = batchSize;
         this.attributePath = attributePath;
         this.correlationBasisEntity = correlationBasisEntity;
-    }
-
-    protected final int getBatchSize(EntityViewConfiguration configuration) {
-        return configuration.getBatchSize(attributePath, batchSize);
-    }
-
-    protected final Map.Entry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro> createCriteriaBuilder(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int batchSize, String paramName) {
-        CorrelationProvider provider = correlationProviderFactory.create(queryBuilder, optionalParameters);
-        CriteriaBuilder<?> cb = queryBuilder.getCriteriaBuilderFactory().create(queryBuilder.getEntityManager(), criteriaBuilderRoot);
-
-        String idAttributePath = null;
-        ManagedType<?> managedType = queryBuilder.getMetamodel().entity(viewRootType.getEntityClass());
-        if (managedType instanceof IdentifiableType<?>) {
-            IdentifiableType<?> identifiableType = (IdentifiableType<?>) managedType;
-            idAttributePath = identifiableType.getId(identifiableType.getIdType().getJavaType()).getName();
-        }
-
-        CorrelatedSubqueryViewRootJpqlMacro macro = new CorrelatedSubqueryViewRootJpqlMacro(cb, optionalParameters, viewRootType.getEntityClass(), idAttributePath);
-        cb.registerMacro("view_root", macro);
-        SubqueryCorrelationBuilder correlationBuilder = new SubqueryCorrelationBuilder(cb, optionalParameters, entityViewConfiguration, this, batchSize, correlationResult);
-        provider.applyCorrelation(correlationBuilder, ':' + paramName);
-        // TODO: take special care when handling parameters. some must be copied, others should probably be moved to optional parameters
-
-        return new AbstractMap.SimpleEntry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro>((CriteriaBuilder<T>) cb, macro);
-    }
-
-    protected abstract void finishCriteriaBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, int batchSize, String correlationRoot);
-
-    protected final String generateCorrelationParamName(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters) {
-        int paramNumber = 0;
-        String paramName;
-        while (true) {
-            paramName = CORRELATION_PARAM_PREFIX + paramNumber;
-            if (queryBuilder.getParameter(paramName) != null) {
-                paramNumber++;
-            } else if (optionalParameters.containsKey(paramName)) {
-                paramNumber++;
-            } else {
-                return paramName;
-            }
-        }
     }
 
 }

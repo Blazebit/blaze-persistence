@@ -1,5 +1,7 @@
 package com.blazebit.persistence.view.impl;
 
+import com.blazebit.persistence.CriteriaBuilder;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,9 +12,11 @@ import java.util.Map;
  */
 public final class EntityViewConfiguration {
 
+    private final CriteriaBuilder<?> criteriaBuilder;
+    private final Map<String, Object> optionalParameters;
     private final Map<String, Integer> batchSizeConfiguration;
 
-    public EntityViewConfiguration(Map<String, Object> properties) {
+    public EntityViewConfiguration(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, Map<String, Object> properties) {
         Map<String, Integer> batchSizeConfiguration = new HashMap<String, Integer>(properties.size());
 
         for (Map.Entry<String, Object> entry : properties.entrySet()) {
@@ -30,7 +34,17 @@ public final class EntityViewConfiguration {
             }
         }
 
+        this.criteriaBuilder = criteriaBuilder;
+        this.optionalParameters = new HashMap<String, Object>(optionalParameters);
         this.batchSizeConfiguration = Collections.unmodifiableMap(batchSizeConfiguration);
+    }
+
+    public CriteriaBuilder<?> getCriteriaBuilder() {
+        return criteriaBuilder;
+    }
+
+    public Map<String, Object> getOptionalParameters() {
+        return optionalParameters;
     }
 
     public int getBatchSize() {

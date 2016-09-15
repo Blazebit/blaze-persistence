@@ -537,7 +537,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         if (!correlatedAttribute.isCollection()) {
-            tupleTransformatorFactory.add(new CorrelatedSubviewBatchTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix));
+            tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                    new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                    subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity
+            ));
         } else {
             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) correlatedAttribute;
             switch (pluralAttribute.getCollectionType()) {
@@ -545,23 +548,38 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedSubviewBatchListTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix));
+                        tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                                new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                                subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case LIST:
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedSubviewBatchListTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix));
+                        tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                                new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                                subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case SET:
                     if (pluralAttribute.isSorted()) {
-                        tupleTransformatorFactory.add(new CorrelatedSubviewBatchSortedSetTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix, pluralAttribute.getComparator()));
+                        tupleTransformatorFactory.add(new CorrelatedSortedSetBatchTupleListTransformerFactory(
+                                new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                                subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, pluralAttribute.getComparator()
+                        ));
                     } else if (pluralAttribute.isOrdered()) {
-                        tupleTransformatorFactory.add(new CorrelatedSubviewBatchOrderedSetTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix));
+                        tupleTransformatorFactory.add(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
+                                new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                                subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedSubviewBatchSetTupleListTransformerFactory<Object>(managedViewType, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity, evm, ef, subviewAliasPrefix));
+                        tupleTransformatorFactory.add(new CorrelatedSetBatchTupleListTransformerFactory(
+                                new SubviewCorrelator(managedViewType, evm, subviewAliasPrefix),
+                                subviewClass, viewRoot, correlationResult, factory, subviewAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case MAP:
@@ -633,7 +651,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (!correlatedAttribute.isCollection()) {
             // TODO: shouldn't we embed this query no matter what strategy is used?
             resultType = correlatedAttribute.getJavaType();
-            tupleTransformatorFactory.add(new CorrelatedBasicBatchTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity));
+            tupleTransformatorFactory.add(new CorrelatedSingularBatchTupleListTransformerFactory(
+                    new BasicCorrelator(),
+                    resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity
+            ));
         } else {
             PluralAttribute<?, ?, ?> pluralAttribute = (PluralAttribute<?, ?, ?>) correlatedAttribute;
             resultType = pluralAttribute.getElementType();
@@ -642,23 +663,38 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The collection attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedBasicBatchListTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity));
+                        tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                                new BasicCorrelator(),
+                                resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case LIST:
                     if (pluralAttribute.isSorted()) {
                         throw new IllegalArgumentException("The list attribute '" + pluralAttribute + "' can not be sorted!");
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedBasicBatchListTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity));
+                        tupleTransformatorFactory.add(new CorrelatedListBatchTupleListTransformerFactory(
+                                new BasicCorrelator(),
+                                resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case SET:
                     if (pluralAttribute.isSorted()) {
-                        tupleTransformatorFactory.add(new CorrelatedBasicBatchSortedSetTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity, pluralAttribute.getComparator()));
+                        tupleTransformatorFactory.add(new CorrelatedSortedSetBatchTupleListTransformerFactory(
+                                new BasicCorrelator(),
+                                resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity, pluralAttribute.getComparator()
+                        ));
                     } else if (pluralAttribute.isOrdered()) {
-                        tupleTransformatorFactory.add(new CorrelatedBasicBatchOrderedSetTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity));
+                        tupleTransformatorFactory.add(new CorrelatedOrderedSetBatchTupleListTransformerFactory(
+                                new BasicCorrelator(),
+                                resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     } else {
-                        tupleTransformatorFactory.add(new CorrelatedBasicBatchSetTupleListTransformerFactory(resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity));
+                        tupleTransformatorFactory.add(new CorrelatedSetBatchTupleListTransformerFactory(
+                                new BasicCorrelator(),
+                                resultType, viewRoot, correlationResult, factory, basicAttributePath, startIndex, batchSize, correlationBasisEntity
+                        ));
                     }
                     break;
                 case MAP:
@@ -836,31 +872,31 @@ public class ViewTypeObjectBuilderTemplate<T> {
         return effectiveTupleSize;
     }
 
-    public static class Key<T> {
+    public static class Key {
 
     	private final ExpressionFactory ef;
-        private final ManagedViewType<T> viewType;
-        private final MappingConstructor<T> constructor;
+        private final ManagedViewType<Object> viewType;
+        private final MappingConstructor<Object> constructor;
         private final String name;
         private final String entityViewRoot;
         private final int offset;
 
-        public Key(ExpressionFactory ef, ManagedViewType<T> viewType, MappingConstructor<T> constructor, String name, String entityViewRoot, int offset) {
+        public Key(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> constructor, String name, String entityViewRoot, int offset) {
         	this.ef = ef;
-            this.viewType = viewType;
-            this.constructor = constructor;
+            this.viewType = (ManagedViewType<Object>) viewType;
+            this.constructor = (MappingConstructor<Object>) constructor;
             this.name = name;
             this.entityViewRoot = entityViewRoot;
             this.offset = offset;
         }
 
-        public ViewTypeObjectBuilderTemplate<T> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
+        public ViewTypeObjectBuilderTemplate<?> createValue(EntityViewManagerImpl evm, ProxyFactory proxyFactory) {
             int[] idPositions = new int[]{ 0 };
             List<String> mappingPrefixes = null;
             if (entityViewRoot != null && entityViewRoot.length() > 0) {
                 mappingPrefixes = Arrays.asList(entityViewRoot);
             }
-            return new ViewTypeObjectBuilderTemplate<T>(viewType, "", name, mappingPrefixes, entityViewRoot, idPositions, offset, evm, ef, viewType, constructor, proxyFactory);
+            return new ViewTypeObjectBuilderTemplate<Object>(viewType, "", name, mappingPrefixes, entityViewRoot, idPositions, offset, evm, ef, viewType, constructor, proxyFactory);
         }
 
         @Override
@@ -883,7 +919,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final Key<?> other = (Key<?>) obj;
+            final Key other = (Key) obj;
             if (this.ef != other.ef && (this.ef == null || !this.ef.equals(other.ef))) {
                 return false;
             }

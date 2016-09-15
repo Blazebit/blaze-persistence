@@ -17,10 +17,8 @@ package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
 import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -33,21 +31,18 @@ import java.util.Map;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CorrelatedSubviewBatchSortedSetTupleListTransformerFactory<T> extends AbstractCorrelatedSubviewBatchTupleListTransformerFactory<T> {
+public class CorrelatedSortedSetBatchTupleListTransformerFactory extends AbstractCorrelatedBatchTupleListTransformerFactory {
 
     private final Comparator<?> comparator;
 
-    public CorrelatedSubviewBatchSortedSetTupleListTransformerFactory(ManagedViewType<T> managedViewType, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, EntityViewManagerImpl evm, ExpressionFactory ef, String viewName, Comparator<?> comparator) {
-        super(managedViewType, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity, evm, ef, viewName);
+    public CorrelatedSortedSetBatchTupleListTransformerFactory(Correlator correlator, Class<?> criteriaBuilderResult, ManagedViewType<?> viewRoot, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, Comparator<?> comparator) {
+        super(correlator, criteriaBuilderResult, viewRoot, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity);
         this.comparator = comparator;
     }
 
     @Override
     public TupleListTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-        String paramName = generateCorrelationParamName(queryBuilder, optionalParameters);
-        int batchSize = getBatchSize(entityViewConfiguration);
-        Map.Entry<CriteriaBuilder<T>, CorrelatedSubqueryViewRootJpqlMacro> entry = createCriteriaBuilder(queryBuilder, optionalParameters, entityViewConfiguration, batchSize, paramName);
-        return new CorrelatedSortedSetTupleListTransformer(entry.getKey(), entry.getValue(), paramName, tupleIndex, batchSize, correlationBasisEntity, comparator);
+        return new CorrelatedSortedSetTupleListTransformer(correlator, criteriaBuilderRoot, viewRootType, correlationResult, correlationProviderFactory, attributePath, tupleIndex, batchSize, correlationBasisEntity, entityViewConfiguration, comparator);
     }
 
 }

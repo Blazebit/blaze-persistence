@@ -22,8 +22,6 @@ import java.util.concurrent.ConcurrentMap;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
@@ -68,7 +66,6 @@ import com.blazebit.persistence.view.impl.update.FullEntityViewUpdater;
 import com.blazebit.persistence.view.impl.update.PartialEntityViewUpdater;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.ViewMetamodel;
 import com.blazebit.persistence.view.metamodel.ViewType;
 
 /**
@@ -81,7 +78,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private final ViewMetamodelImpl metamodel;
     private final ProxyFactory proxyFactory;
     private final Map<String, Object> properties;
-    private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
+    private final ConcurrentMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>> objectBuilderCache;
     private final ConcurrentMap<ViewType<?>, PartialEntityViewUpdater> partialEntityViewUpdaterCache;
     private final ConcurrentMap<ViewType<?>, FullEntityViewUpdater> fullEntityViewUpdaterCache;
     private final Map<String, Class<? extends AttributeFilterProvider>> filterMappings;
@@ -92,7 +89,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         this.metamodel = new ViewMetamodelImpl(config.getEntityViews(), !Boolean.valueOf(String.valueOf(config.getProperty(ConfigurationProperties.EXPRESSION_VALIDATION_DISABLED))), cbf.getService(ExpressionFactory.class), entityManagerFactory.getMetamodel());
         this.proxyFactory = new ProxyFactory();
         this.properties = copyProperties(config.getProperties());
-        this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key<?>, ViewTypeObjectBuilderTemplate<?>>();
+        this.objectBuilderCache = new ConcurrentHashMap<ViewTypeObjectBuilderTemplate.Key, ViewTypeObjectBuilderTemplate<?>>();
         this.partialEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, PartialEntityViewUpdater>();
         this.fullEntityViewUpdaterCache = new ConcurrentHashMap<ViewType<?>, FullEntityViewUpdater>();
         this.filterMappings = new HashMap<String, Class<? extends AttributeFilterProvider>>();
@@ -249,28 +246,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-	public <T> PaginatedCriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, String entityViewRoot, PaginatedCriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration configuration) {
-        ViewType<T> viewType = getMetamodel().view(clazz);
+    public void applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
+        ViewType<?> viewType = getMetamodel().view(clazz);
         if (viewType == null) {
         	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
-        MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters, configuration, 0, true);
-        return (PaginatedCriteriaBuilder<T>) criteriaBuilder;
+        MappingConstructor<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
+        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> CriteriaBuilder<T> applyObjectBuilder(Class<T> clazz, String mappingConstructorName, String entityViewRoot, CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration configuration) {
-        ViewType<T> viewType = getMetamodel().view(clazz);
-        if (viewType == null) {
-        	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
-        }
-        MappingConstructor<T> mappingConstructor = viewType.getConstructor(mappingConstructorName);
-        applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, (FullQueryBuilder<?, ?>) criteriaBuilder, optionalParameters, configuration, 0, true);
-        return (CriteriaBuilder<T>) criteriaBuilder;
-    }
-
-    public <T> void applyObjectBuilder(ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String viewName, String entityViewRoot, FullQueryBuilder<?, ?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
+    public void applyObjectBuilder(ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String viewName, String entityViewRoot, CriteriaBuilder<?> criteriaBuilder, EntityViewConfiguration configuration, int offset, boolean registerMacro) {
         Class<?> entityClazz;
         Set<Root> roots = criteriaBuilder.getRoots();
         Map.Entry<Root, String> rootEntry = findRoot(roots, entityViewRoot);
@@ -306,7 +291,10 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (registerMacro) {
             criteriaBuilder.registerMacro("view_root", new ViewRootJpqlMacro(entityViewRoot));
         }
-        criteriaBuilder.selectNew(getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, offset).createObjectBuilder(criteriaBuilder, new HashMap<String, Object>(optionalParameters), configuration));
+        criteriaBuilder.selectNew(
+                getTemplate(ef, viewType, mappingConstructor, viewName, entityViewRoot, offset)
+                        .createObjectBuilder(criteriaBuilder, configuration.getOptionalParameters(), configuration)
+        );
     }
 
     private static Map.Entry<Root, String> findRoot(Set<Root> roots, String entityViewRoot) {
@@ -339,12 +327,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ExpressionFactory ef, ViewType<T> viewType, MappingConstructor<T> mappingConstructor, String entityViewRoot) {
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ViewType<?> viewType, MappingConstructor<?> mappingConstructor, String entityViewRoot) {
         return getTemplate(ef, viewType, mappingConstructor, viewType.getName(), entityViewRoot, 0);
     }
 
-    public <T> ViewTypeObjectBuilderTemplate<T> getTemplate(ExpressionFactory ef, ManagedViewType<T> viewType, MappingConstructor<T> mappingConstructor, String name, String entityViewRoot, int offset) {
-    	ViewTypeObjectBuilderTemplate.Key<T> key = new ViewTypeObjectBuilderTemplate.Key<T>(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
+    public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String name, String entityViewRoot, int offset) {
+    	ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
@@ -356,7 +344,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
             }
         }
 
-        return (ViewTypeObjectBuilderTemplate<T>) value;
+        return value;
     }
     
     private EntityViewUpdater getUpdater(ViewType<?> viewType, boolean partial) {

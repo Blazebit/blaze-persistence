@@ -4,9 +4,6 @@ import com.blazebit.persistence.BaseQueryBuilder;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
-import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-
-import java.util.Map;
 
 /**
  *
@@ -16,39 +13,31 @@ import java.util.Map;
 public class SubqueryCorrelationBuilder implements CorrelationBuilder {
 
     private final CriteriaBuilder<?> criteriaBuilder;
-    private final Map<String, Object> optionalParameters;
-    private final EntityViewConfiguration entityViewConfiguration;
-    private final AbstractCorrelatedBatchTupleListTransformerFactory<?> finisher;
-    private final int batchSize;
     private final String correlationResult;
+    private String correlationRoot;
 
-    public SubqueryCorrelationBuilder(CriteriaBuilder<?> criteriaBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration, AbstractCorrelatedBatchTupleListTransformerFactory<?> finisher, int batchSize, String correlationResult) {
+    public SubqueryCorrelationBuilder(CriteriaBuilder<?> criteriaBuilder, String correlationResult) {
         this.criteriaBuilder = criteriaBuilder;
-        this.optionalParameters = optionalParameters;
-        this.entityViewConfiguration = entityViewConfiguration;
-        this.finisher = finisher;
-        this.batchSize = batchSize;
         this.correlationResult = correlationResult;
+    }
+
+    public String getCorrelationRoot() {
+        return correlationRoot;
     }
 
     @Override
     public JoinOnBuilder<BaseQueryBuilder<?, ?>> correlate(Class<?> entityClass, String alias) {
-        if (batchSize > 1) {
-            // TODO: This requires table generating functions
-            throw new UnsupportedOperationException("Not yet implemented!");
-        } else {
-            criteriaBuilder.from(entityClass, alias);
-        }
+        criteriaBuilder.from(entityClass, alias);
 
-        String entityViewRoot;
+        String correlationRoot;
         if (correlationResult.isEmpty()) {
-            entityViewRoot = alias;
+            correlationRoot = alias;
         } else if (correlationResult.startsWith(alias) && (correlationResult.length() == alias.length() || correlationResult.charAt(alias.length()) == '.')) {
-            entityViewRoot = correlationResult;
+            correlationRoot = correlationResult;
         } else {
-            entityViewRoot = alias + '.' + correlationResult;
+            correlationRoot = alias + '.' + correlationResult;
         }
-        finisher.finishCriteriaBuilder(criteriaBuilder, optionalParameters, entityViewConfiguration, batchSize, entityViewRoot);
+        this.correlationRoot = correlationRoot;
         return criteriaBuilder.getService(JoinOnBuilder.class);
     }
 
