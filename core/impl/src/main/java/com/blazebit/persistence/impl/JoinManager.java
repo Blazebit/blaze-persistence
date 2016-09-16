@@ -109,7 +109,10 @@ public class JoinManager extends AbstractManager {
                 // We know it can only be a path
                 PathExpression pathExpression = (PathExpression) expression.getExpressions().get(0);
                 JoinNode node = (JoinNode) pathExpression.getBaseNode();
-                keyRestrictedLeftJoins.add(node);
+                // Exclude element collections as they are not problematic
+                if (node.getParentTreeNode().getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                    keyRestrictedLeftJoins.add(node);
+                }
             }
         }
     }
