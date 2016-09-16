@@ -266,6 +266,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType).setMaxResults(pageSize);
+        // TODO: I think we should apply sql transformations here
 
         if (keysetMode == KeysetMode.NONE) {
             query.setFirstResult(firstRow);
@@ -372,6 +373,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @SuppressWarnings("unchecked")
     private List<T> getQueryResultList() {
         TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+        // TODO: I think we should apply sql transformations here
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }

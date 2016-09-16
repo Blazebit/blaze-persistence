@@ -78,6 +78,11 @@ public class HibernateJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsJoinSubqueryRewrite() {
+        return true;
+    }
+
+    @Override
     public String getBooleanExpression(boolean value) {
         return value ? "CASE WHEN 1 = 1 THEN true ELSE false END" : "CASE WHEN 1 = 1 THEN false ELSE true END";
     }

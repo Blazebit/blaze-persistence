@@ -51,6 +51,11 @@ public class EclipseLinkJpaProvider implements JpaProvider {
     }
 
     @Override
+    public boolean needsJoinSubqueryRewrite() {
+        return false;
+    }
+
+    @Override
     public String getBooleanExpression(boolean value) {
         return value ? "TRUE" : "FALSE";
     }

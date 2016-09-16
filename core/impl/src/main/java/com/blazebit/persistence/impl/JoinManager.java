@@ -77,6 +77,43 @@ public class JoinManager extends AbstractManager {
         this.expressionFactory = expressionFactory;
     }
 
+    Set<JoinNode> getKeyRestrictedLeftJoins() {
+        if (!mainQuery.jpaProvider.needsJoinSubqueryRewrite()) {
+            return Collections.emptySet();
+        }
+
+        Set<JoinNode> keyRestrictedLeftJoins = new HashSet<JoinNode>();
+        acceptVisitor(new KeyRestrictedLeftJoinCollectingVisitor(keyRestrictedLeftJoins));
+        return keyRestrictedLeftJoins;
+    }
+
+    static class KeyRestrictedLeftJoinCollectingVisitor extends VisitorAdapter implements JoinNodeVisitor {
+
+        final Set<JoinNode> keyRestrictedLeftJoins;
+
+        public KeyRestrictedLeftJoinCollectingVisitor(Set<JoinNode> keyRestrictedLeftJoins) {
+            this.keyRestrictedLeftJoins = keyRestrictedLeftJoins;
+        }
+
+        @Override
+        public void visit(JoinNode node) {
+            if (node.getJoinType() == JoinType.LEFT && node.getOnPredicate() != null) {
+                node.getOnPredicate().accept(this);
+            }
+        }
+
+        @Override
+        public void visit(FunctionExpression expression) {
+            super.visit(expression);
+            if ("KEY".equals(expression.getFunctionName()) || "INDEX".equals(expression.getFunctionName())) {
+                // We know it can only be a path
+                PathExpression pathExpression = (PathExpression) expression.getExpressions().get(0);
+                JoinNode node = (JoinNode) pathExpression.getBaseNode();
+                keyRestrictedLeftJoins.add(node);
+            }
+        }
+    }
+
     String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
@@ -1395,8 +1432,8 @@ public class JoinManager extends AbstractManager {
         keyPath.getExpressions().add(new PropertyExpression(joinNode.getAliasInfo().getAlias()));
         keyPath.setPathReference(new SimplePathReference(joinNode, null, null));
         final String accessFunction;
-        Attribute<?, ?> arrayBaseAttribute = metamodel.getManagedType(joinNode.getParent().getPropertyClass()).getAttribute(arrayExpr.getBase().getProperty());
-        if (arrayBaseAttribute instanceof ListAttribute && List.class.isAssignableFrom(arrayBaseAttribute.getJavaType())) {
+        Attribute<?, ?> arrayBaseAttribute = joinNode.getParentTreeNode().getAttribute();
+        if (arrayBaseAttribute instanceof ListAttribute<?, ?>) {
             accessFunction = "INDEX";
         } else {
             accessFunction = "KEY";

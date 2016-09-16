@@ -23,10 +23,8 @@ import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.*;
-import com.blazebit.reflection.*;
 
 import javax.persistence.*;
-import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -1170,8 +1168,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected TypedQuery<QueryResultType> getTypedQuery() {
-        // If we have no ctes, there is nothing to do
-        if (!isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions())) {
+        // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        if (!isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty())) {
             return getTypedQuery(getBaseQueryStringWithCheck());
         }
 
@@ -1179,7 +1178,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         List<Query> participatingQueries = new ArrayList<Query>();
         
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, participatingQueries);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
@@ -1430,14 +1429,27 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return firstCte;
     }
 
-    private StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, List<Query> participatingQueries) {
-        if (!isMainQuery || !joinManager.hasEntityFunctions()) {
+    private StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, Set<JoinNode> keyRestrictedLeftJoins, List<Query> participatingQueries) {
+        if (!isMainQuery || (!joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty())) {
             return new StringBuilder(sqlQuery);
         }
 
         // TODO: find a better size estimate
-        StringBuilder sb = new StringBuilder(sqlQuery.length() + joinManager.getEntityFunctionNodes().size() * 100);
+        StringBuilder sb = new StringBuilder(sqlQuery.length() +
+                // Just a stupid estimate
+                joinManager.getEntityFunctionNodes().size() * 100 +
+                // we put "(select * from )" around
+                keyRestrictedLeftJoins.size() * 20);
         sb.append(sqlQuery);
+
+        if (!keyRestrictedLeftJoins.isEmpty()) {
+            for (JoinNode node : keyRestrictedLeftJoins) {
+                // The alias of the target entity table
+                String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAliasInfo().getAlias());
+                applyLeftJoinSubqueryRewrite(sb, sqlAlias);
+            }
+        }
+
         for (JoinNode node : joinManager.getEntityFunctionNodes()) {
             String valuesClause = node.getValuesClause();
             String valuesAliases = node.getValuesAliases();
@@ -1622,7 +1634,106 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         return firstCte;
     }
-    
+
+    private void applyLeftJoinSubqueryRewrite(StringBuilder sb, String sqlAlias) {
+        final String searchAs = " as";
+        final String searchAlias = " " + sqlAlias;
+        int searchIndex = 0;
+        while ((searchIndex = sb.indexOf(searchAlias, searchIndex)) > -1) {
+            char c = sb.charAt(searchIndex + searchAlias.length());
+            if (c == '.') {
+                // This is a dereference of the alias, skip this
+            } else {
+                int[] indexRange;
+                if (searchAs.equalsIgnoreCase(sb.substring(searchIndex - searchAs.length(), searchIndex))) {
+                    // Uses aliasing with the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex - searchAs.length());
+                } else {
+                    // Uses aliasing without the AS keyword
+                    indexRange = rtrimBackwardsToFirstWhitespace(sb, searchIndex);
+                }
+
+                // Jump back two left joins to further inspect the join table
+                String leftJoinString = "left outer join ";
+                int joinTableJoinIndex = -1;
+                int targetTableJoinIndex = -1;
+                int currentIndex = -1;
+                while ((currentIndex = sb.indexOf(leftJoinString, currentIndex + 1)) < indexRange[0] && currentIndex > 0) {
+                    joinTableJoinIndex = targetTableJoinIndex;
+                    targetTableJoinIndex = currentIndex;
+                }
+
+                if (joinTableJoinIndex < 1) {
+                    throw new IllegalStateException("The left join for subquery rewriting could not be found!");
+                }
+
+                int joinTableIndex = joinTableJoinIndex + leftJoinString.length();
+
+                // Extract the on condition so we can move it
+                String onString = " on ";
+                int onIndex = sb.indexOf(onString, joinTableIndex);
+
+                if (onIndex > targetTableJoinIndex) {
+                    throw new IllegalStateException("The left join for subquery rewriting could not be found!");
+                }
+                String onCondition = sb.substring(onIndex, targetTableJoinIndex);
+
+                // Extract the join table alias since we need to replace it
+                int aliasIndex = sb.indexOf(" ", joinTableIndex) + 1;
+                String joinTableAlias = sb.substring(aliasIndex, onIndex);
+
+                // Replace the join table join with a subquery part
+                String subqueryPrefix = "(select * from ";
+                String subqueryInsert = subqueryPrefix + sb.substring(joinTableIndex, onIndex);
+                sb.replace(joinTableIndex, targetTableJoinIndex - 1, subqueryInsert);
+
+                // Adapt index since we replaced stuff before
+                int realOnConditionStartIndex = indexRange[1] + (subqueryInsert.length() - (targetTableJoinIndex - joinTableIndex));
+                // Find the index at which the actual key restriction begins
+                String realOnConditionStart = " and (";
+                int realOnConditionIndex = sb.indexOf(realOnConditionStart, realOnConditionStartIndex);
+
+                // Insert the target table alias for the subquery and the on condition for joining with the parent
+                String subqueryEnd = ") " + sqlAlias + onCondition;
+                sb.insert(realOnConditionIndex, subqueryEnd);
+                realOnConditionStartIndex += subqueryEnd.length();
+
+                // Replace the join table alias with the target table alias until reaching joinTableIndex and then again at realOnConditionStartIndex
+                int lengthDifference = sqlAlias.length() - joinTableAlias.length();
+                // Replace the join table alias with the target table alias until reaching joinTableIndex
+                int diff = replaceAliasUntil(-1, joinTableIndex, lengthDifference, sb, joinTableAlias, sqlAlias);
+                // and then again from realOnConditionStartIndex until the end
+                replaceAliasUntil(realOnConditionStartIndex + diff, sb.length(), lengthDifference, sb, joinTableAlias, sqlAlias);
+
+                break;
+            }
+
+            searchIndex = searchIndex + 1;
+        }
+    }
+
+    private int replaceAliasUntil(int searchIndex, int endIndex, int lengthDifference, StringBuilder sb, String oldAlias, String newAlias) {
+        int diff = 0;
+        while ((searchIndex = sb.indexOf(oldAlias, searchIndex + 1)) > 0 && searchIndex < endIndex) {
+            if (isIdentifierStart(sb.charAt(searchIndex - 1)) || isIdentifier(sb.charAt(searchIndex + oldAlias.length()))) {
+                continue;
+            }
+            sb.replace(searchIndex, searchIndex + oldAlias.length(), newAlias);
+            searchIndex += lengthDifference;
+            endIndex += lengthDifference;
+            diff += lengthDifference;
+        }
+        return diff;
+    }
+
+    private boolean isIdentifierStart(char c) {
+        return Character.isLetter(c) || c == '_';
+    }
+
+    private boolean isIdentifier(char c) {
+        return Character.isLetterOrDigit(c) || c == '_';
+    }
+
     private void applyTableNameRemapping(StringBuilder sb, String sqlAlias, String newCteName, String aliasExtension) {
         final String searchAs = " as";
         final String searchAlias = " " + sqlAlias;

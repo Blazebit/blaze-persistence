@@ -31,6 +31,14 @@ public interface JpaProvider {
 
     public boolean needsBracketsForListParamter();
 
+    /**
+     * Returns whether key restricted left joins should be rewritten to subquery joins.
+     * This is part of the workaround for https://hibernate.atlassian.net/browse/HHH-9329 which makes key restricted left joins wrong.
+     *
+     * @return true if joins should be rewritten to subquery joins, false otherwise
+     */
+    public boolean needsJoinSubqueryRewrite();
+
     public String getBooleanExpression(boolean value);
 
     public String getBooleanConditionalExpression(boolean value);
@@ -39,6 +47,12 @@ public interface JpaProvider {
 
     public String getOnClause();
 
+    /**
+     * Normally returns <code>VALUE</code>, but since Hibernate does weird things when using that, it returns <code>null</code>.
+     * Returning null results in omitting <code>VALUE</code> in the final query that is passed to the JPA provider.
+     *
+     * @return The value function
+     */
     public String getCollectionValueFunction();
 
     public Class<?> getDefaultQueryResultType();
@@ -60,5 +74,4 @@ public interface JpaProvider {
     public boolean supportsSubtypePropertyResolving();
 
     public boolean supportsCountStar();
-
 }

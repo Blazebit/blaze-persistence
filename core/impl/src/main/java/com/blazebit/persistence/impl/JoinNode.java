@@ -200,7 +200,7 @@ public class JoinNode implements Root {
         }
 
         FunctionExpression keyExpression = (FunctionExpression) left;
-        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName())) {
+        if (!"KEY".equalsIgnoreCase(keyExpression.getFunctionName()) && !"INDEX".equalsIgnoreCase(keyExpression.getFunctionName())) {
             return false;
         }
 
