@@ -175,8 +175,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             		clause == ClauseType.JOIN || 
             		!isCountTransformationEnabled() || 
             		(hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) || 
-            		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
-                    jpaProvider.hasJoinTable(startClass, property) /* due to https://hibernate.atlassian.net/browse/HHH-1615 */) {
+            		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled())) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause

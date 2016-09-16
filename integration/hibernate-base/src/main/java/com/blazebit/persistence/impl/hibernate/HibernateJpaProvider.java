@@ -18,8 +18,12 @@ package com.blazebit.persistence.impl.hibernate;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.Joinable;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.Metamodel;
 import java.util.Map;
 
 /**
@@ -30,7 +34,6 @@ import java.util.Map;
 public class HibernateJpaProvider implements JpaProvider {
 
     private final DB db;
-    private final Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
         OTHER,
@@ -38,7 +41,7 @@ public class HibernateJpaProvider implements JpaProvider {
         DB2;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters) {
+    public HibernateJpaProvider(EntityManager em, String dbms) {
         try {
             if (em == null) {
                 db = DB.OTHER;
@@ -49,7 +52,6 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 db = DB.OTHER;
             }
-            this.collectionPersisters = collectionPersisters;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -178,11 +180,6 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsCountStar() {
-        return true;
-    }
-
-    @Override
-    public boolean hasJoinTable(Class<?> entityType, String property) {
         return true;
     }
 

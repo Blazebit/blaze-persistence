@@ -61,6 +61,4 @@ public interface JpaProvider {
 
     public boolean supportsCountStar();
 
-    public boolean hasJoinTable(Class<?> entityType, String property);
-
 }

@@ -23,6 +23,7 @@ import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
@@ -94,29 +95,20 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         }
     }
 
-    public Map<String, CollectionPersister> getCollectionPersisters(EntityManager em) {
-        if (em == null) {
-            return null;
-        }
-
-        SessionImplementor s = em.unwrap(SessionImplementor.class);
-        return s.getFactory().getCollectionPersisters();
-    }
-
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         if (major > 4 || major == 4 && minor >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getCollectionPersisters(em), major, minor, fix);
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), major, minor, fix);
                 }
             };
         } else {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getCollectionPersisters(em));
+                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory));
                 }
             };
         }

@@ -20,6 +20,7 @@ import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Metamodel;
 import java.util.Map;
 
 /**
@@ -33,8 +34,8 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     private final int minor;
     private final int fix;
 
-    public HibernateJpa21Provider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters, int major, int minor, int fix) {
-        super(em, dbms, collectionPersisters);
+    public HibernateJpa21Provider(EntityManager em, String dbms, int major, int minor, int fix) {
+        super(em, dbms);
         this.major = major;
         this.minor = minor;
         this.fix = fix;

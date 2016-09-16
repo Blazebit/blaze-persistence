@@ -134,9 +134,4 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         return false;
     }
 
-    @Override
-    public boolean hasJoinTable(Class<?> entityType, String property) {
-        return true;
-    }
-
 }

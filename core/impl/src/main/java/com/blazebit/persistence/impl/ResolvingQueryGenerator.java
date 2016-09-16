@@ -59,6 +59,17 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
             renderFunctionFunction(functionName, expression.getExpressions());
         } else if (isCountStarFunction(expression)) {
             renderCountStar();
+        } else if (com.blazebit.persistence.impl.util.ExpressionUtils.isValueFunction(expression)) {
+            // NOTE: Hibernate uses the column from a join table if VALUE is used which is wrong, so drop the VALUE here
+            String valueFunction = jpaProvider.getCollectionValueFunction();
+            if (valueFunction != null) {
+                sb.append(valueFunction);
+                sb.append('(');
+                expression.getExpressions().get(0).accept(this);
+                sb.append(')');
+            } else {
+                expression.getExpressions().get(0).accept(this);
+            }
         } else {
             super.visit(expression);
         }
