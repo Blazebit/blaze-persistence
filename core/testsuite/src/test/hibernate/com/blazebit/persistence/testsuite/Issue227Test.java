@@ -19,6 +19,9 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -51,6 +54,15 @@ public class Issue227Test extends AbstractCoreTest {
 
             RecursiveEntity child1_1_1 = new RecursiveEntity("child1_1_1", child1_1);
             RecursiveEntity child1_2_1 = new RecursiveEntity("child1_2_1", child1_2);
+
+            Set<RecursiveEntity> set = new HashSet<RecursiveEntity>();
+            set.add(root1);
+
+            root1.setManyToManyChildren(set);
+            child1_1.setManyToManyChildren(set);
+            child1_2.setManyToManyChildren(set);
+            child1_1_1.setManyToManyChildren(set);
+            child1_2_1.setManyToManyChildren(set);
 
             em.persist(root1);
             em.persist(child1_1);
@@ -94,6 +106,7 @@ public class Issue227Test extends AbstractCoreTest {
         List<RecursiveEntityCte> result = cb.getResultList();
         RecursiveEntity firstParent = result.get(0).getParent();
         Assert.assertEquals(2, firstParent.getChildren().size());
+        Assert.assertEquals(1, firstParent.getManyToManyChildren().size());
     }
 
     /**
@@ -108,6 +121,7 @@ public class Issue227Test extends AbstractCoreTest {
         private String name;
         private RecursiveEntity parent;
         private Set<RecursiveEntity> children = new HashSet<RecursiveEntity>(0);
+        private Set<RecursiveEntity> manyToManyChildren = new HashSet<RecursiveEntity>(0);
 
         public RecursiveEntity() {
         }
@@ -162,6 +176,20 @@ public class Issue227Test extends AbstractCoreTest {
             this.children = children;
         }
 
+        @Fetch(FetchMode.SUBSELECT)
+        @ManyToMany
+        @JoinTable(name = "many_to_many_children", joinColumns = {
+            @JoinColumn(name = "other_scope_id", nullable = false)
+        }, inverseJoinColumns = {
+            @JoinColumn(name = "scope_id", nullable = false)
+        })
+        public Set<RecursiveEntity> getManyToManyChildren() {
+            return manyToManyChildren;
+        }
+
+        public void setManyToManyChildren(Set<RecursiveEntity> manyToManyChildren) {
+            this.manyToManyChildren = manyToManyChildren;
+        }
     }
 
     @CTE
