@@ -16,15 +16,7 @@
 package com.blazebit.persistence.testsuite.entity;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.*;
 
@@ -53,6 +45,8 @@ public class Document extends Ownable implements Serializable {
     private String nonJoinable;
     private Map<Integer, Person> contacts = new HashMap<Integer, Person>();
     private List<Person> people = new ArrayList<Person>();
+    private List<Person> peopleListBag = new ArrayList<Person>();
+    private Collection<Person> peopleCollectionBag = new ArrayList<Person>();
     private Calendar creationDate;
     private Calendar creationDate2;
     private Date lastModified;
@@ -220,6 +214,24 @@ public class Document extends Ownable implements Serializable {
 
     public void setPeople(List<Person> people) {
         this.people = people;
+    }
+
+    @OneToMany
+    public List<Person> getPeopleListBag() {
+        return peopleListBag;
+    }
+
+    public void setPeopleListBag(List<Person> peopleListBag) {
+        this.peopleListBag = peopleListBag;
+    }
+
+    @OneToMany
+    public Collection<Person> getPeopleCollectionBag() {
+        return peopleCollectionBag;
+    }
+
+    public void setPeopleCollectionBag(Collection<Person> peopleCollectionBag) {
+        this.peopleCollectionBag = peopleCollectionBag;
     }
 
     @Temporal(TemporalType.DATE)

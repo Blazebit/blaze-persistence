@@ -40,6 +40,7 @@ import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
+import com.blazebit.persistence.impl.function.count.CountFunction;
 import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
@@ -377,6 +378,10 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("mysql", new MySQLSecondDiffFunction());
         jpqlFunctionGroup.add("sybase", new DefaultSecondDiffFunction());
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
+        registerFunction(jpqlFunctionGroup);
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(CountFunction.FUNCTION_NAME, false);
+        jpqlFunctionGroup.add(null, new CountFunction());
         registerFunction(jpqlFunctionGroup);
     }
 

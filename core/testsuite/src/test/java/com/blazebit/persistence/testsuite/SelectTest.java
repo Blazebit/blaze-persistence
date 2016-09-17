@@ -305,7 +305,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
 
-        String expected = "SELECT CASE WHEN COUNT(" + joinAliasValue("contacts_1") + ") > 2 THEN 2 ELSE COUNT(" + joinAliasValue("contacts_1") + ") END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("count_tuple", "d.id", "KEY(contacts_1)") + " > 2 THEN 2 ELSE " + function("count_tuple", "d.id", "KEY(contacts_1)") + " END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -316,7 +316,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE 0 END")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("count_tuple", "'DISTINCT'", "d.id", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -366,7 +366,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN SIZE(d.partners) ELSE SIZE(d.versions) END");
 
         // Then
-        String expected = "SELECT CASE WHEN COUNT(DISTINCT " + joinAliasValue("contacts_1") + ") > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("count_tuple", "'DISTINCT'", "d.id", "KEY(contacts_1)") + " > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         assertEquals(3l, result.get(0).get(0));
