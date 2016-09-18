@@ -12,92 +12,52 @@ import java.util.List;
  * @author Christian Beikov
  * @since 1.2.0
  */
-public class CountTupleEmulationFunction implements JpqlFunction {
+public class CountTupleEmulationFunction extends AbstractCountFunction {
 
-    public static final String FUNCTION_NAME = "count_tuple";
-    public static final String DISTINCT_QUALIFIER = "DISTINCT";
-
-    TemplateRenderer renderer = new TemplateRenderer("COUNT(?1)");
-
-    @Override
-    public boolean hasArguments() {
-        return true;
-    }
-
-    @Override
-    public boolean hasParenthesesIfNoArguments() {
-        return true;
-    }
-
-    @Override
-    public Class<?> getReturnType(Class<?> firstArgumentType) {
-        return Long.class;
-    }
+    private static String DISTINCT = "distinct ";
 
     @Override
     public void render(FunctionRenderContext context) {
-        if (context.getArgumentsSize() == 0) {
-            throw new RuntimeException("The " + CountTupleEmulationFunction.FUNCTION_NAME + " function needs at least one argument!");
-        }
-
         Count count = getCount(context);
 
-        StringBuilder sb = new StringBuilder();
+        context.addChunk("count(");
 
         if (count.isDistinct()) {
-            sb.append(DISTINCT_QUALIFIER).append(' ');
+            context.addChunk(DISTINCT);
         }
 
-        List<String> expressions = count.getExpressions();
+        if (context.getArgumentsSize() > 1) {
+            // see https://hibernate.atlassian.net/browse/HHH-11042 for the workaround description
+            //count(distinct case when col1 is null or col2 is null then null else col1 || '\0' || col2 end) + count(case when col1 is null or col2 is null then 1 end)
+            context.addChunk("case when ");
+            context.addArgument(0);
+            context.addChunk(" is null");
+            for (int i = 1; i < context.getArgumentsSize(); i++) {
+                context.addChunk(" or ");
+                context.addArgument(i);
+                context.addChunk(" is null");
+            }
+            context.addChunk(" then null else ");
 
-        sb.append('(').append(expressions.get(0));
-        for (int i = 1; i < expressions.size(); i++){
-            sb.append(", ").append(expressions.get(i));
+            context.addArgument(0);
+            for (int i = 1; i < context.getArgumentsSize(); i++) {
+                context.addChunk(" || '\\0' || ");
+                context.addArgument(i);
+            }
+            context.addChunk(" end) + count(case when ");
+            context.addArgument(0);
+            context.addChunk(" is null");
+            for (int i = 1; i < context.getArgumentsSize(); i++) {
+                context.addChunk(" or ");
+                context.addArgument(i);
+                context.addChunk(" is null");
+            }
+            context.addChunk(" then 1 end");
+        } else {
+            context.addArgument(0);
         }
-        sb.append(')');
 
-        renderer.start(context).addParameter(sb.toString()).build();
+        context.addChunk(")");
     }
 
-    protected Count getCount(FunctionRenderContext context) {
-        boolean distinct = false;
-        int startIndex = 0;
-        int argsSize = context.getArgumentsSize();
-        String maybeDistinct = context.getArgument(0);
-
-        if (("'" + DISTINCT_QUALIFIER + "'").equalsIgnoreCase(maybeDistinct)) {
-            distinct = true;
-            startIndex++;
-        }
-
-        if (startIndex >= argsSize) {
-            throw new RuntimeException("The " + CountTupleEmulationFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
-        }
-
-        List<String> expressions = new ArrayList<String>();
-        for (int i = startIndex; i < argsSize; i++) {
-            expressions.add(context.getArgument(i));
-        }
-
-        return new Count(distinct, expressions);
-    }
-
-    protected static final class Count {
-
-        private final boolean distinct;
-        private final List<String> expressions;
-
-        public Count(boolean distinct, List<String> expressions) {
-            this.distinct = distinct;
-            this.expressions = expressions;
-        }
-
-        public boolean isDistinct() {
-            return distinct;
-        }
-
-        public List<String> getExpressions() {
-            return expressions;
-        }
-    }
 }

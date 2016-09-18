@@ -26,7 +26,7 @@ import javax.persistence.metamodel.*;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.function.count.CountFunction;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
@@ -210,12 +210,12 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
 
                     List<Expression> countArguments = new ArrayList<Expression>();
                     if (distinctRequired) {
-                        countArguments.add(new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
+                        countArguments.add(new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                     }
                     countArguments.add(parentIdPath);
                     countArguments.add(keyExpression);
 
-                    countExpr = new AggregateExpression(false, CountFunction.FUNCTION_NAME, countArguments);
+                    countExpr = new AggregateExpression(false, AbstractCountFunction.FUNCTION_NAME, countArguments);
                 } else {
                     countExpr = new AggregateExpression(distinctRequired, "COUNT", expression.getExpressions());
                 }
@@ -240,10 +240,10 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                          *  performed transformations to distinct.
                          */
                         for (AggregateExpression transformedExpr : transformedExpressions) {
-                            if (CountFunction.FUNCTION_NAME.equals(transformedExpr.getFunctionName())) {
-                                // CountFunction
-                                if (!CountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(0))) {
-                                    transformedExpr.getExpressions().add(0, new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
+                            if (AbstractCountFunction.FUNCTION_NAME.equals(transformedExpr.getFunctionName())) {
+                                // AbstractCountFunction
+                                if (!AbstractCountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(0))) {
+                                    transformedExpr.getExpressions().add(0, new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                                 }
                             } else {
                                 transformedExpr.setDistinct(true);
