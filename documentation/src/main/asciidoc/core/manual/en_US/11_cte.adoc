@@ -63,9 +63,8 @@ Every CTE will result in a separate JPQL query behind the scenes from which the 
 The SQL from the main query together with the SQLs from the CTEs are put together together to form the full SQL query.
 That SQL will be the query exectued by another newly created and separately cached JPQL query.
 
-Because Hibernate itself does not support CTE queries out of the box, this library ships with a custom `OneToManyCollectionPersister and `BasicCollectionPersister` in order to support `FetchMode.SUBSELECT` for CTE queries.
-This may conflict with your any of your own custom Persisters.
-Keep in mind that `FetchMode.SUBSELECT` will currently fail on CTE queries if you overload these custom persisters with your own implementation.
+NOTE: In order to support the `org.hibernate.FetchMode.SUBSELECT` this library ships with custom implementations of `org.hibernate.persister.collection.CollectionPersister`.
+Custom persister implementations should be made aware of CTEs in a similar fashion to be able to make use of the fetch mode.
 
 === RDBMS compatibility
 
