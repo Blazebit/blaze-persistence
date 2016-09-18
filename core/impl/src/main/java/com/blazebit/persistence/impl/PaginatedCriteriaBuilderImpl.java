@@ -28,12 +28,7 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.KeysetPage;
-import com.blazebit.persistence.ObjectBuilder;
-import com.blazebit.persistence.PagedList;
-import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
@@ -125,23 +120,51 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return keysetExtraction;
     }
 
+    private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
+            TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
+            parameterManager.parameterizeQuery(countQuery);
+            return countQuery;
+        }
+
+        TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
+        parameterManager.parameterizeQuery(baseQuery);
+        List<Query> participatingQueries = new ArrayList<Query>();
+
+        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+
+        String finalQuery = sqlSb.toString();
+
+        for (Query q : participatingQueries) {
+            parameterManager.parameterizeQuery(q);
+        }
+
+        participatingQueries.add(baseQuery);
+        TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        return countQuery;
+    }
+
     @Override
     public PagedList<T> getResultList() {
         prepareAndCheck();
 
+        // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        boolean normalQueryMode = !isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty());
         String countQueryString = getPageCountQueryString0();
         long totalSize;
 
         if (entityId == null) {
             // No reference entity id, so just do a simple count query
-            TypedQuery<Long> countQuery = em.createQuery(countQueryString, Long.class);
-            parameterManager.parameterizeQuery(countQuery);
+            TypedQuery<Long> countQuery = getCountQuery(countQueryString, Long.class, normalQueryMode, keyRestrictedLeftJoins);
 
             totalSize = countQuery.getSingleResult();
         } else {
             // There is a reference entity id, so we need to extract the page position
-            TypedQuery<Object[]> countQuery = em.createQuery(countQueryString, Object[].class);
-            parameterManager.parameterizeQuery(countQuery);
+            TypedQuery<Object[]> countQuery = getCountQuery(countQueryString, Object[].class, normalQueryMode, keyRestrictedLeftJoins);
 
             Object[] result = countQuery.getSingleResult();
             totalSize = (Long) result[0];
@@ -162,9 +185,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         if (!joinManager.hasCollections()) {
-            return getResultListViaObjectQuery(totalSize);
+            return getResultListViaObjectQuery(totalSize, normalQueryMode, keyRestrictedLeftJoins);
         } else {
-            return getResultListViaIdQuery(totalSize);
+            return getResultListViaIdQuery(totalSize, normalQueryMode, keyRestrictedLeftJoins);
         }
     }
 
@@ -206,7 +229,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     protected String getBaseQueryString() {
         if (cachedQueryString == null) {
             if (!joinManager.hasCollections()) {
-                cachedQueryString = getObjectQueryString1();
+                cachedQueryString = buildObjectQueryString();
             } else {
                 cachedQueryString = buildBaseQueryString(false);
             }
@@ -254,7 +277,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     @SuppressWarnings("unchecked")
-    private PagedList<T> getResultListViaObjectQuery(long totalSize) {
+    private PagedList<T> getResultListViaObjectQuery(long totalSize, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
         String queryString = getBaseQueryString();
         Class<?> expectedResultType;
 
@@ -265,11 +288,38 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             expectedResultType = selectManager.getExpectedQueryResultType();
         }
 
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType).setMaxResults(pageSize);
-        // TODO: I think we should apply sql transformations here
+        TypedQuery<T> query;
 
-        if (keysetMode == KeysetMode.NONE) {
-            query.setFirstResult(firstRow);
+        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class))) {
+            query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType).setMaxResults(pageSize);
+            parameterManager.parameterizeQuery(query);
+
+            if (keysetMode == KeysetMode.NONE) {
+                query.setFirstResult(firstRow);
+            }
+        } else {
+            TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType).setMaxResults(pageSize);
+            parameterManager.parameterizeQuery(baseQuery);
+
+            if (keysetMode == KeysetMode.NONE) {
+                baseQuery.setFirstResult(firstRow);
+            }
+
+            List<Query> participatingQueries = new ArrayList<Query>();
+
+            String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+            StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.noneOf(ClauseType.class));
+            StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+            applyExtendedSql(sqlSb, false, false, withClause, null, null);
+
+            String finalQuery = sqlSb.toString();
+
+            for (Query q : participatingQueries) {
+                parameterManager.parameterizeQuery(q);
+            }
+
+            participatingQueries.add(baseQuery);
+            query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
         }
 
         KeysetExtractionObjectBuilder<T> objectBuilder = null;
@@ -293,7 +343,6 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
-        parameterManager.parameterizeQuery(query);
         List<T> result = query.getResultList();
 
         if (result.isEmpty()) {
@@ -318,15 +367,48 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return pagedResultList;
     }
 
-    private PagedList<T> getResultListViaIdQuery(long totalSize) {
-        String idQueryString = getPageIdQueryString0();
-        Query idQuery = em.createQuery(idQueryString).setMaxResults(pageSize);
+    private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT))) {
+            TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
+            idQuery.setMaxResults(pageSize);
 
-        if (keysetMode == KeysetMode.NONE) {
-            idQuery.setFirstResult(firstRow);
+            if (keysetMode == KeysetMode.NONE) {
+                idQuery.setFirstResult(firstRow);
+            }
+
+            parameterManager.parameterizeQuery(idQuery);
+            return idQuery;
         }
 
-        parameterManager.parameterizeQuery(idQuery);
+        TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
+        parameterManager.parameterizeQuery(baseQuery);
+        baseQuery.setMaxResults(pageSize);
+
+        if (keysetMode == KeysetMode.NONE) {
+            baseQuery.setFirstResult(firstRow);
+        }
+
+        List<Query> participatingQueries = new ArrayList<Query>();
+
+        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.of(ClauseType.SELECT));
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+
+        String finalQuery = sqlSb.toString();
+
+        for (Query q : participatingQueries) {
+            parameterManager.parameterizeQuery(q);
+        }
+
+        participatingQueries.add(baseQuery);
+        TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        return idQuery;
+    }
+
+    private PagedList<T> getResultListViaIdQuery(long totalSize, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+        String idQueryString = getPageIdQueryString0();
+        Query idQuery = getIdQuery(idQueryString, normalQueryMode, keyRestrictedLeftJoins);
         List<?> ids = idQuery.getResultList();
 
         if (ids.isEmpty()) {
@@ -365,20 +447,43 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             newKeyset = new KeysetPageImpl(firstRow, pageSize, lowest, highest);
         }
 
-        List<T> queryResultList = getQueryResultList();
+        List<T> queryResultList = getQueryResultList(normalQueryMode, keyRestrictedLeftJoins);
         PagedList<T> pagedResultList = new PagedListImpl<T>(queryResultList, newKeyset, totalSize, firstResult, pageSize);
         return pagedResultList;
     }
 
     @SuppressWarnings("unchecked")
-    private List<T> getQueryResultList() {
-        TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-        // TODO: I think we should apply sql transformations here
+    private List<T> getQueryResultList(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
+        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
+            TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+            if (selectManager.getSelectObjectBuilder() != null) {
+                query = transformQuery(query);
+            }
+
+            parameterManager.parameterizeQuery(query);
+            return query.getResultList();
+        }
+
+        TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
+        parameterManager.parameterizeQuery(baseQuery);
+        List<Query> participatingQueries = new ArrayList<Query>();
+
+        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
+        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
+        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+
+        String finalQuery = sqlSb.toString();
+
+        for (Query q : participatingQueries) {
+            parameterManager.parameterizeQuery(q);
+        }
+
+        participatingQueries.add(baseQuery);
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
-
-        parameterManager.parameterizeQuery(query);
         return query.getResultList();
     }
 
@@ -547,7 +652,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return sbSelectFrom.toString();
     }
 
-    private String getObjectQueryString1() {
+    private String buildObjectQueryString() {
         StringBuilder sbSelectFrom = new StringBuilder();
         selectManager.buildSelect(sbSelectFrom);
 

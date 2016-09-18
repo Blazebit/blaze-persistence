@@ -33,7 +33,7 @@ else
 	# Just in case we want to run against a specific version
 	#git clone --depth=1 --branch="wip/6.0" https://github.com/sebersole/hibernate-core.git hibernate6
 	#cd hibernate6
-	#./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
+	#./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x :documentation:aggregateJavadocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
 	: # do nothing right now
   fi
   

@@ -1178,7 +1178,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         List<Query> participatingQueries = new ArrayList<Query>();
         
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries);
+        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, Collections.EMPTY_SET);
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
         applyExtendedSql(sqlSb, false, false, withClause, null, null);
         
@@ -1429,7 +1429,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return firstCte;
     }
 
-    private StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, Set<JoinNode> keyRestrictedLeftJoins, List<Query> participatingQueries) {
+    protected static boolean isEmpty(Set<JoinNode> joinNodes, Set<ClauseType> clauseExclusions) {
+        for (JoinNode node : joinNodes) {
+            if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
+                continue;
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    protected StringBuilder applySqlTransformations(Query baseQuery, String sqlQuery, Set<JoinNode> keyRestrictedLeftJoins, List<Query> participatingQueries, Set<ClauseType> clauseExclusions) {
         if (!isMainQuery || (!joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty())) {
             return new StringBuilder(sqlQuery);
         }
@@ -1444,6 +1455,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
 
         if (!keyRestrictedLeftJoins.isEmpty()) {
             for (JoinNode node : keyRestrictedLeftJoins) {
+                if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
+                    continue;
+                }
                 // The alias of the target entity table
                 String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAliasInfo().getAlias());
                 applyLeftJoinSubqueryRewrite(sb, sqlAlias);
