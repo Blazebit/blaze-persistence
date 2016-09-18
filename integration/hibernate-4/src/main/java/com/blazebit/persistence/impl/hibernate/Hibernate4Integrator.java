@@ -7,6 +7,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.Iterator;
@@ -36,7 +37,8 @@ public class Hibernate4Integrator implements Integrator {
 				// TODO: check that no collections are mapped
 			}
 		}
-		CommonHibernateUtils.setCollectionPersisterClass(configuration.getClassMappings(), CustomOneToManyPersister.class);
+
+		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
 	}
 
 	@Override
