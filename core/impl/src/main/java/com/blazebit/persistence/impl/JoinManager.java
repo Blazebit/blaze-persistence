@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.ValuesStrategy;
 import com.blazebit.reflection.PropertyPathExpression;
 
@@ -1893,7 +1894,7 @@ public class JoinManager extends AbstractManager {
                 @Override
                 public void visit(FunctionExpression expression) {
                     boolean old = isKeyFunction;
-                    this.isKeyFunction = "KEY".equalsIgnoreCase(expression.getFunctionName());
+                    this.isKeyFunction = com.blazebit.persistence.impl.util.ExpressionUtils.isKeyFunction(expression) || com.blazebit.persistence.impl.util.ExpressionUtils.isIndexFunction(expression);
                     super.visit(expression);
                     this.isKeyFunction = old;
                 }

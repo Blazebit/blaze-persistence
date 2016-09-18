@@ -28,6 +28,7 @@ import javax.persistence.metamodel.Type.PersistenceType;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.function.count.CountFunction;
 import com.blazebit.persistence.impl.util.*;
+import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -199,6 +200,8 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                     FunctionExpression keyExpression;
                     final String keyOrIndexFunctionName;
                     List<Expression> keyArg = new ArrayList<Expression>(1);
+
+                    sizeArg.setCollectionKeyPath(true);
                     keyArg.add(sizeArg);
                     if (collectionType == PluralAttribute.CollectionType.LIST) {
                         keyOrIndexFunctionName = "INDEX";
@@ -214,7 +217,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                     countArguments.add(parentIdPath);
                     countArguments.add(keyExpression);
 
-                    countExpr = new AggregateExpression(false, CountFunction.FUNCTION_NAME, countArguments);
+                    countExpr = createCountTupleFunction(countArguments);
                 } else {
                     countExpr = new AggregateExpression(distinctRequired, "COUNT", expression.getExpressions());
                 }
@@ -239,10 +242,11 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                          *  performed transformations to distinct.
                          */
                         for (AggregateExpression transformedExpr : transformedExpressions) {
-                            if (CountFunction.FUNCTION_NAME.equals(transformedExpr.getFunctionName())) {
+                            if (ExpressionUtils.isCustomFunctionInvocation(transformedExpr) &&
+                                    CountFunction.FUNCTION_NAME.equals(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
                                 // CountFunction
-                                if (!CountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(0))) {
-                                    transformedExpr.getExpressions().add(0, new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
+                                if (!CountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(1))) {
+                                    transformedExpr.getExpressions().add(1, new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
                                 }
                             } else {
                                 transformedExpr.setDistinct(true);
@@ -261,6 +265,11 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         }
         return expression;
     }
+
+    private AggregateExpression createCountTupleFunction(List<Expression> countTupleArguments) {
+        countTupleArguments.add(0, new StringLiteral(CountFunction.FUNCTION_NAME));
+        return new AggregateExpression(false, "FUNCTION", countTupleArguments);
+    }
     
     private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
         String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
@@ -278,7 +287,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
         
         Subquery countSubquery = (Subquery) subqueryInitFactory.createSubqueryInitiator(null, new SubqueryBuilderListenerImpl<Object>())
             .from(collectionClass, collectionPropertyClassAlias)
-            .select(new StringBuilder("COUNT(").append(collectionPropertyAlias).append(")").toString())
+            .select("COUNT(*)")
             .leftJoin(new StringBuilder(collectionPropertyClassAlias).append('.').append(collectionPropertyName).toString(), collectionPropertyAlias)
             .where(collectionPropertyClassAlias)
             .eqExpression(baseAlias);

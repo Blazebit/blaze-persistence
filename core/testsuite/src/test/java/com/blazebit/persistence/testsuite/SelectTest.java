@@ -379,7 +379,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)")
                 .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false");
         
-        final String expected = "SELECT (SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
+        final String expected = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -392,7 +392,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("d.age")
                 .setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, "false");
         
-        final String expected = "SELECT (SELECT COUNT(" + joinAliasValue("contacts") + ") FROM Document document LEFT JOIN document.contacts contacts WHERE document = d), d.age FROM Document d";
+        final String expected = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.contacts contacts WHERE document = d), d.age FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }

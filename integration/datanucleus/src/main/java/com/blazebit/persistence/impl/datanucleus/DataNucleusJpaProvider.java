@@ -113,7 +113,7 @@ public class DataNucleusJpaProvider implements JpaProvider {
     @Override
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
     	// Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
-        return functionName + "(";
+        return functionName.toUpperCase() + "(";
     }
 
     @Override

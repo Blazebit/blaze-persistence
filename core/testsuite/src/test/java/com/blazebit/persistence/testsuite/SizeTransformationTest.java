@@ -1,9 +1,12 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.Document;
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.Tuple;
 
@@ -61,20 +64,24 @@ public class SizeTransformationTest extends AbstractCoreTest {
         cb.getResultList();
     }
 
+    // fails with datanucleus-4
+    @Category(NoDatanucleus4.class)
     @Test
     public void testSizeToCountTransformationWithCollectionBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleCollectionBag)");
-        String expectedQuery = "SELECT (SELECT COUNT(peopleCollectionBag) FROM Document document LEFT JOIN document.peopleCollectionBag peopleCollectionBag WHERE document = d) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.peopleCollectionBag peopleCollectionBag WHERE document = d) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
 
+    // fails with datanucleus-5
+    @Category(NoDatanucleus.class)
     @Test
     public void testSizeToCountTransformationWithListBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleListBag)");
-        String expectedQuery = "SELECT (SELECT COUNT(peopleListBag) FROM Document document LEFT JOIN document.peopleListBag peopleListBag WHERE document = d) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.peopleListBag peopleListBag WHERE document = d) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

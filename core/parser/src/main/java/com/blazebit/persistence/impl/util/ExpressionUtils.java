@@ -29,8 +29,20 @@ public class ExpressionUtils {
         return "VALUE".equalsIgnoreCase(e.getFunctionName());
     }
 
+    public static boolean isKeyFunction(FunctionExpression e) {
+        return "KEY".equalsIgnoreCase(e.getFunctionName());
+    }
+
+    public static boolean isIndexFunction(FunctionExpression e) {
+        return "INDEX".equalsIgnoreCase(e.getFunctionName());
+    }
+
     public static boolean isEntryFunction(FunctionExpression e) {
         return "ENTRY".equalsIgnoreCase(e.getFunctionName());
+    }
+
+    public static boolean isCustomFunctionInvocation(FunctionExpression e) {
+        return "FUNCTION".equalsIgnoreCase(e.getFunctionName());
     }
 
 }
