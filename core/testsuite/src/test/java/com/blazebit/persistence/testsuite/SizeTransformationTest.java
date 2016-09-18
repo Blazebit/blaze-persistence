@@ -4,6 +4,7 @@ import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import com.blazebit.persistence.testsuite.entity.Document;
+import com.blazebit.persistence.testsuite.entity.Workflow;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -11,11 +12,51 @@ import org.junit.experimental.categories.Category;
 import javax.persistence.Tuple;
 
 /**
- * Created
- * by Moritz Becker (moritz.becker@gmx.at)
- * on 16.09.2016.
+ *
+ * @author Moritz Becker
+ * @since 1.2.0
  */
 public class SizeTransformationTest extends AbstractCoreTest {
+
+    @Test
+    public void testSizeToCountTransformationWithElementCollectionIndexed1() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
+                .select("SIZE(w.localized)");
+        String expectedQuery = "SELECT " + function("count_tuple", "w.id", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 GROUP BY w.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSizeToCountTransformationWithElementCollectionIndexed2() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
+                .select("SIZE(w.localized)")
+                .leftJoin("w.supportedLocales", "supportedLocales_1");
+        String expectedQuery = "SELECT " + function("count_tuple", "'DISTINCT'", "w.id", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 " +
+                "LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSizeToCountTransformationWithElementCollectionBasic1() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
+                .select("SIZE(w.supportedLocales)");
+        String expectedQuery = "SELECT " + function("count_tuple", "w.id", "supportedLocales_1") + " FROM Workflow w LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSizeToCountTransformationWithElementCollectionBasic2() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
+                .select("SIZE(w.supportedLocales)")
+                .leftJoin("w.localized", "localized");
+        String expectedQuery = "SELECT " + function("count_tuple", "'DISTINCT'", "w.id", "supportedLocales_1") + " FROM Workflow w LEFT JOIN w.supportedLocales supportedLocales_1 " +
+                "LEFT JOIN w.localized localized GROUP BY w.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
 
     @Test
     public void testSizeToCountTransformationWithList1() {

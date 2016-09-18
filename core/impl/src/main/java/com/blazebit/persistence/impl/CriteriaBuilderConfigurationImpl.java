@@ -21,7 +21,6 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -40,7 +39,9 @@ import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
-import com.blazebit.persistence.impl.function.count.CountFunction;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
+import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
+import com.blazebit.persistence.impl.function.count.CountTupleFunction;
 import com.blazebit.persistence.impl.function.datediff.day.AccessDayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DB2DayDiffFunction;
 import com.blazebit.persistence.impl.function.datediff.day.DefaultDayDiffFunction;
@@ -380,8 +381,14 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         jpqlFunctionGroup.add("postgresql", new PostgreSQLSecondDiffFunction());
         registerFunction(jpqlFunctionGroup);
 
-        jpqlFunctionGroup = new JpqlFunctionGroup(CountFunction.FUNCTION_NAME, false);
-        jpqlFunctionGroup.add(null, new CountFunction());
+        // count
+
+        jpqlFunctionGroup = new JpqlFunctionGroup(AbstractCountFunction.FUNCTION_NAME, true);
+        jpqlFunctionGroup.add(null, new CountTupleFunction());
+        jpqlFunctionGroup.add("db2", new CountTupleEmulationFunction());
+        jpqlFunctionGroup.add("microsoft", new CountTupleEmulationFunction());
+        jpqlFunctionGroup.add("oracle", new CountTupleEmulationFunction());
+        jpqlFunctionGroup.add("hsql", new CountTupleEmulationFunction());
         registerFunction(jpqlFunctionGroup);
     }
 

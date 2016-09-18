@@ -18,12 +18,14 @@ package com.blazebit.persistence.impl.hibernate;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import java.util.Map;
 
 /**
@@ -34,6 +36,7 @@ import java.util.Map;
 public class HibernateJpaProvider implements JpaProvider {
 
     private final DB db;
+    private Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
         OTHER,
@@ -41,7 +44,7 @@ public class HibernateJpaProvider implements JpaProvider {
         DB2;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms) {
+    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters) {
         try {
             if (em == null) {
                 db = DB.OTHER;
@@ -52,6 +55,7 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 db = DB.OTHER;
             }
+            this.collectionPersisters = collectionPersisters;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -188,4 +192,36 @@ public class HibernateJpaProvider implements JpaProvider {
         return true;
     }
 
+    @Override
+    public boolean isJoinTable(Attribute<?, ?> attribute) {
+        StringBuilder sb = new StringBuilder(200);
+        sb.append(attribute.getDeclaringType().getJavaType().getName());
+        sb.append('.');
+        sb.append(attribute.getName());
+
+        CollectionPersister persister = collectionPersisters.get(sb.toString());
+        if (persister instanceof QueryableCollection) {
+            QueryableCollection queryableCollection = (QueryableCollection) persister;
+            if (queryableCollection.getElementPersister() instanceof Joinable) {
+                String elementTableName = ((Joinable) queryableCollection.getElementPersister()).getTableName();
+                return !queryableCollection.getTableName().equals(elementTableName);
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean isBag(Attribute<?, ?> attribute) {
+        if (attribute instanceof PluralAttribute) {
+            StringBuilder sb = new StringBuilder(200);
+            sb.append(attribute.getDeclaringType().getJavaType().getName());
+            sb.append('.');
+            sb.append(attribute.getName());
+
+            CollectionPersister persister = collectionPersisters.get(sb.toString());
+            return !persister.hasIndex();
+        }
+
+        return false;
+    }
 }

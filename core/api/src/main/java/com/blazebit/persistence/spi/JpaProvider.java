@@ -15,6 +15,8 @@
  */
 package com.blazebit.persistence.spi;
 
+import javax.persistence.metamodel.Attribute;
+
 /**
  * TODO: documentation
  *
@@ -74,4 +76,8 @@ public interface JpaProvider {
     public boolean supportsSubtypePropertyResolving();
 
     public boolean supportsCountStar();
+
+    public boolean isJoinTable(Attribute<?, ?> attribute);
+
+    public boolean isBag(Attribute<?, ?> attribute);
 }

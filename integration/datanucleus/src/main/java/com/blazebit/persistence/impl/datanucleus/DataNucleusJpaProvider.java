@@ -18,6 +18,12 @@ package com.blazebit.persistence.impl.datanucleus;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
+import javax.persistence.OrderColumn;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.PluralAttribute;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 
 /**
  *
@@ -138,6 +144,31 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsCountStar() {
+        return false;
+    }
+
+    @Override
+    public boolean isJoinTable(Attribute<?, ?> attribute) {
+        // just return false since we don't need that for datanucleus anyway
+        return false;
+    }
+
+    @Override
+    public boolean isBag(Attribute<?, ?> attribute) {
+        if (attribute instanceof PluralAttribute) {
+            PluralAttribute<?, ?, ?> pluralAttr = (PluralAttribute<?, ?, ?>) attribute;
+            if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
+                return true;
+            } else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
+                // TODO: implement check
+                Member member = pluralAttr.getJavaMember();
+                if (member instanceof Field) {
+                    return ((Field) member).getAnnotation(OrderColumn.class) == null;
+                } else if (member instanceof Method) {
+                    return ((Method) member).getAnnotation(OrderColumn.class) == null;
+                }
+            }
+        }
         return false;
     }
 

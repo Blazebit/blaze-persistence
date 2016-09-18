@@ -26,7 +26,7 @@ import javax.persistence.metamodel.*;
 import javax.persistence.metamodel.Type.PersistenceType;
 
 import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.function.count.CountFunction;
+import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -147,7 +147,8 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             String property = sizeArg.getPathReference().getField();
             Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
-            PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) MetamodelUtils.resolveTargetAttribute(metamodel, startClass, property)).getCollectionType();
+            PluralAttribute<?, ?, ?> targetAttribute = (PluralAttribute<?, ?, ?>) MetamodelUtils.resolveTargetAttribute(metamodel, startClass, property);
+            PluralAttribute.CollectionType collectionType = targetAttribute.getCollectionType();
             EntityType<?> startType = metamodel.entity(startClass);
             ManagedType<?> managedTargetType = MetamodelUtils.resolveManagedTargetType(metamodel, startClass, property);
             
@@ -165,7 +166,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             		!isCountTransformationEnabled() || 
             		(hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) || 
             		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
-                    MetamodelUtils.isBag(metamodel, startClass, property)) {
+                    jpaProvider.isBag(targetAttribute)) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause
@@ -189,7 +190,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
 
                 if (collectionType == PluralAttribute.CollectionType.LIST || collectionType == PluralAttribute.CollectionType.MAP) {
                     String alias = ((JoinNode) sizeArg.getPathReference().getBaseNode()).getAlias();
-                    String id = startType.getId(startType.getIdType().getJavaType()).getName();
+                    String id = JpaUtils.getIdAttribute(startType).getName();
 
                     List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
                     pathElems.add(new PropertyExpression(alias));
@@ -212,7 +213,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
 
                     List<Expression> countArguments = new ArrayList<Expression>();
                     if (distinctRequired) {
-                        countArguments.add(new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
+                        countArguments.add(new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                     }
                     countArguments.add(parentIdPath);
                     countArguments.add(keyExpression);
@@ -243,10 +244,10 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
                          */
                         for (AggregateExpression transformedExpr : transformedExpressions) {
                             if (ExpressionUtils.isCustomFunctionInvocation(transformedExpr) &&
-                                    CountFunction.FUNCTION_NAME.equals(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
-                                // CountFunction
-                                if (!CountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(1))) {
-                                    transformedExpr.getExpressions().add(1, new StringLiteral(CountFunction.DISTINCT_QUALIFIER));
+                                    AbstractCountFunction.FUNCTION_NAME.equals(((StringLiteral) transformedExpr.getExpressions().get(0)).getValue())) {
+                                // AbstractCountFunction
+                                if (!AbstractCountFunction.DISTINCT_QUALIFIER.equals(transformedExpr.getExpressions().get(1))) {
+                                    transformedExpr.getExpressions().add(1, new StringLiteral(AbstractCountFunction.DISTINCT_QUALIFIER));
                                 }
                             } else {
                                 transformedExpr.setDistinct(true);
@@ -267,10 +268,10 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
     }
 
     private AggregateExpression createCountTupleFunction(List<Expression> countTupleArguments) {
-        countTupleArguments.add(0, new StringLiteral(CountFunction.FUNCTION_NAME));
+        countTupleArguments.add(0, new StringLiteral(AbstractCountFunction.FUNCTION_NAME));
         return new AggregateExpression(false, "FUNCTION", countTupleArguments);
     }
-    
+
     private SubqueryExpression generateSubquery(PathExpression sizeArg, Class<?> collectionClass) {
         String baseAlias = ((JoinNode) sizeArg.getBaseNode()).getAliasInfo().getAlias();
         String collectionPropertyName = sizeArg.getField() != null ? sizeArg.getField() : baseAlias;

@@ -1676,34 +1676,74 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
                 if (onIndex > targetTableJoinIndex) {
                     throw new IllegalStateException("The left join for subquery rewriting could not be found!");
                 }
-                String onCondition = sb.substring(onIndex, targetTableJoinIndex);
+                StringBuilder onCondition = new StringBuilder(sb.substring(onIndex, targetTableJoinIndex));
 
                 // Extract the join table alias since we need to replace it
                 int aliasIndex = sb.indexOf(" ", joinTableIndex) + 1;
                 String joinTableAlias = sb.substring(aliasIndex, onIndex);
 
+                int realOnConditionStartIndex = indexRange[1];
+                // Find the index at which the actual key restriction begins
+                String realOnConditionStart = " and (";
+                int realOnConditionIndex = sb.indexOf(realOnConditionStart, realOnConditionStartIndex);
+
+                // We need to find the column name of the key
+                List<String> joinTableParentExpressions = getColumnExpressions(sb, joinTableAlias, onIndex, targetTableJoinIndex);
+                List<String> joinTableKeyExpressions = getColumnExpressions(sb, joinTableAlias, realOnConditionIndex, sb.length());
+
+                if (joinTableKeyExpressions.size() != 1) {
+                    throw new IllegalStateException("Expected exactly one key expression but found: " + joinTableKeyExpressions.size());
+                }
+
+                String joinTableKeyExpression = joinTableKeyExpressions.get(0);
+
+                // Construct the subquery part that will replace the join table join part
+                String joinTableKeyAlias = "join_table_key";
+                String joinTableParentAliasPrefix = "join_table_parent_";
+                StringBuilder subqueryPrefixSb = new StringBuilder();
+                subqueryPrefixSb.append("(select ");
+                subqueryPrefixSb.append(joinTableKeyExpression);
+                subqueryPrefixSb.append(" as ");
+                subqueryPrefixSb.append(joinTableKeyAlias);
+                subqueryPrefixSb.append(", ");
+                subqueryPrefixSb.append(sqlAlias);
+                subqueryPrefixSb.append(".*");
+
+                for (int i = 0; i < joinTableParentExpressions.size(); i++) {
+                    subqueryPrefixSb.append(", ");
+                    subqueryPrefixSb.append(joinTableParentExpressions.get(i));
+                    subqueryPrefixSb.append(" as ");
+                    subqueryPrefixSb.append(joinTableParentAliasPrefix);
+                    subqueryPrefixSb.append(i);
+
+                    String newParentExpression = sqlAlias + "." + joinTableParentAliasPrefix + i;
+                    int lengthDifference = newParentExpression.length() - joinTableParentExpressions.get(i).length();
+                    replaceExpressionUntil(0, onCondition.length(), lengthDifference, onCondition, joinTableParentExpressions.get(i), newParentExpression);
+                }
+
+                subqueryPrefixSb.append(" from ");
+
                 // Replace the join table join with a subquery part
-                String subqueryPrefix = "(select * from ";
+                String subqueryPrefix =  subqueryPrefixSb.toString();
                 String subqueryInsert = subqueryPrefix + sb.substring(joinTableIndex, onIndex);
                 sb.replace(joinTableIndex, targetTableJoinIndex - 1, subqueryInsert);
 
                 // Adapt index since we replaced stuff before
-                int realOnConditionStartIndex = indexRange[1] + (subqueryInsert.length() - (targetTableJoinIndex - joinTableIndex));
-                // Find the index at which the actual key restriction begins
-                String realOnConditionStart = " and (";
-                int realOnConditionIndex = sb.indexOf(realOnConditionStart, realOnConditionStartIndex);
+                realOnConditionStartIndex += (subqueryInsert.length() - (targetTableJoinIndex - joinTableIndex));
+                realOnConditionIndex += (subqueryInsert.length() - (targetTableJoinIndex - joinTableIndex - 1));
 
                 // Insert the target table alias for the subquery and the on condition for joining with the parent
                 String subqueryEnd = ") " + sqlAlias + onCondition;
                 sb.insert(realOnConditionIndex, subqueryEnd);
                 realOnConditionStartIndex += subqueryEnd.length();
 
-                // Replace the join table alias with the target table alias until reaching joinTableIndex and then again at realOnConditionStartIndex
-                int lengthDifference = sqlAlias.length() - joinTableAlias.length();
+                // Replace the join table key expression with the target table key expression until reaching joinTableIndex and then again at realOnConditionStartIndex
+                String targetTableKeyExpression = sqlAlias + "." + joinTableKeyAlias;
+                int lengthDifference = targetTableKeyExpression.length() - joinTableKeyExpression.length();
                 // Replace the join table alias with the target table alias until reaching joinTableIndex
-                int diff = replaceAliasUntil(-1, joinTableIndex, lengthDifference, sb, joinTableAlias, sqlAlias);
+                int diff = replaceExpressionUntil(-1, joinTableIndex, lengthDifference, sb, joinTableKeyExpression, targetTableKeyExpression);
                 // and then again from realOnConditionStartIndex until the end
-                replaceAliasUntil(realOnConditionStartIndex + diff, sb.length(), lengthDifference, sb, joinTableAlias, sqlAlias);
+                replaceExpressionUntil(realOnConditionStartIndex + diff, sb.length(), lengthDifference, sb, joinTableKeyExpression, targetTableKeyExpression);
 
                 break;
             }
@@ -1712,13 +1752,41 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
     }
 
-    private int replaceAliasUntil(int searchIndex, int endIndex, int lengthDifference, StringBuilder sb, String oldAlias, String newAlias) {
+    private List<String> getColumnExpressions(StringBuilder sb, String tableAlias, int startIndex, int endIndex) {
+        String columnExpressionStart = tableAlias + ".";
+        List<String> columnExpressions = new ArrayList<String>();
+        while (startIndex < endIndex) {
+            int expressionIndex = sb.indexOf(columnExpressionStart, startIndex);
+
+            if (expressionIndex < 0) {
+                if (columnExpressions.isEmpty()) {
+                    throw new IllegalStateException("The join table column expression needed for subquery rewriting could not be found!");
+                }
+                break;
+            }
+
+            StringBuilder columnExpressionSb = new StringBuilder(80);
+            columnExpressionSb.append(columnExpressionStart);
+            expressionIndex += columnExpressionStart.length();
+            char keyChar;
+            while (isIdentifier(keyChar = sb.charAt(expressionIndex))) {
+                columnExpressionSb.append(keyChar);
+                expressionIndex++;
+            }
+            columnExpressions.add(columnExpressionSb.toString());
+            startIndex = expressionIndex;
+        }
+
+        return columnExpressions;
+    }
+
+    private int replaceExpressionUntil(int searchIndex, int endIndex, int lengthDifference, StringBuilder sb, String oldExpression, String newExpression) {
         int diff = 0;
-        while ((searchIndex = sb.indexOf(oldAlias, searchIndex + 1)) > 0 && searchIndex < endIndex) {
-            if (isIdentifierStart(sb.charAt(searchIndex - 1)) || isIdentifier(sb.charAt(searchIndex + oldAlias.length()))) {
+        while ((searchIndex = sb.indexOf(oldExpression, searchIndex + 1)) > 0 && searchIndex < endIndex) {
+            if (isIdentifierStart(sb.charAt(searchIndex - 1)) || isIdentifier(sb.charAt(searchIndex + oldExpression.length()))) {
                 continue;
             }
-            sb.replace(searchIndex, searchIndex + oldAlias.length(), newAlias);
+            sb.replace(searchIndex, searchIndex + oldExpression.length(), newExpression);
             searchIndex += lengthDifference;
             endIndex += lengthDifference;
             diff += lengthDifference;

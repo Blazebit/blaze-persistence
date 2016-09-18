@@ -95,20 +95,28 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         }
     }
 
+    private Map<String, CollectionPersister> getCollectionPersisters(EntityManager em) {
+        if (em == null) {
+            return null;
+        }
+
+        return em.unwrap(SessionImplementor.class).getFactory().getCollectionPersisters();
+    }
+
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         if (major > 4 || major == 4 && minor >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), major, minor, fix);
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getCollectionPersisters(em), major, minor, fix);
                 }
             };
         } else {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory));
+                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getCollectionPersisters(em));
                 }
             };
         }

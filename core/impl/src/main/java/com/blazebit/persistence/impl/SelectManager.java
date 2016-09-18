@@ -174,7 +174,7 @@ public class SelectManager<T> extends AbstractManager {
 
         // When no select infos are available, it can only be a root entity select
         if (selectInfos.isEmpty()) {
-            // TODO: Not sure if this branch is ever possible. It's problematic because it's not aware of VALUES clause
+            // TODO: GroupByTest#testGroupByEntitySelect uses this. It's problematic because it's not aware of VALUES clause
             List<JoinNode> roots = joinManager.getRoots();
             
             if (roots.size() > 1) {
