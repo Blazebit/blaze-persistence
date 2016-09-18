@@ -370,7 +370,7 @@ public class JoinTest extends AbstractCoreTest {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();
         
-        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p " + ON_CLAUSE + " (SELECT COUNT(versions) FROM Document document LEFT JOIN document.versions versions WHERE document = d) > 2";
+        final String expected = "SELECT d FROM Document d LEFT JOIN d.partners p " + ON_CLAUSE + " (SELECT " + countStar() + " FROM Document document LEFT JOIN document.versions versions WHERE document = d) > 2";
         assertEquals(expected, crit.getQueryString());
         crit.getResultList();
     }
@@ -409,7 +409,7 @@ public class JoinTest extends AbstractCoreTest {
             .where("partner.name").eqExpression("'Joe'");
     
         // Then
-        final String expected = "SELECT COUNT(DISTINCT partners_1) FROM Document d LEFT JOIN d.partners partner LEFT JOIN d.partners partners_1 WHERE partner.name = 'Joe' GROUP BY d.id";
+        final String expected = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "partners_1") + " FROM Document d LEFT JOIN d.partners partner LEFT JOIN d.partners partners_1 WHERE partner.name = 'Joe' GROUP BY d.id";
         assertEquals(expected, crit.getQueryString());
         List<Long> results = crit.getResultList();
         assertEquals(1, results.size());

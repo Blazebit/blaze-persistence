@@ -213,13 +213,18 @@ public class HibernateJpaProvider implements JpaProvider {
     @Override
     public boolean isBag(Attribute<?, ?> attribute) {
         if (attribute instanceof PluralAttribute) {
-            StringBuilder sb = new StringBuilder(200);
-            sb.append(attribute.getDeclaringType().getJavaType().getName());
-            sb.append('.');
-            sb.append(attribute.getName());
+            PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) attribute).getCollectionType();
+            if (collectionType == PluralAttribute.CollectionType.COLLECTION) {
+                return true;
+            } else if (collectionType == PluralAttribute.CollectionType.LIST) {
+                StringBuilder sb = new StringBuilder(200);
+                sb.append(attribute.getDeclaringType().getJavaType().getName());
+                sb.append('.');
+                sb.append(attribute.getName());
 
-            CollectionPersister persister = collectionPersisters.get(sb.toString());
-            return !persister.hasIndex();
+                CollectionPersister persister = collectionPersisters.get(sb.toString());
+                return !persister.hasIndex();
+            }
         }
 
         return false;
