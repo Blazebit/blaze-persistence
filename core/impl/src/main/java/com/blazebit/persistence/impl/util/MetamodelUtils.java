@@ -52,23 +52,4 @@ public class MetamodelUtils {
 		return managedType.getAttribute(pathElements[pathElements.length - 1]);
 	}
 
-	public static boolean isBag(Metamodel metamodel, Class<?> entityClass, String property) {
-		EntityType<?> entityType = metamodel.entity(entityClass);
-		Attribute<?, ?> attribute = entityType.getAttribute(property);
-		if (attribute instanceof PluralAttribute) {
-			PluralAttribute<?, ?, ?> pluralAttr = (PluralAttribute<?, ?, ?>) attribute;
-			if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.COLLECTION) {
-				return true;
-			} else if (pluralAttr.getCollectionType() == PluralAttribute.CollectionType.LIST) {
-				Member member = pluralAttr.getJavaMember();
-				if (member instanceof Field) {
-					return ((Field) member).getAnnotation(OrderColumn.class) == null;
-				} else if (member instanceof Method) {
-					return ((Method) member).getAnnotation(OrderColumn.class) == null;
-				}
-			}
-		}
-		return false;
-	}
-	
 }

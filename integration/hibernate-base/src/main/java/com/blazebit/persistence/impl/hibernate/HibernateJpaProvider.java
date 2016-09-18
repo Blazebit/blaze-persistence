@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.MapAttribute;
 import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import java.util.Map;
 
 /**
@@ -206,6 +207,21 @@ public class HibernateJpaProvider implements JpaProvider {
                 return !queryableCollection.getTableName().equals(elementTableName);
             }
         }
+        return false;
+    }
+
+    @Override
+    public boolean isBag(Attribute<?, ?> attribute) {
+        if (attribute instanceof PluralAttribute) {
+            StringBuilder sb = new StringBuilder(200);
+            sb.append(attribute.getDeclaringType().getJavaType().getName());
+            sb.append('.');
+            sb.append(attribute.getName());
+
+            CollectionPersister persister = collectionPersisters.get(sb.toString());
+            return !persister.hasIndex();
+        }
+
         return false;
     }
 }

@@ -1,7 +1,5 @@
 package com.blazebit.persistence.impl.function.count;
 
-import com.blazebit.persistence.impl.expression.Expression;
-import com.blazebit.persistence.impl.function.groupconcat.AbstractGroupConcatFunction;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
@@ -11,10 +9,10 @@ import java.util.List;
 
 /**
  *
- * @author Moritz Becker
+ * @author Christian Beikov
  * @since 1.2.0
  */
-public class CountFunction implements JpqlFunction {
+public class CountTupleEmulationFunction implements JpqlFunction {
 
     public static final String FUNCTION_NAME = "count_tuple";
     public static final String DISTINCT_QUALIFIER = "DISTINCT";
@@ -39,7 +37,7 @@ public class CountFunction implements JpqlFunction {
     @Override
     public void render(FunctionRenderContext context) {
         if (context.getArgumentsSize() == 0) {
-            throw new RuntimeException("The " + CountFunction.FUNCTION_NAME + " function needs at least one argument!");
+            throw new RuntimeException("The " + CountTupleEmulationFunction.FUNCTION_NAME + " function needs at least one argument!");
         }
 
         Count count = getCount(context);
@@ -73,7 +71,7 @@ public class CountFunction implements JpqlFunction {
         }
 
         if (startIndex >= argsSize) {
-            throw new RuntimeException("The " + CountFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
+            throw new RuntimeException("The " + CountTupleEmulationFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
         }
 
         List<String> expressions = new ArrayList<String>();

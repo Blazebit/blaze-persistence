@@ -146,7 +146,8 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             String property = sizeArg.getPathReference().getField();
             Class<?> startClass = ((JoinNode) sizeArg.getBaseNode()).getPropertyClass();
 
-            PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) MetamodelUtils.resolveTargetAttribute(metamodel, startClass, property)).getCollectionType();
+            Attribute<?, ?> targetAttribute = MetamodelUtils.resolveTargetAttribute(metamodel, startClass, property);
+            PluralAttribute.CollectionType collectionType = ((PluralAttribute<?, ?, ?>) targetAttribute).getCollectionType();
             EntityType<?> startType = metamodel.entity(startClass);
             ManagedType<?> managedTargetType = MetamodelUtils.resolveManagedTargetType(metamodel, startClass, property);
             
@@ -164,7 +165,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
             		!isCountTransformationEnabled() || 
             		(hasComplexGroupBySelects && !dbmsDialect.supportsComplexGroupBy()) || 
             		(hasGroupBySelects && !isImplicitGroupByFromSelectEnabled()) ||
-                    MetamodelUtils.isBag(metamodel, startClass, property)) {
+                    jpaProvider.isBag(targetAttribute)) {
                 return generateSubquery(sizeArg, startClass);
             } else {
                 // build group by id clause
@@ -188,7 +189,7 @@ public class SizeTransformationVisitor extends PredicateModifyingResultVisitorAd
 
                 if (collectionType == PluralAttribute.CollectionType.LIST || collectionType == PluralAttribute.CollectionType.MAP) {
                     String alias = ((JoinNode) sizeArg.getPathReference().getBaseNode()).getAlias();
-                    String id = startType.getId(startType.getIdType().getJavaType()).getName();
+                    String id = JpaUtils.getIdAttribute(startType).getName();
 
                     List<PathElementExpression> pathElems = new ArrayList<PathElementExpression>();
                     pathElems.add(new PropertyExpression(alias));

@@ -78,4 +78,6 @@ public interface JpaProvider {
     public boolean supportsCountStar();
 
     public boolean isJoinTable(Attribute<?, ?> attribute);
+
+    public boolean isBag(Attribute<?, ?> attribute);
 }
