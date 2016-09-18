@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.eclipselink;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Attribute;
 
 /**
  *
@@ -136,6 +137,12 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsCountStar() {
+        return false;
+    }
+
+    @Override
+    public boolean isJoinTable(Attribute<?, ?> attribute) {
+        // just return false since we don't need that for eclipselink anyway
         return false;
     }
 

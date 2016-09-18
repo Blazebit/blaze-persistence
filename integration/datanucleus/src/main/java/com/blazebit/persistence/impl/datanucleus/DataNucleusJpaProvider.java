@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl.datanucleus;
 import com.blazebit.persistence.spi.JpaProvider;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Attribute;
 
 /**
  *
@@ -138,6 +139,12 @@ public class DataNucleusJpaProvider implements JpaProvider {
 
     @Override
     public boolean supportsCountStar() {
+        return false;
+    }
+
+    @Override
+    public boolean isJoinTable(Attribute<?, ?> attribute) {
+        // just return false since we don't need that for datanucleus anyway
         return false;
     }
 

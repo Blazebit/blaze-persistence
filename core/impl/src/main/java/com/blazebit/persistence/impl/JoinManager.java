@@ -34,6 +34,7 @@ import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.ValuesStrategy;
 import com.blazebit.reflection.PropertyPathExpression;
 
@@ -83,15 +84,17 @@ public class JoinManager extends AbstractManager {
         }
 
         Set<JoinNode> keyRestrictedLeftJoins = new HashSet<JoinNode>();
-        acceptVisitor(new KeyRestrictedLeftJoinCollectingVisitor(keyRestrictedLeftJoins));
+        acceptVisitor(new KeyRestrictedLeftJoinCollectingVisitor(mainQuery.jpaProvider, keyRestrictedLeftJoins));
         return keyRestrictedLeftJoins;
     }
 
     static class KeyRestrictedLeftJoinCollectingVisitor extends VisitorAdapter implements JoinNodeVisitor {
 
+        final JpaProvider jpaProvider;
         final Set<JoinNode> keyRestrictedLeftJoins;
 
-        public KeyRestrictedLeftJoinCollectingVisitor(Set<JoinNode> keyRestrictedLeftJoins) {
+        public KeyRestrictedLeftJoinCollectingVisitor(JpaProvider jpaProvider, Set<JoinNode> keyRestrictedLeftJoins) {
+            this.jpaProvider = jpaProvider;
             this.keyRestrictedLeftJoins = keyRestrictedLeftJoins;
         }
 
@@ -109,9 +112,13 @@ public class JoinManager extends AbstractManager {
                 // We know it can only be a path
                 PathExpression pathExpression = (PathExpression) expression.getExpressions().get(0);
                 JoinNode node = (JoinNode) pathExpression.getBaseNode();
+                Attribute<?, ?> attribute = node.getParentTreeNode().getAttribute();
                 // Exclude element collections as they are not problematic
-                if (node.getParentTreeNode().getAttribute().getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
-                    keyRestrictedLeftJoins.add(node);
+                if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION) {
+                    // There are weird mappings possible, we have to check if the attribute is a join table
+                    if (jpaProvider.isJoinTable(attribute)) {
+                        keyRestrictedLeftJoins.add(node);
+                    }
                 }
             }
         }
