@@ -6,6 +6,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.logging.Logger;
@@ -25,7 +26,8 @@ public class Hibernate5Integrator implements Integrator {
                 // TODO: check that no collections are mapped
 			}
 		}
-		CommonHibernateUtils.setCollectionPersisterClass(metadata.getEntityBindings().iterator(), CustomOneToManyPersister.class);
+
+		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
 	}
 
 	@Override
