@@ -13,6 +13,11 @@ import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 
 import com.blazebit.reflection.ReflectionUtils;
 
+/**
+ *
+ * @author Moritz Becker
+ * @since 1.2.0
+ */
 public class MetamodelUtils {
 
 	public static ManagedType<?> resolveManagedTargetType(Metamodel metamodel, Class<?> entityClass, String path) {

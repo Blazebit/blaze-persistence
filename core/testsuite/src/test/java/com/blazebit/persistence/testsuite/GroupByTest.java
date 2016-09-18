@@ -49,6 +49,8 @@ public class GroupByTest extends AbstractCoreTest {
     
     /**
      * Some databases like DB2 do not support group bys with parameter markers.
+     * Thus, for these DBs no such group bys should be generated and therefore the size to count transformation should
+     * produce a subquery in this case.
      */
     @Test
     @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoOracle.class, NoSQLite.class})
@@ -56,8 +58,8 @@ public class GroupByTest extends AbstractCoreTest {
     	CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
     			.select("SIZE(d.versions)")
     			.selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
-    	
-    	final String expected = "SELECT (SELECT COUNT(versions) FROM Document document LEFT JOIN document.versions versions WHERE document = d), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d";
+
+    	final String expected = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.versions versions WHERE document = d), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d";
     	assertEquals(expected, criteria.getQueryString());
     	criteria.getResultList();
     }
@@ -70,7 +72,7 @@ public class GroupByTest extends AbstractCoreTest {
     			.select("SIZE(d.versions)")
     			.selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
     	
-    	final String expected = "SELECT COUNT(versions_1), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
+    	final String expected = "SELECT " + function("COUNT_TUPLE", "d.id", "versions_1") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
     	assertEquals(expected, criteria.getQueryString());
     	criteria.getResultList();
     }
