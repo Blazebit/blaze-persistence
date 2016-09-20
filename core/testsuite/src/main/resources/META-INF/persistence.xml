@@ -42,5 +42,14 @@ limitations under the License.
         <class>com.blazebit.persistence.testsuite.entity.TestCTE</class>
         <class>com.blazebit.persistence.testsuite.entity.Version</class>
         <class>com.blazebit.persistence.testsuite.entity.Workflow</class>
+
+        <class>com.blazebit.persistence.testsuite.entity.Root</class>
+        <class>com.blazebit.persistence.testsuite.entity.Root2</class>
+        <class>com.blazebit.persistence.testsuite.entity.IndexedNode</class>
+        <class>com.blazebit.persistence.testsuite.entity.IndexedNode2</class>
+        <class>com.blazebit.persistence.testsuite.entity.IndexedEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.entity.KeyedEmbeddable</class>
+        <class>com.blazebit.persistence.testsuite.entity.KeyedNode</class>
+        <class>com.blazebit.persistence.testsuite.entity.KeyedNode2</class>
     </persistence-unit>
 </persistence>

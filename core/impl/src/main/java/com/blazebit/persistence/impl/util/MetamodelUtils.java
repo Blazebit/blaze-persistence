@@ -34,10 +34,8 @@ public class MetamodelUtils {
     		
     		if (attribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
     			throw new RuntimeException("Path [" + path.toString() + "] contains BASIC path element");
-    		} else if (attribute.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
-    			currentType = metamodel.embeddable(type);
-    		} else {
-    			currentType = metamodel.entity(type);
+    		} else  {
+    			currentType = metamodel.managedType(type);
     		}
         }
         

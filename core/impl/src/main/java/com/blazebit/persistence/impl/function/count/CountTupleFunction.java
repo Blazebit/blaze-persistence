@@ -26,16 +26,18 @@ public class CountTupleFunction extends AbstractCountFunction {
             context.addChunk(DISTINCT);
         }
 
+        int argumentStartIndex = count.getArgumentStartIndex();
+
         if (context.getArgumentsSize() > 1) {
             context.addChunk("(");
-            context.addArgument(0);
-            for (int i = 1; i < context.getArgumentsSize(); i++) {
+            context.addArgument(argumentStartIndex);
+            for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
                 context.addChunk(", ");
                 context.addArgument(i);
             }
             context.addChunk(")");
         } else {
-            context.addArgument(0);
+            context.addArgument(argumentStartIndex);
         }
 
         context.addChunk(")");
