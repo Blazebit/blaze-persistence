@@ -17,6 +17,6 @@ public class KeyedNode {
     private Integer id;
     @ManyToOne
     private Root parent;
-    @Column(name = "map_key")
+    @Column(name = "map_key", length = 10)
     private String key;
 }

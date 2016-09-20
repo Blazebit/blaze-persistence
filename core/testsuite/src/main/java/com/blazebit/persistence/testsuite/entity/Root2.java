@@ -19,7 +19,7 @@ public class Root2 {
     @OrderColumn(name = "list_index")
     private List<IndexedNode2> indexedNodesMappedBy;
     @OneToMany(mappedBy = "parent")
-    @MapKeyColumn(name = "map_key")
+    @MapKeyColumn(name = "map_key", length = 10)
     private Map<String, KeyedNode2> keyedNodesMappedBy;
 
 }

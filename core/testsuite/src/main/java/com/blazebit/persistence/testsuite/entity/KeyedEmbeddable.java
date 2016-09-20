@@ -1,5 +1,6 @@
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
 /**
@@ -10,7 +11,9 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class KeyedEmbeddable {
 
+    @Column(length = 10)
     private String value;
+    @Column(length = 10)
     private String value2;
 
     public KeyedEmbeddable() {

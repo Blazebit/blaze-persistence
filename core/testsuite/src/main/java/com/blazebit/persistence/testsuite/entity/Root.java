@@ -21,7 +21,7 @@ public class Root {
     private List<IndexedNode> indexedNodes;
     @OneToMany
     @JoinTable(name = "map_one_to_many")
-    @MapKeyColumn(name = "join_table_map_key")
+    @MapKeyColumn(name = "join_table_map_key", length = 10)
     private Map<String, KeyedNode> keyedNodes;
 
     @ManyToMany
@@ -30,7 +30,7 @@ public class Root {
     private List<IndexedNode> indexedNodesMany;
     @ManyToMany
     @JoinTable(name = "map_many_to_many")
-    @MapKeyColumn(name = "join_table_map_key")
+    @MapKeyColumn(name = "join_table_map_key", length = 10)
     private Map<String, KeyedNode> keyedNodesMany;
 
     @ManyToMany
@@ -39,7 +39,7 @@ public class Root {
     private List<IndexedNode> indexedNodesManyDuplicate;
     @ManyToMany
     @JoinTable(name = "map_many_to_many_duplicate")
-    @MapKeyColumn(name = "map_key")
+    @MapKeyColumn(name = "map_key", length = 10)
     private Map<String, KeyedNode> keyedNodesManyDuplicate;
 
     @ElementCollection
@@ -48,7 +48,7 @@ public class Root {
     private List<IndexedEmbeddable> indexedNodesElementCollection;
     @ElementCollection
     @CollectionTable(name = "map_collection_table")
-    @MapKeyColumn(name = "map_key")
+    @MapKeyColumn(name = "map_key", length = 10)
     private Map<String, KeyedEmbeddable> keyedNodesElementCollection;
 
 }
