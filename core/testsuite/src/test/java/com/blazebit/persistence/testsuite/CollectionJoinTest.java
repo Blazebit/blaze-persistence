@@ -21,11 +21,6 @@ import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import javax.persistence.*;
-
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -96,90 +91,5 @@ public class CollectionJoinTest extends AbstractCoreTest {
                 "LEFT JOIN r.indexedNodesElementCollection indexedNodesElementCollection_0_1 " + ON_CLAUSE + " INDEX(indexedNodesElementCollection_0_1) = 0 " +
                 "LEFT JOIN r.keyedNodesElementCollection keyedNodesElementCollection_default_1 " + ON_CLAUSE + " KEY(keyedNodesElementCollection_default_1) = 'default'", criteria.getQueryString());
         criteria.getResultList();
-    }
-
-    @Entity(name = "Root")
-    static class Root {
-
-        @Id
-        private Integer id;
-
-        @OneToMany
-        @JoinTable(name = "list_one_to_many")
-        @OrderColumn(name = "join_table_list_index")
-        private List<IndexedNode> indexedNodes;
-        @OneToMany
-        @JoinTable(name = "map_one_to_many")
-        @MapKeyColumn(name = "join_table_map_key")
-        private Map<String, KeyedNode> keyedNodes;
-
-        @OneToMany(mappedBy = "parent")
-        @OrderColumn(name = "list_index")
-        private List<IndexedNode> indexedNodesMappedBy;
-        @OneToMany(mappedBy = "parent")
-        @MapKeyColumn(name = "map_key")
-        private Map<String, KeyedNode> keyedNodesMappedBy;
-
-        @ManyToMany
-        @JoinTable(name = "list_many_to_many")
-        @OrderColumn(name = "join_table_list_index")
-        private List<IndexedNode> indexedNodesMany;
-        @ManyToMany
-        @JoinTable(name = "map_many_to_many")
-        @MapKeyColumn(name = "join_table_map_key")
-        private Map<String, KeyedNode> keyedNodesMany;
-
-        @ManyToMany
-        @JoinTable(name = "list_many_to_many_duplicate")
-        @OrderColumn(name = "list_index")
-        private List<IndexedNode> indexedNodesManyDuplicate;
-        @ManyToMany
-        @JoinTable(name = "map_many_to_many_duplicate")
-        @MapKeyColumn(name = "map_key")
-        private Map<String, KeyedNode> keyedNodesManyDuplicate;
-
-        @ElementCollection
-        @CollectionTable(name = "list_collection_table")
-        @OrderColumn(name = "list_index")
-        private List<IndexedEmbeddable> indexedNodesElementCollection;
-        @ElementCollection
-        @CollectionTable(name = "map_collection_table")
-        @MapKeyColumn(name = "map_key")
-        private Map<String, KeyedEmbeddable> keyedNodesElementCollection;
-
-    }
-
-    @Entity(name = "IndexedNode")
-    static class IndexedNode {
-
-        @Id
-        private Integer id;
-        @ManyToOne
-        private Root parent;
-        @Column(name = "list_index")
-        private Integer index;
-    }
-
-    @Entity(name = "KeyedNode")
-    static class KeyedNode {
-
-        @Id
-        private Integer id;
-        @ManyToOne
-        private Root parent;
-        @Column(name = "map_key")
-        private String key;
-    }
-
-    @Embeddable
-    static class IndexedEmbeddable {
-
-        private String value;
-    }
-
-    @Embeddable
-    static class KeyedEmbeddable {
-
-        private String value;
     }
 }
