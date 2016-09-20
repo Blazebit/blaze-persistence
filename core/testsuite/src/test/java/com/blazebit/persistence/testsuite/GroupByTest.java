@@ -72,7 +72,7 @@ public class GroupByTest extends AbstractCoreTest {
     			.select("SIZE(d.versions)")
     			.selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
     	
-    	final String expected = "SELECT " + function("COUNT_TUPLE", "d.id", "versions_1") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
+    	final String expected = "SELECT COUNT(versions_1), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
     	assertEquals(expected, criteria.getQueryString());
     	criteria.getResultList();
     }

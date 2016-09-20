@@ -156,7 +156,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").orderByAsc("SIZE(d.partners)");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id ORDER BY " + renderNullPrecedence(function("COUNT_TUPLE", "d.id", "partners_1"), "ASC", "LAST");
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("COUNT(partners_1)", "ASC", "LAST");
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -166,7 +166,7 @@ public class OrderByTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").orderByAsc("SIZE(d.partners)").orderByDesc("SIZE(d.versions)");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id ORDER BY " + renderNullPrecedence(function("COUNT_TUPLE", "'DISTINCT'", "d.id", "partners_1"), "ASC", "LAST") + ", " + renderNullPrecedence(function("COUNT_TUPLE", "'DISTINCT'", "d.id", "versions_1"), "DESC", "LAST");
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id ORDER BY " + renderNullPrecedence("COUNT(DISTINCT partners_1)", "ASC", "LAST") + ", " + renderNullPrecedence("COUNT(DISTINCT versions_1)", "DESC", "LAST");
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
