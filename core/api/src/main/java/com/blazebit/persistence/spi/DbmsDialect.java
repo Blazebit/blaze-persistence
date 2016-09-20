@@ -205,6 +205,14 @@ public interface DbmsDialect {
     public ValuesStrategy getValuesStrategy();
 
     /**
+     * Returns whether parameters need to be casted if occurring in an untyped context like e.g. VALUES clause.
+     *
+     * @return True if casting is required, otherwise false
+     * @since 1.2.0
+     */
+    public boolean needsCastParameters();
+
+    /**
      * Returns the name of a dummy table like DUAL in Oracle or null if none is required.
      *
      * @return The dummy table name or null

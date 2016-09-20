@@ -24,7 +24,6 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
         int argumentStartIndex = count.getArgumentStartIndex();
 
         if (context.getArgumentsSize() > 1) {
-            context.addChunk("(");
             if (count.isDistinct()) {
                 context.addArgument(argumentStartIndex);
                 for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
@@ -42,7 +41,6 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
                 }
                 context.addChunk(" then null else 1 end");
             }
-            context.addChunk(")");
         } else {
             context.addArgument(argumentStartIndex);
         }

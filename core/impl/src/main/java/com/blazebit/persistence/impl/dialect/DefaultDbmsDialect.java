@@ -273,6 +273,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
+    public boolean needsCastParameters() {
+        return true;
+    }
+
+    @Override
     public String getDummyTable() {
         return null;
     }

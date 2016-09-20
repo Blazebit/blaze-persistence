@@ -4,6 +4,9 @@ import com.blazebit.persistence.impl.function.CyclicUnsignedCounter;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MySQLDbmsDialect extends DefaultDbmsDialect {
     
     private static final ThreadLocal<CyclicUnsignedCounter> threadLocalCounter = new ThreadLocal<CyclicUnsignedCounter>() {
@@ -15,7 +18,19 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
 
     };
 
-	@Override
+    public MySQLDbmsDialect() {
+        super(getSqlTypes());
+    }
+
+    private static Map<Class<?>, String> getSqlTypes() {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>();
+
+        types.put(String.class, "longtext");
+
+        return types;
+    }
+
+    @Override
 	public boolean supportsWithClause() {
 		return false;
 	}
@@ -78,6 +93,11 @@ public class MySQLDbmsDialect extends DefaultDbmsDialect {
     @Override
     public ValuesStrategy getValuesStrategy() {
         return ValuesStrategy.SELECT_UNION;
+    }
+
+    @Override
+    public boolean needsCastParameters() {
+        return false;
     }
 
 }

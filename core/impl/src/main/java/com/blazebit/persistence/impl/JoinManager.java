@@ -254,7 +254,7 @@ public class JoinManager extends AbstractManager {
         if (clazz == ValuesEntity.class) {
             sb.append("e.");
             attributes[0] = attributeSet.iterator().next().getName();
-            attributeParameter[0] = castedParameter;
+            attributeParameter[0] = mainQuery.dbmsDialect.needsCastParameters() ? castedParameter : "?";
             pathExpressions[0] = new SimpleValueRetriever();
             sb.append(attributes[0]);
             sb.append(',');
@@ -264,7 +264,7 @@ public class JoinManager extends AbstractManager {
                 sb.append("e.");
                 Attribute<?, ?> attribute = iter.next();
                 attributes[i] = attribute.getName();
-                attributeParameter[i] = mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute));
+                attributeParameter[i] = mainQuery.dbmsDialect.needsCastParameters() ? mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute)) : "?";
                 pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
                 sb.append(attributes[i]);
                 sb.append(',');
