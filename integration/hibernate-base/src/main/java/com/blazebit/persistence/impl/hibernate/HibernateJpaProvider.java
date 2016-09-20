@@ -16,9 +16,13 @@
 package com.blazebit.persistence.impl.hibernate;
 
 import com.blazebit.persistence.spi.JpaProvider;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Table;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 
 import javax.persistence.EntityManager;
@@ -36,7 +40,9 @@ import java.util.Map;
 public class HibernateJpaProvider implements JpaProvider {
 
     private final DB db;
-    private Map<String, CollectionPersister> collectionPersisters;
+    private final Database database;
+    private final Map<String, EntityPersister> entityPersisters;
+    private final Map<String, CollectionPersister> collectionPersisters;
 
     private static enum DB {
         OTHER,
@@ -44,7 +50,7 @@ public class HibernateJpaProvider implements JpaProvider {
         DB2;
     }
 
-    public HibernateJpaProvider(EntityManager em, String dbms, Map<String, CollectionPersister> collectionPersisters) {
+    public HibernateJpaProvider(EntityManager em, String dbms, Database database, Map<String, EntityPersister> entityPersisters, Map<String, CollectionPersister> collectionPersisters) {
         try {
             if (em == null) {
                 db = DB.OTHER;
@@ -55,6 +61,8 @@ public class HibernateJpaProvider implements JpaProvider {
             } else {
                 db = DB.OTHER;
             }
+            this.database = database;
+            this.entityPersisters = entityPersisters;
             this.collectionPersisters = collectionPersisters;
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -228,5 +236,22 @@ public class HibernateJpaProvider implements JpaProvider {
         }
 
         return false;
+    }
+
+    @Override
+    public String getColumnType(Attribute<?, ?> attribute) {
+        EntityPersister persister = entityPersisters.get(attribute.getDeclaringType().getJavaType().getName());
+        if (!(persister instanceof AbstractEntityPersister)) {
+            throw new UnsupportedOperationException("Type '" + attribute.getDeclaringType().getJavaType().getName() + "' uses unsupported entity persister type: " + persister.getClass().getName());
+        }
+        AbstractEntityPersister entityPersister = (AbstractEntityPersister) persister;
+        Table table = database.getTable(entityPersister.getTableName());
+        String[] columnNames = entityPersister.getPropertyColumnNames(attribute.getName());
+        if (columnNames.length > 1) {
+            throw new UnsupportedOperationException("Attribute '" + attribute.getName() + "' could have multiple types!");
+        }
+
+        Column column = table.getColumn(new Column(columnNames[0]));
+        return column.getSqlType();
     }
 }

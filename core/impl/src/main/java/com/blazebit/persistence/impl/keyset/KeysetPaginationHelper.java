@@ -34,9 +34,13 @@ public class KeysetPaginationHelper {
         return key;
     }
 
-    public static KeysetMode getKeysetMode(KeysetPage keysetPage, int firstRow, int pageSize) {
+    public static KeysetMode getKeysetMode(KeysetPage keysetPage, Object entityId, int firstRow, int pageSize) {
         // a keyset must be given
         if (keysetPage == null) {
+            return KeysetMode.NONE;
+        }
+        // We do offset pagination to scroll to the page where an entity is
+        if (entityId != null) {
             return KeysetMode.NONE;
         }
         // The last page size must equal the current page size

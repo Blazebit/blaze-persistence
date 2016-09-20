@@ -17,7 +17,8 @@
     <modules>
         <module>jpa-base</module>
         <module>hibernate-base</module>
-        <module>hibernate-4</module>
+        <module>hibernate-4.2</module>
+        <module>hibernate-4.3</module>
         <module>hibernate-5</module>
         <module>hibernate-5.2</module>
         <module>hibernate-6.0</module>

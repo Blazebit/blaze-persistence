@@ -6,11 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
@@ -24,6 +20,8 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
 	private final Map<String, String> addedCtes;
+	private int firstResult;
+	private int maxResults = Integer.MAX_VALUE;
 	
 	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> addedCtes) {
 	    this.participatingQueries = participatingQueries;
@@ -72,33 +70,37 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 	}
 
 	@Override
-	public Query setMaxResults(int maxResult) {
-		return wrapOrReturn(delegate.setMaxResults(maxResult));
+	public Query setMaxResults(int maxResults) {
+		this.maxResults = maxResults;
+		return this;
 	}
 
 	@Override
 	public int getMaxResults() {
-		return delegate.getMaxResults();
+		return maxResults;
 	}
 
 	@Override
 	public Query setFirstResult(int startPosition) {
-		return wrapOrReturn(delegate.setFirstResult(startPosition));
+		this.firstResult = startPosition;
+		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
-		return delegate.getFirstResult();
+		return firstResult;
 	}
 
 	@Override
 	public Query setHint(String hintName, Object value) {
-		return wrapOrReturn(delegate.setHint(hintName, value));
+		// TODO: implement
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 
 	@Override
 	public Map<String, Object> getHints() {
-		return delegate.getHints();
+		// TODO: implement
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 
 	@Override
@@ -213,6 +215,6 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		return delegate.unwrap(cls);
+		throw new PersistenceException("Unsupported unwrap: " + cls.getName());
 	}
 }

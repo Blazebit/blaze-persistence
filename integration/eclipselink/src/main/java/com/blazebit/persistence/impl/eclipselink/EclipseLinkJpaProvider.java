@@ -170,4 +170,9 @@ public class EclipseLinkJpaProvider implements JpaProvider {
         return false;
     }
 
+    @Override
+    public String getColumnType(Attribute<?, ?> attribute) {
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
 }

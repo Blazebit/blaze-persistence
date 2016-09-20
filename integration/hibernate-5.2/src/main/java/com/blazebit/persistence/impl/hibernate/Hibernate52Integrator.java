@@ -7,6 +7,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.logging.Logger;
@@ -18,6 +19,7 @@ public class Hibernate52Integrator implements Integrator {
 	
 	@Override
 	public void integrate(Metadata metadata, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		// TODO: remember metadata for exact column types
 		for (PersistentClass clazz : metadata.getEntityBindings()) {
 			Class<?> entityClass = clazz.getMappedClass();
 			
@@ -28,6 +30,7 @@ public class Hibernate52Integrator implements Integrator {
 		}
 
 		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
+		serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(metadata.getDatabase().getDefaultNamespace().getTables().iterator()));
 	}
 
 	@Override

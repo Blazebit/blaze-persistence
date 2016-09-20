@@ -76,12 +76,21 @@ Hibernate 5+
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
+
+Hibernate 4.3
+
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
 	
-Hibernate 4.2+
+Hibernate 4.2
 	
 	<dependency>
 		<groupId>com.blazebit</groupId>
-		<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+		<artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>

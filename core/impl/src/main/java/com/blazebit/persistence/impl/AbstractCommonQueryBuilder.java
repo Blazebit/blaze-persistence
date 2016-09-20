@@ -472,16 +472,18 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         Class<?> valuesClazz = clazz;
         ManagedType<?> type = mainQuery.metamodel.getManagedType(clazz);
         String treatFunction = null;
+        String castedParameter = null;
         if (type == null) {
             treatFunction = cbf.getTreatFunctions().get(clazz);
             if (treatFunction == null) {
                 throw new IllegalArgumentException("Unsupported type for VALUES clause: " + clazz.getName());
             }
 
+            String sqlType = mainQuery.dbmsDialect.getSqlType(clazz);
+            castedParameter = mainQuery.dbmsDialect.cast("?", sqlType);
             valuesClazz = ValuesEntity.class;
         }
-        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction);
-        // TODO: query must be bound here
+        joinManager.addRootValues(valuesClazz, clazz, alias, valueCount, treatFunction, castedParameter);
         fromClassExplicitelySet = true;
 
         return (BuilderType) this;

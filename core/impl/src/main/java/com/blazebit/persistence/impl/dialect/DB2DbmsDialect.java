@@ -1,5 +1,6 @@
 package com.blazebit.persistence.impl.dialect;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,20 @@ import com.blazebit.persistence.spi.OrderByElement;
 
 public class DB2DbmsDialect extends DefaultDbmsDialect {
 
-	@Override
+    public DB2DbmsDialect() {
+        super(getSqlTypes());
+    }
+
+    private static Map<Class<?>, String> getSqlTypes() {
+        Map<Class<?>, String> types = new HashMap<Class<?>, String>();
+
+        // We have to specify a length and we just choose 2048 because it will most probably be a good fit
+        types.put(String.class, "varchar(2048)");
+
+        return types;
+    }
+
+    @Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}

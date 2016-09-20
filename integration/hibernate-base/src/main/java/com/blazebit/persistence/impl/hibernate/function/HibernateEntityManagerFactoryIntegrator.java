@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.metamodel.Metamodel;
 
+import com.blazebit.persistence.impl.hibernate.Database;
 import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
 import com.blazebit.persistence.spi.*;
@@ -51,6 +52,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import com.blazebit.apt.service.ServiceProvider;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  *
@@ -103,20 +105,36 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         return em.unwrap(SessionImplementor.class).getFactory().getCollectionPersisters();
     }
 
+    private Map<String, EntityPersister> getEntityPersisters(EntityManager em) {
+        if (em == null) {
+            return null;
+        }
+
+        return em.unwrap(SessionImplementor.class).getFactory().getEntityPersisters();
+    }
+
+    private Database getDatabase(EntityManager em) {
+        if (em == null) {
+            return null;
+        }
+
+        return em.unwrap(SessionImplementor.class).getFactory().getServiceRegistry().locateServiceBinding(Database.class).getService();
+    }
+
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
         if (major > 4 || major == 4 && minor >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getCollectionPersisters(em), major, minor, fix);
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em), major, minor, fix);
                 }
             };
         } else {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getCollectionPersisters(em));
+                    return new HibernateJpaProvider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em));
                 }
             };
         }

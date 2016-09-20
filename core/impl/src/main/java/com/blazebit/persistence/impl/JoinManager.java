@@ -125,7 +125,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction) {
+    String addRootValues(Class<?> clazz, Class<?> valueClazz, String rootAlias, int valueCount, String treatFunction, String castedParameter) {
         if (rootAlias == null) {
             throw new IllegalArgumentException("Illegal empty alias for the VALUES clause: " + clazz.getName());
         }
@@ -140,7 +140,7 @@ public class JoinManager extends AbstractManager {
         ValueRetriever<Object, Object>[] pathExpressions = new ValueRetriever[attributeSet.size()];
 
         StringBuilder valuesSb = new StringBuilder(20 + valueCount * attributeSet.size() * 3);
-        Query valuesExampleQuery = getValuesExampleQuery(clazz, rootAlias, treatFunction, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
+        Query valuesExampleQuery = getValuesExampleQuery(clazz, rootAlias, treatFunction, castedParameter, attributeSet, parameterNames, pathExpressions, valuesSb, strategy, dummyTable);
         parameterManager.registerValuesParameter(rootAlias, valueClazz, parameterNames, pathExpressions);
 
         String exampleQuerySql = mainQuery.cbf.getExtendedQuerySupport().getSql(mainQuery.em, valuesExampleQuery);
@@ -243,9 +243,10 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
+    private Query getValuesExampleQuery(Class<?> clazz, String prefix, String treatFunction, String castedParameter, Set<Attribute<?, ?>> attributeSet, String[][] parameterNames, ValueRetriever<?, ?>[] pathExpressions, StringBuilder valuesSb, ValuesStrategy strategy, String dummyTable) {
         int valueCount = parameterNames.length;
         String[] attributes = new String[attributeSet.size()];
+        String[] attributeParameter = new String[attributeSet.size()];
         // This size estimation roughly assumes a maximum attribute name length of 15
         StringBuilder sb = new StringBuilder(50 + valueCount * prefix.length() * attributeSet.size() * 50);
         sb.append("SELECT ");
@@ -253,6 +254,7 @@ public class JoinManager extends AbstractManager {
         if (clazz == ValuesEntity.class) {
             sb.append("e.");
             attributes[0] = attributeSet.iterator().next().getName();
+            attributeParameter[0] = castedParameter;
             pathExpressions[0] = new SimpleValueRetriever();
             sb.append(attributes[0]);
             sb.append(',');
@@ -260,7 +262,9 @@ public class JoinManager extends AbstractManager {
             Iterator<Attribute<?, ?>> iter = attributeSet.iterator();
             for (int i = 0; i < attributes.length; i++) {
                 sb.append("e.");
-                attributes[i] = iter.next().getName();
+                Attribute<?, ?> attribute = iter.next();
+                attributes[i] = attribute.getName();
+                attributeParameter[i] = mainQuery.dbmsDialect.cast("?", mainQuery.jpaProvider.getColumnType(attribute));
                 pathExpressions[i] = com.blazebit.reflection.ExpressionUtils.getExpression(clazz, attributes[i]);
                 sb.append(attributes[i]);
                 sb.append(',');
@@ -313,7 +317,8 @@ public class JoinManager extends AbstractManager {
                 String paramName = sb.substring(start, sb.length());
                 parameterNames[i][j] = paramName;
 
-                valuesSb.append("?,");
+                valuesSb.append(attributeParameter[j]);
+                valuesSb.append(',');
             }
 
             if (strategy == ValuesStrategy.SELECT_UNION) {

@@ -50,9 +50,16 @@ public class ParameterManager {
     }
 
     void parameterizeQuery(Query q) {
+        parameterizeQuery(q, Collections.EMPTY_SET);
+    }
+
+    void parameterizeQuery(Query q, Set<String> skippedParameters) {
         Set<String> requestedValueParameters = new HashSet<String>();
         for (Parameter<?> p : q.getParameters()) {
             String parameterName = p.getName();
+            if (skippedParameters.contains(parameterName)) {
+                continue;
+            }
             ParameterImpl<?> parameter = parameters.get(parameterName);
             if (parameter == null) {
                 String valuesParameter = valuesParameters.get(parameterName);

@@ -277,6 +277,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         return null;
     }
 
+    @Override
+    public String cast(String expression, String sqlType) {
+        return "cast(" + expression + " as " + sqlType + ")";
+    }
+
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
         if (offset == null) {
             sqlSb.append(" limit ").append(limit);

@@ -1,5 +1,6 @@
 package com.blazebit.persistence.impl.hibernate;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 
 import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
@@ -17,6 +19,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
@@ -32,7 +35,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
 @ServiceProvider(HibernateAccess.class)
-public class Hibernate4Access implements HibernateAccess {
+public class Hibernate43Access implements HibernateAccess {
 
     private static final Logger LOG = Logger.getLogger(HibernateExtendedQuerySupport.class.getName());
 
@@ -42,8 +45,8 @@ public class Hibernate4Access implements HibernateAccess {
         JdbcCoordinator jdbcCoordinator = transactionCoordinator.getJdbcCoordinator();
         
         Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
-        Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new Hibernate4TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));
-        Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate4SessionInvocationHandler(session, transactionCoordinatorProxy));
+        Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new Hibernate43TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));
+        Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate43SessionInvocationHandler(session, transactionCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
     }
 
@@ -219,5 +222,37 @@ public class Hibernate4Access implements HibernateAccess {
     @Override
     public void throwPersistenceException(EntityManager em, HibernateException e) {
         getEntityManager(em).throwPersistenceException(e);
+    }
+
+    @Override
+    public QueryParameters createQueryParameters(
+            final Type[] positionalParameterTypes,
+            final Object[] positionalParameterValues,
+            final Map<String,TypedValue> namedParameters,
+            final LockOptions lockOptions,
+            final RowSelection rowSelection,
+            final boolean isReadOnlyInitialized,
+            final boolean readOnly,
+            final boolean cacheable,
+            final String cacheRegion,
+            //final boolean forceCacheRefresh,
+            final String comment,
+            final List<String> queryHints,
+            final Serializable[] collectionKeys) {
+        return new QueryParameters(
+                positionalParameterTypes,
+                positionalParameterValues,
+                namedParameters,
+                lockOptions,
+                rowSelection,
+                isReadOnlyInitialized,
+                readOnly,
+                cacheable,
+                cacheRegion,
+                comment,
+                queryHints,
+                collectionKeys,
+                null
+        );
     }
 }

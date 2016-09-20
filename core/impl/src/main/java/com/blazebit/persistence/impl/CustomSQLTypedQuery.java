@@ -6,12 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.Query;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
@@ -24,6 +19,8 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 	private final CommonQueryBuilder<?> cqb;
 	private final ExtendedQuerySupport extendedQuerySupport;
 	private final String sql;
+	private int firstResult;
+	private int maxResults = Integer.MAX_VALUE;
 	
 	public CustomSQLTypedQuery(List<Query> participatingQueries, TypedQuery<X> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql) {
 	    this.participatingQueries = participatingQueries;
@@ -53,12 +50,14 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
     @Override
     @SuppressWarnings("unchecked")
 	public List<X> getResultList() {
+    	// TODO: apply firstResult and maxResults
 		return (List<X>) extendedQuerySupport.getResultList(cqb, participatingQueries, delegate, sql);
 	}
 
 	@Override
     @SuppressWarnings("unchecked")
 	public X getSingleResult() {
+		// TODO: apply firstResult and maxResults
 		return (X) extendedQuerySupport.getSingleResult(cqb, participatingQueries, delegate, sql);
 	}
 
@@ -68,33 +67,37 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 	}
 
 	@Override
-	public TypedQuery<X> setMaxResults(int maxResult) {
-		return wrapOrReturn(delegate.setMaxResults(maxResult));
+	public TypedQuery<X> setMaxResults(int maxResults) {
+		this.maxResults = maxResults;
+		return this;
 	}
 
 	@Override
 	public int getMaxResults() {
-		return delegate.getMaxResults();
+		return maxResults;
 	}
 
 	@Override
 	public TypedQuery<X> setFirstResult(int startPosition) {
-		return wrapOrReturn(delegate.setFirstResult(startPosition));
+		this.firstResult = startPosition;
+		return this;
 	}
 
 	@Override
 	public int getFirstResult() {
-		return delegate.getFirstResult();
+		return firstResult;
 	}
 
 	@Override
 	public TypedQuery<X> setHint(String hintName, Object value) {
-		return wrapOrReturn(delegate.setHint(hintName, value));
+		// TODO: implement
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 
 	@Override
 	public Map<String, Object> getHints() {
-		return delegate.getHints();
+		// TODO: implement
+		throw new UnsupportedOperationException("Not yet implemented!");
 	}
 
 	@Override
@@ -209,6 +212,6 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		return delegate.unwrap(cls);
+		throw new PersistenceException("Unsupported unwrap: " + cls.getName());
 	}
 }

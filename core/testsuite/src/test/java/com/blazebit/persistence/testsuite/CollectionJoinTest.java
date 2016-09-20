@@ -26,8 +26,7 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.*;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
 
@@ -102,7 +101,8 @@ public class CollectionJoinTest extends AbstractCoreTest {
     // Hibernate bug
     @Category({ NoHibernate.class })
     public void testElementCollection() {
-        CriteriaBuilder<Root> criteria = cbf.create(em, Root.class, "r");
+        CriteriaBuilder<Object[]> criteria = cbf.create(em, Object[].class);
+        criteria.from(Root.class, "r");
         criteria.select("r.indexedNodesElementCollection[0]");
         criteria.select("r.keyedNodesElementCollection['default']");
 
@@ -189,11 +189,29 @@ public class CollectionJoinTest extends AbstractCoreTest {
     static class IndexedEmbeddable {
 
         private String value;
+        private String value2;
+
+        public IndexedEmbeddable() {
+        }
+
+        public IndexedEmbeddable(String value, String value2) {
+            this.value = value;
+            this.value2 = value2;
+        }
     }
 
     @Embeddable
     static class KeyedEmbeddable {
 
         private String value;
+        private String value2;
+
+        public KeyedEmbeddable() {
+        }
+
+        public KeyedEmbeddable(String value, String value2) {
+            this.value = value;
+            this.value2 = value2;
+        }
     }
 }

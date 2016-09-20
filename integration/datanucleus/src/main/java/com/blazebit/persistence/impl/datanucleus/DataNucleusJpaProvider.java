@@ -172,4 +172,9 @@ public class DataNucleusJpaProvider implements JpaProvider {
         return false;
     }
 
+    @Override
+    public String getColumnType(Attribute<?, ?> attribute) {
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
 }

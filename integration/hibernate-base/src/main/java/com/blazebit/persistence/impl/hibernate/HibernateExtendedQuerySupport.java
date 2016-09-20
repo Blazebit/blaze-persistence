@@ -15,13 +15,12 @@ import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -508,64 +507,87 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         List<Object> values = new ArrayList<Object>();
         Map<String, TypedValue> namedParams = new LinkedHashMap<String, TypedValue>();
         Serializable collectionKey = null;
-//        LockOptions lockOptions = new LockOptions();
-//        RowSelection rowSelection = new RowSelection();
-//        boolean readOnly = false;
-//        boolean cacheable = false;
-//        String cacheRegion = null;
-//        String comment = null;
-//        ResultTransformer resultTransformer = null;
-        
+        LockOptions lockOptions = new LockOptions();
+        RowSelection rowSelection = new RowSelection();
+        boolean readOnly = false; // TODO: readonly?
+        boolean cacheable = false; // TODO: cacheable?
+        String cacheRegion = null;
+        String comment = null;
+        List<String> queryHints = null;
+
         for (QueryParamEntry queryParamEntry : getQueryParamEntries(em, participatingQueries)) {
             QueryParameters participatingQueryParameters = queryParamEntry.queryParameters;
+            // Merge parameters
             Collections.addAll(types, participatingQueryParameters.getPositionalParameterTypes());
             Collections.addAll(values, participatingQueryParameters.getPositionalParameterValues());
             namedParams.putAll(participatingQueryParameters.getNamedParameters());
             parameterSpecifications.addAll(queryParamEntry.specifications);
-            
+
+            // Merge row selections
+            if (participatingQueryParameters.hasRowSelection()) {
+                RowSelection original = queryParamEntry.queryParameters.getRowSelection();
+                // Check for defaults
+                if (rowSelection.getFirstRow() == null || rowSelection.getFirstRow() < 1) {
+                    rowSelection.setFirstRow(original.getFirstRow());
+                } else if (original.getFirstRow() != null && original.getFirstRow() > 0 && !original.getFirstRow().equals(rowSelection.getFirstRow())) {
+                    throw new IllegalStateException("Multiple row selections not allowed!");
+                }
+                if (rowSelection.getMaxRows() == null || rowSelection.getMaxRows() == Integer.MAX_VALUE) {
+                    rowSelection.setMaxRows(original.getMaxRows());
+                } else if (original.getMaxRows() != null && original.getMaxRows() != Integer.MAX_VALUE && !original.getMaxRows().equals(rowSelection.getMaxRows())) {
+                    throw new IllegalStateException("Multiple row selections not allowed!");
+                }
+                if (rowSelection.getFetchSize() == null) {
+                    rowSelection.setFetchSize(original.getFetchSize());
+                } else if (original.getFetchSize() != null && !original.getFetchSize().equals(rowSelection.getFetchSize())) {
+                    throw new IllegalStateException("Multiple row selections not allowed!");
+                }
+                if (rowSelection.getTimeout() == null) {
+                    rowSelection.setTimeout(original.getTimeout());
+                } else if (original.getTimeout() != null && !original.getTimeout().equals(rowSelection.getTimeout())) {
+                    throw new IllegalStateException("Multiple row selections not allowed!");
+                }
+            }
+
             // Merge lock options
-//            @SuppressWarnings("unchecked")
-//            Iterator<Map.Entry<String, LockMode>> aliasLockIter = participatingQueryParameters.getLockOptions().getAliasLockIterator();
-//            while (aliasLockIter.hasNext()) {
-//                Map.Entry<String, LockMode> entry = aliasLockIter.next();
-//                lockOptions.setAliasSpecificLockMode(entry.getKey(), entry.getValue());
-//            }
-//            
-//            if (participatingQueryParameters.getLockOptions().getLockMode() != LockMode.NONE) {
-//                lockOptions.setLockMode(participatingQueryParameters.getLockOptions().getLockMode());
-//            }
-//            if (participatingQueryParameters.getLockOptions().getScope()) {
-//                lockOptions.setScope(true);
-//            }
-//            if (participatingQueryParameters.getLockOptions().getTimeOut() < lockOptions.getTimeOut()) {
-//                lockOptions.setTimeOut(participatingQueryParameters.getLockOptions().getTimeOut());
-//            }
-            
-            // NOTE: we don't merge row selection because there actually shouldn't be any
+            LockOptions originalLockOptions = participatingQueryParameters.getLockOptions();
+            if (originalLockOptions.getScope()) {
+                lockOptions.setScope(true);
+            }
+            if (originalLockOptions.getLockMode() != LockMode.NONE) {
+                if (lockOptions.getLockMode() != LockMode.NONE && lockOptions.getLockMode() != originalLockOptions.getLockMode()) {
+                    throw new IllegalStateException("Multiple different lock modes!");
+                }
+                lockOptions.setLockMode(originalLockOptions.getLockMode());
+            }
+            if (originalLockOptions.getTimeOut() != -1) {
+                if (lockOptions.getTimeOut() != -1 && lockOptions.getTimeOut() != originalLockOptions.getTimeOut()) {
+                    throw new IllegalStateException("Multiple different lock timeouts!");
+                }
+                lockOptions.setTimeOut(originalLockOptions.getTimeOut());
+            }
+            @SuppressWarnings("unchecked")
+            Iterator<Map.Entry<String, LockMode>> aliasLockIter = participatingQueryParameters.getLockOptions().getAliasLockIterator();
+            while (aliasLockIter.hasNext()) {
+                Map.Entry<String, LockMode> entry = aliasLockIter.next();
+                lockOptions.setAliasSpecificLockMode(entry.getKey(), entry.getValue());
+            }
         }
         
-        // We need to create our own queryParameters which joins the query parameters of the participating queries
-        // NOTE: Rather use this, because it's more compatible across hibernate versions
-        QueryParameters queryParameters = new QueryParameters(
-                                   types.toArray(new Type[types.size()]),
-                                   values.toArray(new Object[values.size()]),
-                                   namedParams,
-                                   collectionKey == null ? null : new Serializable[] { collectionKey }
+        QueryParameters queryParameters = hibernateAccess.createQueryParameters(
+                  types.toArray(new Type[types.size()]),
+                  values.toArray(new Object[values.size()]),
+                  namedParams,
+                  lockOptions,
+                  rowSelection,
+                  true,
+                  readOnly,
+                  cacheable,
+                  cacheRegion,
+                  comment,
+                  queryHints,
+                  collectionKey == null ? null : new Serializable[] { collectionKey }
         );
-//        QueryParameters queryParameters = new QueryParameters(
-//                                  types.toArray(new Type[types.size()]),
-//                                  values.toArray(new Object[values.size()]),
-//                                  namedParams,
-//                                  lockOptions,
-//                                  rowSelection,
-//                                  true,
-//                                  readOnly,
-//                                  cacheable,
-//                                  cacheRegion,
-//                                  comment,
-//                                  collectionKey == null ? null : new Serializable[] { collectionKey },
-//                                  resultTransformer
-//                          );
         
         return new QueryParamEntry(queryParameters, parameterSpecifications);
     }

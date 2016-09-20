@@ -211,4 +211,14 @@ public interface DbmsDialect {
      * @since 1.2.0
      */
     public String getDummyTable();
+
+    /**
+     * Returns the cast expression for the given expression to the given sql type.
+     *
+     * @param expression The expression to cast
+     * @param sqlType The type to which to cast
+     * @return The cast expression
+     * @since 1.2.0
+     */
+    public String cast(String expression, String sqlType);
 }

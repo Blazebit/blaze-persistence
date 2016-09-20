@@ -2,21 +2,42 @@ package com.blazebit.persistence.impl.hibernate;
 
 import com.blazebit.apt.service.ServiceProvider;
 import com.blazebit.persistence.CTE;
+import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.integrator.spi.Integrator;
+import org.hibernate.integrator.spi.ServiceContributingIntegrator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.source.MetadataImplementor;
 import org.hibernate.persister.spi.PersisterClassResolver;
+import org.hibernate.service.Service;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.logging.Logger;
 
 @ServiceProvider(Integrator.class)
-public class Hibernate4Integrator implements Integrator {
+public class Hibernate43Integrator implements ServiceContributingIntegrator {
 
-	private static final Logger LOG = Logger.getLogger(Hibernate4Integrator.class.getName());
+	private static final Logger LOG = Logger.getLogger(Hibernate43Integrator.class.getName());
+
+	@Override
+	public void prepareServices(StandardServiceRegistryBuilder serviceRegistryBuilder) {
+		serviceRegistryBuilder.addInitiator(new StandardServiceInitiator() {
+			@Override
+			public Service initiateService(Map configurationValues, ServiceRegistryImplementor registry) {
+				return null;
+			}
+
+			@Override
+			public Class getServiceInitiated() {
+				return Database.class;
+			}
+		});
+	}
 
 	@Override
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
@@ -39,6 +60,7 @@ public class Hibernate4Integrator implements Integrator {
 		}
 
 		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
+		serviceRegistry.locateServiceBinding(Database.class).setService(new SimpleDatabase(configuration.getTableMappings()));
 	}
 
 	@Override

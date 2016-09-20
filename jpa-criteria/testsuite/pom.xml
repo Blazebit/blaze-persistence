@@ -128,7 +128,7 @@
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
-					<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+					<artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
 					<scope>test</scope>
 				</dependency>
 				<dependency>
@@ -214,7 +214,7 @@
 				</dependency>
 				<dependency>
 					<groupId>${project.groupId}</groupId>
-					<artifactId>blaze-persistence-integration-hibernate-4</artifactId>
+					<artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
 					<scope>test</scope>
 				</dependency>
 				<dependency>

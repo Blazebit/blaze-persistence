@@ -80,4 +80,6 @@ public interface JpaProvider {
     public boolean isJoinTable(Attribute<?, ?> attribute);
 
     public boolean isBag(Attribute<?, ?> attribute);
+
+    public String getColumnType(Attribute<?, ?> attribute);
 }

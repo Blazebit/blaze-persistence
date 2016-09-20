@@ -1,5 +1,6 @@
 package com.blazebit.persistence.impl.hibernate;
 
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
@@ -10,6 +11,7 @@ import java.util.logging.Logger;
 
 import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.ejb.HibernateEntityManagerImplementor;
@@ -17,6 +19,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
 import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
@@ -222,6 +225,38 @@ public class Hibernate5Access implements HibernateAccess {
     @Override
     public void throwPersistenceException(EntityManager em, HibernateException e) {
         getEntityManager(em).throwPersistenceException(e);
+    }
+
+    @Override
+    public QueryParameters createQueryParameters(
+            final Type[] positionalParameterTypes,
+            final Object[] positionalParameterValues,
+            final Map<String,TypedValue> namedParameters,
+            final LockOptions lockOptions,
+            final RowSelection rowSelection,
+            final boolean isReadOnlyInitialized,
+            final boolean readOnly,
+            final boolean cacheable,
+            final String cacheRegion,
+            //final boolean forceCacheRefresh,
+            final String comment,
+            final List<String> queryHints,
+            final Serializable[] collectionKeys) {
+        return new QueryParameters(
+                positionalParameterTypes,
+                positionalParameterValues,
+                namedParameters,
+                lockOptions,
+                rowSelection,
+                isReadOnlyInitialized,
+                readOnly,
+                cacheable,
+                cacheRegion,
+                comment,
+                queryHints,
+                collectionKeys,
+                null
+        );
     }
 
 }
