@@ -215,6 +215,9 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		throw new PersistenceException("Unsupported unwrap: " + cls.getName());
+		if (participatingQueries.size() > 1) {
+			throw new PersistenceException("Unsupported unwrap: " + cls.getName());
+		}
+		return delegate.unwrap(cls);
 	}
 }

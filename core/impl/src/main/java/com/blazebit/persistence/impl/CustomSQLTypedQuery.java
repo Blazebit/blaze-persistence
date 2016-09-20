@@ -69,6 +69,7 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 	@Override
 	public TypedQuery<X> setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
+		this.delegate.setMaxResults(maxResults);
 		return this;
 	}
 
@@ -80,6 +81,7 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 	@Override
 	public TypedQuery<X> setFirstResult(int startPosition) {
 		this.firstResult = startPosition;
+		this.delegate.setFirstResult(startPosition);
 		return this;
 	}
 
@@ -212,6 +214,9 @@ public class CustomSQLTypedQuery<X> implements TypedQuery<X>, CteQueryWrapper {
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		throw new PersistenceException("Unsupported unwrap: " + cls.getName());
+		if (participatingQueries.size() > 1) {
+			throw new PersistenceException("Unsupported unwrap: " + cls.getName());
+		}
+		return delegate.unwrap(cls);
 	}
 }

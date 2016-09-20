@@ -54,7 +54,9 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     // Cache
     private String cachedCountQueryString;
+    private String cachedExternalCountQueryString;
     private String cachedIdQueryString;
+    private String cachedExternalIdQueryString;
 
     public PaginatedCriteriaBuilderImpl(AbstractFullQueryBuilder<T, ? extends FullQueryBuilder<T, ?>, ?, ?, ?> baseBuilder, boolean keysetExtraction, KeysetPage keysetPage, Object entityId, int pageSize) {
         super(baseBuilder);
@@ -126,7 +128,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private <X> TypedQuery<X> getCountQuery(String countQueryString, Class<X> resultType, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT))) {
             TypedQuery<X> countQuery = em.createQuery(countQueryString, resultType);
             parameterManager.parameterizeQuery(countQuery);
             return countQuery;
@@ -193,42 +195,58 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     public String getPageCountQueryString() {
         prepareAndCheck();
-        return getPageCountQueryStringWithoutCheck();
+        return getExternalPageCountQueryString();
     }
 
     private String getPageCountQueryStringWithoutCheck() {
         if (cachedCountQueryString == null) {
-            cachedCountQueryString = buildPageCountQueryString();
+            cachedCountQueryString = buildPageCountQueryString(false);
         }
 
         return cachedCountQueryString;
     }
 
+    protected String getExternalPageCountQueryString() {
+        if (cachedExternalCountQueryString == null) {
+            cachedExternalCountQueryString = buildPageCountQueryString(true);
+        }
+
+        return cachedExternalCountQueryString;
+    }
+
     @Override
     public String getPageIdQueryString() {
         prepareAndCheck();
-        return getPageIdQueryStringWithoutCheck();
+        return getExternalPageIdQueryString();
     }
 
     private String getPageIdQueryStringWithoutCheck() {
         if (cachedIdQueryString == null) {
-            cachedIdQueryString = buildPageIdQueryString();
+            cachedIdQueryString = buildPageIdQueryString(false);
         }
 
         return cachedIdQueryString;
     }
 
+    protected String getExternalPageIdQueryString() {
+        if (cachedExternalIdQueryString == null) {
+            cachedExternalIdQueryString = buildPageIdQueryString(true);
+        }
+
+        return cachedExternalIdQueryString;
+    }
+
     @Override
     public String getQueryString() {
         prepareAndCheck();
-        return getBaseQueryString();
+        return getExternalQueryString();
     }
 
     @Override
     protected String getBaseQueryString() {
         if (cachedQueryString == null) {
             if (!joinManager.hasCollections()) {
-                cachedQueryString = buildObjectQueryString();
+                cachedQueryString = buildObjectQueryString(false);
             } else {
                 cachedQueryString = buildBaseQueryString(false);
             }
@@ -237,11 +255,25 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return cachedQueryString;
     }
 
+    protected String getExternalQueryString() {
+        if (cachedExternalQueryString == null) {
+            if (!joinManager.hasCollections()) {
+                cachedExternalQueryString = buildObjectQueryString(true);
+            } else {
+                cachedExternalQueryString = buildBaseQueryString(true);
+            }
+        }
+
+        return cachedExternalQueryString;
+    }
+
     @Override
     protected void clearCache() {
         super.clearCache();
         cachedCountQueryString = null;
+        cachedExternalCountQueryString = null;
         cachedIdQueryString = null;
+        cachedExternalIdQueryString = null;
     }
 
     @Override
@@ -289,7 +321,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         TypedQuery<T> query;
 
-        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class))) {
             query = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
             parameterManager.parameterizeQuery(query);
         } else {
@@ -338,7 +370,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     }
 
     private TypedQuery<Object[]> getIdQuery(String idQueryString, boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT))) {
             TypedQuery<Object[]> idQuery = em.createQuery(idQueryString, Object[].class);
 
             parameterManager.parameterizeQuery(idQuery);
@@ -368,7 +400,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
     @SuppressWarnings("unchecked")
     private TypedQuery<T> getObjectQueryById(boolean normalQueryMode, Set<JoinNode> keyRestrictedLeftJoins) {
-        if (normalQueryMode || isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
+        if (normalQueryMode && isEmpty(keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)))) {
             TypedQuery<T> query = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
             if (selectManager.getSelectObjectBuilder() != null) {
                 query = transformQuery(query);
@@ -402,8 +434,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return query;
     }
 
-    private String buildPageCountQueryString() {
+    protected String buildPageCountQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
+        if (externalRepresentation && isMainQuery) {
+            mainQuery.cteManager.buildClause(sbSelectFrom);
+        }
+        buildPageCountQueryString(sbSelectFrom, externalRepresentation);
+        return sbSelectFrom.toString();
+    }
+
+    private String buildPageCountQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         Attribute<?, ?> idAttribute = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass()));
         String idName = idAttribute.getName();
@@ -488,8 +528,16 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         return sbSelectFrom.toString();
     }
 
-    private String buildPageIdQueryString() {
+    private String buildPageIdQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
+        if (externalRepresentation && isMainQuery) {
+            mainQuery.cteManager.buildClause(sbSelectFrom);
+        }
+        buildPageIdQueryString(sbSelectFrom, externalRepresentation);
+        return sbSelectFrom.toString();
+    }
+
+    private String buildPageIdQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
         StringBuilder idClause = new StringBuilder(100);
@@ -534,6 +582,15 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
     @Override
     protected String buildBaseQueryString(boolean externalRepresentation) {
         StringBuilder sbSelectFrom = new StringBuilder();
+        if (externalRepresentation && isMainQuery) {
+            mainQuery.cteManager.buildClause(sbSelectFrom);
+        }
+        buildBaseQueryString(sbSelectFrom, externalRepresentation);
+        return sbSelectFrom.toString();
+    }
+
+    @Override
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         JoinNode rootNode = joinManager.getRootNodeOrFail("Paginated criteria builders do not support multiple from clause elements!");
         String idName = JpaUtils.getIdAttribute(em.getMetamodel().entity(rootNode.getPropertyClass())).getName();
 
@@ -563,12 +620,18 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         queryGenerator.setResolveSelectAliases(false);
         orderByManager.buildOrderBy(sbSelectFrom, false, false);
         queryGenerator.setResolveSelectAliases(true);
+    }
 
+    private String buildObjectQueryString(boolean externalRepresentation) {
+        StringBuilder sbSelectFrom = new StringBuilder();
+        if (externalRepresentation && isMainQuery) {
+            mainQuery.cteManager.buildClause(sbSelectFrom);
+        }
+        buildObjectQueryString(sbSelectFrom, externalRepresentation);
         return sbSelectFrom.toString();
     }
 
-    private String buildObjectQueryString() {
-        StringBuilder sbSelectFrom = new StringBuilder();
+    private String buildObjectQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
         selectManager.buildSelect(sbSelectFrom);
 
         if (keysetExtraction) {

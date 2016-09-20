@@ -22,6 +22,8 @@ import java.util.List;
 
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -155,6 +157,68 @@ public class CTETest extends AbstractCoreTest {
         List<TestCTE> resultList = cb.getResultList();
         assertEquals(3, resultList.size());
         assertEquals("root1", resultList.get(0).getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testRecursiveCTEPagination() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
+        cb.withRecursive(TestCTE.class)
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .bind("level").select("0")
+                .where("e.parent").isNull()
+        .unionAll()
+                .from(TestCTE.class, "t")
+                .from(RecursiveEntity.class, "e")
+                .bind("id").select("e.id")
+                .bind("name").select("e.name")
+                .bind("level").select("t.level + 1")
+                .where("t.id").eqExpression("e.parent.id")
+        .end();
+        cb.from(TestCTE.class, "t")
+                .where("t.level").ltExpression("2")
+                .orderByAsc("t.level")
+                .orderByAsc("t.id");
+
+        PaginatedCriteriaBuilder<TestCTE> pcb = cb.page(0, 1);
+
+        String expectedCountQuery = ""
+                + "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT " + countPaginated("t.id", false) + " FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2";
+
+        String expectedObjectQuery = ""
+                + "WITH RECURSIVE " + TestCTE.class.getSimpleName() + "(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM " + TestCTE.class.getSimpleName() + " t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT t FROM " + TestCTE.class.getSimpleName() + " t WHERE t.level < 2 ORDER BY " + renderNullPrecedence("t.level", "ASC", "LAST") + ", " + renderNullPrecedence("t.id", "ASC", "LAST");
+
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedObjectQuery, pcb.getQueryString());
+
+        PagedList<TestCTE> resultList = pcb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(3, resultList.getTotalSize());
+        assertEquals("root1", resultList.get(0).getName());
+
+        pcb = cb.page(1, 1);
+        resultList = pcb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(3, resultList.getTotalSize());
+        assertEquals("child1_1", resultList.get(0).getName());
+
+        pcb = cb.page(2, 1);
+        resultList = pcb.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals(3, resultList.getTotalSize());
+        assertEquals("child1_2", resultList.get(0).getName());
     }
     
     // NOTE: Apparently H2 can't handle multiple CTEs

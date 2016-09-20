@@ -527,16 +527,16 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             if (participatingQueryParameters.hasRowSelection()) {
                 RowSelection original = queryParamEntry.queryParameters.getRowSelection();
                 // Check for defaults
-                if (rowSelection.getFirstRow() == null || rowSelection.getFirstRow() < 1) {
-                    rowSelection.setFirstRow(original.getFirstRow());
-                } else if (original.getFirstRow() != null && original.getFirstRow() > 0 && !original.getFirstRow().equals(rowSelection.getFirstRow())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
-                if (rowSelection.getMaxRows() == null || rowSelection.getMaxRows() == Integer.MAX_VALUE) {
-                    rowSelection.setMaxRows(original.getMaxRows());
-                } else if (original.getMaxRows() != null && original.getMaxRows() != Integer.MAX_VALUE && !original.getMaxRows().equals(rowSelection.getMaxRows())) {
-                    throw new IllegalStateException("Multiple row selections not allowed!");
-                }
+//                if (rowSelection.getFirstRow() == null || rowSelection.getFirstRow() < 1) {
+//                    rowSelection.setFirstRow(original.getFirstRow());
+//                } else if (original.getFirstRow() != null && original.getFirstRow() > 0 && !original.getFirstRow().equals(rowSelection.getFirstRow())) {
+//                    throw new IllegalStateException("Multiple row selections not allowed!");
+//                }
+//                if (rowSelection.getMaxRows() == null || rowSelection.getMaxRows() == Integer.MAX_VALUE) {
+//                    rowSelection.setMaxRows(original.getMaxRows());
+//                } else if (original.getMaxRows() != null && original.getMaxRows() != Integer.MAX_VALUE && !original.getMaxRows().equals(rowSelection.getMaxRows())) {
+//                    throw new IllegalStateException("Multiple row selections not allowed!");
+//                }
                 if (rowSelection.getFetchSize() == null) {
                     rowSelection.setFetchSize(original.getFetchSize());
                 } else if (original.getFetchSize() != null && !original.getFetchSize().equals(rowSelection.getFetchSize())) {
@@ -762,19 +762,19 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private QueryPlanCacheKey createCacheKey(List<Query> queries) {
-        List<String> parts = new ArrayList<String>(queries.size());
+        List<QueryPlanCacheKeyQuery> parts = new ArrayList<QueryPlanCacheKeyQuery>(queries.size());
         addAll(queries, parts);
         return new QueryPlanCacheKey(parts);
     }
     
-    private void addAll(List<Query> queries, List<String> parts) {
+    private void addAll(List<Query> queries, List<QueryPlanCacheKeyQuery> parts) {
         for (int i = 0; i< queries.size(); i++) {
             Query q = queries.get(i);
             
             if (q instanceof CteQueryWrapper) {
                 addAll(((CteQueryWrapper) q).getParticipatingQueries(), parts);
             } else {
-                parts.add(q.unwrap(org.hibernate.Query.class).getQueryString());
+                parts.add(new QueryPlanCacheKeyQuery(q));
             }
         }
     }
@@ -790,9 +790,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private static class QueryPlanCacheKey {
-        final List<String> cacheKeyParts;
+        final List<QueryPlanCacheKeyQuery> cacheKeyParts;
 
-        public QueryPlanCacheKey(List<String> cacheKeyParts) {
+        public QueryPlanCacheKey(List<QueryPlanCacheKeyQuery> cacheKeyParts) {
             this.cacheKeyParts = cacheKeyParts;
         }
 
@@ -821,6 +821,40 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return true;
         }
         
+    }
+
+    static class QueryPlanCacheKeyQuery {
+
+        private final String query;
+        private final Integer firstResult;
+        private final Integer maxResults;
+
+        public QueryPlanCacheKeyQuery(Query query) {
+            this.query = query.unwrap(org.hibernate.Query.class).getQueryString();
+            this.firstResult = query.getFirstResult();
+            this.maxResults = query.getMaxResults();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof QueryPlanCacheKeyQuery)) return false;
+
+            QueryPlanCacheKeyQuery that = (QueryPlanCacheKeyQuery) o;
+
+            if (query != null ? !query.equals(that.query) : that.query != null) return false;
+            if (firstResult != null ? !firstResult.equals(that.firstResult) : that.firstResult != null) return false;
+            return maxResults != null ? maxResults.equals(that.maxResults) : that.maxResults == null;
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = query != null ? query.hashCode() : 0;
+            result = 31 * result + (firstResult != null ? firstResult.hashCode() : 0);
+            result = 31 * result + (maxResults != null ? maxResults.hashCode() : 0);
+            return result;
+        }
     }
     
     private static class CacheEntry<T> {
