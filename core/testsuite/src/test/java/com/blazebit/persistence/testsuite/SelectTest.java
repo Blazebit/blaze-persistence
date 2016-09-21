@@ -369,7 +369,7 @@ public class SelectTest extends AbstractCoreTest {
         String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "KEY(contacts_1)") + " > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
-        assertEquals(3l, result.get(0).get(0));
+        assertEquals(3L, result.get(0).get(0));
     }
     
     @Test
