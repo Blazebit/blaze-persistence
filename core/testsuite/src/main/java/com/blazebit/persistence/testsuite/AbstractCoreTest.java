@@ -149,7 +149,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
 	protected String countPaginated(String string, boolean distinct) {
 		StringBuilder sb = new StringBuilder(20 + string.length());
-		sb.append("COUNT(DISTINCT ").append(string).append("   )");
+		sb.append(jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', ").append(string).append(")");
 		
 		if (!distinct) {
 	    	String countStar;

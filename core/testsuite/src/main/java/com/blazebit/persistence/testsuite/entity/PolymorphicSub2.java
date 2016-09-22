@@ -15,6 +15,7 @@
  */
 package com.blazebit.persistence.testsuite.entity;
 
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -30,6 +31,7 @@ public class PolymorphicSub2 extends PolymorphicBase {
 
     private IntIdEntity relation2;
     private PolymorphicBase parent2;
+    private NameObject embeddable2;
     private Integer sub2Value;
 
     public PolymorphicSub2() {
@@ -50,6 +52,15 @@ public class PolymorphicSub2 extends PolymorphicBase {
 
     public void setParent2(PolymorphicBase parent1) {
         this.parent2 = parent1;
+    }
+
+    @Embedded
+    public NameObject getEmbeddable2() {
+        return embeddable2;
+    }
+
+    public void setEmbeddable2(NameObject embeddable1) {
+        this.embeddable2 = embeddable1;
     }
 
     public Integer getSub2Value() {

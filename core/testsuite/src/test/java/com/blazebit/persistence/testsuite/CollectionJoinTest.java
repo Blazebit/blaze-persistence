@@ -79,7 +79,7 @@ public class CollectionJoinTest extends AbstractCoreTest {
     }
 
     @Test
-    // Hibernate bug
+    // NOTE: hibernate.atlassian.net/browse/HHH-10229
     @Category({ NoHibernate.class })
     public void testElementCollection() {
         CriteriaBuilder<Object[]> criteria = cbf.create(em, Object[].class);

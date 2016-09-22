@@ -2,7 +2,7 @@
 
 JPQL offers support for `CROSS`, `INNER`, `LEFT` and `RIGHT JOIN` which are all well supported by {projectname}. In contrast to JPQL, {projectname} also has a notion of implicit/default and explicit joins which makes it very convenient to write queries as can be seen a few sections later.
 
-NOTE: `RIGHT JOIN`s aren't well defined by JPA so we recommend not using them at all.
+NOTE: `RIGHT JOIN` support is optional in JPA so we recommend not using it at all.
 
 === Implicit joins
 
@@ -23,7 +23,9 @@ This will result in the following JPQL query
 SELECT kittens_1.age FROM Cat cat LEFT JOIN cat.kittens kittens_1 WHERE kittens_1.age > 1
 ----
 
+==== Model awareness
 
+Implicit joins are a result of a path dereference or explicit fetching.
 
 TODO: Mention the model awareness +
 TODO: Mention implicit aliases shouldn't be use, instead the full path or an alias should be used +

@@ -450,7 +450,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         StringBuilder idClause = new StringBuilder(100);
         rootNode.appendAlias(idClause, idName);
         // Spaces are important to be able to reuse the string builder without copying
-        String countString = "COUNT(DISTINCT " + idClause + "   )";
+        String countString = jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', " + idClause + ")";
         sbSelectFrom.append("SELECT ").append(countString);
 
         if (entityId != null) {
@@ -468,18 +468,14 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         // Collect usage of collection join nodes to optimize away the count distinct
-        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, false);
+        Set<JoinNode> collectionJoinNodes = joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT), null, true, externalRepresentation);
         // TODO: Maybe we can improve this and treat array access joins like non-collection join nodes 
         boolean hasCollectionJoinUsages = collectionJoinNodes.size() > 0;
         
         whereManager.buildClause(sbSelectFrom);
         
         // Count distinct is obviously unnecessary if we have no collection joins
-        if (hasCollectionJoinUsages) {
-        	if (idAttribute.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED && !dbmsDialect.supportsTupleDistinctCounts()) {
-                throw new UnsupportedOperationException("The database does not support count distinct queries for tuples! This is needed for paginated queries to work when using collection joins in the where clause. Consider removing references to collection aliases to resolve the problem.");
-        	}
-        } else {
+        if (!hasCollectionJoinUsages) {
         	int idx = sbSelectFrom.indexOf(countString);
         	int endIdx = idx + countString.length() - 1;
         	String countStar;
@@ -549,7 +545,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, keysetExtraction);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), null, false, externalRepresentation);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);
@@ -602,7 +598,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
          * more and therefore we can also omit any joins which the SELECT or the
          * ORDER_BY clause do not depend on
          */
-        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation);
         sbSelectFrom.append(" WHERE ");
         rootNode.appendAlias(sbSelectFrom, idName);
         sbSelectFrom.append(" IN :").append(idParamName).append("");
@@ -638,7 +634,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             orderByManager.buildSelectClauses(sbSelectFrom, true);
         }
 
-        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, false);
+        joinManager.buildClause(sbSelectFrom, EnumSet.noneOf(ClauseType.class), null, false, externalRepresentation);
 
         if (keysetMode == KeysetMode.NONE) {
             whereManager.buildClause(sbSelectFrom);

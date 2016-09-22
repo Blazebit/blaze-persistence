@@ -42,6 +42,23 @@ public final class JpaUtils {
 
     private final static Logger LOG = Logger.getLogger(JpaUtils.class.getName());
 
+    public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
+        if (treatTypeName != null) {
+            ManagedType<?> type = metamodel.managedType(treatTypeName);
+            if (!type.getJavaType().isAssignableFrom(managedTypeClass)) {
+                throw new IllegalArgumentException("Treat type '" + treatTypeName + "' is not a subtype of: " + managedTypeClass.getName());
+            }
+
+            return type;
+        }
+
+        return metamodel.managedType(managedTypeClass);
+    }
+
+    public static ManagedType<?> getManagedTypeOrNull(EntityMetamodel metamodel, Class<?> javaType) {
+        return metamodel.getManagedType(javaType);
+    }
+
     public static <T> Attribute<? super T, ?> getAttribute(ManagedType<T> type, String attributeName) {
         try {
             return type.getAttribute(attributeName);

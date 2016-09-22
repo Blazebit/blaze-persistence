@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
+import com.blazebit.persistence.testsuite.base.category.NoHibernate;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -146,21 +147,33 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableElementCollectionPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
-            .where("embeddable.elementCollection.name").eqExpression("''");
+            .where("embeddable.elementCollection.primaryName").eqExpression("''");
         String expectedQuery = "SELECT e FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.elementCollection elementCollection_1 "
-            + "WHERE " + joinAliasValue("elementCollection_1", "name") + " = ''";
+            + "WHERE " + joinAliasValue("elementCollection_1", "primaryName") + " = ''";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
     
     @Test
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    // NOTE: hibernate.atlassian.net/browse/HHH-10229
+    @Category({NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.elementCollection");
         String expectedQuery = "SELECT " + joinAliasValue("elementCollection_1") + " FROM EmbeddableTestEntity e "
             + "LEFT JOIN e.embeddable.elementCollection elementCollection_1";
+        assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
+    public void testSelectEmbeddableManyToManyCollection() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
+                .select("embeddable.manyToMany");
+        String expectedQuery = "SELECT " + joinAliasValue("manyToMany_1") + " FROM EmbeddableTestEntity e "
+                + "LEFT JOIN e.embeddable.manyToMany manyToMany_1";
         assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }

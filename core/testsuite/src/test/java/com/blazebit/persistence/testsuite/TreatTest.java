@@ -91,6 +91,31 @@ public class TreatTest extends AbstractCoreTest {
     // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
     // NOTE: Apparently a bug in datanucleus? TODO: report the error
     @Category({ NoDatanucleus.class })
+    public void joinTreatedRootEmbeddable() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("intIdEntity.name");
+        criteria.innerJoin("TREAT(p AS PolymorphicSub1).embeddable1.intIdEntity", "intIdEntity");
+        assertEquals("SELECT intIdEntity.name FROM PolymorphicBase p JOIN " + treatRootJoin("p", PolymorphicSub1.class, "embeddable1.intIdEntity") + " intIdEntity", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
+    // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    @Category({ NoDatanucleus.class })
+    public void selectTreatedRootEmbeddable() {
+        CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
+        criteria.from(PolymorphicBase.class, "p");
+        criteria.select("TREAT(p AS PolymorphicSub2).embeddable2.intIdEntity.name");
+        assertEquals("SELECT intIdEntity_1.name FROM PolymorphicBase p LEFT JOIN " + treatRootJoin("p", PolymorphicSub2.class, "embeddable2.intIdEntity") + " intIdEntity_1", criteria.getQueryString());
+        criteria.getResultList();
+    }
+
+    @Test
+    // TODO: This is an extension of the treat grammar. Maybe we should render a cross/left join for the root path treat and then just treat on the other alias?
+    // NOTE: Apparently a bug in datanucleus? TODO: report the error
+    @Category({ NoDatanucleus.class })
     public void treatJoinTreatedRootRelation() {
         CriteriaBuilder<Integer> criteria = cbf.create(em, Integer.class);
         criteria.from(PolymorphicBase.class, "p");
