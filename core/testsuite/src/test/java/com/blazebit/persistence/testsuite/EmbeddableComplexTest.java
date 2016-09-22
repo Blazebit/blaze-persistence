@@ -53,6 +53,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* ManyToOne */
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -63,6 +64,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdSingleValuedAssociationId() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -73,6 +75,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdJoinedProperty() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -84,6 +87,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -95,6 +99,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableManyToOne() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -108,6 +113,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* OneToMany */
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableOneToManyPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -120,6 +126,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableOneToMany() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -131,6 +138,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddedIdCollectionSize(){
         CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class, "e");
@@ -144,6 +152,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     /* ElementCollection */
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableElementCollectionPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -157,6 +166,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     
     @Test
     // NOTE: hibernate.atlassian.net/browse/HHH-10229
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoHibernate.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -168,6 +178,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testSelectEmbeddableManyToManyCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
@@ -179,6 +190,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableInEmbeddedIdJoin(){
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
@@ -189,6 +201,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddableExplicitJoin(){
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
@@ -200,6 +213,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddedIdSize1(){
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
@@ -210,6 +224,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testEmbeddedIdSize2(){
         CriteriaBuilder<EmbeddableTestEntityContainer> crit = cbf.create(em, EmbeddableTestEntityContainer.class, "e")

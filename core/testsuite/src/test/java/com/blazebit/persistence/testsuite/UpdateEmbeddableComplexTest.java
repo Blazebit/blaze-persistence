@@ -63,6 +63,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
+	// NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningEmbeddable(){
     	final String newEmbeddableTestEntityIdKey = "newKey";
@@ -92,6 +93,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
+	// NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningExplicitId(){
     	final String intIdEntity1Key = "1";

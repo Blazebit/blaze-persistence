@@ -55,7 +55,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: This kind of mapping is not required to be supported by a JPA implementation.
+    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
     @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void simpleTest() {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e");
