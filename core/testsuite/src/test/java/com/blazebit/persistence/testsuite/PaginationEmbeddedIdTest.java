@@ -43,6 +43,9 @@ import static org.junit.Assert.assertEquals;
  * @author Christian Beikov
  * @since 1.2.0
  */
+// NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
+// NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
+@Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 
     @Override
@@ -55,8 +58,6 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
     }
 
     @Test
-    // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void simpleTest() {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e");
         crit.where("e.embeddable.elementCollection['test'].primaryName").eq("test");

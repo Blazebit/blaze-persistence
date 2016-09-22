@@ -63,7 +63,8 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-	// NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
+	// NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
+	// NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningEmbeddable(){
     	final String newEmbeddableTestEntityIdKey = "newKey";
@@ -71,11 +72,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work() {
-    			IntIdEntity intIdEntity1 = new IntIdEntity("1");
-    			em.persist(intIdEntity1);
-    			
-    			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, "oldKey");
-    			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+    			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId("1", "oldKey");
     			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
     			embeddable1.setId(embeddable1Id);
     			em.persist(embeddable1);
@@ -93,7 +90,8 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
-	// NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
+	// NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
+	// NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningExplicitId(){
     	final String intIdEntity1Key = "1";
@@ -101,18 +99,13 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
         transactional(new TxVoidWork() {
             @Override
             public void work() {
-    			IntIdEntity intIdEntity1 = new IntIdEntity("1");
-    			em.persist(intIdEntity1);
-    			
-    			EmbeddableTestEntityId embeddable2Id = new EmbeddableTestEntityId(intIdEntity1, "2");
-    			embeddable2Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+    			EmbeddableTestEntityId embeddable2Id = new EmbeddableTestEntityId("1", "2");
     			EmbeddableTestEntity embeddable2 = new EmbeddableTestEntity();
     			
     			embeddable2.setId(embeddable2Id);
     			em.persist(embeddable2);
     			
-    			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId(intIdEntity1, intIdEntity1Key);
-    			embeddable1Id.setLocalizedEntity(new EmbeddableTestEntityIdEmbeddable(""));
+    			EmbeddableTestEntityId embeddable1Id = new EmbeddableTestEntityId("1", intIdEntity1Key);
     			EmbeddableTestEntity embeddable1 = new EmbeddableTestEntity();
     			embeddable1.setId(embeddable1Id);
     			EmbeddableTestEntityEmbeddable embeddable1Embeddable = new EmbeddableTestEntityEmbeddable();

@@ -12,26 +12,26 @@ import javax.persistence.ManyToOne;
 public class EmbeddableTestEntityId implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    
-    private IntIdEntity intIdEntity;
+
+    private String value;
     private String key;
-    private EmbeddableTestEntityIdEmbeddable localizedEntity;
 
     public EmbeddableTestEntityId() {
     }
 
-    public EmbeddableTestEntityId(IntIdEntity intIdEntity, String key) {
-        this.intIdEntity = intIdEntity;
+    public EmbeddableTestEntityId(String value, String key) {
+        this.value = value;
         this.key = key;
     }
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    public IntIdEntity getIntIdEntity() {
-        return intIdEntity;
+    // Fixed size because mysql has size limitations
+    @Column(name = "test_value", nullable = false, length = 10)
+    public String getValue() {
+        return value;
     }
 
-    public void setIntIdEntity(IntIdEntity intIdEntity) {
-        this.intIdEntity = intIdEntity;
+    public void setValue(String value) {
+        this.value = value;
     }
 
     // Rename because mysql can't handle "key"
@@ -45,44 +45,22 @@ public class EmbeddableTestEntityId implements Serializable {
         this.key = key;
     }
 
-    @Embedded
-    public EmbeddableTestEntityIdEmbeddable getLocalizedEntity() {
-        return localizedEntity;
-    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof EmbeddableTestEntityId)) return false;
 
-    public void setLocalizedEntity(EmbeddableTestEntityIdEmbeddable localizedEntity) {
-        this.localizedEntity = localizedEntity;
+        EmbeddableTestEntityId that = (EmbeddableTestEntityId) o;
+
+        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) return false;
+        return getKey() != null ? getKey().equals(that.getKey()) : that.getKey() == null;
+
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((intIdEntity == null) ? 0 : intIdEntity.hashCode());
-        result = prime * result + ((key == null) ? 0 : key.hashCode());
+        int result = getValue() != null ? getValue().hashCode() : 0;
+        result = 31 * result + (getKey() != null ? getKey().hashCode() : 0);
         return result;
     }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        EmbeddableTestEntityId other = (EmbeddableTestEntityId) obj;
-        if (intIdEntity == null) {
-            if (other.intIdEntity != null)
-                return false;
-        } else if (!intIdEntity.equals(other.intIdEntity))
-            return false;
-        if (key == null) {
-            if (other.key != null)
-                return false;
-        } else if (!key.equals(other.key))
-            return false;
-        return true;
-    }
-
 }
