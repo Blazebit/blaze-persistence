@@ -18,12 +18,16 @@ package com.blazebit.persistence.testsuite;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
+import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.*;
 import com.blazebit.persistence.testsuite.model.DocumentViewModel;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
@@ -51,6 +55,8 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
     }
 
     @Test
+    // NOTE: This kind of mapping is not required to be supported by a JPA implementation.
+    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void simpleTest() {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e");
         crit.where("e.embeddable.elementCollection['test'].primaryName").eq("test");
