@@ -145,7 +145,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         Query query;
 
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
-        if (jpaProvider.supportsInsertStatement()) {
+        if (jpaProvider.supportsInsertStatement() && dbmsDialect.supportsWithClause()) {
         // We always have to use a custom query, otherwise we can't use LIMIT and OFFSET
 //        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
 
