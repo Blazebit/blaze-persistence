@@ -10,6 +10,8 @@ import javax.persistence.*;
 
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.spi.CteQueryWrapper;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 public class CustomSQLQuery implements Query, CteQueryWrapper {
@@ -66,12 +68,31 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 
 	@Override
 	public int executeUpdate() {
-        return extendedQuerySupport.executeUpdate(cqb, participatingQueries, delegate, sql);
+		final String finalSql;
+		if (firstResult > 0 || maxResults != Integer.MAX_VALUE) {
+			DbmsLimitHandler limitHandler = cqb.getService(DbmsDialect.class).createLimitHandler();
+
+			Integer firstResult = null;
+			Integer maxResults = null;
+
+			if (getFirstResult() > 0) {
+				firstResult = getFirstResult();
+			}
+			if (getMaxResults() != Integer.MAX_VALUE) {
+				maxResults = getMaxResults();
+			}
+
+			finalSql = limitHandler.applySqlInlined(sql, false, maxResults, firstResult);
+		} else {
+			finalSql = sql;
+		}
+        return extendedQuerySupport.executeUpdate(cqb, participatingQueries, delegate, finalSql);
 	}
 
 	@Override
 	public Query setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
+		delegate.setMaxResults(maxResults);
 		return this;
 	}
 
@@ -83,6 +104,7 @@ public class CustomSQLQuery implements Query, CteQueryWrapper {
 	@Override
 	public Query setFirstResult(int startPosition) {
 		this.firstResult = startPosition;
+		delegate.setFirstResult(startPosition);
 		return this;
 	}
 

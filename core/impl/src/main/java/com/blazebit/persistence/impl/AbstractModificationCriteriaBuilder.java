@@ -143,8 +143,12 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     @Override
     protected Query getQuery(Map<DbmsModificationState, String> includedModificationStates) {
         Query query;
-        
-        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
+
+        // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
+        if (jpaProvider.supportsInsertStatement()) {
+        // We always have to use a custom query, otherwise we can't use LIMIT and OFFSET
+//        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
+
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
             List<Query> participatingQueries = new ArrayList<Query>();
@@ -167,6 +171,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             }
             
             query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
+            query.setFirstResult(firstResult);
+            query.setMaxResults(maxResults);
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
         }
@@ -318,6 +324,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         applyExtendedSql(sqlSb, false, false, withClause, returningColumns, null);
         String finalSql = sqlSb.toString();
         participatingQueries.add(baseQuery);
+
+        baseQuery.setFirstResult(firstResult);
+        baseQuery.setMaxResults(maxResults);
         
         // TODO: hibernate will return the object directly for single attribute case instead of an object array
         final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning((CommonQueryBuilder<?>) this, participatingQueries, exampleQuery, finalSql);

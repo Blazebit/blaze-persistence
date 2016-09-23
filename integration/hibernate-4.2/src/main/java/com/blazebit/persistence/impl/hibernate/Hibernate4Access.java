@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -18,10 +19,7 @@ import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
 import org.hibernate.engine.transaction.spi.TransactionCoordinator;
 import org.hibernate.event.spi.EventSource;
 
@@ -48,6 +46,12 @@ public class Hibernate4Access implements HibernateAccess {
         Object transactionCoordinatorProxy = Proxy.newProxyInstance(transactionCoordinator.getClass().getClassLoader(), new Class[]{ TransactionCoordinator.class }, new Hibernate4TransactionCoordinatorInvocationHandler(transactionCoordinator, jdbcCoordinatorProxy));
         Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate4SessionInvocationHandler(session, transactionCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
+    }
+
+    public SessionFactoryImplementor wrapSessionFactory(SessionFactoryImplementor sessionFactory, DbmsDialect dbmsDialect) {
+        Object dialectProxy = new Hibernate4LimitHandlingDialect(sessionFactory.getDialect(), dbmsDialect);
+        Object sessionFactoryProxy = Proxy.newProxyInstance(sessionFactory.getClass().getClassLoader(), new Class[]{ SessionFactoryImplementor.class }, new Hibernate4SessionFactoryInvocationHandler(sessionFactory, dialectProxy));
+        return (SessionFactoryImplementor) sessionFactoryProxy;
     }
 
     @Override

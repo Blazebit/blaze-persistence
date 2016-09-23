@@ -91,6 +91,14 @@ public interface DbmsDialect {
      * @param offset The offset for the offset clause, or null if no offset
      */
     public void appendSet(StringBuilder sqlSb, SetOperationType setType, boolean isSubquery, List<String> operands, List<? extends OrderByElement> orderByElements, String limit, String offset);
+
+    /**
+     * Creates a new limit handler for an SQL query.
+     *
+     * @return A new limit handler for a query
+     * @since 1.2.0
+     */
+    public DbmsLimitHandler createLimitHandler();
     
     /**
      * Returns true if the dbms supports the with clause in modification queries, false otherwise.

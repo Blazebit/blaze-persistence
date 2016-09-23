@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.*;
 
 public class DefaultDbmsDialect implements DbmsDialect {
@@ -131,6 +131,11 @@ public class DefaultDbmsDialect implements DbmsDialect {
         if (isSubquery) {
             sqlSb.append(')');
         }
+    }
+
+    @Override
+    public DbmsLimitHandler createLimitHandler() {
+        return new DefaultDbmsLimitHandler();
     }
 
     protected void appendSetOperands(StringBuilder sqlSb, String operator, boolean isSubquery, List<String> operands, boolean hasOuterClause) {
@@ -288,83 +293,7 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
-        if (offset == null) {
-            sqlSb.append(" limit ").append(limit);
-        } else {
-            sqlSb.append(" limit ").append(limit).append(" offset ").append(offset);
-        }
-    }
-
-    protected static String[] getSelectColumnAliases(String querySql) {
-        int fromIndex = querySql.indexOf("from");
-        int selectIndex = querySql.indexOf("select");
-        String[] selectItems = splitSelectItems(querySql.subSequence(selectIndex + "select".length() + 1, fromIndex));
-        String[] selectColumnAliases = new String[selectItems.length];
-
-        for (int i = 0; i < selectItems.length; i++) {
-            String selectItemWithAlias = selectItems[i].substring(selectItems[i].lastIndexOf('.') + 1);
-            selectColumnAliases[i] = selectItemWithAlias.substring(selectItemWithAlias.lastIndexOf(' ') + 1);
-        }
-
-        return selectColumnAliases;
-    }
-
-    private static String[] splitSelectItems(CharSequence itemsString) {
-        List<String> selectItems = new ArrayList<String>();
-        StringBuilder sb = new StringBuilder();
-        int parenthesis = 0;
-        boolean text = false;
-
-        int i = 0;
-        int length = itemsString.length();
-        while (i < length) {
-            char c = itemsString.charAt(i);
-
-            if (text) {
-                if (c == '(') {
-                    parenthesis++;
-                } else if (c == ')') {
-                    parenthesis--;
-                } else if (parenthesis == 0 && c == ',') {
-                    selectItems.add(trim(sb));
-                    sb.setLength(0);
-                    text = false;
-
-                    i++;
-                    continue;
-                }
-
-                sb.append(c);
-            } else {
-                if (Character.isWhitespace(c)) {
-                    // skip whitespace
-                } else {
-                    sb.append(c);
-                    text = true;
-                }
-            }
-
-            i++;
-        }
-
-        if (text) {
-            selectItems.add(trim(sb));
-        }
-
-        return selectItems.toArray(new String[selectItems.size()]);
-    }
-
-    private static String trim(StringBuilder sb) {
-        int i = sb.length() - 1;
-        while (i >= 0) {
-            if (!Character.isWhitespace(sb.charAt(i))) {
-                break;
-            } else {
-                i--;
-            }
-        }
-        
-        return sb.substring(0, i + 1);
+        createLimitHandler().applySql(sqlSb, isSubquery, limit, offset);
     }
 
     protected static int indexOfIgnoreCase(StringBuilder haystack, String needle) {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.spi.DbmsDialect;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
@@ -38,6 +39,13 @@ public class Hibernate60Access implements HibernateAccess {
         Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
         Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate60SessionInvocationHandler(session, jdbcCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
+    }
+
+    @Override
+    public SessionFactoryImplementor wrapSessionFactory(SessionFactoryImplementor sessionFactory, DbmsDialect dbmsDialect) {
+        Object dialectProxy = new Hibernate60LimitHandlingDialect(sessionFactory.getDialect(), dbmsDialect);
+        Object sessionFactoryProxy = Proxy.newProxyInstance(sessionFactory.getClass().getClassLoader(), new Class[]{ SessionFactoryImplementor.class }, new Hibernate60SessionFactoryInvocationHandler(sessionFactory, dialectProxy));
+        return (SessionFactoryImplementor) sessionFactoryProxy;
     }
 
     @Override

@@ -1,13 +1,11 @@
 package com.blazebit.persistence.impl.hibernate;
 
+import com.blazebit.persistence.spi.DbmsDialect;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
 import org.hibernate.loader.hql.QueryLoader;
 import org.hibernate.type.Type;
 
@@ -33,6 +31,8 @@ public interface HibernateAccess {
     public String expandParameterLists(SessionImplementor session, Query hibernateQuery, Map<String, TypedValue> namedParamsCopy);
 
     public SessionImplementor wrapSession(SessionImplementor session, boolean generated, String[][] columns, HibernateReturningResult<?> returningResult);
+
+    public SessionFactoryImplementor wrapSessionFactory(SessionFactoryImplementor sessionFactory, DbmsDialect dbmsDialect);
     
     public void checkTransactionSynchStatus(SessionImplementor session);
     

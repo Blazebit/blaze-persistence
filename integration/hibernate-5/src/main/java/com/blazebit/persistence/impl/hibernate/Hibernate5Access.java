@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.reflection.ReflectionUtils;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
@@ -18,10 +19,7 @@ import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.ParameterMetadata;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TypedValue;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.hql.internal.classic.ParserHelper;
 import org.hibernate.internal.util.StringHelper;
@@ -47,6 +45,13 @@ public class Hibernate5Access implements HibernateAccess {
         Object jdbcCoordinatorProxy = Proxy.newProxyInstance(jdbcCoordinator.getClass().getClassLoader(), new Class[]{ JdbcCoordinator.class }, new JdbcCoordinatorInvocationHandler(jdbcCoordinator, session.getFactory(), generatedKeys, columns, returningResult));
         Object sessionProxy = Proxy.newProxyInstance(session.getClass().getClassLoader(), new Class[]{ SessionImplementor.class, EventSource.class }, new Hibernate5SessionInvocationHandler(session, jdbcCoordinatorProxy));
         return (SessionImplementor) sessionProxy;
+    }
+
+    @Override
+    public SessionFactoryImplementor wrapSessionFactory(SessionFactoryImplementor sessionFactory, DbmsDialect dbmsDialect) {
+        Object dialectProxy = new Hibernate5LimitHandlingDialect(sessionFactory.getDialect(), dbmsDialect);
+        Object sessionFactoryProxy = Proxy.newProxyInstance(sessionFactory.getClass().getClassLoader(), new Class[]{ SessionFactoryImplementor.class }, new Hibernate5SessionFactoryInvocationHandler(sessionFactory, dialectProxy));
+        return (SessionFactoryImplementor) sessionFactoryProxy;
     }
 
     @Override

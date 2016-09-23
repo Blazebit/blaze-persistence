@@ -2,13 +2,14 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.util.Map;
 
+import com.blazebit.persistence.spi.DbmsLimitHandler;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 
 public class OracleDbmsDialect extends DefaultDbmsDialect {
-    
+
 //	private static final Method registerReturnParameter;
 //	private static final Method getReturnResultSet;
 //	
@@ -54,18 +55,9 @@ public class OracleDbmsDialect extends DefaultDbmsDialect {
 	}
 
     @Override
-    public void appendLimit(StringBuilder sqlSb, boolean isSubquery, String limit, String offset) {
-        if (offset == null) {
-            sqlSb.insert(0, "select * from (");
-            sqlSb.append(") where rownum <= ").append(limit);
-        } else {
-            // TODO: This is selecting the rownum too...
-            // TODO: See the following
-            // https://groups.google.com/forum/#!topic/jooq-user/G9Op6cQwMkY/discussion
-            // http://www.inf.unideb.hu/~gabora/pagination/results.html
-            sqlSb.insert(0, "select * from ( select row_.*, rownum rownum_ from (");
-            sqlSb.append(") row_ ) where rownum_ <= ").append(limit).append(" and rownum_ > ").append(offset);
-        }
+    public DbmsLimitHandler createLimitHandler() {
+        // NOTE: Oracle12c should use SQL2008DbmsLimitHandler
+        return new OracleDbmsLimitHandler();
     }
 
     @Override

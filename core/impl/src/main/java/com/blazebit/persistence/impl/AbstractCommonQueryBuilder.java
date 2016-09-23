@@ -1489,7 +1489,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
-        if (!isMainQuery || isSubquery || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE) {
+        if (!isMainQuery || isSubquery || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             return null;
         }
 
@@ -1893,12 +1893,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         String limit = null;
         String offset = null;
-        
-        if (firstResult != 0) {
-            offset = Integer.toString(firstResult);
-        }
-        if (maxResults != Integer.MAX_VALUE) {
-            limit = Integer.toString(maxResults);
+
+        // The main query will handle that separately
+        if (!isMainQuery) {
+            if (firstResult != 0) {
+                offset = Integer.toString(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                limit = Integer.toString(maxResults);
+            }
         }
         
         return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
