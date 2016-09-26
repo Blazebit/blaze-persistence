@@ -1489,7 +1489,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, boolean isSubquery, List<Query> participatingQueries) {
         // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
-        if (!isMainQuery || isSubquery || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
+        if (!isMainQuery || isSubquery || !dbmsDialect.supportsWithClause() || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
             return null;
         }
 

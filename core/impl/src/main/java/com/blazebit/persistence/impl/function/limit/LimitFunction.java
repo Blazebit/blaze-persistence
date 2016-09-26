@@ -13,10 +13,12 @@ import com.blazebit.persistence.spi.JpqlFunction;
 public class LimitFunction implements JpqlFunction {
 
     protected final DbmsDialect dbmsDialect;
+    protected final boolean limitIncludesOffset;
 
     public LimitFunction(DbmsDialect dbmsDialect) {
         // LIMIT(SUBQUERY, LIMIT, OFFSET)
         this.dbmsDialect = dbmsDialect;
+        this.limitIncludesOffset = dbmsDialect.createLimitHandler().limitIncludesOffset();
     }
 
     @Override
@@ -61,7 +63,19 @@ public class LimitFunction implements JpqlFunction {
 
     protected void renderLimitOffset(FunctionRenderContext functionRenderContext) {
         StringBuilder sqlSb = getSql(functionRenderContext);
-        dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
+        if (limitIncludesOffset) {
+            // Careful, parameters are not supported in this case as that would require parameter rewriting or something like that
+            String limit = functionRenderContext.getArgument(1);
+            String offset = functionRenderContext.getArgument(2);
+            if (limit.contains("?") || offset.contains("?")) {
+                throw new IllegalArgumentException("Limit and offset in subquery can not be a parameter!");
+            }
+            Integer limitValue = Integer.parseInt(limit);
+            Integer offsetValue = Integer.parseInt(offset);
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, Integer.toString(limitValue + offsetValue), offset, null, null);
+        } else {
+            dbmsDialect.appendExtendedSql(sqlSb, DbmsStatementType.SELECT, true, false, null, functionRenderContext.getArgument(1), functionRenderContext.getArgument(2), null, null);
+        }
         functionRenderContext.addChunk(sqlSb.toString());
     }
 

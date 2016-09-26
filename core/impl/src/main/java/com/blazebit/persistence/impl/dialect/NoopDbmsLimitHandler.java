@@ -18,7 +18,7 @@ public class NoopDbmsLimitHandler implements DbmsLimitHandler {
     }
 
     @Override
-    public boolean supportsVariableLimit() {
+    public boolean limitIncludesOffset() {
         return false;
     }
 

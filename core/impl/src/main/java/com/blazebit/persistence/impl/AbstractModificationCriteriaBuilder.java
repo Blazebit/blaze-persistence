@@ -145,7 +145,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         Query query;
 
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
-        if (jpaProvider.supportsInsertStatement() && dbmsDialect.supportsWithClause()) {
+        if (jpaProvider.supportsInsertStatement()) {
         // We always have to use a custom query, otherwise we can't use LIMIT and OFFSET
 //        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
 
@@ -165,8 +165,13 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             String finalSql = sqlSb.toString();
             participatingQueries.add(query);
 
+            for (Query q : participatingQueries) {
+                parameterManager.parameterizeQuery(q);
+            }
+
             // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
-            if (mainQuery.cteManager.hasCtes() && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
+            boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
+            if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
                 query = getCountExampleQuery();
             }
             
@@ -175,9 +180,9 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             query.setMaxResults(maxResults);
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
+            parameterManager.parameterizeQuery(query);
         }
 
-        parameterManager.parameterizeQuery(query);
         return query;
 	}
 	

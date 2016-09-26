@@ -62,7 +62,7 @@ public class ResultSetInvocationHandler implements InvocationHandler {
     private final Map<String, Integer> aliasIndex;
     private final HibernateReturningResult<?> returningResult;
     private final boolean calculateRowCount;
-    private int rowCount = -1;
+    private int rowCount = 0;
 
     public ResultSetInvocationHandler(ResultSet delegate, Map<String, Integer> aliasIndex, HibernateReturningResult<?> returningResult) {
         this.delegate = delegate;
@@ -97,7 +97,11 @@ public class ResultSetInvocationHandler implements InvocationHandler {
             }
         } else if (calculateRowCount) {
             if ("next".equals(method.getName())) {
-                rowCount++;
+                Object result = method.invoke(delegate, args);
+                if ((Boolean) result) {
+                    rowCount++;
+                }
+                return result;
             } else if ("close".equals(method.getName())) {
                 returningResult.setUpdateCount(rowCount);
             }

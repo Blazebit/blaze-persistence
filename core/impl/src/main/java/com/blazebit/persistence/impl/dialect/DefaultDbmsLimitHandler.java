@@ -11,7 +11,7 @@ public class DefaultDbmsLimitHandler extends AbstractDbmsLimitHandler {
 
     @Override
     public boolean supportsVariableLimit() {
-        return false;
+        return true;
     }
 
     @Override

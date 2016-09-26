@@ -24,6 +24,18 @@ public abstract class AbstractDbmsLimitHandler implements DbmsLimitHandler {
     }
 
     @Override
+    public boolean limitIncludesOffset() {
+        return false;
+    }
+
+    /**
+     * Returns whether the dbms supports parameters for LIMIT and OFFSET via prepared statements.
+     *
+     * @return True if parameters allowed, otherwise false
+     */
+    protected abstract boolean supportsVariableLimit();
+
+    @Override
     public String applySql(String sql, boolean isSubquery, Integer limit, Integer offset) {
         if (limit == null && offset == null) {
             return sql;
@@ -31,7 +43,17 @@ public abstract class AbstractDbmsLimitHandler implements DbmsLimitHandler {
 
         StringBuilder sb = new StringBuilder(sql.length() + length);
         sb.append(sql);
-        applySql(sb, isSubquery, limit == null ? null : "?", offset == null ? null : "?");
+
+        if (supportsVariableLimit()) {
+            applySql(sb, isSubquery, limit == null ? null : "?", offset == null ? null : "?");
+        } else {
+            if (limitIncludesOffset() && offset != null && limit != null) {
+                applySql(sb, isSubquery, Integer.toString(limit + offset), offset.toString());
+            } else {
+                applySql(sb, isSubquery, limit == null ? null : limit.toString(), offset == null ? null : offset.toString());
+            }
+        }
+
         return sb.toString();
     }
 
@@ -43,7 +65,11 @@ public abstract class AbstractDbmsLimitHandler implements DbmsLimitHandler {
 
         StringBuilder sb = new StringBuilder(sql.length() + length);
         sb.append(sql);
-        applySql(sb, isSubquery, limit == null ? null : limit.toString(), offset == null ? null : offset.toString());
+        if (limitIncludesOffset() && offset != null && limit != null) {
+            applySql(sb, isSubquery, Integer.toString(limit + offset), offset.toString());
+        } else {
+            applySql(sb, isSubquery, limit == null ? null : limit.toString(), offset == null ? null : offset.toString());
+        }
         return sb.toString();
     }
 

@@ -139,6 +139,32 @@ public class InsertTest extends AbstractCoreTest {
         });
     }
 
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testSimpleWithLimitAndOffset() {
+        final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
+        cb.from(Person.class, "p");
+        cb.bind("name").select("CONCAT(p.name,'s document')");
+        cb.bind("age").select("p.age");
+        cb.bind("idx").select("1");
+        cb.bind("owner").select("p");
+        cb.orderByAsc("p.id");
+        cb.setFirstResult(1);
+        cb.setMaxResults(1);
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+                + "SELECT p.age, 1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+
+        assertEquals(expected, cb.getQueryString());
+
+        transactional(new TxVoidWork() {
+            @Override
+            public void work() {
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
+            }
+        });
+    }
+
 	// NOTE: hibernate 4.2 does not support using parameters in the select clause
 	@Test
 	@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })

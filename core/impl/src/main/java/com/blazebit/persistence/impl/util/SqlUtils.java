@@ -8,9 +8,13 @@ public class SqlUtils {
     private static final String SELECT = "select ";
     private static final String FROM = " from ";
     private static final String WITH = "with ";
+    private static final String FROM_FINAL_TABLE = " from final table (";
+    private static final String NEXT_VALUE_FOR = "next value for ";
     private static final PatternFinder SELECT_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(SELECT);
     private static final PatternFinder FROM_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM);
     private static final PatternFinder WITH_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(WITH);
+    private static final PatternFinder FROM_FINAL_TABLE_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE);
+    private static final PatternFinder NEXT_VALUE_FOR_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR);
 
     public static String[] getSelectItemAliases(CharSequence sql, int start) {
         int selectIndex = SELECT_FINDER.indexIn(sql, start);
@@ -32,7 +36,7 @@ public class SqlUtils {
 
             if (text) {
                 if (parenthesis == 0 && c == ',') {
-                    selectAliases.add(extractAlias(sb));
+                    selectAliases.add(extractAlias(sb, selectAliases.size()));
                     sb.setLength(0);
                     text = false;
                 } else {
@@ -72,7 +76,7 @@ public class SqlUtils {
         }
 
         if (text) {
-            selectAliases.add(extractAlias(sb));
+            selectAliases.add(extractAlias(sb, selectAliases.size()));
         }
 
         return selectAliases.toArray(new String[selectAliases.size()]);
@@ -114,11 +118,40 @@ public class SqlUtils {
         return selectIndex;
     }
 
-    private static String extractAlias(StringBuilder sb) {
+    public static int[] indexOfFinalTableSubquery(CharSequence sql, int selectIndex) {
+        int fromFinalTableIndex = FROM_FINAL_TABLE_FINDER.indexIn(sql, selectIndex);
+        if (fromFinalTableIndex == -1) {
+            return new int[] { 0, sql.length() };
+        }
+        int brackets = 1;
+        int i = fromFinalTableIndex + FROM_FINAL_TABLE.length();
+        int end = sql.length();
+        while (i < end) {
+            final char c = sql.charAt(i);
+            if (c == '(') {
+                brackets++;
+            } else if (c == ')') {
+                brackets--;
+
+                if (brackets == 0) {
+                    return new int[] { fromFinalTableIndex + FROM_FINAL_TABLE.length(), i };
+                }
+            }
+            i++;
+        }
+
+        return new int[] { 0, sql.length() };
+    }
+
+    private static String extractAlias(StringBuilder sb, int index) {
         int aliasEndCharIndex = findLastNonWhitespace(sb);
         int aliasBeforeIndex = findLastWhitespace(sb, aliasEndCharIndex);
         if (aliasBeforeIndex < 0) {
             aliasBeforeIndex = sb.lastIndexOf(".");
+        }
+        if (NEXT_VALUE_FOR_FINDER.indexIn(sb) != -1) {
+            // Since sequences in subqueries might not be allowed, we pass the whole expression
+            return sb.toString();
         }
         return sb.substring(aliasBeforeIndex + 1, aliasEndCharIndex + 1);
     }
