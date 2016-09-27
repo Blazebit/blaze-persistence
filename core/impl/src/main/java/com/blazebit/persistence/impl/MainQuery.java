@@ -63,4 +63,11 @@ public class MainQuery {
         macroStorage.registerMacro(macroName, jpqlMacro);
     }
 
+    public EntityManager getEm() {
+        return em;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
+    }
 }

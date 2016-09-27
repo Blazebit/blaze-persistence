@@ -36,7 +36,7 @@ public class WhereManager<T> extends PredicateManager<T> {
     }
 
     @Override
-    protected ClauseType getClauseType() {
+    public ClauseType getClauseType() {
         return ClauseType.WHERE;
     }
 

@@ -574,7 +574,7 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING COUNT(partners_1) > 1";
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE", "partners_1")+ " > 1";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }
@@ -584,7 +584,7 @@ public class HavingTest extends AbstractCoreTest {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d");
         criteria.select("d.id").groupBy("d.id").having("SIZE(d.partners)").gtExpression("1").having("SIZE(d.versions)").gtExpression("2");
         
-        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING COUNT(DISTINCT partners_1) > 1 AND COUNT(DISTINCT versions_1) > 2";
+        final String expected = "SELECT d.id FROM Document d LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id HAVING " + function("COUNT_TUPLE" , "'DISTINCT'", "partners_1") + " > 1 AND " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + " > 2";
         assertEquals(expected, criteria.getQueryString());
         criteria.getResultList();
     }

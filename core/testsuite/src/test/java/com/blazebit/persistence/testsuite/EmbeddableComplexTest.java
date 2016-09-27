@@ -103,7 +103,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntity> cb = cbf.create(em, EmbeddableTestEntity.class, "e");
         cb.select("SIZE(e.embeddable.oneToMany)");
         
-        String expected = "SELECT (SELECT " + countStar() + " FROM EmbeddableTestEntity embeddabletestentity LEFT JOIN embeddabletestentity.embeddable.oneToMany embeddable_oneToMany WHERE embeddabletestentity = e) FROM EmbeddableTestEntity e";
+        String expected = "SELECT (SELECT " + countStar() + " FROM e.embeddable.oneToMany embeddableTestEntity) FROM EmbeddableTestEntity e";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -160,7 +160,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntity> crit = cbf.create(em, EmbeddableTestEntity.class, "e")
                 .select("SIZE(e.embeddable.oneToMany)");
         
-        assertEquals("SELECT (SELECT " + countStar() + " FROM EmbeddableTestEntity embeddabletestentity LEFT JOIN embeddabletestentity.embeddable.oneToMany embeddable_oneToMany WHERE embeddabletestentity = e) FROM EmbeddableTestEntity e", crit.getQueryString());
+        assertEquals("SELECT (SELECT " + countStar() + " FROM e.embeddable.oneToMany embeddableTestEntity) FROM EmbeddableTestEntity e", crit.getQueryString());
         crit.getResultList();
     }
     
@@ -169,7 +169,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
         CriteriaBuilder<EmbeddableTestEntityContainer> crit = cbf.create(em, EmbeddableTestEntityContainer.class, "e")
                 .select("SIZE(e.embeddableTestEntities)");
         
-        assertEquals("SELECT (SELECT " + countStar() + " FROM EmbeddableTestEntityContainer embeddabletestentitycontainer LEFT JOIN embeddabletestentitycontainer.embeddableTestEntities embeddableTestEntities WHERE embeddabletestentitycontainer = e) FROM EmbeddableTestEntityContainer e", crit.getQueryString());
+        assertEquals("SELECT (SELECT " + countStar() + " FROM e.embeddableTestEntities embeddableTestEntity) FROM EmbeddableTestEntityContainer e", crit.getQueryString());
         crit.getResultList();
     }
     

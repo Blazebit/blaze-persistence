@@ -25,6 +25,8 @@ import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
 import com.blazebit.persistence.spi.JpaProvider;
 
 /**
@@ -44,7 +46,12 @@ public class OrderByManager extends AbstractManager {
         this.jpaProvider = jpaProvider;
     }
 
-    Set<String> getOrderBySelectAliases() {
+    @Override
+    public ClauseType getClauseType() {
+        return ClauseType.ORDER_BY;
+    }
+
+    public Set<String> getOrderBySelectAliases() {
         if (orderByInfos.isEmpty()) {
             return Collections.emptySet();
         }
@@ -148,12 +155,13 @@ public class OrderByManager extends AbstractManager {
         return null;
     }
 
-    void applyTransformer(ExpressionTransformer transformer) {
+    @Override
+    public void applyTransformer(ExpressionTransformer transformer) {
         List<OrderByInfo> infos = orderByInfos;
         int size = infos.size();
         for (int i = 0; i < size; i++) {
             final OrderByInfo orderByInfo = infos.get(i);
-            orderByInfo.setExpression(transformer.transform(orderByInfo.getExpression(), ClauseType.ORDER_BY, true));
+            orderByInfo.setExpression(transformer.transform(new NodeInfoExpressionModifier(orderByInfo), orderByInfo.getExpression(), ClauseType.ORDER_BY, true));
         }
     }
 

@@ -37,7 +37,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithElementCollectionIndexed1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
                 .select("SIZE(w.localized)");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "w.id", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 GROUP BY w.id";
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 GROUP BY w.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -49,7 +49,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
                 .select("SIZE(w.localized)")
                 .leftJoin("w.supportedLocales", "supportedLocales_1");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "w.id", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 " +
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(localized_1)") + " FROM Workflow w LEFT JOIN w.localized localized_1 " +
                 "LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -61,7 +61,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithElementCollectionBasic1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
                 .select("SIZE(w.supportedLocales)");
-        String expectedQuery = "SELECT COUNT(supportedLocales_1) FROM Workflow w LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "supportedLocales_1") + " FROM Workflow w LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -73,7 +73,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Workflow.class, "w")
                 .select("SIZE(w.supportedLocales)")
                 .leftJoin("w.localized", "localized");
-        String expectedQuery = "SELECT COUNT(DISTINCT supportedLocales_1) FROM Workflow w LEFT JOIN w.localized localized " +
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "supportedLocales_1") + " FROM Workflow w LEFT JOIN w.localized localized " +
                 "LEFT JOIN w.supportedLocales supportedLocales_1 GROUP BY w.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
@@ -83,20 +83,17 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithList1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.people)");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "d.id", "INDEX(people_1)") + " FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id";
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "INDEX(people_1)") + " FROM Document d LEFT JOIN d.people people_1 GROUP BY d.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
 
-    /**
-     * involves two collections and thus requires the usage of distinct
-     */
     @Test
     public void testSizeToCountTransformationWithList2() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.people)")
                 .select("d.partners");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "INDEX(people_1)") + ", partners_1 FROM Document d " +
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "INDEX(people_1)") + ", partners_1 FROM Document d " +
                 "LEFT JOIN d.partners partners_1 " +
                 "LEFT JOIN d.people people_1 " +
                 "GROUP BY d.id, partners_1.age, partners_1.id, partners_1.name, partners_1.partnerDocument";
@@ -108,7 +105,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithMap1() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "d.id", "KEY(contacts_1)") + " FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + " FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -118,7 +115,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.contacts)")
                 .select("d.partners");
-        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "KEY(contacts_1)") + ", partners_1 FROM Document d " +
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + ", partners_1 FROM Document d " +
                 "LEFT JOIN d.contacts contacts_1 " +
                 "LEFT JOIN d.partners partners_1 " +
                 "GROUP BY d.id, partners_1.age, partners_1.id, partners_1.name, partners_1.partnerDocument";
@@ -133,7 +130,7 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithCollectionBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleCollectionBag)");
-        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.peopleCollectionBag peopleCollectionBag WHERE document = d) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleCollectionBag person) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -145,12 +142,22 @@ public class SizeTransformationTest extends AbstractCoreTest {
     public void testSizeToCountTransformationWithListBag() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("SIZE(d.peopleListBag)");
-        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.peopleListBag peopleListBag WHERE document = d) FROM Document d";
+        String expectedQuery = "SELECT (SELECT " + countStar() + " FROM d.peopleListBag person) FROM Document d";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();
     }
 
-    @Ignore
+    @Test
+    public void testDuplicateSizeExpressionsInSelect() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                .select("SIZE(p.ownedDocuments)")
+                .select("SIZE(p.ownedDocuments)");
+
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "ownedDocuments_1") + ", " + function("COUNT_TUPLE", "ownedDocuments_1") + " FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 GROUP BY p.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
     @Test
     public void testSizeToCountTransformationMultiLevel() {
         EntityTransaction tx = em.getTransaction();
@@ -208,14 +215,59 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .orderByAsc("p.id")
                 .orderByAsc("ownedDocument.id");
 
-        String expectedQuery = "SELECT p.id, (SELECT " + countStar() + " FROM p.ownedDocuments), (SELECT " + countStar() + " FROM ownedDocument.versions) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument";
+        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY ownedDocument.id, p.id ORDER BY p.id ASC NULLS LAST, ownedDocument.id ASC NULLS LAST";
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         Assert.assertEquals(3, result.size());
 
-        Assert.assertArrayEquals(new Object[] { o1.getId(), doc1.getId(), 1, 2 }, result.get(0).toArray());
-        Assert.assertArrayEquals(new Object[] { o1.getId(), doc2.getId(), 2, 2 }, result.get(1).toArray());
-        Assert.assertArrayEquals(new Object[] { o2.getId(), null, 0, 0 }, result.get(2).toArray());
+        Assert.assertArrayEquals(new Object[] { o1.getId(), doc1.getId(), 1l, 2l }, result.get(0).toArray());
+        Assert.assertArrayEquals(new Object[] { o1.getId(), doc2.getId(), 2l, 2l }, result.get(1).toArray());
+        Assert.assertArrayEquals(new Object[] { o2.getId(), null, 0l, 0l }, result.get(2).toArray());
+    }
+
+    @Test
+    public void testSizeToCountTransformationMultiLevel2() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                .leftJoin("p.ownedDocuments", "ownedDocument")
+                .select("p.id")
+                .select("SIZE(ownedDocument.versions)")
+                .select("SIZE(p.ownedDocuments)")
+                .orderByAsc("p.id");
+
+        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY ownedDocument.id, p.id ORDER BY p.id ASC NULLS LAST";
+
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
+    }
+
+    @Test
+    public void testSizeToCountTransformationMultiBranches() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                .leftJoin("p.ownedDocuments", "ownedDocument")
+                .leftJoin("p.favoriteDocuments", "favoriteDocument")
+                .select("p.id")
+                .select("ownedDocument.id")
+                .select("favoriteDocument.id")
+                .select("SIZE(ownedDocument.versions)")
+                .select("SIZE(favoriteDocument.versions)")
+                .select("SIZE(p.ownedDocuments)")
+                .orderByAsc("p.id")
+                .orderByAsc("ownedDocument.id")
+                .orderByAsc("favoriteDocument.id");
+
+        String expectedQuery = "SELECT p.id, ownedDocument.id, favoriteDocument.id, (SELECT " + countStar() + " FROM ownedDocument.versions version), (SELECT " + countStar() + " FROM favoriteDocument.versions version), (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.favoriteDocuments favoriteDocument LEFT JOIN p.ownedDocuments ownedDocument " +
+                "ORDER BY p.id ASC NULLS LAST, ownedDocument.id ASC NULLS LAST, favoriteDocument.id ASC NULLS LAST";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+    }
+
+    @Test
+    public void testSizeTransformationInArithmeticExpression() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Person.class, "p")
+                .select("SIZE(p.ownedDocuments) + 1");
+
+        String expectedQuery = "SELECT " + function("COUNT_TUPLE", "ownedDocuments_1") + " + 1 FROM Person p LEFT JOIN p.ownedDocuments ownedDocuments_1 GROUP BY p.id";
+        Assert.assertEquals(expectedQuery, cb.getQueryString());
+        cb.getResultList();
     }
 
 }

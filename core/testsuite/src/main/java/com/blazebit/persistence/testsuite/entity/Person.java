@@ -21,15 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Basic;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 /**
  *
@@ -46,6 +38,7 @@ public class Person implements Serializable {
     private long age;
     private Document partnerDocument;
     private Set<Document> ownedDocuments = new HashSet<Document>();
+    private Set<Document> favoriteDocuments = new HashSet<Document>();
     private Map<Integer, String> localized = new HashMap<Integer, String>();
 
     public Person() {
@@ -86,6 +79,16 @@ public class Person implements Serializable {
 
     public void setOwnedDocuments(Set<Document> ownedDocuments) {
         this.ownedDocuments = ownedDocuments;
+    }
+
+    @OneToMany
+    @CollectionTable
+    public Set<Document> getFavoriteDocuments() {
+        return favoriteDocuments;
+    }
+
+    public void setFavoriteDocuments(Set<Document> favoriteDocuments) {
+        this.favoriteDocuments = favoriteDocuments;
     }
 
     @Basic(optional = false)

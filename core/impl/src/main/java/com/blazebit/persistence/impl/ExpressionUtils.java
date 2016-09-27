@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.logging.Logger;
 
 import javax.persistence.Basic;
 import javax.persistence.ElementCollection;
@@ -41,6 +40,7 @@ import javax.persistence.metamodel.SingularAttribute;
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.transform.AliasReplacementTransformer;
 
 /**
  *

@@ -38,7 +38,7 @@ public class HavingManager<T> extends PredicateManager<T> {
     }
 
     @Override
-    protected ClauseType getClauseType() {
+    public ClauseType getClauseType() {
         return ClauseType.HAVING;
     }
 

@@ -16,14 +16,7 @@
 package com.blazebit.persistence.impl;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.Tuple;
 import javax.persistence.metamodel.Metamodel;
@@ -48,6 +41,9 @@ import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
+import com.blazebit.persistence.impl.transform.SelectInfoTransformer;
 import com.blazebit.persistence.spi.JpaProvider;
 
 /**
@@ -87,6 +83,11 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
+    @Override
+    public ClauseType getClauseType() {
+        return ClauseType.SELECT;
+    }
+
     void verifyBuilderEnded() {
         if (subqueryBuilderListener != null) {
             subqueryBuilderListener.verifySubqueryBuilderEnded();
@@ -123,6 +124,19 @@ public class SelectManager<T> extends AbstractManager {
     	}
     	boolean containsComplexGroupBySelect = !gatheringVisitor.getExpressions().isEmpty();
     	return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
+    }
+
+    public Set<Expression>[] getGroupBySelectExpressions(boolean treatSizeAsAggregate) {
+        GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
+        Set<Expression> groupBySelects = new HashSet<Expression>();
+        for (SelectInfo selectInfo : selectInfos) {
+            if (!(selectInfo.getExpression() instanceof PathExpression)) {
+                selectInfo.getExpression().accept(gatheringVisitor);
+            } else {
+                groupBySelects.add(selectInfo.getExpression());
+            }
+        }
+        return new Set[] { groupBySelects, gatheringVisitor.getExpressions()};
     }
     
     public boolean containsSizeSelect() {
@@ -259,18 +273,19 @@ public class SelectManager<T> extends AbstractManager {
         }
     }
 
-    void applyTransformer(ExpressionTransformer transformer) {
+    @Override
+    public void applyTransformer(ExpressionTransformer transformer) {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
         // carry out transformations
         for (int i = 0; i < size; i++) {
             final SelectInfo selectInfo = infos.get(i);
-            Expression transformed = transformer.transform(selectInfo.getExpression(), ClauseType.SELECT, true);
+            Expression transformed = transformer.transform(new NodeInfoExpressionModifier(selectInfo), selectInfo.getExpression(), ClauseType.SELECT, true);
             selectInfo.setExpression(transformed);
         }
     }
 
-    void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
+    public void applySelectInfoTransformer(SelectInfoTransformer selectInfoTransformer) {
         List<SelectInfo> infos = selectInfos;
         int size = selectInfos.size();
         for (int i = 0; i < size; i++) {

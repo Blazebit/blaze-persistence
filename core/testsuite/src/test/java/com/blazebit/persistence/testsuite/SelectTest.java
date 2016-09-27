@@ -305,7 +305,7 @@ public class SelectTest extends AbstractCoreTest {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(Document.class, "d")
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE SIZE(d.contacts) END");
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "d.id", "KEY(contacts_1)") + " > 2 THEN 2 ELSE " + function("COUNT_TUPLE", "d.id", "KEY(contacts_1)") + " END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "KEY(contacts_1)") + " > 2 THEN 2 ELSE " + function("COUNT_TUPLE", "KEY(contacts_1)") + " END FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -316,7 +316,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN 2 ELSE 0 END")
                 .where("d.partners.name").like().expression("'%onny'").noEscape();
 
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN 2 ELSE 0 END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 WHERE partners_1.name LIKE '%onny' GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -366,7 +366,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("CASE WHEN SIZE(d.contacts) > 2 THEN SIZE(d.partners) ELSE SIZE(d.versions) END");
 
         // Then
-        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "d.id", "KEY(contacts_1)") + " > 2 THEN COUNT(DISTINCT partners_1) ELSE COUNT(DISTINCT versions_1) END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
+        String expected = "SELECT CASE WHEN " + function("COUNT_TUPLE", "'DISTINCT'", "KEY(contacts_1)") + " > 2 THEN " + function("COUNT_TUPLE", "'DISTINCT'", "partners_1") + " ELSE " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + " END FROM Document d LEFT JOIN d.contacts contacts_1 LEFT JOIN d.partners partners_1 LEFT JOIN d.versions versions_1 GROUP BY d.id";
         assertEquals(expected, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         assertEquals(3L, result.get(0).get(0));
@@ -379,7 +379,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("SIZE(d.contacts)")
                 .setProperty(ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, "false");
         
-        final String expected = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.contacts contacts WHERE document = d) FROM Document d";
+        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts person) FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -392,7 +392,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("d.age")
                 .setProperty(ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, "false");
         
-        final String expected = "SELECT (SELECT " + countStar() + " FROM Document document LEFT JOIN document.contacts contacts WHERE document = d), d.age FROM Document d";
+        final String expected = "SELECT (SELECT " + countStar() + " FROM d.contacts person), d.age FROM Document d";
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();
     }
@@ -404,7 +404,7 @@ public class SelectTest extends AbstractCoreTest {
                 .select("owner.name")
                 .orderByDesc("id");
 
-        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }
@@ -419,7 +419,7 @@ public class SelectTest extends AbstractCoreTest {
 
         String countQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String idQuery = "SELECT d.id FROM Document d GROUP BY d.id ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
-        String objectQuery = "SELECT COUNT(versions_1), owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+        String objectQuery = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", owner_1.name FROM Document d JOIN d.owner owner_1 LEFT JOIN d.versions versions_1 WHERE d.id IN :ids GROUP BY d.id, owner_1.name ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
 
         assertEquals(countQuery, cb.getPageCountQueryString());
         assertEquals(idQuery, cb.getPageIdQueryString());

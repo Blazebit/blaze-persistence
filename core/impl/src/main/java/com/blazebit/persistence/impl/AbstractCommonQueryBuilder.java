@@ -18,6 +18,7 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.transform.*;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -78,7 +79,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final ExpressionFactory expressionFactory;
 
     private final List<ExpressionTransformer> transformers;
-    private final SizeSelectInfoTransformer sizeSelectToCountTransformer;
+    private final List<ExpressionTransformerGroup> transformerGroups;
 
     // Mutable state
     protected Class<QueryResultType> resultType;
@@ -123,8 +124,8 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.aliasManager = builder.aliasManager;
         this.expressionFactory = builder.expressionFactory;
         this.transformers = builder.transformers;
+        this.transformerGroups = builder.transformerGroups;
         this.resultType = builder.resultType;
-        this.sizeSelectToCountTransformer = builder.sizeSelectToCountTransformer;
     }
     
     protected AbstractCommonQueryBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<QueryResultType> resultClazz, String alias, AliasManager aliasManager, JoinManager parentJoinManager, ExpressionFactory expressionFactory, FinalSetReturn finalSetOperationBuilder) {
@@ -182,9 +183,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         this.orderByManager = new OrderByManager(queryGenerator, parameterManager, this.aliasManager, jpaProvider);
         this.keysetManager = new KeysetManager(queryGenerator, parameterManager);
 
-        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, this.aliasManager, subqueryInitFactory, joinManager, groupByManager, dbmsDialect, jpaProvider);
-        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer(), new SizeExpressionTransformer(sizeTransformationVisitor, selectManager));
-        this.sizeSelectToCountTransformer = new SizeSelectInfoTransformer(sizeTransformationVisitor, orderByManager, selectManager);
+        final SizeTransformationVisitor sizeTransformationVisitor = new SizeTransformationVisitor(mainQuery, subqueryInitFactory, joinManager, groupByManager, dbmsDialect, jpaProvider);
+        this.transformers = Arrays.asList(new OuterFunctionTransformer(joinManager), new SubqueryRecursiveExpressionTransformer());
+        this.transformerGroups = Arrays.asList((ExpressionTransformerGroup) new SizeTransformerGroup(sizeTransformationVisitor, orderByManager, selectManager, joinManager, groupByManager));
         this.resultType = resultClazz;
         
         this.finalSetOperationBuilder = finalSetOperationBuilder;
@@ -1102,13 +1103,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         orderByManager.acceptVisitor(expressionVisitor);
     }
 
-    protected void applySizeSelectTransformer() {
-        if (selectManager.containsSizeSelect()) {
-            selectManager.applySelectInfoTransformer(sizeSelectToCountTransformer);
-        }
-    }
-
-    protected void applyExpressionTransformers() {
+    public void applyExpressionTransformers() {
         // run through expressions
         // for each arrayExpression, look up the alias in the joinManager's aliasMap
         // do the transformation using the alias
@@ -1143,7 +1138,16 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             orderByManager.applyTransformer(transformer);
         }
 
-        applySizeSelectTransformer();
+        for (ExpressionTransformerGroup transformerGroup : transformerGroups) {
+            transformerGroup.applyExpressionTransformer(joinManager);
+            transformerGroup.applyExpressionTransformer(selectManager);
+            transformerGroup.applyExpressionTransformer(whereManager);
+            transformerGroup.applyExpressionTransformer(groupByManager);
+            transformerGroup.applyExpressionTransformer(havingManager);
+            transformerGroup.applyExpressionTransformer(orderByManager);
+
+            transformerGroup.afterGlobalTransformation();
+        }
 
         // After all transformations are done, we can finally check if aggregations are used
         AggregateDetectionVisitor aggregateDetector = new AggregateDetectionVisitor();

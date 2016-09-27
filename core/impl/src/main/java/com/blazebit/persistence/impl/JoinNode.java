@@ -469,4 +469,13 @@ public class JoinNode implements Root {
     public Class<?> getType() {
         return propertyClass;
     }
+
+    public int getJoinDepth() {
+        int i = 0;
+        JoinNode joinNode = this;
+        while ((joinNode = joinNode.getParent()) != null) {
+            i++;
+        }
+        return i;
+    }
 }
