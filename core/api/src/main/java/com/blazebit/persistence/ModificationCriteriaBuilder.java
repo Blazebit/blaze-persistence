@@ -17,6 +17,7 @@ package com.blazebit.persistence;
 
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import java.util.Set;
 
 /**
@@ -44,4 +45,13 @@ public interface ModificationCriteriaBuilder<X extends ModificationCriteriaBuild
 
     // TODO: documentation
     public <T> ReturningResult<T> executeWithReturning(ReturningObjectBuilder<T> objectBuilder);
+
+    // TODO: documentation
+    public TypedQuery<ReturningResult<Tuple>> getWithReturningQuery(String... attributes);
+
+    // TODO: documentation
+    public <T> TypedQuery<ReturningResult<T>> getWithReturningQuery(String attribute, Class<T> type);
+
+    // TODO: documentation
+    public <T> TypedQuery<ReturningResult<T>> getWithReturningQuery(ReturningObjectBuilder<T> objectBuilder);
 }

@@ -38,6 +38,7 @@ import com.blazebit.persistence.impl.dialect.H2DbmsDialect;
 import com.blazebit.persistence.impl.dialect.MySQLDbmsDialect;
 import com.blazebit.persistence.impl.dialect.OracleDbmsDialect;
 import com.blazebit.persistence.impl.dialect.PostgreSQLDbmsDialect;
+import com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache;
 import com.blazebit.persistence.impl.function.cast.CastFunction;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
 import com.blazebit.persistence.impl.function.count.CountTupleEmulationFunction;
@@ -406,6 +407,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     private void loadDefaultProperties() {
         properties.put(ConfigurationProperties.COMPATIBLE_MODE, "false");
         properties.put(ConfigurationProperties.RETURNING_CLAUSE_CASE_SENSITIVE, "true");
+        properties.put(ConfigurationProperties.EXPRESSION_CACHE_CLASS, ConcurrentHashMapExpressionCache.class.getName());
     }
 
     private void loadQueryTransformers() {

@@ -30,6 +30,7 @@ import com.blazebit.reflection.PropertyPathExpression;
 
 /**
  *
+ * @author Christian Beikov
  * @author Moritz Becker
  * @since 1.0
  */
@@ -47,6 +48,16 @@ public class ParameterManager {
 
     public VisitorAdapter getParameterRegistrationVisitor() {
         return parameterRegistrationVisitor;
+    }
+
+    void expandParameterLists(Query q) {
+        expandParameterLists(q, Collections.EMPTY_SET);
+    }
+
+    void expandParameterLists(Query q, Set<String> skippedParameters) {
+        // TODO: This is needed to expand parameter lists in the query so that the SQL is correct
+        // NOTE: This means that different parameter list sizes are not supported
+        parameterizeQuery(q, skippedParameters);
     }
 
     void parameterizeQuery(Query q) {
@@ -72,7 +83,12 @@ public class ParameterManager {
                 continue;
             }
 
-            parameter.bind(q);
+            // If a query requests the values parameter directly, it is aware of handling it
+            if (parameter.getParamerterValue() instanceof ValuesParameterWrapper) {
+                q.setParameter(parameterName, parameter.getValue());
+            } else {
+                parameter.bind(q);
+            }
         }
 
         for (String parameterName : requestedValueParameters) {
@@ -93,6 +109,21 @@ public class ParameterManager {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Set<? extends Parameter<?>> getParameters() {
         return new HashSet<Parameter<?>>(parameters.values());
+    }
+
+    public Map<String, String> getValuesParameters() {
+        return Collections.unmodifiableMap(valuesParameters);
+    }
+
+    public Map<String, ValuesParameterBinder> getValuesBinders() {
+        Map<String, ValuesParameterBinder> binders = new HashMap<String, ValuesParameterBinder>();
+        for (Map.Entry<String, ParameterImpl<?>> entry : parameters.entrySet()) {
+            ParamerterValue value = entry.getValue().getParamerterValue();
+            if (value instanceof ValuesParameterWrapper) {
+                binders.put(entry.getKey(), ((ValuesParameterWrapper) value).getBinder());
+            }
+        }
+        return binders;
     }
 
     public boolean containsParameter(String parameterName) {
@@ -254,6 +285,13 @@ public class ParameterManager {
             this.parameterType = parameterType;
         }
 
+        public ParamerterValue getParamerterValue() {
+            if (value instanceof ParamerterValue) {
+                return (ParamerterValue) value;
+            }
+            return null;
+        }
+
         public T getValue() {
             if (value instanceof ParamerterValue) {
                 return (T) ((ParamerterValue) value).getValue();
@@ -384,14 +422,16 @@ public class ParameterManager {
     static final class ValuesParameterWrapper implements ParamerterValue {
 
         private final Class<?> type;
-        private final String[][] parameterNames;
-        private final ValueRetriever<Object, Object>[] pathExpressions;
+        private final ValuesParameterBinder binder;
         private Collection<Object> value;
 
         public ValuesParameterWrapper(Class<?> type, String[][] parameterNames, ValueRetriever<Object, Object>[] pathExpressions) {
             this.type = type;
-            this.parameterNames = parameterNames;
-            this.pathExpressions = pathExpressions;
+            this.binder = new ValuesParameterBinder(parameterNames, pathExpressions);
+        }
+
+        public ValuesParameterBinder getBinder() {
+            return binder;
         }
 
         @Override
@@ -413,8 +453,12 @@ public class ParameterManager {
                 throw new IllegalArgumentException("Value for VALUES parameter must be a collection! Unsupported type: " + value.getClass());
             }
 
+            Collection<Object> collection = (Collection<Object>) value;
+            if (collection.size() > binder.size()) {
+                throw new IllegalArgumentException("The size of the collection must be lower or equal to the specified size for the VALUES clause.");
+            }
             // NOTE: be careful when changing this, there might be code that depends on this not being copied for performance
-            this.value = (Collection<Object>) value;
+            this.value = collection;
             return this;
         }
 
@@ -424,19 +468,7 @@ public class ParameterManager {
                 throw new IllegalArgumentException("No values are bound for parameter with name: " + name);
             }
 
-            Iterator<Object> iterator = value.iterator();
-            for (int i = 0; i < parameterNames.length; i++) {
-                if (iterator.hasNext()) {
-                    Object element = iterator.next();
-                    for (int j = 0; j < parameterNames[i].length; j++) {
-                        query.setParameter(parameterNames[i][j], pathExpressions[j].getValue(element));
-                    }
-                } else {
-                    for (int j = 0; j < parameterNames[i].length; j++) {
-                        query.setParameter(parameterNames[i][j], null);
-                    }
-                }
-            }
+            binder.bind(query, value);
         }
     }
 }

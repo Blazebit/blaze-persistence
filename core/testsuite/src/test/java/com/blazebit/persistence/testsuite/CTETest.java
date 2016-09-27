@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.List;
 
 import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
 
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
@@ -219,6 +220,78 @@ public class CTETest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals(3, resultList.getTotalSize());
         assertEquals("child1_2", resultList.get(0).getName());
+
+        pcb = cb.page(0, 2);
+        resultList = pcb.getResultList();
+        assertEquals(2, resultList.size());
+        assertEquals(3, resultList.getTotalSize());
+        assertEquals("root1", resultList.get(0).getName());
+        assertEquals("child1_1", resultList.get(1).getName());
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
+    public void testRecursiveCTEPaginationIdQuery() {
+        CriteriaBuilder<TestCTE> cb = cbf.create(em, TestCTE.class);
+        cb.withRecursive(TestCTE.class)
+        .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("0")
+            .where("e.parent").isNull()
+        .unionAll()
+            .from(TestCTE.class, "t")
+            .from(RecursiveEntity.class, "e")
+            .bind("id").select("e.id")
+            .bind("name").select("e.name")
+            .bind("level").select("t.level + 1")
+            .where("t.id").eqExpression("e.parent.id")
+        .end();
+        cb.from(RecursiveEntity.class, "r")
+            .select("r.id")
+            .select("r.children.id")
+            .where("r.id").in()
+                .from(TestCTE.class, "t")
+                .select("t.id")
+                .where("t.level").ltExpression("2")
+            .end()
+            .orderByAsc("r.id");
+
+        PaginatedCriteriaBuilder<TestCTE> pcb = cb.page(0, 2);
+
+        String expectedCountQuery = ""
+                + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT " + countPaginated("r.id", false) + " FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2)";
+
+        String expectedIdQuery = ""
+                + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT r.id FROM RecursiveEntity r WHERE r.id IN (SELECT t.id FROM TestCTE t WHERE t.level < 2) GROUP BY r.id ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+
+        String expectedObjectQuery = ""
+                + "WITH RECURSIVE TestCTE(id, name, level) AS(\n"
+                + "SELECT e.id, e.name, 0 FROM RecursiveEntity e WHERE e.parent IS NULL"
+                + "\nUNION ALL\n"
+                + "SELECT e.id, e.name, t.level + 1 FROM TestCTE t, RecursiveEntity e WHERE t.id = e.parent.id"
+                + "\n)\n"
+                + "SELECT r.id, children_1.id FROM RecursiveEntity r LEFT JOIN r.children children_1 WHERE r.id IN :ids ORDER BY " + renderNullPrecedence("r.id", "ASC", "LAST");
+
+        assertEquals(expectedCountQuery, pcb.getPageCountQueryString());
+        assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
+        assertEquals(expectedObjectQuery, pcb.getQueryString());
+
+        PagedList<TestCTE> resultList = pcb.getResultList();
+        assertEquals(2, resultList.size());
+        assertEquals(3, resultList.getTotalSize());
+        assertEquals("root1", resultList.get(0).getName());
+        assertEquals("child1_1", resultList.get(1).getName());
     }
     
     // NOTE: Apparently H2 can't handle multiple CTEs

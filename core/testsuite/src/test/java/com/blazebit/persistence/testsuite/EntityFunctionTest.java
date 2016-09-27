@@ -27,6 +27,7 @@ import org.junit.experimental.categories.Category;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,6 +82,31 @@ public class EntityFunctionTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("doc1", resultList.get(0).get(0));
         assertEquals(1L, resultList.get(0).get(1));
+    }
+
+    @Test
+    @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testValuesEntityFunctionParameters() {
+        CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class);
+        cb.fromValues(Long.class, "allowedAge", Arrays.asList(1L, 2L));
+        cb.from(Document.class, "doc");
+        cb.where("doc.age").eqExpression("allowedAge.value");
+        cb.select("doc.name");
+        cb.select("allowedAge.value");
+
+        TypedQuery<Tuple> query = cb.getQuery();
+        assertEquals(1, query.getParameters().size());
+        assertEquals(Collection.class, query.getParameter("allowedAge").getParameterType());
+        assertEquals(Arrays.asList(1L, 2L), query.getParameterValue("allowedAge"));
+
+        List<Tuple> resultList = query.getResultList();
+        assertEquals(1, resultList.size());
+        assertEquals("doc1", resultList.get(0).get(0));
+        assertEquals(1L, resultList.get(0).get(1));
+
+        query.setParameter("allowedAge", Arrays.asList(3L));
+        resultList = query.getResultList();
+        assertEquals(0, resultList.size());
     }
 
     @Test

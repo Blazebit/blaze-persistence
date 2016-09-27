@@ -88,6 +88,13 @@ public final class ConfigurationProperties {
      * @since 1.1.0
      */
     public static final String EXPRESSION_OPTIMIZATION = "com.blazebit.persistence.expression_optimization";
+
+    /**
+     * The full qualified expression cache implementation class name.
+     *
+     * @since 1.2.0
+     */
+    public static final String EXPRESSION_CACHE_CLASS = "com.blazebit.persistence.expression.cache_class";
     
     private ConfigurationProperties() {
     }

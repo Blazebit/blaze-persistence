@@ -135,7 +135,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
-        parameterManager.parameterizeQuery(baseQuery);
+        parameterManager.expandParameterLists(baseQuery);
         List<Query> participatingQueries = new ArrayList<Query>();
 
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
@@ -145,12 +145,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         String finalQuery = sqlSb.toString();
 
-        for (Query q : participatingQueries) {
-            parameterManager.parameterizeQuery(q);
-        }
-
         participatingQueries.add(baseQuery);
-        TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
+                participatingQueries,
+                baseQuery,
+                (CommonQueryBuilder<?>) this,
+                cbf.getExtendedQuerySupport(),
+                finalQuery,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
+        parameterManager.parameterizeQuery(countQuery);
         return countQuery;
     }
 
@@ -326,7 +331,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             parameterManager.parameterizeQuery(query);
         } else {
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
-            parameterManager.parameterizeQuery(baseQuery);
+            parameterManager.expandParameterLists(baseQuery);
 
             List<Query> participatingQueries = new ArrayList<Query>();
 
@@ -337,12 +342,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
             String finalQuery = sqlSb.toString();
 
-            for (Query q : participatingQueries) {
-                parameterManager.parameterizeQuery(q);
-            }
-
             participatingQueries.add(baseQuery);
-            query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+            query = new CustomSQLTypedQuery<T>(
+                    participatingQueries,
+                    baseQuery,
+                    (CommonQueryBuilder<?>) this,
+                    cbf.getExtendedQuerySupport(),
+                    finalQuery,
+                    parameterManager.getValuesParameters(),
+                    parameterManager.getValuesBinders()
+            );
+            parameterManager.parameterizeQuery(query);
         }
 
         KeysetExtractionObjectBuilder<T> objectBuilder = null;
@@ -378,7 +388,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
-        parameterManager.parameterizeQuery(baseQuery);
+        parameterManager.expandParameterLists(baseQuery);
 
         List<Query> participatingQueries = new ArrayList<Query>();
 
@@ -389,12 +399,17 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         String finalQuery = sqlSb.toString();
 
-        for (Query q : participatingQueries) {
-            parameterManager.parameterizeQuery(q);
-        }
-
         participatingQueries.add(baseQuery);
-        TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
+                participatingQueries,
+                baseQuery,
+                (CommonQueryBuilder<?>) this,
+                cbf.getExtendedQuerySupport(),
+                finalQuery,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
+        parameterManager.parameterizeQuery(idQuery);
         return idQuery;
     }
 
@@ -411,7 +426,8 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-        parameterManager.parameterizeQuery(baseQuery, Collections.singleton(idParamName));
+        // TODO: shouldn't we expand the id param too?
+        parameterManager.expandParameterLists(baseQuery, Collections.singleton(idParamName));
         List<Query> participatingQueries = new ArrayList<Query>();
 
         String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
@@ -421,12 +437,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
 
         String finalQuery = sqlSb.toString();
 
-        for (Query q : participatingQueries) {
-            parameterManager.parameterizeQuery(q, Collections.singleton(idParamName));
-        }
-
         participatingQueries.add(baseQuery);
-        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(
+                participatingQueries,
+                baseQuery,
+                (CommonQueryBuilder<?>) this,
+                cbf.getExtendedQuerySupport(),
+                finalQuery,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
+
+        parameterManager.parameterizeQuery(query, Collections.singleton(idParamName));
+
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }

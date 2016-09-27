@@ -70,7 +70,7 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.treatFunctions = resolveTreatTypes(config.getTreatTypes());
 
         ExpressionFactory originalExpressionFactory = new ExpressionFactoryImpl(aggregateFunctions, !compatibleMode, optimize);
-        this.expressionCache = new ConcurrentHashMapExpressionCache();
+        this.expressionCache = createCache(config.getProperty(ConfigurationProperties.EXPRESSION_CACHE_CLASS));
         ExpressionFactory cachingExpressionFactory = new SimpleCachingExpressionFactory(originalExpressionFactory, expressionCache);
         ExpressionFactory cachingSubqueryExpressionFactory = new SimpleCachingExpressionFactory(new SubqueryExpressionFactory(aggregateFunctions, !compatibleMode, optimize, originalExpressionFactory));
         this.macroConfiguration = MacroConfiguration.of(JpqlMacroAdapter.createMacros(config.getMacros(), cachingExpressionFactory));
@@ -101,6 +101,14 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
         this.configuredDbmsDialect = dialect;
         this.configuredRegisteredFunctions = registeredFunctions;
         this.configuredJpaProviderFactory = integrator.getJpaProviderFactory(emf);
+    }
+
+    private ExpressionCache createCache(String className) {
+        try {
+            return (ExpressionCache) Class.forName(className).newInstance();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Could not instantiate expression cache: " + className, ex);
+        }
     }
 
     private static Set<String> resolveAggregateFunctions(Map<String, JpqlFunctionGroup> functions) {

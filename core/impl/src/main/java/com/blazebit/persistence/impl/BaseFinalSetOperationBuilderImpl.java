@@ -246,7 +246,15 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         String finalQuery = sqlSb.toString();
         // Unfortunately we need this little adapter here
         @SuppressWarnings("rawtypes")
-        TypedQuery<T> query = new CustomSQLTypedQuery<T>(participatingQueries, baseQuery, new CommonQueryBuilderAdapter(this), cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<T> query = new CustomSQLTypedQuery<T>(
+                participatingQueries,
+                baseQuery,
+                new CommonQueryBuilderAdapter(this),
+                cbf.getExtendedQuerySupport(),
+                finalQuery,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
 
         // TODO: needs tests
         if (selectManager.getSelectObjectBuilder() != null) {

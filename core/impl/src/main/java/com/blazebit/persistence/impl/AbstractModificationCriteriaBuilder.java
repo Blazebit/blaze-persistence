@@ -26,6 +26,7 @@ import java.util.TreeSet;
 
 import javax.persistence.Query;
 import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
@@ -39,7 +40,6 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
@@ -154,6 +154,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             List<Query> participatingQueries = new ArrayList<Query>();
             
             query = em.createQuery(getBaseQueryStringWithCheck());
+            parameterManager.expandParameterLists(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
             boolean isEmbedded = this instanceof ReturningBuilder;
@@ -165,30 +166,30 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             String finalSql = sqlSb.toString();
             participatingQueries.add(query);
 
-            for (Query q : participatingQueries) {
-                parameterManager.parameterizeQuery(q);
-            }
-
             // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
             boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
             if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
                 query = getCountExampleQuery();
             }
             
-            query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, addedCtes);
-            query.setFirstResult(firstResult);
-            query.setMaxResults(maxResults);
+            query = new CustomSQLQuery(
+                    participatingQueries,
+                    query,
+                    (CommonQueryBuilder<?>) this,
+                    cbf.getExtendedQuerySupport(),
+                    finalSql,
+                    parameterManager.getValuesParameters(),
+                    parameterManager.getValuesBinders(),
+                    addedCtes
+            );
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
-            parameterManager.parameterizeQuery(query);
         }
 
-        return query;
-	}
-	
-	protected Query getBaseQuery() {
-	    Query query = em.createQuery(getBaseQueryStringWithCheck());
         parameterManager.parameterizeQuery(query);
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
+
         return query;
 	}
 
@@ -255,7 +256,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return tableNameRemappings;
     }
 
-	public ReturningResult<Tuple> executeWithReturning(String... attributes) {
+    public ReturningResult<Tuple> executeWithReturning(String... attributes) {
+        return getWithReturningQuery(attributes).getSingleResult();
+    }
+
+	public TypedQuery<ReturningResult<Tuple>> getWithReturningQuery(String... attributes) {
 	    if (attributes == null) {
 	        throw new NullPointerException("attributes");
 	    }
@@ -263,18 +268,19 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	        throw new IllegalArgumentException("Invalid empty attributes");
 	    }
 
-	    List<List<Attribute<?, ?>>> attributeList = getAndCheckAttributes(attributes);
-        Query exampleQuery = getExampleQuery(attributeList);
-        Query baseQuery = getBaseQuery();
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        List<List<Attribute<?, ?>>> attributeList = getAndCheckAttributes(attributes);
+        TypedQuery<Object[]> exampleQuery = getExampleQuery(attributeList);
         String[] returningColumns = getReturningColumns(attributeList);
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
-        final List<Object[]> originalResultList = result.getResultList();
-        final int updateCount = result.getUpdateCount();
-        return new DefaultReturningResult<Tuple>(originalResultList, updateCount, dbmsDialect, new ReturningTupleObjectBuilder());
+        return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, new ReturningTupleObjectBuilder());
 	}
 
-    @SuppressWarnings("unchecked")
     public <Z> ReturningResult<Z> executeWithReturning(String attribute, Class<Z> type) {
+        return getWithReturningQuery(attribute, type).getSingleResult();
+    }
+
+    @SuppressWarnings("unchecked")
+    public <Z> TypedQuery<ReturningResult<Z>> getWithReturningQuery(String attribute, Class<Z> type) {
         if (attribute == null) {
             throw new NullPointerException("attribute");
         }
@@ -293,37 +299,33 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         List<List<Attribute<?, ?>>> attributes = new ArrayList<List<Attribute<?, ?>>>();
         attributes.add(attrPath.getAttributes());
-        
-        Query exampleQuery = getExampleQuery(attributes);
-        Query baseQuery = getBaseQuery();
+
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
-        final List<Object[]> originalResultList = result.getResultList();
-        final int updateCount = result.getUpdateCount();
-        
-        // The single element case will not return object arrays
-        return new DefaultReturningResult<Z>((List<Z>) originalResultList, updateCount, dbmsDialect);
+        return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, null);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
     public <Z> ReturningResult<Z> executeWithReturning(ReturningObjectBuilder<Z> objectBuilder) {
+        return getWithReturningQuery(objectBuilder).getSingleResult();
+    }
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+    public <Z> TypedQuery<ReturningResult<Z>> getWithReturningQuery(ReturningObjectBuilder<Z> objectBuilder) {
 	    // TODO: this is not really nice, we should abstract that somehow
 	    objectBuilder.applyReturning((ReturningBuilder) this);
 	    List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
 	    returningAttributeBindingMap.clear();
-	    
-        Query exampleQuery = getExampleQuery(attributes);
-        Query baseQuery = getBaseQuery();
+
+        Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
+        TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
-        final ReturningResult<Object[]> result = executeWithReturning(exampleQuery, baseQuery, returningColumns);
-        final List<Object[]> originalResultList = result.getResultList();
-        final int updateCount = result.getUpdateCount();
-        return new DefaultReturningResult<Z>(originalResultList, updateCount, dbmsDialect, objectBuilder);
+        return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, objectBuilder);
 	}
 	
-	private ReturningResult<Object[]> executeWithReturning(Query exampleQuery, Query baseQuery, String[] returningColumns) {
+	private <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
         List<Query> participatingQueries = new ArrayList<Query>();
-        
+
         StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, baseQuery));
         StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
         applyExtendedSql(sqlSb, false, false, withClause, returningColumns, null);
@@ -332,11 +334,22 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         baseQuery.setFirstResult(firstResult);
         baseQuery.setMaxResults(maxResults);
-        
-        // TODO: hibernate will return the object directly for single attribute case instead of an object array
-        final ReturningResult<Object[]> result = cbf.getExtendedQuerySupport().executeReturning((CommonQueryBuilder<?>) this, participatingQueries, exampleQuery, finalSql);
-        return result;
-	}
+
+        CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
+                participatingQueries,
+                exampleQuery,
+                (CommonQueryBuilder<?>) this,
+                cbf.getExtendedQuerySupport(),
+                finalSql,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders(),
+                dbmsDialect,
+                objectBuilder
+        );
+
+        parameterManager.parameterizeQuery(query);
+        return query;
+    }
 	
     private List<List<Attribute<?, ?>>> getAndCheckReturningAttributes() {
         validateReturningAttributes();
@@ -488,7 +501,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return em.createQuery(exampleQueryString);
     }
     
-    private Query getExampleQuery(List<List<Attribute<?, ?>>> attributes) {
+    private TypedQuery<Object[]> getExampleQuery(List<List<Attribute<?, ?>>> attributes) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         
@@ -525,54 +538,11 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         sb.append(entityType.getName());
         
         String exampleQueryString = sb.toString();
-        return em.createQuery(exampleQueryString);
+        return em.createQuery(exampleQueryString, Object[].class);
     }
     
     protected List<String> prepareAndGetAttributes() {
         return new ArrayList<String>(returningAttributeBindingMap.keySet());
     }
-    
-    protected static class DefaultReturningResult<Z> implements ReturningResult<Z> {
-        private final List<Z> resultList;
-        private final int updateCount;
-        private final DbmsDialect dbmsDialect;
-        
-        public DefaultReturningResult(List<Z> resultList, int updateCount, DbmsDialect dbmsDialect) {
-            this.resultList = resultList;
-            this.updateCount = updateCount;
-            this.dbmsDialect = dbmsDialect;
-        }
 
-        public DefaultReturningResult(List<Object[]> originalResultList, int updateCount, DbmsDialect dbmsDialect, ReturningObjectBuilder<Z> objectBuilder) {
-            this.updateCount = updateCount;
-            this.dbmsDialect = dbmsDialect;
-            final List<Z> resultList = new ArrayList<Z>(originalResultList.size());
-            
-            for (Object[] element : originalResultList) {
-                resultList.add(objectBuilder.build(element));
-            }
-            
-            this.resultList = objectBuilder.buildList(resultList);
-        }
-
-        @Override
-        public Z getLastResult() {
-            return resultList.get(resultList.size() - 1);
-        }
-
-        @Override
-        public List<Z> getResultList() {
-            if (dbmsDialect.supportsReturningAllGeneratedKeys()) {
-                return resultList;
-            }
-            
-            throw new UnsupportedOperationException("The database does not support returning all generated keys!");
-        }
-
-        @Override
-        public int getUpdateCount() {
-            return updateCount;
-        }
-    }
-    
 }

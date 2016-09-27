@@ -35,7 +35,6 @@ import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
- * @param <T> The query result type
  * @param <Y> The criteria builder returned after the cte builder
  * @param <X> The concrete builder type
  * @param <Z> The builder type that should be returned on set operations
@@ -80,13 +79,23 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         if (hasLimit()) {
             // We need to change the underlying sql when doing a limit
             query = em.createQuery(getBaseQueryStringWithCheck());
+            parameterManager.expandParameterLists(query);
             List<Query> participatingQueries = Arrays.asList(query);
             
             StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
             applyExtendedSql(sqlSb, false, true, null, null, null);
             String finalSql = sqlSb.toString();
             
-            query = new CustomSQLQuery(participatingQueries, query, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalSql, null);
+            query = new CustomSQLQuery(
+                    participatingQueries,
+                    query,
+                    (CommonQueryBuilder<?>) this,
+                    cbf.getExtendedQuerySupport(),
+                    finalSql,
+                    parameterManager.getValuesParameters(),
+                    parameterManager.getValuesBinders(),
+                    null
+            );
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
         }

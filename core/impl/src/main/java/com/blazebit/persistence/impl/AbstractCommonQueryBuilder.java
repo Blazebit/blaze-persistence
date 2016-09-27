@@ -1173,7 +1173,9 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         // We can only use the query directly if we have no ctes, entity functions or hibernate bugs
         Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
         if (!isMainQuery || (!mainQuery.cteManager.hasCtes() && !joinManager.hasEntityFunctions() && keyRestrictedLeftJoins.isEmpty())) {
-            return getTypedQuery(getBaseQueryStringWithCheck());
+            TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
+            parameterManager.parameterizeQuery(baseQuery);
+            return baseQuery;
         }
 
         TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
@@ -1186,17 +1188,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         String finalQuery = sqlSb.toString();
 
-        for (Query q : participatingQueries) {
-            parameterManager.parameterizeQuery(q);
-        }
-
         participatingQueries.add(baseQuery);
-        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(participatingQueries, baseQuery, (CommonQueryBuilder<?>) this, cbf.getExtendedQuerySupport(), finalQuery);
+        TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(
+                participatingQueries,
+                baseQuery,
+                (CommonQueryBuilder<?>) this,
+                cbf.getExtendedQuerySupport(),
+                finalQuery,
+                parameterManager.getValuesParameters(),
+                parameterManager.getValuesBinders()
+        );
         
         // TODO: needs tests
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
         }
+
+        parameterManager.parameterizeQuery(query);
         
         return query;
     }
@@ -1222,7 +1230,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             query = transformQuery(query);
         }
 
-        parameterManager.parameterizeQuery(query);
+        parameterManager.expandParameterLists(query);
         return query;
     }
 
