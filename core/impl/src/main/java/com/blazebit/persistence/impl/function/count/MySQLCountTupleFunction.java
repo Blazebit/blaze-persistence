@@ -23,7 +23,7 @@ public class MySQLCountTupleFunction extends AbstractCountFunction {
 
         int argumentStartIndex = count.getArgumentStartIndex();
 
-        if (context.getArgumentsSize() > 1) {
+        if (count.getCountArgumentSize() > 1) {
             if (count.isDistinct()) {
                 context.addArgument(argumentStartIndex);
                 for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {

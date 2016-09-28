@@ -28,7 +28,7 @@ public class CountTupleFunction extends AbstractCountFunction {
 
         int argumentStartIndex = count.getArgumentStartIndex();
 
-        if (context.getArgumentsSize() > 1) {
+        if (count.getCountArgumentSize() > 1) {
             context.addChunk("(");
             context.addArgument(argumentStartIndex);
             for (int i = argumentStartIndex + 1; i < context.getArgumentsSize(); i++) {
