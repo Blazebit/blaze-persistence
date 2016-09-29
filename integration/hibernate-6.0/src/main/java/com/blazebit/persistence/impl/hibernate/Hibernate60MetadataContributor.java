@@ -19,6 +19,11 @@ public class Hibernate60MetadataContributor implements MetadataContributor {
 
     @Override
     public void contribute(InFlightMetadataCollector metadataCollector, IndexView jandexIndex) {
+        // Skip if already registered
+        if (metadataCollector.getEntityBinding("com.blazebit.persistence.impl.function.entity.ValuesEntity") != null) {
+            return;
+        }
+
         MetadataBuildingOptions options = metadataCollector.getMetadataBuildingOptions();
         final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 

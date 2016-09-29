@@ -41,9 +41,10 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator {
 
 	@Override
 	public void integrate(Configuration configuration, SessionFactoryImplementor sessionFactory, SessionFactoryServiceRegistry serviceRegistry) {
+		Class<?> valuesEntity;
+		boolean registerValuesEntity = true;
 		try {
-			configuration.addAnnotatedClass(Class.forName("com.blazebit.persistence.impl.function.entity.ValuesEntity"));
-			configuration.buildMappings();
+			valuesEntity = Class.forName("com.blazebit.persistence.impl.function.entity.ValuesEntity");
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException("Are you missing blaze-persistence-core-impl on the classpath?", e);
 		}
@@ -52,11 +53,20 @@ public class Hibernate4Integrator implements ServiceContributingIntegrator {
 		while (iter.hasNext()) {
 			PersistentClass clazz = iter.next();
 			Class<?> entityClass = clazz.getMappedClass();
+			if (valuesEntity.equals(entityClass)) {
+				registerValuesEntity = false;
+			}
 			
 			if (entityClass.isAnnotationPresent(CTE.class)) {
 				clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
 				// TODO: check that no collections are mapped
 			}
+		}
+
+		if (registerValuesEntity) {
+			// Register values entity if wasn't found
+			configuration.addAnnotatedClass(valuesEntity);
+			configuration.buildMappings();
 		}
 
 		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
