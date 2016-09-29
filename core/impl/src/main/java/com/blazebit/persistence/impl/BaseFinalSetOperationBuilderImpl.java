@@ -254,11 +254,6 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
         return query;
     }
     
-    protected Map<String, String> applyExtendedSql(StringBuilder sqlSb, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
-        // No limit/offset here because we need to handle that differently 
-        return dbmsDialect.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, null, null, returningColumns, includedModificationStates);
-    }
-
     protected String getOperator(SetOperationType type) {
         switch (type) {
             case UNION: return "UNION";

@@ -128,7 +128,7 @@ public class CustomQuerySpecification<T> implements QuerySpecification<T> {
     }
 
     protected StringBuilder applyCtes(StringBuilder sqlSb, Query baseQuery, List<Query> participatingQueries) {
-        if (!shouldRenderCtes) {
+        if (!shouldRenderCtes || (ctes.isEmpty() && statementType != DbmsStatementType.DELETE)) {
             return null;
         }
         // EntityAlias -> CteName
