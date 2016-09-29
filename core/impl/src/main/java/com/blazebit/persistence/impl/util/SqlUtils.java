@@ -16,6 +16,24 @@ public class SqlUtils {
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE);
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR);
 
+    public static int countSelectItems(CharSequence sql) {
+        int count = 1;
+        int parenthesis = 0;
+        for (int i = 0; i < sql.length(); i++) {
+            final char c = sql.charAt(i);
+
+            if (c == '(') {
+                parenthesis++;
+            } else if (c == ')') {
+                parenthesis--;
+            } else if (parenthesis == 0 && c == ',') {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
     public static String[] getSelectItemAliases(CharSequence sql, int start) {
         int selectIndex = SELECT_FINDER.indexIn(sql, start);
         int fromIndex = FROM_FINDER.indexIn(sql, selectIndex);

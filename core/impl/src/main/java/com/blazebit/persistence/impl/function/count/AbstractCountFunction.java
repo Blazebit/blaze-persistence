@@ -1,5 +1,6 @@
 package com.blazebit.persistence.impl.function.count;
 
+import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
 import com.blazebit.persistence.spi.TemplateRenderer;
@@ -39,7 +40,6 @@ public abstract class AbstractCountFunction implements JpqlFunction {
 
         boolean distinct = false;
         int startIndex = 0;
-        int argsSize = context.getArgumentsSize();
         String maybeDistinct = context.getArgument(0);
 
         if (("'" + DISTINCT_QUALIFIER + "'").equalsIgnoreCase(maybeDistinct)) {
@@ -47,11 +47,17 @@ public abstract class AbstractCountFunction implements JpqlFunction {
             startIndex++;
         }
 
+        // Hibernate puts the columns for embeddables into a single string, so we have to count items
+        int argsSize = 0;
+        for (int i = startIndex; i < context.getArgumentsSize(); i++) {
+            argsSize += SqlUtils.countSelectItems(context.getArgument(i));
+        }
+
         if (startIndex >= argsSize) {
             throw new RuntimeException("The " + AbstractCountFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
         }
 
-        return new Count(distinct, startIndex, argsSize - startIndex);
+        return new Count(distinct, startIndex, argsSize);
     }
 
     protected static final class Count {
