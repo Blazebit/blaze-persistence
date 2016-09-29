@@ -1,40 +1,34 @@
 package com.blazebit.persistence.impl;
 
+import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+
+import javax.persistence.*;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.persistence.*;
-
-import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.spi.CteQueryWrapper;
-import com.blazebit.persistence.spi.ExtendedQuerySupport;
-
-public class CustomSQLTypedQuery<X> extends AbstractCustomQuery implements TypedQuery<X> {
+public class CustomSQLTypedQuery<X> extends AbstractCustomQuery<X> implements TypedQuery<X> {
 
 	private final TypedQuery<X> delegate;
 
-	public CustomSQLTypedQuery(List<Query> participatingQueries, TypedQuery<X> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-		super(participatingQueries, cqb, extendedQuerySupport, sql, valuesParameters, valuesBinders);
+	public CustomSQLTypedQuery(QuerySpecification querySpecification, TypedQuery<X> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+		super(querySpecification, cqb, extendedQuerySupport, valuesParameters, valuesBinders);
 		this.delegate = delegate;
 	}
 
     @Override
     @SuppressWarnings("unchecked")
 	public List<X> getResultList() {
-		delegate.setFirstResult(firstResult);
-		delegate.setMaxResults(maxResults);
-		return (List<X>) extendedQuerySupport.getResultList(cqb, participatingQueries, delegate, sql);
+    	return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
 	}
 
 	@Override
     @SuppressWarnings("unchecked")
 	public X getSingleResult() {
-		delegate.setFirstResult(firstResult);
-		delegate.setMaxResults(maxResults);
-		return (X) extendedQuerySupport.getSingleResult(cqb, participatingQueries, delegate, sql);
+		return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
 	}
 
 	@Override
@@ -78,7 +72,8 @@ public class CustomSQLTypedQuery<X> extends AbstractCustomQuery implements Typed
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		if (participatingQueries.size() > 1) {
+		// TODO: This unperformant, I think we should introduce a hasParticiaptingQueries in QuerySpecification
+		if (querySpecification.getParticipatingQueries().size() > 1) {
 			throw new PersistenceException("Unsupported unwrap: " + cls.getName());
 		}
 		return delegate.unwrap(cls);

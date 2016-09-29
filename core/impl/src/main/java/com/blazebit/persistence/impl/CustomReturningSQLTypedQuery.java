@@ -3,47 +3,37 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.ReturningResult;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.*;
 import java.util.*;
 
-public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery implements TypedQuery<ReturningResult<T>> {
+public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery<ReturningResult<T>> implements TypedQuery<ReturningResult<T>> {
 
 	private final TypedQuery<?> delegate;
-	private final DbmsDialect dbmsDialect;
-	private final ReturningObjectBuilder<T> objectBuilder;
 
-	public CustomReturningSQLTypedQuery(List<Query> participatingQueries, TypedQuery<?> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders, DbmsDialect dbmsDialect, ReturningObjectBuilder<T> objectBuilder) {
-		super(participatingQueries, cqb, extendedQuerySupport, sql, valuesParameters, valuesBinders);
+	public CustomReturningSQLTypedQuery(QuerySpecification<ReturningResult<T>> querySpecification, TypedQuery<?> delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+		super(querySpecification, cqb, extendedQuerySupport, valuesParameters, valuesBinders);
 		this.delegate = delegate;
-		this.dbmsDialect = dbmsDialect;
-		this.objectBuilder = objectBuilder;
 	}
 
     @Override
     @SuppressWarnings("unchecked")
 	public List<ReturningResult<T>> getResultList() {
-		return Arrays.asList(getSingleResult());
+		return querySpecification.createSelectPlan(firstResult, maxResults).getResultList();
 	}
 
 	@Override
     @SuppressWarnings("unchecked")
 	public ReturningResult<T> getSingleResult() {
-		delegate.setFirstResult(firstResult);
-		delegate.setMaxResults(maxResults);
-		// TODO: hibernate will return the object directly for single attribute case instead of an object array
-		ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(cqb, participatingQueries, delegate, sql);
-		final List<Object[]> originalResultList = result.getResultList();
-		final int updateCount = result.getUpdateCount();
-		return new DefaultReturningResult<T>(originalResultList, updateCount, dbmsDialect, objectBuilder);
+		return querySpecification.createSelectPlan(firstResult, maxResults).getSingleResult();
 	}
 
 	@Override
 	public int executeUpdate() {
-		ReturningResult<Object[]> result = extendedQuerySupport.executeReturning(cqb, participatingQueries, delegate, sql);
-		return result.getUpdateCount();
+		return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
 	}
 
 	@Override
@@ -82,7 +72,7 @@ public class CustomReturningSQLTypedQuery<T> extends AbstractCustomQuery impleme
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		if (participatingQueries.size() > 1) {
+		if (getParticipatingQueries().size() > 1) {
 			throw new PersistenceException("Unsupported unwrap: " + cls.getName());
 		}
 		return delegate.unwrap(cls);

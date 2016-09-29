@@ -1,27 +1,24 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.spi.DbmsDialect;
-import com.blazebit.persistence.spi.DbmsLimitHandler;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.*;
 import java.util.List;
 import java.util.Map;
 
-public class CustomSQLQuery extends AbstractCustomQuery {
+public class CustomSQLQuery extends AbstractCustomQuery<Object> {
 
 	private final Query delegate;
-	private final Map<String, String> addedCtes;
 
-	public CustomSQLQuery(List<Query> participatingQueries, Query delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders, Map<String, String> addedCtes) {
-		super(participatingQueries, cqb, extendedQuerySupport, sql, valuesParameters, valuesBinders);
+	public CustomSQLQuery(QuerySpecification querySpecification, Query delegate, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+		super(querySpecification, cqb, extendedQuerySupport, valuesParameters, valuesBinders);
 		this.delegate = delegate;
-		this.addedCtes = addedCtes;
 	}
 
     public Map<String, String> getAddedCtes() {
-        return addedCtes;
+        return querySpecification.getAddedCtes();
     }
 
     @Override
@@ -37,27 +34,7 @@ public class CustomSQLQuery extends AbstractCustomQuery {
 
 	@Override
 	public int executeUpdate() {
-		final String finalSql;
-		if (getFirstResult() > 0 || getMaxResults() != Integer.MAX_VALUE) {
-			DbmsLimitHandler limitHandler = cqb.getService(DbmsDialect.class).createLimitHandler();
-
-			Integer firstResult = null;
-			Integer maxResults = null;
-
-			if (getFirstResult() > 0) {
-				firstResult = getFirstResult();
-			}
-			if (getMaxResults() != Integer.MAX_VALUE) {
-				maxResults = getMaxResults();
-			}
-
-			delegate.setFirstResult(getFirstResult());
-			delegate.setMaxResults(getMaxResults());
-			finalSql = limitHandler.applySqlInlined(sql, false, maxResults, firstResult);
-		} else {
-			finalSql = sql;
-		}
-        return extendedQuerySupport.executeUpdate(cqb, participatingQueries, delegate, finalSql);
+		return querySpecification.createModificationPlan(firstResult, maxResults).executeUpdate();
 	}
 
 	@Override
@@ -93,9 +70,10 @@ public class CustomSQLQuery extends AbstractCustomQuery {
 	public LockModeType getLockMode() {
 		return delegate.getLockMode();
 	}
+
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		if (participatingQueries.size() > 1) {
+		if (querySpecification.getParticipatingQueries().size() > 1) {
 			throw new PersistenceException("Unsupported unwrap: " + cls.getName());
 		}
 		return delegate.unwrap(cls);

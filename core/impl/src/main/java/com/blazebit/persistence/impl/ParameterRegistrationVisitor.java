@@ -37,7 +37,7 @@ public class ParameterRegistrationVisitor extends VisitorAdapter {
         if (AbstractFullQueryBuilder.idParamName.equals(expression.getName())) {
             throw new IllegalArgumentException("The parameter name '" + expression.getName() + "' is reserved - use a different name");
         } else {
-            parameterManager.registerParameterName(expression.getName());
+            parameterManager.registerParameterName(expression.getName(), expression.isCollectionValued());
         }
     }
 };

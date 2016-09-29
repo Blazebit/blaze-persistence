@@ -101,4 +101,9 @@ public class CommonQueryBuilderAdapter<BuilderType extends CommonQueryBuilder<Bu
     public Map<String, String> getProperties() {
         return builder.getProperties();
     }
+
+    @Override
+    public String getProperty(String propertyName) {
+        return builder.getProperty(propertyName);
+    }
 }

@@ -18,6 +18,9 @@ package com.blazebit.persistence.impl;
 import com.blazebit.persistence.*;
 import com.blazebit.persistence.impl.expression.*;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
+import com.blazebit.persistence.impl.query.*;
+import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
@@ -42,7 +45,7 @@ import java.util.logging.Logger;
  * @author Moritz Becker
  * @since 1.0
  */
-public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> {
+public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> implements ServiceProvider, ConfigurationSource {
 
     protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
     public static final String idParamName = "ids";
@@ -201,11 +204,17 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     public CriteriaBuilderFactory getCriteriaBuilderFactory() {
         return cbf;
     }
-    
+
+    public DbmsStatementType getStatementType() {
+        return statementType;
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T getService(Class<T> serviceClass) {
         if (CriteriaBuilderFactory.class.equals(serviceClass)) {
             return (T) cbf;
+        } else if (ConfigurationSource.class.equals(serviceClass)) {
+            return (T) this;
         } else if (EntityManager.class.equals(serviceClass)) {
             return (T) em;
         } else if (DbmsDialect.class.equals(serviceClass)) {
@@ -243,6 +252,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     
     public Map<String, String> getProperties() {
         return this.mainQuery.properties;
+    }
+
+    public String getProperty(String name) {
+        return this.mainQuery.properties.get(name);
     }
     
     @SuppressWarnings("unchecked")
@@ -1179,25 +1192,36 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         }
 
         TypedQuery<QueryResultType> baseQuery = getTypedQuery(getBaseQueryStringWithCheck());
-        List<Query> participatingQueries = new ArrayList<Query>();
-        
-        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, Collections.EMPTY_SET);
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, null, null);
-        
-        String finalQuery = sqlSb.toString();
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        String limit = null;
+        String offset = null;
 
-        participatingQueries.add(baseQuery);
+        // The main query will handle that separately
+        if (!isMainQuery) {
+            if (firstResult != 0) {
+                offset = Integer.toString(firstResult);
+            }
+            if (maxResults != Integer.MAX_VALUE) {
+                limit = Integer.toString(maxResults);
+            }
+        }
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new CustomQuerySpecification(
+                this, baseQuery, parameterListNames, limit, offset, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+        );
+
         TypedQuery<QueryResultType> query = new CustomSQLTypedQuery<QueryResultType>(
-                participatingQueries,
+                querySpecification,
                 baseQuery,
                 (CommonQueryBuilder<?>) this,
                 cbf.getExtendedQuerySupport(),
-                finalQuery,
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
+
         
         // TODO: needs tests
         if (selectManager.getSelectObjectBuilder() != null) {
@@ -1207,6 +1231,133 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         parameterManager.parameterizeQuery(query);
         
         return query;
+    }
+
+    protected List<String> getKeyRestrictedLeftJoinAliases(Query baseQuery, Set<JoinNode> keyRestrictedLeftJoins, Set<ClauseType> clauseExclusions) {
+        List<String> keyRestrictedLeftJoinAliases = new ArrayList<String>();
+        if (!keyRestrictedLeftJoins.isEmpty()) {
+            for (JoinNode node : keyRestrictedLeftJoins) {
+                if (!clauseExclusions.isEmpty() && clauseExclusions.containsAll(node.getClauseDependencies()) && !node.isCardinalityMandatory()) {
+                    continue;
+                }
+                // The alias of the target entity table
+                String sqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAliasInfo().getAlias());
+                keyRestrictedLeftJoinAliases.add(sqlAlias);
+            }
+        }
+        return keyRestrictedLeftJoinAliases;
+    }
+
+    protected List<EntityFunctionNode> getEntityFunctionNodes(Query baseQuery) {
+        List<EntityFunctionNode> entityFunctionNodes = new ArrayList<EntityFunctionNode>();
+        for (JoinNode node : joinManager.getEntityFunctionNodes()) {
+            String valuesClause = node.getValuesClause();
+            String valuesAliases = node.getValuesAliases();
+
+
+            String valuesTableSqlAlias = cbf.getExtendedQuerySupport().getSqlAlias(em, baseQuery, node.getAlias());
+            entityFunctionNodes.add(new EntityFunctionNode(valuesClause, valuesAliases, node.getPropertyClass(), valuesTableSqlAlias, node.getValueQuery()));
+        }
+        return entityFunctionNodes;
+    }
+
+    protected boolean renderCteNodes(boolean isSubquery) {
+        return isMainQuery && !isSubquery;
+    }
+
+    protected List<CTENode> getCteNodes(Query baseQuery, boolean isSubquery) {
+        List<CTENode> cteNodes = new ArrayList<CTENode>();
+        // NOTE: Delete statements could cause CTEs to be generated for the cascading deletes
+        if (!isMainQuery || isSubquery || !dbmsDialect.supportsWithClause() || !mainQuery.cteManager.hasCtes() && statementType != DbmsStatementType.DELETE || statementType != DbmsStatementType.SELECT && !mainQuery.dbmsDialect.supportsWithClauseInModificationQuery()) {
+            return cteNodes;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for (CTEInfo cteInfo : mainQuery.cteManager.getCtes()) {
+            // Build queries and add as participating queries
+            Map<DbmsModificationState, String> modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
+            Query nonRecursiveQuery = cteInfo.nonRecursiveCriteriaBuilder.getQuery(modificationStates);
+            QuerySpecification<?> nonRecursiveQuerySpecification = getQuerySpecification(nonRecursiveQuery);
+            Map<String, String> nonRecursiveTableNameRemappings = null;
+
+            if (nonRecursiveQuery instanceof CustomSQLQuery) {
+                // EntityAlias -> CteName
+                nonRecursiveTableNameRemappings = cteInfo.nonRecursiveCriteriaBuilder.getModificationStateRelatedTableNameRemappings(explicitVersionEntities);
+            }
+
+            Query recursiveQuery;
+            QuerySpecification<?> recursiveQuerySpecification = null;
+            Map<String, String> recursiveTableNameRemappings = null;
+            if (cteInfo.recursive) {
+                modificationStates = cteInfo.nonRecursiveCriteriaBuilder.getModificationStates(explicitVersionEntities);
+                recursiveQuery = cteInfo.recursiveCriteriaBuilder.getQuery(modificationStates);
+
+                if (!dbmsDialect.supportsJoinsInRecursiveCte() && cteInfo.recursiveCriteriaBuilder.joinManager.hasJoins()) {
+                    throw new IllegalStateException("The dbms dialect does not support joins in the recursive part of a CTE!");
+                }
+
+                recursiveQuerySpecification = getQuerySpecification(recursiveQuery);
+                if (recursiveQuery instanceof CustomSQLQuery) {
+                    // EntityAlias -> CteName
+                    recursiveTableNameRemappings = cteInfo.recursiveCriteriaBuilder.getModificationStateRelatedTableNameRemappings(explicitVersionEntities);
+                }
+            }
+
+            String cteName = cteInfo.cteType.getName();
+            sb.setLength(0);
+            sb.append(cteName);
+            sb.append('(');
+
+            final List<String> attributes = cteInfo.attributes;
+            boolean first = true;
+            for (int i = 0; i < attributes.size(); i++) {
+                String[] columns = cbf.getExtendedQuerySupport().getColumnNames(em, cteInfo.cteType, attributes.get(i));
+                for (String column : columns) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        sb.append(", ");
+                    }
+
+                    sb.append(column);
+                }
+            }
+
+            sb.append(')');
+            String head = sb.toString();
+
+            String nonRecursiveWithClauseSuffix = null;
+            if (!cteInfo.recursive && !dbmsDialect.supportsNonRecursiveWithClause()) {
+                sb.setLength(0);
+                sb.append("\nUNION ALL\n");
+                sb.append("SELECT ");
+
+                sb.append("NULL");
+
+                for (int i = 1; i < attributes.size(); i++) {
+                    sb.append(", ");
+                    sb.append("NULL");
+                }
+
+                sb.append(" FROM DUAL WHERE 1=0");
+                nonRecursiveWithClauseSuffix = sb.toString();
+            }
+
+            cteNodes.add(new CTENode(
+                    cteInfo.name,
+                    cteInfo.cteType.getName(),
+                    head,
+                    cteInfo.unionAll,
+                    nonRecursiveQuerySpecification,
+                    recursiveQuerySpecification,
+                    nonRecursiveTableNameRemappings,
+                    recursiveTableNameRemappings,
+                    nonRecursiveWithClauseSuffix
+            ));
+        }
+
+        return cteNodes;
     }
     
     protected Query getQuery() {
@@ -1230,7 +1381,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             query = transformQuery(query);
         }
 
-        parameterManager.expandParameterLists(query);
         return query;
     }
 
@@ -1407,7 +1557,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected Map<String, String> getModificationStateRelatedTableNameRemappings(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
         return null;
     }
-    
+
     private boolean applyAddedCtes(Query query, AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder, StringBuilder sb, Map<String, String> tableNameRemapping, boolean firstCte) {
         if (query instanceof CustomSQLQuery) {
             // EntityAlias -> CteName
@@ -1884,7 +2034,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         
         return new int[]{ tableNameStartIndex, tableNameEndIndex };
     }
-    
+
     private String getSql(Query query) {
         if (query instanceof CustomSQLQuery) {
             return ((CustomSQLQuery) query).getSql();
@@ -1892,6 +2042,13 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             return ((CustomSQLTypedQuery<?>) query).getSql();
         }
         return cbf.getExtendedQuerySupport().getSql(em, query);
+    }
+
+    private QuerySpecification<?> getQuerySpecification(Query query) {
+        if (query instanceof AbstractCustomQuery<?>) {
+            return ((AbstractCustomQuery<?>) query).getQuerySpecification();
+        }
+        return new DefaultQuerySpecification(query, em, parameterManager.getParameterListNames(query), cbf.getExtendedQuerySupport());
     }
     
     protected boolean hasLimit() {

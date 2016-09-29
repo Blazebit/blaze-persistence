@@ -1,36 +1,35 @@
 package com.blazebit.persistence.impl;
 
 import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
 import java.util.*;
 
-public abstract class AbstractCustomQuery implements Query, CteQueryWrapper {
+public abstract class AbstractCustomQuery<T> implements Query, CteQueryWrapper {
 
-    protected final List<Query> participatingQueries;
+    protected final QuerySpecification<T> querySpecification;
     protected final CommonQueryBuilder<?> cqb;
     protected final ExtendedQuerySupport extendedQuerySupport;
     protected final Map<String, ValuesParameter> valuesParameters;
     protected final Map<String, Set<Query>> parameterQueries;
     protected final Set<Parameter<?>> parameters;
-    protected final String sql;
     protected int firstResult;
     protected int maxResults = Integer.MAX_VALUE;
 
-    public AbstractCustomQuery(List<Query> participatingQueries, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, String sql, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
-        this.participatingQueries = participatingQueries;
+    public AbstractCustomQuery(QuerySpecification<T> querySpecification, CommonQueryBuilder<?> cqb, ExtendedQuerySupport extendedQuerySupport, Map<String, String> valuesParameters, Map<String, ValuesParameterBinder> valuesBinders) {
+        this.querySpecification = querySpecification;
         this.cqb = cqb;
         this.extendedQuerySupport = extendedQuerySupport;
-        this.sql = sql;
         Map<String, ValuesParameter> valuesParameterMap = new HashMap<String, ValuesParameter>();
         Map<String, Set<Query>> parameterQueries = new HashMap<String, Set<Query>>();
         Set<Parameter<?>> parameters = new HashSet<Parameter<?>>();
-        for (Query q : participatingQueries) {
+        // TODO: Fix this, currently this builds the complete query plan
+        for (Query q : querySpecification.getParticipatingQueries()) {
             for (Parameter<?> p : q.getParameters()) {
                 String name = p.getName();
                 String valuesName = valuesParameters.get(name);
@@ -60,13 +59,17 @@ public abstract class AbstractCustomQuery implements Query, CteQueryWrapper {
         this.parameterQueries = Collections.unmodifiableMap(parameterQueries);
     }
 
+    public QuerySpecification<T> getQuerySpecification() {
+        return querySpecification;
+    }
+
     public String getSql() {
-        return sql;
+        return querySpecification.getSql();
     }
 
     @Override
     public List<Query> getParticipatingQueries() {
-        return participatingQueries;
+        return querySpecification.getParticipatingQueries();
     }
 
     @Override
@@ -126,7 +129,8 @@ public abstract class AbstractCustomQuery implements Query, CteQueryWrapper {
                 valuesParameter.setValue(value);
                 valuesParameter.bind(q);
             }
-        } else {
+        } else if (queries.size() > 0) {
+            querySpecification.onParameterChange(name);
             for (Query q : queries) {
                 q.setParameter(name, value);
             }
@@ -137,8 +141,11 @@ public abstract class AbstractCustomQuery implements Query, CteQueryWrapper {
     @Override
     public Query setParameter(String name, Calendar value, TemporalType temporalType) {
         Set<Query> queries = queries(name);
-        for (Query q : queries) {
-            q.setParameter(name, value, temporalType);
+        if (queries.size() > 0) {
+            querySpecification.onParameterChange(name);
+            for (Query q : queries) {
+                q.setParameter(name, value, temporalType);
+            }
         }
         return this;
     }
@@ -146,8 +153,11 @@ public abstract class AbstractCustomQuery implements Query, CteQueryWrapper {
     @Override
     public Query setParameter(String name, Date value, TemporalType temporalType) {
         Set<Query> queries = queries(name);
-        for (Query q : queries) {
-            q.setParameter(name, value, temporalType);
+        if (queries.size() > 0) {
+            querySpecification.onParameterChange(name);
+            for (Query q : queries) {
+                q.setParameter(name, value, temporalType);
+            }
         }
         return this;
     }

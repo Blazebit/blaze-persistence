@@ -15,15 +15,17 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
 import com.blazebit.persistence.BaseOngoingFinalSetOperationBuilder;
+import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
@@ -174,61 +176,32 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
     @Override
     @SuppressWarnings("unchecked")
     protected TypedQuery<T> getTypedQuery() {
+        Set<String> parameterListNames = new HashSet<String>();
         TypedQuery<T> leftMostQuery = (TypedQuery<T>) setOperationManager.getStartQueryBuilder().getTypedQuery();
-        
         TypedQuery<T> baseQuery;
-        String sqlQuery;
-        List<Query> participatingQueries = new ArrayList<Query>();
-        
+
+        parameterManager.collectParameterListNames(leftMostQuery, parameterListNames);
+
         if (leftMostQuery instanceof CustomSQLQuery) {
             CustomSQLQuery customQuery = (CustomSQLQuery) leftMostQuery;
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            participatingQueries.addAll(customQueryParticipants);
             baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
-            sqlQuery = customQuery.getSql();
         } else if (leftMostQuery instanceof CustomSQLTypedQuery<?>) {
             CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) leftMostQuery;
             List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-            participatingQueries.addAll(customQueryParticipants);
             baseQuery = (TypedQuery<T>) customQueryParticipants.get(0);
-            sqlQuery = customQuery.getSql();
         } else {
             baseQuery = leftMostQuery;
-            participatingQueries.add(baseQuery);
-            sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
         }
         
-        int size = sqlQuery.length() + 10;
-        List<String> setOperands = new ArrayList<String>();
-        setOperands.add(sqlQuery);
-        
+        List<Query> setOperands = new ArrayList<Query>();
+
         for (AbstractCommonQueryBuilder<?, ?, ?, ?, ?> setOperand : setOperationManager.getSetOperations()) {
             Query q = setOperand.getQuery();
-            String setOperandSql;
-            
-            if (q instanceof CustomSQLQuery) {
-                CustomSQLQuery customQuery = (CustomSQLQuery) q;
-                List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-                participatingQueries.addAll(customQueryParticipants);
-                
-                setOperandSql = customQuery.getSql();
-            } else if (q instanceof CustomSQLTypedQuery<?>) {
-                CustomSQLTypedQuery<?> customQuery = (CustomSQLTypedQuery<?>) q;
-                List<Query> customQueryParticipants = customQuery.getParticipatingQueries();
-                participatingQueries.addAll(customQueryParticipants);
-
-                setOperandSql = customQuery.getSql();
-            } else {
-                setOperandSql = cbf.getExtendedQuerySupport().getSql(em, q);
-                participatingQueries.add(q);
-            }
-            
-            setOperands.add(setOperandSql);
-            size += setOperandSql.length() + 30;
+            setOperands.add(q);
+            parameterManager.collectParameterListNames(q, parameterListNames);
         }
 
-        StringBuilder sqlSb = new StringBuilder(size);
-        
         String limit = null;
         String offset = null;
         
@@ -239,19 +212,36 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             limit = Integer.toString(maxResults);
         }
 
-        dbmsDialect.appendSet(sqlSb, setOperationManager.getOperator(), setOperationManager.isNested(), setOperands, getOrderByElements(), limit, offset);
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+        Set<JoinNode> keyRestrictedLeftJoins = joinManager.getKeyRestrictedLeftJoins();
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, Collections.EMPTY_SET);
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new SetOperationQuerySpecification(
+                this,
+                leftMostQuery,
+                baseQuery,
+                setOperands,
+                setOperationManager.getOperator(),
+                getOrderByElements(),
+                setOperationManager.isNested(),
+                parameterListNames,
+                limit,
+                offset,
+                keyRestrictedLeftJoinAliases,
+                entityFunctionNodes,
+                mainQuery.cteManager.isRecursive(),
+                ctes,
+                shouldRenderCteNodes
+        );
         
-        String finalQuery = sqlSb.toString();
         // Unfortunately we need this little adapter here
         @SuppressWarnings("rawtypes")
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
-                participatingQueries,
+                querySpecification,
                 baseQuery,
                 new CommonQueryBuilderAdapter(this),
                 cbf.getExtendedQuerySupport(),
-                finalQuery,
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

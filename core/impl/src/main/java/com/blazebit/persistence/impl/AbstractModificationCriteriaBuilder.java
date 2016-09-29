@@ -15,14 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import javax.persistence.Query;
 import javax.persistence.Tuple;
@@ -40,6 +33,7 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
+import com.blazebit.persistence.impl.query.*;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
@@ -145,42 +139,40 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         Query query;
 
         // We use this to make these features only available to Hibernate as it is the only provider that supports sql replace yet
-        if (jpaProvider.supportsInsertStatement()) {
-        // We always have to use a custom query, otherwise we can't use LIMIT and OFFSET
-//        if (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0) {
+        if (statementType == DbmsStatementType.INSERT
+                || (hasLimit() || mainQuery.cteManager.hasCtes() || returningAttributeBindingMap.size() > 0)) {
 
             // We need to change the underlying sql when doing a limit with hibernate since it does not support limiting insert ... select statements
             // For CTEs we will also need to change the underlying sql
-            List<Query> participatingQueries = new ArrayList<Query>();
-            
             query = em.createQuery(getBaseQueryStringWithCheck());
-            parameterManager.expandParameterLists(query);
-            
-            StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            boolean isEmbedded = this instanceof ReturningBuilder;
-            StringBuilder withClause = applyCtes(sqlSb, query, isEmbedded, participatingQueries);
-            String[] returningColumns = getReturningColumns();
-            // NOTE: CTEs will only be added, if this is a subquery
-            Map<String, String> addedCtes = applyExtendedSql(sqlSb, false, isEmbedded, withClause, returningColumns, includedModificationStates);
-            
-            String finalSql = sqlSb.toString();
-            participatingQueries.add(query);
+            Set<String> parameterListNames = parameterManager.getParameterListNames(query);
 
-            // Some dbms like DB2 will need to wrap modification queries in select queries when using CTEs
-            boolean hasCtes = withClause != null && withClause.length() != 0 || addedCtes != null && !addedCtes.isEmpty();
-            if (hasCtes && returningAttributeBindingMap.isEmpty() && !dbmsDialect.usesExecuteUpdateWhenWithClauseInModificationQuery()) {
-                query = getCountExampleQuery();
-            }
-            
+            boolean isEmbedded = this instanceof ReturningBuilder;
+            String[] returningColumns = getReturningColumns();
+            boolean shouldRenderCteNodes = renderCteNodes(isEmbedded);
+            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(query, isEmbedded) : Collections.EMPTY_LIST;
+
+            QuerySpecification querySpecification = new ModificationQuerySpecification(
+                    this,
+                    query,
+                    getCountExampleQuery(),
+                    parameterListNames,
+                    mainQuery.cteManager.isRecursive(),
+                    ctes,
+                    shouldRenderCteNodes,
+                    isEmbedded,
+                    returningColumns,
+                    includedModificationStates,
+                    returningAttributeBindingMap
+            );
+
             query = new CustomSQLQuery(
-                    participatingQueries,
+                    querySpecification,
                     query,
                     (CommonQueryBuilder<?>) this,
                     cbf.getExtendedQuerySupport(),
-                    finalSql,
                     parameterManager.getValuesParameters(),
-                    parameterManager.getValuesBinders(),
-                    addedCtes
+                    parameterManager.getValuesBinders()
             );
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());
@@ -324,29 +316,24 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 	}
 	
 	private <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
-        List<Query> participatingQueries = new ArrayList<Query>();
-
-        StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, baseQuery));
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, returningColumns, null);
-        String finalSql = sqlSb.toString();
-        participatingQueries.add(baseQuery);
-
-        baseQuery.setFirstResult(firstResult);
-        baseQuery.setMaxResults(maxResults);
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new ReturningModificationQuerySpecification<R>(
+                this, baseQuery, exampleQuery, parameterListNames, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes, returningColumns, objectBuilder
+        );
 
         CustomReturningSQLTypedQuery query = new CustomReturningSQLTypedQuery<R>(
-                participatingQueries,
+                querySpecification,
                 exampleQuery,
                 (CommonQueryBuilder<?>) this,
                 cbf.getExtendedQuerySupport(),
-                finalSql,
                 parameterManager.getValuesParameters(),
-                parameterManager.getValuesBinders(),
-                dbmsDialect,
-                objectBuilder
+                parameterManager.getValuesBinders()
         );
 
+        query.setFirstResult(firstResult);
+        query.setMaxResults(maxResults);
         parameterManager.parameterizeQuery(query);
         return query;
     }

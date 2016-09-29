@@ -17,10 +17,8 @@ package com.blazebit.persistence.impl;
 
 import java.util.*;
 
-import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.*;
@@ -29,6 +27,10 @@ import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilde
 import com.blazebit.persistence.impl.keyset.KeysetMode;
 import com.blazebit.persistence.impl.keyset.KeysetPaginationHelper;
 import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.QueryTransformer;
 
 /**
@@ -135,26 +137,24 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<X> baseQuery = em.createQuery(countQueryString, resultType);
-        parameterManager.expandParameterLists(baseQuery);
-        List<Query> participatingQueries = new ArrayList<Query>();
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new CustomQuerySpecification(
+                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+        );
 
-        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.of(ClauseType.ORDER_BY, ClauseType.SELECT));
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, null, null);
-
-        String finalQuery = sqlSb.toString();
-
-        participatingQueries.add(baseQuery);
         TypedQuery<X> countQuery = new CustomSQLTypedQuery<X>(
-                participatingQueries,
+                querySpecification,
                 baseQuery,
                 (CommonQueryBuilder<?>) this,
                 cbf.getExtendedQuerySupport(),
-                finalQuery,
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
+
         parameterManager.parameterizeQuery(countQuery);
         return countQuery;
     }
@@ -331,24 +331,21 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             parameterManager.parameterizeQuery(query);
         } else {
             TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(queryString, expectedResultType);
-            parameterManager.expandParameterLists(baseQuery);
+            Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-            List<Query> participatingQueries = new ArrayList<Query>();
+            List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.noneOf(ClauseType.class));
+            List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+            boolean shouldRenderCteNodes = renderCteNodes(false);
+            List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+            QuerySpecification querySpecification = new CustomQuerySpecification(
+                    this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+            );
 
-            String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-            StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.noneOf(ClauseType.class));
-            StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-            applyExtendedSql(sqlSb, false, false, withClause, null, null);
-
-            String finalQuery = sqlSb.toString();
-
-            participatingQueries.add(baseQuery);
             query = new CustomSQLTypedQuery<T>(
-                    participatingQueries,
+                    querySpecification,
                     baseQuery,
                     (CommonQueryBuilder<?>) this,
                     cbf.getExtendedQuerySupport(),
-                    finalQuery,
                     parameterManager.getValuesParameters(),
                     parameterManager.getValuesBinders()
             );
@@ -388,24 +385,21 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<Object[]> baseQuery = em.createQuery(idQueryString, Object[].class);
-        parameterManager.expandParameterLists(baseQuery);
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
 
-        List<Query> participatingQueries = new ArrayList<Query>();
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.of(ClauseType.SELECT));
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new CustomQuerySpecification(
+                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+        );
 
-        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.of(ClauseType.SELECT));
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, null, null);
-
-        String finalQuery = sqlSb.toString();
-
-        participatingQueries.add(baseQuery);
         TypedQuery<Object[]> idQuery = new CustomSQLTypedQuery<Object[]>(
-                participatingQueries,
+                querySpecification,
                 baseQuery,
                 (CommonQueryBuilder<?>) this,
                 cbf.getExtendedQuerySupport(),
-                finalQuery,
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );
@@ -426,24 +420,22 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         }
 
         TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-        // TODO: shouldn't we expand the id param too?
-        parameterManager.expandParameterLists(baseQuery, Collections.singleton(idParamName));
-        List<Query> participatingQueries = new ArrayList<Query>();
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, Collections.singleton(idParamName));
+        parameterListNames.add(idParamName);
 
-        String sqlQuery = cbf.getExtendedQuerySupport().getSql(em, baseQuery);
-        StringBuilder sqlSb = applySqlTransformations(baseQuery, sqlQuery, keyRestrictedLeftJoins, participatingQueries, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
-        StringBuilder withClause = applyCtes(sqlSb, baseQuery, false, participatingQueries);
-        applyExtendedSql(sqlSb, false, false, withClause, null, null);
+        List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
+        List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
+        boolean shouldRenderCteNodes = renderCteNodes(false);
+        List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
+        QuerySpecification querySpecification = new CustomQuerySpecification(
+                this, baseQuery, parameterListNames, null, null, keyRestrictedLeftJoinAliases, entityFunctionNodes, mainQuery.cteManager.isRecursive(), ctes, shouldRenderCteNodes
+        );
 
-        String finalQuery = sqlSb.toString();
-
-        participatingQueries.add(baseQuery);
         TypedQuery<T> query = new CustomSQLTypedQuery<T>(
-                participatingQueries,
+                querySpecification,
                 baseQuery,
                 (CommonQueryBuilder<?>) this,
                 cbf.getExtendedQuerySupport(),
-                finalQuery,
                 parameterManager.getValuesParameters(),
                 parameterManager.getValuesBinders()
         );

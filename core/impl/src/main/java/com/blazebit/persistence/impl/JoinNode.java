@@ -148,8 +148,9 @@ public class JoinNode implements Root {
         boolean computedMandatory = false;
         if (joinType == JoinType.INNER) {
             // If the relation is optional/nullable or the join has a condition
-            // the join is mandatory, because doing omitting it might change the semantics result set 
-            if (parentTreeNode.isOptional() || !isEmptyCondition()) {
+            // the join is mandatory, because omitting it might change the semantics of the result set
+            // NOTE: entity join nodes(the ones which don't have a parentTreeNode) are considered mandatory for now
+            if (parentTreeNode == null || parentTreeNode.isOptional() || !isEmptyCondition()) {
                 computedMandatory = true;
             }
         } else if (joinType == JoinType.LEFT) {
@@ -382,7 +383,7 @@ public class JoinNode implements Root {
 
     public boolean hasCollections() {
         if (!entityJoinNodes.isEmpty()) {
-            return false;
+            return true;
         }
 
         List<JoinTreeNode> stack = new ArrayList<JoinTreeNode>();

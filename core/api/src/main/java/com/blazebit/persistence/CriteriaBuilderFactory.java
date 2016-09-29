@@ -15,6 +15,9 @@
  */
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.ServiceProvider;
+
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -25,7 +28,7 @@ import javax.persistence.EntityManager;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CriteriaBuilderFactory {
+public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSource {
 
     // TODO: documentation
     public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
@@ -112,30 +115,4 @@ public interface CriteriaBuilderFactory {
      * @since 1.1.0
      */
     public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass);
-
-    /**
-     * Returns the service provided by this criteria builder factory or null if none is available.
-     * 
-     * @param serviceClass The type of the service
-     * @return The service or null
-     * @since 1.0.5
-     */
-    public <T> T getService(Class<T> serviceClass);
-
-    /**
-     * Returns all properties.
-     *
-     * @return All properties
-     * @since 1.1.0
-     */
-    public Map<String, String> getProperties();
-
-    /**
-     * Returns a property value by name.
-     *
-     * @param propertyName The name of the property
-     * @return The value currently associated with that property name; may be null.
-     * @since 1.1.0
-     */
-    public String getProperty(String propertyName);
 }

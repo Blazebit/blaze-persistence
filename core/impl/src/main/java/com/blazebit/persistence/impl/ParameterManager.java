@@ -50,14 +50,30 @@ public class ParameterManager {
         return parameterRegistrationVisitor;
     }
 
-    void expandParameterLists(Query q) {
-        expandParameterLists(q, Collections.EMPTY_SET);
+    Set<String> getParameterListNames(Query q) {
+        return getParameterListNames(q, Collections.EMPTY_SET);
     }
 
-    void expandParameterLists(Query q, Set<String> skippedParameters) {
-        // TODO: This is needed to expand parameter lists in the query so that the SQL is correct
-        // NOTE: This means that different parameter list sizes are not supported
-        parameterizeQuery(q, skippedParameters);
+    Set<String> getParameterListNames(Query q, Set<String> skippedParameters) {
+        Set<String> parameterListNames = new HashSet<String>();
+        collectParameterListNames(q, parameterListNames, skippedParameters);
+        return parameterListNames;
+    }
+
+    void collectParameterListNames(Query q, Set<String> parameterListNames) {
+        collectParameterListNames(q, parameterListNames, Collections.EMPTY_SET);
+    }
+
+    void collectParameterListNames(Query q, Set<String> parameterListNames, Set<String> skippedParameters) {
+        for (Parameter<?> p: q.getParameters()) {
+            String name = p.getName();
+            if (skippedParameters.contains(name)) {
+                continue;
+            }
+            if (getParameter(name).isCollectionValued()) {
+                parameterListNames.add(name);
+            }
+        }
     }
 
     void parameterizeQuery(Query q) {
@@ -98,7 +114,7 @@ public class ParameterManager {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Parameter<?> getParameter(String parameterName) {
+    public ParameterImpl<?> getParameter(String parameterName) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
@@ -153,16 +169,16 @@ public class ParameterManager {
     }
 
     public ParameterExpression addParameterExpression(Object o) {
-        String name = addParameter(o);
+        String name = addParameter(o, o instanceof Collection);
         return new ParameterExpression(name, o, o instanceof Collection);
     }
 
-    public String addParameter(Object o) {
+    public String addParameter(Object o, boolean collectionValued) {
         if (o == null) {
             throw new NullPointerException();
         }
         String name = prefix + counter++;
-        parameters.put(name, new ParameterImpl<Object>(name, o));
+        parameters.put(name, new ParameterImpl<Object>(name, collectionValued, o));
         return name;
     }
 
@@ -170,15 +186,15 @@ public class ParameterManager {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
-        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o));
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, o instanceof Collection, o));
     }
 
-    public void registerParameterName(String parameterName) {
+    public void registerParameterName(String parameterName, boolean collectionValued) {
         if (parameterName == null) {
             throw new NullPointerException("parameterName");
         }
         if (!parameters.containsKey(parameterName)) {
-            parameters.put(parameterName, new ParameterImpl<Object>(parameterName));
+            parameters.put(parameterName, new ParameterImpl<Object>(parameterName, collectionValued));
         }
     }
 
@@ -189,7 +205,7 @@ public class ParameterManager {
         if (parameters.containsKey(parameterName)) {
             throw new IllegalArgumentException("Can't register parameter for VALUES clause because there already exists a parameter with the name: " + parameterName);
         }
-        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, new ValuesParameterWrapper(type, parameterNames, pathExpressions)));
+        parameters.put(parameterName, new ParameterImpl<Object>(parameterName, false, new ValuesParameterWrapper(type, parameterNames, pathExpressions)));
         for (int i = 0; i < parameterNames.length; i++) {
             for (int j = 0; j < parameterNames[i].length; j++) {
                 valuesParameters.put(parameterNames[i][j], parameterName);
@@ -252,17 +268,20 @@ public class ParameterManager {
 
         private final String name;
         private final Integer position;
+        private final boolean collectionValued;
         private Class<T> parameterType;
         private T value;
 
-        public ParameterImpl(String name) {
+        public ParameterImpl(String name, boolean collectionValued) {
             this.name = name;
             this.position = null;
+            this.collectionValued = collectionValued;
         }
 
-        public ParameterImpl(String name, T value) {
+        public ParameterImpl(String name, boolean collectionValued, T value) {
             this.name = name;
             this.position = null;
+            this.collectionValued = collectionValued;
             setValue(value);
         }
 
@@ -274,6 +293,10 @@ public class ParameterManager {
         @Override
         public Integer getPosition() {
             return position;
+        }
+
+        public boolean isCollectionValued() {
+            return collectionValued;
         }
 
         @Override

@@ -15,11 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.persistence.Query;
 import javax.persistence.metamodel.Attribute;
@@ -30,6 +26,8 @@ import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.query.CTEQuerySpecification;
+import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.SetOperationType;
 
@@ -79,22 +77,36 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         if (hasLimit()) {
             // We need to change the underlying sql when doing a limit
             query = em.createQuery(getBaseQueryStringWithCheck());
-            parameterManager.expandParameterLists(query);
-            List<Query> participatingQueries = Arrays.asList(query);
-            
-            StringBuilder sqlSb = new StringBuilder(cbf.getExtendedQuerySupport().getSql(em, query));
-            applyExtendedSql(sqlSb, false, true, null, null, null);
-            String finalSql = sqlSb.toString();
-            
+
+            Set<String> parameterListNames = parameterManager.getParameterListNames(query);
+            String limit = null;
+            String offset = null;
+
+            // The main query will handle that separately
+            if (!isMainQuery) {
+                if (firstResult != 0) {
+                    offset = Integer.toString(firstResult);
+                }
+                if (maxResults != Integer.MAX_VALUE) {
+                    limit = Integer.toString(maxResults);
+                }
+            }
+
+            QuerySpecification querySpecification = new CTEQuerySpecification(
+                    this,
+                    query,
+                    parameterListNames,
+                    limit,
+                    offset
+            );
+
             query = new CustomSQLQuery(
-                    participatingQueries,
+                    querySpecification,
                     query,
                     (CommonQueryBuilder<?>) this,
                     cbf.getExtendedQuerySupport(),
-                    finalSql,
                     parameterManager.getValuesParameters(),
-                    parameterManager.getValuesBinders(),
-                    null
+                    parameterManager.getValuesBinders()
             );
         } else {
             query = em.createQuery(getBaseQueryStringWithCheck());

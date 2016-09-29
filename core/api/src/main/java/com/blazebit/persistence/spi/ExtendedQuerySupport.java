@@ -47,11 +47,11 @@ public interface ExtendedQuerySupport {
     public int getSqlSelectAttributePosition(EntityManager em, Query query, String alias);
     
     @SuppressWarnings("rawtypes")
-    public List getResultList(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride);
+    public List getResultList(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public Object getSingleResult(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride);
+    public Object getSingleResult(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public int executeUpdate(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride);
+    public int executeUpdate(ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride);
     
-    public ReturningResult<Object[]> executeReturning(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
+    public ReturningResult<Object[]> executeReturning(ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride);
 }

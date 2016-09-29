@@ -261,10 +261,14 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     public <T> T getService(Class<T> serviceClass) {
         if (SubqueryExpressionFactory.class.equals(serviceClass)) {
             return (T) subqueryExpressionFactory;
+        } else if (ConfigurationSource.class.equals(serviceClass)) {
+            return (T) this;
         } else if (ExpressionFactory.class.isAssignableFrom(serviceClass)) {
             return (T) expressionFactory;
         } else if (DbmsDialect.class.equals(serviceClass)) {
             return (T) configuredDbmsDialect;
+        } else if (ExtendedQuerySupport.class.equals(serviceClass)) {
+            return (T) extendedQuerySupport;
         } else if (JpaProviderFactory.class.equals(serviceClass)) {
             return (T) configuredJpaProviderFactory;
         } else if (ExpressionCache.class.equals(serviceClass)) {

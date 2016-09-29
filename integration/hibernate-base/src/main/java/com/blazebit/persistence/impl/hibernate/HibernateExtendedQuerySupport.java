@@ -14,6 +14,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
+import com.blazebit.persistence.spi.ConfigurationSource;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -84,8 +85,15 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         }
         QueryTranslator queryTranslator = queryPlan.getTranslators()[0];
         BasicExecutor executor = getStatementExecutor(queryTranslator);
-        
-        return getField(executor, "deletes");
+        if (executor == null || !(executor instanceof DeleteExecutor)) {
+            return Collections.EMPTY_LIST;
+        }
+
+        List<String> deletes = getField(executor, "deletes");
+        if (deletes == null) {
+            return Collections.EMPTY_LIST;
+        }
+        return deletes;
     }
     
     private HQLQueryPlan getOriginalQueryPlan(SessionImplementor session, Query query) {
@@ -202,10 +210,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
-        EntityManager em = cqb.getService(EntityManager.class);
+	public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+        EntityManager em = serviceProvider.getService(EntityManager.class);
 		try {
-			return list(cqb, em, participatingQueries, query, sqlOverride);
+			return list(serviceProvider, em, participatingQueries, query, sqlOverride);
 		} catch (QueryExecutionRequestException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
 			throw new IllegalStateException(he);
@@ -220,10 +228,10 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	
 	@Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getSingleResult(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String sqlOverride) {
-        EntityManager em = cqb.getService(EntityManager.class);
+	public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+        EntityManager em = serviceProvider.getService(EntityManager.class);
 		try {
-			final List result = list(cqb, em, participatingQueries, query, sqlOverride);
+			final List result = list(serviceProvider, em, participatingQueries, query, sqlOverride);
 
 			if (result.size() == 0) {
 				NoResultException nre = new NoResultException("No entity found for query");
@@ -254,7 +262,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 	}
 
     @SuppressWarnings("rawtypes")
-    private List list(CommonQueryBuilder<?> cqb, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
+    private List list(com.blazebit.persistence.spi.ServiceProvider serviceProvider, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -271,7 +279,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
         
         if (!queryPlanEntry.isFromCache()) {
-            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false, cqb.getService(DbmsDialect.class));
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), false, serviceProvider.getService(DbmsDialect.class));
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
         
@@ -279,8 +287,8 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-    public int executeUpdate(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query query, String finalSql) {
-        EntityManager em = cqb.getService(EntityManager.class);
+    public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String finalSql) {
+        EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -307,7 +315,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         QueryParameters queryParameters = queryParametersEntry.queryParameters;
 
         if (!queryPlanEntry.isFromCache()) {
-            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, cqb.getService(DbmsDialect.class));
+            prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, serviceProvider.getService(DbmsDialect.class));
             queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
         }
         
@@ -315,7 +323,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             return hibernateAccess.performExecuteUpdate(queryPlan, session, queryParameters);
         }
 
-        boolean caseInsensitive = !Boolean.valueOf(cqb.getProperties().get("com.blazebit.persistence.returning_clause_case_sensitive"));
+        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
         String exampleQuerySql = queryPlan.getSqlStrings()[0];
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         
@@ -344,9 +352,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("unchecked")
-    public ReturningResult<Object[]> executeReturning(CommonQueryBuilder<?> cqb, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
-        DbmsDialect dialect = cqb.getService(DbmsDialect.class);
-        EntityManager em = cqb.getService(EntityManager.class);
+    public ReturningResult<Object[]> executeReturning(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query exampleQuery, String sqlOverride) {
+        DbmsDialect dialect = serviceProvider.getService(DbmsDialect.class);
+        EntityManager em = serviceProvider.getService(EntityManager.class);
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
 
@@ -363,7 +371,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         StringBuilder sqlSb = new StringBuilder(sqlOverride.length() + 100);
         sqlSb.append(sqlOverride);
 
-        boolean caseInsensitive = !Boolean.valueOf(cqb.getProperties().get("com.blazebit.persistence.returning_clause_case_sensitive"));
+        boolean caseInsensitive = !Boolean.valueOf(serviceProvider.getService(ConfigurationSource.class).getProperty("com.blazebit.persistence.returning_clause_case_sensitive"));
         String[][] returningColumns = getReturningColumns(caseInsensitive, exampleQuerySql);
         boolean generatedKeys = !dialect.supportsReturningColumns();
         String finalSql = sqlSb.toString();
@@ -375,7 +383,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         try {
             HibernateReturningResult<Object[]> returningResult = new HibernateReturningResult<Object[]>();
             if (!queryPlanEntry.isFromCache()) {
-                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, cqb.getService(DbmsDialect.class));
+                prepareQueryPlan(queryPlan, queryParametersEntry.specifications, finalSql, session, participatingQueries.get(participatingQueries.size() - 1), true, serviceProvider.getService(DbmsDialect.class));
                 queryPlan = putQueryPlanIfAbsent(sfi, cacheKey, queryPlan);
             }
 

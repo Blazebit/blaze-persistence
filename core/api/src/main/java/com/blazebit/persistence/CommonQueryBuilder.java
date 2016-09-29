@@ -15,7 +15,9 @@
  */
 package com.blazebit.persistence;
 
+import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.spi.ServiceProvider;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -34,7 +36,7 @@ import javax.persistence.metamodel.Metamodel;
  * @author Christian Beikov
  * @since 1.0
  */
-public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
+public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> extends ServiceProvider, ConfigurationSource {
 
     /**
      * Returns the JPA {@link Metamodel} of the persistence unit which is used by this query builder.
@@ -50,15 +52,6 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      * @since 1.0.5
      */
     public CriteriaBuilderFactory getCriteriaBuilderFactory();
-
-    /**
-     * Returns the service provided by this criteria builder or null if none is available.
-     * 
-     * @param serviceClass The type of the service
-     * @return The service or null
-     * @since 1.1.0
-     */
-    public <T> T getService(Class<T> serviceClass);
 
     /**
      * Sets the given value as the value for the parameter with the given name.
@@ -170,11 +163,4 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> {
      */
     public X setProperties(Map<String, String> properties);
     
-    /**
-     * Retrieves all properties
-     * 
-     * @return A map representing all properties
-     * @since 1.1.0
-     */
-    public Map<String, String> getProperties();
 }
