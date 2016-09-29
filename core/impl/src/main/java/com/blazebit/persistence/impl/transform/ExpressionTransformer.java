@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.transform;
 
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 
 /**
  *
@@ -25,5 +27,7 @@ import com.blazebit.persistence.impl.expression.Expression;
 public interface ExpressionTransformer {
 
     public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired);
+
+    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired);
 
 }

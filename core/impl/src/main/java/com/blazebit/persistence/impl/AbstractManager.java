@@ -20,13 +20,14 @@ import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
  *
  * @author Moritz Becker
  * @since 1.0
  */
-public class AbstractManager {
+public abstract class AbstractManager {
 
     protected final ResolvingQueryGenerator queryGenerator;
     protected final ParameterManager parameterManager;
@@ -52,4 +53,9 @@ public class AbstractManager {
             sb.append(iter.next());
         }
     }
+
+    public abstract void applyTransformer(ExpressionTransformer transformer);
+
+    public abstract ClauseType getClauseType();
+
 }

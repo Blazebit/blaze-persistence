@@ -51,17 +51,19 @@ public abstract class AbstractCountFunction implements JpqlFunction {
             throw new RuntimeException("The " + AbstractCountFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
         }
 
-        return new Count(distinct, startIndex);
+        return new Count(distinct, startIndex, argsSize - startIndex);
     }
 
     protected static final class Count {
 
         private final boolean distinct;
         private final int argumentStartIndex;
+        private final int countArgumentSize;
 
-        public Count(boolean distinct, int argumentStartIndex) {
+        public Count(boolean distinct, int argumentStartIndex, int countArgumentSize) {
             this.distinct = distinct;
             this.argumentStartIndex = argumentStartIndex;
+            this.countArgumentSize = countArgumentSize;
         }
 
         public boolean isDistinct() {
@@ -70,6 +72,10 @@ public abstract class AbstractCountFunction implements JpqlFunction {
 
         public int getArgumentStartIndex() {
             return argumentStartIndex;
+        }
+
+        public int getCountArgumentSize() {
+            return countArgumentSize;
         }
     }
 }

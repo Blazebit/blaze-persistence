@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.transform;
 
+import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
+import com.blazebit.persistence.impl.ClauseType;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
  *
@@ -25,6 +29,11 @@ import com.blazebit.persistence.impl.expression.VisitorAdapter;
  * @since 1.0
  */
 public class SubqueryRecursiveExpressionTransformer extends VisitorAdapter implements ExpressionTransformer {
+
+    @Override
+    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired) {
+        return transform(original, fromClause, joinRequired);
+    }
 
     @Override
     public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {

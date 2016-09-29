@@ -31,7 +31,7 @@ public class CountTupleEmulationFunction extends AbstractCountFunction {
 
         int argumentStartIndex = count.getArgumentStartIndex();
 
-        if (context.getArgumentsSize() > 1) {
+        if (count.getCountArgumentSize() > 1) {
             // see https://hibernate.atlassian.net/browse/HHH-11042 for the workaround description
             if (ANSI_SQL) {
                 if (count.isDistinct()) {

@@ -16,12 +16,13 @@
 package com.blazebit.persistence.impl;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
 
 /**
  *
@@ -41,8 +42,13 @@ public class GroupByManager extends AbstractManager {
         super(queryGenerator, parameterManager);
         groupByInfos = new ArrayList<NodeInfo>();
     }
-    
-    void groupBy(Expression expr) {
+
+    @Override
+    public ClauseType getClauseType() {
+        return ClauseType.GROUP_BY;
+    }
+
+    public void groupBy(Expression expr) {
         groupByInfos.add(new NodeInfo(expr));
         registerParameterExpressions(expr);
     }
@@ -75,9 +81,10 @@ public class GroupByManager extends AbstractManager {
         }
     }
 
-    void applyTransformer(ExpressionTransformer transformer) {
+    @Override
+    public void applyTransformer(ExpressionTransformer transformer) {
         for (NodeInfo groupBy : groupByInfos) {
-            groupBy.setExpression(transformer.transform(groupBy.getExpression(), ClauseType.GROUP_BY, true));
+            groupBy.setExpression(transformer.transform(new NodeInfoExpressionModifier(groupBy), groupBy.getExpression(), ClauseType.GROUP_BY, true));
         }
     }
 
@@ -87,7 +94,7 @@ public class GroupByManager extends AbstractManager {
         }
     }
 
-    boolean hasGroupBys() {
+    public boolean hasGroupBys() {
         return groupByInfos.size() > 0;
     }
 

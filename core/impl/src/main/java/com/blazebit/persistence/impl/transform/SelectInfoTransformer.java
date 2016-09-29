@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.transform;
+
+import com.blazebit.persistence.impl.SelectInfo;
 
 /**
  *

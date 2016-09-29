@@ -389,11 +389,11 @@ public class PaginationTest extends AbstractCoreTest {
                 .orderByAsc("contactCount")
                 .orderByAsc("id")
                 .page(0, 1);
-        String expectedIdQuery = "SELECT d.id, " + function("COUNT_TUPLE", "d.id", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id "
-        		+ "ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "d.id", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT d.id, " + function("COUNT_TUPLE", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 GROUP BY d.id "
+        		+ "ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
-        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "d.id", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id "
-        		+ "ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "d.id", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+        String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids GROUP BY d.id "
+        		+ "ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());

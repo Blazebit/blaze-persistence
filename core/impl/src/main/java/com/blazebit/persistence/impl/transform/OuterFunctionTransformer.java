@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.transform;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.JoinManager;
 import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
  * This Transformer runs through the expressions of the query
@@ -41,6 +45,11 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
     }
 
     @Override
+    public Expression transform(ExpressionModifier<? extends Expression> parentModifier, Expression original, ClauseType fromClause, boolean joinRequired) {
+        return transform(original, fromClause, joinRequired);
+    }
+
+    @Override
     public Expression transform(Expression original, ClauseType fromClause, boolean joinRequired) {
         if (original instanceof ArithmeticExpression) {
             ArithmeticExpression arithmeticExpression = (ArithmeticExpression) original;
@@ -53,7 +62,7 @@ public class OuterFunctionTransformer implements ExpressionTransformer {
             List<Expression> expressions = func.getExpressions();
             int size = expressions.size();
             for (int i = 0; i < size; i++) {
-                transformed.add(transform(expressions.get(i), fromClause, joinRequired));
+                transformed.add(transform(null, expressions.get(i), fromClause, joinRequired));
             }
             func.setExpressions(transformed);
             return func;

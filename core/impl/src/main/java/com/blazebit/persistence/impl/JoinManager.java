@@ -34,10 +34,10 @@ import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.ValuesStrategy;
-import com.blazebit.reflection.PropertyPathExpression;
 
 /**
  * @author Moritz Becker
@@ -77,6 +77,11 @@ public class JoinManager extends AbstractManager {
         this.joinRestrictionKeyword = " " + mainQuery.jpaProvider.getOnClause() + " ";
         this.joinOnBuilderListener = new JoinOnBuilderEndedListener();
         this.expressionFactory = expressionFactory;
+    }
+
+    @Override
+    public ClauseType getClauseType() {
+        return ClauseType.JOIN;
     }
 
     Set<JoinNode> getKeyRestrictedLeftJoins() {
@@ -371,12 +376,8 @@ public class JoinManager extends AbstractManager {
         // TODO: TREAT support is missing
         String[] parts = correlationPath.split("\\.");
 
-        if (parts.length != 2) {
-            throw new IllegalArgumentException("The correlation path does not contain a valid path to a relation of a parent query: " + correlationPath);
-        }
-
         String correlationParentAlias = parts[0];
-        String correlationProperty = parts[1];
+        String correlationPathNoAlias = correlationPath.substring(parts[0].length() + 1);
 
         // We assume that this is a subquery join manager here
         AliasInfo aliasInfo = aliasManager.getAliasInfo(correlationParentAlias);
@@ -385,8 +386,15 @@ public class JoinManager extends AbstractManager {
         }
 
         JoinNode correlationParent = ((JoinAliasInfo) aliasInfo).getJoinNode();
-        Attribute<?, ?> attribute = JpaUtils.getAttribute(metamodel.managedType(correlationParent.getPropertyClass()), correlationProperty);
-        Class<?> attributeType = JpaUtils.resolveFieldClass(correlationParent.getPropertyClass(), attribute);
+        Class<?> attributeType;
+        if (correlationPathNoAlias.indexOf('.') < 0) {
+            Attribute<?, ?> attribute = JpaUtils.getAttribute(metamodel.managedType(correlationParent.getPropertyClass()), correlationPathNoAlias);
+            attributeType = JpaUtils.resolveFieldClass(correlationParent.getPropertyClass(), attribute);
+        } else {
+            ManagedType<?> managedType = MetamodelUtils.resolveManagedTargetType(metamodel, correlationParent.getPropertyClass(), correlationPath.substring(correlationParentAlias.length() + 1, correlationPath.lastIndexOf('.')));
+            Attribute<?, ?> secondLastAttribute = MetamodelUtils.resolveTargetAttribute(metamodel, correlationParent.getPropertyClass(), correlationPathNoAlias);
+            attributeType = JpaUtils.resolveFieldClass(managedType.getJavaType(), secondLastAttribute);
+        }
 
         if (rootAlias == null) {
             // TODO: not sure if other JPA providers support case sensitive queries like hibernate
@@ -403,7 +411,7 @@ public class JoinManager extends AbstractManager {
         // TODO: Implement treat support for correlated subqueries
         String treatType = null;
         JoinAliasInfo rootAliasInfo = new JoinAliasInfo(rootAlias, rootAlias, true, true, aliasManager);
-        JoinNode rootNode = new JoinNode(correlationParent, correlationProperty, treatType, rootAliasInfo, attributeType, null);
+        JoinNode rootNode = new JoinNode(correlationParent, correlationPathNoAlias, treatType, rootAliasInfo, attributeType, null);
         rootAliasInfo.setJoinNode(rootNode);
         rootNodes.add(rootNode);
         // register root alias in aliasManager
@@ -445,7 +453,7 @@ public class JoinManager extends AbstractManager {
         return null;
     }
 
-    List<JoinNode> getRoots() {
+    public List<JoinNode> getRoots() {
         return rootNodes;
     }
 
@@ -478,7 +486,7 @@ public class JoinManager extends AbstractManager {
         return entityFunctionNodes.size() > 0;
     }
 
-    Set<JoinNode> getCollectionJoins() {
+    public Set<JoinNode> getCollectionJoins() {
         if (rootNodes.isEmpty()) {
             return Collections.EMPTY_SET;
         } else {
@@ -505,7 +513,7 @@ public class JoinManager extends AbstractManager {
         }
     }
 
-    JoinManager getParent() {
+    public JoinManager getParent() {
         return parent;
     }
 
@@ -611,7 +619,8 @@ public class JoinManager extends AbstractManager {
         return false;
     }
 
-    void applyTransformer(ExpressionTransformer transformer) {
+    @Override
+    public void applyTransformer(ExpressionTransformer transformer) {
         List<JoinNode> nodes = rootNodes;
         int size = nodes.size();
         for (int i = 0; i < size; i++) {
@@ -970,11 +979,11 @@ public class JoinManager extends AbstractManager {
         return result.baseNode;
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, String targetType, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired) {
+    public void implicitJoin(Expression expression, boolean objectLeafAllowed, String targetType, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired) {
         implicitJoin(expression, objectLeafAllowed, targetType, fromClause, fromSubquery, fromSelectAlias, joinRequired, false);
     }
 
-    void implicitJoin(Expression expression, boolean objectLeafAllowed, String targetTypeName, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch) {
+    public void implicitJoin(Expression expression, boolean objectLeafAllowed, String targetTypeName, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
             pathExpression = (PathExpression) expression;

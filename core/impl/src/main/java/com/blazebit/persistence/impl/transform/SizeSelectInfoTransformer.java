@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.blazebit.persistence.impl;
+package com.blazebit.persistence.impl.transform;
 
+
+import com.blazebit.persistence.impl.*;
 
 /**
  *
@@ -40,6 +42,7 @@ public class SizeSelectInfoTransformer implements SelectInfoTransformer {
         sizeTransformationVisitor.setHasGroupBySelects(groupBySelectStatus[0]);
         sizeTransformationVisitor.setHasComplexGroupBySelects(groupBySelectStatus[1]);
         if (com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(info.getExpression())) {
+            sizeTransformationVisitor.setParentModifier(new NodeInfoExpressionModifier(info));
             info.setExpression(info.getExpression().accept(sizeTransformationVisitor));
         } else {
             info.getExpression().accept(sizeTransformationVisitor);
