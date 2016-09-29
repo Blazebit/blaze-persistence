@@ -46,9 +46,16 @@ public class HibernateJpa21Provider extends HibernateJpaProvider {
     public boolean supportsJpa21() {
         return true;
     }
+
     @Override
     public boolean supportsEntityJoin() {
         return major > 5 || major == 5 && minor >= 1;
+    }
+
+    @Override
+    public boolean needsJoinSubqueryRewrite() {
+        // Got fixed in 5.2.3: https://hibernate.atlassian.net/browse/HHH-9329
+        return major < 5 || major == 5 && minor < 2 || major == 5 && minor == 2 && fix < 3;
     }
 
     @Override
