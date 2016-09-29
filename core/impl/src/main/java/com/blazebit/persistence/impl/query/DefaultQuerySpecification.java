@@ -4,6 +4,7 @@ import com.blazebit.persistence.impl.plan.DefaultModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.DefaultSelectQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 import javax.persistence.EntityManager;
@@ -20,12 +21,14 @@ import java.util.Set;
  */
 public class DefaultQuerySpecification implements QuerySpecification {
 
+    private final DbmsStatementType statementType;
     private final Query query;
     private final EntityManager em;
     private final Set<String> parameterListNames;
     private final ExtendedQuerySupport extendedQuerySupport;
 
-    public DefaultQuerySpecification(Query query, EntityManager em, Set<String> parameterListNames, ExtendedQuerySupport extendedQuerySupport) {
+    public DefaultQuerySpecification(DbmsStatementType statementType, Query query, EntityManager em, Set<String> parameterListNames, ExtendedQuerySupport extendedQuerySupport) {
+        this.statementType = statementType;
         this.query = query;
         this.em = em;
         this.parameterListNames = parameterListNames;
@@ -34,7 +37,7 @@ public class DefaultQuerySpecification implements QuerySpecification {
 
     @Override
     public ModificationQueryPlan createModificationPlan(int firstResult, int maxResults) {
-        return new DefaultModificationQueryPlan(query, firstResult, maxResults);
+        return new DefaultModificationQueryPlan(statementType, query, firstResult, maxResults);
     }
 
     @Override

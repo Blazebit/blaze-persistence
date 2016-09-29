@@ -1577,7 +1577,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (query instanceof AbstractCustomQuery<?>) {
             return ((AbstractCustomQuery<?>) query).getQuerySpecification();
         }
-        return new DefaultQuerySpecification(query, em, parameterManager.getParameterListNames(query), cbf.getExtendedQuerySupport());
+        return new DefaultQuerySpecification(statementType, query, em, parameterManager.getParameterListNames(query), cbf.getExtendedQuerySupport());
     }
 
     protected boolean hasLimit() {

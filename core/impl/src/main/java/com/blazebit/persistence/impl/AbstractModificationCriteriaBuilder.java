@@ -179,8 +179,12 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
 
         parameterManager.parameterizeQuery(query);
-        query.setFirstResult(firstResult);
-        query.setMaxResults(maxResults);
+
+        // Don't set the values for UPDATE or DELETE statements, otherwise Datanucleus will pass through the values to the JDBC statement
+        if (statementType == DbmsStatementType.INSERT) {
+            query.setFirstResult(firstResult);
+            query.setMaxResults(maxResults);
+        }
 
         return query;
 	}
