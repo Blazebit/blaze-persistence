@@ -53,7 +53,7 @@ public abstract class AbstractCountFunction implements JpqlFunction {
             argsSize += SqlUtils.countSelectItems(context.getArgument(i));
         }
 
-        if (startIndex >= argsSize) {
+        if (startIndex > argsSize) {
             throw new RuntimeException("The " + AbstractCountFunction.FUNCTION_NAME + " function needs at least one expression to count! args=" + context);
         }
 
