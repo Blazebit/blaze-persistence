@@ -64,6 +64,8 @@ public class Hibernate43Integrator implements ServiceContributingIntegrator {
 			// Register values entity if wasn't found
 			configuration.addAnnotatedClass(valuesEntity);
 			configuration.buildMappings();
+			PersistentClass clazz = configuration.getClassMapping(valuesEntity.getName());
+			clazz.getTable().setSubselect("select * from " + clazz.getJpaEntityName());
 		}
 
 		serviceRegistry.locateServiceBinding(PersisterClassResolver.class).setService(new CustomPersisterClassResolver());
