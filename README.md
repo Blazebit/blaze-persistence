@@ -7,21 +7,24 @@ Blaze-Persistence is a rich Criteria API for JPA providers.
 What is it?
 ===========
 
-Blaze-Persistence is a rich Criteria API for JPA providers that is better
+Blaze-Persistence is a rich Criteria API for JPA providers that aims to be better
 than all the other Criteria APIs available.
 It provides a fluent API for building queries and removes common restrictions
 encountered when working with JPA directly.
 It offers rich pagination support and also supports keyset pagination.
 
-The entity view module can be used to create views for JPA entites.
+The Entity-View module can be used to create views for JPA entites.
 You can roughly imagine an entity view is to an entity, what a RDBMS view is to a table.
+
+The JPA-Criteria module implements the Criteria API of JPA but is backed by the Blaze-Persistence Core API
+so you can get a query builder out of your CriteriaQuery objects.
 
 How to use it?
 ==============
 Blaze-Persistence is split up into different modules. We recommend that you define a version property in your parent pom that you can use for all artifacts. Modules are all released in one batch so you can safely increment just that property.
 
 	<properties>
-		<blaze-persistence.version>1.2.0-SNAPSHOT</blaze-persistence.version>
+		<blaze-persistence.version>1.2.0.Alpha1</blaze-persistence.version>
 	</properties>
 
 For compiling you will only need API artifacts and for the runtime you need impl and integration artifacts.
@@ -50,6 +53,15 @@ Blaze-Persistence Entity-View module dependencies
 		<version>${blaze-persistence.version}</version>
 		<scope>compile</scope>
 	</dependency>
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-entity-view-impl</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
+
+Blaze-Persistence Entity-View CDI integration dependencies
+
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-entity-view-impl</artifactId>
@@ -118,6 +130,30 @@ OpenJPA
 	<dependency>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blaze-persistence-integration-openjpa</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
+
+Blaze-Persistence JPA-Criteria module dependencies
+
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>compile</scope>
+	</dependency>
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+		<version>${blaze-persistence.version}</version>
+		<scope>runtime</scope>
+	</dependency>
+
+Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
+
+	<dependency>
+		<groupId>com.blazebit</groupId>
+		<artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
 		<version>${blaze-persistence.version}</version>
 		<scope>runtime</scope>
 	</dependency>
