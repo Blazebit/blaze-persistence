@@ -67,6 +67,8 @@ public interface JpaProvider {
 
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls);
 
+    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls);
+
     public boolean supportsRootTreat();
 
     public boolean supportsTreatJoin();

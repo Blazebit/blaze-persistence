@@ -526,12 +526,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         joinManager.buildClause(sbSelectFrom, EnumSet.of(ClauseType.SELECT), PAGE_POSITION_ID_QUERY_ALIAS_PREFIX, false, false);
         whereManager.buildClause(sbSelectFrom);
 
+        boolean inverseOrder = false;
+
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses);
+        orderByManager.buildGroupByClauses(clauses, inverseOrder);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
-        boolean inverseOrder = false;
         // Resolve select aliases because we might omit the select items
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, true);
 
@@ -575,12 +576,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
+        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
+
         Set<String> clauses = new LinkedHashSet<String>();
         clauses.add(idClause.toString());
-        orderByManager.buildGroupByClauses(clauses);
+        orderByManager.buildGroupByClauses(clauses, inverseOrder);
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
-        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
         // Resolve select aliases to their actual expressions only if the select items aren't included
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, !needsNewIdList);
 
@@ -623,7 +625,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         if (hasGroupBy) {
             selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
             havingManager.buildGroupByClauses(clauses);
-            orderByManager.buildGroupByClauses(clauses);
+            orderByManager.buildGroupByClauses(clauses, false);
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
@@ -664,18 +666,19 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
             }
         }
 
+        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
+
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
             selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
             havingManager.buildGroupByClauses(clauses);
-            orderByManager.buildGroupByClauses(clauses);
+            orderByManager.buildGroupByClauses(clauses, inverseOrder);
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
 
         havingManager.buildClause(sbSelectFrom);
 
-        boolean inverseOrder = keysetMode == KeysetMode.PREVIOUS;
         orderByManager.buildOrderBy(sbSelectFrom, inverseOrder, false);
 
         // execute illegal collection access check

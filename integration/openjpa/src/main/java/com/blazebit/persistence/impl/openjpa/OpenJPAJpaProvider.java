@@ -81,6 +81,11 @@ public class OpenJPAJpaProvider implements JpaProvider {
     }
 
     @Override
+    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
+        throw new UnsupportedOperationException("Not yet implemented!");
+    }
+
+    @Override
     public String getOnClause() {
         return "ON";
     }

@@ -1541,7 +1541,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         		havingManager.buildGroupByClauses(clauses);
         	}
         	if (isImplicitGroupByFromOrderBy()) {
-        		orderByManager.buildGroupByClauses(clauses);
+        		orderByManager.buildGroupByClauses(clauses, false);
         	}
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);

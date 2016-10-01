@@ -72,8 +72,8 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT e.id FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1 " + ON_CLAUSE + " KEY(elementCollection_test_1) = 'test' "
                 + "WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0 "
-                + "GROUP BY e.id "
-                + "ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id", "ASC", "LAST"))
+                + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
 
         String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e "
                 + "WHERE e.id IN :ids "

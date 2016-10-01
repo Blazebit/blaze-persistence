@@ -215,8 +215,8 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .orderByAsc("p.id")
                 .orderByAsc("ownedDocument.id");
 
-        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY ownedDocument.id, p.id " +
-                "ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST") + ", " + renderNullPrecedence("ownedDocument.id", "ASC", "LAST");
+        String expectedQuery = "SELECT p.id, ownedDocument.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id", "ASC", "LAST"), renderNullPrecedenceGroupBy("ownedDocument.id", "ASC", "LAST")) +
+                " ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST") + ", " + renderNullPrecedence("ownedDocument.id", "ASC", "LAST");
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         List<Tuple> result = cb.getResultList();
         Assert.assertEquals(3, result.size());
@@ -235,8 +235,8 @@ public class SizeTransformationTest extends AbstractCoreTest {
                 .select("SIZE(p.ownedDocuments)")
                 .orderByAsc("p.id");
 
-        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY ownedDocument.id, p.id " +
-                "ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+        String expectedQuery = "SELECT p.id, " + function("COUNT_TUPLE", "'DISTINCT'", "versions_1") + ", (SELECT " + countStar() + " FROM p.ownedDocuments document) FROM Person p LEFT JOIN p.ownedDocuments ownedDocument LEFT JOIN ownedDocument.versions versions_1 GROUP BY " + groupBy("ownedDocument.id", "p.id", renderNullPrecedenceGroupBy("p.id", "ASC", "LAST")) +
+                " ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
 
         Assert.assertEquals(expectedQuery, cb.getQueryString());
         cb.getResultList();

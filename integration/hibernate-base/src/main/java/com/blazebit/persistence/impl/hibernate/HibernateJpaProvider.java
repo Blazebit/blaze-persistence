@@ -125,6 +125,15 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
+        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, true);
+    }
+
+    @Override
+    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
+        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, false);
+    }
+
+    private void renderNullPrecedence0(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls, boolean forOrderBy) {
         if (nulls != null) {
             if (db == DB.DB2 || db == DB.MY_SQL) {
                 if (db == DB.DB2) {
@@ -132,7 +141,10 @@ public class HibernateJpaProvider implements JpaProvider {
                         // The following are ok according to DB2 docs
                         // ASC + NULLS LAST
                         // DESC + NULLS FIRST
-                        sb.append(expression).append(" ").append(order).append(" NULLS ").append(nulls);
+                        sb.append(expression);
+                        if (forOrderBy) {
+                            sb.append(" ").append(order).append(" NULLS ").append(nulls);
+                        }
                         return;
                     }
                 }
@@ -145,12 +157,21 @@ public class HibernateJpaProvider implements JpaProvider {
                     sb.append("1 ELSE 0");
                 }
                 sb.append(" END, ");
-                sb.append(expression).append(" ").append(order);
+                sb.append(expression);
+                if (forOrderBy) {
+                    sb.append(" ").append(order);
+                }
             } else {
-                sb.append(expression).append(' ').append(order).append(" NULLS ").append(nulls);
+                sb.append(expression);
+                if (forOrderBy) {
+                    sb.append(' ').append(order).append(" NULLS ").append(nulls);
+                }
             }
         } else {
-            sb.append(expression).append(' ').append(order);
+            sb.append(expression);
+            if (forOrderBy) {
+                sb.append(' ').append(order);
+            }
         }
     }
 

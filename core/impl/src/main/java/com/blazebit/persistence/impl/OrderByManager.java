@@ -201,7 +201,7 @@ public class OrderByManager extends AbstractManager {
      * 
      * @return
      */
-    void buildGroupByClauses(Set<String> clauses) {
+    void buildGroupByClauses(Set<String> clauses, boolean inverseOrder) {
         if (orderByInfos.isEmpty()) {
             return;
         }
@@ -225,13 +225,35 @@ public class OrderByManager extends AbstractManager {
                 expr = orderByInfo.getExpression();
             }
 
+
             // This visitor checks if an expression is usable in a group by
             GroupByUsableDetectionVisitor groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(false);
             if (!expr.accept(groupByUsableDetectionVisitor)) {
                 sb.setLength(0);
                 queryGenerator.setQueryBuffer(sb);
                 expr.accept(queryGenerator);
-                clauses.add(sb.toString());
+                if (jpaProvider.supportsNullPrecedenceExpression()) {
+                    clauses.add(sb.toString());
+                } else {
+                    String expression = sb.toString();
+                    String order;
+                    String nulls;
+                    if (orderByInfo.ascending == inverseOrder) {
+                        order = "DESC";
+                    } else {
+                        order = "ASC";
+                    }
+                    if (orderByInfo.nullFirst == inverseOrder) {
+                        nulls = "LAST";
+                    } else {
+                        nulls = "FIRST";
+                    }
+
+                    sb.setLength(0);
+                    jpaProvider.renderNullPrecedenceGroupBy(sb, expression, expression, order, nulls);
+
+                    clauses.add(sb.toString());
+                }
             }
         }
 

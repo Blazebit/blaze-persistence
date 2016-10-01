@@ -139,8 +139,8 @@ public class OrderByTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY d.id, COALESCE(owner_1.name,'a') "
-                + "ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("COALESCE(owner_1.name,'a')", "ASC", "LAST"), renderNullPrecedenceGroupBy("d.id", "ASC", "LAST"))
+                + " ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }
     

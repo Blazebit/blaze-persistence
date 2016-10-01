@@ -36,7 +36,6 @@ import org.junit.runners.Parameterized;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.KeysetEntity;
 
 /**
@@ -318,15 +317,22 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         }
         
         String expectedIdQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
-        String expectedIdQueryEnd = " GROUP BY k.id, k.a, k.b ORDER BY "
-            + clause("k.a", aAsc, aNullsFirst) + ", "
-            + clause("k.b", bAsc, bNullsFirst) + ", "
-            + clause("k.id", idAsc, idNullsFirst);
+        String expectedIdQueryEnd = " GROUP BY "
+            + groupBy(
+                "k.id",
+                groupByClause("k.a", aAsc, aNullsFirst),
+                groupByClause("k.b", bAsc, bNullsFirst),
+                groupByClause("k.id", idAsc, idNullsFirst)
+            )
+            + " ORDER BY "
+            + orderByClause("k.a", aAsc, aNullsFirst) + ", "
+            + orderByClause("k.b", bAsc, bNullsFirst) + ", "
+            + orderByClause("k.id", idAsc, idNullsFirst);
         String expectedObjectQueryStart = "SELECT k.id, k.a, k.b, k.id FROM KeysetEntity k WHERE ";
         String expectedObjectQueryEnd = " ORDER BY "
-            + clause("k.a", aAsc, aNullsFirst) + ", "
-            + clause("k.b", bAsc, bNullsFirst) + ", "
-            + clause("k.id", idAsc, idNullsFirst);
+            + orderByClause("k.a", aAsc, aNullsFirst) + ", "
+            + orderByClause("k.b", bAsc, bNullsFirst) + ", "
+            + orderByClause("k.id", idAsc, idNullsFirst);
         CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(KeysetEntity.class, "k")
             .select("id");
         crit.orderBy("a", this.aAsc, this.aNullsFirst)
@@ -370,7 +376,7 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
         assertEquals(expectedObjectQueryStart + keysetCondition + expectedObjectQueryEnd, actualObjectQueryString);
     }
     
-    private String clause(String expression, boolean asc, boolean nullsFirst) {
+    private String orderByClause(String expression, boolean asc, boolean nullsFirst) {
         if (asc) {
             if (nullsFirst) {
                 return renderNullPrecedence(expression, "ASC", "FIRST");
@@ -382,6 +388,22 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             	return renderNullPrecedence(expression, "DESC", "FIRST");
             } else {
             	return renderNullPrecedence(expression, "DESC", "LAST");
+            }
+        }
+    }
+
+    private String groupByClause(String expression, boolean asc, boolean nullsFirst) {
+        if (asc) {
+            if (nullsFirst) {
+                return renderNullPrecedenceGroupBy(expression, "ASC", "FIRST");
+            } else {
+                return renderNullPrecedenceGroupBy(expression, "ASC", "LAST");
+            }
+        } else {
+            if (nullsFirst) {
+                return renderNullPrecedenceGroupBy(expression, "DESC", "FIRST");
+            } else {
+                return renderNullPrecedenceGroupBy(expression, "DESC", "LAST");
             }
         }
     }

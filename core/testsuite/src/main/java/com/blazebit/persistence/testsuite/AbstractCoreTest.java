@@ -134,9 +134,21 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
-        StringBuilder sb = new StringBuilder();
-    	jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
+    	StringBuilder sb = new StringBuilder();
+        jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
     	return sb.toString();
+    }
+
+    protected String renderNullPrecedenceGroupBy(String resolvedExpression, String order, String nulls) {
+        StringBuilder sb = new StringBuilder();
+        jpaProvider.renderNullPrecedenceGroupBy(sb, resolvedExpression, resolvedExpression, order, nulls);
+        return sb.toString();
+    }
+
+    protected String groupBy(String... groupBys) {
+        Set<String> distinctGroupBys = new LinkedHashSet<String>();
+        distinctGroupBys.addAll(Arrays.asList(groupBys));
+        return StringUtils.join(", ", distinctGroupBys);
     }
     
     protected String countStar() {
