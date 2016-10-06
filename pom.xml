@@ -125,6 +125,9 @@
 		<version.release.plugin>2.5.1</version.release.plugin>
 		<version.surefire.plugin>2.19.1</version.surefire.plugin>
 		
+		<processor.plugin.compilerArguments></processor.plugin.compilerArguments>
+		<surefire.openejb.jvm.params></surefire.openejb.jvm.params>
+		
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
@@ -495,7 +498,9 @@
 				<jdk>[1.9,)</jdk>
 			</activation>
 			<properties>
-				<version.javassist>3.21.0-SNAPSHOT</version.javassist>
+				<version.javassist>3.22.0-CR1</version.javassist>
+				<processor.plugin.compilerArguments>--add-modules=java.se.ee</processor.plugin.compilerArguments>
+				<surefire.openejb.jvm.params>--add-modules=java.xml.bind,java.corba</surefire.openejb.jvm.params>
 			</properties>
 			<repositories>
 				<repository>

@@ -121,6 +121,20 @@
                     </execution>
                 </executions>
             </plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Travis build workaround + JDK 9 support -->
+                            <argLine>${surefire.jvm.params} ${surefire.openejb.jvm.params}</argLine>
+                            <skipTests>${skipTests}</skipTests>
+                        </configuration>
+                    </execution>
+				</executions>
+			</plugin>
         </plugins>
     </build>
 </project>

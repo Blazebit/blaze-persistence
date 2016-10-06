@@ -133,6 +133,13 @@
                         </configuration>
                     </execution>
                 </executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.jruby</groupId>
+						<artifactId>jruby-complete</artifactId>
+						<version>1.7.26</version>
+					</dependency>
+				</dependencies>
             </plugin>
         </plugins>
     </build>

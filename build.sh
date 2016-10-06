@@ -3,7 +3,7 @@ set -e
 
 if [ "$JDK" = "9" ]; then
   MVN_BIN=/tmp/apache-maven/bin/mvn
-  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m"
+  export MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=512m --add-modules=java.se.ee"
 elif [ "$LATEST_MAVEN" = "true" ]; then
   MVN_BIN=/tmp/apache-maven/bin/mvn
   export MAVEN_OPTS="-Xmx1024m -XX:MaxPermSize=512m"

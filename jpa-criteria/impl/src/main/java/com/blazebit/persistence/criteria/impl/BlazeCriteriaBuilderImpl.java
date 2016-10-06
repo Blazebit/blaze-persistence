@@ -993,7 +993,8 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <C, R> SimpleCase<C, R> selectCase(Expression<? extends C> expression) {
-        return selectCase((Class<R>) null, expression);
+		// JDK 9 complains without the cast
+        return /*(SimpleCase<C, R>) */selectCase((Class<R>) null, expression);
     }
 
     public <C, R> SimpleCase<C, R> selectCase(Class<R> type, Expression<? extends C> expression) {

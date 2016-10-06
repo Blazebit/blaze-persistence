@@ -357,6 +357,7 @@
 								</goals>
 								<phase>generate-sources</phase>
 								<configuration>
+									<compilerArguments>${processor.plugin.compilerArguments}</compilerArguments>
 									<!-- source output directory -->
 									<outputDirectory>${project.build.directory}/test-metamodel</outputDirectory>
 									<processors>

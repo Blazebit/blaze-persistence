@@ -184,8 +184,8 @@ matrix:
 #    - env: JPAPROVIDER=openjpa RDBMS=oracle
 #      sudo: true
 # JDK 9 - Not going to work until javassist is fixed
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
+      sudo: true
   allow_failures:
 #    - env: JPAPROVIDER=datanucleus-4 RDBMS=sqlite
 #      jdk: oraclejdk8
@@ -204,7 +204,7 @@ matrix:
 #      sudo: true
 #    - env: JPAPROVIDER=hibernate RDBMS=oracle
 #      sudo: true
-#    - env: JPAPROVIDER=hibernate-5.0 RDBMS=h2 JDK=9
-#      sudo: true
+    - env: JPAPROVIDER=hibernate-5.2 RDBMS=h2 JDK=9
+      sudo: true
 #    - env: JPAPROVIDER=hibernate-6.0 RDBMS=h2
 #      jdk: oraclejdk8
