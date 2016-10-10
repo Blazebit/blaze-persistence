@@ -155,6 +155,20 @@ public class PaginationTest extends AbstractCoreTest {
         assertEquals("DOC5", result.get(0).getName());
     }
 
+
+    @Test
+    public void simpleTestFetch() {
+        PaginatedCriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d")
+            .where("d.name").like(true).value("doc%").noEscape()
+            .where("owner.name").eq("Karl1")
+            .orderByAsc("d.id")
+            .fetch("owner")
+            .page(0, 1);
+        List<Document> result = cb.getResultList();
+        assertEquals(1, result.size());
+        assertEquals("doc1", result.get(0).getName());
+    }
+
     @Test
     public void testSelectIndexedWithParameter() {
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d JOIN d.owner owner_1 WHERE owner_1.name = :param_0";
