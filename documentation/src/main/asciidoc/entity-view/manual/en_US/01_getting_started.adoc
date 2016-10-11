@@ -23,7 +23,7 @@ EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
 cfg.addEntityView(EntityView1.class);
 // Add some more
 cfg.addEntityView(EntityViewn.class);
-EntityViewManager evm = cfg.createEntityViewManager();
+EntityViewManager evm = cfg.createEntityViewManager(criteriaBuilderFactory, entityManagerFactory);
 ----
 As you can see, the `EntityViewConfiguration` is used to register all the entity
 view classes that you want to make accessible within the an `EntityViewManager`.
@@ -215,7 +215,7 @@ query should filter and how we paginate the resulting query.
 ----
 // Base setting
 EntityViewSetting<FilteredCatView, PaginatedCriteriaBuilder<FilteredCatView>> setting = 
-									EntityViewSetting.create(FilteredCatView.class, 0, 10);
+		EntityViewSetting.create(FilteredCatView.class, 0, 10);
 
 // Query
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class);

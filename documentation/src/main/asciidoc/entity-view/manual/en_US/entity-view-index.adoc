@@ -10,8 +10,8 @@ Copyright (C) 2014 Blazebit
 
 toc::[]
 
-include::01_ev_getting_started.ad[]
+include::01_getting_started.adoc[]
 
-include::02_architecture.ad[]
+include::02_architecture.adoc[]
 
-include::03_configuration.ad[]
+include::03_configuration.adoc[]

@@ -81,6 +81,28 @@ This feature can make writing queries a lot easier since it will implicitly copy
 | Default | true 
 |====================
 
+==== EXPRESSION_OPTIMIZATION
+
+Defines whether expressions should be optimized.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.expression_optimization
+| Type | boolean 
+| Default | true 
+|====================
+
+==== EXPRESSION_CACHE_CLASS
+
+The full qualified expression cache implementation class name.
+
+[width="100%",options="header,footer"]
+|====================
+| Key | com.blazebit.persistence.expression.cache_class
+| Type | String 
+| Default | com.blazebit.persistence.impl.expression.ConcurrentHashMapExpressionCache 
+|====================
+
 === Query transformers
 
 Query tranformers are used to apply object builders to typed queries. This is normally provided by an integration module for persistence providers.
@@ -107,4 +129,4 @@ By registering a custom implementation for a specific dbms via `registerDialect(
 
 === Entity manager integrators
 
-A little integration layer to extract the dbms of an entity manager and register `JpqlFunctionGroup`s with the entity manager. This is normally provided by an integration module for persistence providers.
+A little integration layer to extract the dbms of an entity manager and register `JpqlFunctionGroup` instances with the entity manager. This is normally provided by an integration module for persistence providers.

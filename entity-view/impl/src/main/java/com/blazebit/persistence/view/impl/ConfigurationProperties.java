@@ -66,8 +66,6 @@ public final class ConfigurationProperties {
 	 * To specify the batch size of a specific property, append the property name after the "batch_size" like
 	 * e.g. <code>com.blazebit.persistence.view.batch_size.subProperty</code>
 	 *
-	 * Valid values for this property are <code>true</code> or <code>false</code>.
-	 *
 	 * @since 1.2.0
 	 */
 	public static final String DEFAULT_BATCH_SIZE = "com.blazebit.persistence.view.batch_size";
