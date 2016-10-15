@@ -92,7 +92,7 @@
 		<version.blazecbav>0.2.0</version.blazecbav>
 		<version.blazeutils>0.1.10</version.blazeutils>
 		<version.deltaspike>1.0.1</version.deltaspike>
-		<version.junit>4.11</version.junit>
+		<version.junit>4.12</version.junit>
 		<version.javassist>3.18.2-GA</version.javassist>
 
 		<!-- Minimum version is 4.2.8.Final -->
