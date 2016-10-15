@@ -1,6 +1,5 @@
 package com.blazebit.persistence.view.impl.spring;
 
-import org.springframework.beans.factory.xml.NamespaceHandler;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 
 /**

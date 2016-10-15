@@ -1,7 +1,6 @@
 package com.blazebit.persistence.view.impl.spring;
 
 import com.blazebit.persistence.view.EntityView;
-import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.parsing.ReaderContext;
@@ -91,21 +90,17 @@ public class EntityViewRegistrar implements ImportBeanDefinitionRegistrar, BeanD
             }
         }
 
-        final String entityViewClassHolderBeanName = "entityViewClassesHolder";
+        final String entityViewClassHolderBeanName = "entityViewConfigurationProducer";
         if (registry.containsBeanDefinition(entityViewClassHolderBeanName)) {
             BeanDefinition existingClassHolder = registry.getBeanDefinition(entityViewClassHolderBeanName);
             Set<Class<?>> existingEntityViewClasses = (Set<Class<?>>) ((GenericBeanDefinition) existingClassHolder).getConstructorArgumentValues().getGenericArgumentValue(Set.class).getValue();
             existingEntityViewClasses.addAll(entityViewClasses);
         } else {
+            // register configuration class
             GenericBeanDefinition beanDefinition = new GenericBeanDefinition();
-            beanDefinition.setBeanClass(EntityViewClassesHolder.class);
+            beanDefinition.setBeanClass(EntityViewConfigurationProducer.class);
             beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(entityViewClasses);
             registry.registerBeanDefinition(entityViewClassHolderBeanName, beanDefinition);
-
-            // register configuration class
-            beanDefinition = new GenericBeanDefinition();
-            beanDefinition.setBeanClass(EntityViewConfigurationProducer.class);
-            registry.registerBeanDefinition("entityViewConfigurationProducer", beanDefinition);
         }
     }
 

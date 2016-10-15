@@ -5,8 +5,7 @@ import com.blazebit.persistence.view.spi.EntityViewConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import java.util.Set;
 
 /**
  * Created
@@ -18,12 +17,8 @@ public class EntityViewConfigurationProducer {
 
     private final EntityViewConfiguration configuration = EntityViews.createDefaultConfiguration();
 
-    @Inject
-    private EntityViewClassesHolder entityViewClassesHolder;
-
-    @PostConstruct
-    public void initEntityViewConfiguration() throws ClassNotFoundException {
-        for (Class<?> entityViewClass : entityViewClassesHolder.getEntityViewClasses()) {
+    public EntityViewConfigurationProducer(Set<Class<?>> entityViewClasses) {
+        for (Class<?> entityViewClass : entityViewClasses) {
             configuration.addEntityView(entityViewClass);
         }
     }
