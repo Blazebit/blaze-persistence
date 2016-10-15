@@ -21,9 +21,8 @@ import javax.persistence.Id;
 import java.io.Serializable;
 
 /**
- *
- * @author Christian Beikov
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
 @Entity
 public class TestEntity implements Serializable {

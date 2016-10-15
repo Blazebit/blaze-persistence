@@ -20,9 +20,8 @@ import com.blazebit.persistence.view.IdMapping;
 import com.blazebit.persistence.view.impl.spring.TestEntity;
 
 /**
- *
- * @author Christian Beikov
- * @since 1.0
+ * @author Moritz Becker (moritz.becker@gmx.at)
+ * @since 1.2
  */
 @EntityView(TestEntity.class)
 public interface TestView1 {
