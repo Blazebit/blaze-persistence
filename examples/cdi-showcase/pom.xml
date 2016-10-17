@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <name>Blzaebit Persistence Showcase CDI</name>
+    <name>Blazebit Persistence Showcase CDI</name>
     <artifactId>cdi-showcase</artifactId>
 
     <properties>
