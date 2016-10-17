@@ -58,7 +58,7 @@ public class CDIShowcaseTest {
 
     @Test
     public void simpleApplicationTest() {
-        // just run the Application's run method - if no exception occur, we that it works
+        // just run the Application's run method - if no exception occur, we assume that it works
         Application application = BeanProvider.getContextualReference(Application.class);
         application.run();
     }
