@@ -23,6 +23,7 @@
 		<module>integration</module>
 		<module>testsuite-base</module>
 		<module>documentation</module>
+		<module>examples</module>
 	</modules>
 
 	<issueManagement>
