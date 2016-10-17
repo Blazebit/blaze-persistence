@@ -13,8 +13,15 @@
     <artifactId>blaze-persistence-examples</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>cdi-showcase</module>
     </modules>
 
+    <profiles>
+        <profile>
+            <id>jdk-8</id>
+            <modules>
+                <module>cdi-showcase</module>
+            </modules>
+        </profile>
+    </profiles>
 
 </project>
