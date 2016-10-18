@@ -340,6 +340,22 @@ Questions or issues
 
 Drop by on [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new).
 
+Setup local development
+=======================
+
+Here some notes about setting up a local environment for testing.
+
+== Firebird
+
+When installing the 3.x version, you also need a 3.x JDBC driver.
+Additionally you should add the following to the firebird.conf
+
+```
+WireCrypt = Enabled
+```
+
+After creating the DB with `create database 'localhost:test' user 'sysdba' password 'sysdba';`, you can connect with JDBC with `jdbc:firebirdsql:localhost:test?charSet=utf-8`
+
 Licensing
 =========
 

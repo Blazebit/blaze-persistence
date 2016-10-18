@@ -1,5 +1,5 @@
-Blaze Persistence - Criteria API for JPA backends
-=================================================
+Blaze Persistence - Entity View Module
+======================================
 :projectname:     Blaze Persistence
 :lang:            en
 :authors:  	      Christian Beikov, Blazebit; Moritz Becker, Curecomp
@@ -15,19 +15,3 @@ include::01_getting_started.adoc[]
 include::02_architecture.adoc[]
 
 include::03_configuration.adoc[]
-
-include::04_join_clause.adoc[]
-
-include::05_predicate_builder.adoc[]
-
-include::06_where_clause.adoc[]
-
-include::07_group_by_having_clause.adoc[]
-
-include::08_order_by_clause.adoc[]
-
-include::09_select_clause.adoc[]
-
-include::10_pagination.adoc[]
-
-include::11_cte.adoc[]

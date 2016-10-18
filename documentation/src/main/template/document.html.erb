@@ -28,7 +28,7 @@ elsif attr? :stylesheet
 end
 if attr? :icons, 'font'
   if !(attr 'iconfont-remote', '').nil? %>
-<link rel="stylesheet" href="<%= attr 'iconfont-cdn', 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css' %>"><%
+<link rel="stylesheet" href="<%= attr 'iconfont-cdn', 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css' %>"><%
   else %>
 <link rel="stylesheet" href="<%= normalize_web_path(%(#{attr 'iconfont-name', 'font-awesome'}.css), (attr :stylesdir, '')) %>"><%
   end
@@ -53,9 +53,8 @@ when 'pygments'
     end
   end
 when 'highlightjs' %>
-<link rel="stylesheet" href="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/styles/<%= attr 'highlightjs-theme', 'googlecode' %>.min.css">
-<script src="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/highlight.min.js"></script>
-<script src="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.4' %>/lang/common.min.js"></script>
+<link rel="stylesheet" href="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0' %>/styles/<%= attr 'highlightjs-theme', 'default' %>.min.css">
+<script src="<%= attr 'highlightjsdir', 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0' %>/highlight.min.js"></script>
 <script>hljs.initHighlightingOnLoad()</script><%
 when 'prettify' %>
 <link rel="stylesheet" href="<%= attr 'prettifydir', 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298' %>/<%= attr 'prettify-theme', 'prettify' %>.min.css">

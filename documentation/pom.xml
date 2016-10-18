@@ -73,15 +73,15 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>core-manual-en_US-html</id>               
-                        <phase>generate-resources</phase>  
+                        <id>core-manual-en_US-html</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>process-asciidoc</goal>    
+                            <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
                             <sourceDirectory>${basedir}/src/main/asciidoc/core/manual/en_US</sourceDirectory>
                             <outputDirectory>${project.build.directory}/generated-docs/core/manual/en_US</outputDirectory>
-                             see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 
+                            <!-- see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 -->
                             <templateDir>${basedir}/src/main/template</templateDir>
                             <imagesDir>${basedir}/src/main/asciidoc/core/manual/images</imagesDir>
                             <doctype>book</doctype>
@@ -90,7 +90,11 @@
                             <sourceHighlighter>highlightjs</sourceHighlighter>
                             <attributes>
                                 <linkcss>true</linkcss>
-                                <stylesheet>css/style.css</stylesheet>
+                                <stylesheet>blazebit.css</stylesheet>
+								<imagesdir>images</imagesdir>
+								<iconsdir>images/icons</iconsdir>
+								<stylesdir>css</stylesdir>
+								<scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
                                 <icons>picture</icons>
@@ -103,15 +107,15 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>entity-manual-en_US-html</id>               
-                        <phase>generate-resources</phase>  
+                        <id>entity-manual-en_US-html</id>
+                        <phase>generate-resources</phase>
                         <goals>
-                            <goal>process-asciidoc</goal>    
+                            <goal>process-asciidoc</goal>
                         </goals>
                         <configuration>
                             <sourceDirectory>${basedir}/src/main/asciidoc/entity-view/manual/en_US</sourceDirectory>
                             <outputDirectory>${project.build.directory}/generated-docs/entity-view/manual/en_US</outputDirectory>
-                             see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 
+                             <!-- see https://github.com/asciidoctor/asciidoctor-backends/tree/master/erb/html5 -->
                             <templateDir>${basedir}/src/main/template</templateDir>
                             <imagesDir>${basedir}/src/main/asciidoc/entity-view/manual/images</imagesDir>
                             <doctype>book</doctype>
@@ -120,7 +124,11 @@
                             <sourceHighlighter>highlightjs</sourceHighlighter>
                             <attributes>
                                 <linkcss>true</linkcss>
-                                <stylesheet>css/style.css</stylesheet>
+                                <stylesheet>blazebit.css</stylesheet>
+								<imagesdir>images</imagesdir>
+								<iconsdir>images/icons</iconsdir>
+								<stylesdir>css</stylesdir>
+								<scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
                                 <icons>picture</icons>
