@@ -27,5 +27,6 @@
         <module>openjpa</module>
         <module>base-cdi</module>
         <module>entity-view-cdi</module>
+        <module>entity-view-spring</module>
     </modules>
 </project>
