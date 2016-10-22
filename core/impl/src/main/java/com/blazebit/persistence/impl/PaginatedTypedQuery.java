@@ -118,6 +118,11 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 			}
 
 			List<X> queryResultList = objectQuery.getResultList();
+
+			if (keysetMode == KeysetMode.PREVIOUS) {
+				Collections.reverse(queryResultList);
+			}
+
 			PagedList<X> pagedResultList = new PagedListImpl<X>(queryResultList, newKeyset, totalSize, queryFirstResult, pageSize);
 			return pagedResultList;
 		} else {
@@ -139,6 +144,10 @@ public class PaginatedTypedQuery<X> implements TypedQuery<X> {
 				}
 
 				return new PagedListImpl<X>(newKeysetPage, totalSize, queryFirstResult, pageSize);
+			}
+
+			if (keysetMode == KeysetMode.PREVIOUS) {
+				Collections.reverse(result);
 			}
 
 			KeysetPage newKeyset = null;

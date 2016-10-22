@@ -89,6 +89,25 @@ public class KeysetPaginationTest extends AbstractCoreTest {
     }
 
     @Test
+    public void backwardsPaginationResultSetOrder() {
+        CriteriaBuilder<Tuple> crit = cbf.create(em, Tuple.class).from(Document.class, "d")
+                .select("d.name").select("d.owner.name");
+        crit.orderByDesc("d.owner.name")
+                .orderByDesc("d.name")
+                .orderByAsc("d.id");
+
+        PaginatedCriteriaBuilder<Tuple> pcb = crit.page(null, 2, 1);
+        PagedList<Tuple> result = pcb.getResultList();
+
+        // scroll backwards
+        result = crit.page(result.getKeysetPage(), 0, 2).getResultList();
+
+        assertEquals(2, result.getSize());
+        assertEquals("doc3", result.get(0).get(0));
+        assertEquals("doc2", result.get(1).get(0));
+    }
+
+    @Test
     public void testWithReferenceObject() {
         Document reference = cbf.create(em, Document.class).where("name").eq("doc3").getSingleResult();
         String expectedCountQuery =
