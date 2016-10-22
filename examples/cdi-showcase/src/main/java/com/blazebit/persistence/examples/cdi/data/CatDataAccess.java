@@ -18,6 +18,8 @@ package com.blazebit.persistence.examples.cdi.data;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.examples.cdi.cte.CatHierarchyCTE;
 import com.blazebit.persistence.examples.cdi.model.Cat;
 import com.blazebit.persistence.examples.cdi.producer.EntityManagerHolder;
@@ -95,4 +97,10 @@ public class CatDataAccess {
         return evm.applySetting(setting, cb).getResultList();
     }
 
+    public <T> PagedList<T> getPaginatedCats(EntityViewSetting<T, PaginatedCriteriaBuilder<T>> setting) {
+        CriteriaBuilder<Cat> cb = cbf.create(emHolder.getEntityManager(), Cat.class)
+                .orderByAsc("name")
+                .orderByAsc("id");
+        return evm.applySetting(setting, cb).withKeysetExtraction(true).getResultList();
+    }
 }

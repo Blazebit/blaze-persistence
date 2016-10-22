@@ -17,6 +17,8 @@
 package com.blazebit.persistence.examples.cdi;
 
 import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.examples.cdi.data.CatDataAccess;
 import com.blazebit.persistence.examples.cdi.data.TestDataGenerator;
 import com.blazebit.persistence.examples.cdi.view.BasicCatView;
@@ -58,11 +60,41 @@ public class Application {
         print(catDataAccess.getCats(sortedBasicCatSetting));
 
         EntityViewSetting<BasicCatView, CriteriaBuilder<BasicCatView>> basicCatSetting = EntityViewSetting.create(BasicCatView.class);
-        BasicCatView someCat = catDataAccess.getCatByName("Generation 2 - Cat 2/1", basicCatSetting);
+        BasicCatView someCat = catDataAccess.getCatByName("G - Generation 2 - Cat 2/1", basicCatSetting);
 
         // entity-view example with CTE
         System.out.println(heading("Family tree of " + someCat));
         print(catDataAccess.getCatHierarchy(someCat.getId(), basicCatSetting));
+
+        // pagination & entity views
+        EntityViewSetting<BasicCatView, PaginatedCriteriaBuilder<BasicCatView>> paginationSetting = EntityViewSetting.create(BasicCatView.class, 0, 3);
+        PagedList<BasicCatView> pagedResults = catDataAccess.getPaginatedCats(paginationSetting);
+
+        System.out.println(heading("Page 1"));
+        print(pagedResults);
+
+        // insert new cat
+        // in the sort order defined by CatDataAccess#getPaginatedCats, this cat is inserted at index 1 (0-based)
+        testDataGenerator.addCat("B - New cat");
+
+        // since we use keyset pagination, the inserted cat does not influence the next page
+        // depending on the firstRow parameter and the passed keyset page, the criteria builder will automatically decide
+        // if it can use keyset pagination or if it must perform offset pagination
+        paginationSetting = EntityViewSetting.create(BasicCatView.class, 3, 3);
+        paginationSetting.withKeysetPage(pagedResults.getKeysetPage());
+        pagedResults = catDataAccess.getPaginatedCats(paginationSetting);
+
+        System.out.println(heading("Page 2"));
+        print(pagedResults);
+
+        // scroll back to page 1
+        // page 1 will now contain the new cat
+        paginationSetting = EntityViewSetting.create(BasicCatView.class, 0, 3);
+        paginationSetting.withKeysetPage(pagedResults.getKeysetPage());
+        pagedResults = catDataAccess.getPaginatedCats(paginationSetting);
+
+        System.out.println(heading("Back at Page 1"));
+        print(pagedResults);
     }
 
     // helpers
