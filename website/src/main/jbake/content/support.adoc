@@ -1,0 +1,35 @@
+= Support
+:page: support
+:jbake-type: index
+:jbake-status: published
+
+[.bTop.clearfix]
+== Support
+
+[.tCenter]
+As with every software, you will sooner or later reach a point where you can't progress on your own anymore. For this reason we offer you multiple ways of support to help get your work done!
+
+=== Blaze-Persistence community support
+
+If searching the Internet and the link:documentation.html[*documentation*] don't help you with your problem or question you have some other options.
+
+Since Blaze-Persistence is an open source project, you can ask the community for free via the following channels:
+
+. +++<a href="https://blazebit.herokuapp.com">Slack<img src="https://blazebit.herokuapp.com/badge.svg" alt="Slack Status"></a>+++
+. https://stackoverflow.com/questions/ask?tags=java+blaze-persistence[Stackoverflow]
+. https://github.com/Blazebit/blaze-persistence/issues/new[GitHub issues]
+
+=== Blaze-Persistence commercial support
+
+If all the community support didn't help or you require commercial services you can always mailto:office@blazebit.com[*contact Blazebit*] directly and we will find an arrangement that fits your needs.
+
+In general we offer the following commercial services
+
+*Training*::
+To get your developers up-to date with the latest developments of Blaze-Persistence and internal workings
+
+*Consulting*::
+To help you with issues in your project remotely or on-site
+
+*Support*::
+Long term support via multiple channels, high priority bug fixes and low response times

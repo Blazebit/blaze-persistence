@@ -34,8 +34,12 @@ public class ViewRootJpqlMacro implements JpqlMacro {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ViewRootJpqlMacro)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ViewRootJpqlMacro)) {
+            return false;
+        }
 
         ViewRootJpqlMacro that = (ViewRootJpqlMacro) o;
 

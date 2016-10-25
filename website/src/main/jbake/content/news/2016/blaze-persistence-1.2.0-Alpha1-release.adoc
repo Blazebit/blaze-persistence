@@ -1,0 +1,46 @@
+= Blaze-Persistence 1.2.0-Alpha1 Release
+Christian Beikov
+2016-09-29 13
+:description: Blaze-Persistence version 1.2.0-Alpha1 was just released
+:page: news
+:icon: christian_head.png
+:jbake-tags: announcement,release
+:jbake-type: post
+:jbake-status: published
+
+This release includes some very hot features
+
+* https://github.com/Blazebit/blaze-persistence/issues/222[*#222*] Entity joins support in core has landed!
+* https://github.com/Blazebit/blaze-persistence/issues/202[*#202*] Entity views can now reference their view root via <code>VIEW_ROOT</code>
+* https://github.com/Blazebit/blaze-persistence/issues/218[*#218*] Entity views can also now have a custom root defined when applying the setting
+* https://github.com/Blazebit/blaze-persistence/issues/211[*#211*] Parser implements negation optimizations
+* https://github.com/Blazebit/blaze-persistence/issues/200[*#200*] Parser supports literals with type suffix
+* https://github.com/Blazebit/blaze-persistence/issues/193[*#193*] Subqueries can use correlated paths now
+* https://github.com/Blazebit/blaze-persistence/issues/205[*#205*] IN-predicate API of core supports Collection now instead of List
+* https://github.com/Blazebit/blaze-persistence/issues/192[*#192*] Various API changes for supporting multi-subquery expressions
+* https://github.com/Blazebit/blaze-persistence/issues/108[*#108*] Entity views can now correlate separate queries as subviews to an entity view
+* https://github.com/Blazebit/blaze-persistence/issues/120[*#120*] Treat support was added
+* https://github.com/Blazebit/blaze-persistence/issues/181[*#181*] Support for the VALUES clause has been added
+* https://github.com/Blazebit/blaze-persistence/issues/183[*#183*] JPA Criteria API +++<!-- PREVIEW-SUFFIX --><!-- </p></li></ul> --><!-- PREVIEW-END -->+++ has been implemented that is backed by blaze-persistence
+* https://github.com/Blazebit/blaze-persistence/issues/90[*#90*] + https://github.com/Blazebit/blaze-persistence/issues/67[*#67*] SIZE to COUNT transformation was reworked from ground up for better reliability
+
+and lots of bugfixes
+
+* https://github.com/Blazebit/blaze-persistence/issues/234[*#234*] Fix SIZE to COUNT transformation for indexed collections
+* https://github.com/Blazebit/blaze-persistence/issues/233[*#233*] Workaround for Hibernate bug included: https://hibernate.atlassian.net/browse/HHH-9329[*HHH-9329*]
+* https://github.com/Blazebit/blaze-persistence/issues/208[*#208*] Provider classes for entity view get validated now to avoid runtime exceptions
+* https://github.com/Blazebit/blaze-persistence/issues/219[*#219*] Embeddable entity views now allowed to be abstract classes too
+* https://github.com/Blazebit/blaze-persistence/issues/214[*#214*] Generics issues fixed
+
+There will be 2-3 subsequent Alpha releases until we reach feature completion for the planned features. +
+After that we will focus on stabilizing + documentation and release 1-2 Beta versions before the final version goes out.
+
+In the next Alpha release you can expect at least the following
+
+* https://github.com/Blazebit/blaze-persistence/issues/108[*#108*] Correlation strategy subselect and batching will be implemented
+* https://github.com/Blazebit/blaze-persistence/issues/120[*#120*] Treat operator support will be finished
+* https://github.com/Blazebit/blaze-persistence/issues/181[*#181*] Table function support will be finished
+* https://github.com/Blazebit/blaze-persistence/issues/198[*#198*] Problems with one-to-one mappings will be fixed
+* https://github.com/Blazebit/blaze-persistence/issues/191[*#191*] + 216 Entity views will allow better collection usage
+* https://github.com/Blazebit/blaze-persistence/issues/204[*#204*] Polymorphic queries will be supported
+* https://github.com/Blazebit/blaze-persistence/issues/257[*#257*] Entity attributes in entity views will be able to specify fetches

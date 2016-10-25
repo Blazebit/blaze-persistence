@@ -23,5 +23,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface UpdateCriteriaBuilder<T> extends ModificationCriteriaBuilder<UpdateCriteriaBuilder<T>>, BaseUpdateCriteriaBuilder<T, UpdateCriteriaBuilder<T>> {
-	
+
 }

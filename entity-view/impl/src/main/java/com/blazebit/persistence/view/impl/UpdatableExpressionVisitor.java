@@ -22,8 +22,44 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.DateLiteral;
+import com.blazebit.persistence.impl.expression.EntityLiteral;
+import com.blazebit.persistence.impl.expression.EnumLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TimeLiteral;
+import com.blazebit.persistence.impl.expression.TimestampLiteral;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -47,35 +83,36 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
             this.method = method;
         }
 
-		Class<?> getValueClass() {
-			return valueClass;
-		}
+        Class<?> getValueClass() {
+            return valueClass;
+        }
 
-		Class<?> getCurrentClass() {
-			return currentClass;
-		}
+        Class<?> getCurrentClass() {
+            return currentClass;
+        }
 
-		void setCurrentClass(Class<?> currentClass) {
-			this.currentClass = currentClass;
-			this.valueClass = null;
-		}
+        void setCurrentClass(Class<?> currentClass) {
+            this.currentClass = currentClass;
+            this.valueClass = null;
+        }
 
-		Method getMethod() {
-			return method;
-		}
+        Method getMethod() {
+            return method;
+        }
 
-		void setMethod(Method method) {
-			this.method = method;
-		}
+        void setMethod(Method method) {
+            this.method = method;
+        }
 
-		void setValueClass(Class<?> valueClass) {
-			this.valueClass = valueClass;
-		}
+        void setValueClass(Class<?> valueClass) {
+            this.valueClass = valueClass;
+        }
     }
 
     public UpdatableExpressionVisitor(Class<?> startClass) {
         this.pathPositions = new ArrayList<PathPosition>();
-        this.pathPositions.add(currentPosition = new PathPosition(startClass, null));
+        this.currentPosition = new PathPosition(startClass, null);
+        this.pathPositions.add(currentPosition);
     }
 
     private Method resolve(Class<?> currentClass, String property) {

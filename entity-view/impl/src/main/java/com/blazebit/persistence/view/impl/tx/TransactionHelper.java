@@ -8,34 +8,37 @@ import javax.transaction.TransactionSynchronizationRegistry;
 
 public class TransactionHelper {
 
+    private TransactionHelper() {
+    }
+
     public static TransactionSynchronizationStrategy getSynchronizationStrategy(EntityManager em) {
-		TransactionSynchronizationRegistry synchronizationRegistry;
-        
+        TransactionSynchronizationRegistry synchronizationRegistry;
+
         try {
-			synchronizationRegistry = (TransactionSynchronizationRegistry) new InitialContext().lookup("java:comp/TransactionSynchronizationRegistry");
-			if (synchronizationRegistry != null) {
-				return new JtaTransactionSynchronizationStrategy(synchronizationRegistry);
-			}
-		} catch (NoInitialContextException e) {
-			// Maybe in Java SE environment
-			synchronizationRegistry = null;
-		} catch (NamingException e) {
-			throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
-		}
-		
+            synchronizationRegistry = (TransactionSynchronizationRegistry) new InitialContext().lookup("java:comp/TransactionSynchronizationRegistry");
+            if (synchronizationRegistry != null) {
+                return new JtaTransactionSynchronizationStrategy(synchronizationRegistry);
+            }
+        } catch (NoInitialContextException e) {
+            // Maybe in Java SE environment
+            synchronizationRegistry = null;
+        } catch (NamingException e) {
+            throw new IllegalArgumentException("Could not access transaction synchronization registry!", e);
+        }
+
         try {
-        	Class<?> hibernateSessionClass = Class.forName("org.hibernate.Session");
-        	String version = em.unwrap(hibernateSessionClass).getClass().getPackage().getImplementationVersion();
-        	String[] versionParts = version.split("\\.");
-        	int major = Integer.parseInt(versionParts[0]);
-        	
-        	if (major >= 5) {
-        		return new Hibernate5TransactionSynchronizationStrategy(em);
-        	} else {
-        		return new Hibernate4TransactionSynchronizationStrategy(em);
-        	}
+            Class<?> hibernateSessionClass = Class.forName("org.hibernate.Session");
+            String version = em.unwrap(hibernateSessionClass).getClass().getPackage().getImplementationVersion();
+            String[] versionParts = version.split("\\.");
+            int major = Integer.parseInt(versionParts[0]);
+
+            if (major >= 5) {
+                return new Hibernate5TransactionSynchronizationStrategy(em);
+            } else {
+                return new Hibernate4TransactionSynchronizationStrategy(em);
+            }
         } catch (ClassNotFoundException ex) {
-        	throw new IllegalArgumentException("Unsupported jpa provider!", ex);
+            throw new IllegalArgumentException("Unsupported jpa provider!", ex);
         }
     }
 }

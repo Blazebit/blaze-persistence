@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.blazebit</groupId>
 		<artifactId>blazebit-parent</artifactId>
-		<version>8</version>
+		<version>9-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>blaze-persistence</artifactId>
@@ -16,6 +16,8 @@
 	<url>http://blazebit.com/persistence</url>
 	<description>Persistence Utilities for Blazebit Projects</description>
 
+	<inceptionYear>2014</inceptionYear>
+
 	<modules>
 		<module>core</module>
 		<module>entity-view</module>
@@ -23,6 +25,8 @@
 		<module>integration</module>
 		<module>testsuite-base</module>
 		<module>documentation</module>
+		<module>website</module>
+		<module>checkstyle-rules</module>
 	</modules>
 
 	<issueManagement>
@@ -131,6 +135,9 @@
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
+
+		<maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
+		<currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
 	</properties>
 
 	<dependencyManagement>
@@ -174,6 +181,21 @@
 			<dependency>
 				<groupId>${project.groupId}</groupId>
 				<artifactId>blaze-persistence-entity-view-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -467,6 +489,58 @@
 					<preparationGoals>clean install</preparationGoals>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>${version.checkstyle.plugin}</version>
+				<configuration>
+					<configLocation>blaze-persistence/checkstyle-config.xml</configLocation>
+					<consoleOutput>true</consoleOutput>
+				</configuration>
+				<executions>
+					<execution>
+						<id>verify-style</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>${project.groupId}</groupId>
+						<artifactId>blaze-persistence-checkstyle-rules</artifactId>
+						<version>${project.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>com.mycila</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>3.0</version>
+				<inherited>false</inherited>
+				<configuration>
+					<header>license-header.txt</header>
+					<aggregate>true</aggregate>
+					<includes>
+						<include>src/**/*.java</include>
+						<include>src/**/*.xml</include>
+					</includes>
+					<properties>
+						<inceptionYear>${project.inceptionYear}</inceptionYear>
+						<latestYearOfContribution>${currentYearDynamic}</latestYearOfContribution>
+					</properties>
+				</configuration>
+				<executions>
+					<execution>
+						<id>check-license</id>
+						<phase>initialize</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 
@@ -509,6 +583,20 @@
 					<url>http://repository.jboss.org/nexus/content/groups/public/</url>
 				</repository>
 			</repositories>
+		</profile>
+		<profile>
+			<id>blazebit-release</id>
+			<modules>
+				<module>core</module>
+				<module>entity-view</module>
+				<module>jpa-criteria</module>
+				<module>integration</module>
+				<module>testsuite-base</module>
+				<module>documentation</module>
+				<module>website</module>
+				<module>checkstyle-rules</module>
+				<module>dist</module>
+			</modules>
 		</profile>
 	</profiles>
 </project>

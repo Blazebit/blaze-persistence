@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.AbstractExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -51,9 +50,15 @@ public abstract class UnaryExpressionPredicate extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UnaryExpressionPredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof UnaryExpressionPredicate)) {
+            return false;
+        }
+        if (!super.equals(o)){
+            return false;
+        }
 
         UnaryExpressionPredicate that = (UnaryExpressionPredicate) o;
 

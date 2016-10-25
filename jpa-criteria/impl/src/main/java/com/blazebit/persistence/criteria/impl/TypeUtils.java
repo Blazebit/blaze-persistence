@@ -15,18 +15,6 @@ import java.util.Map;
  */
 public class TypeUtils {
 
-    private static final Map<Class<?>, TypeConverter<?>> converters;
-
-    private static abstract class AbstractTypeConverter<T> implements TypeConverter<T>, Serializable {
-
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public String toString(T value) {
-            return value.toString();
-        }
-    }
-
     public static final TypeConverter<String> STRING_CONVERTER = new AbstractTypeConverter<String>() {
 
         private static final long serialVersionUID = 1L;
@@ -348,7 +336,22 @@ public class TypeUtils {
             );
         }
     };
-    
+
+    private static final Map<Class<?>, TypeConverter<?>> CONVERTERS;
+
+    private abstract static class AbstractTypeConverter<T> implements TypeConverter<T>, Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        public String toString(T value) {
+            return value.toString();
+        }
+    }
+
+    private TypeUtils() {
+    }
+
     private static String jdbcTimestamp(int year, int month, int date, int hour, int minute, int second, int millis) {
         StringBuilder sb = new StringBuilder(32);
 
@@ -424,12 +427,12 @@ public class TypeUtils {
         c.put(java.sql.Timestamp.class, TIMESTAMP_CONVERTER);
         c.put(java.util.Date.class, TIMESTAMP_CONVERTER);
         c.put(java.util.Calendar.class, CALENDAR_CONVERTER);
-        converters = Collections.unmodifiableMap(c);
+        CONVERTERS = Collections.unmodifiableMap(c);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <T> TypeConverter<T> getConverter(Class<T> targetType) {
-        TypeConverter t = converters.get(targetType);
+        TypeConverter t = CONVERTERS.get(targetType);
         
         if (t == null) {
             if (java.sql.Time.class.isAssignableFrom(targetType)) {

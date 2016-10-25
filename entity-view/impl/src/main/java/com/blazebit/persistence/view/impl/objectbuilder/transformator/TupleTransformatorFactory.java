@@ -40,7 +40,7 @@ public class TupleTransformatorFactory {
         transformatorLevels.add(new TupleTransformatorFactoryLevel());
     }
 
-	public boolean hasTransformers() {
+    public boolean hasTransformers() {
         return transformatorLevels.get(0).tupleListTransformer != null
             || transformatorLevels.get(0).tupleListTransformerFactory != null
             || transformatorLevels.get(0).tupleTransformerFactories.size() > 0;
@@ -100,7 +100,7 @@ public class TupleTransformatorFactory {
             	tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration));
             }
 
-        	newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
+            newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));
         }
         
         return new TupleTransformator(newTransformatorLevels);

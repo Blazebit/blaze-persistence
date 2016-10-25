@@ -15,11 +15,11 @@ import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
  */
 public class TrimFunction extends AbstractFunctionExpression<String> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "TRIM";
     public static final Trimspec DEFAULT_TRIMSPEC = Trimspec.BOTH;
     public static final char DEFAULT_TRIM_CHAR = ' ';
+
+    private static final long serialVersionUID = 1L;
 
     private final Trimspec trimspec;
     private final Expression<Character> trimCharacter;

@@ -162,11 +162,11 @@ public class PartialEntityViewUpdater implements EntityViewUpdater {
         } else if (current instanceof RecordingMap<?, ?, ?>) {
             return ((RecordingMap<?, ?, ?>) current).hasActions();
         }
-        
+
         if (initial != current && (initial == null || !initial.equals(current))) {
             return true;
         }
-        
+
         return false;
     }
 }

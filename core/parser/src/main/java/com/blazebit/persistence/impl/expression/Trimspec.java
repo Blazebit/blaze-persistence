@@ -24,6 +24,6 @@ package com.blazebit.persistence.impl.expression;
 public enum Trimspec {
 
     LEADING,
-    TRAILING, 
-    BOTH 
+    TRAILING,
+    BOTH
 }

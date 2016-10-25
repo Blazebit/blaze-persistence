@@ -11,9 +11,9 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
  */
 public class UpperFunction extends FunctionExpressionImpl<String> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "UPPER";
+
+    private static final long serialVersionUID = 1L;
 
     public UpperFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
         super(criteriaBuilder, String.class, NAME, string);

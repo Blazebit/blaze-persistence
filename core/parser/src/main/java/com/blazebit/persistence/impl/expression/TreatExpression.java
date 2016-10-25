@@ -55,12 +55,18 @@ public class TreatExpression extends AbstractExpression implements PathElementEx
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TreatExpression)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TreatExpression)) {
+            return false;
+        }
 
         TreatExpression that = (TreatExpression) o;
 
-        if (expression != null ? !expression.equals(that.expression) : that.expression != null) return false;
+        if (expression != null ? !expression.equals(that.expression) : that.expression != null) {
+            return false;
+        }
         return type != null ? type.equals(that.type) : that.type == null;
 
     }

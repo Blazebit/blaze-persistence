@@ -97,7 +97,7 @@ Blaze-Persistence Entity-View CDI integration dependencies
 ```xml
 <dependency>
 	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-entity-view-impl</artifactId>
+	<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
 	<version>${blaze-persistence.version}</version>
 	<scope>runtime</scope>
 </dependency>
@@ -338,7 +338,7 @@ See the left joins created for relations used in the projection? These are impli
 Questions or issues
 ===================
 
-Drop by on [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new).
+Drop by on [![Slack Status](https://blazebit.herokuapp.com/badge.svg)](https://blazebit.herokuapp.com) and ask questions any time or just create an issue on [GitHub](https://github.com/Blazebit/blaze-persistence/issues/new) or ask on [Stackoverflow](https://stackoverflow.com/questions/ask?tags=java+blaze-persistence).
 
 Setup local development
 =======================

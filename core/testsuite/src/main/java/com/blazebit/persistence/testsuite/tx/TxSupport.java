@@ -6,6 +6,9 @@ import javax.persistence.EntityTransaction;
 
 public class TxSupport {
 
+    private TxSupport() {
+    }
+
     public static void transactional(EntityManager em, TxVoidWork r) {
         EntityTransaction tx = em.getTransaction();
         boolean success = false;

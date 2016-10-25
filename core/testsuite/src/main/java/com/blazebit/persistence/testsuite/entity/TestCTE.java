@@ -53,7 +53,7 @@ public class TestCTE implements Serializable {
         this.name = name;
     }
 
-	public Integer getLevel() {
+    public Integer getLevel() {
 		return level;
 	}
 

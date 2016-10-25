@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
  * @since 1.0.6
  */
 public class UnsafeInstantiator<T> extends ReflectionInstantiator<T> {
-	
+
 	public UnsafeInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
 		super(mappingConstructor, proxyFactory, viewType, parameterTypes);
 	}

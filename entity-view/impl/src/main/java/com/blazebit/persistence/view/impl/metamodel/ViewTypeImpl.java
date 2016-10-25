@@ -60,11 +60,11 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
 
         UpdatableEntityView updatableEntityView = AnnotationUtils.findAnnotation(javaType, UpdatableEntityView.class);
         if (updatableEntityView != null) {
-        	this.updatable = true;
-        	this.partiallyUpdatable = updatableEntityView.partial();
+            this.updatable = true;
+            this.partiallyUpdatable = updatableEntityView.partial();
         } else {
-        	this.updatable = false;
-        	this.partiallyUpdatable = false;
+            this.updatable = false;
+            this.partiallyUpdatable = false;
         }
         
         this.viewFilters = new HashMap<String, ViewFilterMapping>();
@@ -101,9 +101,9 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
         }
         
         if (updatable) {
-	        if (foundIdAttribute.isUpdatable()) {
-	        	throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
-	        }
+            if (foundIdAttribute.isUpdatable()) {
+                throw new IllegalArgumentException("Id attribute in entity view '" + javaType.getName() + "' is updatable which is not allowed!");
+            }
         }
 
         this.idAttribute = foundIdAttribute;
@@ -142,7 +142,7 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
             if (viewFilters.containsKey(filterName)) {
                 throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at the class '" + javaType.getName() + "'!");
             } else if (attributeFilters.containsKey(filterName)) {
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + attributeFilters.get(filterName).getDeclaringAttribute().getName() 
+                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + attributeFilters.get(filterName).getDeclaringAttribute().getName()
                                                    + "' of the class '" + javaType.getName() + "'! Already defined on class '" + javaType.getName() + "'!");
             }
         }
@@ -162,9 +162,9 @@ public class ViewTypeImpl<X> extends ManagedViewTypeImpl<X> implements ViewType<
     }
 
     @Override
-	public boolean isPartiallyUpdatable() {
-		return partiallyUpdatable;
-	}
+    public boolean isPartiallyUpdatable() {
+        return partiallyUpdatable;
+    }
 
     @Override
     public MethodAttribute<? super X, ?> getIdAttribute() {

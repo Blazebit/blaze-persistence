@@ -8,14 +8,14 @@ import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTra
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformer;
 
 public class TupleTransformator {
-	
+
     private final List<TupleTransformatorLevel> transformatorLevels;
 
-	public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels) {
-		this.transformatorLevels = transformatorLevels;
-	}
+    public TupleTransformator(List<TupleTransformatorLevel> transformatorLevels) {
+        this.transformatorLevels = transformatorLevels;
+    }
 
-	public List<Object[]> transformAll(List<Object[]> tupleList) {
+    public List<Object[]> transformAll(List<Object[]> tupleList) {
         List<Object[]> newTupleList;
 
         // Performance optimization
@@ -28,7 +28,7 @@ public class TupleTransformator {
         }
 
         for (int i = 0; i < transformatorLevels.size(); i++) {
-                if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
+            if (!transformatorLevels.get(i).tupleTransformers.isEmpty()) {
                 ListIterator<Object[]> newTupleListIter = newTupleList.listIterator();
 
                 while (newTupleListIter.hasNext()) {

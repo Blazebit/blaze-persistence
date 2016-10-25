@@ -23,10 +23,17 @@ import java.util.*;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
-import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.CorrelationProvider;
+import com.blazebit.persistence.view.FetchStrategy;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.SubqueryProvider;
 import com.blazebit.persistence.view.impl.CollectionJoinMappingGathererExpressionVisitor;
 import com.blazebit.persistence.view.impl.ScalarTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.impl.UpdatableExpressionVisitor;
@@ -309,13 +316,13 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public boolean isUpdatable() {
     	return false;
     }
-    
+
     public boolean isIndexed() {
     	return false;
     }
-    
+
     protected abstract String getLocation();
-    
+
     public Class<?> getElementType() {
     	return getJavaType();
     }
@@ -327,7 +334,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     public boolean isQueryParameter() {
         return queryParameter;
     }
-    
+
     public boolean isId() {
         return id;
     }

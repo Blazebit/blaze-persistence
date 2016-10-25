@@ -17,24 +17,28 @@ package com.blazebit.persistence.view.impl.proxy;
 
 import java.lang.reflect.Field;
 
+//CHECKSTYLE:OFF
 import sun.misc.Unsafe;
+//CHECKSTYLE:ON
 
 /**
  *
  * @author Christian Beikov
  * @since 1.0.6
  */
-@SuppressWarnings("restriction")
 public class UnsafeHelper {
 
-	private static final Unsafe unsafe;
+	private static final Unsafe UNSAFE;
+
+	private UnsafeHelper() {
+	}
 
 	static {
 		Field f;
 		try {
 			f = Unsafe.class.getDeclaredField("theUnsafe");
 			f.setAccessible(true);
-			unsafe = (Unsafe) f.get(null);
+			UNSAFE = (Unsafe) f.get(null);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
@@ -43,7 +47,7 @@ public class UnsafeHelper {
 	public static Class<?> define(String name, byte[] bytes, final Class<?> declaringClass) {
 		try {
 			ClassLoader newLoader = declaringClass.getClassLoader();
-			return unsafe.defineClass(name, bytes, 0, bytes.length, newLoader, null);
+			return UNSAFE.defineClass(name, bytes, 0, bytes.length, newLoader, null);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

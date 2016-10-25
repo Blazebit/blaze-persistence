@@ -14,7 +14,14 @@
 
     <name>Blazebit Persistence Testsuite Base OpenJPA</name>
     
-    <dependencies>        
+    <dependencies>
+        <!-- Actually we only need JPA but since there is no official artifact we rather use this than provider specific apis -->
+        <dependency>
+            <groupId>org.apache.openejb</groupId>
+            <artifactId>javaee-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-core-api</artifactId>

@@ -19,7 +19,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 
-import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.IdentifiableType;
+import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.ObjectBuilder;
@@ -29,22 +30,72 @@ import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.FetchStrategy;
 import com.blazebit.persistence.view.SubqueryProvider;
-import com.blazebit.persistence.view.impl.*;
+import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
+import com.blazebit.persistence.view.impl.CorrelationProviderHelper;
+import com.blazebit.persistence.view.impl.EntityViewConfiguration;
+import com.blazebit.persistence.view.impl.EntityViewManagerImpl;
+import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
+import com.blazebit.persistence.view.impl.PrefixingQueryGenerator;
+import com.blazebit.persistence.view.impl.SubqueryProviderFactory;
+import com.blazebit.persistence.view.impl.SubqueryProviderHelper;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
-import com.blazebit.persistence.view.impl.objectbuilder.mapper.*;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasExpressionTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.AliasSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionCorrelationJoinTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ExpressionTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedAliasExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedAliasSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedExpressionCorrelationJoinTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedExpressionSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.ParameterizedSubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.SubqueryTupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleElementMapper;
+import com.blazebit.persistence.view.impl.objectbuilder.mapper.TupleParameterMapper;
 import com.blazebit.persistence.view.impl.objectbuilder.transformator.TupleTransformatorFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.*;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.*;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.IndexedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.MapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.OrderedSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SortedSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.SubviewTupleTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableIndexedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedListTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableOrderedSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSortedMapTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.UpdatableSortedSetTupleListTransformer;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.BasicCorrelator;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedListBatchTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedOrderedSetBatchTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSetBatchTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSingularBatchTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSortedSetBatchTupleListTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.CorrelatedSubviewJoinTupleTransformerFactory;
+import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.SubviewCorrelator;
 import com.blazebit.persistence.view.impl.proxy.ObjectInstantiator;
 import com.blazebit.persistence.view.impl.proxy.ProxyFactory;
 import com.blazebit.persistence.view.impl.proxy.ReflectionInstantiator;
 import com.blazebit.persistence.view.impl.proxy.UnsafeInstantiator;
-import com.blazebit.persistence.view.metamodel.*;
 import com.blazebit.persistence.view.metamodel.Attribute;
+import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ListAttribute;
+import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MapAttribute;
+import com.blazebit.persistence.view.metamodel.MappingAttribute;
+import com.blazebit.persistence.view.metamodel.MappingConstructor;
+import com.blazebit.persistence.view.metamodel.MethodAttribute;
+import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
 import com.blazebit.persistence.view.metamodel.SingularAttribute;
+import com.blazebit.persistence.view.metamodel.SubqueryAttribute;
+import com.blazebit.persistence.view.metamodel.ViewType;
 import com.blazebit.reflection.ReflectionUtils;
 
 /**
@@ -53,6 +104,10 @@ import com.blazebit.reflection.ReflectionUtils;
  * @since 1.0
  */
 public class ViewTypeObjectBuilderTemplate<T> {
+
+    private static final int FEATURE_PARAMETERS = 0;
+    private static final int FEATURE_INDEXED_COLLECTIONS = 1;
+    private static final int FEATURE_SUBVIEWS = 2;
 
     private final ObjectInstantiator<T> objectInstantiator;
     private final TupleElementMapper[] mappers;
@@ -73,13 +128,10 @@ public class ViewTypeObjectBuilderTemplate<T> {
     private final ExpressionFactory ef;
     private final ProxyFactory proxyFactory;
     private final TupleTransformatorFactory tupleTransformatorFactory = new TupleTransformatorFactory();
-    
-    private static final int FEATURE_PARAMETERS = 0;
-    private static final int FEATURE_INDEXED_COLLECTIONS = 1;
-    private static final int FEATURE_SUBVIEWS = 2;
 
     @SuppressWarnings("unchecked")
-	private ViewTypeObjectBuilderTemplate(ManagedViewType<?> viewRoot, String attributePath, String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset, EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewType<T> managedViewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
+    private ViewTypeObjectBuilderTemplate(ManagedViewType<?> viewRoot, String attributePath, String aliasPrefix, List<String> mappingPrefix, String idPrefix, int[] idPositions, int tupleOffset,
+                                          EntityViewManagerImpl evm, ExpressionFactory ef, ManagedViewType<T> managedViewType, MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory) {
         if (mappingConstructor == null) {
             if (managedViewType.getConstructors().size() > 1) {
                 throw new IllegalArgumentException("The given view type '" + managedViewType.getJavaType().getName() + "' has multiple constructors but the given constructor was null.");
@@ -141,42 +193,42 @@ public class ViewTypeObjectBuilderTemplate<T> {
         }
 
         attributeCount += parameterAttributes.length;
-        
+
         List<Object> mappingList = new ArrayList<Object>(attributeCount);
         List<String> parameterMappingList = new ArrayList<String>(attributeCount);
         Class<?>[] parameterTypes = new Class<?>[attributeCount];
         boolean[] featuresFound = new boolean[3];
         int parameterOffset = 0;
-        
+
         if (managedViewType instanceof ViewType<?>) {
             ViewType<?> viewType = (ViewType<?>) managedViewType;
             String idAttributeName = jpaIdAttr.getName();
             MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
             MappingAttribute<?, ?> idMappingAttribute = (MappingAttribute<?, ?>) idAttribute;
-            
+
             if (!idAttributeName.equals(idMappingAttribute.getMapping())) {
-                throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() +"' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName +"'!");
+                throw new IllegalArgumentException("Invalid id mapping '" + idMappingAttribute.getMapping() + "' for entity view '" + viewType.getJavaType().getName() + "'! Expected '" + idAttributeName + "'!");
             }
-            
-            String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
-            
+
+            String idMapping = idPrefix == null ? idAttributeName : idPrefix + "." + idAttributeName;
+
             parameterTypes[0] = idAttributeType;
             mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
             parameterMappingList.add(0, null);
             parameterOffset = 1;
         }
-        
+
         for (int i = 0; i < attributes.length; i++) {
             parameterTypes[i + parameterOffset] = attributes[i].getJavaType();
         }
         for (int i = 0; i < parameterAttributes.length; i++) {
             parameterTypes[i + attributes.length + parameterOffset] = parameterAttributes[i].getJavaType();
         }
-        
+
         if (managedViewType.getConstructors().isEmpty() || evm.isUnsafeDisabled()) {
-        	this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
+            this.objectInstantiator = new ReflectionInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
         } else {
-        	this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
+            this.objectInstantiator = new UnsafeInstantiator<T>(mappingConstructor, proxyFactory, managedViewType, parameterTypes);
         }
         
         for (int i = 0; i < attributes.length; i++) {
@@ -259,7 +311,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             mappers[i] = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), correlationBasis, correlationResult, (String) mapping[1]);
                         }
                     } else {
-                        if (factory.isParameterized()) {mappers[i] = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, correlationBasis, correlationResult, null);
+                        if (factory.isParameterized()) {
+                            mappers[i] = new ParameterizedExpressionCorrelationJoinTupleElementMapper(factory, correlationBasis, correlationResult, null);
                         } else {
                             mappers[i] = new ExpressionCorrelationJoinTupleElementMapper(factory.create(null, null), correlationBasis, correlationResult, null);
                         }
@@ -278,7 +331,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
     }
 
     @SuppressWarnings("unchecked")
-	private void applyMapping(Attribute<?, ?> attribute, String attributePath, List<Object> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
+    private void applyMapping(Attribute<?, ?> attribute, String attributePath, List<Object> mappingList, List<String> parameterMappingList, boolean[] featuresFound) {
         int batchSize = attribute.getBatchSize();
 
         if (batchSize == -1) {
@@ -414,6 +467,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                             break;
                         case MAP:
                             throw new IllegalArgumentException("Ignoring the index on the attribute '" + pluralAttribute + "' is not possible!");
+                        default:
+                            throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
                     }
                 }
             } else if (((SingularAttribute<?, ?>) mappingAttribute).isQueryParameter()) {
@@ -455,15 +510,15 @@ public class ViewTypeObjectBuilderTemplate<T> {
         int[] subviewIdPositions;
         int startIndex;
 
-		if (managedViewType instanceof ViewType<?>) {
+        if (managedViewType instanceof ViewType<?>) {
             subviewIdPositions = new int[idPositions.length + 1];
             System.arraycopy(idPositions, 0, subviewIdPositions, 0, idPositions.length);
             subviewIdPositions[idPositions.length] = tupleOffset + mappingList.size();
             startIndex = tupleOffset + mappingList.size();
-		} else {
+        } else {
             subviewIdPositions = idPositions;
             startIndex = tupleOffset + mappingList.size();
-		}
+        }
 
         ViewTypeObjectBuilderTemplate<Object[]> template = new ViewTypeObjectBuilderTemplate<Object[]>(viewRoot, subviewAttributePath, subviewAliasPrefix, subviewMappingPrefix, subviewIdPrefix, subviewIdPositions,
                 startIndex, evm, ef, managedViewType, null, proxyFactory);
@@ -584,6 +639,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     break;
                 case MAP:
                     throw new IllegalArgumentException("Map type unsupported for correlated mappings!");
+                default:
+                    throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
             }
         }
     }
@@ -699,6 +756,8 @@ public class ViewTypeObjectBuilderTemplate<T> {
                     break;
                 case MAP:
                     throw new IllegalArgumentException("Map type unsupported for correlated mappings!");
+                default:
+                    throw new IllegalArgumentException("Unknown collection type: " + pluralAttribute.getCollectionType());
             }
         }
     }
@@ -707,7 +766,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         if (prefixParts == null || prefixParts.isEmpty()) {
             return Collections.singletonList(mapping);
         }
-        
+
         List<String> subviewMappingPrefix = new ArrayList<String>(prefixParts.size() + 1);
         subviewMappingPrefix.addAll(prefixParts);
         subviewMappingPrefix.add(mapping);
@@ -783,7 +842,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
         return mapping;
     }
-    
+
     private String getMapping(String prefix, MappingAttribute<?, ?> mappingAttribute) {
         return getMapping(prefix, mappingAttribute.getMapping());
     }
@@ -882,7 +941,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
         private final int offset;
 
         public Key(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> constructor, String name, String entityViewRoot, int offset) {
-        	this.ef = ef;
+            this.ef = ef;
             this.viewType = (ManagedViewType<Object>) viewType;
             this.constructor = (MappingConstructor<Object>) constructor;
             this.name = name;
