@@ -160,7 +160,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
             
             String idMapping = idPrefix == null? idAttributeName : idPrefix + "." + idAttributeName;
             
-            parameterTypes[0] = idAttributeType;
+            parameterTypes[0] = idAttribute.getJavaType();
             mappingList.add(0, new Object[]{ idMapping, getAlias(aliasPrefix, idAttribute) });
             parameterMappingList.add(0, null);
             parameterOffset = 1;
