@@ -21,61 +21,35 @@ import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.cdise.api.ContextControl;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
-import org.junit.*;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.jboss.weld.bootstrap.spi.Metadata;
+import org.jboss.weld.util.ServiceLoader;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.util.ServiceLoader;
+import java.util.Iterator;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@RunWith(Parameterized.class)
-public class CDIShowcaseTest {
+public class CDIShowcaseRunner {
 
-    final Showcase showcase;
-
-    public CDIShowcaseTest(Showcase showcase) {
-        this.showcase = showcase;
-    }
-
-    @Parameterized.Parameters
-    public static Iterable<Showcase> data() {
-        return ServiceLoader.load(Showcase.class);
-    }
-
-    @BeforeClass
-    public static void startContainer() {
+    public static void main(String[] args) {
         CdiContainer cdiContainer = CdiContainerLoader.getCdiContainer();
         cdiContainer.boot();
-    }
 
-    @AfterClass
-    public static void stopContainer() {
-        CdiContainer cdiContainer = CdiContainerLoader.getCdiContainer();
-        cdiContainer.shutdown();
-    }
-
-    @Before
-    public void startContexts() {
-        CdiContainer cdiContainer = CdiContainerLoader.getCdiContainer();
         ContextControl contextControl = cdiContainer.getContextControl();
         contextControl.startContext(ApplicationScoped.class);
-    }
 
-    @After
-    public void stopContexts() {
-        CdiContainer cdiContainer = CdiContainerLoader.getCdiContainer();
-        ContextControl contextControl = cdiContainer.getContextControl();
-        contextControl.stopContext(ApplicationScoped.class);
-    }
+        ServiceLoader<Showcase> showcaseLoader = ServiceLoader.load(Showcase.class);
+        Iterator<Metadata<Showcase>> showcaseIterator = showcaseLoader.iterator();
+        if (!showcaseIterator.hasNext()) {
+            throw new RuntimeException("No showcases found");
+        }
+        while (showcaseIterator.hasNext()) {
+            BeanProvider.injectFields(showcaseIterator.next().getValue()).run();
+        }
 
-    @Test
-    public void simpleApplicationTest() {
-        BeanProvider.injectFields(showcase).run();
+        cdiContainer.shutdown();
     }
-
 
 }

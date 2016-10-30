@@ -14,51 +14,44 @@
  * limitations under the License.
  */
 
-package com.blazebit.persistence.examples.cdi.producer;
+package com.blazebit.persistence.examples.spring.config;
 
 import com.blazebit.persistence.Criteria;
 import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.blazebit.persistence.view.EntityViewManager;
 import com.blazebit.persistence.view.spi.EntityViewConfiguration;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.context.Initialized;
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.Produces;
-import javax.inject.Inject;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceUnit;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
-@ApplicationScoped
-public class BlazePersistenceProducer {
+@Configuration
+public class BlazePersistenceConfiguration {
 
-    @Inject
-    private EntityManagerFactory emf;
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
 
-    @Inject
-    private EntityViewConfiguration entityViewConfiguration;
-
-    private CriteriaBuilderFactory criteriaBuilderFactory;
-
-    @PostConstruct
-    public void onStartup() {
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(emf);
-    }
-
-    @Produces
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
     public CriteriaBuilderFactory createCriteriaBuilderFactory() {
-        return criteriaBuilderFactory;
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        return config.createCriteriaBuilderFactory(entityManagerFactory);
     }
 
-    @Produces
-    public EntityViewManager createEntityViewManager() {
-        return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory, emf);
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+        return entityViewConfiguration.createEntityViewManager(cbf, entityManagerFactory);
     }
-
 }

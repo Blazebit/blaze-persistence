@@ -13,6 +13,11 @@
     <artifactId>blaze-persistence-examples</artifactId>
     <packaging>pom</packaging>
     <modules>
+        <module>spring-showcase</module>
+        <module>showcase-base</module>
+        <module>showcase-spi</module>
+        <module>basic-showcase</module>
+        <module>cte-showcase</module>
     </modules>
 
     <profiles>

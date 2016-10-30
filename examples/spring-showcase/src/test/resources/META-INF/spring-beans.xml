@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+
+    <!-- Aggregate of all spring-beans.xml -->
+    <bean class="com.blazebit.persistence.examples.basic.data.CatDataAccess"/>
+    <bean class="com.blazebit.persistence.examples.basic.data.TestDataGenerator"/>
+    <bean class="com.blazebit.persistence.examples.cte.data.CatDataAccess"/>
+    <bean class="com.blazebit.persistence.examples.cte.data.TestDataGenerator"/>
+
+</beans>

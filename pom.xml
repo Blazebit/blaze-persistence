@@ -263,6 +263,31 @@
 		        <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
 		        <version>${project.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-showcase-base</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-showcase-spi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-basic-showcase</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>${project.groupId}</groupId>
+				<artifactId>blaze-persistence-cte-showcase</artifactId>
+				<version>${project.version}</version>
+			</dependency>
 
 			<!-- Platform dependencies -->
 
