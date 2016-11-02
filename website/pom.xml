@@ -5,9 +5,9 @@
 
     <parent>
         <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence</artifactId>
+        <artifactId>blaze-persistence-parent</artifactId>
         <version>1.2.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>blaze-persistence-website</artifactId>
@@ -23,7 +23,7 @@
         <!-- This is used for the htaccess file for filename based caching -->
         <maven.build.timestamp.format>yyyyMMddHHmmssSSSS</maven.build.timestamp.format>
         <buildtime>${maven.build.timestamp}</buildtime>
-		
+        
         <asciidoctor.option.template_dirs>${basedir}/src/main/jbake/templates/asciidoctor</asciidoctor.option.template_dirs>
     </properties>
 
@@ -65,7 +65,7 @@
             </build>
         </profile>
         <profile>
-            <id>release</id>
+            <id>blazebit-release</id>
             <build>
                 <plugins>
                     <plugin>
