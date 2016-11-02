@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014 - 2016 Blazebit.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -61,9 +77,6 @@
         <!-- JVM values for surefire plugin -->
         <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
         <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
-
-        <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
-        <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
     </properties>
 
     <dependencyManagement>
@@ -446,36 +459,6 @@
                         <version>${project.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
-                <inherited>false</inherited>
-                <configuration>
-                    <header>license-header.txt</header>
-                    <aggregate>true</aggregate>
-                    <includes>
-                        <include>src/**/*.java</include>
-                        <include>src/**/*.xml</include>
-                    </includes>
-                    <excludes>
-                        <exclude>target/**</exclude>
-                    </excludes>
-                    <properties>
-                        <inceptionYear>${project.inceptionYear}</inceptionYear>
-                        <latestYearOfContribution>${currentYearDynamic}</latestYearOfContribution>
-                    </properties>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>check-license</id>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
