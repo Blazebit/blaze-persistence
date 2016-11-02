@@ -61,9 +61,9 @@ public class HavingManager<T> extends PredicateManager<T> {
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.PREDICATE);
         
         for (Expression expr : visitor.getExpressions()) {
-        	expr.accept(queryGenerator);
-        	clauses.add(sb.toString());
-        	sb.setLength(0);
+            expr.accept(queryGenerator);
+            clauses.add(sb.toString());
+            sb.setLength(0);
         }
         
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);

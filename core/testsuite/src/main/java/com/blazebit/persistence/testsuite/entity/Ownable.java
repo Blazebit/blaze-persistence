@@ -27,9 +27,9 @@ import javax.persistence.MappedSuperclass;
 // NOTE: Datanucleus does not seem to support generic types of mapped super classes
 public abstract class Ownable extends LongSequenceEntity /*SequenceBaseEntity<Long>*/ implements Serializable {
     
-	private static final long serialVersionUID = 1L;
-	
-	private Person owner;
+    private static final long serialVersionUID = 1L;
+    
+    private Person owner;
     
     @ManyToOne(optional = false)
     public Person getOwner() {

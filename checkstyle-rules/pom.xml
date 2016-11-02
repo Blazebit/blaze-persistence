@@ -11,7 +11,7 @@
 
     <artifactId>blaze-persistence-checkstyle-rules</artifactId>
     <packaging>jar</packaging>
-	
+    
     <name>Blazebit Persistence Checkstyle Rules</name>
-	
+    
 </project>

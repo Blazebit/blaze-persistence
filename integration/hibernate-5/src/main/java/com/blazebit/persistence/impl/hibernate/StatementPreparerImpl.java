@@ -97,7 +97,7 @@ public class StatementPreparerImpl implements StatementPreparer {
                 }
             }
         }.prepareStatement();
-        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{ PreparedStatement.class }, new PreparedStatementInvocationHandler(ps, columns, returningResult));
+        ps = (PreparedStatement) Proxy.newProxyInstance(ps.getClass().getClassLoader(), new Class[]{PreparedStatement.class}, new PreparedStatementInvocationHandler(ps, columns, returningResult));
         jdbcCoordinator.registerLastQuery(ps);
         return ps;
     }
@@ -113,36 +113,34 @@ public class StatementPreparerImpl implements StatementPreparer {
 
         public PreparedStatement prepareStatement() {
             try {
-                getJdbcService().getSqlStatementLogger().logStatement( sql );
+                getJdbcService().getSqlStatementLogger().logStatement(sql);
 
                 final PreparedStatement preparedStatement;
                 try {
                     jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementStart();
                     preparedStatement = doPrepare();
-                    setStatementTimeout( preparedStatement );
-                }
-                finally {
+                    setStatementTimeout(preparedStatement);
+                } finally {
                     jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementEnd();
                 }
-                postProcess( preparedStatement );
+                postProcess(preparedStatement);
                 return preparedStatement;
-            }
-            catch ( SQLException e ) {
-                throw sqlExceptionHelper().convert( e, "could not prepare statement", sql );
+            } catch (SQLException e) {
+                throw sqlExceptionHelper().convert(e, "could not prepare statement", sql);
             }
         }
 
         protected abstract PreparedStatement doPrepare() throws SQLException;
 
         public void postProcess(PreparedStatement preparedStatement) throws SQLException {
-            jdbcCoordinator.getResourceRegistry().register( preparedStatement, true );
-//          logicalConnection().notifyObserversStatementPrepared();
+            jdbcCoordinator.getResourceRegistry().register(preparedStatement, true);
+            //          logicalConnection().notifyObserversStatementPrepared();
         }
 
         private void setStatementTimeout(PreparedStatement preparedStatement) throws SQLException {
             final int remainingTransactionTimeOutPeriod = jdbcCoordinator.determineRemainingTransactionTimeOutPeriod();
-            if ( remainingTransactionTimeOutPeriod > 0 ) {
-                preparedStatement.setQueryTimeout( remainingTransactionTimeOutPeriod );
+            if (remainingTransactionTimeOutPeriod > 0) {
+                preparedStatement.setQueryTimeout(remainingTransactionTimeOutPeriod);
             }
         }
     }

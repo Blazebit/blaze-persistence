@@ -28,6 +28,9 @@ import com.blazebit.persistence.KeysetPage;
  */
 public class KeysetPaginationHelper {
 
+    private KeysetPaginationHelper() {
+    }
+
     public static Serializable[] extractKey(Object[] tuple, int offset) {
         Serializable[] key = new Serializable[tuple.length - offset];
         System.arraycopy(tuple, offset, key, 0, key.length);

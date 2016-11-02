@@ -123,7 +123,7 @@ public class SetOperationTest extends AbstractCoreTest {
         assertEquals(1, resultList.size());
         assertEquals("D1", resultList.get(0));
     }
-	
+    
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class, NoMySQL.class })
     public void testUnionAll() {
@@ -137,9 +137,9 @@ public class SetOperationTest extends AbstractCoreTest {
                 .where("d2.name").eq("D1")
             .endSet();
         String expected = ""
-        		+ "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
-        		+ "UNION ALL\n"
-        		+ "SELECT d2 FROM Document d2 WHERE d2.name = :param_1";
+                + "SELECT d1 FROM Document d1 WHERE d1.name = :param_0\n"
+                + "UNION ALL\n"
+                + "SELECT d2 FROM Document d2 WHERE d2.name = :param_1";
         
         assertEquals(expected, cb.getQueryString());
         List<Document> resultList = cb.getResultList();

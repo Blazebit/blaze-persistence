@@ -72,14 +72,24 @@ public class ArithmeticExpression extends AbstractNumericExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ArithmeticExpression)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ArithmeticExpression)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         ArithmeticExpression that = (ArithmeticExpression) o;
 
-        if (left != null ? !left.equals(that.left) : that.left != null) return false;
-        if (right != null ? !right.equals(that.right) : that.right != null) return false;
+        if (left != null ? !left.equals(that.left) : that.left != null) {
+            return false;
+        }
+        if (right != null ? !right.equals(that.right) : that.right != null) {
+            return false;
+        }
         return op == that.op;
 
     }

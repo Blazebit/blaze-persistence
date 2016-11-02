@@ -23,5 +23,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface DeleteCriteriaBuilder<T> extends ModificationCriteriaBuilder<DeleteCriteriaBuilder<T>>, BaseDeleteCriteriaBuilder<T, DeleteCriteriaBuilder<T>> {
-	
+    
 }

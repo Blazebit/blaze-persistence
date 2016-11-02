@@ -54,8 +54,8 @@ join_association_path_expression
 
 join_path_expression
     : simple_subpath '.' general_path_element                                                    #SimplePath
-	| {allowTreatJoinExtension == true}? TREAT '(' identifier AS subtype ')' '.' simple_subpath  #TreatedRootPath
-	;
+    | {allowTreatJoinExtension == true}? TREAT '(' identifier AS subtype ')' '.' simple_subpath  #TreatedRootPath
+    ;
 
 subtype : identifier
         ;
@@ -93,7 +93,7 @@ parseInItemOrPathExpression
     ;
 
 parsePredicateExpression
-	: conditional_expression;
+    : conditional_expression;
 
 simple_expression : null_literal // This is a custom, non JPA compliant extension
                   | single_valued_path_expression
@@ -135,7 +135,7 @@ general_path_element : simple_path_element
 
 //TODO: allow only in certain clauses??
 //array_expression : simple_path_element '[' arithmetic_expression ']' #ArrayExpressionArithmeticIndex
-//				 | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
+//                 | simple_path_element '[' string_expression ']' #ArrayExpressionStringIndex
 //                 ;
 
 array_expression : simple_path_element '[' Input_parameter ']' #ArrayExpressionParameterIndex

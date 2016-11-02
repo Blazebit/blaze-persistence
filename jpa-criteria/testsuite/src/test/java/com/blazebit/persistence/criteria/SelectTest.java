@@ -20,9 +20,6 @@ import static org.junit.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.Time;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
@@ -269,7 +266,7 @@ public class SelectTest extends AbstractCoreTest {
 
         cq.select(cb.nullLiteral(Integer.class));
 
-        assertEquals("SELECT " + staticJpaProvider.getNullExpression()+ " FROM Document document", cq.getQueryString());
+        assertEquals("SELECT " + STATIC_JPA_PROVIDER.getNullExpression()+ " FROM Document document", cq.getQueryString());
     }
 
     @Test

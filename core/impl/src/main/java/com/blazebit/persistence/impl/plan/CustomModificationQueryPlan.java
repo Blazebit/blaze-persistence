@@ -1,6 +1,5 @@
 package com.blazebit.persistence.impl.plan;
 
-import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 import com.blazebit.persistence.spi.ServiceProvider;
 

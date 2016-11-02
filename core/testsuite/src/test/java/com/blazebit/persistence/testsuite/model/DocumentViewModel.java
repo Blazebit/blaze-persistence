@@ -43,15 +43,15 @@ public class DocumentViewModel {
         return name;
     }
 
-	public String getOwnerName() {
-		return ownerName;
-	}
+    public String getOwnerName() {
+        return ownerName;
+    }
 
-	public String getFirstLocalizedItem() {
-		return firstLocalizedItem;
-	}
+    public String getFirstLocalizedItem() {
+        return firstLocalizedItem;
+    }
 
-	public String getPartnerDocumentName() {
-		return partnerDocumentName;
-	}
+    public String getPartnerDocumentName() {
+        return partnerDocumentName;
+    }
 }

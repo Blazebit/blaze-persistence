@@ -84,8 +84,8 @@ public class FilterTest {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
-		WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+    public RestrictionBuilder<?> verifyFilter(AttributeFilterProvider filter, String expression) {
+        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder<?> rb = Mockito.mock(RestrictionBuilder.class);
         Mockito.when(whereBuilder.where(expression)).thenReturn(rb);
         filter.apply(whereBuilder, expression);
@@ -93,8 +93,8 @@ public class FilterTest {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
-		WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
+    public RestrictionBuilder<?> verifyLikeFilter(AttributeFilterProvider filter, String expression) {
+        WhereBuilder whereBuilder = Mockito.mock(WhereBuilder.class);
         RestrictionBuilder rb = Mockito.mock(RestrictionBuilder.class, Mockito.RETURNS_DEEP_STUBS);
         EscapeBuilder eb = Mockito.mock(EscapeBuilder.class);
         LikeBuilder lb = Mockito.mock(LikeBuilder.class);

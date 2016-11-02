@@ -12,7 +12,11 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 /**
  * This visitor resolves entity references to their attributes. This is needed for entity references

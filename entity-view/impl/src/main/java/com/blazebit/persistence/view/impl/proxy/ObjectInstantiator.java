@@ -22,5 +22,5 @@ package com.blazebit.persistence.view.impl.proxy;
  */
 public interface ObjectInstantiator<T> {
 
-	public T newInstance(Object[] tuple);
+    public T newInstance(Object[] tuple);
 }

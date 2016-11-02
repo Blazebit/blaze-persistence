@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.view.metamodel;
 
-import com.blazebit.persistence.view.FetchStrategy;
-
 import java.util.Set;
 
 /**

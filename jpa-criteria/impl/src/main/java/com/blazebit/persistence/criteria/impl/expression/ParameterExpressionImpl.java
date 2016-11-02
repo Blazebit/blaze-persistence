@@ -1,15 +1,11 @@
 package com.blazebit.persistence.criteria.impl.expression;
 
 import javax.persistence.Parameter;
-import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Predicate;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-
-import java.util.Collection;
 
 /**
  *
@@ -60,8 +56,12 @@ public class ParameterExpressionImpl<T> extends AbstractExpression<T> implements
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Parameter<?>)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Parameter<?>)) {
+            return false;
+        }
 
         Parameter<?> that = (Parameter<?>) o;
 

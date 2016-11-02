@@ -79,7 +79,9 @@ public class SubqueryInitiatorImpl<X> implements SubqueryInitiator<X> {
         listener.onBuilderStarted(parentFinalSetOperationBuilder);
         
         LeafOngoingSetOperationSubqueryBuilderImpl<X> leafCb = new LeafOngoingSetOperationSubqueryBuilderImpl<X>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, parentFinalSetOperationBuilder.getSubListener(), parentFinalSetOperationBuilder);
-        OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>> cb = new OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>>(mainQuery, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb);
+        OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>> cb = new OngoingSetOperationSubqueryBuilderImpl<X, LeafOngoingSetOperationSubqueryBuilder<X>>(
+                mainQuery, aliasManager, parentJoinManager, expressionFactory, result, subFinalSetOperationBuilder.getSubListener(), subFinalSetOperationBuilder, leafCb
+        );
         
         subFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(cb);
         parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(subFinalSetOperationBuilder);

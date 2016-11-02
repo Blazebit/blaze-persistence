@@ -36,35 +36,35 @@ import com.blazebit.persistence.testsuite.entity.Person;
  */
 public class LimitTest extends AbstractCoreTest {
 
-	@Before
-	public void setUp() {
-		EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			
-			Person o1 = new Person("P1");
-			em.persist(o1);
-			em.flush();
-			
-			Person o2 = new Person("P2");
-			em.persist(o2);
-			em.flush();
-			
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-	}
-	
+    @Before
+    public void setUp() {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            
+            Person o1 = new Person("P1");
+            em.persist(o1);
+            em.flush();
+            
+            Person o2 = new Person("P2");
+            em.persist(o2);
+            em.flush();
+            
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Test
     public void testSubqueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()
-        	.from(Person.class, "pSub")
-        	.select("pSub.id")
-        	.orderByAsc("pSub.id")
-        	.setMaxResults(1)
+            .from(Person.class, "pSub")
+            .select("pSub.id")
+            .orderByAsc("pSub.id")
+            .setMaxResults(1)
         .end()
         .setMaxResults(1);
         String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "LAST") +  ")", "1") + ")";
@@ -74,17 +74,17 @@ public class LimitTest extends AbstractCoreTest {
         assertEquals(1, result.size());
         assertEquals("P1", result.get(0).getName());
     }
-	
+    
     @Test
     public void testSubqueryAndOuterQueryLimit() {
         CriteriaBuilder<Person> cb = cbf.create(em, Person.class, "p");
         cb.where("p.id").in()
-        	.from(Person.class, "pSub")
-        	.select("pSub.id")
-        	.orderByAsc("pSub.id")
-        	.setMaxResults(2)
+            .from(Person.class, "pSub")
+            .select("pSub.id")
+            .orderByAsc("pSub.id")
+            .setMaxResults(2)
         .end()
-    	.orderByAsc("p.id")
+        .orderByAsc("p.id")
         .setMaxResults(1);
         String expected = "SELECT p FROM Person p WHERE p.id IN (" + function("LIMIT", "(SELECT pSub.id FROM Person pSub ORDER BY " + renderNullPrecedence("pSub.id", "ASC", "LAST") +  ")", "2") + ") ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
 

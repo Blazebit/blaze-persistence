@@ -14,9 +14,9 @@ import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
  */
 public class LocateFunction extends AbstractFunctionExpression<Integer> {
 
-    private static final long serialVersionUID = 1L;
-
     public static final String NAME = "LOCATE";
+
+    private static final long serialVersionUID = 1L;
 
     private final Expression<String> pattern;
     private final Expression<String> string;

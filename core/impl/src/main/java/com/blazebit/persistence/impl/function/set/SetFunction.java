@@ -83,6 +83,8 @@ public class SetFunction implements JpqlFunction {
                         size += argument.length() + 30;
                         offset = argument;
                         break;
+                    default:
+                        throw new IllegalArgumentException("Unexpected mode: " + mode);
                 }
             }
         }

@@ -1,6 +1,5 @@
 package com.blazebit.persistence.criteria.impl.expression;
 
-import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Subquery;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;

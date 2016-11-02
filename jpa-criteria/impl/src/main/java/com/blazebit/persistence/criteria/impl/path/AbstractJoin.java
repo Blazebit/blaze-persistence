@@ -7,7 +7,6 @@ import com.blazebit.persistence.criteria.BlazeFetch;
 import com.blazebit.persistence.criteria.BlazeFrom;
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
 
 /**

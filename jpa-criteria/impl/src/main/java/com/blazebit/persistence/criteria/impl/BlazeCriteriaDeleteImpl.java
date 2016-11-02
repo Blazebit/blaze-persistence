@@ -2,18 +2,12 @@ package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.DeleteCriteriaBuilder;
 import com.blazebit.persistence.ModificationCriteriaBuilder;
-import com.blazebit.persistence.MultipleSubqueryInitiator;
-import com.blazebit.persistence.UpdateCriteriaBuilder;
 import com.blazebit.persistence.criteria.BlazeCriteriaDelete;
-import com.blazebit.persistence.criteria.BlazeCriteriaUpdate;
-import com.blazebit.persistence.criteria.BlazeRoot;
-import com.blazebit.persistence.criteria.BlazeSubquery;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 import javax.persistence.Query;
-import javax.persistence.criteria.*;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
 import java.util.Map;
 
 public class BlazeCriteriaDeleteImpl<T> extends AbstractModificationCriteriaQuery<T> implements BlazeCriteriaDelete<T> {

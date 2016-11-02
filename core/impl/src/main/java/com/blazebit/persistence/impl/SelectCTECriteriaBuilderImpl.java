@@ -27,20 +27,20 @@ import com.blazebit.persistence.SelectCTECriteriaBuilder;
  */
 public class SelectCTECriteriaBuilderImpl<Y> extends AbstractCTECriteriaBuilder<Y, SelectCTECriteriaBuilder<Y>, Void, Void> implements SelectCTECriteriaBuilder<Y> {
 
-	public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener) {
-		super(mainQuery, cteName, clazz, result, listener, null);
-	}
+    public SelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener) {
+        super(mainQuery, cteName, clazz, result, listener, null);
+    }
 
-	@Override
-	public Y end() {
-		listener.onBuilderEnded(this);
-		return result;
-	}
-	
-	public CTEInfo createCTEInfo() {
-		List<String> attributes = prepareAndGetAttributes();
-		CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
-		return info;
-	}
+    @Override
+    public Y end() {
+        listener.onBuilderEnded(this);
+        return result;
+    }
+    
+    public CTEInfo createCTEInfo() {
+        List<String> attributes = prepareAndGetAttributes();
+        CTEInfo info = new CTEInfo(cteName, cteType, attributes, false, false, this, null);
+        return info;
+    }
 
 }

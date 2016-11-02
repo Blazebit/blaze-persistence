@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.blazebit</groupId>
+        <artifactId>blaze-persistence</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>blaze-persistence-parent</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Blazebit Persistence Parent</name>
+    <url>http://blazebit.com/persistence</url>
+    <description>Blaze-Persistence Parent</description>
+
+    <properties>
+        <blaze-persistence.codename>Ink</blaze-persistence.codename>
+
+        <version.blazecbav>0.2.0</version.blazecbav>
+        <version.blazeutils>0.1.10</version.blazeutils>
+        <version.deltaspike>1.0.1</version.deltaspike>
+        <version.junit>4.11</version.junit>
+        <version.javassist>3.18.2-GA</version.javassist>
+
+        <!-- Minimum version is 4.2.8.Final -->
+        <!-- 4.2.15.Final has a bug regarding naming strategies -->
+        <version.hibernate-4.2>4.2.21.Final</version.hibernate-4.2>
+        <version.hibernate-4.3>4.3.11.Final</version.hibernate-4.3>
+        <version.hibernate-5>5.0.10.Final</version.hibernate-5>
+        <version.hibernate-5.1>5.1.0.Final</version.hibernate-5.1>
+        <version.hibernate-5.2>5.2.2.Final</version.hibernate-5.2>
+        <version.hibernate-6.0>6.0.0-SNAPSHOT</version.hibernate-6.0>
+
+        <version.datanucleus.base-4>4.1.14</version.datanucleus.base-4>
+        <version.datanucleus.rdbms-4>4.1.16</version.datanucleus.rdbms-4>
+        <version.datanucleus.api-jpa-4>4.1.13</version.datanucleus.api-jpa-4>
+        <version.datanucleus.jpa-4>4.0.6</version.datanucleus.jpa-4>
+        <version.datanucleus.base-5>5.0.3</version.datanucleus.base-5>
+        <version.datanucleus.rdbms-5>5.0.3</version.datanucleus.rdbms-5>
+        <version.datanucleus.api-jpa-5>5.0.3</version.datanucleus.api-jpa-5>
+        <version.datanucleus.jpa-5>5.0.1</version.datanucleus.jpa-5>
+        
+        <version.eclipselink>2.6.3</version.eclipselink>
+        <version.openjpa>2.4.0</version.openjpa>
+
+        <version.openejb>4.6.0</version.openejb>
+        <version.openejb.javaee-api>6.0-4</version.openejb.javaee-api>
+
+        <!-- Plugin versions -->
+        <version.processor.plugin>2.2.4</version.processor.plugin>
+        <version.injection.plugin>1.0.2</version.injection.plugin>
+        <version.release.plugin>2.5.1</version.release.plugin>
+        <version.surefire.plugin>2.19.1</version.surefire.plugin>
+        
+        <processor.plugin.compilerArguments></processor.plugin.compilerArguments>
+        <surefire.openejb.jvm.params></surefire.openejb.jvm.params>
+        
+        <!-- JVM values for surefire plugin -->
+        <!-- Has a default value for Travis; MUST be set to smaller for 32-bit environment -->
+        <surefire.jvm.params>-Xms1024m -Xmx2048m</surefire.jvm.params>
+
+        <maven.build.timestamp.format>yyyy</maven.build.timestamp.format>
+        <currentYearDynamic>${maven.build.timestamp}</currentYearDynamic>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Project dependencies -->
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-apt-utils</artifactId>
+                <version>${version.blazeutils}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-common-utils</artifactId>
+                <version>${version.blazeutils}</version>
+            </dependency>
+
+            <!-- Module dependencies -->
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-parser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-core-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-entity-view-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-jpa-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-hibernate-6.0</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-openjpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-jpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-hibernate</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-datanucleus</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-eclipselink</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-testsuite-base-openjpa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-base-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Platform dependencies -->
+
+            <dependency>
+                <groupId>org.apache.openejb</groupId>
+                <artifactId>javaee-api</artifactId>
+                <version>${version.openejb.javaee-api}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.googlecode.catch-exception</groupId>
+                <artifactId>catch-exception</artifactId>
+                <version>1.2.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-api</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.core</groupId>
+                <artifactId>deltaspike-core-impl</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.openejb</groupId>
+                <artifactId>openejb-core</artifactId>
+                <version>${version.openejb}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.cdictrl</groupId>
+                <artifactId>deltaspike-cdictrl-api</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.deltaspike.cdictrl</groupId>
+                <artifactId>deltaspike-cdictrl-openejb</artifactId>
+                <version>${version.deltaspike}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- RDBMS driver versions -->
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>1.4.183</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>5.1.36</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>9.4-1201-jdbc41</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>3.8.11.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.firebirdsql.jdbc</groupId>
+                <artifactId>jaybird-jdk16</artifactId>
+                <version>2.2.8</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle</groupId>
+                <artifactId>ojdbc14</artifactId>
+                <version>10.2.0.4.0</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.bsc.maven</groupId>
+                    <artifactId>maven-processor-plugin</artifactId>
+                    <version>${version.processor.plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jboss.maven.plugins</groupId>
+                    <artifactId>maven-injection-plugin</artifactId>
+                    <version>${version.injection.plugin}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.javassist</groupId>
+                            <artifactId>javassist</artifactId>
+                            <version>${version.javassist}</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <!--This plugin's configuration is used to store Eclipse m2e settings 
+                    only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.asciidoctor
+                                        </groupId>
+                                        <artifactId>
+                                            asciidoctor-maven-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [1.5.0,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>
+                                                process-asciidoc
+                                            </goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.jboss.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-injection-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [1.0.2,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>bytecode</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore />
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${maven.compiler.argument.source}</source>
+                    <target>${maven.compiler.argument.target}</target>
+                    <!-- Disable annotation processing via compiler plugin. -->
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <!-- Travis build workaround -->
+                            <argLine>${surefire.jvm.params}</argLine>
+                            <skipTests>${skipTests}</skipTests>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <pushChanges>false</pushChanges>
+                    <localCheckout>true</localCheckout>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+
+                    <preparationGoals>clean install</preparationGoals>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${version.checkstyle.plugin}</version>
+                <configuration>
+                    <configLocation>blaze-persistence/checkstyle-config.xml</configLocation>
+                    <suppressionsLocation>blaze-persistence/checkstyle-suppressions.xml</suppressionsLocation>
+                    <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>verify-style</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>6.19</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>${project.groupId}</groupId>
+                        <artifactId>blaze-persistence-checkstyle-rules</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>3.0</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <header>license-header.txt</header>
+                    <aggregate>true</aggregate>
+                    <includes>
+                        <include>src/**/*.java</include>
+                        <include>src/**/*.xml</include>
+                    </includes>
+                    <excludes>
+                        <exclude>target/**</exclude>
+                    </excludes>
+                    <properties>
+                        <inceptionYear>${project.inceptionYear}</inceptionYear>
+                        <latestYearOfContribution>${currentYearDynamic}</latestYearOfContribution>
+                    </properties>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>check-license</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

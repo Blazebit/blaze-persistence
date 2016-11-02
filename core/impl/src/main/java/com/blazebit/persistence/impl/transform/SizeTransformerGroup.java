@@ -1,6 +1,12 @@
 package com.blazebit.persistence.impl.transform;
 
-import com.blazebit.persistence.impl.*;
+import com.blazebit.persistence.impl.AbstractManager;
+import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.GroupByManager;
+import com.blazebit.persistence.impl.JoinManager;
+import com.blazebit.persistence.impl.JoinNode;
+import com.blazebit.persistence.impl.OrderByManager;
+import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.expression.PathReference;
 import com.blazebit.persistence.impl.expression.SimplePathReference;

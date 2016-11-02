@@ -35,11 +35,11 @@ else
     [ "$TRAVIS_PULL_REQUEST" == "false" ] &&
     [ "$JPAPROVIDER" == "hibernate-6.0" ] &&
     [ "$RDBMS" == "h2" ]; then
-	# Just in case we want to run against a specific version
-	#git clone --depth=1 --branch="wip/6.0" https://github.com/sebersole/hibernate-core.git hibernate6
-	#cd hibernate6
-	#./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x :documentation:aggregateJavadocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
-	: # do nothing right now
+    # Just in case we want to run against a specific version
+    #git clone --depth=1 --branch="wip/6.0" https://github.com/sebersole/hibernate-core.git hibernate6
+    #cd hibernate6
+    #./gradlew clean build publishToMavenLocal -x :documentation:buildDocs -x :documentation:aggregateJavadocs -x test -x findbugsMain -x findbugsTest -x checkStyleMain -x checkStyleTest
+    : # do nothing right now
   fi
   
   exec ${MVN_BIN} -P ${JPAPROVIDER},${RDBMS} install --projects "core/testsuite,entity-view/testsuite,jpa-criteria/testsuite" -am

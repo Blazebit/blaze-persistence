@@ -22,7 +22,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-			<version>${project.version}</version>
+            <version>${project.version}</version>
             <optional>true</optional>
         </dependency>
 

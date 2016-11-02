@@ -11,9 +11,9 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
  */
 public class LengthFunction extends FunctionExpressionImpl<Integer> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "LENGTH";
+
+    private static final long serialVersionUID = 1L;
 
     public LengthFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> value) {
         super(criteriaBuilder, Integer.class, NAME, value);

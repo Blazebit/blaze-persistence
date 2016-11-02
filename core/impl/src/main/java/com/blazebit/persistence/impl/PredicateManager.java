@@ -17,16 +17,41 @@ package com.blazebit.persistence.impl;
 
 import java.util.List;
 
-import com.blazebit.persistence.*;
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
 import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.builder.predicate.*;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.builder.predicate.CaseExpressionBuilderListener;
+import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.LeftHandsideSubqueryPredicateBuilderListener;
+import com.blazebit.persistence.impl.builder.predicate.RestrictionBuilderImpl;
+import com.blazebit.persistence.impl.builder.predicate.RightHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.builder.predicate.RootPredicate;
+import com.blazebit.persistence.impl.builder.predicate.SuperExpressionLeftHandsideSubqueryPredicateBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionListModifier;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifiers;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 
 /**
@@ -242,8 +267,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         @Override
         public void visit(EqPredicate predicate) {
-    		boolean original = joinRequired;
-    		joinRequired = false;
+            boolean original = joinRequired;
+            joinRequired = false;
             predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
             predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
             joinRequired = original;
@@ -263,8 +288,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         @Override
         public void visit(InPredicate predicate) {
-    		boolean original = joinRequired;
-    		joinRequired = false;
+            boolean original = joinRequired;
+            joinRequired = false;
             predicate.setLeft(transformer.transform(expressionModifiers.getInPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
             List<Expression> right = predicate.getRight();
             ExpressionListModifier<Expression> listModifier = expressionModifiers.getExpressionListModifier(right);
@@ -282,8 +307,8 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         @Override
         public void visit(MemberOfPredicate predicate) {
-    		boolean original = joinRequired;
-    		joinRequired = false;
+            boolean original = joinRequired;
+            joinRequired = false;
             predicate.setLeft(transformer.transform(expressionModifiers.getBinaryExpressionPredicateLeftModifier(predicate), predicate.getLeft(), fromClause, joinRequired));
             predicate.setRight(transformer.transform(expressionModifiers.getBinaryExpressionPredicateRightModifier(predicate), predicate.getRight(), fromClause, joinRequired));
             joinRequired = original;
@@ -291,16 +316,16 @@ public abstract class PredicateManager<T> extends AbstractManager {
 
         @Override
         public void visit(IsEmptyPredicate predicate) {
-    		boolean original = joinRequired;
-    		joinRequired = false;
+            boolean original = joinRequired;
+            joinRequired = false;
             predicate.setExpression(transformer.transform(expressionModifiers.getUnaryExpressionPredicateModifier(predicate), predicate.getExpression(), fromClause, joinRequired));
             joinRequired = original;
         }
 
         @Override
         public void visit(IsNullPredicate predicate) {
-    		boolean original = joinRequired;
-    		joinRequired = false;
+            boolean original = joinRequired;
+            joinRequired = false;
             predicate.setExpression(transformer.transform(expressionModifiers.getUnaryExpressionPredicateModifier(predicate), predicate.getExpression(), fromClause, joinRequired));
             joinRequired = original;
         }

@@ -25,7 +25,7 @@ import com.blazebit.persistence.view.MappingParameter;
  */
 public abstract class DocumentViewAbstractClass implements DocumentViewInterface {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     private final long age;
     private final Integer contactPersonNumber;

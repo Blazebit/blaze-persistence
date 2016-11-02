@@ -15,16 +15,12 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.TreeSet;
 
 /**
  *

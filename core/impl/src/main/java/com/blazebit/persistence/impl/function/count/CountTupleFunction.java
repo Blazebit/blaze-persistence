@@ -1,11 +1,6 @@
 package com.blazebit.persistence.impl.function.count;
 
 import com.blazebit.persistence.spi.FunctionRenderContext;
-import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.TemplateRenderer;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -14,7 +9,7 @@ import java.util.List;
  */
 public class CountTupleFunction extends AbstractCountFunction {
 
-    private static String DISTINCT = "distinct ";
+    private static final String DISTINCT = "distinct ";
 
     @Override
     public void render(FunctionRenderContext context) {

@@ -50,12 +50,15 @@ import com.blazebit.persistence.view.metamodel.ViewType;
  */
 public final class EntityViewSettingHelper {
 
+    private EntityViewSettingHelper() {
+    }
+
     @SuppressWarnings("unchecked")
     public static <T, Q extends FullQueryBuilder<T, Q>> Q apply(EntityViewSetting<T, Q> setting, EntityViewManagerImpl evm, CriteriaBuilder<?> criteriaBuilder, String entityViewRoot) {
         ExpressionFactory ef = criteriaBuilder.getCriteriaBuilderFactory().getService(ExpressionFactory.class);
         EntityViewConfiguration configuration = new EntityViewConfiguration(criteriaBuilder, setting.getOptionalParameters(), setting.getProperties());
         evm.applyObjectBuilder(setting.getEntityViewClass(), setting.getViewConstructorName(), entityViewRoot, configuration);
-    	applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
+        applyAttributeFilters(setting, evm, criteriaBuilder, ef, entityViewRoot);
         applyAttributeSorters(setting, evm, criteriaBuilder, ef, entityViewRoot);
         applyOptionalParameters(setting, criteriaBuilder);
 

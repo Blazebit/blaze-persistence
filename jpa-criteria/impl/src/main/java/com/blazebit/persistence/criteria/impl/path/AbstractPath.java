@@ -176,12 +176,18 @@ public abstract class AbstractPath<X> extends AbstractExpression<X> implements P
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AbstractPath<?>)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AbstractPath<?>)) {
+            return false;
+        }
 
         AbstractPath<?> that = (AbstractPath<?>) o;
 
-        if (getAttribute() != null ? !getAttribute().equals(that.getAttribute()) : that.getAttribute() != null) return false;
+        if (getAttribute() != null ? !getAttribute().equals(that.getAttribute()) : that.getAttribute() != null) {
+            return false;
+        }
         return getAlias() != null ? getAlias().equals(that.getAlias()) : that.getAlias() == null;
     }
 

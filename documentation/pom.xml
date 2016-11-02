@@ -4,15 +4,15 @@
 
     <parent>
         <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence</artifactId>
+        <artifactId>blaze-persistence-parent</artifactId>
         <version>1.2.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>blaze-persistence-documentation</artifactId>
-	
+    
     <name>Blazebit Persistence Documentation</name>
-	
+    
     <properties>
         <version.asciidoctor>1.5.3</version.asciidoctor>
     </properties>
@@ -91,10 +91,10 @@
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>
-								<imagesdir>images</imagesdir>
-								<iconsdir>images/icons</iconsdir>
-								<stylesdir>css</stylesdir>
-								<scriptsdir>js</scriptsdir>
+                                <imagesdir>images</imagesdir>
+                                <iconsdir>images/icons</iconsdir>
+                                <stylesdir>css</stylesdir>
+                                <scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
                                 <icons>picture</icons>
@@ -125,10 +125,10 @@
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>
-								<imagesdir>images</imagesdir>
-								<iconsdir>images/icons</iconsdir>
-								<stylesdir>css</stylesdir>
-								<scriptsdir>js</scriptsdir>
+                                <imagesdir>images</imagesdir>
+                                <iconsdir>images/icons</iconsdir>
+                                <stylesdir>css</stylesdir>
+                                <scriptsdir>js</scriptsdir>
                                 
                                 <toc>left</toc>
                                 <icons>picture</icons>
@@ -141,13 +141,13 @@
                         </configuration>
                     </execution>
                 </executions>
-				<dependencies>
-					<dependency>
-						<groupId>org.jruby</groupId>
-						<artifactId>jruby-complete</artifactId>
-						<version>1.7.26</version>
-					</dependency>
-				</dependencies>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jruby</groupId>
+                        <artifactId>jruby-complete</artifactId>
+                        <version>1.7.26</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

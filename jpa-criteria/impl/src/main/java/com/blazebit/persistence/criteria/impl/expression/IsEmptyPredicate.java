@@ -7,8 +7,6 @@ import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.path.PluralAttributePath;
 
-import javax.persistence.criteria.Predicate;
-
 /**
  *
  * @author Christian Beikov

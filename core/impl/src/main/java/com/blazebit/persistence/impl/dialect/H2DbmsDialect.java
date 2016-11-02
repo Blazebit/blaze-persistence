@@ -14,20 +14,20 @@ public class H2DbmsDialect extends DefaultDbmsDialect {
         return false;
     }
     
-	@Override
-	public boolean supportsWithClause() {
-		return true;
-	}
+    @Override
+    public boolean supportsWithClause() {
+        return true;
+    }
 
-	@Override
-	public boolean supportsNonRecursiveWithClause() {
-		return false;
-	}
+    @Override
+    public boolean supportsNonRecursiveWithClause() {
+        return false;
+    }
 
-	@Override
-	public String getWithClause(boolean recursive) {
-		return "with recursive";
-	}
+    @Override
+    public String getWithClause(boolean recursive) {
+        return "with recursive";
+    }
 
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {

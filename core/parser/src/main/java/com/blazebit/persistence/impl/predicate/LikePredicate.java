@@ -65,13 +65,21 @@ public class LikePredicate extends BinaryExpressionPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof LikePredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof LikePredicate)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         LikePredicate that = (LikePredicate) o;
 
-        if (caseSensitive != that.caseSensitive) return false;
+        if (caseSensitive != that.caseSensitive) {
+            return false;
+        }
         return escapeCharacter != null ? escapeCharacter.equals(that.escapeCharacter) : that.escapeCharacter == null;
 
     }

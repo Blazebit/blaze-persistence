@@ -49,18 +49,23 @@ public class NodeInfo {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         NodeInfo other = (NodeInfo) obj;
         if (expression == null) {
-            if (other.expression != null)
+            if (other.expression != null) {
                 return false;
-        } else if (!expression.equals(other.expression))
+            }
+        } else if (!expression.equals(other.expression)) {
             return false;
+        }
         return true;
     }
 

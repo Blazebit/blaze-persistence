@@ -1,6 +1,10 @@
 package com.blazebit.persistence.impl.hibernate;
 
-import org.hibernate.*;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.NullPrecedence;
 import org.hibernate.dialect.ColumnAliasExtractor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.LobMergeStrategy;

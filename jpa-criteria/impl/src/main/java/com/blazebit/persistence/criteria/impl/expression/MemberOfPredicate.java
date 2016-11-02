@@ -3,7 +3,6 @@ package com.blazebit.persistence.criteria.impl.expression;
 import java.util.Collection;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;

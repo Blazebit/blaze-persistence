@@ -37,7 +37,7 @@ public class SubviewTupleTransformerFactory implements TupleTransformerFactory {
 
     @Override
     public TupleTransformer create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
+        ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new SubviewTupleTransformer(template, objectBuilder);
     }
 

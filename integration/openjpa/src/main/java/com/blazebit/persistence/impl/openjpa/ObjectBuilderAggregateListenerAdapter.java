@@ -27,10 +27,10 @@ import org.apache.openjpa.kernel.exps.AggregateListener;
  */
 public class ObjectBuilderAggregateListenerAdapter implements AggregateListener {
 
-	private static final long serialVersionUID = 1L;
-	
-	@SuppressWarnings("unused")
-	private final ObjectBuilder<?> builder;
+    private static final long serialVersionUID = 1L;
+    
+    @SuppressWarnings("unused")
+    private final ObjectBuilder<?> builder;
 
     public ObjectBuilderAggregateListenerAdapter(ObjectBuilder<?> builder) {
         this.builder = builder;
@@ -46,7 +46,7 @@ public class ObjectBuilderAggregateListenerAdapter implements AggregateListener 
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-	@Override
+    @Override
     @SuppressWarnings("rawtypes")
     public Object evaluate(Collection clctn, Class[] types, Collection clctn1, StoreContext sc) {
         throw new UnsupportedOperationException("Not supported yet.");

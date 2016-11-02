@@ -26,8 +26,9 @@ import com.blazebit.persistence.spi.TemplateRenderer;
  */
 public abstract class DateDiffFunction implements JpqlFunction {
 
-    private final String functionName;
     protected final TemplateRenderer renderer;
+
+    private final String functionName;
 
     public DateDiffFunction(String functionName, String template) {
         this.functionName = functionName;

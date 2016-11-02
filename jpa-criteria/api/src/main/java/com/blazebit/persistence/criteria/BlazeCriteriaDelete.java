@@ -2,9 +2,10 @@ package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.Executable;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
 
 public interface BlazeCriteriaDelete<T> extends CriteriaDelete<T>, BlazeCommonAbstractCriteria, Executable {
 

@@ -40,9 +40,9 @@ public class DefaultMethodMappingListAttribute<X, Y> extends AbstractMethodMappi
         super(viewType, method, mapping, entityViews, false);
         
         if (isIgnoreIndex()) {
-        	this.isIndexed = false;
+            this.isIndexed = false;
         } else {
-        	this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, viewType.getEntityClass(), mapping);
+            this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, viewType.getEntityClass(), mapping);
         }
     }
 

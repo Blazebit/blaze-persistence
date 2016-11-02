@@ -2,8 +2,6 @@ package com.blazebit.persistence.criteria.impl.expression.function;
 
 import java.io.Serializable;
 
-import javax.persistence.metamodel.ListAttribute;
-
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;

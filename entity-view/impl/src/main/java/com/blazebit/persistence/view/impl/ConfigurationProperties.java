@@ -15,41 +15,39 @@
  */
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.view.MappingCorrelated;
-
 /**
  *
  * @author Christian Beikov
  * @since 1.0.6
  */
 public final class ConfigurationProperties {
-	
-	/**
-	 * We added a flag to make it possible to use the generated proxies with serialization.
-	 * When deserializing an instance the class might not have been loaded yet, so we can force loading
-	 * proxy classes on startup to avoid this problem. 
-	 * By default the eager loading of proxies is disabled to have a better startup performance.
-	 * Valid values for this property are <code>true</code> or <code>false</code>.
-	 * 
-	 * @since 1.0.6
-	 */
-	public static final String PROXY_EAGER_LOADING = "com.blazebit.persistence.view.proxy.eager_loading";
-	/**
-	 * We added a flag to make it possible to prepare all view template caches on startup.
-	 * By default the eager loading of the view templates is disabled to have a better startup performance.
-	 * Valid values for this property are <code>true</code> or <code>false</code>.
-	 *
-	 * @since 1.2.0
-	 */
-	public static final String TEMPLATE_EAGER_LOADING = "com.blazebit.persistence.view.eager_loading";
-	/**
-	 * We added a flag to make it possible to disable unsafe proxy generation.
-	 * By default the unsafe proxies are allowed to be able to make use of the features.
-	 * Valid values for this property are <code>true</code> or <code>false</code>.
-	 * 
-	 * @since 1.0.6
-	 */
-	public static final String PROXY_UNSAFE_ALLOWED = "com.blazebit.persistence.view.proxy.unsafe_allowed";
+    
+    /**
+     * We added a flag to make it possible to use the generated proxies with serialization.
+     * When deserializing an instance the class might not have been loaded yet, so we can force loading
+     * proxy classes on startup to avoid this problem. 
+     * By default the eager loading of proxies is disabled to have a better startup performance.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * 
+     * @since 1.0.6
+     */
+    public static final String PROXY_EAGER_LOADING = "com.blazebit.persistence.view.proxy.eager_loading";
+    /**
+     * We added a flag to make it possible to prepare all view template caches on startup.
+     * By default the eager loading of the view templates is disabled to have a better startup performance.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     *
+     * @since 1.2.0
+     */
+    public static final String TEMPLATE_EAGER_LOADING = "com.blazebit.persistence.view.eager_loading";
+    /**
+     * We added a flag to make it possible to disable unsafe proxy generation.
+     * By default the unsafe proxies are allowed to be able to make use of the features.
+     * Valid values for this property are <code>true</code> or <code>false</code>.
+     * 
+     * @since 1.0.6
+     */
+    public static final String PROXY_UNSAFE_ALLOWED = "com.blazebit.persistence.view.proxy.unsafe_allowed";
     /**
      * We added a flag to make it possible to disable the expression validation.
      * By default the expression validation is enabled, but since the validation is not bullet proof, it can be disabled.
@@ -58,18 +56,18 @@ public final class ConfigurationProperties {
      * @since 1.1.0
      */
     public static final String EXPRESSION_VALIDATION_DISABLED = "com.blazebit.persistence.view.expression_validation_disabled";
-	/**
-	 * An integer value that defines the default batch size for entity view attributes.
-	 * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
-	 * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
-	 *
-	 * To specify the batch size of a specific property, append the property name after the "batch_size" like
-	 * e.g. <code>com.blazebit.persistence.view.batch_size.subProperty</code>
-	 *
-	 * @since 1.2.0
-	 */
-	public static final String DEFAULT_BATCH_SIZE = "com.blazebit.persistence.view.batch_size";
+    /**
+     * An integer value that defines the default batch size for entity view attributes.
+     * By default the value is 1 and can be overridden either via {@linkplain com.blazebit.persistence.view.BatchFetch#size()}
+     * or by setting this property via {@linkplain com.blazebit.persistence.view.EntityViewSetting#setProperty}.
+     *
+     * To specify the batch size of a specific property, append the property name after the "batch_size" like
+     * e.g. <code>com.blazebit.persistence.view.batch_size.subProperty</code>
+     *
+     * @since 1.2.0
+     */
+    public static final String DEFAULT_BATCH_SIZE = "com.blazebit.persistence.view.batch_size";
 
-	private ConfigurationProperties() {
-	}
+    private ConfigurationProperties() {
+    }
 }

@@ -15,8 +15,6 @@
  */
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.metamodel.AbstractMethodMappingPluralAttribute;
-import com.blazebit.persistence.view.metamodel.CollectionAttribute;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 

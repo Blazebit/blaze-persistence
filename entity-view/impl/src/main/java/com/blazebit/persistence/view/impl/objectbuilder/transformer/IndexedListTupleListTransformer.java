@@ -39,10 +39,10 @@ public class IndexedListTupleListTransformer extends AbstractIndexedTupleListTra
         if (index < list.size()) {
             list.set(index, value);
         } else if (index > list.size()) {
-        	for (int i = index - list.size(); i <= index; i++) {
-        		list.add(null);
-        	}
-        	
+            for (int i = index - list.size(); i <= index; i++) {
+                list.add(null);
+            }
+            
             list.add(index, value);
         } else {
             list.add(index, value);

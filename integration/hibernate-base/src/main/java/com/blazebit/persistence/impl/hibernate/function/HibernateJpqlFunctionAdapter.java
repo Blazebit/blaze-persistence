@@ -48,12 +48,12 @@ public class HibernateJpqlFunctionAdapter implements SQLFunction {
 
     @Override
     public Type getReturnType(Type firstArgumentType, Mapping mapping) throws QueryException {
-    	SessionFactoryImplementor sfi = (SessionFactoryImplementor) mapping;
+        SessionFactoryImplementor sfi = (SessionFactoryImplementor) mapping;
         Class<?> argumentClass;
         
         if (firstArgumentType == null) {
             argumentClass = null;
-        } else { 
+        } else {
             argumentClass = firstArgumentType.getReturnedClass();
         }
         

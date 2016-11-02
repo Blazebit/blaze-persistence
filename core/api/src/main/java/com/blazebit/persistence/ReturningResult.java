@@ -48,5 +48,5 @@ public interface ReturningResult<T> {
      * @return The number of affected entities
      */
     public int getUpdateCount();
-	
+    
 }

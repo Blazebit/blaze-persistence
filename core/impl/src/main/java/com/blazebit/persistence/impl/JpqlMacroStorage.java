@@ -1,13 +1,10 @@
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
-import com.blazebit.persistence.impl.expression.MacroFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**

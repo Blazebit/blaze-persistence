@@ -15,9 +15,9 @@ import javax.persistence.criteria.Expression;
  */
 public class CurrentTimeFunction extends AbstractFunctionExpression<Time> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "CURRENT_TIME";
+
+    private static final long serialVersionUID = 1L;
 
     public CurrentTimeFunction(BlazeCriteriaBuilderImpl criteriaBuilder) {
         super(criteriaBuilder, Time.class, NAME);

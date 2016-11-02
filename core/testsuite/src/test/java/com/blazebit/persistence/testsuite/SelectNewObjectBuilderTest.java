@@ -28,7 +28,6 @@ import org.junit.Test;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.ObjectBuilder;
 import com.blazebit.persistence.SelectBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -91,7 +90,7 @@ public class SelectNewObjectBuilderTest extends AbstractCoreTest {
                     return list;
                 }
             });
-        assertEquals("SELECT d.name AS name, UPPER(d.name) AS upperName, LOWER(d.name) AS lowerName, " + staticJpaProvider.getBooleanExpression(false)+ " FROM Document d", criteria.getQueryString());
+        assertEquals("SELECT d.name AS name, UPPER(d.name) AS upperName, LOWER(d.name) AS lowerName, " + STATIC_JPA_PROVIDER.getBooleanExpression(false)+ " FROM Document d", criteria.getQueryString());
         List<String[]> actual = criteria.getQuery().getResultList();
 
         assertArrayEquals(new String[]{ "Doc1", "DOC1", "doc1" }, actual.get(0));

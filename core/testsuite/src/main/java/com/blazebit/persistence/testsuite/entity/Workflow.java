@@ -92,11 +92,11 @@ public class Workflow implements Serializable {
 //    @Column(length = 20)
 //    public Set<String> getTags() {
 //      return tags;
-//	}
+//    }
 //
-//	public void setTags(Set<String> tags) {
-//		this.tags = tags;
-//	}
+//    public void setTags(Set<String> tags) {
+//        this.tags = tags;
+//    }
 
     @ElementCollection
     @CollectionTable(

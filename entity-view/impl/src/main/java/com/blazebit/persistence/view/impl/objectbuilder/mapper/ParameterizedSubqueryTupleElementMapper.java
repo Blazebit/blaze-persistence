@@ -36,7 +36,7 @@ public class ParameterizedSubqueryTupleElementMapper implements TupleElementMapp
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-    	providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery());
+        providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery());
     }
 
 }

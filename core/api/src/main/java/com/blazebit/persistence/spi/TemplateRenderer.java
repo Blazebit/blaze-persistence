@@ -28,10 +28,10 @@ import java.util.List;
  * 
  * <code>
  * new TemplateRenderer("?1 limit ?2")
- * 		.start(context)
- * 		.addArgument(1)
- * 		.addArgument(2)
- * 		.build();
+ *         .start(context)
+ *         .addArgument(1)
+ *         .addArgument(2)
+ *         .build();
  * </code>
  *
  * @author Christian Beikov

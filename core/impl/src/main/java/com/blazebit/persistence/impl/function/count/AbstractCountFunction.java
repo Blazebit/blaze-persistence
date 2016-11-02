@@ -3,10 +3,6 @@ package com.blazebit.persistence.impl.function.count;
 import com.blazebit.persistence.impl.util.SqlUtils;
 import com.blazebit.persistence.spi.FunctionRenderContext;
 import com.blazebit.persistence.spi.JpqlFunction;
-import com.blazebit.persistence.spi.TemplateRenderer;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *

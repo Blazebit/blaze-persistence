@@ -17,15 +17,38 @@ package com.blazebit.persistence.impl.transform;
 
 import java.util.*;
 
-import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.Metamodel;
+import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type.PersistenceType;
 
-import com.blazebit.persistence.impl.*;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.ConfigurationProperties;
+import com.blazebit.persistence.impl.GroupByManager;
+import com.blazebit.persistence.impl.JoinManager;
+import com.blazebit.persistence.impl.JoinNode;
+import com.blazebit.persistence.impl.JpaUtils;
+import com.blazebit.persistence.impl.MainQuery;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionModifyingResultVisitorAdapter;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 import com.blazebit.persistence.impl.function.count.AbstractCountFunction;
-import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
+import com.blazebit.persistence.impl.util.MetamodelUtils;
+import com.blazebit.persistence.impl.util.PropertyUtils;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpaProvider;
 
@@ -71,22 +94,22 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
     }
     
     public boolean isHasComplexGroupBySelects() {
-		return hasComplexGroupBySelects;
-	}
+        return hasComplexGroupBySelects;
+    }
 
-	public void setHasComplexGroupBySelects(boolean hasComplexGroupBySelects) {
-		this.hasComplexGroupBySelects = hasComplexGroupBySelects;
-	}
-	
-	public boolean isHasGroupBySelects() {
-		return hasGroupBySelects;
-	}
+    public void setHasComplexGroupBySelects(boolean hasComplexGroupBySelects) {
+        this.hasComplexGroupBySelects = hasComplexGroupBySelects;
+    }
+    
+    public boolean isHasGroupBySelects() {
+        return hasGroupBySelects;
+    }
 
-	public void setHasGroupBySelects(boolean hasGroupBySelects) {
-		this.hasGroupBySelects = hasGroupBySelects;
-	}
+    public void setHasGroupBySelects(boolean hasGroupBySelects) {
+        this.hasGroupBySelects = hasGroupBySelects;
+    }
 
-	public void setClause(ClauseType clause) {
+    public void setClause(ClauseType clause) {
         this.clause = clause;
     }
     
@@ -115,11 +138,11 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
     }
 
     private boolean isCountTransformationEnabled() {
-    	return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, true);
+        return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.SIZE_TO_COUNT_TRANSFORMATION, true);
     }
     
     private boolean isImplicitGroupByFromSelectEnabled() {
-    	return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
+        return PropertyUtils.getAsBooleanProperty(properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
     }
 
     @Override
@@ -257,8 +280,8 @@ public class SizeTransformationVisitor extends ExpressionModifyingResultVisitorA
 
                 currentJoinNode = (JoinNode) originalSizeArg.getBaseNode();
                 
-                if (distinctRequired == false) { 
-                    if(lateJoins.size() + joinManager.getCollectionJoins().size() > 1) {
+                if (distinctRequired == false) {
+                    if (lateJoins.size() + joinManager.getCollectionJoins().size() > 1) {
                         distinctRequired = true;
                         /**
                          *  As soon as we encounter another collection join, set previously 

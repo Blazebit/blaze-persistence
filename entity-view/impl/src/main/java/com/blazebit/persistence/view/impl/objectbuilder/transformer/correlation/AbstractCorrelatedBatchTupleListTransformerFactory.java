@@ -15,22 +15,9 @@
  */
 package com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation;
 
-import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.FullQueryBuilder;
-import com.blazebit.persistence.view.CorrelationProvider;
 import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
-import com.blazebit.persistence.view.impl.EntityViewConfiguration;
-import com.blazebit.persistence.view.impl.macro.CorrelatedSubqueryViewRootJpqlMacro;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformer;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleListTransformerFactory;
-import com.blazebit.persistence.view.impl.objectbuilder.transformer.TupleTransformerFactory;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.ManagedType;
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *

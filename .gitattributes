@@ -12,16 +12,16 @@ Makefile text eol=lf
 ################################################################################################
 
 # Documents
-*.doc	 diff=astextplain
-*.DOC	 diff=astextplain
+*.doc     diff=astextplain
+*.DOC     diff=astextplain
 *.docx diff=astextplain
 *.DOCX diff=astextplain
 *.dot  diff=astextplain
 *.DOT  diff=astextplain
 *.pdf  diff=astextplain
-*.PDF	 diff=astextplain
-*.rtf	 diff=astextplain
-*.RTF	 diff=astextplain
+*.PDF     diff=astextplain
+*.rtf     diff=astextplain
+*.RTF     diff=astextplain
 *.md text eol=lf
 *.adoc text eol=lf
 *.textile text eol=lf
@@ -158,4 +158,4 @@ AUTHORS text eol=lf
 *.so            binary
 *.war           binary
 *.keystore      binary
-*.vsdx	        binary
+*.vsdx            binary

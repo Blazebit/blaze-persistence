@@ -28,10 +28,10 @@ import com.blazebit.persistence.view.metamodel.MappingConstructor;
  */
 public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
 
-	private final Constructor<T> constructor;
+    private final Constructor<T> constructor;
 
-	public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
-		Class<T> proxyClazz = getProxyClass(proxyFactory, viewType);
+    public ReflectionInstantiator(MappingConstructor<T> mappingConstructor, ProxyFactory proxyFactory, ManagedViewType<T> viewType, Class<?>[] parameterTypes) {
+        Class<T> proxyClazz = getProxyClass(proxyFactory, viewType);
         Constructor<T> javaConstructor = null;
         
         try {
@@ -50,10 +50,10 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
         }
         
         this.constructor = javaConstructor;
-	}
+    }
 
-	@Override
-	public T newInstance(Object[] tuple) {
+    @Override
+    public T newInstance(Object[] tuple) {
         try {
             return constructor.newInstance(tuple);
         } catch (Exception ex) {
@@ -68,11 +68,11 @@ public class ReflectionInstantiator<T> implements ObjectInstantiator<T> {
             }
             throw new RuntimeException("Could not invoke the proxy constructor '" + constructor + "' with the given tuple: " + Arrays.toString(tuple) + " with the types: " + Arrays.toString(types), ex);
         }
-	}
-	
-	@SuppressWarnings("unchecked")
-	protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType) {
-		return (Class<T>) proxyFactory.getProxy(viewType);
-	}
-	
+    }
+    
+    @SuppressWarnings("unchecked")
+    protected Class<T> getProxyClass(ProxyFactory proxyFactory, ManagedViewType<T> viewType) {
+        return (Class<T>) proxyFactory.getProxy(viewType);
+    }
+    
 }

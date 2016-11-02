@@ -56,7 +56,7 @@ public class SorterTest {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public OrderByBuilder<?> verifySorter(Sorter sorter) {
+    public OrderByBuilder<?> verifySorter(Sorter sorter) {
         OrderByBuilder<?> sortable = Mockito.mock(OrderByBuilder.class);
         sorter.apply((OrderByBuilder) sortable, expression);
         return Mockito.verify(sortable);

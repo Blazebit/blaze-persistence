@@ -1,13 +1,17 @@
 package com.blazebit.persistence.impl.hibernate;
 
-import org.hibernate.*;
+import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.MappingException;
+import org.hibernate.NullPrecedence;
+import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.ColumnAliasExtractor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.LobMergeStrategy;
-import org.hibernate.dialect.function.SQLFunction;
 import org.hibernate.dialect.lock.LockingStrategy;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.UniqueDelegate;

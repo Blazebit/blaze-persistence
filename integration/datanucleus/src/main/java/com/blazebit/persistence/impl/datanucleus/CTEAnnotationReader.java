@@ -11,26 +11,26 @@ import org.datanucleus.metadata.PackageMetaData;
 import com.blazebit.persistence.CTE;
 
 public class CTEAnnotationReader extends JPAAnnotationReader {
-	
+    
     public CTEAnnotationReader(MetaDataManager mgr) {
-    	super(mgr);
-    	String[] supportedAnnotationPacakges = new String[supportedPackages.length + 1];
-    	System.arraycopy(supportedPackages, 0, supportedAnnotationPacakges, 0, supportedPackages.length);
-    	supportedAnnotationPacakges[supportedAnnotationPacakges.length - 1] = "com.blazebit.persistence";
+        super(mgr);
+        String[] supportedAnnotationPacakges = new String[supportedPackages.length + 1];
+        System.arraycopy(supportedPackages, 0, supportedAnnotationPacakges, 0, supportedPackages.length);
+        supportedAnnotationPacakges[supportedAnnotationPacakges.length - 1] = "com.blazebit.persistence";
         setSupportedAnnotationPackages(supportedAnnotationPacakges);
     }
 
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public AbstractClassMetaData getMetaDataForClass(Class cls, PackageMetaData pmd, ClassLoaderResolver clr) {
-		AbstractClassMetaData cmd = super.getMetaDataForClass(cls, pmd, clr);
-		
-		if (cmd == null) {
-			return null;
-		}
-		
+    public AbstractClassMetaData getMetaDataForClass(Class cls, PackageMetaData pmd, ClassLoaderResolver clr) {
+        AbstractClassMetaData cmd = super.getMetaDataForClass(cls, pmd, clr);
+        
+        if (cmd == null) {
+            return null;
+        }
+        
         if (!cls.isAnnotationPresent(CTE.class)) {
-        	return cmd;
+            return cmd;
         }
 
         cmd.setIdentityType(IdentityType.NONDURABLE);
@@ -38,12 +38,12 @@ public class CTEAnnotationReader extends JPAAnnotationReader {
         // TODO: check that no collections are mapped
         
         for (int i = 0; i < cmd.getNoOfMembers(); i++) {
-        	AbstractMemberMetaData mmd = cmd.getMetaDataForMemberAtRelativePosition(i);
-        	if (mmd.isPrimaryKey()) {
-        		mmd.setPrimaryKey(false);
-        	}
+            AbstractMemberMetaData mmd = cmd.getMetaDataForMemberAtRelativePosition(i);
+            if (mmd.isPrimaryKey()) {
+                mmd.setPrimaryKey(false);
+            }
         }
-		return cmd;
-	}
+        return cmd;
+    }
 
 }

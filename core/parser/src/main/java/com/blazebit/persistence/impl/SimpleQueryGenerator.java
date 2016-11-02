@@ -15,8 +15,50 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.ArithmeticOperator;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.DateLiteral;
+import com.blazebit.persistence.impl.expression.EntityLiteral;
+import com.blazebit.persistence.impl.expression.EnumLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TimeLiteral;
+import com.blazebit.persistence.impl.expression.TimestampLiteral;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -391,8 +433,8 @@ public class SimpleQueryGenerator extends VisitorAdapter {
 
         // @formatter:off
         if (!"CURRENT_TIME".equalsIgnoreCase(functionName)
-    		 && !"CURRENT_DATE".equalsIgnoreCase(functionName) 
-    		 && !"CURRENT_TIMESTAMP".equalsIgnoreCase(functionName)) {
+             && !"CURRENT_DATE".equalsIgnoreCase(functionName)
+             && !"CURRENT_TIMESTAMP".equalsIgnoreCase(functionName)) {
             // @formatter:on
             sb.append('(');
 
@@ -503,7 +545,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             ArithmeticOperator leftOp = left.getOp();
             if (leftOp == ArithmeticOperator.DIVISION // (1 / 3) / 4
                     || !op.isAddOrSubtract() && leftOp.isAddOrSubtract() // (1 - 3) * 4
-                    ) {
+            ) {
                 sb.append("(");
                 expression.getLeft().accept(this);
                 sb.append(")");
@@ -522,7 +564,7 @@ public class SimpleQueryGenerator extends VisitorAdapter {
             if (rightOp == ArithmeticOperator.DIVISION    // 1 / (3 / 4)
                     || op == ArithmeticOperator.SUBTRACTION // 1 - (3 + 4)
                     || !op.isAddOrSubtract() && rightOp.isAddOrSubtract() // 1 - (3 * 4)
-                    ) {
+            ) {
                 sb.append("(");
                 expression.getRight().accept(this);
                 sb.append(")");
@@ -561,6 +603,9 @@ public class SimpleQueryGenerator extends VisitorAdapter {
                 break;
             case CASE_WHEN:
                 sb.append(getBooleanExpression(expression.getValue()));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid boolean literal rendering context: " + booleanLiteralRenderingContext);
         }
     }
 

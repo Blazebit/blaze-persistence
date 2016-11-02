@@ -16,6 +16,9 @@ public class SqlUtils {
     private static final PatternFinder FROM_FINAL_TABLE_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(FROM_FINAL_TABLE);
     private static final PatternFinder NEXT_VALUE_FOR_FINDER = new BoyerMooreCaseInsensitiveAsciiFirstPatternFinder(NEXT_VALUE_FOR);
 
+    private SqlUtils() {
+    }
+
     public static int countSelectItems(CharSequence sql) {
         int count = 1;
         int parenthesis = 0;

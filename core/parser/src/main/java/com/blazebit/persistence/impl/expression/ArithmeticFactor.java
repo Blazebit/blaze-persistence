@@ -49,13 +49,21 @@ public class ArithmeticFactor extends AbstractNumericExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ArithmeticFactor)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ArithmeticFactor)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         ArithmeticFactor that = (ArithmeticFactor) o;
 
-        if (invertSignum != that.invertSignum) return false;
+        if (invertSignum != that.invertSignum) {
+            return false;
+        }
         return expression != null ? expression.equals(that.expression) : that.expression == null;
 
     }

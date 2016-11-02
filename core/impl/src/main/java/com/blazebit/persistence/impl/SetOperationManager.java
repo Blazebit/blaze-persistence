@@ -28,8 +28,8 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class SetOperationManager {
 
-	private AbstractCommonQueryBuilder<?, ?, ?, ?, ?> startQueryBuilder;
-	private SetOperationType operator;
+    private AbstractCommonQueryBuilder<?, ?, ?, ?, ?> startQueryBuilder;
+    private SetOperationType operator;
     private final boolean nested;
     private final List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> setOperations;
 
@@ -40,7 +40,7 @@ public class SetOperationManager {
     }
 
     List<AbstractCommonQueryBuilder<?, ?, ?, ?, ?>> getSetOperations() {
-    	return setOperations;
+        return setOperations;
     }
 
     boolean hasSetOperations() {

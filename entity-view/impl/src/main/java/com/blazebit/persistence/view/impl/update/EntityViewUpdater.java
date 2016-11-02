@@ -6,6 +6,6 @@ import com.blazebit.persistence.view.impl.proxy.UpdatableProxy;
 
 public interface EntityViewUpdater {
 
-	public void executeUpdate(EntityManager em, UpdatableProxy updatableProxy);
-	
+    public void executeUpdate(EntityManager em, UpdatableProxy updatableProxy);
+    
 }

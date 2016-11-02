@@ -11,7 +11,7 @@
 
     <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
     <packaging>jar</packaging>
-	
+    
     <name>Blazebit Persistence JPA-Criteria Impl</name>
 
     <dependencies>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-			<version>${project.version}</version>
+            <version>${project.version}</version>
         </dependency>
         
         <dependency>
@@ -54,7 +54,7 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-			<version>${project.version}</version>
+            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

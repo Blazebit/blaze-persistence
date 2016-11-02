@@ -15,9 +15,7 @@
  */
 package com.blazebit.persistence.impl;
 
-import java.util.Map;
 import java.util.NavigableMap;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import javax.persistence.metamodel.Attribute;

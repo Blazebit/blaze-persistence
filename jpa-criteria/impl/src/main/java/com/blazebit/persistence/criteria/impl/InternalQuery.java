@@ -21,8 +21,24 @@ import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 
-import com.blazebit.persistence.*;
-import com.blazebit.persistence.criteria.*;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.FromBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.GroupByBuilder;
+import com.blazebit.persistence.HavingBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.OrderByBuilder;
+import com.blazebit.persistence.SelectBuilder;
+import com.blazebit.persistence.SelectObjectBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.WhereBuilder;
+import com.blazebit.persistence.criteria.BlazeAbstractQuery;
+import com.blazebit.persistence.criteria.BlazeJoin;
+import com.blazebit.persistence.criteria.BlazeOrder;
+import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSubquery;
 import com.blazebit.persistence.criteria.impl.RenderContext.ClauseType;
 import com.blazebit.persistence.criteria.impl.expression.AbstractSelection;
 import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
@@ -526,9 +542,9 @@ public class InternalQuery<T> implements Serializable {
                 return JoinType.LEFT;
             case RIGHT:
                 return JoinType.RIGHT;
+            default:
+                throw new IllegalArgumentException("Unsupported join type: " + joinType);
         }
-
-        throw new IllegalArgumentException("Unsupported join type: " + joinType);
     }
     
     private void renderWhere(WhereBuilder<?> wb, RenderContextImpl context) {

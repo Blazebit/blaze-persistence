@@ -40,7 +40,7 @@ public class ParameterizedExpressionSubqueryTupleElementMapper implements TupleE
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-    	providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
+        providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression));
     }
 
 }

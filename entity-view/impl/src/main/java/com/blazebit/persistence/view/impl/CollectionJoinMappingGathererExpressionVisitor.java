@@ -25,7 +25,13 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.Type;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
 import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
@@ -42,16 +48,16 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
     private final List<String> paths;
 
     public CollectionJoinMappingGathererExpressionVisitor(ManagedType<?> managedType, Metamodel metamodel) {
-    	this.metamodel = metamodel;
-    	this.managedType = managedType;
+        this.metamodel = metamodel;
+        this.managedType = managedType;
         this.paths = new ArrayList<String>();
     }
     
-	public List<String> getPaths() {
-		return paths;
-	}
+    public List<String> getPaths() {
+        return paths;
+    }
 
-	@Override
+    @Override
     public void visit(PropertyExpression expression) {
         throw new UnsupportedOperationException("This method should never be called!");
     }
@@ -65,56 +71,56 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
         Attribute<?, ?> jpaAttribute = null;
         
         for (int i = 0; i < size; i++) {
-        	String baseName;
-        	Expression e = expressions.get(i);
-        	if (e instanceof ArrayExpression) {
-        		ArrayExpression arrayExpression = (ArrayExpression) e;
-        		arrayExpression.getIndex().accept(this);
-				continue;
-        	} else {
-        		baseName = e.toString();
-        	}
-        	
-        	if (i != 0) {
-        		sb.append('.');
-        	}
-        	
-    		sb.append(e.toString());
+            String baseName;
+            Expression e = expressions.get(i);
+            if (e instanceof ArrayExpression) {
+                ArrayExpression arrayExpression = (ArrayExpression) e;
+                arrayExpression.getIndex().accept(this);
+                continue;
+            } else {
+                baseName = e.toString();
+            }
+            
+            if (i != 0) {
+                sb.append('.');
+            }
+            
+            sb.append(e.toString());
 
-    		try {
-    			jpaAttribute = t.getAttribute(baseName);
-    		} catch (IllegalArgumentException ex) {
-    			// Ignore non existing attributes
-    			jpaAttribute = null;
-    		}
-        	
-        	// NOTE: Attribute could be null because this model might contain errors
-        	if (jpaAttribute != null) {
-	        	if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
-	        		paths.add(sb.toString());
-	            	Type<?> elementType = ((PluralAttribute<?, ?, ?>) jpaAttribute).getElementType();
-	            	
-	            	if (elementType instanceof ManagedType<?>) {
-	            		t = (ManagedType<?>) elementType;
-	            	} else {
-	            		t = null;
-	            	}
-	        	} else {
-	        		if (jpaAttribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
-	        			t = null;
-	        		} else {
-	        			t = metamodel.managedType(jpaAttribute.getJavaType());
-	        		}
-	        	}
-        	}
+            try {
+                jpaAttribute = t.getAttribute(baseName);
+            } catch (IllegalArgumentException ex) {
+                // Ignore non existing attributes
+                jpaAttribute = null;
+            }
+            
+            // NOTE: Attribute could be null because this model might contain errors
+            if (jpaAttribute != null) {
+                if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
+                    paths.add(sb.toString());
+                    Type<?> elementType = ((PluralAttribute<?, ?, ?>) jpaAttribute).getElementType();
+                    
+                    if (elementType instanceof ManagedType<?>) {
+                        t = (ManagedType<?>) elementType;
+                    } else {
+                        t = null;
+                    }
+                } else {
+                    if (jpaAttribute.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
+                        t = null;
+                    } else {
+                        t = metamodel.managedType(jpaAttribute.getJavaType());
+                    }
+                }
+            }
         }
 
-    	if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
-    		paths.add(sb.toString());
-    	}
+        if (jpaAttribute instanceof PluralAttribute<?, ?, ?>) {
+            paths.add(sb.toString());
+        }
     }
 
-	@Override
+    @Override
     public void visit(IsEmptyPredicate predicate) {
     }
 
@@ -122,10 +128,10 @@ public class CollectionJoinMappingGathererExpressionVisitor extends VisitorAdapt
     public void visit(MemberOfPredicate predicate) {
     }
 
-	@Override
-	public void visit(FunctionExpression expression) {
-		if (!ExpressionUtils.isSizeFunction(expression)) {
-			super.visit(expression);
-		}
-	}
+    @Override
+    public void visit(FunctionExpression expression) {
+        if (!ExpressionUtils.isSizeFunction(expression)) {
+            super.visit(expression);
+        }
+    }
 }

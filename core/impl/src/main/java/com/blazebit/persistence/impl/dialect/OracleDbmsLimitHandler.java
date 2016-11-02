@@ -76,7 +76,7 @@ public class OracleDbmsLimitHandler extends AbstractDbmsLimitHandler {
                 statement.setInt(index, offset);
                 return 1;
             }
-        } if (limit != null) {
+        } else if (limit != null) {
             statement.setInt(index, limit);
             return 1;
         }

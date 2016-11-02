@@ -38,18 +38,24 @@ public class EmbeddableTestEntityIdEmbeddable implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         EmbeddableTestEntityIdEmbeddable other = (EmbeddableTestEntityIdEmbeddable) obj;
         if (someValue == null) {
-            if (other.someValue != null)
+            if (other.someValue != null) {
                 return false;
-        } else if (!someValue.equals(other.someValue))
+            }
+        } else if (!someValue.equals(other.someValue)) {
             return false;
+        }
+
         return true;
     }
 

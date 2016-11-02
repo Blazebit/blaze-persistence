@@ -1,5 +1,6 @@
 package com.blazebit.persistence.view.impl.proxy;
 
+@SuppressWarnings("checkstyle:methodname")
 public interface UpdatableProxy {
     
     public Class<?> $$_getEntityViewClass();

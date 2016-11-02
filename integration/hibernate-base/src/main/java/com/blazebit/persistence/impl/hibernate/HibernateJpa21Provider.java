@@ -15,13 +15,10 @@
  */
 package com.blazebit.persistence.impl.hibernate;
 
-import org.hibernate.Version;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
 import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Metamodel;
 import java.util.Map;
 
 /**

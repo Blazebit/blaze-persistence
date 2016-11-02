@@ -16,7 +16,10 @@
 package com.blazebit.persistence.impl.openjpa;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -36,9 +39,9 @@ public class OpenJPAEntityManagerIntegrator implements EntityManagerFactoryInteg
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
     
     @Override
-	public String getDbms(EntityManagerFactory entityManagerFactory) {
-		return null;
-	}
+    public String getDbms(EntityManagerFactory entityManagerFactory) {
+        return null;
+    }
 
     @Override
     public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {

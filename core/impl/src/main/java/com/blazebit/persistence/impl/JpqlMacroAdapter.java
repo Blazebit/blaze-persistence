@@ -49,8 +49,12 @@ public class JpqlMacroAdapter implements MacroFunction {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof JpqlMacroAdapter)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof JpqlMacroAdapter)) {
+            return false;
+        }
 
         JpqlMacroAdapter that = (JpqlMacroAdapter) o;
 

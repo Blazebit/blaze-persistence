@@ -22,13 +22,48 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.DateLiteral;
+import com.blazebit.persistence.impl.expression.EntityLiteral;
+import com.blazebit.persistence.impl.expression.EnumLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TimeLiteral;
+import com.blazebit.persistence.impl.expression.TimestampLiteral;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
 import com.blazebit.reflection.ReflectionUtils;
 
 import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.Metamodel;
 
 /**
  * A visitor that can determine possible target types of a path expression.
@@ -59,34 +94,34 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             this.method = method;
         }
 
-		Class<?> getRealCurrentClass() {
-			return currentClass;
-		}
+        Class<?> getRealCurrentClass() {
+            return currentClass;
+        }
 
-		Class<?> getCurrentClass() {
-			if (valueClass != null) {
-				return valueClass;
-			}
-			
-			return currentClass;
-		}
+        Class<?> getCurrentClass() {
+            if (valueClass != null) {
+                return valueClass;
+            }
+            
+            return currentClass;
+        }
 
-		void setCurrentClass(Class<?> currentClass) {
-			this.currentClass = currentClass;
-			this.valueClass = null;
-		}
+        void setCurrentClass(Class<?> currentClass) {
+            this.currentClass = currentClass;
+            this.valueClass = null;
+        }
 
-		Method getMethod() {
-			return method;
-		}
+        Method getMethod() {
+            return method;
+        }
 
-		void setMethod(Method method) {
-			this.method = method;
-		}
+        void setMethod(Method method) {
+            this.method = method;
+        }
 
-		void setValueClass(Class<?> valueClass) {
-			this.valueClass = valueClass;
-		}
+        void setValueClass(Class<?> valueClass) {
+            this.valueClass = valueClass;
+        }
         
         PathPosition copy() {
             return new PathPosition(currentClass, valueClass, method);
@@ -130,10 +165,10 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
             Class<?> valueType = null;
             
             if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-            	Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            	valueType = typeArguments[typeArguments.length - 1];
+                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+                valueType = typeArguments[typeArguments.length - 1];
             } else {
-            	valueType = type;
+                valueType = type;
             }
             
             currentPosition.setCurrentClass(type);
@@ -259,45 +294,45 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
 
     @Override
     public void visit(FunctionExpression expression) {
-    	String name = expression.getFunctionName();
-    	if ("KEY".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        String name = expression.getFunctionName();
+        if ("KEY".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
             Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
 
-    		if (!Map.class.isAssignableFrom(type)) {
-            	invalid(expression, "Does not resolve to java.util.Map!");
+            if (!Map.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.Map!");
             } else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(typeArguments[0]);
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(typeArguments[0]);
             }
-    	} else if ("INDEX".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-    		
-    		if (!List.class.isAssignableFrom(type)) {
-    			invalid(expression, "Does not resolve to java.util.List!");
-    		} else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(Integer.class);
-    		}
-    	} else if ("VALUE".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        } else if ("INDEX".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            
+            if (!List.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.List!");
+            } else {
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(Integer.class);
+            }
+        } else if ("VALUE".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
             Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
 
-    		if (!Map.class.isAssignableFrom(type)) {
-            	invalid(expression, "Does not resolve to java.util.Map!");
+            if (!Map.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.Map!");
             } else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(typeArguments[1]);
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(typeArguments[1]);
             }
-    	} else {
-    		invalid(expression);
-    	}
+        } else {
+            invalid(expression);
+        }
     }
 
     @Override
@@ -311,16 +346,16 @@ public class PathTargetResolvingExpressionVisitor implements Expression.Visitor 
     }
 
     private PropertyExpression resolveBase(FunctionExpression expression) {
-		// According to our grammar, we can only get a path here
-		PathExpression path = (PathExpression) expression.getExpressions().get(0);
-		int lastIndex = path.getExpressions().size() - 1;
-		
-		for (int i = 0; i < lastIndex; i++) {
-			path.getExpressions().get(i).accept(this);
-		}
-		
-		// According to our grammar, the last element must be a property
-		return (PropertyExpression) path.getExpressions().get(lastIndex);
+        // According to our grammar, we can only get a path here
+        PathExpression path = (PathExpression) expression.getExpressions().get(0);
+        int lastIndex = path.getExpressions().size() - 1;
+        
+        for (int i = 0; i < lastIndex; i++) {
+            path.getExpressions().get(i).accept(this);
+        }
+        
+        // According to our grammar, the last element must be a property
+        return (PropertyExpression) path.getExpressions().get(lastIndex);
     }
 
     @Override

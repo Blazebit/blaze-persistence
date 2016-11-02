@@ -30,12 +30,12 @@ public class ConcatFunction extends AbstractExpression<String> {
         this(criteriaBuilder, string1, wrap(criteriaBuilder, string2));
     }
 
-    private static Expression<String> wrap(BlazeCriteriaBuilderImpl criteriaBuilder, String string) {
-        return new LiteralExpression<String>(criteriaBuilder, string);
-    }
-
     public ConcatFunction(BlazeCriteriaBuilderImpl criteriaBuilder, String string1, Expression<String> string2) {
         this(criteriaBuilder, wrap(criteriaBuilder, string1), string2);
+    }
+
+    private static Expression<String> wrap(BlazeCriteriaBuilderImpl criteriaBuilder, String string) {
+        return new LiteralExpression<String>(criteriaBuilder, string);
     }
 
     @Override

@@ -24,9 +24,41 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import com.blazebit.persistence.CriteriaBuilderFactory;
-import com.blazebit.persistence.criteria.*;
-import com.blazebit.persistence.criteria.impl.expression.*;
+import com.blazebit.persistence.criteria.BlazeCollectionJoin;
+import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaDelete;
+import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.criteria.BlazeCriteriaUpdate;
+import com.blazebit.persistence.criteria.BlazeJoin;
+import com.blazebit.persistence.criteria.BlazeListJoin;
+import com.blazebit.persistence.criteria.BlazeMapJoin;
+import com.blazebit.persistence.criteria.BlazeOrder;
+import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSetJoin;
+import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
+import com.blazebit.persistence.criteria.impl.expression.AbstractPredicate;
+import com.blazebit.persistence.criteria.impl.expression.BetweenPredicate;
+import com.blazebit.persistence.criteria.impl.expression.BinaryArithmeticExpression;
+import com.blazebit.persistence.criteria.impl.expression.BooleanExpressionPredicate;
+import com.blazebit.persistence.criteria.impl.expression.BooleanLiteralPredicate;
+import com.blazebit.persistence.criteria.impl.expression.ComparisonPredicate;
 import com.blazebit.persistence.criteria.impl.expression.ComparisonPredicate.ComparisonOperator;
+import com.blazebit.persistence.criteria.impl.expression.CompoundPredicate;
+import com.blazebit.persistence.criteria.impl.expression.CompoundSelectionImpl;
+import com.blazebit.persistence.criteria.impl.expression.ExistsPredicate;
+import com.blazebit.persistence.criteria.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.criteria.impl.expression.InPredicate;
+import com.blazebit.persistence.criteria.impl.expression.IsEmptyPredicate;
+import com.blazebit.persistence.criteria.impl.expression.IsNullPredicate;
+import com.blazebit.persistence.criteria.impl.expression.LikePredicate;
+import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
+import com.blazebit.persistence.criteria.impl.expression.MemberOfPredicate;
+import com.blazebit.persistence.criteria.impl.expression.NotPredicate;
+import com.blazebit.persistence.criteria.impl.expression.NullLiteralExpression;
+import com.blazebit.persistence.criteria.impl.expression.ParameterExpressionImpl;
+import com.blazebit.persistence.criteria.impl.expression.QuantifiableSubqueryExpression;
+import com.blazebit.persistence.criteria.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.criteria.impl.expression.UnaryMinusExpression;
 import com.blazebit.persistence.criteria.impl.expression.function.AbsFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.AggregationFunction;
 import com.blazebit.persistence.criteria.impl.expression.function.CoalesceFunction;
@@ -993,7 +1025,7 @@ public class BlazeCriteriaBuilderImpl implements BlazeCriteriaBuilder, Serializa
 
     @Override
     public <C, R> SimpleCase<C, R> selectCase(Expression<? extends C> expression) {
-		// JDK 9 complains without the cast
+        // JDK 9 complains without the cast
         return /*(SimpleCase<C, R>) */selectCase((Class<R>) null, expression);
     }
 

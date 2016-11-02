@@ -27,8 +27,12 @@ public class SequenceBaseEntity<I extends Serializable> implements Serializable 
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof SequenceBaseEntity)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof SequenceBaseEntity)) {
+            return false;
+        }
         SequenceBaseEntity<?> that = (SequenceBaseEntity<?>) o;
         return id != null ? id.equals(that.id) : that.id == null;
     }

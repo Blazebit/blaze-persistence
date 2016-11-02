@@ -4,9 +4,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.FetchType;
-import javax.persistence.ManyToOne;
 
 @Embeddable
 public class EmbeddableTestEntityId implements Serializable {
@@ -47,12 +44,18 @@ public class EmbeddableTestEntityId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof EmbeddableTestEntityId)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof EmbeddableTestEntityId)) {
+            return false;
+        }
 
         EmbeddableTestEntityId that = (EmbeddableTestEntityId) o;
 
-        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) return false;
+        if (getValue() != null ? !getValue().equals(that.getValue()) : that.getValue() != null) {
+            return false;
+        }
         return getKey() != null ? getKey().equals(that.getKey()) : that.getKey() == null;
 
     }

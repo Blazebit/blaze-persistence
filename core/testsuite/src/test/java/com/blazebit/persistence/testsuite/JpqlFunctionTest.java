@@ -107,15 +107,15 @@ public class JpqlFunctionTest extends AbstractCoreTest {
     public void testGroupByFunction(){
         CriteriaBuilder<Document> cb = cbf.create(em, Document.class, "d");
         cb.select("SUM(d.id)")
-        	.select("FUNCTION('YEAR', d.creationDate)", "years")
-        	.where("FUNCTION('YEAR', d.creationDate)").in(2013,2014,2015)
-        	.groupBy("d.age")
-        	.orderByAsc("years");
+            .select("FUNCTION('YEAR', d.creationDate)", "years")
+            .where("FUNCTION('YEAR', d.creationDate)").in(2013,2014,2015)
+            .groupBy("d.age")
+            .orderByAsc("years");
         String expected = "SELECT SUM(d.id), " + function("YEAR", "d.creationDate") + " AS years "
-        		+ "FROM Document d "
-        		+ "WHERE " + function("YEAR", "d.creationDate") + " IN (:param_0) "
-				+ "GROUP BY " + groupBy("d.age", function("YEAR", "d.creationDate"), renderNullPrecedenceGroupBy(function("YEAR", "d.creationDate"), "ASC", "LAST"))
-				+ " ORDER BY " + renderNullPrecedence("years", function("YEAR", "d.creationDate"), "ASC", "LAST");
+                + "FROM Document d "
+                + "WHERE " + function("YEAR", "d.creationDate") + " IN (:param_0) "
+                + "GROUP BY " + groupBy("d.age", function("YEAR", "d.creationDate"), renderNullPrecedenceGroupBy(function("YEAR", "d.creationDate"), "ASC", "LAST"))
+                + " ORDER BY " + renderNullPrecedence("years", function("YEAR", "d.creationDate"), "ASC", "LAST");
         
         assertEquals(expected, cb.getQueryString());
         cb.getResultList();

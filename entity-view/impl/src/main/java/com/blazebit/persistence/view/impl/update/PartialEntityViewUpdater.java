@@ -28,17 +28,17 @@ import com.blazebit.reflection.PropertyPathExpression;
 public class PartialEntityViewUpdater implements EntityViewUpdater {
 
     private final Class<?> entityClass;
-	private final String idAttributeName;
-	private final String[] dirtyStateFieldUpdates;
-	private final DirtyAttributeFlusher<Object, Object>[] dirtyAttributeFlushers;
-	private final String updateStart;
-	private final String updateEnd;
-	private final int bufferSize;
+    private final String idAttributeName;
+    private final String[] dirtyStateFieldUpdates;
+    private final DirtyAttributeFlusher<Object, Object>[] dirtyAttributeFlushers;
+    private final String updateStart;
+    private final String updateEnd;
+    private final int bufferSize;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	public PartialEntityViewUpdater(ViewType<?> viewType) {
+    public PartialEntityViewUpdater(ViewType<?> viewType) {
         this.entityClass = viewType.getEntityClass();
-		Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) viewType.getAttributes();
+        Set<MethodAttribute<?, ?>> attributes = (Set<MethodAttribute<?, ?>>) (Set) viewType.getAttributes();
         MethodAttribute<?, ?> idAttribute = viewType.getIdAttribute();
         List<DirtyAttributeFlusher<? extends Object, ? extends Object>> flushers = new ArrayList<DirtyAttributeFlusher<? extends Object, ? extends Object>>(attributes.size());
         List<String> attributeUpdateList = new ArrayList<String>(attributes.size());
@@ -46,32 +46,32 @@ public class PartialEntityViewUpdater implements EntityViewUpdater {
         int length = 0;
         
         for (MethodAttribute<?, ?> attribute : attributes) {
-        	if (attribute == idAttribute) {
-        		continue;
-        	}
-        	
-        	if (attribute.isUpdatable()) {
-        	    String attributeName = attribute.getName();
-        	    String attributeMapping = ((MappingAttribute<?, ?>) viewType.getAttribute(attributeName)).getMapping();
-        	    
-        		sb.setLength(0);
-	            sb.append(attributeMapping);
-	            sb.append(" = :");
-        		sb.append(attributeName);
-        		
-        		if (attribute.isCollection()) {
-        		    if (attribute instanceof MapAttribute<?, ?, ?>) {
+            if (attribute == idAttribute) {
+                continue;
+            }
+            
+            if (attribute.isUpdatable()) {
+                String attributeName = attribute.getName();
+                String attributeMapping = ((MappingAttribute<?, ?>) viewType.getAttribute(attributeName)).getMapping();
+                
+                sb.setLength(0);
+                sb.append(attributeMapping);
+                sb.append(" = :");
+                sb.append(attributeName);
+                
+                if (attribute.isCollection()) {
+                    if (attribute instanceof MapAttribute<?, ?, ?>) {
                         flushers.add(new MapAttributeFlusher<Object, RecordingMap<Map<?, ?>, ?, ?>>((PropertyPathExpression<Object, Map<?, ?>>) (PropertyPathExpression) ExpressionUtils.getExpression(entityClass, attributeMapping)));
-        		    } else {
+                    } else {
                         flushers.add(new CollectionAttributeFlusher<Object, RecordingCollection<Collection<?>, ?>>((PropertyPathExpression<Object, Collection<?>>) (PropertyPathExpression) ExpressionUtils.getExpression(entityClass, attributeMapping)));
-        		    }
-        		} else {
-        		    flushers.add(new BasicAttributeFlusher<Object, Object>(attributeName, (PropertyPathExpression<Object, Object>) ExpressionUtils.getExpression(entityClass, attributeMapping)));
-        		}
-        		
-        		attributeUpdateList.add(sb.toString());
-        		length += sb.length() + 2;
-        	}
+                    }
+                } else {
+                    flushers.add(new BasicAttributeFlusher<Object, Object>(attributeName, (PropertyPathExpression<Object, Object>) ExpressionUtils.getExpression(entityClass, attributeMapping)));
+                }
+                
+                attributeUpdateList.add(sb.toString());
+                length += sb.length() + 2;
+            }
         }
         
         dirtyStateFieldUpdates = attributeUpdateList.toArray(new String[attributeUpdateList.size()]);
@@ -82,60 +82,60 @@ public class PartialEntityViewUpdater implements EntityViewUpdater {
         updateStart = "UPDATE " + entityClass.getName() + " SET ";
         updateEnd = " WHERE " + ((MappingAttribute<?, ?>) viewType.getAttribute(idName)).getMapping() + " = :" + idName;
         bufferSize = updateStart.length() + updateEnd.length() + length;
-	}
-	
+    }
+    
     @Override
-	public void executeUpdate(EntityManager em, UpdatableProxy updatableProxy) {
+    public void executeUpdate(EntityManager em, UpdatableProxy updatableProxy) {
         TransactionSynchronizationStrategy synchronizationStrategy = TransactionHelper.getSynchronizationStrategy(em);
         
         if (!synchronizationStrategy.isActive()) {
-			throw new IllegalStateException("Transaction is not active!");
+            throw new IllegalStateException("Transaction is not active!");
         }
-		
+        
         Object id = updatableProxy.$$_getId();
         Object[] initialState = updatableProxy.$$_getInitialState();
         Object[] originalDirtyState = updatableProxy.$$_getDirtyState();
         boolean[] dirty = new boolean[originalDirtyState.length];
         
         StringBuilder sb = new StringBuilder(bufferSize);
-		sb.append(updateStart);
+        sb.append(updateStart);
 
         boolean first = true;
         boolean supportsQueryFlush = true;
         for (int i = 0; i < originalDirtyState.length; i++) {
-        	if (isDirty(initialState[i], originalDirtyState[i])) {
-        	    dirty[i] = true;
-        	    supportsQueryFlush = supportsQueryFlush && dirtyAttributeFlushers[i].supportsQueryFlush();
-        	    
-	            if (first) {
-	                first = false;
-	            } else {
-	                sb.append(", ");
-	            }
-	            
-	            sb.append(dirtyStateFieldUpdates[i]);
-        	}
+            if (isDirty(initialState[i], originalDirtyState[i])) {
+                dirty[i] = true;
+                supportsQueryFlush = supportsQueryFlush && dirtyAttributeFlushers[i].supportsQueryFlush();
+                
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(", ");
+                }
+                
+                sb.append(dirtyStateFieldUpdates[i]);
+            }
         }
         
         // If nothing is dirty, we don't have to do anything
         if (first) {
-        	return;
+            return;
         }
 
         // Copy the dirtyState because until transaction commit, there might still happen some changes
         Object[] dirtyState = originalDirtyState.clone();
         
         if (supportsQueryFlush) {
-    		sb.append(updateEnd);
+            sb.append(updateEnd);
     
-    		String queryString = sb.toString();
+            String queryString = sb.toString();
             Query query = em.createQuery(queryString);
             query.setParameter(idAttributeName, id);
     
             for (int i = 0; i < dirtyState.length; i++) {
-            	if (dirty[i]) {
-            	    dirtyAttributeFlushers[i].flushQuery(query, dirtyState[i]);
-            	}
+                if (dirty[i]) {
+                    dirtyAttributeFlushers[i].flushQuery(query, dirtyState[i]);
+                }
             }
             
             int updatedCount = query.executeUpdate();
@@ -154,7 +154,7 @@ public class PartialEntityViewUpdater implements EntityViewUpdater {
         }
         
         synchronizationStrategy.registerSynchronization(new ClearDirtySynchronization(initialState, originalDirtyState, dirtyState));
-	}
+    }
     
     private boolean isDirty(Object initial, Object current) {
         if (current instanceof RecordingCollection<?, ?>) {

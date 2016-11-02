@@ -38,7 +38,7 @@ import javax.persistence.OneToMany;
 @Inheritance
 @DiscriminatorColumn(name = "project_leader_type")
 public abstract class ProjectLeader<P extends Project<? extends ProjectLeader<?>>> implements Serializable {
-	
+    
     private static final long serialVersionUID = 1L;
 
     private Long id;

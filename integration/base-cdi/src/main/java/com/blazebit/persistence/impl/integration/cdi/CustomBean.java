@@ -30,7 +30,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
  * @author Christian Beikov
  * @since 1.0
  */
-public class CustomBean<T> implements Bean<T>{
+public class CustomBean<T> implements Bean<T> {
     
     private final Class<?> beanClass;
     private final Set<Type> types;

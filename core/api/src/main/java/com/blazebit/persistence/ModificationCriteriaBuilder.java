@@ -15,10 +15,8 @@
  */
 package com.blazebit.persistence;
 
-import javax.persistence.Query;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import java.util.Set;
 
 /**
  * A builder for modification queries.

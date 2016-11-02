@@ -74,52 +74,52 @@ public class UpdateTest extends AbstractCoreTest {
         };
     }
     
-	@Before
-	public void setUp() {
-		EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			doc1 = new Document("D1");
-			doc2 = new Document("D2");
-			doc3 = new Document("D3");
+    @Before
+    public void setUp() {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            doc1 = new Document("D1");
+            doc2 = new Document("D2");
+            doc3 = new Document("D3");
 
-			Person o1 = new Person("P1");
+            Person o1 = new Person("P1");
 
-			doc1.setOwner(o1);
-			doc2.setOwner(o1);
-			doc3.setOwner(o1);
+            doc1.setOwner(o1);
+            doc2.setOwner(o1);
+            doc3.setOwner(o1);
 
-			em.persist(o1);
+            em.persist(o1);
 
-			em.persist(doc1);
-			em.persist(doc2);
-			em.persist(doc3);
+            em.persist(doc1);
+            em.persist(doc2);
+            em.persist(doc3);
 
-			em.flush();
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-	}
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Test
-	public void testSimple() {
-		final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
-		cb.set("name", "NewD1");
-		cb.where("name").eq("D1");
-		String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
+    @Test
+    public void testSimple() {
+        final UpdateCriteriaBuilder<Document> cb = cbf.update(em, Document.class, "d");
+        cb.set("name", "NewD1");
+        cb.where("name").eq("D1");
+        String expected = "UPDATE Document d SET name = :param_0 WHERE d.name = :param_1";
 
-		assertEquals(expected, cb.getQueryString());
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
             public void work() {
-    			int updateCount = cb.executeUpdate();
-    			assertEquals(1, updateCount);
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
             }
         });
-	}
+    }
 
     @Test
     public void testParameterExpression() {
@@ -356,5 +356,5 @@ public class UpdateTest extends AbstractCoreTest {
         transactional(work);
         transactional(work);
     }
-	
+    
 }

@@ -39,24 +39,24 @@ The most convenient way to use {projectname} within a CDI environment is by crea
 @javax.ejb.Startup
 public class CriteriaBuilderFactoryProducer {
 
-	// inject your entity manager factory
-	@PersistenceContext
-	private EntityManagerFactory entityManagerFactory;
-	
-	private CriteriaBuilderFactory criteriaBuilderFactory;
-	
-	@PostConstruct
-	public void init() {
-		CriteriaBuilderConfiguration config = Criteria.getDefault();
-		// do some configuration
-		this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
-	}
+    // inject your entity manager factory
+    @PersistenceContext
+    private EntityManagerFactory entityManagerFactory;
     
-	@Produces
-	@ApplicationScoped
-	public CriteriaBuilderFactory createCriteriaBuilderFactory() {
-		return criteriaBuilderFactory;
-	}
+    private CriteriaBuilderFactory criteriaBuilderFactory;
+    
+    @PostConstruct
+    public void init() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        // do some configuration
+        this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(entityManagerFactory);
+    }
+    
+    @Produces
+    @ApplicationScoped
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        return criteriaBuilderFactory;
+    }
 }
 ----
 

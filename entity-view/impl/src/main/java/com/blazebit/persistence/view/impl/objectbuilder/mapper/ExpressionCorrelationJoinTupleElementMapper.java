@@ -20,7 +20,6 @@ import com.blazebit.persistence.FullQueryBuilder;
 import com.blazebit.persistence.SelectBuilder;
 import com.blazebit.persistence.view.CorrelationBuilder;
 import com.blazebit.persistence.view.CorrelationProvider;
-import com.blazebit.persistence.view.impl.CorrelationProviderFactory;
 import com.blazebit.persistence.view.impl.objectbuilder.transformer.correlation.JoinCorrelationBuilder;
 
 import java.util.Map;
@@ -47,7 +46,7 @@ public class ExpressionCorrelationJoinTupleElementMapper implements TupleElement
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
         CorrelationBuilder correlationBuilder = new JoinCorrelationBuilder((FullQueryBuilder<?, ?>) queryBuilder, optionalParameters, correlationBasis, correlationResult, alias);
-    	provider.applyCorrelation(correlationBuilder, correlationBasis);
+        provider.applyCorrelation(correlationBuilder, correlationBasis);
     }
 
 }

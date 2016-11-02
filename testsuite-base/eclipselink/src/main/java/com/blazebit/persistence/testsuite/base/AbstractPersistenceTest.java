@@ -17,8 +17,6 @@ package com.blazebit.persistence.testsuite.base;
 
 import java.util.Properties;
 
-import com.blazebit.persistence.testsuite.base.AbstractJpaPersistenceTest;
-
 /**
  *
  * @author Christian Beikov

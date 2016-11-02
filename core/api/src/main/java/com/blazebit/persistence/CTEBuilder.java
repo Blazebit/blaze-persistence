@@ -25,34 +25,34 @@ package com.blazebit.persistence;
  */
 public interface CTEBuilder<T extends CTEBuilder<T>> {
 
-	/**
-	 * TODO: documentation
-	 * 
-	 * @param cteClass
-	 * @return
-	 * @since 1.1.0
-	 */
+    /**
+     * TODO: documentation
+     * 
+     * @param cteClass
+     * @return
+     * @since 1.1.0
+     */
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass);
 
     // TODO: documentation
     public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
 
-	/**
-	 * TODO: documentation
-	 * 
-	 * @param cteClass
-	 * @return
-	 * @since 1.1.0
-	 */
+    /**
+     * TODO: documentation
+     * 
+     * @param cteClass
+     * @return
+     * @since 1.1.0
+     */
     public SelectRecursiveCTECriteriaBuilder< T> withRecursive(Class<?> cteClass);
 
-	/**
-	 * TODO: documentation
-	 * 
-	 * @param cteClass
-	 * @return
-	 * @since 1.1.0
-	 */
+    /**
+     * TODO: documentation
+     * 
+     * @param cteClass
+     * @return
+     * @since 1.1.0
+     */
     public ReturningModificationCriteriaBuilderFactory<T> withReturning(Class<?> cteClass);
 
 }

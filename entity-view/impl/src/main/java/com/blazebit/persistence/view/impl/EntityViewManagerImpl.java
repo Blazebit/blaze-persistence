@@ -23,7 +23,10 @@ import java.util.concurrent.ConcurrentMap;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import com.blazebit.persistence.*;
+import com.blazebit.persistence.CriteriaBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.Root;
 import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.impl.expression.MacroConfiguration;
@@ -100,16 +103,16 @@ public class EntityViewManagerImpl implements EntityViewManager {
         if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.TEMPLATE_EAGER_LOADING)))) {
             MacroConfiguration originalMacroConfiguration = cbf.getService(MacroConfiguration.class);
             ExpressionFactory cachingExpressionFactory = cbf.getService(ExpressionFactory.class).unwrap(AbstractCachingExpressionFactory.class);
-        	for (ViewType<?> view : metamodel.getViews()) {
+            for (ViewType<?> view : metamodel.getViews()) {
                 MacroFunction macro = new JpqlMacroAdapter(new ViewRootJpqlMacro(null), cachingExpressionFactory);
-        	    MacroConfiguration macroConfiguration = originalMacroConfiguration.with(Collections.singletonMap("view_root", macro));
-        	    ExpressionFactory expressionFactory = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
+                MacroConfiguration macroConfiguration = originalMacroConfiguration.with(Collections.singletonMap("view_root", macro));
+                ExpressionFactory expressionFactory = new MacroConfigurationExpressionFactory(cachingExpressionFactory, macroConfiguration);
                 getTemplate(expressionFactory, view, null, null);
 
                 for (MappingConstructor<?> constructor : view.getConstructors()) {
                     getTemplate(expressionFactory, view, (MappingConstructor) constructor, null);
                 }
-        	}
+            }
         } else if (Boolean.valueOf(String.valueOf(properties.get(ConfigurationProperties.PROXY_EAGER_LOADING)))) {
             for (ViewType<?> view : metamodel.getViews()) {
                 if (view.getConstructors().isEmpty() || unsafeDisabled) {
@@ -128,12 +131,12 @@ public class EntityViewManagerImpl implements EntityViewManager {
 
     @Override
     public void update(EntityManager em, Object view) {
-    	update(em, view, true);
+        update(em, view, true);
     }
 
     @Override
     public void updateFull(EntityManager em, Object view) {
-    	update(em, view, false);
+        update(em, view, false);
     }
     
     private void update(EntityManager em, Object view, boolean partial) {
@@ -159,9 +162,9 @@ public class EntityViewManagerImpl implements EntityViewManager {
         return EntityViewSettingHelper.apply(setting, this, criteriaBuilder, entityViewRoot);
     }
 
-	public boolean isUnsafeDisabled() {
-		return unsafeDisabled;
-	}
+    public boolean isUnsafeDisabled() {
+        return unsafeDisabled;
+    }
 
     /**
      * Creates a new filter instance of the given filter class.
@@ -192,7 +195,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
      */
     public <T extends AttributeFilterProvider> T createAttributeFilter(Class<T> filterClass, Class<?> expectedType, Object argument) {
         @SuppressWarnings("unchecked")
-		Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
+        Class<T> filterClassImpl = (Class<T>) filterMappings.get(filterClass.getName());
 
         if (filterClassImpl == null) {
             return createFilterInstance(filterClass, expectedType, argument);
@@ -204,7 +207,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     private <T extends AttributeFilterProvider> T createFilterInstance(Class<T> filterClass, Class<?> expectedType, Object argument) {
         try {
             @SuppressWarnings("unchecked")
-			Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
+            Constructor<T>[] constructors = (Constructor<T>[]) filterClass.getDeclaredConstructors();
             Constructor<T> filterConstructor = findConstructor(constructors, Class.class, Object.class);
 
             if (filterConstructor != null) {
@@ -249,7 +252,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     public void applyObjectBuilder(Class<?> clazz, String mappingConstructorName, String entityViewRoot, EntityViewConfiguration configuration) {
         ViewType<?> viewType = getMetamodel().view(clazz);
         if (viewType == null) {
-        	throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
+            throw new IllegalArgumentException("There is no entity view for the class '" + clazz.getName() + "' registered!");
         }
         MappingConstructor<?> mappingConstructor = viewType.getConstructor(mappingConstructorName);
         applyObjectBuilder(viewType, mappingConstructor, viewType.getName(), entityViewRoot, configuration.getCriteriaBuilder(), configuration, 0, true);
@@ -332,7 +335,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
 
     public ViewTypeObjectBuilderTemplate<?> getTemplate(ExpressionFactory ef, ManagedViewType<?> viewType, MappingConstructor<?> mappingConstructor, String name, String entityViewRoot, int offset) {
-    	ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
+        ViewTypeObjectBuilderTemplate.Key key = new ViewTypeObjectBuilderTemplate.Key(ef, viewType, mappingConstructor, name, entityViewRoot, offset);
         ViewTypeObjectBuilderTemplate<?> value = objectBuilderCache.get(key);
 
         if (value == null) {
@@ -348,15 +351,15 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private EntityViewUpdater getUpdater(ViewType<?> viewType, boolean partial) {
-    	if (partial) {
-    		return getPartialUpdater(viewType);
-    	} else {
-    		return getFullUpdater(viewType);
-    	}
+        if (partial) {
+            return getPartialUpdater(viewType);
+        } else {
+            return getFullUpdater(viewType);
+        }
     }
     
     private FullEntityViewUpdater getFullUpdater(ViewType<?> viewType) {
-    	FullEntityViewUpdater value = fullEntityViewUpdaterCache.get(viewType);
+        FullEntityViewUpdater value = fullEntityViewUpdaterCache.get(viewType);
 
         if (value == null) {
             value = new FullEntityViewUpdater(viewType);
@@ -371,7 +374,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
     }
     
     private PartialEntityViewUpdater getPartialUpdater(ViewType<?> viewType) {
-    	PartialEntityViewUpdater value = partialEntityViewUpdaterCache.get(viewType);
+        PartialEntityViewUpdater value = partialEntityViewUpdaterCache.get(viewType);
 
         if (value == null) {
             value = new PartialEntityViewUpdater(viewType);
@@ -400,7 +403,7 @@ public class EntityViewManagerImpl implements EntityViewManager {
         filterMappings.put(LessOrEqualFilter.class.getName(), LessOrEqualFilterImpl.class);
     }
 
-	private Map<String, Object> copyProperties(Properties properties) {
+    private Map<String, Object> copyProperties(Properties properties) {
         Map<String, Object> newProperties = new HashMap<String, Object>();
 
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {

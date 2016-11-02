@@ -124,7 +124,7 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
-    	// Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
+        // Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
         if (argumentCount == 0) {
             return "OPERATOR('" + functionName + "'";
         }

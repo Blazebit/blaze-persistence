@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
  */
 public class TestViewRootSubqueryProvider implements SubqueryProvider {
 
-	@Override
+    @Override
     public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
         return subqueryBuilder.from(Person.class)
             .where("partnerDocument.id").eqExpression("VIEW_ROOT(id)")

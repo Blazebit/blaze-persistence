@@ -16,20 +16,20 @@ limitations under the License.
 -->
 <persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
     <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
-		<mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
-		<class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections</class>
-		<class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForElementCollections</class>
-		<class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections</class>
-		<class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForElementCollections</class>
-<!-- 		<class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForCollections</class> -->
-<!-- 		<class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections</class> -->
-<!-- 		<class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForCollections</class> -->
-<!-- 		<class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections</class> -->
-		<class>com.blazebit.persistence.view.testsuite.entity.Document</class>
-		<class>com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity</class>
-		<class>com.blazebit.persistence.view.testsuite.entity.IntIdEntity</class>
-		<class>com.blazebit.persistence.view.testsuite.entity.Person</class>
-		<class>com.blazebit.persistence.view.testsuite.entity.TestEntity</class>
-		<class>com.blazebit.persistence.view.testsuite.entity.Version</class>
+        <mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForElementCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForElementCollections</class>
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections</class> -->
+        <class>com.blazebit.persistence.view.testsuite.entity.Document</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.IntIdEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.Person</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.TestEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.Version</class>
     </persistence-unit>
 </persistence>

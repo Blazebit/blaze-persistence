@@ -1,7 +1,6 @@
 package com.blazebit.persistence.impl.transform;
 
 import com.blazebit.persistence.impl.NodeInfo;
-import com.blazebit.persistence.impl.SelectManager;
 import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.modifier.ExpressionModifier;
 

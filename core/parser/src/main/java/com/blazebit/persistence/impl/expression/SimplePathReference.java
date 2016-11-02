@@ -40,28 +40,37 @@ public class SimplePathReference implements PathReference {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (!(obj instanceof PathReference))
+        }
+        if (!(obj instanceof PathReference)) {
             return false;
+        }
         PathReference other = (PathReference) obj;
         if (baseNode == null) {
-            if (other.getBaseNode() != null)
+            if (other.getBaseNode() != null) {
                 return false;
-        } else if (!baseNode.equals(other.getBaseNode()))
+            }
+        } else if (!baseNode.equals(other.getBaseNode())) {
             return false;
+        }
         if (field == null) {
-            if (other.getField() != null)
+            if (other.getField() != null) {
                 return false;
-        } else if (!field.equals(other.getField()))
+            }
+        } else if (!field.equals(other.getField())) {
             return false;
+        }
         if (typeName == null) {
-            if (other.getTreatTypeName() != null)
+            if (other.getTreatTypeName() != null) {
                 return false;
-        } else if (!typeName.equals(other.getTreatTypeName()))
+            }
+        } else if (!typeName.equals(other.getTreatTypeName())) {
             return false;
+        }
         return true;
     }
     

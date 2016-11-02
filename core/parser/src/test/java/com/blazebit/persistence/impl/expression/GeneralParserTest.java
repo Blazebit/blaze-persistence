@@ -405,8 +405,8 @@ public class GeneralParserTest extends AbstractParserTest {
     
     @Test
     public void testSimpleCaseWhen() {
-    	SimpleCaseExpression result = (SimpleCaseExpression) parse("CASE a.b WHEN 1 THEN true ELSE false END");
-    	SimpleCaseExpression expected = new SimpleCaseExpression(path("a", "b"), Arrays.asList(
+        SimpleCaseExpression result = (SimpleCaseExpression) parse("CASE a.b WHEN 1 THEN true ELSE false END");
+        SimpleCaseExpression expected = new SimpleCaseExpression(path("a", "b"), Arrays.asList(
                 new WhenClauseExpression(_int("1"), _boolean(true))),
                 _boolean(false));
         assertEquals(expected, result);
@@ -435,21 +435,21 @@ public class GeneralParserTest extends AbstractParserTest {
     public void testComplexCaseWhen() {
         FunctionExpression result = (FunctionExpression) parse(""
                 + "CONCAT(\n"
-                + "	COALESCE(\n"
-                + "		CONCAT(\n"
-                + "			NULLIF(\n"
-                + "				CONCAT(\n"
-                + "					CASE WHEN LENGTH(COALESCE(zip, '')) > 0 OR LENGTH(COALESCE(city, '')) > 0 THEN COALESCE(CONCAT(NULLIF(street, ''), ', '), '') ELSE COALESCE(street, '') END,\n"
-                + "					CASE WHEN LENGTH(COALESCE(city, '')) > 0 THEN COALESCE(CONCAT(NULLIF(zip, ''), ' '), '') ELSE COALESCE(zip, '') END,\n"
-                + "					COALESCE(city, '')\n"
-                + "				),\n"
-                + "				''\n"
-                + "			),\n"
-                + "			' - '\n"
-                + "		),\n"
-                + "		''\n"
-                + "	),\n"
-                + "	'test'"
+                + "    COALESCE(\n"
+                + "        CONCAT(\n"
+                + "            NULLIF(\n"
+                + "                CONCAT(\n"
+                + "                    CASE WHEN LENGTH(COALESCE(zip, '')) > 0 OR LENGTH(COALESCE(city, '')) > 0 THEN COALESCE(CONCAT(NULLIF(street, ''), ', '), '') ELSE COALESCE(street, '') END,\n"
+                + "                    CASE WHEN LENGTH(COALESCE(city, '')) > 0 THEN COALESCE(CONCAT(NULLIF(zip, ''), ' '), '') ELSE COALESCE(zip, '') END,\n"
+                + "                    COALESCE(city, '')\n"
+                + "                ),\n"
+                + "                ''\n"
+                + "            ),\n"
+                + "            ' - '\n"
+                + "        ),\n"
+                + "        ''\n"
+                + "    ),\n"
+                + "    'test'"
                 + ")");
 
         FunctionExpression expected
@@ -784,17 +784,17 @@ public class GeneralParserTest extends AbstractParserTest {
         GeneralCaseExpression result = (GeneralCaseExpression) parse("CASE WHEN a = b THEN CURRENT_DATE WHEN a > b THEN CURRENT_TIME ELSE CURRENT_TIMESTAMP END");
         
         GeneralCaseExpression expected = new GeneralCaseExpression(Arrays.asList(
-        		new WhenClauseExpression(new EqPredicate(path("a"), path("b")), function("CURRENT_DATE")),
-        		new WhenClauseExpression(new GtPredicate(path("a"), path("b")), function("CURRENT_TIME"))
-    		), function("CURRENT_TIMESTAMP")
-		);
+                new WhenClauseExpression(new EqPredicate(path("a"), path("b")), function("CURRENT_DATE")),
+                new WhenClauseExpression(new GtPredicate(path("a"), path("b")), function("CURRENT_TIME"))
+            ), function("CURRENT_TIMESTAMP")
+        );
         assertEquals(expected, result);
     }
     
     @Test
     public void testParameterSignumInvert() {
-    	Expression result = parse("-(:test)");
-    	assertEquals(new ArithmeticFactor(new ParameterExpression("test"), true), result);
+        Expression result = parse("-(:test)");
+        assertEquals(new ArithmeticFactor(new ParameterExpression("test"), true), result);
     }
     
     @Test

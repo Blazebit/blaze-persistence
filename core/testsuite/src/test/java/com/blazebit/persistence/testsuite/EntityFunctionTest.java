@@ -75,7 +75,7 @@ public class EntityFunctionTest extends AbstractCoreTest {
         cb.select("allowedAge.value");
 
         String expected = ""
-        		+ "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM (VALUES (?)) allowedAge, Document doc WHERE doc.age = TREAT_LONG(allowedAge.value)";
+                + "SELECT doc.name, TREAT_LONG(allowedAge.value) FROM (VALUES (?)) allowedAge, Document doc WHERE doc.age = TREAT_LONG(allowedAge.value)";
         
         assertEquals(expected, cb.getQueryString());
         List<Tuple> resultList = cb.getResultList();

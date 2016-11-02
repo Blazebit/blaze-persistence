@@ -25,7 +25,15 @@ import java.util.Set;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.AttributeFilter;
+import com.blazebit.persistence.view.AttributeFilters;
+import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.UpdatableMapping;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -104,22 +112,22 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
         filterMappings.put(attributeFilterMapping.getName(), attributeFilterMapping);
     }
 
-	@Override
-	protected String getLocation() {
-		return "attribute '" + getName() + "' of the managed entity view class '" + getDeclaringType().getJavaType().getName() + "'";
-	}
+    @Override
+    protected String getLocation() {
+        return "attribute '" + getName() + "' of the managed entity view class '" + getDeclaringType().getJavaType().getName() + "'";
+    }
 
-	@Override
+    @Override
     public String getName() {
         return name;
     }
 
     @Override
-	public boolean isUpdatable() {
-		return updatable;
-	}
+    public boolean isUpdatable() {
+        return updatable;
+    }
 
-	@Override
+    @Override
     public Method getJavaMethod() {
         return javaMethod;
     }

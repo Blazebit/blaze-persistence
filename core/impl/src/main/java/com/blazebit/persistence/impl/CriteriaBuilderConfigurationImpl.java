@@ -122,7 +122,14 @@ import com.blazebit.persistence.impl.function.pageposition.PagePositionFunction;
 import com.blazebit.persistence.impl.function.pageposition.TransactSQLPagePositionFunction;
 import com.blazebit.persistence.impl.function.set.SetFunction;
 import com.blazebit.persistence.impl.function.treat.TreatFunction;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.spi.QueryTransformer;
+import com.blazebit.persistence.spi.SetOperationType;
 
 /**
  *
@@ -150,6 +157,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     // NOTE: When adding a function here, you might want to also add it in AbstractCoreTest so it is recognized
+    @SuppressWarnings("checkstyle:methodlength")
     private void loadFunctions() {
         JpqlFunctionGroup jpqlFunctionGroup;
         
@@ -396,12 +404,12 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     private void loadDbmsDialects() {
-    	registerDialect(null, new DefaultDbmsDialect());
-    	registerDialect("mysql", new MySQLDbmsDialect());
-    	registerDialect("h2", new H2DbmsDialect());
-    	registerDialect("db2", new DB2DbmsDialect());
-    	registerDialect("postgresql", new PostgreSQLDbmsDialect());
-    	registerDialect("oracle", new OracleDbmsDialect());
+        registerDialect(null, new DefaultDbmsDialect());
+        registerDialect("mysql", new MySQLDbmsDialect());
+        registerDialect("h2", new H2DbmsDialect());
+        registerDialect("db2", new DB2DbmsDialect());
+        registerDialect("postgresql", new PostgreSQLDbmsDialect());
+        registerDialect("oracle", new OracleDbmsDialect());
     }
 
     private void loadDefaultProperties() {
@@ -425,7 +433,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
         Iterator<ExtendedQuerySupport> iterator = serviceLoader.iterator();
 
         if (iterator.hasNext()) {
-        	extendedQuerySupport = iterator.next();
+            extendedQuerySupport = iterator.next();
         }
     }
 
@@ -475,13 +483,13 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
 
     @Override
-	public CriteriaBuilderConfiguration registerDialect(String dbms, DbmsDialect dialect) {
-		dbmsDialects.put(dbms, dialect);
-		return this;
-	}
+    public CriteriaBuilderConfiguration registerDialect(String dbms, DbmsDialect dialect) {
+        dbmsDialects.put(dbms, dialect);
+        return this;
+    }
     
     public Map<String, DbmsDialect> getDbmsDialects() {
-    	return dbmsDialects;
+        return dbmsDialects;
     }
 
     @Override
@@ -496,7 +504,7 @@ public class CriteriaBuilderConfigurationImpl implements CriteriaBuilderConfigur
     }
     
     public ExtendedQuerySupport getExtendedQuerySupport() {
-    	return extendedQuerySupport;
+        return extendedQuerySupport;
     }
 
     @Override

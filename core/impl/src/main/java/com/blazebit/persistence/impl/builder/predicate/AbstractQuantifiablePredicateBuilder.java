@@ -36,8 +36,14 @@ import com.blazebit.persistence.impl.builder.expression.CaseWhenBuilderImpl;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SimpleCaseWhenBuilderImpl;
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateBuilder;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 
 /**
  *
@@ -47,13 +53,14 @@ import com.blazebit.persistence.impl.predicate.*;
  */
 public abstract class AbstractQuantifiablePredicateBuilder<T> extends SubqueryAndExpressionBuilderListener<T> implements QuantifiableBinaryPredicateBuilder<T>, PredicateBuilder {
 
+    protected final Expression leftExpression;
+    protected final SubqueryInitiatorFactory subqueryInitFactory;
+    protected final ExpressionFactory expressionFactory;
+
     private final T result;
     private final PredicateBuilderEndedListener listener;
     private final boolean wrapNot;
-    protected final Expression leftExpression;
-    protected final SubqueryInitiatorFactory subqueryInitFactory;
     private Predicate predicate;
-    protected final ExpressionFactory expressionFactory;
     private final ParameterManager parameterManager;
     private SubqueryInitiator<T> subqueryInitiator;
 

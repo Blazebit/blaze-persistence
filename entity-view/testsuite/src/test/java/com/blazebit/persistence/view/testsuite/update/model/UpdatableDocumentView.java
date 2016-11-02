@@ -34,12 +34,12 @@ public interface UpdatableDocumentView {
 
     public void setName(String name);
 
-	public Date getLastModified();
-	
-	public void setLastModified(Date date);
+    public Date getLastModified();
+    
+    public void setLastModified(Date date);
 
-	public Person getOwner();
-	
-	public void setOwner(Person owner);
+    public Person getOwner();
+    
+    public void setOwner(Person owner);
 
 }

@@ -37,7 +37,7 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
 
     private static final String CORRELATION_PARAM_PREFIX = "correlationParam_";
 
-    private final Correlator correlator;
+    protected final Correlator correlator;
     protected final Class<?> criteriaBuilderRoot;
     protected final ManagedViewType<?> viewRootType;
     protected final String correlationResult;
@@ -45,13 +45,13 @@ public abstract class AbstractCorrelatedTupleListTransformer extends TupleListTr
     protected final String attributePath;
     protected final Class<?> correlationBasisEntity;
 
-    private final EntityViewConfiguration entityViewConfiguration;
+    protected final EntityViewConfiguration entityViewConfiguration;
     protected final int batchSize;
 
-    private final String correlationParamName;
+    protected final String correlationParamName;
     protected final CriteriaBuilder<?> criteriaBuilder;
-    private final CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
-    private final String correlationRoot;
+    protected final CorrelatedSubqueryViewRootJpqlMacro viewRootJpqlMacro;
+    protected final String correlationRoot;
 
     public AbstractCorrelatedTupleListTransformer(Correlator correlator, Class<?> criteriaBuilderRoot, ManagedViewType<?> viewRootType, String correlationResult, CorrelationProviderFactory correlationProviderFactory, String attributePath, int tupleIndex, int batchSize, Class<?> correlationBasisEntity, EntityViewConfiguration entityViewConfiguration) {
         super(tupleIndex);

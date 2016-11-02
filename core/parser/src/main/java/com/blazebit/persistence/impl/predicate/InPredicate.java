@@ -88,12 +88,20 @@ public class InPredicate extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof InPredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof InPredicate)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         InPredicate that = (InPredicate) o;
-        if (left != null ? !left.equals(that.left) : that.left != null) return false;
+        if (left != null ? !left.equals(that.left) : that.left != null) {
+            return false;
+        }
         return right != null ? right.equals(that.right) : that.right == null;
 
     }

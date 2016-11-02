@@ -2,12 +2,9 @@ package com.blazebit.persistence.impl.query;
 
 import com.blazebit.persistence.ReturningObjectBuilder;
 import com.blazebit.persistence.impl.AbstractCommonQueryBuilder;
-import com.blazebit.persistence.impl.plan.CustomModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.CustomReturningModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
-import com.blazebit.persistence.spi.DbmsLimitHandler;
-import com.blazebit.persistence.spi.DbmsModificationState;
 
 import javax.persistence.Query;
 import java.util.*;

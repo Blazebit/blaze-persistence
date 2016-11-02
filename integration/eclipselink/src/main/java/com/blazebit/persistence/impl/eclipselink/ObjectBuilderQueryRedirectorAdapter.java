@@ -32,9 +32,9 @@ import org.eclipse.persistence.sessions.Session;
  */
 public class ObjectBuilderQueryRedirectorAdapter implements QueryRedirector {
 
-	private static final long serialVersionUID = 1L;
-	
-	private final ObjectBuilder<?> builder;
+    private static final long serialVersionUID = 1L;
+    
+    private final ObjectBuilder<?> builder;
 
     public ObjectBuilderQueryRedirectorAdapter(ObjectBuilder<?> builder) {
         this.builder = builder;

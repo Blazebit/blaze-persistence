@@ -43,8 +43,12 @@ public final class MacroConfiguration {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof MacroConfiguration)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof MacroConfiguration)) {
+            return false;
+        }
 
         MacroConfiguration that = (MacroConfiguration) o;
 

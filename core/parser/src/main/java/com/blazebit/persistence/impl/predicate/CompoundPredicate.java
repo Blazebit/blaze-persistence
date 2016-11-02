@@ -55,13 +55,21 @@ public class CompoundPredicate extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CompoundPredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof CompoundPredicate)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         CompoundPredicate that = (CompoundPredicate) o;
 
-        if (children != null ? !children.equals(that.children) : that.children != null) return false;
+        if (children != null ? !children.equals(that.children) : that.children != null) {
+            return false;
+        }
         return operator == that.operator;
 
     }

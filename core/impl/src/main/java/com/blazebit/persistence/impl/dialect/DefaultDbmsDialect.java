@@ -2,11 +2,17 @@ package com.blazebit.persistence.impl.dialect;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.*;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.*;
 
-import com.blazebit.persistence.impl.util.SqlUtils;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsLimitHandler;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.OrderByElement;
+import com.blazebit.persistence.spi.SetOperationType;
+import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class DefaultDbmsDialect implements DbmsDialect {
 
@@ -57,19 +63,19 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-	public boolean supportsWithClause() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsNonRecursiveWithClause() {
-		return true;
-	}
+    public boolean supportsWithClause() {
+        return true;
+    }
 
     @Override
-	public boolean supportsJoinsInRecursiveCte() {
-	    return true;
-	}
+    public boolean supportsNonRecursiveWithClause() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsJoinsInRecursiveCte() {
+        return true;
+    }
 
     @Override
     public String getSqlType(Class<?> castType) {
@@ -77,23 +83,23 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-	public String getWithClause(boolean recursive) {
-		if (recursive) {
-			return "with recursive";
-		} else {
-			return "with";
-		}
-	}
+    public String getWithClause(boolean recursive) {
+        if (recursive) {
+            return "with recursive";
+        } else {
+            return "with";
+        }
+    }
 
-	@Override
+    @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {
         if (isSubquery) {
             sqlSb.insert(0, '(');
         }
 
-	    if (withClause != null) {
-	        sqlSb.insert(0, withClause);
-	    }
+        if (withClause != null) {
+            sqlSb.insert(0, withClause);
+        }
         if (limit != null) {
             appendLimit(sqlSb, isSubquery, limit, offset);
         }
@@ -210,9 +216,8 @@ public class DefaultDbmsDialect implements DbmsDialect {
             case INTERSECT_ALL: return "INTERSECT ALL";
             case EXCEPT: return "EXCEPT";
             case EXCEPT_ALL: return "EXCEPT ALL";
+            default: throw new IllegalArgumentException("Unknown operation type: " + type);
         }
-
-        return null;
     }
 
     @Override
@@ -248,24 +253,24 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     @Override
-	public boolean supportsReturningGeneratedKeys() {
-		return true;
-	}
+    public boolean supportsReturningGeneratedKeys() {
+        return true;
+    }
 
     @Override
     public boolean supportsReturningAllGeneratedKeys() {
         return true;
     }
 
-	@Override
-	public boolean supportsReturningColumns() {
-		return false;
-	}
+    @Override
+    public boolean supportsReturningColumns() {
+        return false;
+    }
 
-	@Override
-	public boolean supportsComplexGroupBy() {
-		return true;
-	}
+    @Override
+    public boolean supportsComplexGroupBy() {
+        return true;
+    }
 
     @Override
     public boolean supportsComplexJoinOn() {
@@ -307,20 +312,20 @@ public class DefaultDbmsDialect implements DbmsDialect {
     }
 
     protected static boolean regionMatchesIgnoreCase(StringBuilder haystack, int thisStart, String substring, int start, int length) {
-       int index1 = thisStart;
-       int index2 = start;
-       int tmpLen = length;
+        int index1 = thisStart;
+        int index2 = start;
+        int tmpLen = length;
 
-       while (tmpLen-- > 0) {
-           final char c1 = haystack.charAt(index1++);
-           final char c2 = substring.charAt(index2++);
+        while (tmpLen-- > 0) {
+            final char c1 = haystack.charAt(index1++);
+            final char c2 = substring.charAt(index2++);
 
-           if (c1 != c2 && Character.toUpperCase(c1) != Character.toUpperCase(c2) && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
-               return false;
-           }
-       }
+            if (c1 != c2 && Character.toUpperCase(c1) != Character.toUpperCase(c2) && Character.toLowerCase(c1) != Character.toLowerCase(c2)) {
+                return false;
+            }
+        }
 
-       return true;
+        return true;
     }
 
 }

@@ -1,6 +1,5 @@
 package com.blazebit.persistence.criteria.impl.expression.function;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +8,6 @@ import javax.persistence.criteria.Expression;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 /**
  *

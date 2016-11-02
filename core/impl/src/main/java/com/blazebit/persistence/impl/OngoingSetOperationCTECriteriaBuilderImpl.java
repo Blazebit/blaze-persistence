@@ -27,7 +27,7 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @since 1.1.0
  */
 public class OngoingSetOperationCTECriteriaBuilderImpl<T, Z> extends AbstractCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>, OngoingSetOperationCTECriteriaBuilder<T, Z>, StartOngoingSetOperationCTECriteriaBuilder<T, OngoingSetOperationCTECriteriaBuilder<T, Z>>> implements StartOngoingSetOperationCTECriteriaBuilder<T, Z> {
-	
+    
     private final Z endSetResult;
     
     public OngoingSetOperationCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener, OngoingFinalSetOperationCTECriteriaBuilderImpl<Object> finalSetOperationBuilder, Z endSetResult) {

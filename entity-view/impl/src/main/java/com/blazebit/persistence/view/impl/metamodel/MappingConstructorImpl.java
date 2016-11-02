@@ -24,8 +24,21 @@ import java.util.*;
 import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.*;
-import com.blazebit.persistence.view.impl.metamodel.attribute.*;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSingular;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.ViewConstructor;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultParameterSubquerySingularAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
@@ -80,13 +93,13 @@ public class MappingConstructorImpl<X> implements MappingConstructor<X> {
             errors.addAll(parameter.checkAttribute(managedType, managedViews, expressionFactory, metamodel));
 
             for (String mapping : parameter.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
-            	List<String> locations = collectionMappings.get(mapping);
-            	if (locations == null) {
-            		locations = new ArrayList<String>(2);
-            		collectionMappings.put(mapping, locations);
-            	}
-            	
-            	locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
+                List<String> locations = collectionMappings.get(mapping);
+                if (locations == null) {
+                    locations = new ArrayList<String>(2);
+                    collectionMappings.put(mapping, locations);
+                }
+                
+                locations.add("Parameter with the index '" + parameter.getIndex() + "' of the constructor '" + parameter.getDeclaringConstructor().getJavaConstructor() + "'");
             }
         }
     }

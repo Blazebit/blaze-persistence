@@ -18,7 +18,6 @@ package com.blazebit.persistence;
 import com.blazebit.persistence.spi.ConfigurationSource;
 import com.blazebit.persistence.spi.ServiceProvider;
 
-import java.util.Map;
 
 import javax.persistence.EntityManager;
 

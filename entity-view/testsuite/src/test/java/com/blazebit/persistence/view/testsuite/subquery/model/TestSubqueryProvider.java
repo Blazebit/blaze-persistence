@@ -26,14 +26,14 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
  * @since 1.0
  */
 public class TestSubqueryProvider implements SubqueryProvider {
-	
-	private final Integer parameterValue;
+    
+    private final Integer parameterValue;
 
-	public TestSubqueryProvider(@MappingParameter("optionalParameter") Integer parameterValue) {
-		this.parameterValue = parameterValue;
-	}
+    public TestSubqueryProvider(@MappingParameter("optionalParameter") Integer parameterValue) {
+        this.parameterValue = parameterValue;
+    }
 
-	@Override
+    @Override
     public <T> T createSubquery(SubqueryInitiator<T> subqueryBuilder) {
         return subqueryBuilder.from(Person.class)
             .where("partnerDocument.id").eqExpression("OUTER(id)")

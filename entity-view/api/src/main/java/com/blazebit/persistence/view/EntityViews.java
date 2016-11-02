@@ -28,6 +28,9 @@ import java.util.ServiceLoader;
  */
 public class EntityViews {
 
+    private EntityViews() {
+    }
+
     /**
      * Returns the first {@linkplain EntityViewConfigurationProvider} that is found
      *

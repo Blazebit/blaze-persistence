@@ -6,9 +6,7 @@ import com.blazebit.persistence.impl.expression.MacroFunction;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -41,8 +39,12 @@ public class JpqlMacroAdapter implements MacroFunction {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof JpqlMacroAdapter)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof JpqlMacroAdapter)) {
+            return false;
+        }
 
         JpqlMacroAdapter that = (JpqlMacroAdapter) o;
 

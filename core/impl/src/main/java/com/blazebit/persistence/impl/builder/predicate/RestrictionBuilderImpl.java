@@ -15,19 +15,44 @@
  */
 package com.blazebit.persistence.impl.builder.predicate;
 
-import com.blazebit.persistence.*;
-import com.blazebit.persistence.impl.*;
+import com.blazebit.persistence.BetweenBuilder;
+import com.blazebit.persistence.LikeBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.QuantifiableBinaryPredicateBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.impl.ExpressionUtils;
+import com.blazebit.persistence.impl.MultipleSubqueryInitiatorImpl;
+import com.blazebit.persistence.impl.ParameterManager;
+import com.blazebit.persistence.impl.PredicateAndSubqueryBuilderEndedListener;
+import com.blazebit.persistence.impl.SubqueryBuilderListener;
+import com.blazebit.persistence.impl.SubqueryBuilderListenerImpl;
+import com.blazebit.persistence.impl.SubqueryInitiatorFactory;
+import com.blazebit.persistence.impl.SubqueryInternalBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilder;
 import com.blazebit.persistence.impl.builder.expression.ExpressionBuilderEndedListener;
 import com.blazebit.persistence.impl.builder.expression.SuperExpressionSubqueryBuilderListener;
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.SyntaxErrorException;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.internal.RestrictionBuilderExperimental;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 /**
  *

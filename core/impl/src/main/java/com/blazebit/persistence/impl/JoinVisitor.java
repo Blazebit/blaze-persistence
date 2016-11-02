@@ -15,7 +15,12 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.InPredicate;
 import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
@@ -91,48 +96,48 @@ public class JoinVisitor extends VisitorAdapter {
         this.joinWithObjectLeafAllowed = joinWithObjectLeafAllowed;
     }
 
-	@Override
-	public void visit(EqPredicate predicate) {
-		boolean original = joinRequired;
-		joinRequired = false;
+    @Override
+    public void visit(EqPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
         joinRequired = original;
-	}
+    }
 
-	@Override
-	public void visit(IsNullPredicate predicate) {
-		boolean original = joinRequired;
-		joinRequired = false;
+    @Override
+    public void visit(IsNullPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
         predicate.getExpression().accept(this);
         joinRequired = original;
-	}
+    }
 
-	@Override
-	public void visit(IsEmptyPredicate predicate) {
-		boolean original = joinRequired;
-		joinRequired = false;
+    @Override
+    public void visit(IsEmptyPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
         predicate.getExpression().accept(this);
         joinRequired = original;
-	}
+    }
 
-	@Override
-	public void visit(MemberOfPredicate predicate) {
-		boolean original = joinRequired;
-		joinRequired = false;
+    @Override
+    public void visit(MemberOfPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
         predicate.getLeft().accept(this);
         predicate.getRight().accept(this);
         joinRequired = original;
-	}
+    }
 
-	@Override
-	public void visit(InPredicate predicate) {
-		boolean original = joinRequired;
-		joinRequired = false;
+    @Override
+    public void visit(InPredicate predicate) {
+        boolean original = joinRequired;
+        joinRequired = false;
         predicate.getLeft().accept(this);
         for (Expression right : predicate.getRight()) {
             right.accept(this);
         }
         joinRequired = original;
-	}
+    }
 }

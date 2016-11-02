@@ -21,7 +21,13 @@ import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.Metamodel;
 
-import com.blazebit.persistence.*;
+import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.FullQueryBuilder;
+import com.blazebit.persistence.KeysetPage;
+import com.blazebit.persistence.ObjectBuilder;
+import com.blazebit.persistence.PagedList;
+import com.blazebit.persistence.PaginatedCriteriaBuilder;
+import com.blazebit.persistence.SelectObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.DelegatingKeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.KeysetExtractionObjectBuilder;
 import com.blazebit.persistence.impl.keyset.KeysetMode;
@@ -415,13 +421,13 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 query = transformQuery(query);
             }
 
-            parameterManager.parameterizeQuery(query, Collections.singleton(idParamName));
+            parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
             return query;
         }
 
         TypedQuery<T> baseQuery = (TypedQuery<T>) em.createQuery(getBaseQueryString(), selectManager.getExpectedQueryResultType());
-        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, Collections.singleton(idParamName));
-        parameterListNames.add(idParamName);
+        Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery, Collections.singleton(ID_PARAM_NAME));
+        parameterListNames.add(ID_PARAM_NAME);
 
         List<String> keyRestrictedLeftJoinAliases = getKeyRestrictedLeftJoinAliases(baseQuery, keyRestrictedLeftJoins, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)));
         List<EntityFunctionNode> entityFunctionNodes = getEntityFunctionNodes(baseQuery);
@@ -440,7 +446,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
                 parameterManager.getValuesBinders()
         );
 
-        parameterManager.parameterizeQuery(query, Collections.singleton(idParamName));
+        parameterManager.parameterizeQuery(query, Collections.singleton(ID_PARAM_NAME));
 
         if (selectManager.getSelectObjectBuilder() != null) {
             query = transformQuery(query);
@@ -491,21 +497,21 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         
         // Count distinct is obviously unnecessary if we have no collection joins
         if (!hasCollectionJoinUsages) {
-        	int idx = sbSelectFrom.indexOf(countString);
-        	int endIdx = idx + countString.length() - 1;
-        	String countStar;
-        	if (jpaProvider.supportsCountStar()) {
-        		countStar = "COUNT(*";
-        	} else {
-        		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
-        	}
-        	for (int i = idx, j = 0; i < endIdx; i++, j++) {
-        		if (j < countStar.length()) {
-        			sbSelectFrom.setCharAt(i, countStar.charAt(j));
-        		} else {
-        			sbSelectFrom.setCharAt(i, ' ');
-        		}
-        	}
+            int idx = sbSelectFrom.indexOf(countString);
+            int endIdx = idx + countString.length() - 1;
+            String countStar;
+            if (jpaProvider.supportsCountStar()) {
+                countStar = "COUNT(*";
+            } else {
+                countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
+            }
+            for (int i = idx, j = 0; i < endIdx; i++, j++) {
+                if (j < countStar.length()) {
+                    sbSelectFrom.setCharAt(i, countStar.charAt(j));
+                } else {
+                    sbSelectFrom.setCharAt(i, ' ');
+                }
+            }
         }
 
         return sbSelectFrom.toString();
@@ -618,7 +624,7 @@ public class PaginatedCriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T,
         joinManager.buildClause(sbSelectFrom, EnumSet.complementOf(EnumSet.of(ClauseType.SELECT, ClauseType.ORDER_BY)), null, false, externalRepresentation);
         sbSelectFrom.append(" WHERE ");
         rootNode.appendAlias(sbSelectFrom, idName);
-        sbSelectFrom.append(" IN :").append(idParamName).append("");
+        sbSelectFrom.append(" IN :").append(ID_PARAM_NAME).append("");
 
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);

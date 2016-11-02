@@ -3,7 +3,12 @@ package com.blazebit.persistence.criteria.impl.path;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.Bindable;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 
 import com.blazebit.persistence.criteria.BlazeJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
@@ -69,6 +74,8 @@ public class SingularAttributeJoin<Z, X> extends AbstractJoin<Z, X> {
                     throw new IllegalArgumentException("Joins on '" + getPathExpression() + "' are not allowed");
                 }
                 return (ManagedType<? super X>) elementType;
+            default:
+                break;
         }
 
         return super.getManagedType();

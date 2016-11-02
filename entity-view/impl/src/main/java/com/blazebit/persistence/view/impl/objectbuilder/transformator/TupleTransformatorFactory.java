@@ -84,7 +84,7 @@ public class TupleTransformatorFactory {
     }
 
     public TupleTransformator create(FullQueryBuilder<?, ?> queryBuilder, Map<String, Object> optionalParameters, EntityViewConfiguration entityViewConfiguration) {
-    	List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
+        List<TupleTransformatorLevel> newTransformatorLevels = new ArrayList<TupleTransformatorLevel>(transformatorLevels.size());
         for (TupleTransformatorFactoryLevel thisLevel : transformatorLevels) {
             final List<TupleTransformer> tupleTransformers = new ArrayList<TupleTransformer>(thisLevel.tupleTransformerFactories.size());
             // No need to copy this, because TupleListTransformer are not context sensitive
@@ -97,7 +97,7 @@ public class TupleTransformatorFactory {
             }
             
             for (TupleTransformerFactory tupleTransformerFactory : thisLevel.tupleTransformerFactories) {
-            	tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration));
+                tupleTransformers.add(tupleTransformerFactory.create(queryBuilder, optionalParameters, entityViewConfiguration));
             }
 
             newTransformatorLevels.add(new TupleTransformatorLevel(tupleTransformers, tupleListTransformer));

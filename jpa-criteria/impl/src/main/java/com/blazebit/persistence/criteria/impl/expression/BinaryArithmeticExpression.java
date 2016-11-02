@@ -69,6 +69,27 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
     private final Expression<? extends N> rightHandSide;
     private final Expression<? extends N> leftHandSide;
 
+    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> resultType, Operation operator, Expression<? extends N> leftHandSide, Expression<? extends N> rightHandSide) {
+        super(criteriaBuilder, resultType);
+        this.operator = operator;
+        this.leftHandSide = leftHandSide;
+        this.rightHandSide = rightHandSide;
+    }
+
+    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> javaType, Operation operator, Expression<? extends N> leftHandSide, N rightHandSide) {
+        super(criteriaBuilder, javaType);
+        this.operator = operator;
+        this.leftHandSide = leftHandSide;
+        this.rightHandSide = new LiteralExpression<N>(criteriaBuilder, rightHandSide);
+    }
+
+    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> javaType, Operation operator, N leftHandSide, Expression<? extends N> rightHandSide) {
+        super(criteriaBuilder, javaType);
+        this.operator = operator;
+        this.leftHandSide = new LiteralExpression<N>(criteriaBuilder, leftHandSide);
+        this.rightHandSide = rightHandSide;
+    }
+
     public static Class<? extends Number> determineResultType(Class<? extends Number> argument1Type, Class<? extends Number> argument2Type) {
         return determineResultType(argument1Type, argument2Type, false);
     }
@@ -108,27 +129,6 @@ public class BinaryArithmeticExpression<N extends Number> extends AbstractExpres
 
     private static boolean isIntegralType(Class<? extends Number> type) {
         return Integer.class.equals(type) || Short.class.equals(type);
-    }
-
-    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> resultType, Operation operator, Expression<? extends N> leftHandSide, Expression<? extends N> rightHandSide) {
-        super(criteriaBuilder, resultType);
-        this.operator = operator;
-        this.leftHandSide = leftHandSide;
-        this.rightHandSide = rightHandSide;
-    }
-
-    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> javaType, Operation operator, Expression<? extends N> leftHandSide, N rightHandSide) {
-        super(criteriaBuilder, javaType);
-        this.operator = operator;
-        this.leftHandSide = leftHandSide;
-        this.rightHandSide = new LiteralExpression<N>(criteriaBuilder, rightHandSide);
-    }
-
-    public BinaryArithmeticExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<N> javaType, Operation operator, N leftHandSide, Expression<? extends N> rightHandSide) {
-        super(criteriaBuilder, javaType);
-        this.operator = operator;
-        this.leftHandSide = new LiteralExpression<N>(criteriaBuilder, leftHandSide);
-        this.rightHandSide = rightHandSide;
     }
 
     @Override

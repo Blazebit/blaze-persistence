@@ -34,5 +34,5 @@ public interface SubqueryInternalBuilder<T> extends Subquery {
     public int getFirstResult();
     
     public int getMaxResults();
-	
+    
 }

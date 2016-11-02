@@ -56,8 +56,8 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     private Document doc;
     
     public EntityViewUpdateTest(Class<T> viewType) {
-    	this.viewType = viewType;
-	}
+        this.viewType = viewType;
+    }
 
     @Parameterized.Parameters
     public static Collection<?> entityViewCombinations() {
@@ -115,8 +115,8 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
 
             @Override
             public void doWork(EntityManager em) {
-    	        docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
-    	        evm.update(em, docView);
+                docView.setOwner(cbf.create(em, Person.class).where("name").eq("pers2").getSingleResult());
+                evm.update(em, docView);
                 em.flush();
             }
         });
@@ -140,8 +140,8 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
 
             @Override
             public void doWork(EntityManager em) {
-    	        docView.setName("newDoc");
-    	        evm.update(em, docView);
+                docView.setName("newDoc");
+                evm.update(em, docView);
                 em.flush();
             }
         });
@@ -166,13 +166,13 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
             @Override
             public void doWork(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-    	        docView.setName("newDoc");
-    	        evm.update(em, docView);
+                docView.setName("newDoc");
+                evm.update(em, docView);
                 em.flush();
                 tx.rollback();
     
                 tx.begin();
-    	        evm.update(em, docView);
+                evm.update(em, docView);
                 em.flush();
             }
         });
@@ -197,19 +197,19 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
             @Override
             public void doWork(EntityManager em) {
                 EntityTransaction tx = em.getTransaction();
-    	        docView.setName("newDoc");
-    	        evm.update(em, docView);
+                docView.setName("newDoc");
+                evm.update(em, docView);
                 em.flush();
                 tx.rollback();
                 
-    	        docView.setName("newDoc1");
-    	        // Remove milliseconds because MySQL doesn't use that precision by default
-    	        Date date = new Date();
-    	        date.setTime(1000 * (date.getTime() / 1000));
-    	        docView.setLastModified(date);
+                docView.setName("newDoc1");
+                // Remove milliseconds because MySQL doesn't use that precision by default
+                Date date = new Date();
+                date.setTime(1000 * (date.getTime() / 1000));
+                docView.setLastModified(date);
     
                 tx.begin();
-    	        evm.update(em, docView);
+                evm.update(em, docView);
                 em.flush();
             }
         });

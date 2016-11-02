@@ -58,12 +58,18 @@ public class ConcurrentHashMapExpressionCache implements ExpressionCache {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof CacheKey)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof CacheKey)) {
+                return false;
+            }
 
             CacheKey cacheKey = (CacheKey) o;
 
-            if (expression != null ? !expression.equals(cacheKey.expression) : cacheKey.expression != null) return false;
+            if (expression != null ? !expression.equals(cacheKey.expression) : cacheKey.expression != null) {
+                return false;
+            }
             return macroConfiguration != null ? macroConfiguration.equals(cacheKey.macroConfiguration) : cacheKey.macroConfiguration == null;
 
         }

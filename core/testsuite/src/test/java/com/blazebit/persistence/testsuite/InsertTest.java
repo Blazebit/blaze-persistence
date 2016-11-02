@@ -58,7 +58,7 @@ public class InsertTest extends AbstractCoreTest {
     private Person p1;
     private Person p2;
 
-	@Override
+    @Override
     protected Class<?>[] getEntityClasses() {
         return new Class<?>[] {
             Document.class,
@@ -72,24 +72,24 @@ public class InsertTest extends AbstractCoreTest {
     }
 
     @Before
-	public void setUp() {
-		EntityTransaction tx = em.getTransaction();
-		try {
-			tx.begin();
-			p1 = new Person("P1");
-			em.persist(p1);
-			em.flush();
+    public void setUp() {
+        EntityTransaction tx = em.getTransaction();
+        try {
+            tx.begin();
+            p1 = new Person("P1");
+            em.persist(p1);
+            em.flush();
 
-			p2 = new Person("P2");
-			em.persist(p2);
-			em.flush();
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-	}
-	
+            p2 = new Person("P2");
+            em.persist(p2);
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Test
     @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testSimple() {
@@ -165,34 +165,34 @@ public class InsertTest extends AbstractCoreTest {
         });
     }
 
-	// NOTE: hibernate 4.2 does not support using parameters in the select clause
-	@Test
-	@Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
-	public void testSimpleWithParameters() {
-		final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
-		cb.from(Person.class, "p");
-		cb.bind("name").select("CONCAT(p.name,'s document')");
-		cb.bind("age", 1L);
-		cb.bind("idx", 1);
-		cb.bind("owner").select("p");
+    // NOTE: hibernate 4.2 does not support using parameters in the select clause
+    @Test
+    @Category({ NoHibernate42.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
+    public void testSimpleWithParameters() {
+        final InsertCriteriaBuilder<Document> cb = cbf.insert(em, Document.class);
+        cb.from(Person.class, "p");
+        cb.bind("name").select("CONCAT(p.name,'s document')");
+        cb.bind("age", 1L);
+        cb.bind("idx", 1);
+        cb.bind("owner").select("p");
         cb.orderByAsc("p.id");
-		String expected = "INSERT INTO Document(age, idx, name, owner)\n"
-				+ "SELECT :param_0, :param_1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
+        String expected = "INSERT INTO Document(age, idx, name, owner)\n"
+                + "SELECT :param_0, :param_1, CONCAT(p.name,'s document'), p FROM Person p ORDER BY " + renderNullPrecedence("p.id", "ASC", "LAST");
 
-		assertEquals(expected, cb.getQueryString());
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
             public void work() {
-    			int updateCount = cb.executeUpdate();
-    			assertEquals(2, updateCount);
+                int updateCount = cb.executeUpdate();
+                assertEquals(2, updateCount);
             }
         });
-	}
+    }
 
-	/* Returning */
+    /* Returning */
     
-	// NOTE: H2 does not support returning all generated keys
+    // NOTE: H2 does not support returning all generated keys
     @Test
     @Category({ NoH2.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testReturningAll() {

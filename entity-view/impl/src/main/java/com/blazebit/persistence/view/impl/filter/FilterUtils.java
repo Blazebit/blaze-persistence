@@ -27,6 +27,9 @@ import com.blazebit.text.FormatUtils;
  */
 public final class FilterUtils {
 
+    private FilterUtils() {
+    }
+
     @SuppressWarnings("unchecked")
     public static Object parseValue(Class<?> clazz, Object value) {
         try {

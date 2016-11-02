@@ -34,8 +34,12 @@ public class StringLiteral extends AbstractExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof StringLiteral)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof StringLiteral)) {
+            return false;
+        }
 
         StringLiteral that = (StringLiteral) o;
 

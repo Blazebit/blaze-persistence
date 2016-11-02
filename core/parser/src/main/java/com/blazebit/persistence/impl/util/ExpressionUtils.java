@@ -10,6 +10,9 @@ import com.blazebit.persistence.impl.expression.FunctionExpression;
  */
 public class ExpressionUtils {
 
+    private ExpressionUtils() {
+    }
+
     public static boolean isSizeFunction(Expression expression) {
         if (expression instanceof FunctionExpression) {
             return isSizeFunction((FunctionExpression) expression);

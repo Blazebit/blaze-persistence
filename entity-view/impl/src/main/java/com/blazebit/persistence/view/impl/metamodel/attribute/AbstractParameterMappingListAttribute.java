@@ -39,9 +39,9 @@ public abstract class AbstractParameterMappingListAttribute<X, Y> extends Abstra
         super(mappingConstructor, index, mapping, entityViews, false);
         
         if (isIgnoreIndex()) {
-        	this.isIndexed = false;
+            this.isIndexed = false;
         } else {
-        	this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, mappingConstructor.getDeclaringType().getEntityClass(), mapping);
+            this.isIndexed = MetamodelUtils.isIndexedList(metamodel, expressionFactory, mappingConstructor.getDeclaringType().getEntityClass(), mapping);
         }
     }
 

@@ -30,5 +30,5 @@ public interface FullSelectCTECriteriaBuilder<X> extends SelectBaseCTECriteriaBu
      *
      * @return The parent query builder
      */
-	public X end();
+    public X end();
 }

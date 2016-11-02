@@ -120,14 +120,12 @@ public class StatementPreparerImpl implements StatementPreparer {
                     jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementStart();
                     preparedStatement = doPrepare();
                     setStatementTimeout( preparedStatement );
-                }
-                finally {
+                } finally {
                     jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver().jdbcPrepareStatementEnd();
                 }
                 postProcess( preparedStatement );
                 return preparedStatement;
-            }
-            catch ( SQLException e ) {
+            } catch ( SQLException e ) {
                 throw sqlExceptionHelper().convert( e, "could not prepare statement", sql );
             }
         }

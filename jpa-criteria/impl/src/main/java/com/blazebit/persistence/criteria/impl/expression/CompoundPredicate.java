@@ -3,7 +3,6 @@ package com.blazebit.persistence.criteria.impl.expression;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.ListIterator;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;

@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.CollectionMapping;
 public class CollectionMappingLiteral implements CollectionMapping {
 
     @SuppressWarnings("rawtypes")
-	private final Class<? extends Comparator> comparator;
+    private final Class<? extends Comparator> comparator;
     private final boolean ordered;
     private final boolean ignoreIndex;
 

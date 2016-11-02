@@ -3,7 +3,7 @@ package com.blazebit.persistence.impl.util;
 public class BoyerMooreCaseInsensitiveAsciiLastPatternFinder extends AbstractPatternFinder {
 
     // Only support ASCII
-    private static final int radix = 256;
+    private static final int RADIX = 256;
     private final int[] left;
     private final char[] pattern;
 
@@ -11,8 +11,8 @@ public class BoyerMooreCaseInsensitiveAsciiLastPatternFinder extends AbstractPat
         final int length = pattern.length();
         this.pattern = new char[length];
 
-        this.left = new int[radix];
-        for (int i = 0; i < radix; i++) {
+        this.left = new int[RADIX];
+        for (int i = 0; i < RADIX; i++) {
             this.left[i] = length;
         }
         for (int i = 0; i < length; i++) {

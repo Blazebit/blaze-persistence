@@ -34,21 +34,21 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseInsertCriteriaBuilder<T, X>, SelectBuilder<X> {
 
-	private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
+    private final Map<String, Integer> bindingMap = new TreeMap<String, Integer>();
 
-	public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(mainQuery, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
-		
+    public BaseInsertCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, isMainQuery, DbmsStatementType.INSERT, clazz, null, cteName, cteClass, result, listener);
+        
         if (!jpaProvider.supportsInsertStatement()) {
             throw new IllegalStateException("JPA provider does not support insert statements!");
         }
-	}
+    }
 
     @Override
     @SuppressWarnings("unchecked")
-	public X bind(String attributeName, Object value) {
+    public X bind(String attributeName, Object value) {
         // NOTE: We are not resolving embedded properties, because hibernate does not support them
-		// Just do that to assert the attribute exists
+        // Just do that to assert the attribute exists
         if (entityType.getAttribute(attributeName) == null) {
             // Well, some implementations might not be fully spec compliant..
             throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
@@ -59,29 +59,29 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
             throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
         }
         
-		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		selectManager.select(parameterManager.addParameterExpression(value), null);
-		
-		return (X) this;
-	}
+        bindingMap.put(attributeName, selectManager.getSelectInfos().size());
+        selectManager.select(parameterManager.addParameterExpression(value), null);
+        
+        return (X) this;
+    }
 
     @Override
-	public SelectBuilder<X> bind(String attributeName) {
+    public SelectBuilder<X> bind(String attributeName) {
         // NOTE: We are not resolving embedded properties, because hibernate does not support them
-		// Just do that to assert the attribute exists
+        // Just do that to assert the attribute exists
         if (entityType.getAttribute(attributeName) == null) {
             // Well, some implementations might not be fully spec compliant..
             throw new IllegalArgumentException("Attribute '" + attributeName + "' does not exist on '" + entityType.getName() + "'!");
         }
-		Integer attributeBindIndex = bindingMap.get(attributeName);
-		
-		if (attributeBindIndex != null) {
-			throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
-		}
-		
-		bindingMap.put(attributeName, selectManager.getSelectInfos().size());
-		return this;
-	}
+        Integer attributeBindIndex = bindingMap.get(attributeName);
+        
+        if (attributeBindIndex != null) {
+            throw new IllegalArgumentException("The attribute [" + attributeName + "] has already been bound!");
+        }
+        
+        bindingMap.put(attributeName, selectManager.getSelectInfos().size());
+        return this;
+    }
     
     @Override
     protected void prepareAndCheck() {
@@ -102,31 +102,31 @@ public class BaseInsertCriteriaBuilderImpl<T, X extends BaseInsertCriteriaBuilde
         super.prepareAndCheck();
     }
 
-	@Override
+    @Override
     protected boolean isJoinRequiredForSelect() {
-	    // NOTE: since we aren't actually selecting properties but passing them through to the insert, we don't require joins
+        // NOTE: since we aren't actually selecting properties but passing them through to the insert, we don't require joins
         return false;
     }
 
     @Override
-	protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-		sbSelectFrom.append("INSERT INTO ");
-		sbSelectFrom.append(entityType.getName()).append('(');
-		
-		boolean first = true;
-		for (Map.Entry<String, Integer> attributeEntry : bindingMap.entrySet()) {
-			if (first) {
-				first = false;
-			} else {
-				sbSelectFrom.append(", ");
-			}
-			
-			sbSelectFrom.append(attributeEntry.getKey());
-		}
-		
-		sbSelectFrom.append(")\n");
-    	super.buildBaseQueryString(sbSelectFrom, externalRepresentation);
-	}
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        sbSelectFrom.append("INSERT INTO ");
+        sbSelectFrom.append(entityType.getName()).append('(');
+        
+        boolean first = true;
+        for (Map.Entry<String, Integer> attributeEntry : bindingMap.entrySet()) {
+            if (first) {
+                first = false;
+            } else {
+                sbSelectFrom.append(", ");
+            }
+            
+            sbSelectFrom.append(attributeEntry.getKey());
+        }
+        
+        sbSelectFrom.append(")\n");
+        super.buildBaseQueryString(sbSelectFrom, externalRepresentation);
+    }
 
     @Override
     public Query getQuery() {

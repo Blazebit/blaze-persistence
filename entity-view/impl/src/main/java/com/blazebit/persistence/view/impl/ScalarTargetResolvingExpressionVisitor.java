@@ -22,7 +22,28 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.DateLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TimeLiteral;
+import com.blazebit.persistence.impl.expression.TimestampLiteral;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
 import com.blazebit.persistence.impl.predicate.BooleanLiteral;
 import com.blazebit.persistence.impl.util.ExpressionUtils;
 import com.blazebit.persistence.view.impl.metamodel.EntityMetamodel;
@@ -54,7 +75,7 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             this.method = method;
         }
         
-		private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
+        private PathPosition(Class<?> currentClass, Class<?> valueClass, Method method, boolean hasCollectionJoin) {
             this.currentClass = currentClass;
             this.valueClass = valueClass;
             this.method = method;
@@ -62,41 +83,41 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         }
 
         Class<?> getRealCurrentClass() {
-			return currentClass;
-		}
+            return currentClass;
+        }
 
-		Class<?> getCurrentClass() {
-			if (valueClass != null) {
-				return valueClass;
-			}
-			
-			return currentClass;
-		}
+        Class<?> getCurrentClass() {
+            if (valueClass != null) {
+                return valueClass;
+            }
+            
+            return currentClass;
+        }
 
-		void setCurrentClass(Class<?> currentClass) {
-			this.currentClass = currentClass;
-			this.valueClass = null;
-		}
+        void setCurrentClass(Class<?> currentClass) {
+            this.currentClass = currentClass;
+            this.valueClass = null;
+        }
 
-		Method getMethod() {
-			return method;
-		}
+        Method getMethod() {
+            return method;
+        }
 
-		void setMethod(Method method) {
-			this.method = method;
-		}
+        void setMethod(Method method) {
+            this.method = method;
+        }
 
-		public boolean hasCollectionJoin() {
-			return hasCollectionJoin;
-		}
+        public boolean hasCollectionJoin() {
+            return hasCollectionJoin;
+        }
 
-		void setValueClass(Class<?> valueClass) {
-			this.valueClass = valueClass;
-			
-			if (valueClass != null && valueClass != currentClass) {
-				hasCollectionJoin = true;
-			}
-		}
+        void setValueClass(Class<?> valueClass) {
+            this.valueClass = valueClass;
+            
+            if (valueClass != null && valueClass != currentClass) {
+                hasCollectionJoin = true;
+            }
+        }
 
         Class<?> getValueClass() {
             return valueClass;
@@ -116,14 +137,14 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     private Method resolve(Class<?> currentClass, String property) {
-    	Attribute<?, ?> attribute = null;
-    	
-    	try {
-    		attribute = metamodel.managedType(currentClass).getAttribute(property);
-    	} catch (IllegalArgumentException ex) {
-    		attribute = null;
-    	}
-    	
+        Attribute<?, ?> attribute = null;
+        
+        try {
+            attribute = metamodel.managedType(currentClass).getAttribute(property);
+        } catch (IllegalArgumentException ex) {
+            attribute = null;
+        }
+        
         if (attribute == null) {
             throw new IllegalArgumentException("The property '" + property + "' could not be found on the type '" + currentClass.getName() + "'!");
         }
@@ -136,50 +157,50 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
     
     public static interface TargetType {
-    	
-    	public boolean hasCollectionJoin();
-    	
-    	public Method getLeafMethod();
-    	
-    	public Class<?> getLeafBaseClass();
-    	
-    	public Class<?> getLeafBaseValueClass();
-    	
+        
+        public boolean hasCollectionJoin();
+        
+        public Method getLeafMethod();
+        
+        public Class<?> getLeafBaseClass();
+        
+        public Class<?> getLeafBaseValueClass();
+        
     }
     
     private static class TargetTypeImpl implements TargetType {
-    	
-    	private final boolean hasCollectionJoin;
-    	private final Method leafMethod;
-    	private final Class<?> leafBaseClass;
-    	private final Class<?> leafBaseValueClass;
+        
+        private final boolean hasCollectionJoin;
+        private final Method leafMethod;
+        private final Class<?> leafBaseClass;
+        private final Class<?> leafBaseValueClass;
 
-    	public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseValueClass) {
-			this.hasCollectionJoin = hasCollectionJoin;
-			this.leafMethod = leafMethod;
-			this.leafBaseClass = leafBaseClass;
-			this.leafBaseValueClass = leafBaseValueClass;
-		}
+        public TargetTypeImpl(boolean hasCollectionJoin, Method leafMethod, Class<?> leafBaseClass, Class<?> leafBaseValueClass) {
+            this.hasCollectionJoin = hasCollectionJoin;
+            this.leafMethod = leafMethod;
+            this.leafBaseClass = leafBaseClass;
+            this.leafBaseValueClass = leafBaseValueClass;
+        }
 
-    	@Override
-		public boolean hasCollectionJoin() {
-			return hasCollectionJoin;
-		}
+        @Override
+        public boolean hasCollectionJoin() {
+            return hasCollectionJoin;
+        }
 
-    	@Override
-		public Method getLeafMethod() {
-			return leafMethod;
-		}
+        @Override
+        public Method getLeafMethod() {
+            return leafMethod;
+        }
 
-    	@Override
-		public Class<?> getLeafBaseClass() {
-			return leafBaseClass;
-		}
+        @Override
+        public Class<?> getLeafBaseClass() {
+            return leafBaseClass;
+        }
 
-    	@Override
-		public Class<?> getLeafBaseValueClass() {
-			return leafBaseValueClass;
-		}
+        @Override
+        public Class<?> getLeafBaseValueClass() {
+            return leafBaseValueClass;
+        }
     }
 
     public List<TargetType> getPossibleTargets() {
@@ -214,10 +235,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             Class<?> valueType = null;
             
             if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-            	Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
-            	valueType = typeArguments[typeArguments.length - 1];
+                Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
+                valueType = typeArguments[typeArguments.length - 1];
             } else {
-            	valueType = type;
+                valueType = type;
             }
             
             currentPosition.setCurrentClass(type);
@@ -276,8 +297,8 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
         expression.getIndex().accept(this);
         
         parametersAllowed = wasParamsAllowed;
-		currentPosition = position;
-		pathPositions = currentPositions;
+        currentPosition = position;
+        pathPositions = currentPositions;
     
         // Only need the base to navigate down the path
         expression.getBase().accept(this);
@@ -383,64 +404,64 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     private boolean isNumber(String expressionString) {
-    	String s = expressionString.trim();
-    	
-    	if (s.isEmpty()) {
-    		return false;
-    	}
-    	
-    	for (int i = 0; i < expressionString.length(); i++) {
-    		char c = expressionString.charAt(i);
-    		if (!Character.isDigit(c)) {
-    			return false;
-    		}
-    	}
-    	
-    	return true;
-	}
+        String s = expressionString.trim();
+        
+        if (s.isEmpty()) {
+            return false;
+        }
+        
+        for (int i = 0; i < expressionString.length(); i++) {
+            char c = expressionString.charAt(i);
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 
-	@Override
+    @Override
     public void visit(SubqueryExpression expression) {
         invalid(expression);
     }
 
     @Override
     public void visit(FunctionExpression expression) {
-    	String name = expression.getFunctionName();
-    	if ("KEY".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        String name = expression.getFunctionName();
+        if ("KEY".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
             Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
 
-    		if (!Map.class.isAssignableFrom(type)) {
-            	invalid(expression, "Does not resolve to java.util.Map!");
+            if (!Map.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.Map!");
             } else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(typeArguments[0]);
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(typeArguments[0]);
             }
-    	} else if ("INDEX".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
-    		
-    		if (!List.class.isAssignableFrom(type)) {
-    			invalid(expression, "Does not resolve to java.util.List!");
-    		} else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(Integer.class);
-    		}
-    	} else if ("VALUE".equalsIgnoreCase(name)) {
-    		PropertyExpression property = resolveBase(expression);
-    		currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
-    		Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+        } else if ("INDEX".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
+            
+            if (!List.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.List!");
+            } else {
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(Integer.class);
+            }
+        } else if ("VALUE".equalsIgnoreCase(name)) {
+            PropertyExpression property = resolveBase(expression);
+            currentPosition.setMethod(resolve(currentPosition.getCurrentClass(), property.getProperty()));
+            Class<?> type = ReflectionUtils.getResolvedMethodReturnType(currentPosition.getCurrentClass(), currentPosition.getMethod());
             Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
 
-    		if (!Map.class.isAssignableFrom(type)) {
-            	invalid(expression, "Does not resolve to java.util.Map!");
+            if (!Map.class.isAssignableFrom(type)) {
+                invalid(expression, "Does not resolve to java.util.Map!");
             } else {
-            	currentPosition.setCurrentClass(type);
-            	currentPosition.setValueClass(typeArguments[1]);
+                currentPosition.setCurrentClass(type);
+                currentPosition.setValueClass(typeArguments[1]);
             }
         } else if ("FUNCTION".equalsIgnoreCase(name)) {
             // Skip the function name
@@ -451,10 +472,10 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
             currentPosition.setCurrentClass(Long.class);
         } else {
             // TODO: we could do better here by checking the actual return types of the functions or put a list of other "known" functions here, at least make it extendible
-    	    // We can't just say it's invalid, we might just not know the function
-//    		invalid(expression);
+            // We can't just say it's invalid, we might just not know the function
+//            invalid(expression);
             resolveToAny(expression.getExpressions(), true);
-    	}
+        }
     }
 
     @Override
@@ -463,16 +484,16 @@ public class ScalarTargetResolvingExpressionVisitor extends VisitorAdapter {
     }
 
     private PropertyExpression resolveBase(FunctionExpression expression) {
-		// According to our grammar, we can only get a path here
-		PathExpression path = (PathExpression) expression.getExpressions().get(0);
-		int lastIndex = path.getExpressions().size() - 1;
-		
-		for (int i = 0; i < lastIndex; i++) {
-			path.getExpressions().get(i).accept(this);
-		}
-		
-		// According to our grammar, the last element must be a property
-		return (PropertyExpression) path.getExpressions().get(lastIndex);
+        // According to our grammar, we can only get a path here
+        PathExpression path = (PathExpression) expression.getExpressions().get(0);
+        int lastIndex = path.getExpressions().size() - 1;
+        
+        for (int i = 0; i < lastIndex; i++) {
+            path.getExpressions().get(i).accept(this);
+        }
+        
+        // According to our grammar, the last element must be a property
+        return (PropertyExpression) path.getExpressions().get(lastIndex);
     }
 
     @Override

@@ -1,11 +1,20 @@
 package com.blazebit.persistence.criteria.impl;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.criteria.*;
+import com.blazebit.persistence.criteria.BlazeCriteriaBuilder;
+import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
+import com.blazebit.persistence.criteria.BlazeOrder;
+import com.blazebit.persistence.criteria.BlazeRoot;
+import com.blazebit.persistence.criteria.BlazeSubquery;
 
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.EntityType;
 import java.util.Arrays;
 import java.util.Collections;

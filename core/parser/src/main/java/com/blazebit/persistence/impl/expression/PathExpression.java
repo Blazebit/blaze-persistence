@@ -154,7 +154,7 @@ public class PathExpression extends AbstractExpression implements Expression {
             return false;
         }
         final PathExpression other = (PathExpression) obj;
-        if (this.pathReference != null|| other.pathReference != null) {
+        if (this.pathReference != null || other.pathReference != null) {
             if (this.pathReference != other.pathReference && (this.pathReference == null || !this.pathReference.equals(other.pathReference))) {
                 return false;
             }

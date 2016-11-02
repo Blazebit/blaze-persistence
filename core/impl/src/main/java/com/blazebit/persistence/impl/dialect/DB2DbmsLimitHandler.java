@@ -1,14 +1,10 @@
 package com.blazebit.persistence.impl.dialect;
 
-import com.blazebit.persistence.impl.util.BoyerMooreCaseInsensitiveAsciiFirstPatternFinder;
-import com.blazebit.persistence.impl.util.PatternFinder;
 import com.blazebit.persistence.impl.util.SqlUtils;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class DB2DbmsLimitHandler extends AbstractDbmsLimitHandler {

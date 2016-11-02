@@ -30,7 +30,7 @@ public abstract class AbstractEntityViewUpdateTest extends AbstractEntityViewTes
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
-	        work.doWork(em);
+            work.doWork(em);
             tx.commit();
         } catch (Exception e) {
             tx.rollback();

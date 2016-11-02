@@ -9,14 +9,14 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  * Returns false if expression is usable in groupBy, true otherwise
  */
 class GroupByUsableDetectionVisitor extends AbortableVisitorAdapter {
-	
-	private final boolean treatSizeAsAggreagte;
-	
-	public GroupByUsableDetectionVisitor(boolean treatSizeAsAggreagte) {
-		this.treatSizeAsAggreagte = treatSizeAsAggreagte;
-	}
+    
+    private final boolean treatSizeAsAggreagte;
+    
+    public GroupByUsableDetectionVisitor(boolean treatSizeAsAggreagte) {
+        this.treatSizeAsAggreagte = treatSizeAsAggreagte;
+    }
 
-	@Override
+    @Override
     public Boolean visit(FunctionExpression expression) {
         if (expression instanceof AggregateExpression || (treatSizeAsAggreagte && com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression))) {
             return true;

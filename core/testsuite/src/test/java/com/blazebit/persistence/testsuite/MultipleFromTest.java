@@ -34,8 +34,8 @@ public class MultipleFromTest extends AbstractCoreTest {
     @Test
     public void testMultipleFrom() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class)
-        		.from(Document.class, "d")
-        		.from(Person.class, "p");
+                .from(Document.class, "d")
+                .from(Person.class, "p");
         criteria.where("d.owner").eqExpression("p");
         criteria.select("COUNT(*)");
         assertEquals("SELECT " + countStar() + " FROM Document d, Person p WHERE d.owner = p", criteria.getQueryString());

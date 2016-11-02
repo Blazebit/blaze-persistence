@@ -58,7 +58,7 @@ public interface CriteriaDelete<T> extends CommonAbstractCriteria {
     * Return the query root.
     * @return the query root
     */
-   Root<T> getRoot();
+    Root<T> getRoot();
 
     /**
      * Modify the delete query to restrict the target of the deletion 
@@ -67,7 +67,7 @@ public interface CriteriaDelete<T> extends CommonAbstractCriteria {
      * @param restriction  a simple or compound boolean expression
      * @return the modified delete query
      */    
-   CriteriaDelete<T> where(Expression<Boolean> restriction);
+    CriteriaDelete<T> where(Expression<Boolean> restriction);
 
     /**
      * Modify the delete query to restrict the target of the deletion
@@ -79,6 +79,6 @@ public interface CriteriaDelete<T> extends CommonAbstractCriteria {
      * @param restrictions  zero or more restriction predicates
      * @return the modified delete query
      */
-   CriteriaDelete<T> where(Predicate... restrictions);
+    CriteriaDelete<T> where(Predicate... restrictions);
 
 }

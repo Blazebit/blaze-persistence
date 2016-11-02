@@ -29,5 +29,5 @@ public interface SelectCTECriteriaBuilder<X> extends SelectBaseCTECriteriaBuilde
      *
      * @return The parent query builder
      */
-	public X end();
+    public X end();
 }

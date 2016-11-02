@@ -3,7 +3,17 @@ package com.blazebit.persistence.criteria;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CollectionJoin;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.ListJoin;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.SetJoin;
+import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
 public interface BlazeSubquery<T> extends Subquery<T>, BlazeAbstractQuery<T> {

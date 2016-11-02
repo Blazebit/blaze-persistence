@@ -81,41 +81,41 @@ public class DeleteTest extends AbstractCoreTest {
             doc2 = new Document("D2");
             doc3 = new Document("D3");
 
-			Person o1 = new Person("P1");
+            Person o1 = new Person("P1");
 
-			doc1.setOwner(o1);
-			doc2.setOwner(o1);
-			doc3.setOwner(o1);
+            doc1.setOwner(o1);
+            doc2.setOwner(o1);
+            doc3.setOwner(o1);
 
-			em.persist(o1);
+            em.persist(o1);
 
-			em.persist(doc1);
-			em.persist(doc2);
-			em.persist(doc3);
+            em.persist(doc1);
+            em.persist(doc2);
+            em.persist(doc3);
 
-			em.flush();
-			tx.commit();
-		} catch (Exception e) {
-			tx.rollback();
-			throw new RuntimeException(e);
-		}
-	}
+            em.flush();
+            tx.commit();
+        } catch (Exception e) {
+            tx.rollback();
+            throw new RuntimeException(e);
+        }
+    }
 
-	@Test
-	public void testSimple() {
-		final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d").where("d.name").eq("D1");
-		String expected = "DELETE FROM Document d WHERE d.name = :param_0";
+    @Test
+    public void testSimple() {
+        final DeleteCriteriaBuilder<Document> cb = cbf.delete(em, Document.class, "d").where("d.name").eq("D1");
+        String expected = "DELETE FROM Document d WHERE d.name = :param_0";
 
-		assertEquals(expected, cb.getQueryString());
+        assertEquals(expected, cb.getQueryString());
 
         transactional(new TxVoidWork() {
             @Override
             public void work() {
-    			int updateCount = cb.executeUpdate();
-    			assertEquals(1, updateCount);
+                int updateCount = cb.executeUpdate();
+                assertEquals(1, updateCount);
             }
         });
-	}
+    }
 
     /* Returning */
     

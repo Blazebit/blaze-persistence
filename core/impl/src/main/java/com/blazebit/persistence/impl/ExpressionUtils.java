@@ -38,8 +38,38 @@ import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
 import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.impl.expression.*;
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.expression.AbortableVisitorAdapter;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.EntityLiteral;
+import com.blazebit.persistence.impl.expression.EnumLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TemporalLiteral;
+import com.blazebit.persistence.impl.expression.TrimExpression;
+import com.blazebit.persistence.impl.expression.TypeFunctionExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
+import com.blazebit.persistence.impl.expression.WhenClauseExpression;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
 import com.blazebit.persistence.impl.transform.AliasReplacementTransformer;
 
 /**
@@ -49,6 +79,25 @@ import com.blazebit.persistence.impl.transform.AliasReplacementTransformer;
  * @since 1.0
  */
 public class ExpressionUtils {
+
+    private static final AbortableVisitorAdapter SUBQUERY_EXPRESSION_DETECTOR = new AbortableVisitorAdapter() {
+
+        @Override
+        public Boolean visit(SubqueryExpression expression) {
+            return true;
+        }
+    };
+
+    private static final AbortableVisitorAdapter SIZE_EXPRESSION_DETECTOR = new AbortableVisitorAdapter() {
+
+        @Override
+        public Boolean visit(FunctionExpression expression) {
+            return com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression);
+        }
+    };
+
+    private ExpressionUtils() {
+    }
 
     public static boolean isUnique(Metamodel metamodel, Expression expr) {
         if (expr instanceof FunctionExpression) {
@@ -77,7 +126,7 @@ public class ExpressionUtils {
             return isUnique(metamodel, ((ArithmeticFactor) expr).getExpression());
         } else if (expr instanceof ArithmeticExpression) {
             return false;
-        } if (expr instanceof NullExpression) {
+        } else if (expr instanceof NullExpression) {
             // The actual semantics of NULL are, that NULL != NULL
             return true;
         } else {
@@ -127,13 +176,13 @@ public class ExpressionUtils {
             if (attributeName.indexOf('.') < 0) {
                 attr = t.getAttribute(expr.getField());
             } else {
-		        String[] attributeParts = attributeName.split("\\.");
-		        attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
+                String[] attributeParts = attributeName.split("\\.");
+                attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
 
-		        for (int i = 1; i < attributeParts.length; i++) {
-		            t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
-		            attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
-		        }
+                for (int i = 1; i < attributeParts.length; i++) {
+                    t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
+                    attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
+                }
             }
 
             if (!isUnique(attr)) {
@@ -197,7 +246,7 @@ public class ExpressionUtils {
             return true;
         } else if (expr instanceof NumericLiteral) {
             return false;
-        }else if (expr instanceof BooleanLiteral) {
+        } else if (expr instanceof BooleanLiteral) {
             return false;
         } else if (expr instanceof StringLiteral) {
             return false;
@@ -285,13 +334,13 @@ public class ExpressionUtils {
             if (attributeName.indexOf('.') < 0) {
                 attr = t.getAttribute(expr.getField());
             } else {
-		        String[] attributeParts = attributeName.split("\\.");
-		        attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
+                String[] attributeParts = attributeName.split("\\.");
+                attr = JpaUtils.getPolymorphicSimpleAttribute(metamodel, t, attributeParts[0]);
 
-		        for (int i = 1; i < attributeParts.length; i++) {
-		            t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
-		            attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
-		        }
+                for (int i = 1; i < attributeParts.length; i++) {
+                    t = metamodel.managedType(JpaUtils.resolveFieldClass(t.getJavaType(), attr));
+                    attr = JpaUtils.getPolymorphicAttribute(metamodel, t, attributeParts[i]);
+                }
             }
 
             if (isNullable(attr)) {
@@ -373,11 +422,11 @@ public class ExpressionUtils {
     }
 
     public static boolean containsSubqueryExpression(Expression e) {
-        return e.accept(subqueryExpressionDetector);
+        return e.accept(SUBQUERY_EXPRESSION_DETECTOR);
     }
 
     public static boolean containsSizeExpression(Expression e) {
-        return e.accept(sizeExpressionDetector);
+        return e.accept(SIZE_EXPRESSION_DETECTOR);
     }
 
     public static Expression replaceSubexpression(Expression superExpression, String placeholder, Expression substitute) {
@@ -512,20 +561,4 @@ public class ExpressionUtils {
         superExpression.accept(transformationVisitor);
         return superExpression;
     }
-
-    private static final AbortableVisitorAdapter subqueryExpressionDetector = new AbortableVisitorAdapter() {
-
-        @Override
-        public Boolean visit(SubqueryExpression expression) {
-            return true;
-        }
-    };
-
-    private static final AbortableVisitorAdapter sizeExpressionDetector = new AbortableVisitorAdapter() {
-
-        @Override
-        public Boolean visit(FunctionExpression expression) {
-            return com.blazebit.persistence.impl.util.ExpressionUtils.isSizeFunction(expression);
-        }
-    };
 }

@@ -18,7 +18,6 @@ package com.blazebit.persistence.impl.hibernate;
 import com.blazebit.persistence.spi.JpaProvider;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
-import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -27,8 +26,6 @@ import org.hibernate.persister.entity.Joinable;
 
 import javax.persistence.EntityManager;
 import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.MapAttribute;
-import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.PluralAttribute;
 import java.util.Map;
 
@@ -192,7 +189,7 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public String getCustomFunctionInvocation(String functionName, int argumentCount) {
-    	// Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
+        // Careful, PaginatedCriteriaBuilder has some dependency on the "length" of the string for rendering in the count query
         return functionName + "(";
     }
 

@@ -1,6 +1,10 @@
 package com.blazebit.persistence.testsuite.entity;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
+import javax.persistence.OrderColumn;
 import java.util.List;
 import java.util.Map;
 

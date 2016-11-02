@@ -11,7 +11,7 @@
 
     <artifactId>blaze-persistence-entity-view-impl</artifactId>
     <packaging>jar</packaging>
-	
+    
     <name>Blazebit Persistence Entity-View Impl</name>
 
     <dependencies>

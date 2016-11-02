@@ -24,5 +24,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface ReturningUpdateCriteriaBuilder<T, X> extends ReturningModificationCriteriaBuilder<ReturningUpdateCriteriaBuilder<T, X>, X>, BaseUpdateCriteriaBuilder<T, ReturningUpdateCriteriaBuilder<T, X>> {
-	
+    
 }

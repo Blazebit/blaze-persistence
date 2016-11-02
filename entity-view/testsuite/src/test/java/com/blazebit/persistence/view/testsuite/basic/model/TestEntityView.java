@@ -26,5 +26,5 @@ import com.blazebit.persistence.view.testsuite.entity.TestEntity;
 @EntityView(TestEntity.class)
 public interface TestEntityView extends NamedView {
 
-	public String getDescription();
+    public String getDescription();
 }

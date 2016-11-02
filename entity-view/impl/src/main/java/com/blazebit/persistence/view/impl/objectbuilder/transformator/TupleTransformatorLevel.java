@@ -10,9 +10,9 @@ class TupleTransformatorLevel {
     final List<TupleTransformer> tupleTransformers;
     final TupleListTransformer tupleListTransformer;
     
-	public TupleTransformatorLevel(List<TupleTransformer> tupleTransformers,
-			TupleListTransformer tupleListTransformer) {
-		this.tupleTransformers = tupleTransformers;
-		this.tupleListTransformer = tupleListTransformer;
-	}
+    public TupleTransformatorLevel(List<TupleTransformer> tupleTransformers,
+            TupleListTransformer tupleListTransformer) {
+        this.tupleTransformers = tupleTransformers;
+        this.tupleListTransformer = tupleListTransformer;
+    }
 }

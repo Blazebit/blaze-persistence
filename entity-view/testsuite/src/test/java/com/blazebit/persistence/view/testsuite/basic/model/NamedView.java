@@ -26,5 +26,5 @@ import com.blazebit.persistence.view.testsuite.entity.NamedEntity;
 @EntityView(NamedEntity.class)
 public interface NamedView extends IdHolderView<Integer> {
 
-	public String getName();
+    public String getName();
 }

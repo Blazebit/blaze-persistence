@@ -27,6 +27,6 @@ import javax.persistence.Entity;
 @DiscriminatorValue("S")
 public class SmallProject extends Project<JuniorProjectLeader> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     
 }

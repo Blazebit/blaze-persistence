@@ -27,8 +27,8 @@ import javax.persistence.ManyToOne;
  */
 @Embeddable
 public class ExtendedPersonForElementCollections implements Serializable {
-	
-	private static final long serialVersionUID = 1L;
+    
+    private static final long serialVersionUID = 1L;
 
     private String fullname;
     private ExtendedDocumentForElementCollections partnerDocument;
@@ -57,34 +57,34 @@ public class ExtendedPersonForElementCollections implements Serializable {
         this.partnerDocument = partnerDocument;
     }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((fullname == null) ? 0 : fullname.hashCode());
-		result = prime * result + ((partnerDocument == null) ? 0 : partnerDocument.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((fullname == null) ? 0 : fullname.hashCode());
+        result = prime * result + ((partnerDocument == null) ? 0 : partnerDocument.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ExtendedPersonForElementCollections other = (ExtendedPersonForElementCollections) obj;
-		if (fullname == null) {
-			if (other.fullname != null)
-				return false;
-		} else if (!fullname.equals(other.fullname))
-			return false;
-		if (partnerDocument == null) {
-			if (other.partnerDocument != null)
-				return false;
-		} else if (!partnerDocument.equals(other.partnerDocument))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ExtendedPersonForElementCollections other = (ExtendedPersonForElementCollections) obj;
+        if (fullname == null) {
+            if (other.fullname != null)
+                return false;
+        } else if (!fullname.equals(other.fullname))
+            return false;
+        if (partnerDocument == null) {
+            if (other.partnerDocument != null)
+                return false;
+        } else if (!partnerDocument.equals(other.partnerDocument))
+            return false;
+        return true;
+    }
 }

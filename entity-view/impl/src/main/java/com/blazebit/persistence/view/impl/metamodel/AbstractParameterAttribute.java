@@ -18,8 +18,12 @@ package com.blazebit.persistence.view.impl.metamodel;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
-import com.blazebit.annotation.AnnotationUtils;
-import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.ParameterAttribute;
 import com.blazebit.reflection.ReflectionUtils;
@@ -108,12 +112,12 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
         return null;
     }
 
-	@Override
-	protected String getLocation() {
-		return "parameter with the index '" + getIndex() + "' of the constructor '" + getDeclaringConstructor().getJavaConstructor() + "'";
-	}
+    @Override
+    protected String getLocation() {
+        return "parameter with the index '" + getIndex() + "' of the constructor '" + getDeclaringConstructor().getJavaConstructor() + "'";
+    }
 
-	@Override
+    @Override
     public int getIndex() {
         return index;
     }

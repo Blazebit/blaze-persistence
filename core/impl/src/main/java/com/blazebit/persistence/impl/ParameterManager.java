@@ -20,13 +20,10 @@ import java.util.*;
 import javax.persistence.Parameter;
 import javax.persistence.Query;
 import javax.persistence.TemporalType;
-import javax.persistence.metamodel.Attribute;
 
 import com.blazebit.lang.ValueRetriever;
 import com.blazebit.persistence.impl.expression.ParameterExpression;
 import com.blazebit.persistence.impl.expression.VisitorAdapter;
-import com.blazebit.persistence.impl.function.entity.ValuesEntity;
-import com.blazebit.reflection.PropertyPathExpression;
 
 /**
  *
@@ -36,7 +33,7 @@ import com.blazebit.reflection.PropertyPathExpression;
  */
 public class ParameterManager {
 
-    private static final String prefix = "param_";
+    private static final String PREFIX = "param_";
     private int counter;
     private final Map<String, ParameterImpl<?>> parameters = new HashMap<String, ParameterImpl<?>>();
     private final Map<String, String> valuesParameters = new HashMap<String, String>();
@@ -177,7 +174,7 @@ public class ParameterManager {
         if (o == null) {
             throw new NullPointerException();
         }
-        String name = prefix + counter++;
+        String name = PREFIX + counter++;
         parameters.put(name, new ParameterImpl<Object>(name, collectionValued, o));
         return name;
     }
@@ -349,12 +346,18 @@ public class ParameterManager {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Parameter<?>)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof Parameter<?>)) {
+                return false;
+            }
 
             Parameter<?> parameter = (Parameter<?>) o;
 
-            if (name != null ? !name.equals(parameter.getName()) : parameter.getName() != null) return false;
+            if (name != null ? !name.equals(parameter.getName()) : parameter.getName() != null) {
+                return false;
+            }
             return position != null ? position.equals(parameter.getPosition()) : parameter.getPosition() == null;
         }
 

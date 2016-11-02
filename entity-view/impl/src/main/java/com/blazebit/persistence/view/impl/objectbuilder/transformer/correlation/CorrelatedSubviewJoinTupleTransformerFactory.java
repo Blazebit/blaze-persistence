@@ -51,7 +51,7 @@ public class CorrelatedSubviewJoinTupleTransformerFactory implements TupleTransf
 
         provider.applyCorrelation(new JoinCorrelationBuilder(queryBuilder, optionalParameters, correlationBasis, correlationResult, null), correlationBasis);
 
-    	ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
+        ObjectBuilder<Object[]> objectBuilder = template.createObjectBuilder(queryBuilder, optionalParameters, entityViewConfiguration, true);
         return new CorrelatedSubviewJoinTupleTransformer(template, objectBuilder);
     }
 

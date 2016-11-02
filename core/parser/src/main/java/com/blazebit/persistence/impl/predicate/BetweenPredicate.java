@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.AbstractExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -82,14 +81,24 @@ public class BetweenPredicate extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BetweenPredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BetweenPredicate)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         BetweenPredicate that = (BetweenPredicate) o;
 
-        if (left != null ? !left.equals(that.left) : that.left != null) return false;
-        if (start != null ? !start.equals(that.start) : that.start != null) return false;
+        if (left != null ? !left.equals(that.left) : that.left != null) {
+            return false;
+        }
+        if (start != null ? !start.equals(that.start) : that.start != null) {
+            return false;
+        }
         return end != null ? end.equals(that.end) : that.end == null;
 
     }

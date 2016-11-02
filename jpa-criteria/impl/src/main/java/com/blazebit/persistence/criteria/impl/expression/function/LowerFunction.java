@@ -11,9 +11,9 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
  */
 public class LowerFunction extends FunctionExpressionImpl<String> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "LOWER";
+
+    private static final long serialVersionUID = 1L;
 
     public LowerFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<String> string) {
         super(criteriaBuilder, String.class, NAME, string);

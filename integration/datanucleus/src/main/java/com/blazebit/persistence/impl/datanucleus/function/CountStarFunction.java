@@ -5,24 +5,24 @@ import com.blazebit.persistence.spi.JpqlFunction;
 
 public class CountStarFunction implements JpqlFunction {
 
-	@Override
-	public boolean hasArguments() {
-		return false;
-	}
+    @Override
+    public boolean hasArguments() {
+        return false;
+    }
 
-	@Override
-	public boolean hasParenthesesIfNoArguments() {
-		return true;
-	}
+    @Override
+    public boolean hasParenthesesIfNoArguments() {
+        return true;
+    }
 
-	@Override
-	public Class<?> getReturnType(Class<?> firstArgumentType) {
-		return long.class;
-	}
+    @Override
+    public Class<?> getReturnType(Class<?> firstArgumentType) {
+        return long.class;
+    }
 
-	@Override
-	public void render(FunctionRenderContext context) {
-		context.addChunk("COUNT(*)");
-	}
+    @Override
+    public void render(FunctionRenderContext context) {
+        context.addChunk("COUNT(*)");
+    }
 
 }

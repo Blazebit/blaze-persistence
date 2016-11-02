@@ -23,5 +23,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface InsertCriteriaBuilder<T> extends ModificationCriteriaBuilder<InsertCriteriaBuilder<T>>, BaseInsertCriteriaBuilder<T, InsertCriteriaBuilder<T>> {
-	
+    
 }

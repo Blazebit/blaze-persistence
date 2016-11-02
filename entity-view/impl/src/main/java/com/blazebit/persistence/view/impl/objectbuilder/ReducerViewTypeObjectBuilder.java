@@ -53,13 +53,21 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
 
     private static class FastArrayList {
 
+        /**
+         * The maximum size of array to allocate.
+         * Some VMs reserve some header words in an array.
+         * Attempts to allocate larger arrays may result in
+         * OutOfMemoryError: Requested array size exceeds VM limit
+         */
+        private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
         private Object[] array;
         private int size;
 
         public FastArrayList(int initialSize) {
             this.size = 0;
             this.array = new Object[initialSize];
-}
+        }
 
         public void clear() {
             size = 0;
@@ -88,13 +96,6 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         /*
          * The following is copied from java.util.ArrayList
          */
-        /**
-         * The maximum size of array to allocate.
-         * Some VMs reserve some header words in an array.
-         * Attempts to allocate larger arrays may result in
-         * OutOfMemoryError: Requested array size exceeds VM limit
-         */
-        private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
         /**
          * Increases the capacity to ensure that it can hold at least the
@@ -117,13 +118,12 @@ public class ReducerViewTypeObjectBuilder<T> extends DelegatingObjectBuilder<T> 
         }
 
         private static int hugeCapacity(int minCapacity) {
-            if (minCapacity < 0) // overflow
-            {
+            if (minCapacity < 0) { // overflow
                 throw new OutOfMemoryError();
             }
             return (minCapacity > MAX_ARRAY_SIZE)
-                ? Integer.MAX_VALUE
-                : MAX_ARRAY_SIZE;
+                    ? Integer.MAX_VALUE
+                    : MAX_ARRAY_SIZE;
         }
     }
 }

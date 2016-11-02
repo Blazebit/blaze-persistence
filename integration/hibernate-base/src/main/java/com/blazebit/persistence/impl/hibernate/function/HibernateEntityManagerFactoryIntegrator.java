@@ -23,12 +23,15 @@ import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import javax.persistence.metamodel.Metamodel;
 
 import com.blazebit.persistence.impl.hibernate.Database;
 import com.blazebit.persistence.impl.hibernate.HibernateJpa21Provider;
 import com.blazebit.persistence.impl.hibernate.HibernateJpaProvider;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.hibernate.Session;
 import org.hibernate.Version;
 import org.hibernate.dialect.CUBRIDDialect;
@@ -65,20 +68,20 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     
     private static final Logger LOG = Logger.getLogger(EntityManagerFactoryIntegrator.class.getName());
 
-    private static final int major;
-    private static final int minor;
-    private static final int fix;
+    private static final int MAJOR;
+    private static final int MINOR;
+    private static final int FIX;
 
     static {
         String versionString = Version.getVersionString();
         String[] parts = versionString.split("\\.");
-        major = Integer.parseInt(parts[0]);
-        minor = Integer.parseInt(parts[1]);
-        fix = Integer.parseInt(parts[2]);
+        MAJOR = Integer.parseInt(parts[0]);
+        MINOR = Integer.parseInt(parts[1]);
+        FIX = Integer.parseInt(parts[2]);
     }
     
     @Override
-	public String getDbms(EntityManagerFactory entityManagerFactory) {
+    public String getDbms(EntityManagerFactory entityManagerFactory) {
         if (entityManagerFactory == null) {
             return null;
         }
@@ -123,11 +126,11 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
 
     @Override
     public JpaProviderFactory getJpaProviderFactory(final EntityManagerFactory entityManagerFactory) {
-        if (major > 4 || major == 4 && minor >= 3) {
+        if (MAJOR > 4 || MAJOR == 4 && MINOR >= 3) {
             return new JpaProviderFactory() {
                 @Override
                 public JpaProvider createJpaProvider(EntityManager em) {
-                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em), major, minor, fix);
+                    return new HibernateJpa21Provider(em, getDbms(entityManagerFactory), getDatabase(em), getEntityPersisters(em), getCollectionPersisters(em), MAJOR, MINOR, FIX);
                 }
             };
         } else {
@@ -142,33 +145,33 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
 
     private String getDbmsName(Dialect dialect) {
         if (dialect instanceof MySQLDialect) {
-        	return "mysql";
+            return "mysql";
         } else if (dialect instanceof DB2Dialect) {
-        	return "db2";
+            return "db2";
         } else if (dialect instanceof PostgreSQL81Dialect) {
-        	return "postgresql";
+            return "postgresql";
         } else if (dialect instanceof Oracle8iDialect || dialect instanceof Oracle9Dialect) {
-        	return "oracle";
+            return "oracle";
         } else if (dialect instanceof SQLServerDialect) {
-        	return "microsoft";
+            return "microsoft";
         } else if (dialect instanceof SybaseDialect) {
-        	return "sybase";
+            return "sybase";
         } else if (dialect instanceof H2Dialect) {
-        	return "h2";
+            return "h2";
         } else if (dialect instanceof CUBRIDDialect) {
-        	return "cubrid";
+            return "cubrid";
         } else if (dialect instanceof HSQLDialect) {
-        	return "hsql";
+            return "hsql";
         } else if (dialect instanceof InformixDialect) {
-        	return "informix";
+            return "informix";
         } else if (dialect instanceof IngresDialect) {
-        	return "ingres";
+            return "ingres";
         } else if (dialect instanceof InterbaseDialect) {
-        	return "interbase";
+            return "interbase";
         } else {
             return null;
         }
-	}
+    }
     
     @Override
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
@@ -224,7 +227,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     }
     
     @SuppressWarnings("unchecked")
-	private Map<String, SQLFunction> getFunctions(Session s) {
+    private Map<String, SQLFunction> getFunctions(Session s) {
         String version = s.getClass().getPackage().getImplementationVersion();
 
         String[] versionParts = version.split("\\.");
@@ -234,8 +237,8 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
         String type = versionParts[3];
 
         if (major < 5 || (major == 5 && minor == 0 && fix == 0 && "Beta1".equals(type))) {
-	        // Implementation detail: Hibernate uses a mutable map, so we can do this
-	        return getDialect(s).getFunctions();
+            // Implementation detail: Hibernate uses a mutable map, so we can do this
+            return getDialect(s).getFunctions();
         } else {
             SessionFactoryImplementor sf = (SessionFactoryImplementor) s.getSessionFactory();
             SQLFunctionRegistry registry = sf.getSqlFunctionRegistry();
@@ -246,28 +249,28 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
             boolean madeAccessible = false;
             
             try {
-            	f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
-            	madeAccessible = !f.isAccessible();
-            	
-            	if (madeAccessible) {
-            		f.setAccessible(true);
-            	}
-            	
-            	return (Map<String, SQLFunction>) f.get(registry);
+                f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
+                madeAccessible = !f.isAccessible();
+                
+                if (madeAccessible) {
+                    f.setAccessible(true);
+                }
+                
+                return (Map<String, SQLFunction>) f.get(registry);
             } catch (NoSuchFieldException e) {
-    			ex = e;
+                ex = e;
             } catch (IllegalArgumentException e) {
-            	// This can never happen
-				ex = e;
-			} catch (IllegalAccessException e) {
-				ex = e;
-			} finally {
-			    if (f != null && madeAccessible) {
-			        f.setAccessible(false);
-			    }
-			}
+                // This can never happen
+                ex = e;
+            } catch (IllegalAccessException e) {
+                ex = e;
+            } finally {
+                if (f != null && madeAccessible) {
+                    f.setAccessible(false);
+                }
+            }
             
-			throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
+            throw new RuntimeException("Could not access the function map to dynamically register functions. Please report this version of hibernate(" + version + ") so we can provide support for it!", ex);
         }
     }
     
@@ -290,7 +293,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                 madeAccessible = !f.isAccessible();
                 
                 if (madeAccessible) {
-                	f.setAccessible(true);
+                    f.setAccessible(true);
                 }
                 
                 f.set(getDialect(s), newFunctions);
@@ -322,7 +325,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
                 madeAccessible = !f.isAccessible();
                 
                 if (madeAccessible) {
-                	f.setAccessible(true);
+                    f.setAccessible(true);
                 }
                 
                 f.set(registry, newFunctions);

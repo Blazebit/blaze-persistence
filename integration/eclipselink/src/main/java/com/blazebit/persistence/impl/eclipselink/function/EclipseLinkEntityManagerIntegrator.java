@@ -24,7 +24,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import com.blazebit.persistence.impl.eclipselink.EclipseLinkJpaProvider;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunction;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import org.eclipse.persistence.expressions.ExpressionOperator;
 import org.eclipse.persistence.internal.helper.ClassConstants;
 import org.eclipse.persistence.jpa.JpaHelper;
@@ -50,9 +54,9 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     private int functionSelectorCounter = 100000;
 
     @Override
-	public String getDbms(EntityManagerFactory entityManagerFactory) {
-		return null;
-	}
+    public String getDbms(EntityManagerFactory entityManagerFactory) {
+        return null;
+    }
 
     @Override
     public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory) {
@@ -85,7 +89,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     public Set<String> getRegisteredFunctions(EntityManagerFactory entityManagerFactory) {
         DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
         @SuppressWarnings("unchecked")
-		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
+        Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         Set<String> functions = new HashSet<String>(platformOperators.size());
         
         for (ExpressionOperator op : platformOperators.values()) {
@@ -103,7 +107,7 @@ public class EclipseLinkEntityManagerIntegrator implements EntityManagerFactoryI
     public EntityManagerFactory registerFunctions(EntityManagerFactory entityManagerFactory, Map<String, JpqlFunctionGroup> dbmsFunctions) {
         DatabasePlatform platform = JpaHelper.getDatabaseSession(entityManagerFactory).getPlatform();
         @SuppressWarnings("unchecked")
-		Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
+        Map<Integer, ExpressionOperator> platformOperators = platform.getPlatformOperators();
         String dbms;
         
         if (platform.isMySQL()) {

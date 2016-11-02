@@ -40,7 +40,10 @@ import com.blazebit.reflection.ReflectionUtils;
  */
 public final class JpaUtils {
 
-    private final static Logger LOG = Logger.getLogger(JpaUtils.class.getName());
+    private static final Logger LOG = Logger.getLogger(JpaUtils.class.getName());
+
+    private JpaUtils() {
+    }
 
     public static ManagedType<?> getManagedType(EntityMetamodel metamodel, Class<?> managedTypeClass, String treatTypeName) {
         if (treatTypeName != null) {
@@ -102,9 +105,9 @@ public final class JpaUtils {
             }
             if (attr.getPersistentAttributeType() == PersistentAttributeType.EMBEDDED) {
                 currentType = metamodel.embeddable(attr.getJavaType());
-            } else if(attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
+            } else if (attr.getPersistentAttributeType() == PersistentAttributeType.BASIC) {
                 currentType = null;
-            } else if(JpaUtils.isJoinable(attr) && joinableAllowed) {
+            } else if (JpaUtils.isJoinable(attr) && joinableAllowed) {
                 joinableAllowed = false;
                 if (i + 1 < attributeParts.length) {
                     currentType = metamodel.entity(attr.getJavaType());
@@ -169,9 +172,9 @@ public final class JpaUtils {
         return true;
     }
 
-	public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
-		return entityType.getId(entityType.getIdType().getJavaType());
-	}
+    public static Attribute<?, ?> getIdAttribute(EntityType<?> entityType) {
+        return entityType.getId(entityType.getIdType().getJavaType());
+    }
 
     public static boolean isJoinable(Attribute<?, ?> attr) {
         if (attr.isCollection()) {

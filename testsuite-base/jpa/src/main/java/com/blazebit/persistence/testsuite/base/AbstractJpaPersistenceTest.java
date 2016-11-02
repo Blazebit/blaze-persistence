@@ -72,10 +72,10 @@ public abstract class AbstractJpaPersistenceTest {
 
     @After
     public void destruct() {
-    	EntityManagerFactory factory = em.getEntityManagerFactory();
-    	// NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
-    	// I am looking at you MySQL..
-    	em.close();
+        EntityManagerFactory factory = em.getEntityManagerFactory();
+        // NOTE: We need to close the entity manager or else we could run into a deadlock on some dbms platforms
+        // I am looking at you MySQL..
+        em.close();
         factory.close();
 
         // Drop the tables again with the same persistence unit
@@ -91,8 +91,8 @@ public abstract class AbstractJpaPersistenceTest {
         properties.put("javax.persistence.jdbc.driver", System.getProperty("jdbc.driver"));
         properties.put("javax.persistence.sharedCache.mode", "NONE");
         properties.put("javax.persistence.schema-generation.database.action", dbAction);
-		properties = applyProperties(properties);
-		return properties;
+        properties = applyProperties(properties);
+        return properties;
     }
 
     protected abstract Class<?>[] getEntityClasses();

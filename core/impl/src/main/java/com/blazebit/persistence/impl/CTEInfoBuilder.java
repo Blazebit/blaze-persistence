@@ -23,5 +23,5 @@ package com.blazebit.persistence.impl;
 public interface CTEInfoBuilder {
 
     public CTEInfo createCTEInfo();
-	
+    
 }

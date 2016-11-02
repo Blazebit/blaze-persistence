@@ -101,16 +101,16 @@ public class AliasManager {
     }
 
     public void unregisterAliasInfoForBottomLevel(AliasInfo aliasInfo) {
-    	String alias = aliasInfo.getAlias();
+        String alias = aliasInfo.getAlias();
         aliasMap.remove(alias);
         int counter = aliasCounterMap.get(alias).intValue();
         
         if (alias.endsWith("_" + counter)) {
-        	if (counter == 1) {
-        		aliasCounterMap.remove(alias);
-        	} else {
-        		aliasCounterMap.put(alias, counter - 1);
-        	}
+            if (counter == 1) {
+                aliasCounterMap.remove(alias);
+            } else {
+                aliasCounterMap.put(alias, counter - 1);
+            }
         }
     }
 

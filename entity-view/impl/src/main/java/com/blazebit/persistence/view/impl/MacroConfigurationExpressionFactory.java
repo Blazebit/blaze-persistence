@@ -1,6 +1,10 @@
 package com.blazebit.persistence.view.impl;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.AbstractExpressionFactoryMacroAdapter;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.MacroConfiguration;
+import com.blazebit.persistence.impl.expression.PathExpression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 
 import java.util.List;
@@ -97,11 +101,15 @@ public class MacroConfigurationExpressionFactory extends AbstractExpressionFacto
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
+        if (this == o) {
+            return true;
+        }
         if (o instanceof ExpressionFactory) {
             ExpressionFactory that = (ExpressionFactory) o;
             ExpressionFactory thatExpressionFactory = that.unwrap(expressionFactory.getClass());
-            if (thatExpressionFactory == null || !expressionFactory.equals(thatExpressionFactory)) return false;
+            if (thatExpressionFactory == null || !expressionFactory.equals(thatExpressionFactory)) {
+                return false;
+            }
             return getDefaultMacroConfiguration() != null ? getDefaultMacroConfiguration().equals(that.getDefaultMacroConfiguration()) : that.getDefaultMacroConfiguration() == null;
         }
 

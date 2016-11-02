@@ -27,9 +27,21 @@ import com.blazebit.persistence.InsertCriteriaBuilder;
 import com.blazebit.persistence.LeafOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.StartOngoingSetOperationCriteriaBuilder;
 import com.blazebit.persistence.UpdateCriteriaBuilder;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.ExpressionCache;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
+import com.blazebit.persistence.impl.expression.MacroConfiguration;
+import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
+import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
 import com.blazebit.persistence.impl.util.PropertyUtils;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
+import com.blazebit.persistence.spi.QueryTransformer;
 
 /**
  *
@@ -183,9 +195,9 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
-	public String getProperty(String propertyName) {
-		return properties.get(propertyName);
-	}
+    public String getProperty(String propertyName) {
+        return properties.get(propertyName);
+    }
     
     private MainQuery createMainQuery(EntityManager entityManager) {
         return MainQuery.create(this, entityManager, configuredDbms, configuredDbmsDialect, configuredRegisteredFunctions);
@@ -226,37 +238,37 @@ public class CriteriaBuilderFactoryImpl implements CriteriaBuilderFactory {
     }
 
     @Override
-	public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass) {
+    public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass) {
         return delete(entityManager, deleteClass, null);
-	}
+    }
 
-	@Override
-	public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias) {
+    @Override
+    public <T> DeleteCriteriaBuilder<T> delete(EntityManager entityManager, Class<T> deleteClass, String alias) {
         MainQuery mainQuery = createMainQuery(entityManager);
         DeleteCriteriaBuilderImpl<T> cb = new DeleteCriteriaBuilderImpl<T>(mainQuery, deleteClass, alias);
         return cb;
-	}
+    }
 
     @Override
-	public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass) {
+    public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass) {
         return update(entityManager, updateClass, null);
-	}
+    }
 
-	@Override
-	public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias) {
+    @Override
+    public <T> UpdateCriteriaBuilder<T> update(EntityManager entityManager, Class<T> updateClass, String alias) {
         MainQuery mainQuery = createMainQuery(entityManager);
         UpdateCriteriaBuilderImpl<T> cb = new UpdateCriteriaBuilderImpl<T>(mainQuery, updateClass, alias);
         return cb;
-	}
+    }
 
-	@Override
-	public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass) {
+    @Override
+    public <T> InsertCriteriaBuilder<T> insert(EntityManager entityManager, Class<T> insertClass) {
         MainQuery mainQuery = createMainQuery(entityManager);
         InsertCriteriaBuilderImpl<T> cb = new InsertCriteriaBuilderImpl<T>(mainQuery, insertClass);
         return cb;
-	}
+    }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
     public <T> T getService(Class<T> serviceClass) {
         if (SubqueryExpressionFactory.class.equals(serviceClass)) {

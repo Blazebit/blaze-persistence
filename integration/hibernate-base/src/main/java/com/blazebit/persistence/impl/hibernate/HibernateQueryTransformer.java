@@ -31,12 +31,12 @@ import com.blazebit.persistence.spi.QueryTransformer;
 @ServiceProvider(QueryTransformer.class)
 public class HibernateQueryTransformer implements QueryTransformer {
 
-	@Override
+    @Override
     public <X> TypedQuery<X> transformQuery(TypedQuery<?> query, ObjectBuilder<X> objectBuilder) {
-		if (query instanceof CteQueryWrapper) {
-			return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
-		}
-		
+        if (query instanceof CteQueryWrapper) {
+            return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
+        }
+        
         return new ObjectBuilderJPAQueryAdapter<X>(query, objectBuilder);
     }
 

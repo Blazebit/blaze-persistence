@@ -11,8 +11,8 @@ import com.blazebit.persistence.view.SubqueryProvider;
  * @since 1.1.0
  */
 public interface SubqueryProviderFactory {
-	
-	public boolean isParameterized();
+    
+    public boolean isParameterized();
 
-	public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters);
+    public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters);
 }

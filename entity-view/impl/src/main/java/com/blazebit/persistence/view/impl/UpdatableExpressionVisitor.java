@@ -153,7 +153,7 @@ public class UpdatableExpressionVisitor implements Expression.Visitor {
                 Class<?>[] typeArguments = ReflectionUtils.getResolvedMethodReturnTypeArguments(currentPosition.getCurrentClass(), currentPosition.getMethod());
                 valueType = typeArguments[typeArguments.length - 1];
             } else {
-            	valueType = type;
+                valueType = type;
             }
             
             currentPosition.setCurrentClass(type);

@@ -21,7 +21,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.metamodel.EntityType;
 
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ReturningResult;
 
 /**

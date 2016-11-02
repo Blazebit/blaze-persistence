@@ -14,10 +14,10 @@ public class PostgreSQLDbmsDialect extends DefaultDbmsDialect {
         return true;
     }
 
-	@Override
-	public boolean supportsReturningColumns() {
-		return true;
-	}
+    @Override
+    public boolean supportsReturningColumns() {
+        return true;
+    }
 
     @Override
     public Map<String, String> appendExtendedSql(StringBuilder sqlSb, DbmsStatementType statementType, boolean isSubquery, boolean isEmbedded, StringBuilder withClause, String limit, String offset, String[] returningColumns, Map<DbmsModificationState, String> includedModificationStates) {

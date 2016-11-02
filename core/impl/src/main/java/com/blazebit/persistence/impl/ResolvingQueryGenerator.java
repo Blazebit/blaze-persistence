@@ -21,7 +21,19 @@ import java.util.List;
 import java.util.Set;
 
 import com.blazebit.persistence.BaseFinalSetOperationBuilder;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.NumericType;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.Subquery;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TreatExpression;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.OrderByElement;
 
@@ -33,10 +45,10 @@ import com.blazebit.persistence.spi.OrderByElement;
  */
 public class ResolvingQueryGenerator extends SimpleQueryGenerator {
 
+    protected String aliasPrefix;
     private boolean resolveSelectAliases = true;
     private final AliasManager aliasManager;
     private final JpaProvider jpaProvider;
-    protected String aliasPrefix;
     private final Set<String> registeredFunctions;
 
     public ResolvingQueryGenerator(AliasManager aliasManager, JpaProvider jpaProvider, Set<String> registeredFunctions) {
@@ -85,7 +97,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
     }
 
     @Override
-	public void visit(SubqueryExpression expression) {
+    public void visit(SubqueryExpression expression) {
         sb.append('(');
 
         if (expression.getSubquery() instanceof SubqueryInternalBuilder) {
@@ -122,7 +134,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         }
         
         sb.append(')');
-	}
+    }
     
     protected Expression asExpression(AbstractCommonQueryBuilder<?, ?, ?, ?, ?> queryBuilder) {
         if (queryBuilder instanceof BaseFinalSetOperationBuilderImpl<?, ?, ?>) {
@@ -185,7 +197,7 @@ public class ResolvingQueryGenerator extends SimpleQueryGenerator {
         });
     }
 
-	protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
+    protected void renderFunctionFunction(String functionName, List<Expression> arguments) {
         if (registeredFunctions.contains(functionName.toLowerCase())) {
             sb.append(jpaProvider.getCustomFunctionInvocation(functionName, arguments.size()));
             if (arguments.size() > 1) {

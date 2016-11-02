@@ -23,13 +23,13 @@ public class LiteralExpression<T> extends AbstractExpression<T> {
         this(criteriaBuilder, (Class<T>) determineClass(literal), literal);
     }
 
-    private static Class determineClass(Object literal) {
-        return literal == null ? null : literal.getClass();
-    }
-
     public LiteralExpression(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> type, T literal) {
         super(criteriaBuilder, type);
         this.literal = literal;
+    }
+
+    private static Class determineClass(Object literal) {
+        return literal == null ? null : literal.getClass();
     }
 
     @SuppressWarnings({ "unchecked" })

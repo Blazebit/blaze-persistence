@@ -15,10 +15,8 @@
  */
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.metamodel.AbstractMethodSingularAttribute;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
-import com.blazebit.persistence.view.metamodel.MappingAttribute;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;

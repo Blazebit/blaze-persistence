@@ -26,7 +26,6 @@ import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
 import com.blazebit.persistence.impl.query.SetOperationQuerySpecification;
-import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.OrderByElement;
 import com.blazebit.persistence.spi.SetOperationType;
@@ -262,9 +261,8 @@ public class BaseFinalSetOperationBuilderImpl<T, X extends BaseFinalSetOperation
             case INTERSECT_ALL: return "INTERSECT ALL";
             case EXCEPT: return "EXCEPT";
             case EXCEPT_ALL: return "EXCEPT ALL";
+            default: throw new IllegalArgumentException("Unknown type: " + type);
         }
-        
-        return null;
     }
 
     @Override

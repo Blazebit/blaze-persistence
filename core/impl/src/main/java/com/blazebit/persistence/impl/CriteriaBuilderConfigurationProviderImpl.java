@@ -27,13 +27,13 @@ import com.blazebit.persistence.spi.CriteriaBuilderConfigurationProvider;
  */
 public class CriteriaBuilderConfigurationProviderImpl implements CriteriaBuilderConfigurationProvider {
 
-    private static final Logger log = Logger.getLogger(CriteriaBuilderConfigurationProviderImpl.class.getName());
+    private static final Logger LOG = Logger.getLogger(CriteriaBuilderConfigurationProviderImpl.class.getName());
     private static volatile boolean versionLogged = false;
 
     @Override
     public CriteriaBuilderConfiguration createConfiguration() {
         if (!versionLogged) {
-            log.info("Blaze-Persistence version: " + Version.printVersion());
+            LOG.info("Blaze-Persistence version: " + Version.printVersion());
             versionLogged = true;
         }
 

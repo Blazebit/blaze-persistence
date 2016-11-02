@@ -7,39 +7,39 @@ import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.view.SubqueryProvider;
 
 public class ParameterizedSubqueryProviderFactory implements SubqueryProviderFactory {
-	
-	private final Constructor<? extends SubqueryProvider> constructor;
-	private final String[] parameterNames;
+    
+    private final Constructor<? extends SubqueryProvider> constructor;
+    private final String[] parameterNames;
 
-	public ParameterizedSubqueryProviderFactory(Constructor<? extends SubqueryProvider> constructor, String[] parameterNames) {
-		this.constructor = constructor;
-		this.parameterNames = parameterNames;
-	}
+    public ParameterizedSubqueryProviderFactory(Constructor<? extends SubqueryProvider> constructor, String[] parameterNames) {
+        this.constructor = constructor;
+        this.parameterNames = parameterNames;
+    }
 
-	@Override
-	public boolean isParameterized() {
-		return parameterNames.length > 0;
-	}
+    @Override
+    public boolean isParameterized() {
+        return parameterNames.length > 0;
+    }
 
-	@Override
-	public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters) {
-		try {
-			int size = parameterNames.length;
-			Object[] args = new Object[size];
-			
-			for (int i = 0; i < size; i++) {
-				final String name = parameterNames[i];
-				if (queryBuilder.isParameterSet(name)) {
-					args[i] = queryBuilder.getParameterValue(name);
-				} else {
-					args[i] = optionalParameters.get(name);
-				}
-			}
-			
-			return constructor.newInstance(args);
-	    } catch (Exception ex) {
-	        throw new IllegalArgumentException("Could not instantiate the subquery provider: " + constructor.getDeclaringClass().getName(), ex);
-	    }
-	}
+    @Override
+    public SubqueryProvider create(CommonQueryBuilder<?> queryBuilder, Map<String, Object> optionalParameters) {
+        try {
+            int size = parameterNames.length;
+            Object[] args = new Object[size];
+            
+            for (int i = 0; i < size; i++) {
+                final String name = parameterNames[i];
+                if (queryBuilder.isParameterSet(name)) {
+                    args[i] = queryBuilder.getParameterValue(name);
+                } else {
+                    args[i] = optionalParameters.get(name);
+                }
+            }
+            
+            return constructor.newInstance(args);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("Could not instantiate the subquery provider: " + constructor.getDeclaringClass().getName(), ex);
+        }
+    }
 
 }

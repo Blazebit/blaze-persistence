@@ -28,12 +28,12 @@ public abstract class AbstractPersistenceTest extends AbstractJpaPersistenceTest
     @Override
     protected Properties applyProperties(Properties properties) {
         if (System.getProperty("hibernate.dialect") != null) {
-        	properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
+            properties.put("hibernate.dialect", System.getProperty("hibernate.dialect"));
         } else if (properties.get("javax.persistence.jdbc.url").toString().contains("mysql")) {
-        	// MySQL is drunk, it does stuff case insensitive by default...
-        	properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
-        	
-        	// Since MySQL has no sequences, the native strategy is needed for batch inserts
+            // MySQL is drunk, it does stuff case insensitive by default...
+            properties.put("hibernate.dialect", SaneMySQLDialect.class.getName());
+            
+            // Since MySQL has no sequences, the native strategy is needed for batch inserts
             if (isHibernate5()) {
                 properties.put("hibernate.id.new_generator_mappings", "false");
             }

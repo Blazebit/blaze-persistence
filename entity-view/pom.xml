@@ -4,14 +4,14 @@
 
     <parent>
         <groupId>com.blazebit</groupId>
-        <artifactId>blaze-persistence</artifactId>
+        <artifactId>blaze-persistence-parent</artifactId>
         <version>1.2.0-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../parent/pom.xml</relativePath>
     </parent>
 
     <artifactId>blaze-persistence-entity-view</artifactId>
     <packaging>pom</packaging>
-	
+    
     <name>Blazebit Persistence Entity-View Module</name>
 
     <modules>

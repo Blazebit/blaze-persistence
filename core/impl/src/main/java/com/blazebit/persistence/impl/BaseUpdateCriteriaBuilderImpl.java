@@ -39,26 +39,26 @@ import com.blazebit.persistence.spi.DbmsStatementType;
 public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseUpdateCriteriaBuilder<T, X>, SubqueryBuilderListener<X>, ExpressionBuilderEndedListener {
 
     private final VisitorAdapter parameterRegistrationVisitor;
-	private final Map<String, Expression> setAttributes = new LinkedHashMap<String, Expression>();
-	private SubqueryInternalBuilder<X> currentSubqueryBuilder;
-	private String currentAttribute;
+    private final Map<String, Expression> setAttributes = new LinkedHashMap<String, Expression>();
+    private SubqueryInternalBuilder<X> currentSubqueryBuilder;
+    private String currentAttribute;
 
-	public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteName, cteClass, result, listener);
+    public BaseUpdateCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, isMainQuery, DbmsStatementType.UPDATE, clazz, alias, cteName, cteClass, result, listener);
         this.parameterRegistrationVisitor = parameterManager.getParameterRegistrationVisitor();
-	}
+    }
 
     @Override
     @SuppressWarnings("unchecked")
-	public X set(String attributeName, Object value) {
+    public X set(String attributeName, Object value) {
         verifyBuilderEnded();
         checkAttribute(attributeName);
         Expression attributeExpression = parameterManager.addParameterExpression(value);
-		setAttributes.put(attributeName, attributeExpression);
-		return (X) this;
-	}
+        setAttributes.put(attributeName, attributeExpression);
+        return (X) this;
+    }
 
-	@Override
+    @Override
     @SuppressWarnings("unchecked")
     public X setExpression(String attributeName, String expression) {
         verifyBuilderEnded();
@@ -156,32 +156,32 @@ public class BaseUpdateCriteriaBuilderImpl<T, X extends BaseUpdateCriteriaBuilde
     }
 
     @Override
-	protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-		sbSelectFrom.append("UPDATE ");
-		sbSelectFrom.append(entityType.getName()).append(' ');
-	    sbSelectFrom.append(entityAlias);
-		sbSelectFrom.append(" SET ");
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        sbSelectFrom.append("UPDATE ");
+        sbSelectFrom.append(entityType.getName()).append(' ');
+        sbSelectFrom.append(entityAlias);
+        sbSelectFrom.append(" SET ");
 
         queryGenerator.setQueryBuffer(sbSelectFrom);
         SimpleQueryGenerator.BooleanLiteralRenderingContext oldBooleanLiteralRenderingContext = queryGenerator.setBooleanLiteralRenderingContext(SimpleQueryGenerator.BooleanLiteralRenderingContext.CASE_WHEN);
         
         Iterator<Entry<String, Expression>> setAttributeIter = setAttributes.entrySet().iterator();
         if (setAttributeIter.hasNext()) {
-        	Map.Entry<String, Expression> attributeEntry = setAttributeIter.next();
-        	sbSelectFrom.append(attributeEntry.getKey());
-			sbSelectFrom.append(" = ");
-			attributeEntry.getValue().accept(queryGenerator);
-			while (setAttributeIter.hasNext()) {
-				attributeEntry = setAttributeIter.next();
-				sbSelectFrom.append(',');
-	        	sbSelectFrom.append(attributeEntry.getKey());
-				sbSelectFrom.append(" = ");
-				attributeEntry.getValue().accept(queryGenerator);
-			}
+            Map.Entry<String, Expression> attributeEntry = setAttributeIter.next();
+            sbSelectFrom.append(attributeEntry.getKey());
+            sbSelectFrom.append(" = ");
+            attributeEntry.getValue().accept(queryGenerator);
+            while (setAttributeIter.hasNext()) {
+                attributeEntry = setAttributeIter.next();
+                sbSelectFrom.append(',');
+                sbSelectFrom.append(attributeEntry.getKey());
+                sbSelectFrom.append(" = ");
+                attributeEntry.getValue().accept(queryGenerator);
+            }
         }
 
         queryGenerator.setBooleanLiteralRenderingContext(oldBooleanLiteralRenderingContext);
-    	appendWhereClause(sbSelectFrom);
-	}
+        appendWhereClause(sbSelectFrom);
+    }
 
 }

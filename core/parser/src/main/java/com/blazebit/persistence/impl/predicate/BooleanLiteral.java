@@ -35,9 +35,15 @@ public class BooleanLiteral extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BooleanLiteral)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BooleanLiteral)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         BooleanLiteral that = (BooleanLiteral) o;
 

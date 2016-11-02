@@ -38,8 +38,21 @@ import javax.persistence.metamodel.ManagedType;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.view.*;
-import com.blazebit.persistence.view.impl.metamodel.attribute.*;
+import com.blazebit.persistence.view.BatchFetch;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSingular;
+import com.blazebit.persistence.view.MappingSubquery;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.CorrelatedMethodMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingCollectionAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingListAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingMapAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSetAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodMappingSingularAttribute;
+import com.blazebit.persistence.view.impl.metamodel.attribute.DefaultMethodSubquerySingularAttribute;
 import com.blazebit.persistence.view.metamodel.AttributeFilterMapping;
 import com.blazebit.persistence.view.metamodel.FilterMapping;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
@@ -153,56 +166,56 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             attribute.checkAttributeCorrelationUsage(errors, seenCorrelationProviders, managedViews, seenViewTypes, seenConstructors);
 
             for (String mapping : attribute.getCollectionJoinMappings(managedType, metamodel, expressionFactory)) {
-            	List<String> locations = collectionMappings.get(mapping);
-            	if (locations == null) {
-            		locations = new ArrayList<String>(2);
-            		collectionMappings.put(mapping, locations);
-            	}
-            	
-            	locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
+                List<String> locations = collectionMappings.get(mapping);
+                if (locations == null) {
+                    locations = new ArrayList<String>(2);
+                    collectionMappings.put(mapping, locations);
+                }
+                
+                locations.add("Attribute '" + attribute.getName() + "' in entity view '" + javaType.getName() + "'");
             }
         }
         
         if (!constructors.isEmpty()) {
-	        for (MappingConstructorImpl<X> constructor : constructors.values()) {
-	            Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
-	        	
-	            for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
-	            	constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
-	            }
-	        	
-	            constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
+            for (MappingConstructorImpl<X> constructor : constructors.values()) {
+                Map<String, List<String>> constructorCollectionMappings = new HashMap<String, List<String>>();
+                
+                for (Map.Entry<String, List<String>> entry : collectionMappings.entrySet()) {
+                    constructorCollectionMappings.put(entry.getKey(), new ArrayList<String>(entry.getValue()));
+                }
+                
+                constructor.checkParameters(managedType, managedViews, expressionFactory, metamodel, constructorCollectionMappings, errors);
                 constructor.checkParameterCorrelationUsage(errors, new HashMap<Class<?>, String>(seenCorrelationProviders), managedViews, new HashSet<ManagedViewType<?>>(seenViewTypes), new HashSet<MappingConstructor<?>>(seenConstructors));
 
-	    		StringBuilder sb = new StringBuilder();
-	            for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
-	            	List<String> locations = locationsEntry.getValue();
-	            	if (locations.size() > 1) {
-	            		sb.setLength(0);
-	            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
-	            		
-	            		for (String location : locations) {
-	            			sb.append("\n - ");
-	            			sb.append(location);
-	            		}
-	            		errors.add(sb.toString());
-	            	}
-	            }
-	        }
+                StringBuilder sb = new StringBuilder();
+                for (Map.Entry<String, List<String>> locationsEntry : constructorCollectionMappings.entrySet()) {
+                    List<String> locations = locationsEntry.getValue();
+                    if (locations.size() > 1) {
+                        sb.setLength(0);
+                        sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+                        
+                        for (String location : locations) {
+                            sb.append("\n - ");
+                            sb.append(location);
+                        }
+                        errors.add(sb.toString());
+                    }
+                }
+            }
         } else {
-    		StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             for (Map.Entry<String, List<String>> locationsEntry : collectionMappings.entrySet()) {
-            	List<String> locations = locationsEntry.getValue();
-            	if (locations.size() > 1) {
-            		sb.setLength(0);
-            		sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
-            		
-            		for (String location : locations) {
-            			sb.append("\n - ");
-            			sb.append(location);
-            		}
-            		errors.add(sb.toString());
-            	}
+                List<String> locations = locationsEntry.getValue();
+                if (locations.size() > 1) {
+                    sb.setLength(0);
+                    sb.append("Multiple usages of the mapping '" + locationsEntry.getKey() + "' in");
+                    
+                    for (String location : locations) {
+                        sb.append("\n - ");
+                        sb.append(location);
+                    }
+                    errors.add(sb.toString());
+                }
             }
         }
     }
@@ -214,7 +227,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
             
             if (attributeFilters.containsKey(filterName)) {
                 attributeFilters.get(filterName);
-                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName() 
+                throw new IllegalArgumentException("Illegal duplicate filter name mapping '" + filterName + "' at attribute '" + filterMapping.getDeclaringAttribute().getName()
                     + "' of the class '" + javaType.getName() + "'! Already defined on attribute class '" + javaType.getName() + "'!");
             }
             
@@ -273,7 +286,7 @@ public abstract class ManagedViewTypeImpl<X> implements ManagedViewType<X> {
         }
     }
 
-	@Override
+    @Override
     public Class<X> getJavaType() {
         return javaType;
     }

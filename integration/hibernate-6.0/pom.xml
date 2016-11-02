@@ -13,14 +13,14 @@
     <packaging>jar</packaging>
 
     <name>Blazebit Persistence Integration Hibernate 6.0</name>
-	
-	<repositories>
-		<repository>
-			<id>JBoss Snapshots</id>
-			<name>JBoss Snapshots</name>
-			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
-		</repository>
-	</repositories>
+    
+    <repositories>
+        <repository>
+            <id>JBoss Snapshots</id>
+            <name>JBoss Snapshots</name>
+            <url>http://repository.jboss.org/nexus/content/groups/public/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>

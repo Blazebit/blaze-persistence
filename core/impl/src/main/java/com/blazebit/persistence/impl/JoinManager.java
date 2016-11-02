@@ -20,7 +20,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.persistence.Query;
-import javax.persistence.metamodel.*;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.ListAttribute;
+import javax.persistence.metamodel.ManagedType;
+import javax.persistence.metamodel.SingularAttribute;
 
 import com.blazebit.lang.StringUtils;
 import com.blazebit.lang.ValueRetriever;
@@ -28,15 +32,29 @@ import com.blazebit.persistence.JoinOnBuilder;
 import com.blazebit.persistence.JoinType;
 import com.blazebit.persistence.impl.builder.predicate.JoinOnBuilderImpl;
 import com.blazebit.persistence.impl.builder.predicate.PredicateBuilderEndedListenerImpl;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NumericLiteral;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PathReference;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
+import com.blazebit.persistence.impl.expression.StringLiteral;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
 import com.blazebit.persistence.impl.predicate.CompoundPredicate;
 import com.blazebit.persistence.impl.predicate.EqPredicate;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.predicate.PredicateBuilder;
 import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.util.MetamodelUtils;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.impl.util.*;
 import com.blazebit.persistence.spi.ValuesStrategy;
 
 /**
@@ -45,7 +63,7 @@ import com.blazebit.persistence.spi.ValuesStrategy;
  */
 public class JoinManager extends AbstractManager {
 
-    private final static Logger LOG = Logger.getLogger(JoinManager.class.getName());
+    private static final Logger LOG = Logger.getLogger(JoinManager.class.getName());
 
     // we might have multiple nodes that depend on the same unresolved alias,
     // hence we need a List of NodeInfos.
@@ -641,6 +659,8 @@ public class JoinManager extends AbstractManager {
                 case RIGHT:
                     sb.append(" RIGHT JOIN ");
                     break;
+                default:
+                    throw new IllegalArgumentException("Unknown join type: " + node.getJoinType());
             }
             if (node.isFetch() && renderFetches) {
                 sb.append("FETCH ");
@@ -984,6 +1004,7 @@ public class JoinManager extends AbstractManager {
         implicitJoin(expression, objectLeafAllowed, targetType, fromClause, fromSubquery, fromSelectAlias, joinRequired, false);
     }
 
+    @SuppressWarnings("checkstyle:methodlength")
     public void implicitJoin(Expression expression, boolean objectLeafAllowed, String targetTypeName, ClauseType fromClause, boolean fromSubquery, boolean fromSelectAlias, boolean joinRequired, boolean fetch) {
         PathExpression pathExpression;
         if (expression instanceof PathExpression) {
@@ -1278,28 +1299,37 @@ public class JoinManager extends AbstractManager {
 
         @Override
         public boolean equals(Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (!(obj instanceof PathReference))
+            }
+            if (!(obj instanceof PathReference)) {
                 return false;
+            }
             PathReference other = (PathReference) obj;
             if (baseNode == null) {
-                if (other.getBaseNode() != null)
+                if (other.getBaseNode() != null) {
                     return false;
-            } else if (!baseNode.equals(other.getBaseNode()))
+                }
+            } else if (!baseNode.equals(other.getBaseNode())) {
                 return false;
+            }
             if (field == null) {
-                if (other.getField() != null)
+                if (other.getField() != null) {
                     return false;
-            } else if (!field.equals(other.getField()))
+                }
+            } else if (!field.equals(other.getField())) {
                 return false;
+            }
             if (typeName == null) {
-                if (other.getTreatTypeName() != null)
+                if (other.getTreatTypeName() != null) {
                     return false;
-            } else if (!typeName.equals(other.getTreatTypeName()))
+                }
+            } else if (!typeName.equals(other.getTreatTypeName())) {
                 return false;
+            }
             return true;
         }
     }
@@ -1373,7 +1403,7 @@ public class JoinManager extends AbstractManager {
             if (maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.MANY_TO_ONE
                 // TODO: to be able to support ONE_TO_ONE we need to know where the FK is
                 // && maybeSingularAssociation.getPersistentAttributeType() != Attribute.PersistentAttributeType.ONE_TO_ONE
-                    ) {
+            ) {
                 return false;
             }
 

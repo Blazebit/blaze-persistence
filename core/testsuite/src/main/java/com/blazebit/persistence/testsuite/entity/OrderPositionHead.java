@@ -32,7 +32,7 @@ import javax.persistence.Entity;
 @Entity
 public class OrderPositionHead implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     
     private OrderPositionHeadId id;
     private Integer number;

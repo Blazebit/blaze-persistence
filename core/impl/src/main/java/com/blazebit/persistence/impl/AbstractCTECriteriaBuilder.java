@@ -40,14 +40,14 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @since 1.1.0
  */
 public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBuilder<X>, Z, W> extends AbstractCommonQueryBuilder<Object, X, Z, W, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?>> implements BaseCTECriteriaBuilder<X>, SelectBuilder<X>, CTEInfoBuilder {
-	
-	protected static final Integer EMPTY = Integer.valueOf(-1);
-	protected final Y result;
-	protected final CTEBuilderListener listener;
-	protected final String cteName;
-	protected final EntityType<?> cteType;
-	protected final Map<String, Integer> bindingMap;
-	protected final CTEBuilderListenerImpl subListener;
+    
+    protected static final Integer EMPTY = Integer.valueOf(-1);
+    protected final Y result;
+    protected final CTEBuilderListener listener;
+    protected final String cteName;
+    protected final EntityType<?> cteType;
+    protected final Map<String, Integer> bindingMap;
+    protected final CTEBuilderListenerImpl subListener;
 
     public AbstractCTECriteriaBuilder(MainQuery mainQuery, String cteName, Class<Object> clazz, Y result, CTEBuilderListener listener, BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> finalSetOperationBuilder) {
         super(mainQuery, false, DbmsStatementType.SELECT, clazz, null, finalSetOperationBuilder);
@@ -70,7 +70,7 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
         applyJpaLimit(sbSelectFrom);
     }
 
-	@Override
+    @Override
     protected Query getQuery() {
         Query query;
         
@@ -118,18 +118,18 @@ public abstract class AbstractCTECriteriaBuilder<Y, X extends BaseCTECriteriaBui
 
     public SelectBuilder<X> bind(String cteAttribute) {
         // NOTE: Since CTEs can't have embeddables right now, we can skip resolving that
-		Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
-		
-		if (attribute == null) {
-			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
-		}
-		if (bindingMap.containsKey(cteAttribute)) {
-			throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
-		}
-		
-		bindingMap.put(cteAttribute, selectManager.getSelectInfos().size());
-		return this;
-	}
+        Attribute<?, ?> attribute = cteType.getAttribute(cteAttribute);
+        
+        if (attribute == null) {
+            throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] does not exist!");
+        }
+        if (bindingMap.containsKey(cteAttribute)) {
+            throw new IllegalArgumentException("The cte attribute [" + cteAttribute + "] has already been bound!");
+        }
+        
+        bindingMap.put(cteAttribute, selectManager.getSelectInfos().size());
+        return this;
+    }
 
     public Y end() {
         listener.onBuilderEnded(this);

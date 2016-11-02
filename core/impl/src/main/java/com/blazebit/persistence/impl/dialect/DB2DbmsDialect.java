@@ -26,19 +26,19 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
     }
 
     @Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
+    public boolean supportsTupleDistinctCounts() {
+        return false;
+    }
     
-	@Override
-	public String getWithClause(boolean recursive) {
-		return "with";
-	}
-	
-	@Override
-	public boolean supportsComplexGroupBy() {
-		return false;
-	}
+    @Override
+    public String getWithClause(boolean recursive) {
+        return "with";
+    }
+    
+    @Override
+    public boolean supportsComplexGroupBy() {
+        return false;
+    }
 
     @Override
     public boolean supportsComplexJoinOn() {
@@ -51,10 +51,10 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         return false;
     }
 
-	@Override
-	public boolean supportsReturningColumns() {
-		return true;
-	}
+    @Override
+    public boolean supportsReturningColumns() {
+        return true;
+    }
 
     @Override
     public boolean supportsModificationQueryInWithClause() {
@@ -213,34 +213,34 @@ public class DB2DbmsDialect extends DefaultDbmsDialect {
         }
     }
 
-	private void applyQueryReturning(StringBuilder sqlSb, DbmsStatementType statementType, StringBuilder withClause, String[] returningColumns) {
-	    int initial = withClause != null ? withClause.length() : 0;
-		StringBuilder sb = new StringBuilder(initial + 25 + returningColumns.length * 20);
-		if (withClause != null) {
-		    sb.append(withClause);
-		}
-		
-		sb.append("select ");
-		for (int i = 0; i < returningColumns.length; i++) {
-			if (i != 0) {
-			    sb.append(',');
-			}
-			sb.append(returningColumns[i]);
-			sb.append(" as ret_col_");
-			sb.append(i);
-		}
-		sb.append(" from ");
-		
-		if (statementType == DbmsStatementType.DELETE) {
-		    sb.append("old");
-		} else {
+    private void applyQueryReturning(StringBuilder sqlSb, DbmsStatementType statementType, StringBuilder withClause, String[] returningColumns) {
+        int initial = withClause != null ? withClause.length() : 0;
+        StringBuilder sb = new StringBuilder(initial + 25 + returningColumns.length * 20);
+        if (withClause != null) {
+            sb.append(withClause);
+        }
+        
+        sb.append("select ");
+        for (int i = 0; i < returningColumns.length; i++) {
+            if (i != 0) {
+                sb.append(',');
+            }
+            sb.append(returningColumns[i]);
+            sb.append(" as ret_col_");
+            sb.append(i);
+        }
+        sb.append(" from ");
+        
+        if (statementType == DbmsStatementType.DELETE) {
+            sb.append("old");
+        } else {
             sb.append("final");
-		}
-		
-		sb.append(" table (");
-		sqlSb.insert(0, sb);
-		sqlSb.append(')');
-	}
+        }
+        
+        sb.append(" table (");
+        sqlSb.insert(0, sb);
+        sqlSb.append(')');
+    }
 
     private static int indexOfOrEnd(StringBuilder sb, char needle, int startIndex, int endIndex) {
         while (startIndex < endIndex) {

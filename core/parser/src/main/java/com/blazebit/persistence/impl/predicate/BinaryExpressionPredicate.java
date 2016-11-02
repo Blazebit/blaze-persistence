@@ -15,7 +15,6 @@
  */
 package com.blazebit.persistence.impl.predicate;
 
-import com.blazebit.persistence.impl.expression.AbstractExpression;
 import com.blazebit.persistence.impl.expression.Expression;
 
 /**
@@ -60,13 +59,21 @@ public abstract class BinaryExpressionPredicate extends AbstractPredicate {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof BinaryExpressionPredicate)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof BinaryExpressionPredicate)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         BinaryExpressionPredicate that = (BinaryExpressionPredicate) o;
 
-        if (left != null ? !left.equals(that.left) : that.left != null) return false;
+        if (left != null ? !left.equals(that.left) : that.left != null) {
+            return false;
+        }
         return right != null ? right.equals(that.right) : that.right == null;
 
     }

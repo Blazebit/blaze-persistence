@@ -3,7 +3,23 @@ package com.blazebit.persistence.impl;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.AggregateExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticExpression;
+import com.blazebit.persistence.impl.expression.ArithmeticFactor;
+import com.blazebit.persistence.impl.expression.ArrayExpression;
+import com.blazebit.persistence.impl.expression.EntityLiteral;
+import com.blazebit.persistence.impl.expression.EnumLiteral;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.FunctionExpression;
+import com.blazebit.persistence.impl.expression.GeneralCaseExpression;
+import com.blazebit.persistence.impl.expression.NullExpression;
+import com.blazebit.persistence.impl.expression.ParameterExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimpleCaseExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
+import com.blazebit.persistence.impl.expression.TreatExpression;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 
 class GroupByExpressionGatheringVisitor extends VisitorAdapter {
 
@@ -11,23 +27,23 @@ class GroupByExpressionGatheringVisitor extends VisitorAdapter {
     private Set<Expression> expressions = new LinkedHashSet<Expression>();
 
     public GroupByExpressionGatheringVisitor() {
-    	this(false);
+        this(false);
     }
     
     public GroupByExpressionGatheringVisitor(boolean treatSizeAsAggregate) {
-    	this.groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(treatSizeAsAggregate);
-	}
+        this.groupByUsableDetectionVisitor = new GroupByUsableDetectionVisitor(treatSizeAsAggregate);
+    }
 
-	public Set<Expression> getExpressions() {
+    public Set<Expression> getExpressions() {
         return expressions;
     }
 
     private boolean handleExpression(Expression expression) {
         if (expression.accept(groupByUsableDetectionVisitor)) {
-        	return true;
+            return true;
         } else {
-        	expressions.add(expression);
-	        return false;
+            expressions.add(expression);
+            return false;
         }
     }
 

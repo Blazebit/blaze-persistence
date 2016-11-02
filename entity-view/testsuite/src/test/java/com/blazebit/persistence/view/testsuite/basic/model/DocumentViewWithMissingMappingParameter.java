@@ -26,7 +26,7 @@ import com.blazebit.persistence.view.testsuite.entity.Document;
 @EntityView(Document.class)
 public abstract class DocumentViewWithMissingMappingParameter implements IdHolderView<Long> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     private final long age;
 

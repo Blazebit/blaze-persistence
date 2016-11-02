@@ -4,14 +4,15 @@ import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.*;
+import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.cfg.InheritanceState;
-import org.hibernate.cfg.annotations.EntityBinder;
-import org.hibernate.mapping.RootClass;
 import org.jboss.jandex.IndexView;
 
-import javax.persistence.Entity;
 import java.util.HashMap;
 import java.util.Map;
 

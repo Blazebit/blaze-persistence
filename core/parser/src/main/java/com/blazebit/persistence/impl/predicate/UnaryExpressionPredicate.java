@@ -56,7 +56,7 @@ public abstract class UnaryExpressionPredicate extends AbstractPredicate {
         if (!(o instanceof UnaryExpressionPredicate)) {
             return false;
         }
-        if (!super.equals(o)){
+        if (!super.equals(o)) {
             return false;
         }
 

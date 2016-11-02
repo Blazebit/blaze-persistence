@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Selection;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.CollectionAttribute;
 import javax.persistence.metamodel.ListAttribute;
@@ -16,7 +19,13 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 
-import com.blazebit.persistence.criteria.*;
+import com.blazebit.persistence.criteria.BlazeCollectionJoin;
+import com.blazebit.persistence.criteria.BlazeFetchParent;
+import com.blazebit.persistence.criteria.BlazeFrom;
+import com.blazebit.persistence.criteria.BlazeJoin;
+import com.blazebit.persistence.criteria.BlazeListJoin;
+import com.blazebit.persistence.criteria.BlazeMapJoin;
+import com.blazebit.persistence.criteria.BlazeSetJoin;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.FromSelection;
@@ -29,10 +38,9 @@ import com.blazebit.persistence.criteria.impl.expression.SubqueryExpression;
  */
 public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements BlazeFrom<Z, X> {
 
-    private static final long serialVersionUID = 1L;
-
     public static final JoinType DEFAULT_JOIN_TYPE = JoinType.INNER;
 
+    private static final long serialVersionUID = 1L;
 
     private AbstractFrom<Z, X> correlationParent;
     private JoinScope<X> joinScope = new BasicJoinScope();

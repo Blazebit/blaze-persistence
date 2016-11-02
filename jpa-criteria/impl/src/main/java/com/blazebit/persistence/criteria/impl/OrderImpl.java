@@ -3,7 +3,6 @@ package com.blazebit.persistence.criteria.impl;
 import com.blazebit.persistence.criteria.BlazeOrder;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Order;
 
 /**
  *

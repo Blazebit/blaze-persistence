@@ -30,7 +30,7 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @since 1.0
  */
 public class CriteriaBuilderImpl<T> extends AbstractFullQueryBuilder<T, CriteriaBuilder<T>, LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> implements CriteriaBuilder<T> {
-	
+    
     public CriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias) {
         super(mainQuery, isMainQuery, clazz, alias, null);
     }

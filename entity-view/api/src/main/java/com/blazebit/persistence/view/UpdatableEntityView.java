@@ -30,11 +30,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface UpdatableEntityView {
 
-	/**
-	 * Specifies whether partial updates are allowed or not.
-	 * Disabling partial updates will improve cache hits but requires to transfer the full entity view state.
-	 * 
-	 * @return Whether partial updates are allowed
-	 */
-	public boolean partial() default true;
+    /**
+     * Specifies whether partial updates are allowed or not.
+     * Disabling partial updates will improve cache hits but requires to transfer the full entity view state.
+     * 
+     * @return Whether partial updates are allowed
+     */
+    public boolean partial() default true;
 }

@@ -49,12 +49,18 @@ public class NameObject implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof NameObject)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NameObject)) {
+            return false;
+        }
 
         NameObject that = (NameObject) o;
 
-        if (primaryName != null ? !primaryName.equals(that.primaryName) : that.primaryName != null) return false;
+        if (primaryName != null ? !primaryName.equals(that.primaryName) : that.primaryName != null) {
+            return false;
+        }
         return secondaryName != null ? secondaryName.equals(that.secondaryName) : that.secondaryName == null;
 
     }

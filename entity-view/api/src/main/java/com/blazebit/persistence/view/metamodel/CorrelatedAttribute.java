@@ -16,7 +16,6 @@
 package com.blazebit.persistence.view.metamodel;
 
 import com.blazebit.persistence.view.CorrelationProvider;
-import com.blazebit.persistence.view.FetchStrategy;
 
 /**
  * Instances of the type {@linkplain CorrelatedAttribute} represents single-valued properties or fields.

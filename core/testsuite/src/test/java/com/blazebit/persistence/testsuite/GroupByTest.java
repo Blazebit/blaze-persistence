@@ -55,25 +55,25 @@ public class GroupByTest extends AbstractCoreTest {
     @Test
     @Category({NoH2.class, NoPostgreSQL.class, NoMySQL.class, NoFirebird.class, NoOracle.class, NoSQLite.class})
     public void testSizeTransformWithImplicitParameterGroupBy1() {
-    	CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
-    			.select("SIZE(d.versions)")
-    			.selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
+        CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
+                .select("SIZE(d.versions)")
+                .selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
 
-    	final String expected = "SELECT (SELECT " + countStar() + " FROM d.versions version), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d";
-    	assertEquals(expected, criteria.getQueryString());
-    	criteria.getResultList();
+        final String expected = "SELECT (SELECT " + countStar() + " FROM d.versions version), CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
     }
     
     // NOTE: Datanucleus does not support parameters in group by yet. see http://www.datanucleus.org/servlet/jira/browse/NUCRDBMS-1009
     @Test
     @Category({NoDB2.class, NoDatanucleus.class})
     public void testSizeTransformWithImplicitParameterGroupBy2() {
-    	CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
-    			.select("SIZE(d.versions)")
-    			.selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
-    	
-    	final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
-    	assertEquals(expected, criteria.getQueryString());
-    	criteria.getResultList();
+        CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
+                .select("SIZE(d.versions)")
+                .selectCase().when("d.age").lt(2l).thenExpression("'a'").otherwiseExpression("'b'");
+        
+        final String expected = "SELECT " + function("COUNT_TUPLE", "versions_1") + ", CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END FROM Document d LEFT JOIN d.versions versions_1 GROUP BY d.id, CASE WHEN d.age < :param_0 THEN 'a' ELSE 'b' END";
+        assertEquals(expected, criteria.getQueryString());
+        criteria.getResultList();
     }
 }

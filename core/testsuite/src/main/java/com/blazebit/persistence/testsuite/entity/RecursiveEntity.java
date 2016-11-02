@@ -73,20 +73,20 @@ public class RecursiveEntity implements Serializable {
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
-	public RecursiveEntity getParent() {
-		return parent;
-	}
+    public RecursiveEntity getParent() {
+        return parent;
+    }
 
-	public void setParent(RecursiveEntity parent) {
-		this.parent = parent;
-	}
+    public void setParent(RecursiveEntity parent) {
+        this.parent = parent;
+    }
 
-	@OneToMany(mappedBy = "parent")
-	public Set<RecursiveEntity> getChildren() {
-		return children;
-	}
+    @OneToMany(mappedBy = "parent")
+    public Set<RecursiveEntity> getChildren() {
+        return children;
+    }
 
-	public void setChildren(Set<RecursiveEntity> children) {
-		this.children = children;
-	}
+    public void setChildren(Set<RecursiveEntity> children) {
+        this.children = children;
+    }
 }

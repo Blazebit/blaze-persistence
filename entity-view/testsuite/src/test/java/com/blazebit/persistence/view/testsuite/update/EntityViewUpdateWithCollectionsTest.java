@@ -57,8 +57,8 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
     private Person p2;
     
     public EntityViewUpdateWithCollectionsTest(Class<T> viewType) {
-    	this.viewType = viewType;
-	}
+        this.viewType = viewType;
+    }
 
     @Parameterized.Parameters
     public static Collection<?> entityViewCombinations() {
@@ -117,8 +117,8 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
 
             @Override
             public void doWork(EntityManager em) {
-    	        docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
-    	        evm.update(em, docView);
+                docView.setPersonList(new ArrayList<Person>(docView.getPersonList()));
+                evm.update(em, docView);
                 em.flush();
             }
         });

@@ -51,7 +51,7 @@ Blaze-Persistence is split up into different modules. We recommend that you defi
 
 ```xml
 <properties>
-	<blaze-persistence.version>1.2.0.Alpha1</blaze-persistence.version>
+    <blaze-persistence.version>1.2.0.Alpha1</blaze-persistence.version>
 </properties>
 ```
 
@@ -62,33 +62,33 @@ Blaze-Persistence Core module dependencies
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-core-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-core-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 Blaze-Persistence Entity-View module dependencies
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-entity-view-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-entity-view-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -96,10 +96,10 @@ Blaze-Persistence Entity-View CDI integration dependencies
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -109,21 +109,21 @@ Hibernate 5.2
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 Hibernate 5+
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -131,54 +131,54 @@ Hibernate 4.3
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 Hibernate 4.2
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 Datanucleus
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-datanucleus</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 EclipseLink
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-eclipselink</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
-	
+    
 OpenJPA
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-openjpa</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-openjpa</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -186,16 +186,16 @@ Blaze-Persistence JPA-Criteria module dependencies
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -203,10 +203,10 @@ Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
 
 ```xml
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 ```
 
@@ -234,16 +234,16 @@ For demonstration purposes, we will use the following simple entity model.
 ```java
 @Entity
 public class Cat {
-	@Id
-	private Integer id;
-	private String name;
-	@ManyToOne(fetch = FetchType.LAZY)
-	private Cat father;
-	@ManyToOne(fetch = FetchType.LAZY)
-	private Cat mother;
-	@OneToMany
-	private Set<Cat> kittens;
-	// Getter and setters omitted for brevity
+    @Id
+    private Integer id;
+    private String name;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cat father;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Cat mother;
+    @OneToMany
+    private Set<Cat> kittens;
+    // Getter and setters omitted for brevity
 }
 ```
 
@@ -281,25 +281,25 @@ The entity view itself is a simple interface describing the structure of the pro
 ```java
 @EntityView(Cat.class)
 public interface CatView {
-	@IdMapping
-	public Integer getId();
-	
-	@Mapping("CONCAT(mother.name, 's kitty ', name)")
-	public String getCuteName();
-	
-	public SimpleCatView getFather();
-	
+    @IdMapping
+    public Integer getId();
+    
+    @Mapping("CONCAT(mother.name, 's kitty ', name)")
+    public String getCuteName();
+    
+    public SimpleCatView getFather();
+    
 }
 ```
 
 ```java
 @EntityView(Cat.class)
 public interface SimpleCatView {
-	@IdMapping
-	public Integer getId();
-	
-	public String getName();
-	
+    @IdMapping
+    public Integer getId();
+    
+    public String getName();
+    
 }
 ```
 
@@ -311,8 +311,8 @@ You just created two DTO interfaces that contain projection information. Now the
 ```java
 CriteriaBuilder<Cat> cb = criteriaBuilderFactory.create(entityManager, Cat.class);
 cb.whereOr()
-	.where("father").isNull()
-	.where("father.name").like().value("Darth%").noEscape()
+    .where("father").isNull()
+    .where("father.name").like().value("Darth%").noEscape()
 .endOr();
 CriteriaBuilder<CatView> catViewBuilder = evm.applySetting(EntityViewSetting.create(CatView.class), cb);
 List<CatView> catViews = catViewBuilder.getResultList();

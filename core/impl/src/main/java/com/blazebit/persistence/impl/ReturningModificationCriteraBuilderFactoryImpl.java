@@ -28,18 +28,18 @@ import com.blazebit.persistence.ReturningUpdateCriteriaBuilder;
  */
 public class ReturningModificationCriteraBuilderFactoryImpl<X> implements ReturningModificationCriteriaBuilderFactory<X> {
 
-	private final MainQuery mainQuery;
-	private final String cteName;
-	private final Class<?> cteClass;
-	private final X result;
+    private final MainQuery mainQuery;
+    private final String cteName;
+    private final Class<?> cteClass;
+    private final X result;
     private final CTEBuilderListener listener;
 
     ReturningModificationCriteraBuilderFactoryImpl(MainQuery mainQuery, String cteName, Class<?> cteClass, X result, final CTEBuilderListener listener) {
-    	this.mainQuery = mainQuery;
-    	this.cteName = cteName;
-    	this.cteClass = cteClass;
-    	this.result = result;
-    	this.listener = listener;
+        this.mainQuery = mainQuery;
+        this.cteName = cteName;
+        this.cteClass = cteClass;
+        this.result = result;
+        this.listener = listener;
     }
 
     @Override

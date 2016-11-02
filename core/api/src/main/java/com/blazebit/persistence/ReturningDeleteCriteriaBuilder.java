@@ -24,5 +24,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface ReturningDeleteCriteriaBuilder<T, X> extends ReturningModificationCriteriaBuilder<ReturningDeleteCriteriaBuilder<T, X>, X>, BaseDeleteCriteriaBuilder<T, ReturningDeleteCriteriaBuilder<T, X>> {
-	
+    
 }

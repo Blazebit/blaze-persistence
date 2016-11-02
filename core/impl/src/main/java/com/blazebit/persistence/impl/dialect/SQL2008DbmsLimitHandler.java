@@ -1,7 +1,5 @@
 package com.blazebit.persistence.impl.dialect;
 
-import com.blazebit.persistence.spi.DbmsLimitHandler;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
@@ -38,7 +36,7 @@ public class SQL2008DbmsLimitHandler extends AbstractDbmsLimitHandler {
                 return 2;
             }
             return 1;
-        } if (limit != null) {
+        } else if (limit != null) {
             statement.setInt(index, limit);
             return 1;
         }

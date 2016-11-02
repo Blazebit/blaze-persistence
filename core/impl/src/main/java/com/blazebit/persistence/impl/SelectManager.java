@@ -38,9 +38,15 @@ import com.blazebit.persistence.impl.builder.object.ClassObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.ConstructorObjectBuilder;
 import com.blazebit.persistence.impl.builder.object.SelectObjectBuilderImpl;
 import com.blazebit.persistence.impl.builder.object.TupleObjectBuilder;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.Expression;
 import com.blazebit.persistence.impl.expression.Expression.ResultVisitor;
 import com.blazebit.persistence.impl.expression.Expression.Visitor;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathElementExpression;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.PropertyExpression;
+import com.blazebit.persistence.impl.expression.SimplePathReference;
+import com.blazebit.persistence.impl.expression.SubqueryExpression;
 import com.blazebit.persistence.impl.transform.ExpressionTransformer;
 import com.blazebit.persistence.impl.transform.NodeInfoExpressionModifier;
 import com.blazebit.persistence.impl.transform.SelectInfoTransformer;
@@ -113,17 +119,17 @@ public class SelectManager<T> extends AbstractManager {
      * Element 1 is true if the select clause contains a any complex expression that would be required in group by when aggregates are used.
      */
     public boolean[] containsGroupBySelect(boolean treatSizeAsAggregate) {
-    	GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
-    	boolean containsGroupBySelect = false;
-    	for (SelectInfo selectInfo : selectInfos) {
-    		if (!(selectInfo.getExpression() instanceof PathExpression)) {
-    			selectInfo.getExpression().accept(gatheringVisitor);
-    		} else {
-    			containsGroupBySelect = true;
-    		}
-    	}
-    	boolean containsComplexGroupBySelect = !gatheringVisitor.getExpressions().isEmpty();
-    	return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
+        GroupByExpressionGatheringVisitor gatheringVisitor = new GroupByExpressionGatheringVisitor(treatSizeAsAggregate);
+        boolean containsGroupBySelect = false;
+        for (SelectInfo selectInfo : selectInfos) {
+            if (!(selectInfo.getExpression() instanceof PathExpression)) {
+                selectInfo.getExpression().accept(gatheringVisitor);
+            } else {
+                containsGroupBySelect = true;
+            }
+        }
+        boolean containsComplexGroupBySelect = !gatheringVisitor.getExpressions().isEmpty();
+        return new boolean[] {containsGroupBySelect || containsComplexGroupBySelect, containsComplexGroupBySelect};
     }
 
     public Set<Expression>[] getGroupBySelectExpressions(boolean treatSizeAsAggregate) {
@@ -192,12 +198,12 @@ public class SelectManager<T> extends AbstractManager {
             List<JoinNode> roots = joinManager.getRoots();
             
             if (roots.size() > 1) {
-            	throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
+                throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
             }
             
-        	JoinNode rootNode = roots.get(0);
-        	String rootAlias = rootNode.getAliasInfo().getAlias();
-        	
+            JoinNode rootNode = roots.get(0);
+            String rootAlias = rootNode.getAliasInfo().getAlias();
+            
             List<PathElementExpression> path = Arrays.asList((PathElementExpression) new PropertyExpression(rootAlias));
             resolveVisitor.visit(new PathExpression(path, new SimplePathReference(rootNode, null, null), false, false));
 
@@ -252,7 +258,7 @@ public class SelectManager<T> extends AbstractManager {
             List<JoinNode> roots = joinManager.getRoots();
             
             if (roots.size() > 1) {
-            	throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
+                throw new IllegalArgumentException("Empty select not allowed when having multiple roots!");
             }
 
             roots.get(0).appendAlias(sb, null);
@@ -490,7 +496,7 @@ public class SelectManager<T> extends AbstractManager {
             }
             currentBuilder = null;
             for (Map.Entry<Expression, String> e : expressions) {
-            	select(e.getKey(), e.getValue());
+                select(e.getKey(), e.getValue());
                 // SelectInfo selectInfo = new SelectInfo(e.getKey(), e.getValue(), aliasManager);
                 // if (e.getValue() != null) {
                 // aliasManager.registerAliasInfo(selectInfo);

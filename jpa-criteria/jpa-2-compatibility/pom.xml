@@ -11,7 +11,7 @@
 
     <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
     <packaging>jar</packaging>
-	
+    
     <name>Blazebit Persistence JPA-2 Compatibility</name>
 
     <dependencies>

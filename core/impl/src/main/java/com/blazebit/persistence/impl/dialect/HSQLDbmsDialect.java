@@ -9,10 +9,10 @@ import com.blazebit.persistence.spi.ValuesStrategy;
 
 public class HSQLDbmsDialect extends DefaultDbmsDialect {
 
-	@Override
-	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
+    @Override
+    public boolean supportsTupleDistinctCounts() {
+        return false;
+    }
     
     @Override
     public boolean supportsReturningColumns() {
@@ -33,5 +33,5 @@ public class HSQLDbmsDialect extends DefaultDbmsDialect {
         
         return super.appendExtendedSql(sqlSb, statementType, isSubquery, isEmbedded, withClause, limit, offset, returningColumns, includedModificationStates);
     }
-	
+    
 }

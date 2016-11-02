@@ -35,9 +35,15 @@ public class NumericLiteral extends AbstractNumericExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof NumericLiteral)) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof NumericLiteral)) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
         NumericLiteral that = (NumericLiteral) o;
 

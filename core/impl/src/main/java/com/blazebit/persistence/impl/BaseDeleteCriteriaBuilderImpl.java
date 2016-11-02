@@ -26,16 +26,16 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public class BaseDeleteCriteriaBuilderImpl<T, X extends BaseDeleteCriteriaBuilder<T, X>, Y> extends AbstractModificationCriteriaBuilder<T, X, Y> implements BaseDeleteCriteriaBuilder<T, X> {
 
-	public BaseDeleteCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		super(mainQuery, isMainQuery, DbmsStatementType.DELETE, clazz, alias, cteName, cteClass, result, listener);
-	}
+    public BaseDeleteCriteriaBuilderImpl(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        super(mainQuery, isMainQuery, DbmsStatementType.DELETE, clazz, alias, cteName, cteClass, result, listener);
+    }
 
-	@Override
-	protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-		sbSelectFrom.append("DELETE FROM ");
-		sbSelectFrom.append(entityType.getName()).append(' ');
-	    sbSelectFrom.append(entityAlias);
-    	appendWhereClause(sbSelectFrom);
-	}
+    @Override
+    protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
+        sbSelectFrom.append("DELETE FROM ");
+        sbSelectFrom.append(entityType.getName()).append(' ');
+        sbSelectFrom.append(entityAlias);
+        appendWhereClause(sbSelectFrom);
+    }
 
 }

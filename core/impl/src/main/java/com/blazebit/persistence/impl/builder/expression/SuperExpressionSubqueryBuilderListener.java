@@ -28,8 +28,8 @@ import com.blazebit.persistence.impl.expression.SubqueryExpression;
  */
 public class SuperExpressionSubqueryBuilderListener<T> extends SubqueryBuilderListenerImpl<T> {
 
-    private final String subqueryAlias;
     protected Expression superExpression;
+    private final String subqueryAlias;
 
     public SuperExpressionSubqueryBuilderListener(String subqueryAlias, Expression superExpression) {
         this.subqueryAlias = subqueryAlias;

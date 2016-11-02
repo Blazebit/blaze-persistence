@@ -34,7 +34,7 @@ import javax.persistence.ManyToOne;
 @DiscriminatorColumn(name = "category_type")
 public abstract class Project<PL extends ProjectLeader<? extends Project<?>>> implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
     
     private Long id;
     private String name;

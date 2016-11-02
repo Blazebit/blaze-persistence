@@ -28,9 +28,9 @@ import com.blazebit.persistence.spi.SetOperationType;
  */
 public class FullSelectCTECriteriaBuilderImpl<T> extends AbstractCTECriteriaBuilder<T, FullSelectCTECriteriaBuilder<T>, LeafOngoingSetOperationCTECriteriaBuilder<T>, StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>>> implements FullSelectCTECriteriaBuilder<T> {
 
-	public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener) {
-		super(mainQuery, cteName, clazz, result, listener, null);
-	}
+    public FullSelectCTECriteriaBuilderImpl(MainQuery mainQuery, String cteName, Class<Object> clazz, T result, CTEBuilderListener listener) {
+        super(mainQuery, cteName, clazz, result, listener, null);
+    }
     
     @Override
     protected BaseFinalSetOperationCTECriteriaBuilderImpl<Object, ?> createFinalSetOperationBuilder(SetOperationType operator, boolean nested) {

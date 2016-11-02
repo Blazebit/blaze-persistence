@@ -33,7 +33,10 @@ import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
 import com.blazebit.persistence.impl.builder.object.ReturningTupleObjectBuilder;
 import com.blazebit.persistence.impl.dialect.DB2DbmsDialect;
-import com.blazebit.persistence.impl.query.*;
+import com.blazebit.persistence.impl.query.CTENode;
+import com.blazebit.persistence.impl.query.ModificationQuerySpecification;
+import com.blazebit.persistence.impl.query.QuerySpecification;
+import com.blazebit.persistence.impl.query.ReturningModificationQuerySpecification;
 import com.blazebit.persistence.spi.DbmsModificationState;
 import com.blazebit.persistence.spi.DbmsStatementType;
 
@@ -45,20 +48,20 @@ import com.blazebit.persistence.spi.DbmsStatementType;
  */
 public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModificationCriteriaBuilder<X>, Y> extends AbstractCommonQueryBuilder<T, X, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, AbstractCommonQueryBuilder<?, ?, ?, ?, ?>, BaseFinalSetOperationBuilderImpl<T, ?, ?>> implements BaseModificationCriteriaBuilder<X>, CTEInfoBuilder {
 
-	protected final EntityType<T> entityType;
-	protected final String entityAlias;
-	protected final EntityType<?> cteType;
-	protected final String cteName;
-	protected final Y result;
-	protected final CTEBuilderListener listener;
-	protected final boolean isReturningEntityAliasAllowed;
-	protected final Map<String, String> returningAttributeBindingMap;
+    protected final EntityType<T> entityType;
+    protected final String entityAlias;
+    protected final EntityType<?> cteType;
+    protected final String cteName;
+    protected final Y result;
+    protected final CTEBuilderListener listener;
+    protected final boolean isReturningEntityAliasAllowed;
+    protected final Map<String, String> returningAttributeBindingMap;
 
-	@SuppressWarnings("unchecked")
-	public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
-		// NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
-		// but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
-		super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
+    @SuppressWarnings("unchecked")
+    public AbstractModificationCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, DbmsStatementType statementType, Class<T> clazz, String alias, String cteName, Class<?> cteClass, Y result, CTEBuilderListener listener) {
+        // NOTE: using tuple here because this class is used for the join manager and tuple is definitively not an entity
+        // but in case of the insert criteria, the appropriate return type which is convenient because update and delete don't have a return type
+        super(mainQuery, isMainQuery, statementType, (Class<T>) Tuple.class, null);
 
         // set defaults
         if (alias == null) {
@@ -68,24 +71,24 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
             fromClassExplicitelySet = true;
         }
         
-		this.entityType = em.getMetamodel().entity(clazz);
-		this.entityAlias = joinManager.addRoot(entityType, alias);
-		this.result = result;
-		this.listener = listener;
-		
-		if (cteClass == null) {
-		    this.cteType = null;
-		    this.cteName = null;
+        this.entityType = em.getMetamodel().entity(clazz);
+        this.entityAlias = joinManager.addRoot(entityType, alias);
+        this.result = result;
+        this.listener = listener;
+        
+        if (cteClass == null) {
+            this.cteType = null;
+            this.cteName = null;
             this.isReturningEntityAliasAllowed = false;
-	        this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
-		} else {
+            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(0);
+        } else {
             this.cteType = em.getMetamodel().entity(cteClass);
             this.cteName = cteName;
             // Returning the "entity" is only allowed in CTEs
             this.isReturningEntityAliasAllowed = true;
-    		this.returningAttributeBindingMap = new LinkedHashMap<String, String>(cteType.getAttributes().size());
-		}
-	}
+            this.returningAttributeBindingMap = new LinkedHashMap<String, String>(cteType.getAttributes().size());
+        }
+    }
 
     @Override
     public FullSelectCTECriteriaBuilder<X> with(Class<?> cteClass) {
@@ -130,7 +133,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
     }
 
     @Override
-	public Query getQuery() {
+    public Query getQuery() {
         return getQuery(null);
     }
 
@@ -187,41 +190,41 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
 
         return query;
-	}
+    }
 
-	public int executeUpdate() {
-		return getQuery().executeUpdate();
-	}
+    public int executeUpdate() {
+        return getQuery().executeUpdate();
+    }
     
-	@Override
+    @Override
     protected Map<DbmsModificationState, String> getModificationStates(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
-	    Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(entityType.getJavaType());
-	    
-	    if (versionEntities == null) {
-	        return null;
-	    }
+        Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(entityType.getJavaType());
+        
+        if (versionEntities == null) {
+            return null;
+        }
 
-	    Map<DbmsModificationState, String> includedModificationStates = new HashMap<DbmsModificationState, String>();
-	    // TODO: this needs to include the modification states based on what the dbms uses as default
-	    boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
-	    
-	    if (defaultOld) {
-	        for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
-	            if (entry.getValue() == DbmsModificationState.NEW) {
-	                includedModificationStates.put(DbmsModificationState.NEW, entityType.getName() + "_new");
-	                break;
-	            }
-	        }
-	    } else {
+        Map<DbmsModificationState, String> includedModificationStates = new HashMap<DbmsModificationState, String>();
+        // TODO: this needs to include the modification states based on what the dbms uses as default
+        boolean defaultOld = !(dbmsDialect instanceof DB2DbmsDialect);
+        
+        if (defaultOld) {
+            for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
+                if (entry.getValue() == DbmsModificationState.NEW) {
+                    includedModificationStates.put(DbmsModificationState.NEW, entityType.getName() + "_new");
+                    break;
+                }
+            }
+        } else {
             for (Map.Entry<String, DbmsModificationState> entry : versionEntities.entrySet()) {
                 if (entry.getValue() == DbmsModificationState.OLD) {
                     includedModificationStates.put(DbmsModificationState.OLD, entityType.getName() + "_old");
                     break;
                 }
             }
-	    }
-	    
-	    return includedModificationStates;
+        }
+        
+        return includedModificationStates;
     }
     
     protected Map<String, String> getModificationStateRelatedTableNameRemappings(Map<Class<?>, Map<String, DbmsModificationState>> explicitVersionEntities) {
@@ -256,20 +259,20 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         return getWithReturningQuery(attributes).getSingleResult();
     }
 
-	public TypedQuery<ReturningResult<Tuple>> getWithReturningQuery(String... attributes) {
-	    if (attributes == null) {
-	        throw new NullPointerException("attributes");
-	    }
-	    if (attributes.length == 0) {
-	        throw new IllegalArgumentException("Invalid empty attributes");
-	    }
+    public TypedQuery<ReturningResult<Tuple>> getWithReturningQuery(String... attributes) {
+        if (attributes == null) {
+            throw new NullPointerException("attributes");
+        }
+        if (attributes.length == 0) {
+            throw new IllegalArgumentException("Invalid empty attributes");
+        }
 
         Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
         List<List<Attribute<?, ?>>> attributeList = getAndCheckAttributes(attributes);
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributeList);
         String[] returningColumns = getReturningColumns(attributeList);
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, new ReturningTupleObjectBuilder());
-	}
+    }
 
     public <Z> ReturningResult<Z> executeWithReturning(String attribute, Class<Z> type) {
         return getWithReturningQuery(attribute, type).getSingleResult();
@@ -300,26 +303,26 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, null);
-	}
+    }
 
     public <Z> ReturningResult<Z> executeWithReturning(ReturningObjectBuilder<Z> objectBuilder) {
         return getWithReturningQuery(objectBuilder).getSingleResult();
     }
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <Z> TypedQuery<ReturningResult<Z>> getWithReturningQuery(ReturningObjectBuilder<Z> objectBuilder) {
-	    // TODO: this is not really nice, we should abstract that somehow
-	    objectBuilder.applyReturning((ReturningBuilder) this);
-	    List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
-	    returningAttributeBindingMap.clear();
+        // TODO: this is not really nice, we should abstract that somehow
+        objectBuilder.applyReturning((ReturningBuilder) this);
+        List<List<Attribute<?, ?>>> attributes = getAndCheckReturningAttributes();
+        returningAttributeBindingMap.clear();
 
         Query baseQuery = em.createQuery(getBaseQueryStringWithCheck());
         TypedQuery<Object[]> exampleQuery = getExampleQuery(attributes);
         String[] returningColumns = getReturningColumns(attributes);
         return getExecuteWithReturningQuery(exampleQuery, baseQuery, returningColumns, objectBuilder);
-	}
-	
-	private <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
+    }
+    
+    private <R> TypedQuery<ReturningResult<R>> getExecuteWithReturningQuery(TypedQuery<Object[]> exampleQuery, Query baseQuery, String[] returningColumns, ReturningObjectBuilder<R> objectBuilder) {
         Set<String> parameterListNames = parameterManager.getParameterListNames(baseQuery);
         boolean shouldRenderCteNodes = renderCteNodes(false);
         List<CTENode> ctes = shouldRenderCteNodes ? getCteNodes(baseQuery, false) : Collections.EMPTY_LIST;
@@ -341,15 +344,15 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         parameterManager.parameterizeQuery(query);
         return query;
     }
-	
+    
     private List<List<Attribute<?, ?>>> getAndCheckReturningAttributes() {
         validateReturningAttributes();
         return getAndCheckAttributes(returningAttributeBindingMap.keySet().toArray(new String[returningAttributeBindingMap.size()]));
     }
-	
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void validateReturningAttributes() {
-	    int attributeCount = returningAttributeBindingMap.size();
+        int attributeCount = returningAttributeBindingMap.size();
         if (attributeCount == 0) {
             throw new IllegalArgumentException("Invalid empty attributes");
         }
@@ -368,7 +371,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         }
         
         throw new IllegalArgumentException("The following required CTE attributes are not bound: " + attributeNames);
-	}
+    }
 
     @SuppressWarnings("unchecked")
     public X returning(String cteAttribute, String modificationQueryAttribute) {
@@ -452,14 +455,14 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
 
         StringBuilder sb = new StringBuilder();
         for (List<Attribute<?, ?>> returningAttribute : attributes) {
-        	sb.append(returningAttribute.get(0).getName());
-        	for(int i = 1; i < returningAttribute.size(); i++){
-        		sb.append('.').append(returningAttribute.get(i).getName());
-        	}
-        	for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, sb.toString())) {
+            sb.append(returningAttribute.get(0).getName());
+            for (int i = 1; i < returningAttribute.size(); i++) {
+                sb.append('.').append(returningAttribute.get(i).getName());
+            }
+            for (String column : cbf.getExtendedQuerySupport().getColumnNames(em, entityType, sb.toString())) {
                 columns.add(column);
             }
-        	sb.setLength(0);
+            sb.setLength(0);
         }
         
         return columns.toArray(new String[columns.size()]);
@@ -498,7 +501,7 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
         
         boolean first = true;
         for (List<Attribute<?, ?>> attrPath : attributes) {
-        	Attribute<?, ?> lastPathElem = attrPath.get(attrPath.size() - 1);
+            Attribute<?, ?> lastPathElem = attrPath.get(attrPath.size() - 1);
             if (first) {
                 first = false;
             } else {
@@ -519,8 +522,8 @@ public abstract class AbstractModificationCriteriaBuilder<T, X extends BaseModif
                 sb.append(lastPathElem.getName()).append('.').append(idAttribute.getName());
             } else {
                 sb.append(attrPath.get(0).getName());
-                for(int i = 1; i < attrPath.size(); i++){
-                	sb.append('.').append(attrPath.get(i).getName());
+                for (int i = 1; i < attrPath.size(); i++) {
+                    sb.append('.').append(attrPath.get(i).getName());
                 }
             }
         }

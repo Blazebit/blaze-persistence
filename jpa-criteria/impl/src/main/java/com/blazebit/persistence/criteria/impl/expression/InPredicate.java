@@ -138,7 +138,9 @@ public class InPredicate<T> extends AbstractSimplePredicate implements BlazeCrit
                     context.apply(first);
                     return;
                 }
+                //CHECKSTYLE:OFF: FallThrough
             default:
+                //CHECKSTYLE:ON: FallThrough
                 context.apply(expression);
 
                 if (isNegated()) {

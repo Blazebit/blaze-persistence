@@ -1,8 +1,6 @@
 package com.blazebit.persistence.criteria.impl.expression.function;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
-import com.blazebit.persistence.criteria.impl.ParameterVisitor;
-import com.blazebit.persistence.criteria.impl.RenderContext;
 import com.blazebit.persistence.criteria.impl.expression.AbstractExpression;
 
 import java.math.BigDecimal;
@@ -23,11 +21,11 @@ public class CastFunction<T, Y> extends FunctionFunction<T> {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Map<Class<?>, String> SUFFIXES;
+
     public CastFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Class<T> javaType, AbstractExpression<Y> expression) {
         super(criteriaBuilder, javaType, "CAST_" + castSuffix(javaType), expression);
     }
-
-    private static final Map<Class<?>, String> SUFFIXES;
 
     static {
         Map<Class<?>, String> s = new HashMap<Class<?>, String>();

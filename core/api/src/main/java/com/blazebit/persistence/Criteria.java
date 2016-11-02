@@ -28,6 +28,9 @@ import java.util.ServiceLoader;
  */
 public class Criteria {
 
+    private Criteria() {
+    }
+
     /**
      * Returns the first {@linkplain CriteriaBuilderConfigurationProvider} that is found
      *

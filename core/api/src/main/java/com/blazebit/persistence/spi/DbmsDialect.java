@@ -30,30 +30,30 @@ import java.util.Map;
  */
 public interface DbmsDialect {
 
-	/* General methods to workaround some DBMS/JPA-Provider limitations */
-	
+    /* General methods to workaround some DBMS/JPA-Provider limitations */
+    
     /**
      * Returns true if the dbms supports count distinct with multiple columns, false otherwise.
      * 
      * @return Whether count distinct with multiple columns is supported by the dbms
      */
-	public boolean supportsTupleDistinctCounts();
-	
-	/* With clause handling */
-	
-	/**
-	 * Returns true if the dbms supports the with clause, false otherwise.
-	 * 
-	 * @return Whether the with clause is supported by the dbms
-	 */
-	public boolean supportsWithClause();
-	
-	/**
-	 * Returns true if the dbms supports the non-recursive with clause, false otherwise.
-	 * 
-	 * @return Whether the non-recursive with clause is supported by the dbms
-	 */
-	public boolean supportsNonRecursiveWithClause();
+    public boolean supportsTupleDistinctCounts();
+    
+    /* With clause handling */
+    
+    /**
+     * Returns true if the dbms supports the with clause, false otherwise.
+     * 
+     * @return Whether the with clause is supported by the dbms
+     */
+    public boolean supportsWithClause();
+    
+    /**
+     * Returns true if the dbms supports the non-recursive with clause, false otherwise.
+     * 
+     * @return Whether the non-recursive with clause is supported by the dbms
+     */
+    public boolean supportsNonRecursiveWithClause();
 
     /**
      * Returns the SQL representation for the normal or recursive with clause. 
@@ -128,7 +128,7 @@ public interface DbmsDialect {
      * 
      * @return Whether returning generated keys is supported by the dbms
      */
-	public boolean supportsReturningGeneratedKeys();
+    public boolean supportsReturningGeneratedKeys();
     
     /**
      * Returns true if the dbms supports returning all generated keys, false otherwise.
@@ -142,7 +142,7 @@ public interface DbmsDialect {
      * 
      * @return Whether returning columns from a modified row is supported by the dbms
      */
-	public boolean supportsReturningColumns();
+    public boolean supportsReturningColumns();
 
     /**
      * Returns true if the dbms supports complex expressions like subqueries as group by elements, false otherwise.

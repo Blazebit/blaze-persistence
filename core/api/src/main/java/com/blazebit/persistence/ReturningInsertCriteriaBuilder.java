@@ -24,5 +24,5 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface ReturningInsertCriteriaBuilder<T, X> extends ReturningModificationCriteriaBuilder<ReturningInsertCriteriaBuilder<T, X>, X>, BaseInsertCriteriaBuilder<T, ReturningInsertCriteriaBuilder<T, X>> {
-	
+    
 }

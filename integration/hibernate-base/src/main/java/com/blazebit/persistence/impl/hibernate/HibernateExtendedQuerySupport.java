@@ -21,7 +21,11 @@ import org.hibernate.LockOptions;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.engine.query.spi.QueryPlanCache;
-import org.hibernate.engine.spi.*;
+import org.hibernate.engine.spi.QueryParameters;
+import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -45,7 +49,6 @@ import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.Type;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.CommonQueryBuilder;
 import com.blazebit.persistence.ReturningResult;
 import com.blazebit.persistence.spi.CteQueryWrapper;
 import com.blazebit.persistence.spi.DbmsDialect;
@@ -60,21 +63,21 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     private final ConcurrentMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>> queryPlanCachesCache = new ConcurrentHashMap<SessionFactoryImplementor, BoundedConcurrentHashMap<QueryPlanCacheKey, HQLQueryPlan>>();
     private final HibernateAccess hibernateAccess;
     
-	public HibernateExtendedQuerySupport() {
-	    Iterator<HibernateAccess> serviceIter = ServiceLoader.load(HibernateAccess.class).iterator();
-	    if (!serviceIter.hasNext()) {
-	        throw new IllegalStateException("Hibernate integration was not found on the class path!");
-	    }
-	    this.hibernateAccess = serviceIter.next();
+    public HibernateExtendedQuerySupport() {
+        Iterator<HibernateAccess> serviceIter = ServiceLoader.load(HibernateAccess.class).iterator();
+        if (!serviceIter.hasNext()) {
+            throw new IllegalStateException("Hibernate integration was not found on the class path!");
+        }
+        this.hibernateAccess = serviceIter.next();
     }
 
     @Override
-	public String getSql(EntityManager em, Query query) {
-    	SessionImplementor session = em.unwrap(SessionImplementor.class);
-		HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
-		String sql = queryPlan.getSqlStrings()[0];
-		return sql;
-	}
+    public String getSql(EntityManager em, Query query) {
+        SessionImplementor session = em.unwrap(SessionImplementor.class);
+        HQLQueryPlan queryPlan = getOriginalQueryPlan(session, query);
+        String sql = queryPlan.getSqlStrings()[0];
+        return sql;
+    }
 
     @Override
     public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
@@ -106,11 +109,11 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
 
     @Override
-	public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
+    public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
         SessionImplementor session = em.unwrap(SessionImplementor.class);
         SessionFactoryImplementor sfi = session.getFactory();
-	    return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
-	}
+        return ((AbstractEntityPersister) sfi.getClassMetadata(entityType.getJavaType())).getPropertyColumnNames(attributeName);
+    }
 
     @Override
     public String getSqlAlias(EntityManager em, Query query, String alias) {
@@ -210,56 +213,56 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
         EntityManager em = serviceProvider.getService(EntityManager.class);
-		try {
-			return list(serviceProvider, em, participatingQueries, query, sqlOverride);
-		} catch (QueryExecutionRequestException he) {
+        try {
+            return list(serviceProvider, em, participatingQueries, query, sqlOverride);
+        } catch (QueryExecutionRequestException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw new IllegalStateException(he);
-		} catch(TypeMismatchException e) {
+            throw new IllegalStateException(he);
+        } catch (TypeMismatchException e) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw new IllegalArgumentException(e);
-		} catch (HibernateException he) {
-		    LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw hibernateAccess.convert(em, he);
-		}
-	}
-	
-	@Override
+            throw new IllegalArgumentException(e);
+        } catch (HibernateException he) {
+            LOG.severe("Could not execute the following SQL query: " + sqlOverride);
+            throw hibernateAccess.convert(em, he);
+        }
+    }
+    
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+    public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
         EntityManager em = serviceProvider.getService(EntityManager.class);
-		try {
-			final List result = list(serviceProvider, em, participatingQueries, query, sqlOverride);
+        try {
+            final List result = list(serviceProvider, em, participatingQueries, query, sqlOverride);
 
-			if (result.size() == 0) {
-				NoResultException nre = new NoResultException("No entity found for query");
-				hibernateAccess.handlePersistenceException(em, nre);
-				throw nre;
-			} else if (result.size() > 1) {
-				final Set uniqueResult = new HashSet(result);
-				if (uniqueResult.size() > 1) {
-					NonUniqueResultException nure = new NonUniqueResultException("result returns more than one element");
-					hibernateAccess.handlePersistenceException(em, nure);
-					throw nure;
-				} else {
-					return uniqueResult.iterator().next();
-				}
-			} else {
-				return result.get(0);
-			}
-		} catch (QueryExecutionRequestException he) {
+            if (result.size() == 0) {
+                NoResultException nre = new NoResultException("No entity found for query");
+                hibernateAccess.handlePersistenceException(em, nre);
+                throw nre;
+            } else if (result.size() > 1) {
+                final Set uniqueResult = new HashSet(result);
+                if (uniqueResult.size() > 1) {
+                    NonUniqueResultException nure = new NonUniqueResultException("result returns more than one element");
+                    hibernateAccess.handlePersistenceException(em, nure);
+                    throw nure;
+                } else {
+                    return uniqueResult.iterator().next();
+                }
+            } else {
+                return result.get(0);
+            }
+        } catch (QueryExecutionRequestException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw new IllegalStateException(he);
-		} catch(TypeMismatchException e) {
+            throw new IllegalStateException(he);
+        } catch (TypeMismatchException e) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw new IllegalArgumentException(e);
-		} catch (HibernateException he) {
+            throw new IllegalArgumentException(e);
+        } catch (HibernateException he) {
             LOG.severe("Could not execute the following SQL query: " + sqlOverride);
-			throw hibernateAccess.convert(em, he);
-		}
-	}
+            throw hibernateAccess.convert(em, he);
+        }
+    }
 
     @SuppressWarnings("rawtypes")
     private List list(com.blazebit.persistence.spi.ServiceProvider serviceProvider, EntityManager em, List<Query> participatingQueries, Query query, String finalSql) {
@@ -340,7 +343,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         } catch (QueryExecutionRequestException he) {
             LOG.severe("Could not execute the following SQL query: " + finalSql);
             throw new IllegalStateException(he);
-        } catch(TypeMismatchException e) {
+        } catch (TypeMismatchException e) {
             LOG.severe("Could not execute the following SQL query: " + finalSql);
             throw new IllegalArgumentException(e);
         } catch (HibernateException he) {
@@ -417,7 +420,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
             } catch (QueryExecutionRequestException he) {
                 LOG.severe("Could not execute the following SQL query: " + finalSql);
                 throw new IllegalStateException(he);
-            } catch(TypeMismatchException e) {
+            } catch (TypeMismatchException e) {
                 LOG.severe("Could not execute the following SQL query: " + finalSql);
                 throw new IllegalArgumentException(e);
             } catch (HibernateException he) {
@@ -446,9 +449,9 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
         for (int i = 0; i < selectItems.length; i++) {
             String selectItemWithAlias = selectItems[i].substring(selectItems[i].lastIndexOf('.') + 1);
             if (caseInsensitive) {
-            	returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' ')).toLowerCase();
+                returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' ')).toLowerCase();
             } else {
-            	returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' '));
+                returningColumns[i][0] = selectItemWithAlias.substring(0, selectItemWithAlias.indexOf(' '));
             }
             returningColumns[i][1] = selectItemWithAlias.substring(selectItemWithAlias.lastIndexOf(' ') + 1);
         }
@@ -803,7 +806,7 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
     }
     
     private void addAll(List<Query> queries, List<String> parts) {
-        for (int i = 0; i< queries.size(); i++) {
+        for (int i = 0; i < queries.size(); i++) {
             Query query = queries.get(i);
             
             if (query instanceof CteQueryWrapper) {
@@ -843,13 +846,21 @@ public class HibernateExtendedQuerySupport implements ExtendedQuerySupport {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof QueryPlanCacheKey)) return false;
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof QueryPlanCacheKey)) {
+                return false;
+            }
 
             QueryPlanCacheKey that = (QueryPlanCacheKey) o;
 
-            if (!cacheKeyParts.equals(that.cacheKeyParts)) return false;
-            if (firstResult != null ? !firstResult.equals(that.firstResult) : that.firstResult != null) return false;
+            if (!cacheKeyParts.equals(that.cacheKeyParts)) {
+                return false;
+            }
+            if (firstResult != null ? !firstResult.equals(that.firstResult) : that.firstResult != null) {
+                return false;
+            }
             return maxResults != null ? maxResults.equals(that.maxResults) : that.maxResults == null;
 
         }

@@ -1,6 +1,5 @@
 package com.blazebit.persistence.criteria.impl.expression;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.criteria.Selection;
@@ -8,7 +7,6 @@ import javax.persistence.criteria.Selection;
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.ParameterVisitor;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.TypeConverter;
 
 /**
  *

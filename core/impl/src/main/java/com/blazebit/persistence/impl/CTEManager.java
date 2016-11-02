@@ -33,68 +33,68 @@ import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
  */
 public class CTEManager extends CTEBuilderListenerImpl {
 
-	private final MainQuery mainQuery;
+    private final MainQuery mainQuery;
     private final Set<CTEInfo> ctes;
     private boolean recursive = false;
 
     CTEManager(MainQuery mainQuery) {
-    	this.mainQuery = mainQuery;
+        this.mainQuery = mainQuery;
         this.ctes = new LinkedHashSet<CTEInfo>();
     }
     
     Set<CTEInfo> getCtes() {
-    	return ctes;
+        return ctes;
     }
 
     public boolean hasCtes() {
         return ctes.size() > 0;
     }
 
-	boolean isRecursive() {
-		return recursive;
-	}
+    boolean isRecursive() {
+        return recursive;
+    }
 
     void buildClause(StringBuilder sb) {
         if (ctes.isEmpty()) {
-        	return;
+            return;
         }
 
         sb.append("WITH ");
         
         if (recursive) {
-        	sb.append("RECURSIVE ");
+            sb.append("RECURSIVE ");
         }
         
         boolean first = true;
         for (CTEInfo cte : ctes) {
-        	if (first) {
-        		first = false;
-        	} else {
-        		sb.append(", ");
-        	}
-        	
-        	sb.append(cte.name);
-        	sb.append('(');
+            if (first) {
+                first = false;
+            } else {
+                sb.append(", ");
+            }
+            
+            sb.append(cte.name);
+            sb.append('(');
 
-        	final List<String> attributes = cte.attributes; 
-    		sb.append(attributes.get(0));
-    		
-        	for (int i = 1; i < attributes.size(); i++) {
-        		sb.append(", ");
-        		sb.append(attributes.get(i));
-        	}
+            final List<String> attributes = cte.attributes;
+            sb.append(attributes.get(0));
+            
+            for (int i = 1; i < attributes.size(); i++) {
+                sb.append(", ");
+                sb.append(attributes.get(i));
+            }
 
-        	sb.append(')');
-        	
-        	sb.append(" AS(\n");
-        	sb.append(cte.nonRecursiveCriteriaBuilder.getQueryString());
-        	
-        	if (cte.recursive) {
-        	    sb.append("\nUNION ALL\n");
-        	    sb.append(cte.recursiveCriteriaBuilder.getQueryString());
-        	}
-        	
-        	sb.append("\n)");
+            sb.append(')');
+            
+            sb.append(" AS(\n");
+            sb.append(cte.nonRecursiveCriteriaBuilder.getQueryString());
+            
+            if (cte.recursive) {
+                sb.append("\nUNION ALL\n");
+                sb.append(cte.recursiveCriteriaBuilder.getQueryString());
+            }
+            
+            sb.append("\n)");
         }
         
         sb.append("\n");
@@ -120,33 +120,33 @@ public class CTEManager extends CTEBuilderListenerImpl {
     }
 
     @SuppressWarnings("unchecked")
-	<Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result) {
+    <Y> FullSelectCTECriteriaBuilder<Y> with(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
-		FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
+        FullSelectCTECriteriaBuilderImpl<Y> cteBuilder = new FullSelectCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
-		return cteBuilder;
-	}
+        return cteBuilder;
+    }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     <Y> SelectRecursiveCTECriteriaBuilder<Y> withRecursive(Class<?> cteClass, Y result) {
         String cteName = cteClass.getSimpleName();
-		recursive = true;
-		RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
+        recursive = true;
+        RecursiveCTECriteriaBuilderImpl<Y> cteBuilder = new RecursiveCTECriteriaBuilderImpl<Y>(mainQuery, cteName, (Class<Object>) cteClass, result, this);
         this.onBuilderStarted(cteBuilder);
-		return cteBuilder;
-	}
+        return cteBuilder;
+    }
 
-	<Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<?> cteClass, Y result) {
-	    String cteName = cteClass.getSimpleName();
-	    ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteName, cteClass, result, this);
-		return factory;
-	}
+    <Y> ReturningModificationCriteriaBuilderFactory<Y> withReturning(Class<?> cteClass, Y result) {
+        String cteName = cteClass.getSimpleName();
+        ReturningModificationCriteraBuilderFactoryImpl<Y> factory = new ReturningModificationCriteraBuilderFactoryImpl<Y>(mainQuery, cteName, cteClass, result, this);
+        return factory;
+    }
 
     @Override
-	public void onBuilderEnded(CTEInfoBuilder builder) {
-		super.onBuilderEnded(builder);
-		CTEInfo cteInfo = builder.createCTEInfo();
-		ctes.add(cteInfo);
-	}
+    public void onBuilderEnded(CTEInfoBuilder builder) {
+        super.onBuilderEnded(builder);
+        CTEInfo cteInfo = builder.createCTEInfo();
+        ctes.add(cteInfo);
+    }
 
 }

@@ -33,14 +33,14 @@ import java.util.logging.LogManager;
  */
 public class AbstractParserTest {
 
-	private final SetDelegate<String> setDelegate = new SetDelegate<String>() {
+    private final SetDelegate<String> setDelegate = new SetDelegate<String>() {
 
-		@Override
-		protected Set<String> getDelegate() {
-			return AbstractParserTest.this.aggregateFunctions;
-		}
-		
-	};
+        @Override
+        protected Set<String> getDelegate() {
+            return AbstractParserTest.this.aggregateFunctions;
+        }
+        
+    };
     protected ExpressionFactory ef = new AbstractTestExpressionFactory(setDelegate, false) {
 
         private final AbstractExpressionFactory.RuleInvoker simpleExpressionRuleInvoker = new AbstractExpressionFactory.RuleInvoker() {
@@ -105,7 +105,7 @@ public class AbstractParserTest {
 
     @Before
     public void initTest() {
-    	aggregateFunctions = new HashSet<String>();
+        aggregateFunctions = new HashSet<String>();
         macroConfiguration = null;
     }
 
@@ -157,11 +157,11 @@ public class AbstractParserTest {
     }
 
     protected FunctionExpression function(String name, Expression... args) {
-    	if (aggregateFunctions.contains(name)) {
-    		return new AggregateExpression(false, name, Arrays.asList(args));
-    	} else {
-    		return new FunctionExpression(name, Arrays.asList(args));
-    	}
+        if (aggregateFunctions.contains(name)) {
+            return new AggregateExpression(false, name, Arrays.asList(args));
+        } else {
+            return new FunctionExpression(name, Arrays.asList(args));
+        }
     }
 
     protected TypeFunctionExpression typeFunction(Expression arg) {

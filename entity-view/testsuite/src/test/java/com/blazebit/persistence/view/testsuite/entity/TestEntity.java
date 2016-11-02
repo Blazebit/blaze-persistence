@@ -32,17 +32,17 @@ public class TestEntity extends NamedEntity {
     public TestEntity() {
     }
 
-	public TestEntity(String name, String description) {
-		super(name);
-		this.description = description;
-	}
-	
+    public TestEntity(String name, String description) {
+        super(name);
+        this.description = description;
+    }
+    
     public String getDescription() {
-		return description;
-	}
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
 }

@@ -6,15 +6,14 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.impl.expression.AbstractCachingExpressionFactory;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
 import com.blazebit.persistence.spi.JpaProvider;
 import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.JpqlMacro;
 
 
 public class MainQuery {
-
-    private final JpqlMacroStorage macroStorage;
 
     final CriteriaBuilderFactoryImpl cbf;
     final ExpressionFactory expressionFactory;
@@ -27,6 +26,8 @@ public class MainQuery {
     final ParameterManager parameterManager;
     final CTEManager cteManager;
     final Map<String, String> properties;
+
+    private final JpqlMacroStorage macroStorage;
 
     
     private MainQuery(CriteriaBuilderFactoryImpl cbf, EntityManager em, JpaProvider jpaProvider, DbmsDialect dbmsDialect, Set<String> registeredFunctions, ParameterManager parameterManager, Map<String, String> properties) {

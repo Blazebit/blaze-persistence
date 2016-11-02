@@ -15,20 +15,67 @@
  */
 package com.blazebit.persistence.impl;
 
-import com.blazebit.persistence.*;
-import com.blazebit.persistence.impl.expression.*;
+import com.blazebit.persistence.CaseWhenStarterBuilder;
+import com.blazebit.persistence.CommonQueryBuilder;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.FullSelectCTECriteriaBuilder;
+import com.blazebit.persistence.HavingOrBuilder;
+import com.blazebit.persistence.JoinOnBuilder;
+import com.blazebit.persistence.JoinType;
+import com.blazebit.persistence.Keyset;
+import com.blazebit.persistence.KeysetBuilder;
+import com.blazebit.persistence.LeafOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.MultipleSubqueryInitiator;
+import com.blazebit.persistence.RestrictionBuilder;
+import com.blazebit.persistence.ReturningModificationCriteriaBuilderFactory;
+import com.blazebit.persistence.Root;
+import com.blazebit.persistence.SelectRecursiveCTECriteriaBuilder;
+import com.blazebit.persistence.SimpleCaseWhenStarterBuilder;
+import com.blazebit.persistence.StartOngoingSetOperationCTECriteriaBuilder;
+import com.blazebit.persistence.SubqueryBuilder;
+import com.blazebit.persistence.SubqueryInitiator;
+import com.blazebit.persistence.WhereOrBuilder;
+import com.blazebit.persistence.impl.expression.Expression;
+import com.blazebit.persistence.impl.expression.ExpressionFactory;
+import com.blazebit.persistence.impl.expression.PathExpression;
+import com.blazebit.persistence.impl.expression.SubqueryExpressionFactory;
+import com.blazebit.persistence.impl.expression.VisitorAdapter;
 import com.blazebit.persistence.impl.function.entity.ValuesEntity;
-import com.blazebit.persistence.impl.query.*;
+import com.blazebit.persistence.impl.keyset.KeysetBuilderImpl;
+import com.blazebit.persistence.impl.keyset.KeysetImpl;
+import com.blazebit.persistence.impl.keyset.KeysetLink;
+import com.blazebit.persistence.impl.keyset.KeysetManager;
+import com.blazebit.persistence.impl.keyset.KeysetMode;
+import com.blazebit.persistence.impl.keyset.SimpleKeysetLink;
+import com.blazebit.persistence.impl.query.CTENode;
 import com.blazebit.persistence.impl.query.CustomQuerySpecification;
+import com.blazebit.persistence.impl.query.DefaultQuerySpecification;
+import com.blazebit.persistence.impl.query.EntityFunctionNode;
 import com.blazebit.persistence.impl.query.QuerySpecification;
-import com.blazebit.persistence.impl.transform.*;
+import com.blazebit.persistence.impl.transform.ExpressionTransformer;
+import com.blazebit.persistence.impl.transform.ExpressionTransformerGroup;
+import com.blazebit.persistence.impl.transform.OuterFunctionTransformer;
+import com.blazebit.persistence.impl.transform.SizeTransformationVisitor;
+import com.blazebit.persistence.impl.transform.SizeTransformerGroup;
+import com.blazebit.persistence.impl.transform.SubqueryRecursiveExpressionTransformer;
+import com.blazebit.persistence.spi.ConfigurationSource;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
 import com.blazebit.persistence.spi.JpaProvider;
-import com.blazebit.persistence.impl.keyset.*;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.impl.util.PropertyUtils;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.JpqlMacro;
+import com.blazebit.persistence.spi.QueryTransformer;
+import com.blazebit.persistence.spi.ServiceProvider;
+import com.blazebit.persistence.spi.SetOperationType;
 
-import javax.persistence.*;
+import javax.persistence.EntityManager;
+import javax.persistence.Parameter;
+import javax.persistence.Query;
+import javax.persistence.TemporalType;
+import javax.persistence.Tuple;
+import javax.persistence.TypedQuery;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 import javax.persistence.metamodel.Metamodel;
@@ -48,8 +95,9 @@ import java.util.logging.Logger;
  */
 public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, SetReturn, SubquerySetReturn, FinalSetReturn extends BaseFinalSetOperationBuilderImpl<?, ?, ?>> implements ServiceProvider, ConfigurationSource {
 
-    protected static final Logger LOG = Logger.getLogger(CriteriaBuilderImpl.class.getName());
-    public static final String idParamName = "ids";
+    public static final String ID_PARAM_NAME = "ids";
+
+    protected static final Logger LOG = Logger.getLogger(AbstractCommonQueryBuilder.class.getName());
 
     protected final MainQuery mainQuery;
     /* This might change when transitioning to a set operation */
@@ -81,22 +129,22 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     protected final AliasManager aliasManager;
     protected final ExpressionFactory expressionFactory;
 
-    private final List<ExpressionTransformer> transformers;
-    private final List<ExpressionTransformerGroup> transformerGroups;
-
     // Mutable state
     protected Class<QueryResultType> resultType;
     protected int firstResult = 0;
     protected int maxResults = Integer.MAX_VALUE;
     protected boolean fromClassExplicitelySet = false;
 
-    private boolean needsCheck = true;
-    private boolean implicitJoinsApplied = false;
-
     // Cache
     protected String cachedQueryString;
     protected String cachedExternalQueryString;
     protected boolean hasGroupBy = false;
+
+    private boolean needsCheck = true;
+    private boolean implicitJoinsApplied = false;
+
+    private final List<ExpressionTransformer> transformers;
+    private final List<ExpressionTransformerGroup> transformerGroups;
 
     /**
      * Create flat copy of builder
@@ -268,23 +316,23 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return mainQuery.cteManager.withStartSet(cteClass, (BuilderType) this);
     }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public FullSelectCTECriteriaBuilder<BuilderType> with(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-		return mainQuery.cteManager.with(cteClass, (BuilderType) this);
-	}
+        return mainQuery.cteManager.with(cteClass, (BuilderType) this);
+    }
 
     @SuppressWarnings("unchecked")
-	public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass) {
+    public SelectRecursiveCTECriteriaBuilder<BuilderType> withRecursive(Class<?> cteClass) {
         if (!dbmsDialect.supportsWithClause()) {
             throw new UnsupportedOperationException("The database does not support the with clause!");
         }
 
-		return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
-	}
+        return mainQuery.cteManager.withRecursive(cteClass, (BuilderType) this);
+    }
 
     @SuppressWarnings("unchecked")
     public ReturningModificationCriteriaBuilderFactory<BuilderType> withReturning(Class<?> cteClass) {
@@ -295,7 +343,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             throw new UnsupportedOperationException("The database does not support modification queries in the with clause!");
         }
 
-		return mainQuery.cteManager.withReturning(cteClass, (BuilderType) this);
+        return mainQuery.cteManager.withReturning(cteClass, (BuilderType) this);
     }
     
     public SetReturn union() {
@@ -383,7 +431,7 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
             parentFinalSetOperationBuilder = createFinalSetOperationBuilder(type, false);
             parentFinalSetOperationBuilder.setOperationManager.setStartQueryBuilder(this);
         } else {
-            SetOperationManager oldParentOperationManager = finalSetOperationBuilder.setOperationManager; 
+            SetOperationManager oldParentOperationManager = finalSetOperationBuilder.setOperationManager;
 
             if (oldParentOperationManager.getOperator() == null) {
                 oldParentOperationManager.setOperator(type);
@@ -506,28 +554,28 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     @SuppressWarnings("unchecked")
     private BuilderType from(Class<?> clazz, String alias, DbmsModificationState state) {
         clearCache();
-    	if (!fromClassExplicitelySet) {
-    		// When from is explicitly called we have to revert the implicit root
-    		if (joinManager.getRoots().size() > 0) {
-    			joinManager.removeRoot();
-    		}
-    	}
-    	
-    	EntityType<?> type = em.getMetamodel().entity(clazz);
-    	String finalAlias = joinManager.addRoot(type, alias);
+        if (!fromClassExplicitelySet) {
+            // When from is explicitly called we have to revert the implicit root
+            if (joinManager.getRoots().size() > 0) {
+                joinManager.removeRoot();
+            }
+        }
+        
+        EntityType<?> type = em.getMetamodel().entity(clazz);
+        String finalAlias = joinManager.addRoot(type, alias);
         fromClassExplicitelySet = true;
         
         // Handle old and new references
-    	if (state != null) {
-    	    Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
-    	    if (versionEntities == null) {
-    	        versionEntities = new HashMap<String, DbmsModificationState>(1);
-    	        explicitVersionEntities.put(clazz, versionEntities);
-    	    }
-    	    
-    	    versionEntities.put(finalAlias, state);
-    	}
-    	
+        if (state != null) {
+            Map<String, DbmsModificationState> versionEntities = explicitVersionEntities.get(clazz);
+            if (versionEntities == null) {
+                versionEntities = new HashMap<String, DbmsModificationState>(1);
+                explicitVersionEntities.put(clazz, versionEntities);
+            }
+            
+            versionEntities.put(finalAlias, state);
+        }
+        
         return (BuilderType) this;
     }
 
@@ -539,31 +587,31 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         return joinManager.getRootNodeOrFail("This should never happen. Please report this error!");
     }
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
     public BuilderType setFirstResult(int firstResult) {
-    	this.firstResult = firstResult;
+        this.firstResult = firstResult;
         return (BuilderType) this;
     }
 
-	@SuppressWarnings("unchecked")
-	public BuilderType setMaxResults(int maxResults) {
-    	this.maxResults = maxResults;
+    @SuppressWarnings("unchecked")
+    public BuilderType setMaxResults(int maxResults) {
+        this.maxResults = maxResults;
         return (BuilderType) this;
-	}
+    }
 
     public int getFirstResult() {
-		return firstResult;
-	}
-
-	public int getMaxResults() {
-		return maxResults;
-	}
-
-	public EntityManager getEntityManager() {
-	    return em;
+        return firstResult;
     }
 
-	public Metamodel getMetamodel() {
+    public int getMaxResults() {
+        return maxResults;
+    }
+
+    public EntityManager getEntityManager() {
+        return em;
+    }
+
+    public Metamodel getMetamodel() {
         return em.getMetamodel();
     }
 
@@ -793,10 +841,10 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         if (isCompatibleModeEnabled()) {
             expr = expressionFactory.createPathExpression(expression);
         } else {
-        	expr = expressionFactory.createSimpleExpression(expression, false);
-        	if (!(expr instanceof PathExpression) && dbmsDialect.supportsComplexGroupBy()) {
-        		throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
-        	}
+            expr = expressionFactory.createSimpleExpression(expression, false);
+            if (!(expr instanceof PathExpression) && dbmsDialect.supportsComplexGroupBy()) {
+                throw new RuntimeException("The complex group by expression [" + expression + "] is not supported by the underlying database");
+            }
             
         }
         verifyBuilderEnded();
@@ -905,8 +953,14 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         } else {
             expr = expressionFactory.createSimpleExpression(expression, false);
         }
-        _orderBy(expr, ascending, nullFirst);
+        orderBy(expr, ascending, nullFirst);
         return (BuilderType) this;
+    }
+
+    private void orderBy(Expression expression, boolean ascending, boolean nullFirst) {
+        clearCache();
+        verifyBuilderEnded();
+        orderByManager.orderBy(expression, ascending, nullFirst);
     }
 
     protected void verifyBuilderEnded() {
@@ -919,12 +973,6 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         havingManager.verifyBuilderEnded();
         selectManager.verifyBuilderEnded();
         joinManager.verifyBuilderEnded();
-    }
-
-    public void _orderBy(Expression expression, boolean ascending, boolean nullFirst) {
-        clearCache();
-        verifyBuilderEnded();
-        orderByManager.orderBy(expression, ascending, nullFirst);
     }
 
     /*
@@ -1486,11 +1534,11 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
 
     protected void buildBaseQueryString(StringBuilder sbSelectFrom, boolean externalRepresentation) {
-    	appendSelectClause(sbSelectFrom);
-    	appendFromClause(sbSelectFrom, externalRepresentation);
-    	appendWhereClause(sbSelectFrom);
-    	appendGroupByClause(sbSelectFrom);
-    	appendOrderByClause(sbSelectFrom);
+        appendSelectClause(sbSelectFrom);
+        appendFromClause(sbSelectFrom, externalRepresentation);
+        appendWhereClause(sbSelectFrom);
+        appendGroupByClause(sbSelectFrom);
+        appendOrderByClause(sbSelectFrom);
     }
 
     protected String buildExternalQueryString() {
@@ -1534,15 +1582,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
         Set<String> clauses = new LinkedHashSet<String>();
         groupByManager.buildGroupByClauses(clauses);
         if (hasGroupBy) {
-        	if (isImplicitGroupByFromSelect()) {
-        		selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
-        	}
-        	if (isImplicitGroupByFromHaving()) {
-        		havingManager.buildGroupByClauses(clauses);
-        	}
-        	if (isImplicitGroupByFromOrderBy()) {
-        		orderByManager.buildGroupByClauses(clauses, false);
-        	}
+            if (isImplicitGroupByFromSelect()) {
+                selectManager.buildGroupByClauses(em.getMetamodel(), clauses);
+            }
+            if (isImplicitGroupByFromHaving()) {
+                havingManager.buildGroupByClauses(clauses);
+            }
+            if (isImplicitGroupByFromOrderBy()) {
+                orderByManager.buildGroupByClauses(clauses, false);
+            }
         }
         groupByManager.buildGroupBy(sbSelectFrom, clauses);
         havingManager.buildClause(sbSelectFrom);
@@ -1610,15 +1658,15 @@ public abstract class AbstractCommonQueryBuilder<QueryResultType, BuilderType, S
     }
     
     private boolean isImplicitGroupByFromSelect() {
-    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
+        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_SELECT, true);
     }
     
     private boolean isImplicitGroupByFromHaving() {
-    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, true);
+        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_HAVING, true);
     }
     
     private boolean isImplicitGroupByFromOrderBy() {
-    	return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY, true);
+        return PropertyUtils.getAsBooleanProperty(mainQuery.properties, ConfigurationProperties.IMPLICIT_GROUP_BY_FROM_ORDER_BY, true);
     }
 
     // TODO: needs equals-hashCode implementation

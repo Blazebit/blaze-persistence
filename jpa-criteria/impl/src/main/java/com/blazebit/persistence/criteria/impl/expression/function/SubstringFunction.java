@@ -14,9 +14,9 @@ import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
  */
 public class SubstringFunction extends AbstractFunctionExpression<String> {
 
-    private static final long serialVersionUID = 1L;
-
     public static final String NAME = "SUBSTRING";
+
+    private static final long serialVersionUID = 1L;
 
     private final Expression<String> value;
     private final Expression<Integer> start;

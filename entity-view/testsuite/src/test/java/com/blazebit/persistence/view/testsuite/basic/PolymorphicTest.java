@@ -42,13 +42,13 @@ import com.blazebit.persistence.view.testsuite.entity.TestEntity;
 public class PolymorphicTest extends AbstractEntityViewTest {
 
     @Override
-	protected Class<?>[] getEntityClasses() {
-		return new Class<?>[] {
-				TestEntity.class
-		};
-	}
+    protected Class<?>[] getEntityClasses() {
+        return new Class<?>[] {
+                TestEntity.class
+        };
+    }
 
-	@Before
+    @Before
     public void setUp() {
         EntityTransaction tx = em.getTransaction();
         try {

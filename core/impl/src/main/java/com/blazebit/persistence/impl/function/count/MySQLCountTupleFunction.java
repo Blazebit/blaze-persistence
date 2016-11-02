@@ -9,7 +9,7 @@ import com.blazebit.persistence.spi.FunctionRenderContext;
  */
 public class MySQLCountTupleFunction extends AbstractCountFunction {
 
-    private static String DISTINCT = "distinct ";
+    private static final String DISTINCT = "distinct ";
 
     @Override
     public void render(FunctionRenderContext context) {

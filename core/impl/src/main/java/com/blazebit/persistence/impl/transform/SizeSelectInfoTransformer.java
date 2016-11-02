@@ -16,7 +16,10 @@
 package com.blazebit.persistence.impl.transform;
 
 
-import com.blazebit.persistence.impl.*;
+import com.blazebit.persistence.impl.ClauseType;
+import com.blazebit.persistence.impl.OrderByManager;
+import com.blazebit.persistence.impl.SelectInfo;
+import com.blazebit.persistence.impl.SelectManager;
 
 /**
  *

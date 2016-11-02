@@ -438,9 +438,9 @@ public class SelectTest extends AbstractCoreTest {
 
         // TODO: DB2 wants us to also put creationDate and lastModified into the group by...
         String objectQuery = "SELECT CASE WHEN MIN(d.lastModified) > d.creationDate THEN MIN(d.lastModified) ELSE CURRENT_TIMESTAMP END, owner_1.name "
-        		+ "FROM Document d JOIN d.owner owner_1 "
-        		+ "GROUP BY " + groupBy("owner_1.name", renderNullPrecedenceGroupBy("d.id", "DESC", "LAST"))
-        		+ " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
+                + "FROM Document d JOIN d.owner owner_1 "
+                + "GROUP BY " + groupBy("owner_1.name", renderNullPrecedenceGroupBy("d.id", "DESC", "LAST"))
+                + " ORDER BY " + renderNullPrecedence("d.id", "DESC", "LAST");
         assertEquals(objectQuery, cb.getQueryString());
         cb.getResultList();
     }

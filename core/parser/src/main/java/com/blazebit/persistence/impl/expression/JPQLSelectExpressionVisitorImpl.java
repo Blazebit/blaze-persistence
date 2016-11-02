@@ -15,15 +15,68 @@
  */
 package com.blazebit.persistence.impl.expression;
 
-import com.blazebit.persistence.impl.predicate.*;
+import com.blazebit.persistence.impl.predicate.BetweenPredicate;
+import com.blazebit.persistence.impl.predicate.BinaryExpressionPredicate;
+import com.blazebit.persistence.impl.predicate.BooleanLiteral;
+import com.blazebit.persistence.impl.predicate.CompoundPredicate;
+import com.blazebit.persistence.impl.predicate.EqPredicate;
+import com.blazebit.persistence.impl.predicate.ExistsPredicate;
+import com.blazebit.persistence.impl.predicate.GePredicate;
+import com.blazebit.persistence.impl.predicate.GtPredicate;
+import com.blazebit.persistence.impl.predicate.InPredicate;
+import com.blazebit.persistence.impl.predicate.IsEmptyPredicate;
+import com.blazebit.persistence.impl.predicate.IsNullPredicate;
+import com.blazebit.persistence.impl.predicate.LePredicate;
+import com.blazebit.persistence.impl.predicate.LikePredicate;
+import com.blazebit.persistence.impl.predicate.LtPredicate;
+import com.blazebit.persistence.impl.predicate.MemberOfPredicate;
+import com.blazebit.persistence.impl.predicate.Predicate;
+import com.blazebit.persistence.impl.predicate.PredicateQuantifier;
+import com.blazebit.persistence.impl.predicate.QuantifiableBinaryExpressionPredicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionBaseVisitor;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-import com.blazebit.persistence.parser.JPQLSelectExpressionParser.*;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionIntegerLiteralIndexContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionSingleElementPathIndexContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ArrayExpressionStringLiteralIndexContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Boolean_literalContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ComparisonExpression_path_typeContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ComparisonExpression_type_pathContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.DateLiteralContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Escape_characterContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.ExtendedJoinPathExpressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Functions_returning_datetimeContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.General_path_elementContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IdentifierContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.In_itemContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.IndexFunctionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Macro_expressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Path_no_arrayContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_arithmeticContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_booleanContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_datetimeContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_entityContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_entitytypeContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.QuantifiedComparisonExpression_stringContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SimpleJoinPathExpressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SimplePathContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Simple_path_elementContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.SingleJoinElementExpressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.String_literalContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TimeLiteralContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TimestampLiteralContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TreatJoinPathExpressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TreatedRootPathContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_key_value_expressionContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.Treated_subpathContext;
+import com.blazebit.persistence.parser.JPQLSelectExpressionParser.TrimFunctionContext;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -631,7 +684,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
             left = new PathExpression(pathElems);
         }
         if (ctx.param == null && !ctx.in_item().isEmpty()) {
-            List<Expression> inItems= new ArrayList<Expression>();
+            List<Expression> inItems = new ArrayList<Expression>();
             for (In_itemContext inItemCtx : ctx.in_item()) {
                 inItems.add(inItemCtx.accept(this));
             }
@@ -867,7 +920,7 @@ public class JPQLSelectExpressionVisitorImpl extends JPQLSelectExpressionBaseVis
         if (token == null) {
             quantifier = PredicateQuantifier.ONE;
         } else {
-            switch(token.getType()) {
+            switch (token.getType()) {
                 case JPQLSelectExpressionLexer.ANY:
                 case JPQLSelectExpressionLexer.SOME:
                     quantifier = PredicateQuantifier.ANY;

@@ -7,7 +7,6 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
-import javax.persistence.metamodel.EntityType;
 
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.Queryable;

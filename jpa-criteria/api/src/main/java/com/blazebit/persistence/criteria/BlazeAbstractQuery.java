@@ -1,7 +1,6 @@
 package com.blazebit.persistence.criteria;
 
 import javax.persistence.criteria.AbstractQuery;
-import javax.persistence.criteria.CommonAbstractCriteria;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.EntityType;

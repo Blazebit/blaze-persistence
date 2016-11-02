@@ -381,13 +381,13 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
             if (nullsFirst) {
                 return renderNullPrecedence(expression, "ASC", "FIRST");
             } else {
-            	return renderNullPrecedence(expression, "ASC", "LAST");
+                return renderNullPrecedence(expression, "ASC", "LAST");
             }
         } else {
             if (nullsFirst) {
-            	return renderNullPrecedence(expression, "DESC", "FIRST");
+                return renderNullPrecedence(expression, "DESC", "FIRST");
             } else {
-            	return renderNullPrecedence(expression, "DESC", "LAST");
+                return renderNullPrecedence(expression, "DESC", "LAST");
             }
         }
     }

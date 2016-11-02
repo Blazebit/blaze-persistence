@@ -54,10 +54,10 @@ public class TestCTE implements Serializable {
     }
 
     public Integer getLevel() {
-		return level;
-	}
+        return level;
+    }
 
-	public void setLevel(Integer level) {
-		this.level = level;
-	}
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
 }

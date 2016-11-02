@@ -16,7 +16,6 @@
 package com.blazebit.persistence;
 
 import javax.persistence.Query;
-import javax.persistence.Tuple;
 
 /**
  * A base interface for executable query builders.

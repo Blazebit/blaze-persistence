@@ -376,7 +376,7 @@ public class PaginationTest extends AbstractCoreTest {
         String expectedSubQuery = "(SELECT COUNT(" + joinAliasValue("contacts_1", "id") + ") FROM Document d2 LEFT JOIN d2.contacts contacts_1 WHERE d2.id = d.id)";
         String expectedIdQuery = "SELECT d.id, " + expectedSubQuery + " AS contactCount FROM Document d "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id", "ASC", "LAST"))
-        		+ " ORDER BY " + renderNullPrecedence("contactCount", expectedSubQuery, "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + " ORDER BY " + renderNullPrecedence("contactCount", expectedSubQuery, "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         cb.getResultList();
     }
@@ -410,11 +410,11 @@ public class PaginationTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedIdQuery = "SELECT d.id, " + function("COUNT_TUPLE", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id", "ASC", "LAST"))
-        		+ " ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + " ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT " + countPaginated("d.id", false) + " FROM Document d";
         String expectedObjectQuery = "SELECT " + function("COUNT_TUPLE", "KEY(contacts_1)") + " AS contactCount FROM Document d LEFT JOIN d.contacts contacts_1 WHERE d.id IN :ids "
                 + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("d.id", "ASC", "LAST"))
-        		+ " ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
+                + " ORDER BY " + renderNullPrecedence("contactCount", function("COUNT_TUPLE", "KEY(contacts_1)"), "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
 
         assertEquals(expectedIdQuery, cb.getPageIdQueryString());
         assertEquals(expectedCountQuery, cb.getPageCountQueryString());

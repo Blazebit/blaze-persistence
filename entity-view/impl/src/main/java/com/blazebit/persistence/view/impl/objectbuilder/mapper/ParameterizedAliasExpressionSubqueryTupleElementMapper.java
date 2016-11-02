@@ -37,7 +37,7 @@ public class ParameterizedAliasExpressionSubqueryTupleElementMapper extends Para
 
     @Override
     public void applyMapping(SelectBuilder<?> queryBuilder, CommonQueryBuilder<?> parameterSource, Map<String, Object> optionalParameters) {
-    	providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
+        providerFactory.create(parameterSource, optionalParameters).createSubquery(queryBuilder.selectSubquery(subqueryAlias, subqueryExpression, alias));
     }
 
 }

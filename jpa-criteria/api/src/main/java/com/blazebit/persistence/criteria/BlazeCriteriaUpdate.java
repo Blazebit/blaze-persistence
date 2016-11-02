@@ -1,7 +1,6 @@
 package com.blazebit.persistence.criteria;
 
 import com.blazebit.persistence.Executable;
-import com.blazebit.persistence.Queryable;
 
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Expression;

@@ -29,9 +29,9 @@ import com.blazebit.persistence.spi.SetOperationType;
  * @since 1.1.0
  */
 public abstract class AbstractCriteriaBuilder<T, X extends BaseCriteriaBuilder<T, X>, Z, W> extends AbstractCommonQueryBuilder<T, X, Z, W, BaseFinalSetOperationCriteriaBuilderImpl<T, ?>> {
-	
-	protected final BuilderListener<Object> listener;
-	protected final BuilderListenerImpl<Object> subListener;
+    
+    protected final BuilderListener<Object> listener;
+    protected final BuilderListenerImpl<Object> subListener;
 
     public AbstractCriteriaBuilder(MainQuery mainQuery, boolean isMainQuery, Class<T> clazz, String alias, BuilderListener<Object> listener, BaseFinalSetOperationCriteriaBuilderImpl<T, ?> finalSetOperationBuilder) {
         super(mainQuery, isMainQuery, DbmsStatementType.SELECT, clazz, alias, finalSetOperationBuilder);

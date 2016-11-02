@@ -20,8 +20,12 @@ public abstract class AbstractNumericExpression extends AbstractExpression imple
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof AbstractNumericExpression)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AbstractNumericExpression)) {
+            return false;
+        }
 
         AbstractNumericExpression that = (AbstractNumericExpression) o;
 

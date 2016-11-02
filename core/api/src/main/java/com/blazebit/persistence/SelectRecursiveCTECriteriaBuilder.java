@@ -38,5 +38,5 @@ public interface SelectRecursiveCTECriteriaBuilder<X> extends SelectBaseCTECrite
      *
      * @return The parent query builder
      */
-	public SelectCTECriteriaBuilder<X> unionAll();
+    public SelectCTECriteriaBuilder<X> unionAll();
 }

@@ -15,11 +15,8 @@
  */
 package com.blazebit.persistence.view.impl.metamodel.attribute;
 
-import com.blazebit.persistence.view.impl.metamodel.AbstractParameterMappingPluralAttribute;
-import com.blazebit.persistence.view.impl.metamodel.MetamodelUtils;
 import com.blazebit.persistence.view.metamodel.CorrelatedAttribute;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
-import com.blazebit.persistence.view.metamodel.SetAttribute;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;

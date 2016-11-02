@@ -31,10 +31,10 @@ public abstract class AbstractTestExpressionFactory extends AbstractExpressionFa
 
     
     public AbstractTestExpressionFactory(Set<String> aggregateFunctions, boolean optimize) {
-		super(aggregateFunctions, true, optimize);
-	}
+        super(aggregateFunctions, true, optimize);
+    }
 
-	@Override
+    @Override
     protected void configureLexer(JPQLSelectExpressionLexer lexer) {
         lexer.removeErrorListeners();
         lexer.addErrorListener(ERR_LISTENER);

@@ -79,7 +79,7 @@ public class EmbeddableSimpleTest extends AbstractCoreTest {
         assertEquals(expectedCountQuery, criteria.getPageCountQueryString());
     }
 
-	// TODO: not yet implemented
+    // TODO: not yet implemented
     @Test
     @Ignore("This is still causing problems in the JoinManager because of the cyclic dependency")
     public void testCyclicDependencyInOnClauseImplicitJoin() {

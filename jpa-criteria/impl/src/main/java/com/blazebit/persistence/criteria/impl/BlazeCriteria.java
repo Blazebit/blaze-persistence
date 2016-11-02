@@ -13,6 +13,9 @@ import com.blazebit.persistence.criteria.BlazeCriteriaQuery;
  */
 public class BlazeCriteria {
 
+    private BlazeCriteria() {
+    }
+
     public static BlazeCriteriaBuilder get(EntityManager em, CriteriaBuilderFactory cbf) {
         return new BlazeCriteriaBuilderImpl(em, cbf);
     }

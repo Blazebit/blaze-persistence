@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.testsuite.entity.Person;
 @EntityView(Person.class)
 public interface PersonInvalidMappingValidationView extends IdHolderView<Long> {
 
-	// defaultContact is mapped on Document, but not on Person
+    // defaultContact is mapped on Document, but not on Person
     @Mapping("partnerDocument.contacts[defaultContact].name")
     public String getName();
 }

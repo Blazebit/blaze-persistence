@@ -25,16 +25,16 @@ package com.blazebit.persistence;
  */
 public interface LimitBuilder<X extends LimitBuilder<X>> {
 
-	// TODO: documentation
-	public X setFirstResult(int firstResult);
+    // TODO: documentation
+    public X setFirstResult(int firstResult);
 
-	// TODO: documentation
-	public X setMaxResults(int maxResults);
+    // TODO: documentation
+    public X setMaxResults(int maxResults);
 
-	// TODO: documentation
+    // TODO: documentation
     public int getFirstResult();
 
-	// TODO: documentation
+    // TODO: documentation
     public int getMaxResults();
-	
+    
 }

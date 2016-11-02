@@ -47,12 +47,12 @@ public class ValidationTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonDuplicateCollectionUsageValidationView.class);
         
         try {
-        	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
-        	Assert.fail("Expected validation exception!");
+            cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+            Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-        	if (!ex.getMessage().contains("'ownedDocuments'")) {
-        		throw ex;
-        	}
+            if (!ex.getMessage().contains("'ownedDocuments'")) {
+                throw ex;
+            }
         }
     }
 
@@ -62,12 +62,12 @@ public class ValidationTest extends AbstractEntityViewTest {
         cfg.addEntityView(PersonInvalidMappingValidationView.class);
         
         try {
-        	cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
-        	Assert.fail("Expected validation exception!");
+            cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
+            Assert.fail("Expected validation exception!");
         } catch (IllegalArgumentException ex) {
-        	if (!ex.getMessage().contains("'defaultContact'")) {
-        		throw ex;
-        	}
+            if (!ex.getMessage().contains("'defaultContact'")) {
+                throw ex;
+            }
         }
     }
 }

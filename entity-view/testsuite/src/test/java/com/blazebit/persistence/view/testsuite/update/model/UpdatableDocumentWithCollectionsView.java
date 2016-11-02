@@ -34,8 +34,8 @@ public interface UpdatableDocumentWithCollectionsView {
 
     public void setName(String name);
 
-	public List<Person> getPersonList();
-	
-	public void setPersonList(List<Person> personList);
+    public List<Person> getPersonList();
+    
+    public void setPersonList(List<Person> personList);
 
 }

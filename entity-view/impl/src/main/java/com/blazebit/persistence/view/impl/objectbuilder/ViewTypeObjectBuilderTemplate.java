@@ -502,7 +502,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     private void applySubviewMapping(MappingAttribute<? super T, ?> mappingAttribute, String attributePath, int[] idPositions, Class<?> subviewClass, List<Object> mappingList, List<String> parameterMappingList, int batchSize) {
         @SuppressWarnings("unchecked")
-		ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
+        ManagedViewType<Object[]> managedViewType = (ManagedViewType<Object[]>) evm.getMetamodel().managedView(subviewClass);
         String subviewAttributePath = getAttributePath(attributePath, mappingAttribute);
         String subviewAliasPrefix = getAlias(aliasPrefix, mappingAttribute);
         List<String> subviewMappingPrefix = createSubviewMappingPrefix(mappingPrefix, mappingAttribute);
@@ -933,7 +933,7 @@ public class ViewTypeObjectBuilderTemplate<T> {
 
     public static class Key {
 
-    	private final ExpressionFactory ef;
+        private final ExpressionFactory ef;
         private final ManagedViewType<Object> viewType;
         private final MappingConstructor<Object> constructor;
         private final String name;

@@ -180,12 +180,12 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             return Collections.emptySet();
         }
         
-    	CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, metamodel);
+        CollectionJoinMappingGathererExpressionVisitor visitor = new CollectionJoinMappingGathererExpressionVisitor(managedType, metamodel);
         expressionFactory.createSimpleExpression(mapping, false).accept(visitor);
         Set<String> mappings = new HashSet<String>();
         
         for (String s : visitor.getPaths()) {
-        	mappings.add(s);
+            mappings.add(s);
         }
         
         return mappings;
@@ -291,7 +291,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     error = false;
                     break;
                 } else if (t.hasCollectionJoin() && elementType != null && elementType.isAssignableFrom(t.getLeafBaseValueClass())) {
-                	error = false;
+                    error = false;
                     break;
                 }
             }
@@ -314,17 +314,17 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
     }
     
     public boolean isUpdatable() {
-    	return false;
+        return false;
     }
 
     public boolean isIndexed() {
-    	return false;
+        return false;
     }
 
     protected abstract String getLocation();
 
     public Class<?> getElementType() {
-    	return getJavaType();
+        return getJavaType();
     }
 
     public PluralAttribute.CollectionType getCollectionType() {

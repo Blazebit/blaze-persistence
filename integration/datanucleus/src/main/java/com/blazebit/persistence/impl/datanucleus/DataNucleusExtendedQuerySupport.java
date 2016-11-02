@@ -11,49 +11,46 @@ import org.datanucleus.store.rdbms.query.JPQLQuery;
 import org.datanucleus.store.rdbms.query.RDBMSQueryCompilation;
 
 import com.blazebit.apt.service.ServiceProvider;
-import com.blazebit.persistence.CommonQueryBuilder;
-import com.blazebit.persistence.CriteriaBuilderFactory;
 import com.blazebit.persistence.ReturningResult;
-import com.blazebit.persistence.spi.DbmsDialect;
 import com.blazebit.persistence.spi.ExtendedQuerySupport;
 
 @ServiceProvider(ExtendedQuerySupport.class)
 public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
-	
-	private static final Field datastoreCompilationField;
-	
-	static {
-		try {
-			datastoreCompilationField = JPQLQuery.class.getDeclaredField("datastoreCompilation");
-			datastoreCompilationField.setAccessible(true);
-		} catch (Exception e) {
-			throw new RuntimeException("Unsupported datanucleus version!", e);
-		}
-	}
+    
+    private static final Field DATASTORE_COMPILATION_FIELD;
+    
+    static {
+        try {
+            DATASTORE_COMPILATION_FIELD = JPQLQuery.class.getDeclaredField("datastoreCompilation");
+            DATASTORE_COMPILATION_FIELD.setAccessible(true);
+        } catch (Exception e) {
+            throw new RuntimeException("Unsupported datanucleus version!", e);
+        }
+    }
 
-	@Override
-	public String getSql(EntityManager em, Query query) {
-		org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
-		dnQuery.compile();
-		return (String) dnQuery.getNativeQuery();
-	}
-	
-	public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
+    @Override
+    public String getSql(EntityManager em, Query query) {
+        org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
+        dnQuery.compile();
+        return (String) dnQuery.getNativeQuery();
+    }
+    
+    public List<String> getCascadingDeleteSql(EntityManager em, Query query) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
-	}
+    }
 
-	@Override
+    @Override
     public String[] getColumnNames(EntityManager em, EntityType<?> entityType, String attributeName) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }
 
     @Override
-	public int getSqlSelectAliasPosition(EntityManager em, Query query, String alias) {
+    public int getSqlSelectAliasPosition(EntityManager em, Query query, String alias) {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
-	}
+    }
 
     @Override
     public String getSqlAlias(EntityManager em, Query query, String alias) {
@@ -69,16 +66,16 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
 
     @Override
     @SuppressWarnings("rawtypes")
-	public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
-		applySql(query, sqlOverride);
-		return query.getResultList();
-	}
-	
-	@Override
-	public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
-		applySql(query, sqlOverride);
-		return query.getSingleResult();
-	}
+    public List getResultList(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+        applySql(query, sqlOverride);
+        return query.getResultList();
+    }
+    
+    @Override
+    public Object getSingleResult(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
+        applySql(query, sqlOverride);
+        return query.getSingleResult();
+    }
 
     @Override
     public int executeUpdate(com.blazebit.persistence.spi.ServiceProvider serviceProvider, List<Query> participatingQueries, Query query, String sqlOverride) {
@@ -91,18 +88,18 @@ public class DataNucleusExtendedQuerySupport implements ExtendedQuerySupport {
         // TODO: implement
         throw new UnsupportedOperationException("Not yet implemeneted!");
     }
-	
-	private void applySql(Query query, String sqlOverride) {
-	    // TODO: parameter handling
-		org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
-		// Disable caching for these queries
-		dnQuery.addExtension("datanucleus.query.compilation.cached", Boolean.FALSE);
-		try {
-			RDBMSQueryCompilation datastoreCompilation = (RDBMSQueryCompilation) datastoreCompilationField.get(dnQuery);
-			datastoreCompilation.setSQL(sqlOverride);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    
+    private void applySql(Query query, String sqlOverride) {
+        // TODO: parameter handling
+        org.datanucleus.store.query.Query<?> dnQuery = query.unwrap(org.datanucleus.store.query.Query.class);
+        // Disable caching for these queries
+        dnQuery.addExtension("datanucleus.query.compilation.cached", Boolean.FALSE);
+        try {
+            RDBMSQueryCompilation datastoreCompilation = (RDBMSQueryCompilation) DATASTORE_COMPILATION_FIELD.get(dnQuery);
+            datastoreCompilation.setSQL(sqlOverride);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }

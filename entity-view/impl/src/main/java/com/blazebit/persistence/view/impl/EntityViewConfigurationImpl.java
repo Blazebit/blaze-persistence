@@ -38,14 +38,14 @@ public class EntityViewConfigurationImpl implements EntityViewConfiguration {
 
     public EntityViewConfigurationImpl() {
         loadDefaultProperties();
-	}
+    }
     
     private void loadDefaultProperties() {
-    	properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
-    	properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
+        properties.put(ConfigurationProperties.PROXY_EAGER_LOADING, "false");
+        properties.put(ConfigurationProperties.PROXY_UNSAFE_ALLOWED, "true");
     }
 
-	@Override
+    @Override
     public EntityViewConfiguration addEntityView(Class<?> clazz) {
         entityViewClasses.add(clazz);
         return this;

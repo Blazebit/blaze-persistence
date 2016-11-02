@@ -30,9 +30,9 @@ import org.eclipse.persistence.internal.expressions.ExpressionSQLPrinter;
  */
 public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     
-	private static final long serialVersionUID = 1L;
-	
-	private final JpqlFunction function;
+    private static final long serialVersionUID = 1L;
+    
+    private final JpqlFunction function;
 
     public JpqlFunctionExpressionOperator(JpqlFunction function) {
         this.function = function;
@@ -44,7 +44,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
         super.printDuo(first, second, printer);
     }
 
-	@Override
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public void printCollection(Vector items, ExpressionSQLPrinter printer) {
         prepare((List<Expression>) items);
@@ -52,7 +52,7 @@ public class JpqlFunctionExpressionOperator extends ExpressionOperator {
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-	private void prepare(List<Expression> items) {
+    private void prepare(List<Expression> items) {
         EclipseLinkFunctionRenderContext context = new EclipseLinkFunctionRenderContext(items);
         function.render(context);
         setArgumentIndices(context.getArgumentIndices());

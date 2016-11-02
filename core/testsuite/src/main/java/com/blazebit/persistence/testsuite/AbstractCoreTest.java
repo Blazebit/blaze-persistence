@@ -18,7 +18,11 @@ package com.blazebit.persistence.testsuite;
 import java.util.*;
 
 import com.blazebit.lang.StringUtils;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
+import com.blazebit.persistence.spi.EntityManagerFactoryIntegrator;
+import com.blazebit.persistence.spi.JpaProvider;
+import com.blazebit.persistence.spi.JpaProviderFactory;
+import com.blazebit.persistence.spi.JpqlFunctionGroup;
 import com.blazebit.persistence.testsuite.base.AbstractPersistenceTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
@@ -40,22 +44,24 @@ import com.blazebit.persistence.testsuite.tx.TxWork;
  */
 public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
-    protected static final JpaProvider staticJpaProvider;
-    private CriteriaBuilderConfiguration config;
+    protected static final JpaProvider STATIC_JPA_PROVIDER;
+    protected static final String ON_CLAUSE;
+
     protected JpaProvider jpaProvider;
+
+    private CriteriaBuilderConfiguration config;
     private String dbms;
-    protected String ON_CLAUSE;
     
     static {
         EntityManagerFactoryIntegrator integrator = ServiceLoader.load(EntityManagerFactoryIntegrator.class).iterator().next();
-        staticJpaProvider = integrator.getJpaProviderFactory(null).createJpaProvider(null);
+        STATIC_JPA_PROVIDER = integrator.getJpaProviderFactory(null).createJpaProvider(null);
+        ON_CLAUSE = STATIC_JPA_PROVIDER.getOnClause();
     }
 
     @Override
     public void init() {
         super.init();
         jpaProvider = cbf.getService(JpaProviderFactory.class).createJpaProvider(em);
-        ON_CLAUSE = jpaProvider.getOnClause();
     }
 
     @Override
@@ -68,7 +74,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
 
         dbms = config.getEntityManagerIntegrators().get(0).getDbms(em.getEntityManagerFactory());
         if ("postgresql".equals(dbms)) {
-        	config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
+            config.setProperty("com.blazebit.persistence.returning_clause_case_sensitive", "false");
         }
         
         this.config = config;
@@ -78,7 +84,7 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     protected Set<String> getRegisteredFunctions() {
         return new HashSet<String>(Arrays.asList(
                 // internal functions
-        		"count_star",
+                "count_star",
                 "limit",
                 "page_position",
                 "set_union", "set_union_all", "set_intersect", "set_intersect_all", "set_except", "set_except_all",
@@ -115,10 +121,8 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String joinAliasValue(String alias, String field) {
-//        if (field == null) {
-            alias = jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
-//        }
-//        
+        alias = jpaProvider.getCollectionValueFunction() != null ? jpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
+
         if (field == null) {
             return alias;
         }
@@ -130,13 +134,13 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String escapeCharacter(char character) {
-    	return jpaProvider.escapeCharacter(character);
+        return jpaProvider.escapeCharacter(character);
     }
 
     protected String renderNullPrecedence(String expression, String resolvedExpression, String order, String nulls) {
-    	StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
         jpaProvider.renderNullPrecedence(sb, expression, resolvedExpression, order, nulls);
-    	return sb.toString();
+        return sb.toString();
     }
 
     protected String renderNullPrecedenceGroupBy(String resolvedExpression, String order, String nulls) {
@@ -152,39 +156,39 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
     
     protected String countStar() {
-    	if (jpaProvider.supportsCountStar()) {
-    		return "COUNT(*)";
-    	} else {
-    		return function("COUNT_STAR");
-    	}
+        if (jpaProvider.supportsCountStar()) {
+            return "COUNT(*)";
+        } else {
+            return function("COUNT_STAR");
+        }
     }
 
-	protected String countPaginated(String string, boolean distinct) {
-		StringBuilder sb = new StringBuilder(20 + string.length());
-		sb.append(jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', ").append(string).append(")");
-		
-		if (!distinct) {
-	    	String countStar;
-	    	if (jpaProvider.supportsCountStar()) {
-	    		countStar = "COUNT(*";
-	    	} else {
-	    		countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
-	    	}
-	    	for (int i = 0; i < sb.length() - 1; i++) {
-	    		if (i < countStar.length()) {
-	    			sb.setCharAt(i, countStar.charAt(i));
-	    		} else {
-	    			sb.setCharAt(i, ' ');
-	    		}
-	    	}
-		}
-		
-		return sb.toString();
-	}
+    protected String countPaginated(String string, boolean distinct) {
+        StringBuilder sb = new StringBuilder(20 + string.length());
+        sb.append(jpaProvider.getCustomFunctionInvocation("COUNT_TUPLE", 1) + "'DISTINCT', ").append(string).append(")");
+        
+        if (!distinct) {
+            String countStar;
+            if (jpaProvider.supportsCountStar()) {
+                countStar = "COUNT(*";
+            } else {
+                countStar = jpaProvider.getCustomFunctionInvocation("COUNT_STAR", 0);
+            }
+            for (int i = 0; i < sb.length() - 1; i++) {
+                if (i < countStar.length()) {
+                    sb.setCharAt(i, countStar.charAt(i));
+                } else {
+                    sb.setCharAt(i, ' ');
+                }
+            }
+        }
+        
+        return sb.toString();
+    }
 
-	protected String treatRoot(String path, Class<?> type, String property) {
-	    if (jpaProvider.supportsRootTreat()) {
-	        return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
+    protected String treatRoot(String path, Class<?> type, String property) {
+        if (jpaProvider.supportsRootTreat()) {
+            return "TREAT(" + path + " AS " + type.getSimpleName() + ")." + property;
         } else if (jpaProvider.supportsSubtypePropertyResolving()) {
             return path + "." + property;
         }
@@ -213,14 +217,11 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
     }
 
     protected String renderNullPrecedence(String expression, String order, String nulls) {
-    	return renderNullPrecedence(expression, expression, order, nulls);
+        return renderNullPrecedence(expression, expression, order, nulls);
     }
 
     protected static String staticJoinAliasValue(String alias, String field) {
-//        if (field == null) {
-            alias = staticJpaProvider.getCollectionValueFunction() != null ? staticJpaProvider.getCollectionValueFunction() + "(" + alias + ")" : alias;
-//        }
-//
+        alias = STATIC_JPA_PROVIDER.getCollectionValueFunction() != null ? STATIC_JPA_PROVIDER.getCollectionValueFunction() + "(" + alias + ")" : alias;
         if (field == null) {
             return alias;
         }

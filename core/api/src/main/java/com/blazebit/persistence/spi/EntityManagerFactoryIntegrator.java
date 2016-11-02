@@ -30,24 +30,24 @@ import javax.persistence.EntityManagerFactory;
  * @since 1.0
  */
 public interface EntityManagerFactoryIntegrator {
-	
-	/**
-	 * Returns the name of dbms for which the given entity manager factory operates.
-	 * 
-	 * @param entityManagerFactory Then entity manager factory for which to retrieve the dbms from
-	 * @return The name of the dbms
-	 * @since 1.1.0
-	 */
-	public String getDbms(EntityManagerFactory entityManagerFactory);
+    
+    /**
+     * Returns the name of dbms for which the given entity manager factory operates.
+     * 
+     * @param entityManagerFactory Then entity manager factory for which to retrieve the dbms from
+     * @return The name of the dbms
+     * @since 1.1.0
+     */
+    public String getDbms(EntityManagerFactory entityManagerFactory);
 
-	/**
-	 * Returns the jpa provider factory for the jpa provider of the given entity manager factory.
-	 *
-	 * @param entityManagerFactory Then entity manager factory for which to retrieve jpa provider factory for
-	 * @return The jpa provider factory
-	 * @since 1.2.0
-	 */
-	public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory);
+    /**
+     * Returns the jpa provider factory for the jpa provider of the given entity manager factory.
+     *
+     * @param entityManagerFactory Then entity manager factory for which to retrieve jpa provider factory for
+     * @return The jpa provider factory
+     * @since 1.2.0
+     */
+    public JpaProviderFactory getJpaProviderFactory(EntityManagerFactory entityManagerFactory);
 
     /**
      * Registers the given functions under the given names on the given entity manager factory.

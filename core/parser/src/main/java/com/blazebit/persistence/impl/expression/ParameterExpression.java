@@ -83,13 +83,21 @@ public class ParameterExpression extends AbstractExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ParameterExpression)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof ParameterExpression)) {
+            return false;
+        }
 
         ParameterExpression that = (ParameterExpression) o;
 
-        if (collectionValued != that.collectionValued) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
+        if (collectionValued != that.collectionValued) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
         return value != null ? value.equals(that.value) : that.value == null;
 
     }

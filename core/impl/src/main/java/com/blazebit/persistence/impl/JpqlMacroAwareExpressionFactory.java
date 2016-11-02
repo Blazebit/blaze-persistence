@@ -160,11 +160,15 @@ public final class JpqlMacroAwareExpressionFactory implements ExpressionFactory 
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
+        if (this == o) {
+            return true;
+        }
         if (o instanceof ExpressionFactory) {
             ExpressionFactory that = (ExpressionFactory) o;
             ExpressionFactory thatExpressionFactory = that.unwrap(expressionFactory.getClass());
-            if (thatExpressionFactory == null || !expressionFactory.equals(thatExpressionFactory)) return false;
+            if (thatExpressionFactory == null || !expressionFactory.equals(thatExpressionFactory)) {
+                return false;
+            }
             return getDefaultMacroConfiguration() != null ? getDefaultMacroConfiguration().equals(that.getDefaultMacroConfiguration()) : that.getDefaultMacroConfiguration() == null;
         }
 

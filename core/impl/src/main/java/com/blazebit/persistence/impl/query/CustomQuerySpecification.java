@@ -6,7 +6,11 @@ import com.blazebit.persistence.impl.CustomSQLTypedQuery;
 import com.blazebit.persistence.impl.plan.CustomSelectQueryPlan;
 import com.blazebit.persistence.impl.plan.ModificationQueryPlan;
 import com.blazebit.persistence.impl.plan.SelectQueryPlan;
-import com.blazebit.persistence.spi.*;
+import com.blazebit.persistence.spi.DbmsDialect;
+import com.blazebit.persistence.spi.DbmsModificationState;
+import com.blazebit.persistence.spi.DbmsStatementType;
+import com.blazebit.persistence.spi.ExtendedQuerySupport;
+import com.blazebit.persistence.spi.ServiceProvider;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;

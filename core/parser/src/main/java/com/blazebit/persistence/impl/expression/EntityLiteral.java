@@ -40,8 +40,12 @@ public class EntityLiteral extends AbstractExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof EntityLiteral)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof EntityLiteral)) {
+            return false;
+        }
 
         EntityLiteral that = (EntityLiteral) o;
 

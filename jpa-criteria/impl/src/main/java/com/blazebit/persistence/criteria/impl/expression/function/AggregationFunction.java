@@ -3,11 +3,9 @@ package com.blazebit.persistence.criteria.impl.expression.function;
 import java.util.List;
 
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Root;
 
 import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
 import com.blazebit.persistence.criteria.impl.RenderContext;
-import com.blazebit.persistence.criteria.impl.expression.LiteralExpression;
 
 /**
  *

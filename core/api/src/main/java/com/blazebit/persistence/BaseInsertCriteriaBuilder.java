@@ -25,10 +25,10 @@ package com.blazebit.persistence;
  */
 public interface BaseInsertCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, OrderByBuilder<X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X> {
 
-	// TODO: documentation
-	public X bind(String attribute, Object value);
+    // TODO: documentation
+    public X bind(String attribute, Object value);
 
-	// TODO: documentation
-	public SelectBuilder<X> bind(String attribute);
-	
+    // TODO: documentation
+    public SelectBuilder<X> bind(String attribute);
+    
 }

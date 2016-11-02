@@ -21,8 +21,12 @@ public abstract class TemporalLiteral extends AbstractExpression {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof TemporalLiteral)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof TemporalLiteral)) {
+            return false;
+        }
 
         TemporalLiteral that = (TemporalLiteral) o;
 

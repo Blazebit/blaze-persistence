@@ -18,7 +18,13 @@ package com.blazebit.persistence.impl.expression;
 import com.blazebit.persistence.impl.predicate.Predicate;
 import com.blazebit.persistence.parser.JPQLSelectExpressionLexer;
 import com.blazebit.persistence.parser.JPQLSelectExpressionParser;
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.ANTLRErrorListener;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
 import org.antlr.v4.runtime.dfa.DFA;
 
@@ -35,6 +41,27 @@ import java.util.logging.Logger;
 public abstract class AbstractExpressionFactory extends AbstractExpressionFactoryMacroAdapter {
 
     protected static final Logger LOG = Logger.getLogger("com.blazebit.persistence.parser");
+
+    protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
+
+        @Override
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
+            throw new SyntaxErrorException("line " + line + ":" + charPositionInLine + " " + msg);
+        }
+
+        @Override
+        public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+        }
+
+        @Override
+        public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+        }
+
+        @Override
+        public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+        }
+    };
+
     private final boolean allowTreatJoinExtension;
     private final boolean optimize;
     private final Set<String> aggregateFunctions;
@@ -221,26 +248,6 @@ public abstract class AbstractExpressionFactory extends AbstractExpressionFactor
         parser.removeErrorListeners();
         parser.addErrorListener(ERR_LISTENER);
     }
-
-    protected static final ANTLRErrorListener ERR_LISTENER = new ANTLRErrorListener() {
-
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-            throw new SyntaxErrorException("line " + line + ":" + charPositionInLine + " " + msg);
-        }
-
-        @Override
-        public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-        }
-
-        @Override
-        public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-        }
-
-        @Override
-        public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-        }
-    };
 
     protected interface RuleInvoker {
 

@@ -11,9 +11,9 @@ import com.blazebit.persistence.criteria.impl.BlazeCriteriaBuilderImpl;
  */
 public class SqrtFunction extends FunctionExpressionImpl<Double> {
 
-    private static final long serialVersionUID = 1L;
-    
     public static final String NAME = "SQRT";
+
+    private static final long serialVersionUID = 1L;
 
     public SqrtFunction(BlazeCriteriaBuilderImpl criteriaBuilder, Expression<? extends Number> expression) {
         super(criteriaBuilder, Double.class, NAME, expression);

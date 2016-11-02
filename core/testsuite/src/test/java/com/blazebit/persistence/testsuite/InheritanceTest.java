@@ -49,10 +49,10 @@ public class InheritanceTest extends AbstractCoreTest {
         };
     }
     
-	@Test
-	// NOTE: There is a bug in the metamodel generation when used in eclipse: HHH-10265
+    @Test
+    // NOTE: There is a bug in the metamodel generation when used in eclipse: HHH-10265
     public void testInheritanceWithEntityName() {
-	    @SuppressWarnings("rawtypes")
+        @SuppressWarnings("rawtypes")
         CriteriaBuilder<Project> cb = cbf.create(em, Project.class, "p");
         String expectedQuery = "SELECT p FROM Projects p";
         assertEquals(expectedQuery, cb.getQueryString());

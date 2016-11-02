@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,9 +30,12 @@ import javax.persistence.OrderColumn;
 
 import com.blazebit.annotation.AnnotationUtils;
 import com.blazebit.persistence.impl.expression.ExpressionFactory;
-import com.blazebit.persistence.impl.expression.ExpressionFactoryImpl;
-import com.blazebit.persistence.impl.expression.SimpleCachingExpressionFactory;
-import com.blazebit.persistence.view.*;
+import com.blazebit.persistence.view.CollectionMapping;
+import com.blazebit.persistence.view.IdMapping;
+import com.blazebit.persistence.view.Mapping;
+import com.blazebit.persistence.view.MappingCorrelated;
+import com.blazebit.persistence.view.MappingParameter;
+import com.blazebit.persistence.view.MappingSubquery;
 import com.blazebit.persistence.view.impl.PathTargetResolvingExpressionVisitor;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.reflection.ReflectionUtils;
@@ -44,6 +46,9 @@ import com.blazebit.reflection.ReflectionUtils;
  * @since 1.0
  */
 public final class MetamodelUtils {
+
+    private MetamodelUtils() {
+    }
 
     public static CollectionMapping getCollectionMapping(MappingConstructor<?> mappingConstructor, int index) {
         return getCollectionMapping(findAnnotation(mappingConstructor, index, CollectionMapping.class));
@@ -81,7 +86,7 @@ public final class MetamodelUtils {
     }
     
     @SuppressWarnings("unchecked")
-	public static <T> Class<Comparator<T>> getComparatorClass(CollectionMapping mapping) {
+    public static <T> Class<Comparator<T>> getComparatorClass(CollectionMapping mapping) {
         if (Comparator.class == mapping.comparator()) {
             return null;
         }
