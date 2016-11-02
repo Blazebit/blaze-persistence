@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package javax.persistence.criteria;
 
 import javax.persistence.metamodel.EntityType;

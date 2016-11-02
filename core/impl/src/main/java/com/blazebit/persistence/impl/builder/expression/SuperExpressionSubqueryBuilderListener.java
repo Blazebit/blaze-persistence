@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.impl.builder.expression;
 
 import com.blazebit.persistence.impl.ExpressionUtils;

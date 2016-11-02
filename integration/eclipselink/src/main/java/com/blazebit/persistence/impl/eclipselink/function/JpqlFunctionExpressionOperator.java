@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.blazebit.persistence.impl.eclipselink.function;
 
 import com.blazebit.persistence.spi.JpqlFunction;

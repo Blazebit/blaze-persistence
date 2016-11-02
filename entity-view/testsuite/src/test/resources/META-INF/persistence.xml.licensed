@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright 2014 - 2016 Blazebit.
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+  -->
+<persistence version="2.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd">
+    <persistence-unit name="TestsuiteBase" transaction-type="RESOURCE_LOCAL">
+        <mapping-file>META-INF/blaze-persistence/entity-view-orm.xml</mapping-file>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.DocumentForElementCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForCollections</class>
+        <class>com.blazebit.persistence.view.testsuite.collections.entity.simple.PersonForElementCollections</class>
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedDocumentForElementCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForCollections</class> -->
+<!--         <class>com.blazebit.persistence.view.collections.entity.extended.ExtendedPersonForElementCollections</class> -->
+        <class>com.blazebit.persistence.view.testsuite.entity.Document</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.EmbeddableTestEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.IntIdEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.Person</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.TestEntity</class>
+        <class>com.blazebit.persistence.view.testsuite.entity.Version</class>
+    </persistence-unit>
+</persistence>
