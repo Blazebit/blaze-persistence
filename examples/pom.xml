@@ -13,7 +13,6 @@
     <artifactId>blaze-persistence-examples</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>spring-showcase</module>
         <module>showcase-base</module>
         <module>showcase-spi</module>
         <module>basic-showcase</module>
@@ -25,6 +24,7 @@
             <id>jdk-8</id>
             <modules>
                 <module>cdi-showcase</module>
+                <module>spring-showcase</module>
             </modules>
         </profile>
     </profiles>
