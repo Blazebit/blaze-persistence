@@ -55,6 +55,7 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
     @Before
     public void initEvm() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();
+        cfg.addEntityView(PrimitiveSimpleDocumentView.class);
         cfg.addEntityView(PrimitiveDocumentView.class);
         cfg.addEntityView(PrimitivePersonView.class);
         evm = cfg.createEntityViewManager(cbf, em.getEntityManagerFactory());
@@ -62,6 +63,9 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
 
     private PrimitiveDocument doc1;
     private PrimitiveDocument doc2;
+
+    private PrimitivePerson o1;
+    private PrimitivePerson o2;
 
     @Before
     public void setUp() {
@@ -71,8 +75,8 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
             doc1 = new PrimitiveDocument("doc1");
             doc2 = new PrimitiveDocument("doc2");
 
-            PrimitivePerson o1 = new PrimitivePerson("pers1");
-            PrimitivePerson o2 = new PrimitivePerson("pers2");
+            o1 = new PrimitivePerson("pers1");
+            o2 = new PrimitivePerson("pers2");
             o1.setPartnerDocument(doc1);
             o2.setPartnerDocument(doc2);
 
@@ -112,8 +116,15 @@ public class PrimitiveViewTest extends AbstractEntityViewTest {
         // Doc1
         assertEquals(doc1.getId(), results.get(0).getId());
         assertEquals(doc1.getName(), results.get(0).getName());
+        assertEquals(o1.getId(), results.get(0).getOwner().getId().longValue());
+        assertEquals(o1.getName(), results.get(0).getOwner().getName());
         // Doc2
         assertEquals(doc2.getId(), results.get(1).getId());
         assertEquals(doc2.getName(), results.get(1).getName());
+        assertEquals(o2.getId(), results.get(1).getOwner().getId().longValue());
+        assertEquals(o2.getName(), results.get(1).getOwner().getName());
+
+        results.get(0).setId(123L);
+        results.get(0).setName("Abc");
     }
 }

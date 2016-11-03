@@ -62,13 +62,6 @@ public abstract class AbstractParameterAttribute<X, Y> extends AbstractAttribute
     }
 
     public static void validate(MappingConstructor<?> constructor, int index) {
-        Class<?> type = constructor.getJavaConstructor().getParameterTypes()[index];
-
-        if (type.isPrimitive()) {
-            throw new IllegalArgumentException("Primitive type not allowed for the parameter of the constructor '" + constructor.getJavaConstructor() + "' of the class '"
-                + constructor.getDeclaringType().getJavaType().getName() + "' at index '" + index + "'.");
-        }
-        
         Annotation[] annotations = constructor.getJavaConstructor().getParameterAnnotations()[index];
         boolean foundAnnotation = false;
         
