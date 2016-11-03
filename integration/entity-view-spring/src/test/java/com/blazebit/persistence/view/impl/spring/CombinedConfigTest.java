@@ -41,11 +41,6 @@ public class CombinedConfigTest {
     @Inject
     private EntityViewConfiguration entityViewConfiguration;
 
-    @BeforeClass
-    public static void test() {
-        CombinedConfigTest.class.getClassLoader().getResource("entity-views-config.xml");
-    }
-
     @Test
     public void testInjection() {
         Set<Class<?>> entityViews = entityViewConfiguration.getEntityViews();

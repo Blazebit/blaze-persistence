@@ -10,7 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <name>Blazebit Persistence Showcase CDI</name>
-    <artifactId>cdi-showcase</artifactId>
+    <artifactId>blaze-persistence-cdi-showcase</artifactId>
 
     <properties>
         <version.deltaspike>1.7.1</version.deltaspike>
@@ -30,9 +30,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.jboss.weld.se</groupId>
-            <artifactId>weld-se-core</artifactId>
-            <version>2.4.0.Final</version>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-core-api</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-core-impl</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
@@ -47,16 +52,6 @@
         </dependency>
         <dependency>
             <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-core-api</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
-            <artifactId>blaze-persistence-core-impl</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
             <scope>runtime</scope>
         </dependency>
@@ -64,6 +59,21 @@
             <groupId>com.blazebit</groupId>
             <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-showcase-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-showcase-base</artifactId>
+        </dependency>
+
+        <!-- CDI dependencies -->
+        <dependency>
+            <groupId>org.jboss.weld.se</groupId>
+            <artifactId>weld-se-core</artifactId>
+            <version>2.4.0.Final</version>
         </dependency>
 
         <dependency>
@@ -74,7 +84,7 @@
         <dependency>
             <groupId>org.apache.deltaspike.modules</groupId>
             <artifactId>deltaspike-jpa-module-impl</artifactId>
-            <scope>runtime</scope>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.deltaspike.core</groupId>
@@ -98,12 +108,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>3.4</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <version>5.2.1.Final</version>
@@ -115,9 +119,52 @@
         </dependency>
 
         <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <!-- Test dependencies -->
+
+        <!-- include all showcases -->
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-basic-showcase</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.blazebit</groupId>
+            <artifactId>blaze-persistence-cte-showcase</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>showcase-basic</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-basic-showcase</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>showcase-cte</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.blazebit</groupId>
+                    <artifactId>blaze-persistence-cte-showcase</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>

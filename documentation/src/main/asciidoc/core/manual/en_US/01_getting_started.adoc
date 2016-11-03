@@ -60,6 +60,36 @@ public class CriteriaBuilderFactoryProducer {
 }
 ----
 
+=== Spring
+
+[source,java]
+----
+@Configuration
+public class BlazePersistenceConfiguration {
+
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        // do some configuration
+        return config.createCriteriaBuilderFactory(entityManagerFactory);
+    }
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+        return entityViewConfiguration.createEntityViewManager(cbf, entityManagerFactory);
+    }
+}
+----
+
+
+[IMPORTANT]
 Creating the criteria builder factory eagerly at startup is required so that the integration can work properly.
 Initializing it differently might result in data races because at creation time e.g. custom functions are registered. 
 

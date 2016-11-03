@@ -16,19 +16,35 @@
 
 package com.blazebit.persistence.examples.cdi;
 
+import com.blazebit.persistence.examples.spi.Showcase;
 import org.apache.deltaspike.cdise.api.CdiContainer;
 import org.apache.deltaspike.cdise.api.CdiContainerLoader;
 import org.apache.deltaspike.cdise.api.ContextControl;
 import org.apache.deltaspike.core.api.provider.BeanProvider;
 import org.junit.*;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 import javax.enterprise.context.ApplicationScoped;
+import java.util.ServiceLoader;
 
 /**
  * @author Moritz Becker (moritz.becker@gmx.at)
  * @since 1.2
  */
+@RunWith(Parameterized.class)
 public class CDIShowcaseTest {
+
+    final Showcase showcase;
+
+    public CDIShowcaseTest(Showcase showcase) {
+        this.showcase = showcase;
+    }
+
+    @Parameterized.Parameters
+    public static Iterable<Showcase> data() {
+        return ServiceLoader.load(Showcase.class);
+    }
 
     @BeforeClass
     public static void startContainer() {
@@ -58,9 +74,7 @@ public class CDIShowcaseTest {
 
     @Test
     public void simpleApplicationTest() {
-        // just run the Application's run method - if no exception occur, we assume that it works
-        Application application = BeanProvider.getContextualReference(Application.class);
-        application.run();
+        BeanProvider.injectFields(showcase).run();
     }
 
 
