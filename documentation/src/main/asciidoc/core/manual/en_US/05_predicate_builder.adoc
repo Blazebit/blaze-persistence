@@ -248,8 +248,8 @@ WHERE cat.name IS NULL
 
 === Restriction Builder
 
-The restriction builder is used to select a predicate for an existing left hand side expression and chains to the right hand side expression.
-It supports all standard predicates from JPQL and every expression can be one of the following:
+The restriction builder is used to build a predicate for an existing left hand side expression and chains to the right hand side expression.
+It supports all standard predicates from JPQL and expressions can be of the following types:
 
 Value/Parameter::
 The actual value will be registered as parameter value and a named parameter expression will be added instead.
