@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The result type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface JoinOnBuilder<T> extends BaseJoinOnBuilder<JoinOnBuilder<T>> {
 

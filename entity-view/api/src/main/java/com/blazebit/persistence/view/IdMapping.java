@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Maps the annotated element to the id attribute of the entity.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)

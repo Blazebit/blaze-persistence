@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * Represents the mapping of a named filter on an entity view attribute.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface AttributeFilterMapping extends FilterMapping<AttributeFilterProvider> {
     

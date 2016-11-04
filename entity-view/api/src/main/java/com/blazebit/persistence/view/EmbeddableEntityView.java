@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Specifies that the class is is an embeddable entity view.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)

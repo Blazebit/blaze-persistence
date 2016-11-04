@@ -26,14 +26,14 @@ import java.lang.annotation.Target;
  * of an entity view. It is necessary to use them if an entity view has more than one constructor.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.CONSTRUCTOR })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ViewConstructor {
 
     /**
-     * The name of the view constructor which should be unique within the entity view
+     * The name of the view constructor which should be unique within the entity view.
      *
      * @return The name of the view constructor
      */

@@ -25,7 +25,7 @@ import java.util.ServiceLoader;
  * Bootstrap class that is used to obtain a {@linkplain EntityViewConfiguration} instance within Java SE environments.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class EntityViews {
 
@@ -33,7 +33,7 @@ public class EntityViews {
     }
 
     /**
-     * Returns the first {@linkplain EntityViewConfigurationProvider} that is found
+     * Returns the first {@linkplain EntityViewConfigurationProvider} that is found.
      *
      * @return The first {@linkplain EntityViewConfigurationProvider} that is found
      */

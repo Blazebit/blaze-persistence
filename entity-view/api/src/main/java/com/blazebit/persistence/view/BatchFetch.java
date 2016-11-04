@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
 public @interface BatchFetch {
 
     /**
-     * The size of the batch
+     * The size of the batch.
      *
      * @return The batch size
      */

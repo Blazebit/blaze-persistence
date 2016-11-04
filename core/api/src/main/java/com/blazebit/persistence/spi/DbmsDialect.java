@@ -58,7 +58,7 @@ public interface DbmsDialect {
     /**
      * Returns the SQL representation for the normal or recursive with clause. 
      * 
-     * @param context The context into which the function should be rendered
+     * @param recursive Whether the clause should be able to contain recursive queries or not
      * @return The with clause name
      */
     public String getWithClause(boolean recursive);
@@ -69,7 +69,7 @@ public interface DbmsDialect {
      * @param sqlSb The sql string builder to which the with clause should be append to
      * @param statementType The type of the statement in the sql string builder
      * @param isSubquery True if the query in the sql string builder is a subquery, false otherwise
-     * @param isSubquery True if the query in the sql string builder will be embedded in a clause, false otherwise
+     * @param isEmbedded True if the query in the sql string builder will be embedded in a clause, false otherwise
      * @param withClause The with clause which should be appended, or null if none
      * @param limit The limit for the limit clause, or null if no limit
      * @param offset The offset for the offset clause, or null if no offset

@@ -24,7 +24,7 @@ import java.util.Set;
  * @param <X> The type of the declaring entity view
  * @param <E> The element type of the represented Set
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface SetAttribute<X, E> extends PluralAttribute<X, Set<E>, E> {
 

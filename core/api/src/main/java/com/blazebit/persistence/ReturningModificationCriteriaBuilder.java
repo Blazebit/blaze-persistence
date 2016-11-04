@@ -26,7 +26,11 @@ package com.blazebit.persistence;
  */
 public interface ReturningModificationCriteriaBuilder<X extends ReturningModificationCriteriaBuilder<X, Y>, Y> extends CommonQueryBuilder<X>, BaseModificationCriteriaBuilder<X>, ReturningBuilder<X> {
 
-    // TODO: documentation
+    /**
+     * Finishes the returning builder and returns the parent builder.
+     *
+     * @return The parent builder
+     */
     public Y end();
     
 }

@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.EntityViewManager;
  * This class is used to configure the entity view manager that it creates.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface EntityViewConfiguration {
 

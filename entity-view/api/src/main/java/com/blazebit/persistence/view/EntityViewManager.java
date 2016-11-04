@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.metamodel.ViewMetamodel;
  * An interface that gives access to the metamodel and object builders.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface EntityViewManager {
 

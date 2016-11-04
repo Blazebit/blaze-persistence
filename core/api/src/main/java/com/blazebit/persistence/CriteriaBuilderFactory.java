@@ -26,11 +26,20 @@ import javax.persistence.EntityManager;
  * An interface used to create criteria builders.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CriteriaBuilderFactory extends ServiceProvider, ConfigurationSource {
 
-    // TODO: documentation
+    /**
+     * Starts a criteria builder with a nested set operation builder.
+     * Doing this is like starting a nested query that will be connected via a set operation.
+     *
+     * @param entityManager The entity manager to use for the criteria builder
+     * @param resultClass The result class of the query
+     * @param <T> The type of the result class
+     * @return The set operation builder
+     * @since 1.2.0
+     */
     public <T> StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>> startSet(EntityManager entityManager, Class<T> resultClass);
 
     /**

@@ -18,6 +18,12 @@ package com.blazebit.persistence.criteria;
 
 import javax.persistence.criteria.CommonAbstractCriteria;
 
+/**
+ * An extended version of {@link CommonAbstractCriteria}.
+ *
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeCommonAbstractCriteria extends CommonAbstractCriteria {
 
     /* Covariant overrides */

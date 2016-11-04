@@ -28,7 +28,7 @@ import javax.persistence.EntityManagerFactory;
  *
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public interface EntityManagerFactoryIntegrator {
     

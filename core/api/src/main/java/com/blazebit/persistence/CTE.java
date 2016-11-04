@@ -22,7 +22,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * TODO: documentation
+ * Marks an entity as being a CTE.
+ *
+ * @author Christian Beikov
  * @since 1.1.0
  */
 @Retention(RetentionPolicy.RUNTIME)

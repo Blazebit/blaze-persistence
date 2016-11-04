@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @param <T> The type that this builder produces
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface ObjectBuilder<T> {
 
@@ -32,6 +32,7 @@ public interface ObjectBuilder<T> {
      * Applies the select items necessary for this object builder to work.
      *
      * @param selectBuilder The selectBuilder on which to apply the selects
+     * @param <X> The type of the select builder
      */
     public <X extends SelectBuilder<X>> void applySelects(X selectBuilder);
 

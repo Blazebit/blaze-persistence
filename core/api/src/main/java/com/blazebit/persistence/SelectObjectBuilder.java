@@ -21,7 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The query builder that is returned on terminal operations
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface SelectObjectBuilder<T extends FullQueryBuilder<?, T>> {
 

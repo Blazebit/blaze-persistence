@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * Adds multiple {@link AttributeFilter}.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)

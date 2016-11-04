@@ -23,15 +23,15 @@ import java.util.List;
  *
  * @param <T> the type of elements in this list
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface PagedList<T> extends List<T> {
 
     /**
      * Returns the actual size of this page.
-     * 
-     * @see List#size()
+     *
      * @return The actual size
+     * @see List#size()
      */
     public int getSize();
 
@@ -79,8 +79,8 @@ public interface PagedList<T> extends List<T> {
      * Returns the key set page for this paged list which can be used for key set pagination.
      * The key set page may be null if key set pagination wasn't used.
      *
-     * @see FullQueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
      * @return The key set
+     * @see FullQueryBuilder#page(com.blazebit.persistence.KeysetPage, int, int)
      */
     public KeysetPage getKeysetPage();
     

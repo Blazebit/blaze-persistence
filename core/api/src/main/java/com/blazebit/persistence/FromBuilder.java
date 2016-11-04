@@ -29,7 +29,7 @@ import java.util.Set;
 public interface FromBuilder<X extends FromBuilder<X>> {
 
     /**
-     * Returns the query roots
+     * Returns the query roots.
      *
      * @return The roots of this query
      * @since 1.2.0
@@ -37,7 +37,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public Set<Root> getRoots();
 
     /**
-     * Like {@link FromBuilder#from(Class, String))} with the
+     * Like {@link FromBuilder#from(Class, String)} with the
      * alias equivalent to the camel cased result of what {@link Class#getSimpleName()} of the entity class returns.
      *
      * @param entityClass The entity class which should be queried
@@ -55,7 +55,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X from(Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#from(String, String))} with the
+     * Like {@link FromBuilder#from(String, String)} with the
      * alias equivalent to the camel cased result of the class of the correlation parent.
      *
      * @param correlationPath The correlation path which should be queried
@@ -75,7 +75,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X from(String correlationPath, String alias);
 
     /**
-     * Like {@link FromBuilder#from(Class))} but explicitly queries the data before any side effects happen because of CTEs.
+     * Like {@link FromBuilder#from(Class)} but explicitly queries the data before any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried
      * @return The query builder for chaining calls
@@ -84,7 +84,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X fromOld(Class<?> entityClass);
 
     /**
-     * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data before any side effects happen because of CTEs.
+     * Like {@link FromBuilder#from(Class, String)} but explicitly queries the data before any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried
      * @param alias The alias for the entity
@@ -94,7 +94,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X fromOld(Class<?> entityClass, String alias);
 
     /**
-     * Like {@link FromBuilder#from(Class))} but explicitly queries the data after any side effects happen because of CTEs.
+     * Like {@link FromBuilder#from(Class)} but explicitly queries the data after any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried
      * @return The query builder for chaining calls
@@ -103,7 +103,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
     public X fromNew(Class<?> entityClass);
 
     /**
-     * Like {@link FromBuilder#from(Class, String))} but explicitly queries the data after any side effects happen because of CTEs.
+     * Like {@link FromBuilder#from(Class, String)} but explicitly queries the data after any side effects happen because of CTEs.
      *
      * @param entityClass The entity class which should be queried
      * @param alias The alias for the entity
@@ -132,6 +132,7 @@ public interface FromBuilder<X extends FromBuilder<X>> {
      * @param entityClass The entity class which should be queried
      * @param alias The alias for the entity
      * @param values The values to use for the values clause
+     * @param <T> The type of the values
      * @return The query builder for chaining calls
      * @since 1.2.0
      */

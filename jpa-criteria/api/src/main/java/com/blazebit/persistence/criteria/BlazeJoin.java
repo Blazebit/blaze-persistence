@@ -21,6 +21,14 @@ import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 
+/**
+ * An extended version of {@link Join}.
+ *
+ * @param <Z> the source type of the join
+ * @param <X> the target type of the join
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeJoin<Z, X> extends Fetch<Z, X>, Join<Z, X>, BlazeFrom<Z, X> {
 
     /**

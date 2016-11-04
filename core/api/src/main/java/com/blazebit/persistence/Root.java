@@ -26,8 +26,18 @@ package com.blazebit.persistence;
  */
 public interface Root {
 
+    /**
+     * The alias of the from node.
+     *
+     * @return The alias
+     */
     public String getAlias();
 
+    /**
+     * The type of the from node.
+     *
+     * @return The type
+     */
     public Class<?> getType();
 
 }

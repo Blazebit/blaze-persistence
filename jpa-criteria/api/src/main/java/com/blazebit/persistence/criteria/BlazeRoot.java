@@ -18,6 +18,13 @@ package com.blazebit.persistence.criteria;
 
 import javax.persistence.criteria.Root;
 
+/**
+ * An extended version of {@link Root}.
+ *
+ * @param <X> the entity type referenced by the root
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeRoot<X> extends Root<X>, BlazeFrom<X, X> {
 
     

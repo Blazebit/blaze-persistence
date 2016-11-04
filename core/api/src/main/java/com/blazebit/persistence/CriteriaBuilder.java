@@ -21,7 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The query result type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CriteriaBuilder<T> extends FullQueryBuilder<T, CriteriaBuilder<T>>, BaseCriteriaBuilder<T, CriteriaBuilder<T>>, SetOperationBuilder<LeafOngoingSetOperationCriteriaBuilder<T>, StartOngoingSetOperationCriteriaBuilder<T, LeafOngoingSetOperationCriteriaBuilder<T>>> {
 

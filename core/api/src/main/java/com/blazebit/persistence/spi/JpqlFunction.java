@@ -22,8 +22,8 @@ package com.blazebit.persistence.spi;
  * An instance of this interface needs to be registered to be able to use the function in queries.
  *
  * @author Christian Beikov
- * @since 1.0
- * @see EntityManagerFactoryIntegrator#registerFunctions(javax.persistence.EntityManager, java.util.Map)
+ * @since 1.0.0
+ * @see EntityManagerFactoryIntegrator#registerFunctions(javax.persistence.EntityManagerFactory, java.util.Map)
  */
 public interface JpqlFunction {
 
@@ -52,7 +52,7 @@ public interface JpqlFunction {
     public Class<?> getReturnType(Class<?> firstArgumentType);
 
     /**
-     * Renders the function into the given function render context
+     * Renders the function into the given function render context.
      * 
      * @param context The context into which the function should be rendered
      */

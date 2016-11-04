@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * used as value for the starts with restriction.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class StartsWithIgnoreCaseFilter extends AttributeFilterProvider {
 

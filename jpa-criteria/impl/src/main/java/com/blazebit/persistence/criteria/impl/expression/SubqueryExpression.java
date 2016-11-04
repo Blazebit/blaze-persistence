@@ -280,8 +280,20 @@ public class SubqueryExpression<T> extends AbstractExpression<T> implements Blaz
     }
 
     @Override
-    public BlazeSubquery<T> orderBy(List<Order> orderList) {
-        query.setOrderList(orderList);
+    @SuppressWarnings("unchecked")
+    public BlazeSubquery<T> orderBy(BlazeOrder... orders) {
+        if (orders == null || orders.length == 0) {
+            query.setOrderList(Collections.EMPTY_LIST);
+        } else {
+            query.setBlazeOrderList(Arrays.asList(orders));
+        }
+
+        return this;
+    }
+
+    @Override
+    public BlazeSubquery<T> orderBy(List<BlazeOrder> orderList) {
+        query.setBlazeOrderList(orderList);
         return this;
     }
 

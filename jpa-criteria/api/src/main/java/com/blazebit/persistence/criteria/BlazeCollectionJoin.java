@@ -20,6 +20,14 @@ import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+/**
+ * An extended version of {@link CollectionJoin}.
+ *
+ * @param <Z> the source type of the join
+ * @param <E> the element type of the target <code>Collection</code>
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeCollectionJoin<Z, E> extends CollectionJoin<Z, E>, BlazeJoin<Z, E> {
 
     /* Compatibility for JPA 2.1 */

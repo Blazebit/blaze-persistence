@@ -22,7 +22,7 @@ import java.util.Set;
  * Provides access to the metamodel of the entity views.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface ViewMetamodel {
 

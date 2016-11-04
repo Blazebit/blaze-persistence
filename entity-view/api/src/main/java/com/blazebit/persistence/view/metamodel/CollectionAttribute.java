@@ -24,7 +24,7 @@ import java.util.Collection;
  * @param <X> The type of the declaring entity view
  * @param <E> The element type of the represented Collection
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CollectionAttribute<X, E> extends PluralAttribute<X, Collection<E>, E> {
     

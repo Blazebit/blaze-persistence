@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
  *
  * @param <T> The base filter type which is either {@linkplain AttributeFilterProvider} or {@linkplain ViewFilterProvider}. 
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface FilterMapping<T> {
     

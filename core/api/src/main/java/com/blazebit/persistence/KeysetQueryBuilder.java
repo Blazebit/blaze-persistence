@@ -23,7 +23,7 @@ import java.io.Serializable;
  *
  * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface KeysetQueryBuilder<X extends KeysetQueryBuilder<X>> {
 

@@ -22,7 +22,7 @@ import com.blazebit.persistence.view.ViewFilterProvider;
  * Represents the mapping of a named filter on an entity view.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface ViewFilterMapping extends FilterMapping<ViewFilterProvider> {
     

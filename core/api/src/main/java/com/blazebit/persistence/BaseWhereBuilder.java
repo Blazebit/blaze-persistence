@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The concrete builder type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface BaseWhereBuilder<T extends BaseWhereBuilder<T>> {
 

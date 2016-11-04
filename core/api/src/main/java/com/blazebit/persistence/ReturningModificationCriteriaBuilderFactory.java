@@ -19,7 +19,7 @@ package com.blazebit.persistence;
 /**
  * A builder for modification queries that return results.
  *
- * @param <T> The entity type for which this delete query is
+ * @param <X> The entity type for which this modification query is
  * @author Christian Beikov
  * @since 1.1.0
  */

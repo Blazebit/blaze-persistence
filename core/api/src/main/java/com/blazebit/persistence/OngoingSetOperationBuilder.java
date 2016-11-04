@@ -17,7 +17,7 @@
 package com.blazebit.persistence;
 
 /**
- * An interface for builders that support set operators.
+ * A base interface for builders that support set operators.
  *
  * @param <X> The concrete builder type
  * @param <Y> The set sub-operation result type
@@ -27,5 +27,10 @@ package com.blazebit.persistence;
  */
 public interface OngoingSetOperationBuilder<X, Y, Z extends StartOngoingSetOperationBuilder<?, ?, ?>> extends BaseOngoingSetOperationBuilder<X, Y, Z> {
 
+    /**
+     * Finishes the current set operation builder and returns a final builder for ordering and limiting.
+     *
+     * @return The final builder for ordering and limiting
+     */
     public BaseOngoingFinalSetOperationBuilder<Y, ?> endSetWith();
 }

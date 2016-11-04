@@ -23,7 +23,7 @@ package com.blazebit.persistence.spi;
  * dbms specific code for a {@link JpqlFunction}.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface FunctionRenderContext {
 

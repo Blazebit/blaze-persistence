@@ -25,98 +25,459 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import java.util.Set;
 
+/**
+ * An extended version of {@link From}.
+ *
+ * @param <Z> The source type
+ * @param <X> The target type
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeFrom<Z, X> extends From<Z, X>, BlazeFetchParent<Z, X> {
 
     /**
      * Returns all joins including fetches since fetches are just joins with the fetch flag set to true.
      *
-     * @return all joins
+     * @return All joins
      */
     Set<BlazeJoin<X, ?>> getBlazeJoins();
     
     /* Aliased joins */
 
+    /**
+     * Like {@link From#join(SingularAttribute)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param attribute The target of the join
+     * @param alias The alias for the {@link BlazeJoin}
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute, String alias);
 
-    <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(SingularAttribute, JoinType)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param attribute The target of the join
+     * @param alias The alias for the {@link BlazeJoin}
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute, String alias, JoinType joinType);
 
+    /**
+     * Like {@link From#join(CollectionAttribute)} but allows to set the alias of the {@link BlazeCollectionJoin}.
+     *
+     * @param collection The target of the join
+     * @param alias The alias for the {@link BlazeCollectionJoin}
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, String alias);
 
+    /**
+     * Like {@link From#join(SetAttribute)} but allows to set the alias of the {@link BlazeSetJoin}.
+     *
+     * @param set The target of the join
+     * @param alias The alias for the {@link BlazeSetJoin}
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set, String alias);
 
+    /**
+     * Like {@link From#join(ListAttribute)} but allows to set the alias of the {@link BlazeListJoin}.
+     *
+     * @param list The target of the join
+     * @param alias The alias for the {@link BlazeListJoin}
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list, String alias);
 
+    /**
+     * Like {@link From#join(MapAttribute)} but allows to set the alias of the {@link BlazeMapJoin}.
+     *
+     * @param map The target of the join
+     * @param alias The alias for the {@link BlazeMapJoin}
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
     <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, String alias);
 
-    <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(CollectionAttribute, JoinType)} but allows to set the alias of the {@link BlazeCollectionJoin}.
+     *
+     * @param collection The target of the join
+     * @param alias The alias for the {@link BlazeCollectionJoin}
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, String alias, JoinType joinType);
 
-    <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(SetAttribute, JoinType)} but allows to set the alias of the {@link BlazeSetJoin}.
+     *
+     * @param set The target of the join
+     * @param alias The alias for the {@link BlazeSetJoin}
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set, String alias, JoinType joinType);
 
-    <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(ListAttribute, JoinType)} but allows to set the alias of the {@link BlazeListJoin}.
+     *
+     * @param list The target of the join
+     * @param alias The alias for the {@link BlazeListJoin}
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list, String alias, JoinType joinType);
 
-    <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(MapAttribute, JoinType)} but allows to set the alias of the {@link BlazeMapJoin}.
+     *
+     * @param map The target of the join
+     * @param alias The alias for the {@link BlazeMapJoin}
+     * @param joinType The join type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
+    <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, String alias, JoinType joinType);
 
+    /**
+     * Like {@link From#join(String)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeJoin}
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias);
 
+    /**
+     * Like {@link From#joinCollection(String)} but allows to set the alias of the {@link BlazeCollectionJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeCollectionJoin}
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, String alias);
 
+    /**
+     * Like {@link From#joinSet(String)} but allows to set the alias of the {@link BlazeSetJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeSetJoin}
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, String alias);
 
+    /**
+     * Like {@link From#joinList(String)} but allows to set the alias of the {@link BlazeListJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeListJoin}
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, String alias);
 
+    /**
+     * Like {@link From#joinMap(String)} but allows to set the alias of the {@link BlazeMapJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeMapJoin}
+     * @param <X> The join source type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
     <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, String alias);
 
-    <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias, JoinType jt);
+    /**
+     * Like {@link From#join(String, JoinType)} but allows to set the alias of the {@link BlazeJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeJoin}
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeJoin<X, Y> join(String attributeName, String alias, JoinType joinType);
 
-    <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, String alias, JoinType jt);
+    /**
+     * Like {@link From#joinCollection(String, JoinType)} but allows to set the alias of the {@link BlazeCollectionJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeCollectionJoin}
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, String alias, JoinType joinType);
 
-    <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, String alias, JoinType jt);
+    /**
+     * Like {@link From#joinSet(String, JoinType)} but allows to set the alias of the {@link BlazeSetJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeSetJoin}
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, String alias, JoinType joinType);
 
-    <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, String alias, JoinType jt);
+    /**
+     * Like {@link From#joinList(String, JoinType)} but allows to set the alias of the {@link BlazeListJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeListJoin}
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, String alias, JoinType joinType);
 
-    <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, String alias, JoinType jt);
+    /**
+     * Like {@link From#joinMap(String, JoinType)} but allows to set the alias of the {@link BlazeMapJoin}.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param alias The alias for the {@link BlazeMapJoin}
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
+    <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, String alias, JoinType joinType);
 
     /* Covariant overrides */
 
+    /**
+     * Like {@link From#getCorrelationParent} but returns the subtype {@link BlazeFrom} instead.
+     *
+     * @return The parent of the correlated From object
+     */
     BlazeFrom<Z, X> getCorrelationParent();
 
+    /**
+     * Like {@link From#join(SingularAttribute)} but returns the subtype {@link BlazeJoin} instead.
+     *
+     * @param attribute The target of the join
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute);
 
-    <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType jt);
+    /**
+     * Like {@link From#join(SingularAttribute, JoinType)} but returns the subtype {@link BlazeJoin} instead.
+     *
+     * @param attribute The target of the join
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeJoin<X, Y> join(SingularAttribute<? super X, Y> attribute, JoinType joinType);
 
+    /**
+     * Like {@link From#join(CollectionAttribute)} but returns the subtype {@link BlazeCollectionJoin} instead.
+     *
+     * @param collection The target of the join
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection);
 
+    /**
+     * Like {@link From#join(SetAttribute)} but returns the subtype {@link BlazeSetJoin} instead.
+     *
+     * @param set The target of the join
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set);
 
+    /**
+     * Like {@link From#join(ListAttribute)} but returns the subtype {@link BlazeListJoin} instead.
+     *
+     * @param list The target of the join
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list);
 
+    /**
+     * Like {@link From#join(MapAttribute)} but returns the subtype {@link BlazeMapJoin} instead.
+     *
+     * @param map The target of the join
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
     <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map);
 
-    <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType jt);
+    /**
+     * Like {@link From#join(CollectionAttribute, JoinType)} but returns the subtype {@link BlazeCollectionJoin} instead.
+     *
+     * @param collection The target of the join
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeCollectionJoin<X, Y> join(CollectionAttribute<? super X, Y> collection, JoinType joinType);
 
-    <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType jt);
+    /**
+     * Like {@link From#join(SetAttribute, JoinType)} but returns the subtype {@link BlazeSetJoin} instead.
+     *
+     * @param set The target of the join
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeSetJoin<X, Y> join(SetAttribute<? super X, Y> set, JoinType joinType);
 
-    <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType jt);
+    /**
+     * Like {@link From#join(ListAttribute, JoinType)} but returns the subtype {@link BlazeListJoin} instead.
+     *
+     * @param list The target of the join
+     * @param joinType The join type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <Y> BlazeListJoin<X, Y> join(ListAttribute<? super X, Y> list, JoinType joinType);
 
-    <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType jt);
+    /**
+     * Like {@link From#join(MapAttribute, JoinType)} but returns the subtype {@link BlazeMapJoin} instead.
+     *
+     * @param map The target of the join
+     * @param joinType The join type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
+    <K, V> BlazeMapJoin<X, K, V> join(MapAttribute<? super X, K, V> map, JoinType joinType);
 
+    /**
+     * Like {@link From#join(String)} but returns the subtype {@link BlazeJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeJoin<X, Y> join(String attributeName);
 
+    /**
+     * Like {@link From#joinCollection(String)} but returns the subtype {@link BlazeCollectionJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName);
 
+    /**
+     * Like {@link From#joinSet(String)} but returns the subtype {@link BlazeSetJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName);
 
+    /**
+     * Like {@link From#joinList(String)} but returns the subtype {@link BlazeListJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
     <X, Y> BlazeListJoin<X, Y> joinList(String attributeName);
 
+    /**
+     * Like {@link From#joinMap(String)} but returns the subtype {@link BlazeMapJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param <X> The join source type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
     <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName);
 
-    <X, Y> BlazeJoin<X, Y> join(String attributeName, JoinType jt);
+    /**
+     * Like {@link From#join(String, JoinType)} but returns the subtype {@link BlazeJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeJoin<X, Y> join(String attributeName, JoinType joinType);
 
-    <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, JoinType jt);
+    /**
+     * Like {@link From#joinCollection(String, JoinType)} but returns the subtype {@link BlazeCollectionJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeCollectionJoin<X, Y> joinCollection(String attributeName, JoinType joinType);
 
-    <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, JoinType jt);
+    /**
+     * Like {@link From#joinSet(String, JoinType)} but returns the subtype {@link BlazeSetJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeSetJoin<X, Y> joinSet(String attributeName, JoinType joinType);
 
-    <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, JoinType jt);
+    /**
+     * Like {@link From#joinList(String, JoinType)} but returns the subtype {@link BlazeListJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <Y> The join target type
+     * @return The resulting join
+     */
+    <X, Y> BlazeListJoin<X, Y> joinList(String attributeName, JoinType joinType);
 
-    <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
+    /**
+     * Like {@link From#joinMap(String, JoinType)} but returns the subtype {@link BlazeMapJoin} instead.
+     *
+     * @param attributeName The name of the attribute for the target of the join
+     * @param joinType The join type
+     * @param <X> The join source type
+     * @param <K> The join target key type
+     * @param <V> The join target value type
+     * @return The resulting join
+     */
+    <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, JoinType joinType);
 }

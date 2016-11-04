@@ -25,7 +25,7 @@ import java.util.Map;
  * @param <K> The type of the key of the represented Map
  * @param <V> The type of the value of the represented Map
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface MapAttribute<X, K, V> extends PluralAttribute<X, Map<K, V>, V> {
 

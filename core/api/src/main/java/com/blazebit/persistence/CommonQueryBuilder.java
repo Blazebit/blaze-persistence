@@ -35,7 +35,7 @@ import javax.persistence.metamodel.Metamodel;
  *
  * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> extends ServiceProvider, ConfigurationSource {
 
@@ -156,7 +156,7 @@ public interface CommonQueryBuilder<X extends CommonQueryBuilder<X>> extends Ser
     public X setProperty(String propertyName, String propertyValue);
     
     /**
-     * Overwrites the properties with the given set of properties
+     * Overwrites the properties with the given set of properties.
      * 
      * @param properties The new properties
      * @return The query builder for chaining calls

@@ -27,32 +27,35 @@ package com.blazebit.persistence;
 public interface CTEBuilder<T extends CTEBuilder<T>> {
 
     /**
-     * TODO: documentation
+     * Creates a builder for a CTE with the given CTE type.
      * 
-     * @param cteClass
-     * @return
-     * @since 1.1.0
+     * @param cteClass The type of the CTE
+     * @return The CTE builder
      */
     public FullSelectCTECriteriaBuilder<T> with(Class<?> cteClass);
 
-    // TODO: documentation
+    /**
+     * Creates a builder for a CTE with a nested set operation builder.
+     * Doing this is like starting a nested query that will be connected via a set operation.
+     *
+     * @param cteClass The type of the CTE
+     * @return The CTE set operation builder
+     */
     public StartOngoingSetOperationCTECriteriaBuilder<T, LeafOngoingSetOperationCTECriteriaBuilder<T>> withStartSet(Class<?> cteClass);
 
     /**
-     * TODO: documentation
+     * Creates a builder for a recursive CTE with the given CTE type.
      * 
-     * @param cteClass
-     * @return
-     * @since 1.1.0
+     * @param cteClass The type of the CTE
+     * @return The recursive CTE builder
      */
     public SelectRecursiveCTECriteriaBuilder< T> withRecursive(Class<?> cteClass);
 
     /**
-     * TODO: documentation
-     * 
-     * @param cteClass
-     * @return
-     * @since 1.1.0
+     * Creates a builder for a modification CTE with the given CTE type.
+     *
+     * @param cteClass The type of the CTE
+     * @return A factory to create a modification query that returns/binds attributes to the CTE.
      */
     public ReturningModificationCriteriaBuilderFactory<T> withReturning(Class<?> cteClass);
 

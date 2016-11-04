@@ -45,6 +45,9 @@
     </module>
     <module name="SuppressWarningsFilter" />
 
+    <!-- Javadoc -->
+    <!-- See http://checkstyle.sourceforge.net/config_javadoc.html -->
+    <module name="JavadocPackage"/>
 
     <module name="TreeWalker">
 
@@ -53,6 +56,33 @@
         <property name="cacheFile" value="${checkstyle.cache.file}"/>
 
         <module name="SuppressWarningsHolder" />
+
+        <!-- Javadoc -->
+        <!-- See http://checkstyle.sourceforge.net/config_javadoc.html -->
+        <module name="AtclauseOrder">
+            <property name="tagOrder" value="@param, @return, @throws, @exception, @author, @version, @since, @see, @serial, @serialField, @serialData, @deprecated"/>
+            <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
+        </module>
+        <module name="JavadocMethod">
+            <property name="scope" value="package"/>
+            <property name="allowUndeclaredRTE" value="true"/>
+            <property name="allowThrowsTagsForSubclasses" value="true"/>
+            <property name="allowMissingPropertyJavadoc" value="true"/>
+        </module>
+        <module name="JavadocStyle">
+            <property name="scope" value="public"/>
+        </module>
+        <module name="JavadocType">
+            <property name="scope" value="package"/>
+            <!-- Only first name and last name -->
+            <property name="authorFormat" value="[a-zA-Z\-]+( [a-zA-Z\-])+"/>
+            <!-- avoid errors on tag '@noinspection' -->
+            <property name="allowUnknownTags" value="true"/>
+        </module>
+        <module name="NonEmptyAtclauseDescription"/>
+        <module name="com.blazebit.persistence.checkstyle.JavadocSinceCheck">
+            <property name="sinceFormat" value="[1-9]+\.[0-9]+\.[0-9]+"/>
+        </module>
 
         <!-- Checks for Naming Conventions.                  -->
         <!-- See http://checkstyle.sf.net/config_naming.html -->

@@ -20,20 +20,20 @@ package com.blazebit.persistence;
  * The different join types which are possible.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public enum JoinType {
 
     /**
-     * Inner join
+     * Inner join.
      */
     INNER,
     /**
-     * Left outer join
+     * Left outer join.
      */
     LEFT,
     /**
-     * Right outer join
+     * Right outer join.
      */
     RIGHT;
 }

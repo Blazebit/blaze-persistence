@@ -24,7 +24,7 @@ import com.blazebit.persistence.view.FetchStrategy;
  * @param <X> The type of the declaring entity view
  * @param <Y> The type of attribute
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface Attribute<X, Y> {
 

@@ -39,14 +39,16 @@ public class OrderImpl implements BlazeOrder {
 
     @Override
     public BlazeOrder reverse() {
-        ascending = !ascending;
-        return this;
+//        ascending = !ascending;
+//        return this;
+        return new OrderImpl(expression, !ascending, nullsFirst);
     }
 
     @Override
     public BlazeOrder reverseNulls() {
-        nullsFirst = !nullsFirst;
-        return this;
+//        nullsFirst = !nullsFirst;
+//        return this;
+        return new OrderImpl(expression, ascending, !nullsFirst);
     }
 
     @Override

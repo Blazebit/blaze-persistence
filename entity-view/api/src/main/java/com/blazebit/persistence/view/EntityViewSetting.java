@@ -33,7 +33,7 @@ import java.util.*;
  * @param <T> The type of the entity view
  * @param <Q> {@linkplain PaginatedCriteriaBuilder} if paginated, {@linkplain CriteriaBuilder} otherwise
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
 
@@ -177,8 +177,8 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * The id of the entity which should be located on the page returned result.
      * Returns <code>null</code> if no pagination or a absolute first result will be applied.
      *
-     * @see FullQueryBuilder#page(java.lang.Object, int)
      * @return The id of the entity which should be located on a page
+     * @see FullQueryBuilder#page(java.lang.Object, int)
      */
     public Object getEntityId() {
         return entityId;
@@ -188,8 +188,8 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * The first result that the criteria builder should return. Returns 0 if no
      * pagination will be applied. Returns -1 if an entity id was supplied.
      *
-     * @see FullQueryBuilder#page(int, int)
      * @return The first result
+     * @see FullQueryBuilder#page(int, int)
      */
     public int getFirstResult() {
         return firstResult;
@@ -200,8 +200,8 @@ public final class EntityViewSetting<T, Q extends FullQueryBuilder<T, Q>> {
      * Returns {@linkplain java.lang.Integer#MAX_VALUE} if no pagination will be
      * applied.
      *
-     * @see FullQueryBuilder#page(int, int)
      * @return The maximum number of results
+     * @see FullQueryBuilder#page(int, int)
      */
     public int getMaxResults() {
         return maxResults;

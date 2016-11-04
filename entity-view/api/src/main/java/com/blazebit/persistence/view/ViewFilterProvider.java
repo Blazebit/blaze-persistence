@@ -24,7 +24,7 @@ import com.blazebit.persistence.WhereBuilder;
  * View filter providers must have a no-arg constructor if they are used in conjunction with {@link ViewFilter}.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class ViewFilterProvider {
 

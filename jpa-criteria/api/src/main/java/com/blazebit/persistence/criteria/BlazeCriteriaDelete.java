@@ -23,11 +23,32 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.metamodel.EntityType;
 
+/**
+ * An extended version of {@link CriteriaDelete}.
+ *
+ * @param <T> The entity type that is the target of the delete
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeCriteriaDelete<T> extends CriteriaDelete<T>, BlazeCommonAbstractCriteria, Executable {
 
+    /**
+     * Like {@link CriteriaDelete#from(Class)} but allows to set the alias of the {@link BlazeRoot}.
+     *
+     * @param entityClass the entity class
+     * @param alias The alias for the {@link BlazeRoot}
+     * @return query root corresponding to the given entity
+     */
     public BlazeRoot<T> from(Class<T> entityClass, String alias);
 
-    public BlazeRoot<T> from(EntityType<T> entity, String alias);
+    /**
+     * Like {@link CriteriaDelete#from(EntityType)} but allows to set the alias of the {@link BlazeRoot}.
+     *
+     * @param entityType the entity type
+     * @param alias The alias for the {@link BlazeRoot}
+     * @return query root corresponding to the given entity
+     */
+    public BlazeRoot<T> from(EntityType<T> entityType, String alias);
 
     /* Covariant overrides */
 

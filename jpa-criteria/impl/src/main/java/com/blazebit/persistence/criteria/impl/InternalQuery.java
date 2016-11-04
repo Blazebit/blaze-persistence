@@ -199,6 +199,10 @@ public class InternalQuery<T> implements Serializable {
         return orderList;
     }
 
+    public void setBlazeOrderList(List<BlazeOrder> orderList) {
+        this.orderList = orderList;
+    }
+
     @SuppressWarnings({ "unchecked" })
     public List<Order> getOrderList() {
         return (List<Order>) (List<?>) orderList;

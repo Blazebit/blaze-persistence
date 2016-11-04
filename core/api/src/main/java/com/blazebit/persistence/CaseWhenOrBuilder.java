@@ -21,7 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CaseWhenOrBuilder<T> {
 
@@ -51,13 +51,13 @@ public interface CaseWhenOrBuilder<T> {
      * builder and the restriction builder for the right hand side are finished, the when predicate in conjunction with it's then
      * expression are added to this predicate container as disjunct.
      * </p>
-     * 
-     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
-     * 
+     *
      * @param subqueryAlias The alias for the subquery which will be replaced by the actual subquery
      * @param expression The expression which will be used as left hand side of a predicate.
      *            This expression contains the {@code subqueryAlias} to define the insertion points for the subquery.
      * @return The subquery initiator for building a subquery
+     *
+     * @see CaseWhenStarterBuilder#whenSubquery(java.lang.String, java.lang.String) More details about this method
      */
     public SubqueryInitiator<RestrictionBuilder<CaseWhenOrBuilder<T>>> orSubquery(String subqueryAlias, String expression);
     

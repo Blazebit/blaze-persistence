@@ -18,5 +18,16 @@
         "-//Puppy Crawl//DTD Suppressions 1.1//EN"
         "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 <suppressions>
+    <!-- Generated files don't have to fit our checkstyle requirements -->
     <suppress checks="." files="[\\/]target[\\/].*\.java$"/>
+    <!-- The compatibility stuff for the JPA criteria API does not have to comply either -->
+    <suppress checks="." files="[\\/]javax[\\/]persistence[\\/]criteria[\\/].*\.java$"/>
+
+    <!-- The implementation and testsuite don't have to fit our Javadoc requirements -->
+    <suppress checks="JavadocPackage" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
+    <suppress checks="JavadocMethod" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
+    <suppress checks="JavadocStyle" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
+    <suppress checks="JavadocType" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
+    <suppress checks="NonEmptyAtclauseDescription" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
+    <suppress checks="com.blazebit.persistence.checkstyle.JavadocSinceCheck" files="[\\/](impl|testsuite)[\\/].*\.java$"/>
 </suppressions>

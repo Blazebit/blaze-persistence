@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @param <X> The type of the declaring entity view
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface MappingConstructor<X> {
 

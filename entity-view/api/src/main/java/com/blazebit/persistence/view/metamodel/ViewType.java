@@ -23,7 +23,7 @@ import java.util.Set;
  *
  * @param <X> The type of the entity view
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface ViewType<X> extends IdentifiableViewType<X> {
 

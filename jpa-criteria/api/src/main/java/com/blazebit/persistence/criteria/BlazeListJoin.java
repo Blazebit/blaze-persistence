@@ -20,6 +20,14 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.ListJoin;
 import javax.persistence.criteria.Predicate;
 
+/**
+ * An extended version of {@link ListJoin}.
+ *
+ * @param <Z> the source type of the join
+ * @param <E> the element type of the target <code>List</code>
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeListJoin<Z, E> extends ListJoin<Z, E>, BlazeJoin<Z, E> {
 
     /* Compatibility for JPA 2.1 */

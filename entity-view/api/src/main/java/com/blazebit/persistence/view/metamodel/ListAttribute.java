@@ -24,7 +24,7 @@ import java.util.List;
  * @param <X> The type of the declaring entity view
  * @param <E> The element type of the represented List
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface ListAttribute<X, E> extends PluralAttribute<X, List<E>, E> {
 

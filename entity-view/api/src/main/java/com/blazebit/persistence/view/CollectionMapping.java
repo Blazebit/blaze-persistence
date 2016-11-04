@@ -33,7 +33,7 @@ import java.util.SortedSet;
  * The default sort order is the natural order. By using this annotation, the sort order will be overridden.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)

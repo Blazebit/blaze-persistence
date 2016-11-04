@@ -27,7 +27,7 @@ import javax.persistence.EntityManagerFactory;
  * A configuration for a {@link CriteriaBuilderFactory} which is mostly used in non Java EE environments.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CriteriaBuilderConfiguration {
 

@@ -25,7 +25,7 @@ import java.util.ServiceLoader;
  * Bootstrap class that is used to obtain a {@linkplain CriteriaBuilder} instance.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public class Criteria {
 
@@ -33,7 +33,7 @@ public class Criteria {
     }
 
     /**
-     * Returns the first {@linkplain CriteriaBuilderConfigurationProvider} that is found
+     * Returns the first {@linkplain CriteriaBuilderConfigurationProvider} that is found.
      *
      * @return The first {@linkplain CriteriaBuilderConfigurationProvider} that is found
      */

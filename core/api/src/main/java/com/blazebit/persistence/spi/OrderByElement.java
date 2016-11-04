@@ -25,10 +25,25 @@ package com.blazebit.persistence.spi;
  */
 public interface OrderByElement {
 
+    /**
+     * The position of the order by expression in the select clause.
+     *
+     * @return The position
+     */
     public int getPosition();
-    
+
+    /**
+     * Whether sorting is ascending or descending.
+     *
+     * @return True if ascending, false otherwise
+     */
     public boolean isAscending();
-    
+
+    /**
+     * Whether nulls have precedence or non-nulls.
+     *
+     * @return True if nulls come first, false otherwise
+     */
     public boolean isNullsFirst();
     
 }

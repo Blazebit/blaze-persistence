@@ -20,6 +20,7 @@ package com.blazebit.persistence;
  * A builder for criteria queries. This is the entry point for building queries.
  *
  * @param <T> The query result type
+ * @param <X> The concrete builder type
  * @author Christian Beikov
  * @since 1.1.0
  */

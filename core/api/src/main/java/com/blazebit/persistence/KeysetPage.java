@@ -23,7 +23,7 @@ import java.io.Serializable;
  * Instances of this interface can be used for key set pagination.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface KeysetPage extends Serializable {
 

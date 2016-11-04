@@ -20,6 +20,14 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.SetJoin;
 
+/**
+ * An extended version of {@link SetJoin}.
+ *
+ * @param <Z> the source type of the join
+ * @param <E> the element type of the target <code>Set</code>
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeSetJoin<Z, E> extends SetJoin<Z, E>, BlazeJoin<Z, E> {
     
     /* Compatibility for JPA 2.1 */

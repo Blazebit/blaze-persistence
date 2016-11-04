@@ -32,22 +32,88 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 import javax.persistence.metamodel.EntityType;
 
+/**
+ * An extended version of {@link Subquery}.
+ *
+ * @param <T> The type of the selection item
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeSubquery<T> extends Subquery<T>, BlazeAbstractQuery<T> {
 
     // TODO: think about whether multiselect support makes sense for subqueries
 
+    /**
+     * Like {@link BlazeSubquery#getOrderList()} but returns the subtype {@link BlazeOrder} instead.
+     *
+     * @return The list of ordering expressions
+     */
     public List<BlazeOrder> getBlazeOrderList();
 
+    /**
+     * Return the ordering expressions in order of precedence.
+     * Returns empty list if no ordering expressions have been
+     * specified.
+     * Modifications to the list do not affect the query.
+     *
+     * @return the list of ordering expressions
+     */
     public List<Order> getOrderList();
 
+    /**
+     * Specify the ordering expressions that are used to
+     * order the query results.
+     * Replaces the previous ordering expressions, if any.
+     * If no ordering expressions are specified, the previous
+     * ordering, if any, is simply removed, and results will
+     * be returned in no particular order.
+     * The order of the ordering expressions in the list
+     * determines the precedence, whereby the first element in the
+     * list has highest precedence.
+     *
+     * @param orders zero or more ordering expressions
+     * @return this for chaining
+     */
     public BlazeSubquery<T> orderBy(Order... orders);
 
-    public BlazeSubquery<T> orderBy(List<Order> orderList);
+    /**
+     * Like {@link BlazeSubquery#orderBy(Order...)} but accepts the subtype {@link BlazeOrder}.
+     *
+     * @param orders zero or more ordering expressions
+     * @return this for chaining
+     */
+    public BlazeSubquery<T> orderBy(BlazeOrder... orders);
 
+    /**
+     * Specify the ordering expressions that are used to
+     * order the query results.
+     * Replaces the previous ordering expressions, if any.
+     * If no ordering expressions are specified, the previous
+     * ordering, if any, is simply removed, and results will
+     * be returned in no particular order.
+     * The order of the ordering expressions in the list
+     * determines the precedence, whereby the first element in the
+     * list has highest precedence.
+     *
+     * @param orderList list of zero or more ordering expressions
+     * @return this for chaining
+     */
+    public BlazeSubquery<T> orderBy(List<BlazeOrder> orderList);
+
+    /**
+     * Returns the parameters defined on this query.
+     *
+     * @return The parameters
+     */
     public Set<ParameterExpression<?>> getParameters();
     
     /* Compatibility for JPA 2.1 */
 
+    /**
+     * Returns the query (which may be a CriteriaQuery, CriteriaUpdate, CriteriaDelete, or a Subquery) of which this is a subquery.
+     *
+     * @return The enclosing query or subquery
+     */
     public BlazeCommonAbstractCriteria getContainingQuery();
 
     /* Covariant overrides */

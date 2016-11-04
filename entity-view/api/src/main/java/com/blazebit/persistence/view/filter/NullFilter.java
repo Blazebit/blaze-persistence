@@ -28,7 +28,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * If the resulting boolean is true, the filter will apply an is null restriction, otherwise an is not null restriction.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class NullFilter extends AttributeFilterProvider {
 

@@ -622,8 +622,8 @@ public abstract class AbstractFrom<Z, X> extends AbstractPath<X> implements Blaz
     }
 
     @Override
-    public <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-        return joinMap(attributeName, (String) null, jt);
+    public <X, K, V> BlazeMapJoin<X, K, V> joinMap(String attributeName, JoinType joinType) {
+        return joinMap(attributeName, (String) null, joinType);
     }
 
     /* Join scope implementations */

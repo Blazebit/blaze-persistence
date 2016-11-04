@@ -45,7 +45,7 @@ import java.lang.annotation.Target;
  * Example 2 shows that a mapping can contain arbitrary JPQL expressions.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)

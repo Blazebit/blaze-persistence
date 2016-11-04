@@ -29,6 +29,7 @@ public interface ServiceProvider {
      * Returns the service or null if none is available.
      *
      * @param serviceClass The type of the service
+     * @param <T> The service type
      * @return The service or null
      */
     public <T> T getService(Class<T> serviceClass);

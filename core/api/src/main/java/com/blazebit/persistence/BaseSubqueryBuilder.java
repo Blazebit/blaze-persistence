@@ -21,9 +21,9 @@ import javax.persistence.Tuple;
 /**
  * A builder for subquery criteria queries.
  *
- * @param <T> The parent query builder type
+ * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface BaseSubqueryBuilder<X extends BaseSubqueryBuilder<X>> extends BaseQueryBuilder<Tuple, X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X>, CTEBuilder<X> {
 

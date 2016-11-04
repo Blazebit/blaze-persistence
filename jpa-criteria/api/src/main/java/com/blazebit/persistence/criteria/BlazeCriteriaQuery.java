@@ -27,13 +27,34 @@ import javax.persistence.criteria.Selection;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.Queryable;
 
+/**
+ * An extended version of {@link CriteriaQuery}.
+ *
+ * @param <T>  the type of the defined result
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeCriteriaQuery<T> extends CriteriaQuery<T>, BlazeAbstractQuery<T>, Queryable<T, BlazeCriteriaQuery<T>> {
 
-
+    /**
+     * Create a Blaze-Persistence Core {@link CriteriaBuilder} from this query.
+     *
+     * @return A new criteria builder
+     */
     public CriteriaBuilder<T> createCriteriaBuilder();
-    
+
+    /**
+     * The extended JPA {@link javax.persistence.criteria.CriteriaBuilder} associated with this query.
+     *
+     * @return The JPA {@link javax.persistence.criteria.CriteriaBuilder}
+     */
     public BlazeCriteriaBuilder getCriteriaBuilder();
 
+    /**
+     * Like {@link CriteriaQuery#getOrderList()} but returns the subtype {@link BlazeOrder} instead.
+     *
+     * @return The list of ordering expressions
+     */
     public List<BlazeOrder> getBlazeOrderList();
     
     /* Covariant overrides */

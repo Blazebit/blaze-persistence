@@ -27,7 +27,7 @@ package com.blazebit.persistence.spi;
 public interface JpqlMacro {
 
     /**
-     * Renders the function into the given function render context
+     * Renders the function into the given function render context.
      * 
      * @param context The context into which the function should be rendered
      */

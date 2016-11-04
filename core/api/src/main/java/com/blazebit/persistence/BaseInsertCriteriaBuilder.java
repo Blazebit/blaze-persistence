@@ -26,10 +26,21 @@ package com.blazebit.persistence;
  */
 public interface BaseInsertCriteriaBuilder<T, X extends BaseInsertCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, OrderByBuilder<X>, GroupByBuilder<X>, DistinctBuilder<X>, LimitBuilder<X> {
 
-    // TODO: documentation
+    /**
+     * Binds the given value as parameter to the attribute.
+     *
+     * @param attribute The attribute for which the value should be bound
+     * @param value The value that should be bound
+     * @return The query builder for chaining calls
+     */
     public X bind(String attribute, Object value);
 
-    // TODO: documentation
+    /**
+     * Starts a select builder for creating an expression that should be bound to the attribute.
+     *
+     * @param attribute The attribute for which the select expression should be bound
+     * @return The query builder for chaining calls
+     */
     public SelectBuilder<X> bind(String attribute);
     
 }

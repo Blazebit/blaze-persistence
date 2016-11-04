@@ -25,7 +25,7 @@ import com.blazebit.persistence.SubqueryInitiator;
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public interface RestrictionBuilderExperimental<T> extends RestrictionBuilder<T> {
 

@@ -22,7 +22,7 @@ package com.blazebit.persistence.spi;
  * Implementations are instantiated via {@link java.util.ServiceLoader}.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface CriteriaBuilderConfigurationProvider {
 

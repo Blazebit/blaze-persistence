@@ -73,13 +73,12 @@ public interface DbmsLimitHandler {
     public String applySqlInlined(String sql, boolean isSubquery, Integer limit, Integer offset);
 
     /**
-     * Apply the LIMIT and OFFSET clause on the given SQL
+     * Apply the LIMIT and OFFSET clause on the given SQL.
      *
      * @param sqlSb  the string builder containing the sql query on which to apply
      * @param isSubquery whether the query is a subquery
      * @param limit  the limit value or null
      * @param offset the offset value or null
-     * @return Query statement with LIMIT clause applied.
      */
     public void applySql(StringBuilder sqlSb, boolean isSubquery, String limit, String offset);
 

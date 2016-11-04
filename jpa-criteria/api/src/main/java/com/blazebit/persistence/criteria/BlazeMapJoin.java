@@ -20,6 +20,15 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Predicate;
 
+/**
+ * An extended version of {@link MapJoin}.
+ *
+ * @param <Z> the source type of the join
+ * @param <K> the key type of the target <code>Map</code>
+ * @param <V> the element type of the target <code>Map</code>
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeMapJoin<Z, K, V> extends MapJoin<Z, K, V>, BlazeJoin<Z, V> {
 
     /* Compatibility for JPA 2.1 */

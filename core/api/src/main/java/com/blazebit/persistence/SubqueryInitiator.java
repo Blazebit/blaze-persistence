@@ -21,7 +21,7 @@ package com.blazebit.persistence;
  *
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface SubqueryInitiator<T> {
 
@@ -44,7 +44,7 @@ public interface SubqueryInitiator<T> {
     public SubqueryBuilder<T> from(Class<?> entityClass, String alias);
 
     /**
-     * Like {@link SubqueryInitiator#from(String, String))} with the
+     * Like {@link SubqueryInitiator#from(String, String)} with the
      * alias equivalent to the camel cased result of the class of the correlation parent.
      *
      * @param correlationPath The correlation path which should be queried
@@ -63,6 +63,12 @@ public interface SubqueryInitiator<T> {
      */
     public SubqueryBuilder<T> from(String correlationPath, String alias);
 
-    // TODO: documentation
+    /**
+     * Starts a nested set operation builder which is used as subquery.
+     * Doing this is like starting a nested query that will be connected via a set operation.
+     *
+     * @return The set operation builder
+     * @since 1.2.0
+     */
     public StartOngoingSetOperationSubqueryBuilder<T, LeafOngoingSetOperationSubqueryBuilder<T>> startSet();
 }

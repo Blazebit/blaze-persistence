@@ -22,7 +22,7 @@ import com.blazebit.persistence.OrderByBuilder;
  * A sorter is an object that applies an order by on a {@link OrderByBuilder} for a specific expression.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface Sorter {
 

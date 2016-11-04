@@ -25,7 +25,7 @@ import java.util.Comparator;
  * @param <C> The type of the represented collection
  * @param <E> The element type of the represented collection
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface PluralAttribute<X, C, E> extends MappingAttribute<X, C> {
 

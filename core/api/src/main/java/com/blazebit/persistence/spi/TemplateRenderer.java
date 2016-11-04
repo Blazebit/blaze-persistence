@@ -99,6 +99,9 @@ public class TemplateRenderer {
         return new Context(this, context);
     }
 
+    /**
+     * A context for a template renderer that supports binding function arguments or plain strings as values for placeholders.
+     */
     public static class Context {
 
         private final TemplateRenderer template;
@@ -106,6 +109,12 @@ public class TemplateRenderer {
         private final Object[] boundValues;
         private int boundValueIndex = 0;
 
+        /**
+         * Constructs a context for a template renderer and a render context.
+         *
+         * @param template The template renderer
+         * @param context The function render context
+         */
         public Context(TemplateRenderer template, FunctionRenderContext context) {
             this.template = template;
             this.context = context;

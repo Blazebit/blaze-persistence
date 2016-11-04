@@ -22,7 +22,7 @@ package com.blazebit.persistence;
  * @param <T> The builder type that is returned on terminal operations
  * @author Christian Beikov
  * @author Moritz Becker
- * @since 1.0
+ * @since 1.0.0
  */
 public interface EscapeBuilder<T> {
 

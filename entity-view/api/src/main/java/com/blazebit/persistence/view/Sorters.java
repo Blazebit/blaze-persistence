@@ -22,7 +22,7 @@ import com.blazebit.persistence.OrderByBuilder;
  * A utility class that provides methods to create standard sorters.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public final class Sorters {
 
@@ -30,7 +30,7 @@ public final class Sorters {
     }
 
     /**
-     * Creates and returns a new {@link Sorter} that
+     * Creates and returns a new {@link Sorter}. The sorter has the following properties
      * <ul>
      * <li>sorts ascending if the flag <code>ascending</code> is true, descending otherwise</li>
      * <li>sorts nulls first is the flag <code>nullsFirst</code> is ture, nulls last otherwise</li>
@@ -82,6 +82,12 @@ public final class Sorters {
         return new DefaultSorter(false, false);
     }
 
+    /**
+     * The default sorter implementation.
+     *
+     * @author Christian Beikov
+     * @since 1.0.0
+     */
     private static class DefaultSorter implements Sorter {
 
         private final boolean ascending;

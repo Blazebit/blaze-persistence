@@ -25,7 +25,13 @@ package com.blazebit.persistence;
  */
 public interface ReturningBuilder<X extends ReturningBuilder<X>> {
 
-    // TODO: documentation
+    /**
+     * Binds a entity attribute(<code>modificationQueryAttribute</code>) to a CTE attribute(<code>cteAttribute</code>) and returns this builder for chaining.
+     *
+     * @param cteAttribute The CTE attribute on which to bind
+     * @param modificationQueryAttribute The attribute of the modification query entity which to return into the CTE attribute
+     * @return This builder for chaining
+     */
     public X returning(String cteAttribute, String modificationQueryAttribute);
     
 }

@@ -25,5 +25,11 @@ package com.blazebit.persistence;
  */
 public interface SelectBaseCTECriteriaBuilder<X extends SelectBaseCTECriteriaBuilder<X>> extends BaseCTECriteriaBuilder<X> {
 
+    /**
+     * Starts a select builder for building an expression to bind to the CTE attribute.
+     *
+     * @param cteAttribute The CTE attribute to which the resulting expression should be bound
+     * @return A select builder for building an expression
+     */
     public SelectBuilder<X> bind(String cteAttribute);
 }

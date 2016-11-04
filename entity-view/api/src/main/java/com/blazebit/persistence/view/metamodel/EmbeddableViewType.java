@@ -21,7 +21,7 @@ package com.blazebit.persistence.view.metamodel;
  *
  * @param <X> The type of the embeddable entity view
  * @author Christian Beikov
- * @since 1.1
+ * @since 1.1.0
  */
 public interface EmbeddableViewType<X> extends ManagedViewType<X> {
 }

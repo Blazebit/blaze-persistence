@@ -23,7 +23,7 @@ package com.blazebit.persistence;
  * @param <T> The query result type
  * @param <X> The concrete builder type
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public interface BaseQueryBuilder<T, X extends BaseQueryBuilder<T, X>> extends CommonQueryBuilder<X>, FromBuilder<X>, KeysetQueryBuilder<X>, WhereBuilder<X>, OrderByBuilder<X>, SelectBuilder<X> {
 

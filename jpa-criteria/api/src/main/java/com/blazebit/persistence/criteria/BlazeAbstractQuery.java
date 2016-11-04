@@ -23,7 +23,13 @@ import javax.persistence.metamodel.EntityType;
 import java.util.List;
 import java.util.Set;
 
-// Compatibility for JPA 2.1
+/**
+ * An extended version of {@link AbstractQuery} that allows setting an alias for {@link javax.persistence.criteria.From} elements.
+ *
+ * @param <T> the type of the result
+ * @author Christian Beikov
+ * @since 1.2.0
+ */
 public interface BlazeAbstractQuery<T> extends AbstractQuery<T>, BlazeCommonAbstractCriteria {
 
     // TODO: create a fluent builder for clauses, maybe via RestrictionBuilder?
@@ -31,10 +37,31 @@ public interface BlazeAbstractQuery<T> extends AbstractQuery<T>, BlazeCommonAbst
     // TODO: integrate support for default join nodes?
     // TODO: maybe add explicit support for limit?
 
+    /**
+     * Like {@link AbstractQuery#from(Class)} but allows to set the alias of the {@link BlazeRoot}.
+     *
+     * @param entityClass the entity class
+     * @param alias The alias for the {@link BlazeRoot}
+     * @param <X> The entity type
+     * @return query root corresponding to the given entity
+     */
     public <X> BlazeRoot<X> from(Class<X> entityClass, String alias);
 
+    /**
+     * Like {@link AbstractQuery#from(EntityType)} but allows to set the alias of the {@link BlazeRoot}.
+     *
+     * @param entityType the entity type
+     * @param alias The alias for the {@link BlazeRoot}
+     * @param <X> The entity type
+     * @return query root corresponding to the given entity
+     */
     public <X> BlazeRoot<X> from(EntityType<X> entityType, String alias);
 
+    /**
+     * Like {@link AbstractQuery#getRoots()} but returns the subtype {@link BlazeRoot} instead.
+     *
+     * @return the set of query roots
+     */
     public Set<BlazeRoot<?>> getBlazeRoots();
 
     /* Covariant overrides */

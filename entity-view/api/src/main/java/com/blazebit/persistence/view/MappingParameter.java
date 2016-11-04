@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
  * Example 2 is similar to example 1 but shows that a constructor can also contain parameters annotated {@linkplain Mapping} in conjunction with mapping parameters.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 @Target({ ElementType.METHOD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)

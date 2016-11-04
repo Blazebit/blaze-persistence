@@ -27,7 +27,7 @@ import com.blazebit.persistence.view.AttributeFilterProvider;
  * for the contains restriction.
  *
  * @author Christian Beikov
- * @since 1.0
+ * @since 1.0.0
  */
 public abstract class ContainsFilter extends AttributeFilterProvider {
 }

@@ -20,7 +20,6 @@ package com.blazebit.persistence;
  * An interface for builders that support set operators.
  *
  * @param <X> The concrete builder type
- * @param <Y> The builder result type
  * @author Christian Beikov
  * @since 1.1.0
  */

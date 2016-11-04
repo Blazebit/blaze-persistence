@@ -25,17 +25,45 @@ package com.blazebit.persistence;
  * @since 1.1.0
  */
 public interface BaseUpdateCriteriaBuilder<T, X extends BaseUpdateCriteriaBuilder<T, X>> extends BaseModificationCriteriaBuilder<X> {
-    
-    // TODO: documentation
+
+    /**
+     * Binds the given value as parameter to the attribute.
+     *
+     * @param attribute The attribute for which the value should be bound
+     * @param value The value that should be bound
+     * @return The query builder for chaining calls
+     */
     public X set(String attribute, Object value);
 
-    // TODO: documentation
+    /**
+     * Binds the given expression to the attribute.
+     *
+     * @param attribute The attribute for which the expression should be bound
+     * @param expression The expression that should be bound
+     * @return The query builder for chaining calls
+     */
     public X setExpression(String attribute, String expression);
 
-    // TODO: documentation
+    /**
+     * Starts a subquery builder for creating an expression that should be bound to the attribute.
+     *
+     * @param attribute The attribute for which the subquery expression should be bound
+     * @return The query builder for chaining calls
+     */
     public SubqueryInitiator<X> set(String attribute);
-    
-    // TODO: documentation
+
+    /**
+     * Starts a {@link MultipleSubqueryInitiator} with the given expression that should bound to the attribute.
+     *
+     * <p>
+     * All occurrences of subsequently defined <code>subqueryAlias</code>es in <code>expression</code> will be replaced by the respective subquery.
+     * When the builder finishes, the predicate is added to the parent predicate container represented by the type <code>T</code>.
+     * </p>
+     *
+     * @param attribute The attribute for which the expression should be bound
+     * @param expression The expression for the lower bound of the between predicate.
+     * @return The subquery initiator for building multiple subqueries for their respective subqueryAliases
+     */
     public MultipleSubqueryInitiator<X> setSubqueries(String attribute, String expression);
     
 }
