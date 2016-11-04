@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2014 - 2016 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,9 +50,10 @@ public interface PrimitiveDocumentView extends PrimitiveSimpleDocumentView {
 
     public List<PrimitivePersonView> getPeople();
 
-    public List<PrimitivePersonView> getPeopleListBag();
+    // TODO: Report that selecting bags in datanucleus leads to an exception
+//    public List<PrimitivePersonView> getPeopleListBag();
 
-    public List<PrimitivePersonView> getPeopleCollectionBag();
+//    public List<PrimitivePersonView> getPeopleCollectionBag();
 
     public PrimitiveSimpleDocumentView getParent();
 

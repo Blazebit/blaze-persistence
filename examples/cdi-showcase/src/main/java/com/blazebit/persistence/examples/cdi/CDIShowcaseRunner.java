@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Blazebit.
+ * Copyright 2014 - 2016 Blazebit.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,9 @@ import java.util.Iterator;
  * @since 1.2
  */
 public class CDIShowcaseRunner {
+
+    private CDIShowcaseRunner() {
+    }
 
     public static void main(String[] args) {
         CdiContainer cdiContainer = CdiContainerLoader.getCdiContainer();
