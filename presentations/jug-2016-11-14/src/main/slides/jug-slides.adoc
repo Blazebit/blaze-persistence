@@ -1,0 +1,63 @@
+= Blaze-Persistence, Tomorrow's JPA, today
+Christian Beikov, Moritz Becker
+:icons: font
+:navigation:
+
+== About us
+
+image::vendor.png[float="right"]
+
+icon:twitter[] https://twitter.com/Blazebit[@Blazebit] +
+icon:github[] https://github.com/Blazebit
+
+Blazebit Gesbr. is a working group doing commercial software and OSS under APL 2.0
+
+[%step]
+* Christian Beikov, Blaze-Persistence lead
+
+image::christian_head.png[float="right"]
+
+* Moritz Becker, Blaze-Persistence comitter
+
+image::moritz_head.png[float="right"]
+
+* Bernd Artm+++&uuml;+++ller, Designer
+
+image::bernd_head.png[float="right"]
+
+== What is Blaze-Persistence
+
+* Library that builds on top of JPA with deep integration
+* Fluent builder API that is easy to use
+* Rich pagination support integrated
+* Entity-Views as painless DTOs
+* Advanced SQL support on top of JPA model
+
+== Problems with ORM/JPA
+
+List the problems that people have with ORMs and show the bad decisions that have to be made because of that.
+
+Think JPA 2.1 Entity-Graphs are too verbose?
+
+
+== Blaze-Persistence features/use cases
+
+List the features/use cases for which Blaze-Persistence can be used.
+For every feature, give live examples + comparison
+
+== Integrations
+
+Hibernate is the only JPA provider that has deep integration right now.
+Mention CDI/Spring
+
+== Roadmap
+
+List new features that are about to come
+
+== Contributing
+
+We are happy about any contribution, please fork us and join us on Slack.
+
+== Q & A
+
+Got questions?

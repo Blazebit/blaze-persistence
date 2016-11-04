@@ -48,6 +48,7 @@
         <module>testsuite-base</module>
         <module>documentation</module>
         <module>website</module>
+        <module>examples</module>
         <module>checkstyle-rules</module>
     </modules>
 

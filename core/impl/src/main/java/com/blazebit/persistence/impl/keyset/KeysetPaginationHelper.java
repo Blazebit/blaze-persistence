@@ -46,21 +46,17 @@ public class KeysetPaginationHelper {
         if (entityId != null) {
             return KeysetMode.NONE;
         }
-        // The last page size must equal the current page size
-        if (keysetPage.getMaxResults() != pageSize) {
-            return KeysetMode.NONE;
-        }
 
         int offset = keysetPage.getFirstResult() - firstRow;
 
-        if (offset == pageSize) {
+        if (offset > 0 && offset <= pageSize) {
             // We went to the previous page
             if (isValidKey(keysetPage.getLowest())) {
                 return KeysetMode.PREVIOUS;
             } else {
                 return KeysetMode.NONE;
             }
-        } else if (offset == -pageSize) {
+        } else if (offset < 0 && -offset <= pageSize) {
             // We went to the next page
             if (isValidKey(keysetPage.getHighest())) {
                 return KeysetMode.NEXT;

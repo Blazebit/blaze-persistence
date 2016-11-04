@@ -24,6 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 
+import com.blazebit.persistence.view.impl.metamodel.ClassUtils;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.MethodAttribute;
@@ -131,7 +132,7 @@ public class ProxyFactory {
                     initialStateField = new CtField(pool.get(Object[].class.getName()), "$$_initialState", cc);
                     initialStateField.setModifiers(getModifiers(false));
                     cc.addField(initialStateField);
-                    
+
                     addGetter(cc, initialStateField, "$$_getInitialState");
                 }
             }
@@ -139,6 +140,7 @@ public class ProxyFactory {
             Set<MethodAttribute<? super T, ?>> attributes = managedViewType.getAttributes();
             CtField[] attributeFields = new CtField[attributes.size()];
             CtClass[] attributeTypes = new CtClass[attributes.size()];
+            int twoStackSlotCount = 0;
             int i = 0;
 
             // Create the id field
@@ -152,6 +154,10 @@ public class ProxyFactory {
                 attributeFields[0] = idField;
                 attributeTypes[0] = idField.getType();
                 attributes.remove(idAttribute);
+
+                if (needsTwoStackSlots(idField.getType())) {
+                    twoStackSlotCount++;
+                }
 
                 if (viewType.isUpdatable()) {
                     addGetter(cc, idField, "$$_getId", Object.class);
@@ -172,7 +178,11 @@ public class ProxyFactory {
                 attributeFields[i] = attributeField;
                 attributeTypes[i] = attributeField.getType();
                 i++;
-                
+
+                if (needsTwoStackSlots(attributeField.getType())) {
+                    twoStackSlotCount++;
+                }
+
                 if (attribute.isUpdatable()) {
                     dirtyStateIndex++;
                 }
@@ -198,7 +208,7 @@ public class ProxyFactory {
 
             // Add the default constructor only for interfaces since abstract classes may omit it
             if (clazz.isInterface()) {
-                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                cc.addConstructor(createConstructor(cc, attributeFields, attributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
 
             Set<MappingConstructor<T>> constructors = managedViewType.getConstructors();
@@ -216,7 +226,7 @@ public class ProxyFactory {
                 CtConstructor superConstructor = findConstructor(superCc, constructor);
                 System.arraycopy(superConstructor.getParameterTypes(), 0, constructorAttributeTypes, idParameterCount + attributes.size(), superConstructor.getParameterTypes().length);
 
-                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
+                cc.addConstructor(createConstructor(cc, attributeFields, constructorAttributeTypes, twoStackSlotCount, initialStateField, dirtyStateField, dirtyStateIndex, unsafe));
             }
 
             try {
@@ -226,7 +236,7 @@ public class ProxyFactory {
                     return cc.toClass(clazz.getClassLoader(), null);
                 }
             } catch (CannotCompileException ex) {
-                // If there are multiple proxy factories for the same class loader 
+                // If there are multiple proxy factories for the same class loader
                 // we could end up in defining a class multiple times, so we check if the classloader
                 // actually has something to offer
                 if (ex.getCause() instanceof LinkageError) {
@@ -289,16 +299,24 @@ public class ProxyFactory {
         MethodInfo minfo = new MethodInfo(cp, methodName, "()" + returnTypeDescriptor);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
 
-        Bytecode code = new Bytecode(cp, 1, 1);
+        Bytecode code = new Bytecode(cp, needsTwoStackSlots(Descriptor.toClassName(returnTypeDescriptor)) ? 2 : 1, 1);
         
         if (field != null) {
             code.addAload(0);
             code.addGetfield(cc, field.getName(), field.getFieldInfo().getDescriptor());
+
+            CtClass type;
+            try {
+                type = field.getType();
+            } catch (NotFoundException e) {
+                throw new CannotCompileException(e);
+            }
+
+            code.addReturn(type);
         } else {
             code.addOpcode(Bytecode.ACONST_NULL);
+            code.add(Bytecode.ARETURN);
         }
-        
-        code.addOpcode(Bytecode.ARETURN);
 
         minfo.setCodeAttribute(code.toCodeAttribute());
         CtMethod method = CtMethod.make(minfo, cc);
@@ -356,7 +374,7 @@ public class ProxyFactory {
             }
         }
     }
-    
+
     private CtMethod addSetter(MethodAttribute<?, ?> attribute, Method setter, CtField dirtyStateField, int dirtyStateIndex, CtField attributeField) throws CannotCompileException {
         FieldInfo finfo = attributeField.getFieldInfo2();
         String fieldType = finfo.getDescriptor();
@@ -365,7 +383,7 @@ public class ProxyFactory {
         MethodInfo minfo = new MethodInfo(cp, setter.getName(), desc);
         minfo.setAccessFlags(AccessFlag.PUBLIC);
 
-        Bytecode code = new Bytecode(cp, 3, 3);
+        Bytecode code = new Bytecode(cp, needsTwoStackSlots(Descriptor.toClassName(fieldType)) ? 4 : 2, 3);
         try {
             String fieldName = finfo.getName();
 
@@ -405,7 +423,7 @@ public class ProxyFactory {
         List<Method> bridges = new ArrayList<Method>();
         String name = getter.getName();
         Class<?> attributeType = attribute.getJavaType();
-        
+
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
                 if (name.equals(m.getName()) && m.getReturnType().isAssignableFrom(attributeType) && !attributeType.equals(m.getReturnType())) {
@@ -414,12 +432,12 @@ public class ProxyFactory {
                             continue METHOD;
                         }
                     }
-                    
+
                     bridges.add(m);
                 }
             }
         }
-        
+
         return bridges;
     }
 
@@ -427,7 +445,7 @@ public class ProxyFactory {
         List<Method> bridges = new ArrayList<Method>();
         String name = setter.getName();
         Class<?> attributeType = attribute.getJavaType();
-        
+
         for (Class<?> c : ReflectionUtils.getSuperTypes(clazz)) {
             METHOD: for (Method m : c.getMethods()) {
                 if (name.equals(m.getName()) && m.getParameterTypes()[0].isAssignableFrom(attributeType) && !attributeType.equals(m.getParameterTypes()[0])) {
@@ -440,7 +458,7 @@ public class ProxyFactory {
                 }
             }
         }
-        
+
         return bridges;
     }
 
@@ -467,15 +485,21 @@ public class ProxyFactory {
         StringBuilder sb = new StringBuilder();
 
         sb.append('{');
+        sb.append("\tif ($0 == $1) { return true; }\n");
         sb.append("\tif ($1 == null) { return false; }\n");
         sb.append("\tif ($0.getClass() != $1.getClass()) { return false; }\n");
         sb.append("\tfinal ").append(cc.getName()).append(" other = (").append(cc.getName()).append(") $1;\n");
 
         for (CtField field : fields) {
-            sb.append("\tif ($0.").append(field.getName()).append(" != other.").append(field.getName());
-            sb.append(" && ($0.").append(field.getName()).append(" == null");
-            sb.append(" || !$0.").append(field.getName()).append(".equals(other.").append(field.getName()).append("))) {\n");
-            sb.append("\t\treturn false;\n\t}\n");
+            if (field.getType().isPrimitive()) {
+                sb.append("\tif ($0.").append(field.getName()).append(" != other.").append(field.getName()).append(") {\n");
+                sb.append("\t\treturn false;\n\t}\n");
+            } else {
+                sb.append("\tif ($0.").append(field.getName()).append(" != other.").append(field.getName());
+                sb.append(" && ($0.").append(field.getName()).append(" == null");
+                sb.append(" || !$0.").append(field.getName()).append(".equals(other.").append(field.getName()).append("))) {\n");
+                sb.append("\t\treturn false;\n\t}\n");
+            }
         }
 
         sb.append("\treturn true;\n");
@@ -502,8 +526,37 @@ public class ProxyFactory {
         sb.append("\tint hash = 3;\n");
 
         for (CtField field : fields) {
-            sb.append("\thash = 83 * hash + ($0.").append(field.getName()).append(" != null ? ");
-            sb.append("$0.").append(field.getName()).append(".hashCode() : 0);\n");
+            if (field.getType().isPrimitive()) {
+                Class<?> type = ClassUtils.getPrimitiveClassByName(Descriptor.toClassName(field.getFieldInfo().getDescriptor()));
+                if (double.class == type) {
+                    sb.append("long bits = java.lang.Double.doubleToLongBits($0.").append(field.getName()).append(");");
+                }
+                sb.append("\thash = 83 * hash + ");
+                if (boolean.class == type) {
+                    sb.append("$0.").append(field.getName()).append(" ? 1231 : 1237").append(";\n");
+                } else if (byte.class == type || short.class == type || char.class == type) {
+                    sb.append("(int) $0.").append(field.getName()).append(";\n");
+                } else if (int.class == type) {
+                    sb.append("$0.").append(field.getName()).append(";\n");
+                } else if (long.class == type) {
+                    sb.append("(int)(");
+                    sb.append("$0.").append(field.getName());
+                    sb.append(" ^ (");
+                    sb.append("$0.").append(field.getName());
+                    sb.append(" >>> 32));\n");
+                } else if (float.class == type) {
+                    sb.append("java.lang.Float.floatToIntBits(");
+                    sb.append("$0.").append(field.getName());
+                    sb.append(");\n");
+                } else if (double.class == type) {
+                    sb.append("(int)(bits ^ (bits >>> 32));\n");
+                } else {
+                    throw new IllegalArgumentException("Unsupported primitive type: " + type.getName());
+                }
+            } else {
+                sb.append("\thash = 83 * hash + ($0.").append(field.getName()).append(" != null ? ");
+                sb.append("$0.").append(field.getName()).append(".hashCode() : 0);\n");
+            }
         }
 
         sb.append("\treturn hash;\n");
@@ -519,7 +572,7 @@ public class ProxyFactory {
         MethodInfo bridge = new MethodInfo(cp, getter.getName(), desc);
         bridge.setAccessFlags(AccessFlag.PUBLIC | AccessFlag.BRIDGE | AccessFlag.SYNTHETIC);
 
-        Bytecode code = new Bytecode(cp, 2, 1);
+        Bytecode code = new Bytecode(cp, needsTwoStackSlots(bridgeReturnType) ? 2 : 1, 1);
         code.addAload(0);
         code.addInvokevirtual(cc, getter.getName(), attributeGetter.getReturnType(), null);
         code.addReturn(bridgeReturnType);
@@ -535,7 +588,7 @@ public class ProxyFactory {
         MethodInfo bridge = new MethodInfo(cp, setter.getName(), desc);
         bridge.setAccessFlags(AccessFlag.PUBLIC | AccessFlag.BRIDGE | AccessFlag.SYNTHETIC);
 
-        Bytecode code = new Bytecode(cp, 2, 2);
+        Bytecode code = new Bytecode(cp, needsTwoStackSlots(bridgeParameterType) ? 4 : 2, 2);
         code.addAload(0);
         code.addAload(1);
         code.addCheckcast(attributeSetter.getParameterTypes()[0]);
@@ -546,10 +599,10 @@ public class ProxyFactory {
         return CtMethod.make(bridge, cc);
     }
 
-    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
+    private CtConstructor createConstructor(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, int primitives, CtField initialStateField, CtField dirtyStateField, int dirtyStateSize, boolean unsafe) throws CannotCompileException, NotFoundException {
         CtConstructor ctConstructor = new CtConstructor(attributeTypes, cc);
         ctConstructor.setModifiers(Modifier.PUBLIC);
-        Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1);
+        Bytecode bytecode = new Bytecode(cc.getClassFile().getConstPool(), 3, attributeTypes.length + 1 + primitives);
         
         if (unsafe) {
             renderFieldInitialization(attributeFields, initialStateField, dirtyStateField, dirtyStateSize, bytecode);
@@ -580,11 +633,17 @@ public class ProxyFactory {
             bytecode.addAnewarray(Object.class.getName());
             bytecode.addPutfield(Bytecode.THIS, dirtyStateField.getName(), dirtyStateField.getFieldInfo().getDescriptor());
         }
-        
+
         int j = 0;
+        int fieldSlot = 0;
         for (int i = 0; i < attributeFields.length; i++) {
             bytecode.addAload(0);
-            bytecode.addAload(i + 1);
+            bytecode.addLoad(fieldSlot + 1, attributeFields[i].getType());
+            if (needsTwoStackSlots(attributeFields[i].getType())) {
+                fieldSlot += 2;
+            } else {
+                fieldSlot++;
+            }
             bytecode.addPutfield(attributeFields[i].getDeclaringClass(), attributeFields[i].getName(), Descriptor.of(attributeFields[i].getType()));
             
             if ((attributeFields[i].getModifiers() & Modifier.FINAL) == 0) {
@@ -611,9 +670,18 @@ public class ProxyFactory {
         }
     }
 
+    private boolean needsTwoStackSlots(CtClass c) {
+        return needsTwoStackSlots(c.getName());
+    }
+
+    private boolean needsTwoStackSlots(String name) {
+        // Primitive long and double need two stack slots
+        return "long".equals(name) || "double".equals(name);
+    }
+
     private void renderSuperCall(CtClass cc, CtField[] attributeFields, CtClass[] attributeTypes, Bytecode bytecode) throws NotFoundException {
         bytecode.addAload(0);
-        
+
         CtClass[] superArguments = new CtClass[attributeTypes.length - attributeFields.length];
         int size = 0;
         

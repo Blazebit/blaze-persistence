@@ -34,6 +34,9 @@
         <class>com.blazebit.persistence.testsuite.entity.Ownable</class>
         <class>com.blazebit.persistence.testsuite.entity.Person</class>
 
+        <class>com.blazebit.persistence.testsuite.entity.PrimitiveDocument</class>
+        <class>com.blazebit.persistence.testsuite.entity.PrimitivePerson</class>
+
         <class>com.blazebit.persistence.testsuite.entity.Project</class>
         <class>com.blazebit.persistence.testsuite.entity.ProjectLeader</class>
         <class>com.blazebit.persistence.testsuite.entity.RecursiveEntity</class>

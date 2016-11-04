@@ -35,7 +35,7 @@ public interface FullQueryBuilder<T, X extends FullQueryBuilder<T, X>> extends Q
      * <p>
      * Please note: The pagination only works on entity level and NOT on row level. This means that for queries which yield multiple
      * result set rows per entity (i.e. rows with the same entity id), the multiple rows are treated as 1 page entry during the
-     * pagination process. Hence, the result size of such paginated queries might be greater than the specified page size.
+     * pagination process. Hence, the result set size of such paginated queries might be greater than the specified page size.
      * </p>
      * 
      * <p>

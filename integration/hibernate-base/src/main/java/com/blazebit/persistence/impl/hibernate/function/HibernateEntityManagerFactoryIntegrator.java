@@ -229,7 +229,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     
     @SuppressWarnings("unchecked")
     private Map<String, SQLFunction> getFunctions(Session s) {
-        String version = s.getClass().getPackage().getImplementationVersion();
+        String version = Session.class.getPackage().getImplementationVersion();
 
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);
@@ -252,11 +252,11 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
             try {
                 f = SQLFunctionRegistry.class.getDeclaredField("functionMap");
                 madeAccessible = !f.isAccessible();
-                
+
                 if (madeAccessible) {
                     f.setAccessible(true);
                 }
-                
+
                 return (Map<String, SQLFunction>) f.get(registry);
             } catch (NoSuchFieldException e) {
                 ex = e;
@@ -276,7 +276,7 @@ public class HibernateEntityManagerFactoryIntegrator implements EntityManagerFac
     }
     
     private void replaceFunctions(Session s, Map<String, SQLFunction> newFunctions) {
-        String version = s.getClass().getPackage().getImplementationVersion();
+        String version = Session.class.getPackage().getImplementationVersion();
 
         String[] versionParts = version.split("\\.");
         int major = Integer.parseInt(versionParts[0]);

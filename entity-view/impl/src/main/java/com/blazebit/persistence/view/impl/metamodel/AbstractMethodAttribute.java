@@ -169,10 +169,6 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
                     + "' must accept an argument of the same type as it's corresponding getter returns!");
             }
 
-            if (getter.getReturnType().isPrimitive()) {
-                throw new IllegalArgumentException("Primitive type not allowed for the setter '" + m.getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
-            }
-
             return null;
         } else if (!ReflectionUtils.isGetter(m)) {
             throw new IllegalArgumentException("The given method '" + m.getName() + "' from the entity view '" + viewType.getJavaType().getName()
@@ -185,9 +181,6 @@ public abstract class AbstractMethodAttribute<X, Y> extends AbstractAttribute<X,
             if (setter != null && setter.getParameterTypes()[0] != m.getReturnType()) {
                 throw new IllegalArgumentException("The getter '" + m.getName() + "' of the class '" + viewType.getJavaType().getName()
                     + "' must have the same return type as it's corresponding setter accepts!");
-            }
-            if (m.getReturnType().isPrimitive()) {
-                throw new IllegalArgumentException("Primitive type not allowed for the getter '" + m.getName() + "' of the class '" + viewType.getJavaType().getName() + "'!");
             }
         }
 

@@ -1,4 +1,290 @@
 == Predicate Builder
 
+The Predicate Builder API tries to simplify construction but also the reuse of predicates. There are multiple clauses and expressions that support entering the API:
+
+* <<Where clause>>
+* <<Having clause>>
+* <<On clause>>
+* <<Case When expression>>
+
+Every predicate builder follows the same scheme:
+
+* An entry method can be used to start the builder with the left hand side of a predicate
+* Entry methods are additive, and finishing a predicate results in adding that to the compound predicate
+* Once a predicate has been started, it must be properly finished
+* On the top level, a method to directly set a JPQL predicate expression is provided
+
+INFO: Subqueries are not supported to be directly embedded into expressions but instead have to be built with the builder API.
+
+There are multiple different entry methods to cover all possible usage scenarios. The entry methods are mostly named after the clause in which they are defined
+e.g. in the `WHERE` clause the entry methods are named `where()`, `whereExists()` etc.
+The following list of possible entry methods refers to `WHERE` clause entry methods for easier readability.
+
+`where(String expression)`::
+Starts a builder for a predicate with the given expression on the left hand side.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.where("name").eq("Felix");
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.name = :param_1
+----
+
+`whereExists()` & `whereNotExists()`::
+Starts a subquery builder for an exists predicate.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereExists()
+	    .from(Cat.class, "subCat")
+	    .select("1")
+	    .where("subCat").notEqExpression("cat")
+	    .where("subCat.name").eqExpression("cat.name")
+	.end();
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE EXISTS (SELECT 1 FROM Cat subCat WHERE subCat <> cat AND subCat.name = cat.name)
+----
+
+`whereCase()`::
+Starts a general case when builder for a predicate with the resulting case when expression on the left hand side.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereCase()
+	    .when("cat.name").isNull()
+	        .then(1)
+	    .when("LENGTH(cat.name)").gt(10)
+	        .then(2)
+        .otherwise(3)
+    .eqExpression(":someValue");
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE CASE
+      WHEN cat.name IS NULL THEN :param_1
+      WHEN LENGTH(cat.name) > 10 THEN :param_2
+      ELSE :param_3
+      END = :someValue
+----
+
+`whereSimpleCase(String expression)`::
+Starts a general case when builder for a predicate with the resulting case when expression on the left hand side.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereSimpleCase("SUBSTRING(cat.name, 1, 2)")
+	    .when("'Dr.'", "'Doctor'")
+	    .when("'Mr'", "'Mister'")
+        .otherwise("'Unknown'")
+    .notEqExpression("cat.fullTitle");
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE CASE SUBSTRING(cat.name, 1, 2)
+      WHEN 'Dr.' THEN 'Doctor'
+      WHEN 'Mr.' THEN 'Mister'
+      ELSE 'Unknown'
+      END <> cat.fullTitle
+----
+
+`whereSubquery()`::
+Starts a subquery builder for a predicate with the resulting subquery expression on the left hand side.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereSubquery()
+	    .from(Cat.class, "subCat")
+	    .select("subCat.name")
+	    .where("subCat.id").eq(123)
+	.end()
+    .eqExpression("cat.name");
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE (SELECT subCat.name FROM Cat subCat WHERE subCat.id = :param_1) = cat.name
+----
+
+`whereSubquery(String subqueryAlias, String expression)`::
+Like `whereSubquery()` but instead the `expression` is used on the left hand side. Occurrences of subqueryAlias in the expression will be replaced by the subquery expression.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereSubquery("subQuery1", "subQuery1 + 10")
+	    .from(Cat.class, "subCat")
+	    .select("subCat.age")
+	    .where("subCat.id").eq(123)
+	.end()
+    .gt(10);
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1) + 10 > 10
+----
+
+`whereSubqueries(String expression)`::
+Starts a subquery build capable of handling multiple subqueries and uses the given `expression` on the left hand side of the predicate.
+Subqueries are started with `with(String subqueryAlias)` and aliases occurring in the expression will be replaced by the respective subquery expressions.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereSubqueries("subQuery1 + subQuery2")
+	    .with("subQuery1")
+            .from(Cat.class, "subCat")
+            .select("subCat.age")
+            .where("subCat.id").eq(123)
+        .end()
+	    .with("subQuery2")
+            .from(Cat.class, "subCat")
+            .select("subCat.age")
+            .where("subCat.id").eq(456)
+        .end()
+    .end()
+    .gt(10);
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1)
+      + (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_2) > 10
+----
+
+`whereOr()` & `whereAnd()`::
+Starts a builder for a nested compound predicate. Elements of that predicate are connected with `OR` or `AND` respectively.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereOr()
+	    .where("cat.name").isNull()
+	    .whereAnd()
+	        .where("LENGTH(cat.name)").gt(10)
+	        .where("cat.name").like().value("F%").noEscape()
+	    .endAnd()
+	.endOr();
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.name IS NULL OR LENGTH(cat.name) > :param_1 AND cat.name LIKE :param_2
+----
+
+`whereExpression(String expression)`::
+Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereExpression("cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'");
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.name IS NULL OR LENGTH(cat.name) > 10 AND cat.name LIKE 'F%'
+----
+
+`whereExpressionSubqueries(String expression)`::
+A combination of `whereExpression` and `whereSubqueries`. Sets the `WHERE` clause to the given JPQL predicate expression overwriting existing predicates. Subqueries replace aliases in the expression.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+	.whereExpressionSubqueries("cat.name IS NULL AND subQuery1 + subQuery2 > 10")
+	    .with("subQuery1")
+            .from(Cat.class, "subCat")
+            .select("subCat.age")
+            .where("subCat.id").eq(123)
+        .end()
+	    .with("subQuery2")
+            .from(Cat.class, "subCat")
+            .select("subCat.age")
+            .where("subCat.id").eq(456)
+        .end()
+    .end();
+----
+
+[source,sql]
+----
+SELECT cat FROM Cat cat
+WHERE cat.name IS NULL
+  AND (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_1)
+      + (SELECT subCat.age FROM Cat subCat WHERE subCat.id = :param_2) > 10
+----
+
+=== Restriction Builder
+
+The restriction builder is used to build a predicate for an existing left hand side expression and chains to the right hand side expression.
+It supports all standard predicates from JPQL and expressions can be of the following types:
+
+Value/Parameter::
+The actual value will be registered as parameter value and a named parameter expression will be added instead.
+Methods that accept values typical accept arguments of type `Object`.
+
+Expression::
+A JPQL scalar expression can be anything. A path expression, literal, parameter expression, etc.
+
+Subquery::
+A subquery is always created via a subquery builder. Variants for replacing aliases in expressions with subqueries also exist.
+
+Available predicates
+
+`BETWEEN` & `NOT BETWEEN`::
+The `between` methods expect the *start value* and chain to the between builder which is terminated with the *end value*.
+
+`EQ`, `NOT EQ`, `LT`, `LE`, `GT` & `GE`::
+The comparison predicates additionally support quantified subqueries e.g. `ALL` and `ANY`.
+
+`IN` & `NOT IN`::
+This predicate supports value collections, literal expressions or in case of a single parameter expression, that parameter expression can be a collection valued parameter.
+
+`IS NULL` & `IS NOT NULL`::
+A simple null check.
+
+`IS EMPTY` & `IS NOT EMPTY`::
+Checks if the left hand side is empty. Only valid for path expressions that evaluate to collections.
+
+`MEMBER OF` & `NOT MEMBER OF`::
+Checks if the left hand side is a member of the collection typed path expression.
+
+`LIKE` & `NOT LIKE`::
+A `LIKE` with specifiable case sensitivity that must be terminated finally with an escape character or `noEscape()`.
+
+
+
 TODO: For every possible predicate, write some text and give examples +
 TODO: Describe how predicates are built with chained method calls +

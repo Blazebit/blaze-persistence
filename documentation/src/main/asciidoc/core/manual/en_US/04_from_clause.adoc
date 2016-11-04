@@ -1,0 +1,189 @@
+== From clause
+
+The `FROM` clause contains the entities which should be queried. Every 
+
+=== Joins
+
+JPQL offers support for `CROSS`, `INNER`, `LEFT` and `RIGHT JOIN` which are all well supported by {projectname}. In contrast to JPQL, {projectname} also has a notion of implicit/default and explicit joins which makes it very convenient to write queries as can be seen a few sections later.
+
+NOTE: `RIGHT JOIN` support is optional in JPA so we recommend not using it at all.
+
+INFO: In addition to joins on mapped relations, {projectname} also offers support for unrelated or entity joins offered by all major JPA providers.
+
+=== Implicit joins
+
+An implicit or default join is a special join that can be referred to by an absolute path from a root entity to an association or also by alias if an explicit alias has been defined.
+
+The following query builder will create an implicit join for `kittens` when visiting the select clause and reuse that implicit join in the where clause because of the use of an absolute path.
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class)
+    .select("kittens.age")
+    .where("kittens.age").gt(1);
+----
+
+This will result in the following JPQL query
+[source,sql]
+----
+SELECT kittens_1.age FROM Cat cat LEFT JOIN cat.kittens kittens_1 WHERE kittens_1.age > 1
+----
+
+==== Model awareness
+
+Implicit joins are a result of a path dereference or explicit fetching. A path dereference can happen in any place where an expression is expected.
+An explicit fetch can be invoked on `FullQueryBuilder` instances which is the top type for `CriteriaBuilder` and `PaginatedCriteriaBuilder`.
+
+Every implicit join will result in a so called "model-aware" join. The model-awareness of a join is responsible for determining the join type to use.
+Generally it is a good intuition to think of a model-aware join to always produce results, thus never restricting the result set but only extending it.
+A model-aware join currently decides between `INNER` and `LEFT JOIN`. The `INNER JOIN` is only used if 
+
+* The parent join is an `INNER JOIN`
+* The relation is non-optional e.g. the `optional` attribute of a `@ManyToOne` or `@OneToOne` to false
+
+NOTE: This is different from how JPQL path expressions are normally interpreted but will result in a more natural output.
+
+If you aren't happy with the join types you can override them and even specify an alias for implicit joins via the `joinDefault` method and variants.
+Consider the following example for illustration purposes of the implicit joins.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class)
+    .select("kittens.age")
+    .where("kittens.age").gt(1)
+    .innerJoinDefault("kittens", "kitty");
+----
+
+The builder first creates an implicit join for `kittens` with the join type `LEFT JOIN` because a Collection can never be non-optional.
+If you just had the `SELECT` clause, a `NULL` value would be produced for cats that don't have kittens.
+But in this case the `WHERE` clause filters out these cats, because any comparison with `NULL` will result in `UNKNOWN` and thus `FALSE`.
+
+NOTE: Null-aware predicates like `IS NULL` are obviously an exception to this.
+
+The last statement will take the default/implicit join for the path `kittens`, set the join type to `INNER` and the alias to `kitty`.
+
+WARN: Although the generated aliases for implicit joins are deterministic, they might change over time so you should never use them to refer to implicit joins. Always use the full path to the join relation or define an alias and use that instead!
+
+=== Explicit joins
+
+Explicit joins are different from implicit/default joins in a sense that they are only accessible through their alias. You can have only one default join which is identified by it's absolute path,
+but multiple explicit joins as these are identified by their alias. This means that you can also join a relation multiple times with different aliases.
+
+You can create explicit joins with the `join` method and variants. The following shows explicit and implicit joins used together.
+
+[source,java]
+----
+CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
+    .from(Cat.class)
+    .select("kittens.age")
+    .where("kitty.age").gt(1)
+    .innerJoin("kittens", "kitty");
+----
+
+This query will in fact create two joins. One for the explicitly inner joined `kittens` with the alias `kitty` and another for the implicitly left joined `kittens` used in the `SELECT` clause.
+The resulting JPQL looks like the following
+
+[source,sql]
+----
+SELECT kittens_1.age FROM Cat cat INNER JOIN cat.kittens kitty LEFT JOIN cat.kittens kittens_1 WHERE kitty.age > 1
+----
+
+==== Fetched joins
+
+Analogous to the `FETCH` keyword in JPQL, you can specify for every join node of a `FullQueryBuilder` if it should be fetched.
+Every `join` method variant comes with a partner method, that does fetching for the joined path. In addition to that, there is also a simple `fetch` method which can be provided with absolute paths to relations.
+These relations are then implicit/default join fetched, i.e. a default join node with fetching enabled is created for every relation.
+
+INFO: You can make use of deep paths like `kittens.kittens` which will result in fetch joining two levels of kittens.
+
+[source,java]
+----
+CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class)
+    .from(Cat.class)
+    .leftJoinFetch("father", "dad")
+	.whereOr()
+	    .where("dad").isNull()
+	    .where("dad.age").gt(1)
+	.endOr()
+    .fetch("kittens.kittens", "mother");
+----
+
+The `father` relation is left join fetched and given an alias which is then used in the `WHERE` clause. Two levels of `kittens` and the `mother` relation are join fetched.
+
+[source,sql]
+----
+SELECT cat FROM Cat cat LEFT JOIN FETCH cat.father dad LEFT JOIN FETCH cat.kittens kittens_1 LEFT JOIN FETCH kittens_1.kittens kittens_2 LEFT JOIN FETCH cat.mother mother_1 WHERE dad IS NULL OR dad.age > 1
+----
+
+WARN: Although the JPA spec does not specifically allow aliasing fetch joins, every major JPA provider supports this.
+
+==== Array joins
+
+Array joins are an extension to the JPQL grammar which offer a convenient way to create joins with an `ON` clause condition.
+An array join expression is a path expression followed by an opening bracket, the index expression and then the closing bracket e.g. `arrayBase[indexExpression]`.
+
+The type of the `arrayBase` expression must be either an indexed `List` e.g. use an `@OrderColumn` or a `Map`.
+In case of an indexed list, the type of the `indexExpression` must be numeric. For maps, the type must match the map key type as defined in the entity.
+
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class)
+    .select("localizedName[:language]")
+	.where("localizedName[:language]").isNotNull();
+----
+
+[source,sql]
+----
+SELECT localizedName_language FROM Cat cat LEFT JOIN cat.localizedName localizedName_language ON KEY(localizedName_language) = :language WHERE localizedName_language IS NOT NULL
+----
+
+The relation `localizedName` is assumed to be a map of type `Map<String, String>` which maps a language code to a localized name.
+
+NOTE: In case of array expressions, the generated implicit/default join node is identified by the absolute path and the index expression.
+
+=== On clause
+
+The `ON` clause is a filter predicate simialar to the `WHERE` clause but is evaluated while joining to restrict the joined elements.
+In case of `INNER` joins the `ON` clause has the same effect as when putting the predicate into the `WHERE` clause.
+`LEFT` joins won't filter out objects from the source even if the predicate doesn't match any joinable object, but instead will produce a `NULL` value.
+
+The `ON` clause is used when using array joins to restrict the key of a join to the index expression.
+
+WARN: Since the `ON` clause is only supported as of JPA 2.1, the usage with JPA 2.0 providers that have no equivalent vendor extension will fail.
+
+The `ON` clause can be constructed by setting a JPQL predicate expression with `onExpression()` or by using the <<predicate builder>, Predicate Builder API>>.
+
+
+|===
+|onExpression() |Predicate Builder API
+
+a|
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class)
+    .select("localizedNameForLanguage")
+    .leftJoinOn("localizedName", "localizedNameForLanguage")
+        .onExpression("KEY(localizedNameForLanguage) = :language")
+	.where("localizedNameForLanguage").isNotNull();
+----
+
+a|
+[source,java]
+----
+CriteriaBuilder<String> cb = cbf.create(em, String.class)
+    .from(Cat.class)
+    .select("localizedNameForLanguage")
+    .leftJoinOn("localizedName", "localizedNameForLanguage")
+        .on("KEY(localizedNameForLanguage)").eq(":language")
+    .end()
+	.where("localizedNameForLanguage").isNotNull();
+----
+|===
+
+[source,sql]
+----
+SELECT localizedNameForLanguage FROM Cat cat LEFT JOIN cat.localizedName localizedNameForLanguage ON KEY(localizedNameForLanguage) = :language WHERE localizedNameForLanguage IS NOT NULL
+----

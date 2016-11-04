@@ -43,6 +43,7 @@ import com.blazebit.persistence.view.metamodel.Attribute;
 import com.blazebit.persistence.view.metamodel.ManagedViewType;
 import com.blazebit.persistence.view.metamodel.MappingConstructor;
 import com.blazebit.persistence.view.metamodel.PluralAttribute;
+import com.blazebit.reflection.ReflectionUtils;
 
 /**
  *
@@ -285,7 +286,7 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
             boolean error = true;
             for (TargetType t : possibleTargets) {
                 Class<?> possibleTargetType = t.getLeafBaseClass();
-                
+
                 // Null is the marker for ANY TYPE
                 if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
                     || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(t.getLeafBaseValueClass())) {
@@ -296,7 +297,31 @@ public abstract class AbstractAttribute<X, Y> implements Attribute<X, Y> {
                     break;
                 }
             }
-            
+
+            if (error) {
+                if (expressionType.isPrimitive()) {
+                    expressionType = ReflectionUtils.getObjectClassOfPrimitve(expressionType);
+                } else {
+                    expressionType = ClassUtils.getPrimitiveClassOfWrapper(expressionType);
+                }
+
+                if (expressionType != null) {
+                    for (TargetType t : possibleTargets) {
+                        Class<?> possibleTargetType = t.getLeafBaseClass();
+
+                        // Null is the marker for ANY TYPE
+                        if (possibleTargetType == null || expressionType.isAssignableFrom(possibleTargetType)
+                                || Map.class.isAssignableFrom(possibleTargetType) && expressionType.isAssignableFrom(t.getLeafBaseValueClass())) {
+                            error = false;
+                            break;
+                        } else if (t.hasCollectionJoin() && elementType != null && elementType.isAssignableFrom(t.getLeafBaseValueClass())) {
+                            error = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
             if (error) {
                 StringBuilder sb = new StringBuilder();
                 sb.append('[');

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <parent>
+        <groupId>com.blazebit</groupId>
+        <artifactId>blaze-persistence-parent</artifactId>
+        <version>1.2.0-SNAPSHOT</version>
+        <relativePath>../parent/pom.xml</relativePath>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <name>Blazebit Persistence Examples</name>
+    <artifactId>blaze-persistence-examples</artifactId>
+    <packaging>pom</packaging>
+    <modules>
+        <module>showcase-base</module>
+        <module>showcase-spi</module>
+        <module>basic-showcase</module>
+        <module>cte-showcase</module>
+    </modules>
+
+    <profiles>
+        <profile>
+            <id>jdk-8</id>
+            <modules>
+                <module>cdi-showcase</module>
+                <module>spring-showcase</module>
+            </modules>
+        </profile>
+    </profiles>
+
+</project>
