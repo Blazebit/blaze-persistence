@@ -19,7 +19,7 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 .Maven version property
 ----
 <properties>
-	<blaze-persistence.version>{stable_version}</blaze-persistence.version>
+    <blaze-persistence.version>{stable_version}</blaze-persistence.version>
 </properties>
 ----
 
@@ -27,127 +27,127 @@ Older releases can be found on https://github.com/Blazebit/blaze-persistence/rel
 .Maven dependencies
 ----
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-core-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-core-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-core-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- optional -->
 
 <!-- Entity View module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-entity-view-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-entity-view-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-entity-view-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Entity View CDI integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-cdi</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Entity View Spring integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-	<version>${blaze-persistence.version}</version>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+    <version>${blaze-persistence.version}</version>
 </dependency>
 
 
 <!-- Hibernate 5.2 integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Hibernate 5+ integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-5</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-5</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Hibernate 4.3 integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.3</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Hibernate 4.2 integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-hibernate-4.2</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Datanucleus integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-datanucleus</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-datanucleus</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- EclipseLink integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-eclipselink</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-eclipselink</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- OpenJPA integration module -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-integration-openjpa</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-openjpa</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 
 <!-- Blaze-Persistence JPA-Criteria module dependencies -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-api</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>compile</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-api</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>compile</scope>
 </dependency>
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-impl</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 <!-- Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies -->
 <dependency>
-	<groupId>com.blazebit</groupId>
-	<artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
-	<version>${blaze-persistence.version}</version>
-	<scope>runtime</scope>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-jpa-criteria-jpa-2-compatibility</artifactId>
+    <version>${blaze-persistence.version}</version>
+    <scope>runtime</scope>
 </dependency>
 
 ----

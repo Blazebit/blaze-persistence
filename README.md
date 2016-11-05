@@ -383,6 +383,18 @@ Setup local development
 
 Here some notes about setting up a local environment for testing.
 
+== Checkstyle in IntelliJ
+
+. Build the whole thing with `mvn clean install` once to have the checkstyle-rules jar in your M2 repository
+. Install the CheckStyle-IDEA Plugin
+. After a restart, go to Settings > Other Settings > Checkstyle
+. Add a _Third party check_ that points to the _checkstyle-rules.jar_ of your M2 repository
+. Add a configuration file named *Blaze-Persistence Checkstyle rules* pointing to `checkstyle-rules/src/main/resources/blaze-persistence/checkstyle-config.xml`
+. Use `target/checkstyle.cache` for the property `checkstyle.cache.file`
+
+Now you should be able to select *Blaze-Persistence Checkstyle rules* in the dropdown of the CheckStyle window. +
+Click on *Check project* and checkstyle will run once for the whole project, then it should do some work incrementally.
+
 == Firebird
 
 When installing the 3.x version, you also need a 3.x JDBC driver.

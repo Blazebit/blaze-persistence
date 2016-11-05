@@ -1,11 +1,11 @@
-	<footer class="bTop">
-		<section class="copyright">
-			<img height="29" width="104" alt="Blazebit Gesbr." src="images/footer_logo.png" />
-			<p>
-				Blazebit Gesbr. &copy; 2014 - 2016
-			</p>
-		</section>
-	</footer>
+    <footer class="bTop">
+        <section class="copyright">
+            <img height="29" width="104" alt="Blazebit Gesbr." src="images/footer_logo.png" />
+            <p>
+                Blazebit Gesbr. &copy; 2014 - 2016
+            </p>
+        </section>
+    </footer>
 </div> <!--! end of #container -->
 
 <script src="js/modernizr-2.0.6.min.js"></script>
