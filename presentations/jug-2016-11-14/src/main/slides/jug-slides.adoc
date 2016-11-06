@@ -288,6 +288,25 @@ Let's see how Blaze-Persistence helps you out with these problems!
 
 // List the features/use cases for which Blaze-Persistence can be used. For every feature, give live examples + comparison
 
+== Entity-views
+
+Entity-views are the ORM equivalent of database views.
+
+You can use them to optimize entity fetching.
+Most of the time you do not need full entities.
+Querying only the parts you need reduces data transfer.
+
+Some example use cases:
+
+* Display data in UI
+
+* Fetch data to be returned in REST resources
+
+* (Soon: partial updates)
+
+[%step]
+Entity-views showcase
+
 == Pagination
 
 Blaze-persistence supports two types of pagination:
@@ -298,8 +317,11 @@ Blaze-persistence supports two types of pagination:
 
 Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
 
+[NOTE]
+Pagination can also be combined with entity-views!
+
 [%step]
-Pagination Showcase
+Pagination showcase
 
 == Common Table Expressions
 
@@ -311,8 +333,11 @@ Use cases:
 
 * With CTEs it is possible to query recursive structures efficiently
 
+[NOTE]
+CTEs can also be combined with pagination and entity-views!
+
 [%step]
-CTE Showcase
+CTE showcase
 
 == Integrations
 
@@ -383,6 +408,8 @@ public class BlazePersistenceConfiguration {
 == Roadmap
 
 List new features that are about to come
+
+* Updateable entity views
 
 == Contributing
 
