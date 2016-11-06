@@ -109,7 +109,7 @@
                             <templateDir>${templateDir}</templateDir>
                             <outputDirectory>${project.slides.directory}</outputDirectory>
                             <backend>${backend}</backend>
-                            <sourceHighlighter>coderay</sourceHighlighter>
+                            <sourceHighlighter>prettify</sourceHighlighter>
                         </configuration>
                     </execution>
                 </executions>
@@ -163,12 +163,13 @@
                                 </goals>
                                 <configuration>
                                      <attributes>
-                                        <!-- put here the deck.js specific attributes -->
-                                        <deckjs_theme>swiss</deckjs_theme>
-                                        <deckjs_transition>fade</deckjs_transition>
-                                        <navigation>true</navigation>
-                                        <goto>true</goto>
-                                        <status>true</status>
+                                         <prettifydir>prettify</prettifydir>
+                                         <!-- put here the deck.js specific attributes -->
+                                         <deckjs_theme>swiss</deckjs_theme>
+                                         <deckjs_transition>fade</deckjs_transition>
+                                         <navigation>true</navigation>
+                                         <goto>true</goto>
+                                         <status>true</status>
                                     </attributes>
                                 </configuration>
                             </execution>

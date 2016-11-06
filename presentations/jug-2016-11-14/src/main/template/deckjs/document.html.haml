@@ -45,7 +45,7 @@
     %link(rel='stylesheet' href='deck.js/core/deck.core.css')
     - if deckjs_version <= '1.0.0'
       %link(rel='stylesheet' media='screen' href='deck.js/extensions/hash/deck.hash.css')
-    %link(rel='stylesheet' media='screen' href='deck.js/extensions/scale/deck.scale.css')
+    //%link(rel='stylesheet' media='screen' href='deck.js/extensions/scale/deck.scale.css')
     - if attr? :goto
       %link(rel='stylesheet' media='screen' href='deck.js/extensions/goto/deck.goto.css')
     - if attr? :menu
@@ -56,6 +56,8 @@
       %link(rel='stylesheet' media='screen' href='deck.js/extensions/status/deck.status.css')
     - if attr? :toc
       %link(rel='stylesheet' media='screen' href='deck.js/extensions/toc/deck.toc.css')
+    - if attr? :scroll
+      %link(rel='stylesheet' media='screen' href='deck.js/extensions/scroll/deck.scroll.css')
     - unless attr :deckjs_theme == 'none'
       %link(rel='stylesheet' media='screen' href="deck.js/themes/style/#{attr :deckjs_theme, 'web-2.0'}.css")
     - unless attr :deckjs_transition == 'none'
@@ -65,7 +67,7 @@
     %link(rel='stylesheet' media='print' href='deck.js/core/print.css')
     %script(src='deck.js/modernizr.custom.js')
   %body{:id=>@id, :class=>doctype, :style=>("max-width: #{attr 'max-width'};" if (attr? 'max-width'))}
-    .deck-container
+    %div(class='deck-container' style='overflow: hidden;')
       - unless noheader
         %section(class='slide' id='title-slide')
           - unless notitle
@@ -111,7 +113,7 @@
     %script(src='deck.js/core/deck.core.js')
     - if deckjs_version <= '1.0.0'
       %script(src='deck.js/extensions/hash/deck.hash.js')
-    %script(src='deck.js/extensions/scale/deck.scale.js')
+    //%script(src='deck.js/extensions/scale/deck.scale.js')
     - if attr? :blank
       %script(src='deck.js/extensions/blank/deck.blank.js')
     - if attr? :goto
@@ -122,6 +124,8 @@
       %script(src='deck.js/extensions/navigation/deck.navigation.js')
     - if attr? :split
       %script(src='deck.js/extensions/split/deck.split.js')
+    - if attr? :scroll
+      %script(src='deck.js/extensions/scroll/deck.scroll.js')
     - if attr? :status
       %script(src='deck.js/extensions/status/deck.status.js')
     - if attr? :toc
@@ -188,6 +192,10 @@
         right: 50%;
         bottom: 1%;
       }
+
+      .mark {      color: red !important; background-color: yellow; }
+      .mark .pln { color: red !important; background-color: yellow; }
+
       .canvas-image .canvas-caption p {
         text-align: center;
         padding-top: 0;

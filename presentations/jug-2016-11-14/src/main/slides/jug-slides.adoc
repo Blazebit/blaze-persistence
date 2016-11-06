@@ -1,7 +1,11 @@
 = Blaze-Persistence, Tomorrow's JPA, today
 Christian Beikov, Moritz Becker
 :icons: font
+:split:
 :navigation:
+:blank: pass:[ +]
+:markstart: pass:[<span class="mark">]
+:markend: pass:[</span>]
 
 == About us
 
@@ -13,17 +17,34 @@ icon:github[] https://github.com/Blazebit
 Blazebit Gesbr. is a working group doing commercial software and OSS under APL 2.0
 
 [%step]
+--
+image::christian_head.png[float="right"]
+
+{blank}
+
 * Christian Beikov, Blaze-Persistence lead
 
-image::christian_head.png[float="right"]
+--
+
+[%step]
+--
+image::moritz_head.png[float="right"]
+
+{blank}
 
 * Moritz Becker, Blaze-Persistence comitter
 
-image::moritz_head.png[float="right"]
+--
+
+[%step]
+--
+image::bernd_head.png[float="right"]
+
+{blank}
 
 * Bernd Artm+++&uuml;+++ller, Designer
 
-image::bernd_head.png[float="right"]
+--
 
 == What is Blaze-Persistence
 
@@ -35,10 +56,139 @@ image::bernd_head.png[float="right"]
 
 == Problems with ORM/JPA
 
-List the problems that people have with ORMs and show the bad decisions that have to be made because of that.
+// List the problems that people have with ORMs and show the bad decisions that have to be made because of that.
 
-Think JPA 2.1 Entity-Graphs are too verbose?
+* Think JPA 2.1 Entity-Graphs are too verbose?
 
+[source,java]
+----
+@Entity
+@NamedEntityGraph(
+    name = "Cat.catWithKittensParents",
+    attributeNodes = @NamedAttributeNode(value = "kittens", subgraph = "kittens"),
+    subgraphs = @NamedSubgraph(name = "kittens", attributeNodes = {
+        @NamedAttributeNode("father"), @NamedAttributeNode("mother")
+    })
+)
+public class Cat {
+    @Id @GeneratedValue
+    private int id;
+    private String name;
+    @OneToMany
+    private Set<Cat> kittens;
+    @ManyToOne(fetch = Fetch.LAZY)
+    private Cat mother;
+    @ManyToOne(fetch = Fetch.LAZY)
+    private Cat father;
+}
+----
+
+<<<
+
+* Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
+
+[source,java,subs="verbatim,attributes"]
+----
+public class Cat {
+    @Id @GeneratedValue
+    private int id;
+    private String name;
+    @OneToMany(fetch = Fetch.{markstart}EAGER{markend})
+    private Set<Cat> kittens;
+    @ManyToOne(fetch = Fetch.{markstart}EAGER{markend})
+    private Cat mother;
+    @ManyToOne(fetch = Fetch.{markstart}EAGER{markend})
+    private Cat father;
+}
+----
+
+[source,java]
+----
+entityManager.find(Cat.class, catId);
+----
+
+Leading to loading all relations...
+
+<<<
+
+* Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
+
+[source,java,subs="verbatim,attributes"]
+----
+public class Cat {
+    @Id @GeneratedValue
+    private int id;
+    private String name;
+    @OneToMany(fetch = Fetch.{markstart}LAZY{markend})
+    private Set<Cat> kittens;
+    @ManyToOne(fetch = Fetch.{markstart}LAZY{markend})
+    private Cat mother;
+    @ManyToOne(fetch = Fetch.{markstart}LAZY{markend})
+    private Cat father;
+}
+----
+
+[source,java]
+----
+Cat c = entityManager.find(Cat.class, catId);
+c.getFather().getName();
+----
+
+Leading to a `LazyInitializationExceptions` on invocation of `getName()`
+
+<<<
+
+* JPA constructor expressions for DTOs too inflexible?
+
+[source,sql]
+----
+SELECT new com.company.somepackage.dto.MyCatDTO(
+    c.name, kitten.name, father.name, mother.name
+) FROM Cat c
+LEFT JOIN FETCH c.kittens kitten
+LEFT JOIN FETCH kitten.father father
+LEFT JOIN FETCH kitten.mother mother
+----
+
+Results in flat objects, no hierarchies possible except you do something like that...
+
+[source,java]
+----
+entityManager.createQuery(query, MyCatDTO.class)
+    .getResultList()
+    .stream()
+    .collect(Collectors.groupingBy(MyCatDTO::getName, dto -> new MySubCatDTO(dto))
+    .entrySet()
+    .stream()
+    .map(entry -> new MyMainCatDTO(entry.getKey(), entry.getValue()))
+    .collect(Collectors.toList());
+----
+
+<<<
+
+* Missing support for that one little SQL feature that you really need?
+
+<<<
+
+* Having some longstanding problems with the JPA provider that don't seem to get fixed?
+
+<<<
+
+* Feel like you can't reuse parts of queries and have to duplicate code?
+
+<<<
+
+* Think JPA 2.1 Entity-Graphs are too verbose?
+* Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
+* JPA constructor expressions for DTOs too inflexible?
+* Missing support for that one little SQL feature that you really need?
+* Having some longstanding problems with the JPA provider that don't seem to get fixed?
+* Feel like you can't reuse parts of queries and have to duplicate code?
+
+[position=center]
+*Blaze-Persistence got you covered!*
+
+Let's see how Blaze-Persistence helps you out with these problems!
 
 == Blaze-Persistence features/use cases
 
