@@ -395,8 +395,40 @@ Keyset pagination is preferable to offset pagination since it allows consistent 
 
 Pagination can also be combined with entity-views!
 
-[%step]
-+++<h3 style="text-align: center; font-size: 2em;">Pagination showcase</h3>+++
+[%step,role='demo-text']
+Pagination showcase
+
+== Offset pagination example
+
+[source,java]
+----
+PagedList<Cat> page1 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(0, 10)
+                .getResultList()
+
+PagedList<Cat> page2 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(10, 10)
+                .getResultList()
+----
+
+== Keyset pagination example
+
+[source,java]
+----
+PagedList<Cat> page1 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(0, 10)
+                .withKeysetExtraction(true)
+                .getResultList()
+
+PagedList<Cat> page2 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(page1.getKeysetPage(), 10, 10)
+                .withKeysetExtraction(true)
+                .getResultList()
+----
 
 == Common Table Expressions
 
@@ -409,8 +441,8 @@ Use cases:
 
 CTEs can also be combined with pagination and entity-views!
 
-[%step]
-+++<h3 style="text-align: center; font-size: 2em;">CTE showcase</h3>+++
+[%step,role='demo-text']
+CTE showcase
 
 == Integrations
 
