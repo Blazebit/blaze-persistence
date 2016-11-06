@@ -43,21 +43,16 @@ public class BlazePersistenceProducer {
     @Inject
     private EntityViewConfiguration entityViewConfiguration;
 
-    private CriteriaBuilderFactory criteriaBuilderFactory;
-
-    @PostConstruct
-    public void onStartup() {
-        CriteriaBuilderConfiguration config = Criteria.getDefault();
-        this.criteriaBuilderFactory = config.createCriteriaBuilderFactory(emf);
-    }
-
     @Produces
+    @ApplicationScoped
     public CriteriaBuilderFactory createCriteriaBuilderFactory() {
-        return criteriaBuilderFactory;
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        return config.createCriteriaBuilderFactory(emf);
     }
 
     @Produces
-    public EntityViewManager createEntityViewManager() {
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory criteriaBuilderFactory) {
         return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory, emf);
     }
 

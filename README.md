@@ -103,6 +103,16 @@ Blaze-Persistence Entity-View CDI integration dependencies
 </dependency>
 ```
 
+Blaze-Persistence Entity-View Spring integration dependencies
+
+```xml
+<dependency>
+    <groupId>com.blazebit</groupId>
+    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
+    <version>${blaze-persistence.version}</version>
+</dependency>
+```
+
 Blaze-Persistence JPA provider integration module dependencies
 
 Hibernate 5.2
@@ -208,44 +218,6 @@ Blaze-Persistence JPA-Criteria JPA 2.0 provider support dependencies
     <version>${blaze-persistence.version}</version>
     <scope>runtime</scope>
 </dependency>
-```
-
-Spring Integration
-------------------
-
-```xml
-<dependency>
-    <groupId>com.blazebit</groupId>
-    <artifactId>blaze-persistence-integration-entity-view-spring</artifactId>
-    <version>${blaze-persistence.version}</version>
-</dependency>
-```
-
-You have to enable the Spring entity-views integration via annotation based config or XML based config and you can also mix those two types of configuration:
-
-### Annotation Config
-
-```java
-@Configuration
-@EnableEntityViews("my.entityviews.base.package")
-public class AppConfig {
-}
-```
-
-### XML Config
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xmlns:ev="http://www.blazebit.com/persistence/view/spring"
-       xsi:schemaLocation="
-        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
-        http://www.blazebit.com/persistence/view/spring http://www.blazebit.com/persistence/view/spring/spring-entity-views-1.2.xsd">
-
-    <ev:entity-views base-package="my.entityviews.base.package"/>
-
-</beans>
 ```
 
 Documentation
