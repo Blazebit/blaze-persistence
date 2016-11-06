@@ -39,16 +39,102 @@ List the problems that people have with ORMs and show the bad decisions that hav
 
 Think JPA 2.1 Entity-Graphs are too verbose?
 
-
 == Blaze-Persistence features/use cases
 
 List the features/use cases for which Blaze-Persistence can be used.
 For every feature, give live examples + comparison
 
+== Pagination
+
+Blaze-persistence supports two types of pagination:
+
+* Offset pagination
+
+* Keyset pagination
+
+Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
+
+[%step]
+Pagination Showcase
+
+== Common Table Expressions
+
+Common Table Expressions (CTEs) are disposable tables created in memory only for the current statement.
+
+Use cases:
+
+* If you need to refer to a subquery multiple times, it can be convenient to extract it into a CTE - this way the subquery is evaluated only once
+
+* With CTEs it is possible to query recursive structures efficiently
+
+[%step]
+CTE Showcase
+
 == Integrations
 
-Hibernate is the only JPA provider that has deep integration right now.
-Mention CDI/Spring
+Hibernate is the only JPA provider that has deep integration right now:
+
+* Fixes/workarounds for known Hibernate bugs + limitations
+
+* Support for advanced SQL features like CTEs
+
+We provide integrations for CDI and Spring allowing the auto-discovery of entity views.
+
+== Getting started with CDI
+
+[source, java]
+----
+@ApplicationScoped
+public class BlazePersistenceProducer {
+
+    @Inject
+    private EntityManagerFactory emf;
+
+    @Inject
+    private EntityViewConfiguration entityViewConfiguration;
+
+    @Produces
+    @ApplicationScoped
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        return config.createCriteriaBuilderFactory(emf);
+    }
+
+    @Produces
+    @ApplicationScoped
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory criteriaBuilderFactory) {
+        return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory, emf);
+    }
+}
+----
+
+== Getting started with Spring
+
+[source,java]
+----
+@Configuration
+public class BlazePersistenceConfiguration {
+
+    @PersistenceUnit
+    private EntityManagerFactory entityManagerFactory;
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public CriteriaBuilderFactory createCriteriaBuilderFactory() {
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        // do some configuration
+        return config.createCriteriaBuilderFactory(entityManagerFactory);
+    }
+
+    @Bean
+    @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
+    @Lazy(false)
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+        return entityViewConfiguration.createEntityViewManager(cbf, entityManagerFactory);
+    }
+}
+----
 
 == Roadmap
 
