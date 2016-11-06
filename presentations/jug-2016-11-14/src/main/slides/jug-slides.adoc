@@ -131,7 +131,7 @@ public class Cat {
 [source,java]
 ----
 Cat c = entityManager.find(Cat.class, catId);
-entityManager.closer();
+entityManager.close();
 // ...
 c.getFather().getName();
 ----
@@ -195,7 +195,7 @@ Modification CTEs
 [source,sql]
 ----
 WITH MyCte(id) AS(
-UPDATE Cat c SET age = age + 1 RETURNING id
+    UPDATE Cat c SET age = age + 1 RETURNING id
 )
 SELECT c.id FROM MyCte c
 ----
@@ -227,7 +227,9 @@ SELECT c.id FROM MyCte c
 
 [%step]
 --
-many more issues that are worked around automatically in Blaze-Persistence...
+{blank}
+{blank}
++++<p style="text-align: center; font-style: italic;">many more issues that are worked around automatically in Blaze-Persistence...</p>+++
 --
 
 <<<
@@ -275,18 +277,18 @@ WHERE cat.name LIKE :catName
 
 [%step]
 --
+{blank}
 +++<h3 style="text-align: center; font-size: 2em;">Blaze-Persistence got you covered!</h3>+++
 --
 
 [%step]
 --
-Let's see how Blaze-Persistence helps you out with these problems!
+{blank}
+{blank}
++++<p style="text-align: center; font-style: italic;">Let's see how Blaze-Persistence helps you out with these problems!</p>+++
 --
 
-[canvas-image="images/features_are_coming.jpg", role=""]
-//    background-size: auto 100%;
-//    background-repeat: no-repeat;
-//    background-position: center;
+[canvas-image="images/features_are_coming.jpg"]
 == Blaze-Persistence features
 
 // List the features/use cases for which Blaze-Persistence can be used. For every feature, give live examples + comparison
@@ -295,20 +297,15 @@ Let's see how Blaze-Persistence helps you out with these problems!
 
 Entity-views are the ORM equivalent of database views.
 
-You can use them to optimize entity fetching.
-Most of the time you do not need full entities.
-Querying only the parts you need reduces data transfer.
+* You can use them to optimize entity fetching
+* Most of the time you do not need full entities
+* Querying only the parts you need reduces data transfer
 
 Some example use cases:
 
 * Display data in UI
-
 * Fetch data to be returned in REST resources
-
-* (Soon: partial updates)
-
-[%step]
-Entity-views showcase
+* Partial updates in the works
 
 == Example View - Basic
 
@@ -317,7 +314,7 @@ Entity-views showcase
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping
+    @IdMapping("id")
     Integer getId();
 
     String getName();
@@ -330,14 +327,17 @@ public interface CatView {
 }
 ----
 
+[%step,role='demo-text']
+Entity View Basic Showcase
+
 == Example View - Subquery support
 
-[source,java]
+[source,java,role='last-code']
 ----
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping
+    @IdMapping("id")
     Integer getId();
 
     @MappingSubquery(KittensWithNamePatternSubqueryProvider.class)
@@ -355,6 +355,9 @@ public interface CatView {
 }
 ----
 
+[%step,role='demo-text']
+Entity View Subquery Showcase
+
 == Example View - Subview
 
 [source,java]
@@ -362,35 +365,38 @@ public interface CatView {
 @EntityView(Cat.class)
 public interface CatView {
 
-    @IdMapping
+    @IdMapping("id")
     Integer getId();
 
-    OwnerView getCatOwner();
+    PersonView getCatOwner();
 }
 
-@EntityView(Owner.class)
-public interface OwnerView {
+@EntityView(Person.class)
+public interface PersonView {
 
-    @IdMapping
+    @IdMapping("id")
     Integer getId();
 
     String getName();
 }
 ----
 
+[%step,role='demo-text']
+Entity View Subview Showcase
+
 == Pagination
 
 Blaze-persistence supports two types of pagination:
 
 * Offset pagination
-
 * Keyset pagination
 
 Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
 
-Pagination can also be combined with entity-views! +
+Pagination can also be combined with entity-views!
+
 [%step]
-Pagination showcase
++++<h3 style="text-align: center; font-size: 2em;">Pagination showcase</h3>+++
 
 == Common Table Expressions
 
@@ -399,19 +405,18 @@ Common Table Expressions (CTEs) are disposable tables created in memory only for
 Use cases:
 
 * If you need to refer to a subquery multiple times, it can be convenient to extract it into a CTE - this way the subquery is evaluated only once
-
 * With CTEs it is possible to query recursive structures efficiently
 
-CTEs can also be combined with pagination and entity-views! +
+CTEs can also be combined with pagination and entity-views!
+
 [%step]
-CTE showcase
++++<h3 style="text-align: center; font-size: 2em;">CTE showcase</h3>+++
 
 == Integrations
 
 Hibernate is the only JPA provider that has deep integration right now:
 
 * Fixes/workarounds for known Hibernate bugs + limitations
-
 * Support for advanced SQL features like CTEs
 
 We provide integrations for CDI and Spring allowing the auto-discovery of entity views.
