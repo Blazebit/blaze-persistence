@@ -307,9 +307,6 @@ Some example use cases:
 
 * (Soon: partial updates)
 
-[%step]
-Entity-views showcase
-
 == Example View - Basic
 
 [source,java]
@@ -389,8 +386,6 @@ Blaze-persistence supports two types of pagination:
 Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
 
 Pagination can also be combined with entity-views! +
-[%step]
-Pagination showcase
 
 == Offset pagination example
 
@@ -435,8 +430,6 @@ Use cases:
 * With CTEs it is possible to query recursive structures efficiently
 
 CTEs can also be combined with pagination and entity-views! +
-[%step]
-CTE showcase
 
 == Integrations
 
@@ -450,7 +443,7 @@ We provide integrations for CDI and Spring allowing the auto-discovery of entity
 
 == Getting started with CDI
 
-[source, java]
+[source, java, role = 'smallcode']
 ----
 @ApplicationScoped
 public class BlazePersistenceProducer {
@@ -478,7 +471,7 @@ public class BlazePersistenceProducer {
 
 == Getting started with Spring
 
-[source,java]
+[source,java, role = 'smallcode']
 ----
 @Configuration
 public class BlazePersistenceConfiguration {
