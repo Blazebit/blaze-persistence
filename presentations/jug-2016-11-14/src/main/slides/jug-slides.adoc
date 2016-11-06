@@ -407,9 +407,16 @@ public class BlazePersistenceConfiguration {
 
 == Roadmap
 
-List new features that are about to come
+// List new features that are about to come
 
 * Updateable entity views
+* Table function support e.g. `generate_series()`
+* `MERGE`/`UPSERT` statement
+* Geospatial types and operations
+* Range/Interval types and operations
+* Lateral joins
+* Custom static metamodel
+* https://github.com/debezium[Debezium] integration to update secondary index servers via entity views
 
 == Contributing
 
@@ -419,6 +426,4 @@ We are happy about any contribution, please fork us and join us on Slack.
 
 == Q & A
 
-// TODO: center the text
-
-Got questions?
++++<h1 style="text-align: center;">Got questions?</h1>+++
