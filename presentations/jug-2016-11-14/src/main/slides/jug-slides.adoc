@@ -224,9 +224,7 @@ Blaze-persistence supports two types of pagination:
 
 Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
 
-[NOTE]
-Pagination can also be combined with entity-views!
-
+Pagination can also be combined with entity-views! +
 [%step]
 Pagination showcase
 
@@ -240,9 +238,7 @@ Use cases:
 
 * With CTEs it is possible to query recursive structures efficiently
 
-[NOTE]
-CTEs can also be combined with pagination and entity-views!
-
+CTEs can also be combined with pagination and entity-views! +
 [%step]
 CTE showcase
 
