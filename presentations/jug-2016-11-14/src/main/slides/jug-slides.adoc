@@ -212,6 +212,74 @@ Some example use cases:
 [%step]
 Entity-views showcase
 
+== Example View - Basic
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping
+    Integer getId();
+
+    String getName();
+
+    @Mapping("LOWER(name)")
+    String getLowerCaseName();
+
+    @Mapping("SIZE(kittens)")
+    Integer getNumKittens();
+}
+----
+
+== Example View - Subquery support
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping
+    Integer getId();
+
+    @MappingSubquery(KittensWithNamePatternSubqueryProvider.class)
+    Integer getNumKittensWithNamePattern();
+
+    static class KittensWithNamePatternSubqueryProvider implements SubqueryProvider {
+        <T> T createSubquery(SubqueryInitiator<T> subqueryInitiator) {
+            return subqueryBuilder.from(Cat.class)
+                        .select("COUNT(*)")
+                        .where("cat.parent.id").eqExpression("OUTER(id)")
+                        .where("cat.name").like().expression(":kittenNamePattern")
+                        .end();
+        }
+    }
+}
+----
+
+== Example View - Subview
+
+[source,java]
+----
+@EntityView(Cat.class)
+public interface CatView {
+
+    @IdMapping
+    Integer getId();
+
+    OwnerView getCatOwner();
+}
+
+@EntityView(Owner.class)
+public interface OwnerView {
+
+    @IdMapping
+    Integer getId();
+
+    String getName();
+}
+----
+
 == Pagination
 
 Blaze-persistence supports two types of pagination:
