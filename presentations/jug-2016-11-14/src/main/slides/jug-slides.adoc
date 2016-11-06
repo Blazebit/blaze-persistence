@@ -48,6 +48,9 @@ image::bernd_head.png[float="right"]
 
 == What is Blaze-Persistence
 
+// TODO: Need a new logo
+//image::logo.png[role="logo"]
+
 * Library that builds on top of JPA with deep integration
 * Fluent builder API that is easy to use
 * Rich pagination support integrated
