@@ -190,10 +190,8 @@ entityManager.createQuery(query, MyCatDTO.class)
 
 Let's see how Blaze-Persistence helps you out with these problems!
 
-== Blaze-Persistence features/use cases
+== Blaze-Persistence features
 
-List the features/use cases for which Blaze-Persistence can be used.
-For every feature, give live examples + comparison
 
 == Entity-views
 
