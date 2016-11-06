@@ -131,6 +131,8 @@ public class Cat {
 [source,java]
 ----
 Cat c = entityManager.find(Cat.class, catId);
+entityManager.closer();
+// ...
 c.getFather().getName();
 ----
 
@@ -168,13 +170,99 @@ entityManager.createQuery(query, MyCatDTO.class)
 
 * Missing support for that one little SQL feature that you really need?
 
+[%step]
+--
+Set operations
+--
+
+[%step]
+--
+[source,sql]
+----
+SELECT c.name FROM Cat c
+UNION ALL
+SELECT p.name FROM Person p
+----
+--
+
+[%step]
+--
+Modification CTEs
+--
+
+[%step]
+--
+[source,sql]
+----
+WITH MyCte(id) AS(
+UPDATE Cat c SET age = age + 1 RETURNING id
+)
+SELECT c.id FROM MyCte c
+----
+--
+
 <<<
 
 * Having some longstanding problems with the JPA provider that don't seem to get fixed?
 
+[%step]
+--
+`HHH-9329`:: Left join semantics broken when using `ON` clause on collection table attribute
+--
+
+[%step]
+--
+`HHH-11042`:: Count distinct support for DBMS that don't natively support it
+--
+
+[%step]
+--
+`HHH-1615`:: Group by entity
+--
+
+[%step]
+--
+`HHH-10241`:: Buggy MySQL code generation for null precedence
+--
+
+[%step]
+--
+many more issues that are worked around automatically in Blaze-Persistence...
+--
+
 <<<
 
 * Feel like you can't reuse parts of queries and have to duplicate code?
+
+[%step]
+--
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+LEFT JOIN FETCH cat.kittens kitten
+WHERE cat.name LIKE :catName
+  AND cat.age > :catAge
+----
+--
+
+[%step]
+--
+which is very similar to...
+--
+
+[%step]
+--
+[source,sql]
+----
+SELECT cat
+FROM Cat cat
+LEFT JOIN FETCH cat.father
+LEFT JOIN FETCH cat.mother
+WHERE cat.name LIKE :catName
+  AND cat.age > :catAge
+----
+--
 
 <<<
 
@@ -185,15 +273,20 @@ entityManager.createQuery(query, MyCatDTO.class)
 * Having some longstanding problems with the JPA provider that don't seem to get fixed?
 * Feel like you can't reuse parts of queries and have to duplicate code?
 
+[%step]
+--
 [position=center]
 *Blaze-Persistence got you covered!*
+--
 
+[%step]
+--
 Let's see how Blaze-Persistence helps you out with these problems!
+--
 
 == Blaze-Persistence features/use cases
 
-List the features/use cases for which Blaze-Persistence can be used.
-For every feature, give live examples + comparison
+// List the features/use cases for which Blaze-Persistence can be used. For every feature, give live examples + comparison
 
 == Pagination
 
@@ -295,6 +388,10 @@ List new features that are about to come
 
 We are happy about any contribution, please fork us and join us on Slack.
 
+// TODO: add list of possible channels, mention support
+
 == Q & A
+
+// TODO: center the text
 
 Got questions?
