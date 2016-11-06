@@ -123,15 +123,6 @@ public class HibernateJpaProvider implements JpaProvider {
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, true);
-    }
-
-    @Override
-    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, false);
-    }
-
-    private void renderNullPrecedence0(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls, boolean forOrderBy) {
         if (nulls != null) {
             if (db == DB.DB2 || db == DB.MY_SQL) {
                 if (db == DB.DB2) {
@@ -140,7 +131,7 @@ public class HibernateJpaProvider implements JpaProvider {
                         // ASC + NULLS LAST
                         // DESC + NULLS FIRST
                         sb.append(expression);
-                        if (forOrderBy) {
+                        if (order != null) {
                             sb.append(" ").append(order).append(" NULLS ").append(nulls);
                         }
                         return;
@@ -156,18 +147,18 @@ public class HibernateJpaProvider implements JpaProvider {
                 }
                 sb.append(" END, ");
                 sb.append(expression);
-                if (forOrderBy) {
+                if (order != null) {
                     sb.append(" ").append(order);
                 }
             } else {
                 sb.append(expression);
-                if (forOrderBy) {
+                if (order != null) {
                     sb.append(' ').append(order).append(" NULLS ").append(nulls);
                 }
             }
         } else {
             sb.append(expression);
-            if (forOrderBy) {
+            if (order != null) {
                 sb.append(' ').append(order);
             }
         }

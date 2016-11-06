@@ -144,9 +144,9 @@ public abstract class AbstractCoreTest extends AbstractPersistenceTest {
         return sb.toString();
     }
 
-    protected String renderNullPrecedenceGroupBy(String resolvedExpression, String order, String nulls) {
+    protected String renderNullPrecedenceGroupBy(String resolvedExpression) {
         StringBuilder sb = new StringBuilder();
-        jpaProvider.renderNullPrecedenceGroupBy(sb, resolvedExpression, resolvedExpression, order, nulls);
+        jpaProvider.renderNullPrecedence(sb, resolvedExpression, resolvedExpression, null, null);
         return sb.toString();
     }
 

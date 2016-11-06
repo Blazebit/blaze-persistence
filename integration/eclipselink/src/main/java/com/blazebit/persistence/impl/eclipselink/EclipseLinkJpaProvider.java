@@ -89,17 +89,8 @@ public class EclipseLinkJpaProvider implements JpaProvider {
 
     @Override
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, true);
-    }
-
-    @Override
-    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls) {
-        renderNullPrecedence0(sb, expression, resolvedExpression, order, nulls, false);
-    }
-
-    private void renderNullPrecedence0(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls, boolean forOrderBy) {
         sb.append(expression);
-        if (forOrderBy) {
+        if (order != null) {
             sb.append(' ').append(order);
 
             if (nulls != null) {

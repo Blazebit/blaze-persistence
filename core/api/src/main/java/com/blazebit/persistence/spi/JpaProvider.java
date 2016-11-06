@@ -146,18 +146,6 @@ public interface JpaProvider {
     public void renderNullPrecedence(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls);
 
     /**
-     * Renders the null precedence into the given string builder.
-     * TODO: Remove this if possible
-     *
-     * @param sb The builder to which the null precedence should be appended to
-     * @param expression The order by expression which might be a select alias
-     * @param resolvedExpression The resolved expression for a possible select alias or the expression
-     * @param order The order as string (<code>ASC</code> or <code>DESC</code>)
-     * @param nulls The null precedence as string (<code>NULLS FIRST</code> or <code>NULLS LAST</code>)
-     */
-    public void renderNullPrecedenceGroupBy(StringBuilder sb, String expression, String resolvedExpression, String order, String nulls);
-
-    /**
      * Whether treating a from/root alias is supported.
      *
      * @return True if treating a from alias is supported, false otherwise

@@ -30,7 +30,6 @@ import org.junit.Test;
 import com.blazebit.persistence.CriteriaBuilder;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.BuilderChainingException;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.Person;
 import com.blazebit.persistence.testsuite.entity.Version;
@@ -434,7 +433,7 @@ public class SubqueryTest extends AbstractCoreTest {
                 .orderByAsc("id")
                 .page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1) GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id", "ASC", "LAST")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT document.id FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1) GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1)";
         String expectedObjectQuery = "SELECT document FROM Document document WHERE document.owner.id = :param_0 AND document.id NOT IN (SELECT versions_1.document.id FROM Document c2 LEFT JOIN c2.versions versions_1 WHERE c2.id = :param_1) ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());
@@ -452,7 +451,7 @@ public class SubqueryTest extends AbstractCoreTest {
                     .where("version.document.id").eqExpression("OUTER(id)") // we have to fully qualify version.document.id
                 .end().orderByAsc("id").page(0, 10);
         
-        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id", "ASC", "LAST")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
+        String expectedIdQuery = "SELECT document.id FROM Document document GROUP BY " + groupBy("document.id", renderNullPrecedenceGroupBy("document.id")) + " ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         String expectedCountQuery = "SELECT " + countPaginated("document.id", false) + " FROM Document document";
         String expectedObjectQuery = "SELECT (SELECT COUNT(version.id) FROM Version version WHERE version.document.id = document.id) FROM Document document ORDER BY " + renderNullPrecedence("document.id", "ASC", "LAST");
         assertEquals(expectedIdQuery, pcb.getPageIdQueryString());

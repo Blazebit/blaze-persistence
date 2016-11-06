@@ -17,24 +17,13 @@
 package com.blazebit.persistence.testsuite;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.PagedList;
 import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 import com.blazebit.persistence.testsuite.entity.*;
-import com.blazebit.persistence.testsuite.model.DocumentViewModel;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import javax.persistence.EntityTransaction;
-import javax.persistence.Tuple;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
 
 import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
@@ -73,7 +62,7 @@ public class PaginationEmbeddedIdTest extends AbstractCoreTest {
         String expectedIdQuery = "SELECT e.id FROM EmbeddableTestEntity e "
                 + "LEFT JOIN e.embeddable.elementCollection elementCollection_test_1 " + ON_CLAUSE + " KEY(elementCollection_test_1) = 'test' "
                 + "WHERE " + joinAliasValue("elementCollection_test_1", "primaryName") + " = :param_0 "
-                + "GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id", "ASC", "LAST"))
+                + "GROUP BY " + groupBy("e.id", renderNullPrecedenceGroupBy("e.id"))
                 + " ORDER BY " + renderNullPrecedence("e.id", "ASC", "LAST");
 
         String expectedObjectQuery = "SELECT e FROM EmbeddableTestEntity e "

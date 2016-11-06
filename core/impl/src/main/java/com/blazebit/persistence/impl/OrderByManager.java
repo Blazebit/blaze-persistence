@@ -251,7 +251,7 @@ public class OrderByManager extends AbstractManager {
                     }
 
                     sb.setLength(0);
-                    jpaProvider.renderNullPrecedenceGroupBy(sb, expression, expression, order, nulls);
+                    jpaProvider.renderNullPrecedence(sb, expression, expression, null, null);
 
                     clauses.add(sb.toString());
                 }

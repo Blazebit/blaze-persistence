@@ -396,15 +396,15 @@ public class KeysetPaginationNullsTest extends AbstractCoreTest {
     private String groupByClause(String expression, boolean asc, boolean nullsFirst) {
         if (asc) {
             if (nullsFirst) {
-                return renderNullPrecedenceGroupBy(expression, "ASC", "FIRST");
+                return renderNullPrecedenceGroupBy(expression);
             } else {
-                return renderNullPrecedenceGroupBy(expression, "ASC", "LAST");
+                return renderNullPrecedenceGroupBy(expression);
             }
         } else {
             if (nullsFirst) {
-                return renderNullPrecedenceGroupBy(expression, "DESC", "FIRST");
+                return renderNullPrecedenceGroupBy(expression);
             } else {
-                return renderNullPrecedenceGroupBy(expression, "DESC", "LAST");
+                return renderNullPrecedenceGroupBy(expression);
             }
         }
     }

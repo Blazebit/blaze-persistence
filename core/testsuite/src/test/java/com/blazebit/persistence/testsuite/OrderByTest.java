@@ -27,7 +27,6 @@ import com.blazebit.persistence.PaginatedCriteriaBuilder;
 import com.blazebit.persistence.impl.ConfigurationProperties;
 import com.blazebit.persistence.impl.expression.SyntaxErrorException;
 import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.entity.Document;
 
 /**
@@ -140,7 +139,7 @@ public class OrderByTest extends AbstractCoreTest {
                 .page(0, 1);
         String expectedQuery = "SELECT d.id, COALESCE(owner_1.name,'a') AS asd FROM Document d "
                 + "JOIN d.owner owner_1 "
-                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("COALESCE(owner_1.name,'a')", "ASC", "LAST"), renderNullPrecedenceGroupBy("d.id", "ASC", "LAST"))
+                + "GROUP BY " + groupBy("d.id", renderNullPrecedenceGroupBy("COALESCE(owner_1.name,'a')"), renderNullPrecedenceGroupBy("d.id"))
                 + " ORDER BY " + renderNullPrecedence("asd", "COALESCE(owner_1.name,'a')", "ASC", "LAST") + ", " + renderNullPrecedence("d.id", "ASC", "LAST");
         assertEquals(expectedQuery, criteria.getPageIdQueryString());
     }
