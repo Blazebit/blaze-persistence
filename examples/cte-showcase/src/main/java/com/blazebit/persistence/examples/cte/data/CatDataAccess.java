@@ -68,7 +68,7 @@ public class CatDataAccess {
                     .from(CatHierarchyCTE.class, "cte")
                     .bind("id").select("cat.id")
                     .bind("motherId").select("cat.mother.id")
-                    .bind("fatherId").select("cat.mother.id")
+                    .bind("fatherId").select("cat.father.id")
                     .bind("generation").select("cte.generation + 1")
                     .whereOr()
                         .where("cat.id").eqExpression("cte.motherId")
