@@ -392,6 +392,38 @@ Pagination can also be combined with entity-views! +
 [%step]
 Pagination showcase
 
+== Offset pagination example
+
+[source,java]
+----
+PagedList<Cat> page1 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(0, 10)
+                .getResultList()
+
+PagedList<Cat> page2 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(10, 10)
+                .getResultList()
+----
+
+== Keyset pagination example
+
+[source,java]
+----
+PagedList<Cat> page1 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(0, 10)
+                .withKeysetExtraction(true)
+                .getResultList()
+
+PagedList<Cat> page2 = cbf.create(em, Cat.class)
+                .orderByAsc("id")
+                .page(page1.getKeysetPage(), 10, 10)
+                .withKeysetExtraction(true)
+                .getResultList()
+----
+
 == Common Table Expressions
 
 Common Table Expressions (CTEs) are disposable tables created in memory only for the current statement.
