@@ -71,6 +71,37 @@ public class EntityViewManagerProducer {
 }
 ----
 
+==== Spring
+
+You have to enable the Spring entity-views integration via annotation based config or XML based config and you can also mix those two types of configuration:
+
+Annotation Config
+
+[source, java]
+----
+@Configuration
+@EnableEntityViews("my.entityviews.base.package")
+public class AppConfig {
+}
+----
+
+XML Config
+
+[source, xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:ev="http://www.blazebit.com/persistence/view/spring"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.blazebit.com/persistence/view/spring http://www.blazebit.com/persistence/view/spring/spring-entity-views-1.2.xsd">
+
+    <ev:entity-views base-package="my.entityviews.base.package"/>
+
+</beans>
+----
+
 The CDI extension collects all the entity views classes and provides a producer for the pre-configured `EntityViewConfiguration`.
 
 === First entity view query
