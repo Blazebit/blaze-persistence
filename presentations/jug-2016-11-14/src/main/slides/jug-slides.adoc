@@ -275,8 +275,7 @@ WHERE cat.name LIKE :catName
 
 [%step]
 --
-[position=center]
-*Blaze-Persistence got you covered!*
++++<h3 style="text-align: center; font-size: 2em;">Blaze-Persistence got you covered!</h3>+++
 --
 
 [%step]
@@ -284,6 +283,10 @@ WHERE cat.name LIKE :catName
 Let's see how Blaze-Persistence helps you out with these problems!
 --
 
+[canvas-image="images/features_are_coming.jpg", role=""]
+//    background-size: auto 100%;
+//    background-repeat: no-repeat;
+//    background-position: center;
 == Blaze-Persistence features
 
 // List the features/use cases for which Blaze-Persistence can be used. For every feature, give live examples + comparison
@@ -383,19 +386,18 @@ public class BlazePersistenceConfiguration {
     @PersistenceUnit
     private EntityManagerFactory entityManagerFactory;
 
-    @Bean
+    @Bean @Lazy(false)
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-    @Lazy(false)
     public CriteriaBuilderFactory createCriteriaBuilderFactory() {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         // do some configuration
         return config.createCriteriaBuilderFactory(entityManagerFactory);
     }
 
-    @Bean
+    @Bean @Lazy(false)
     @Scope(ConfigurableBeanFactory.SCOPE_SINGLETON)
-    @Lazy(false)
-    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf, EntityViewConfiguration entityViewConfiguration) {
+    public EntityViewManager createEntityViewManager(CriteriaBuilderFactory cbf,
+        EntityViewConfiguration entityViewConfiguration) {
         return entityViewConfiguration.createEntityViewManager(cbf, entityManagerFactory);
     }
 }
@@ -414,11 +416,19 @@ public class BlazePersistenceConfiguration {
 * Custom static metamodel
 * https://github.com/debezium[Debezium] integration to update secondary index servers via entity views
 
-== Contributing
+== Community & Support
 
-We are happy about any contribution, please fork us and join us on Slack.
+https://blazebit.herokuapp.com[Slack]::
+We have notifications enabled, so just ask :)
 
-// TODO: add list of possible channels, mention support
+https://github.com/Blazebit/blaze-persistence/issues[GitHub issues]::
+If you've found a bug or question, just create an issue
+
+https://stackoverflow.com/questions/tagged/blaze-persistence[Stackoverflow]::
+Don't hesitate to ask questions there too, we are listening
+
+Commercial support & training::
+We help you to get the most out of Blaze-Persistence
 
 == Q & A
 

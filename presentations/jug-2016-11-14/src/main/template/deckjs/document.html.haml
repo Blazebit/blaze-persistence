@@ -149,7 +149,10 @@
       -moz-background-size: cover;
       -webkit-background-size: cover;
       -o-background-size: cover;
-      background-size: cover;
+      /*background-size: cover;*/
+      background-size: auto 100%;
+      background-repeat: no-repeat;
+      background-position: center;
       display: -moz-box;
       display: -webkit-box;
       display: -ms-box;
@@ -195,6 +198,7 @@
 
       .mark {      color: red !important; background-color: yellow; }
       .mark .pln { color: red !important; background-color: yellow; }
+      .smallcode { font-size: 0.6em; }
 
       .canvas-image .canvas-caption p {
         text-align: center;
