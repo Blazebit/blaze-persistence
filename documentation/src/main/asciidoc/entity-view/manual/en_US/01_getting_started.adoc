@@ -7,7 +7,7 @@ guide for the core yet, you might want to start your reading there.
 
 === Setup
 
-TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+//TODO: Describe what the dependencies are, maybe give a subsection about Maven.
 
 === Environments [[Environments]]
 
@@ -39,8 +39,8 @@ from which an `EntityViewManager` can be created like following example shows.
 
 [source,java]
 ----
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@Singleton // from javax.ejb
+@Startup   // from javax.ejb
 public class EntityViewManagerProducer {
 
     // inject the configuration provided by the cdi integration

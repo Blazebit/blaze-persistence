@@ -286,5 +286,5 @@ A `LIKE` with specifiable case sensitivity that must be terminated finally with 
 
 
 
-TODO: For every possible predicate, write some text and give examples +
-TODO: Describe how predicates are built with chained method calls +
+//TODO: For every possible predicate, write some text and give examples +
+//TODO: Describe how predicates are built with chained method calls +

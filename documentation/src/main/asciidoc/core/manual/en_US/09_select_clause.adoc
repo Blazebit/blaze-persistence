@@ -1,23 +1,23 @@
 == Select clause
 
-TODO: Describe the features here with examples
-TODO: Mention that arbitrary expression can be used
+//TODO: Describe the features here with examples
+//TODO: Mention that arbitrary expression can be used
 
 === Tuple select
 
-TODO: Mention that by default JPA creates `Object[]` but you can also use a `javax.persistence.Tuple`
+//TODO: Mention that by default JPA creates `Object[]` but you can also use a `javax.persistence.Tuple`
 
 === Case expressions
 
-TODO: Explain that you can use case when in string expression and that there is also the API
+//TODO: Explain that you can use case when in string expression and that there is also the API
 
 ==== Typesafe
 
-TODO: Mention API
+//TODO: Mention API
 
 ==== Expression support
 
-TODO: Mention that case when expressions can be used in expressions
+//TODO: Mention that case when expressions can be used in expressions
 
 ==== Searched case expression (simple case)
 
@@ -25,16 +25,16 @@ TODO: Mention that case when expressions can be used in expressions
 
 === Subqueries
 
-TODO: Mention that subqueries don't have to be repeated if used in select, because select alias can be used.
+//TODO: Mention that subqueries don't have to be repeated if used in select, because select alias can be used.
 
 ==== Wrapping expression
 
-TODO: Explain how selectSubquery(String subqueryAlias, String expression) works
+//TODO: Explain how selectSubquery(String subqueryAlias, String expression) works
 
 === Select new support
 
-TODO: Mention the select new methods and explain what they do
+//TODO: Mention the select new methods and explain what they do
 
 === Object builder
 
-TODO: Mention that entity views use this extension point
+//TODO: Mention that entity views use this extension point

@@ -103,11 +103,12 @@
                             <doctype>book</doctype>
                             <eruby>erb</eruby>
                             <backend>html5</backend>
-                            <sourceHighlighter>highlightjs</sourceHighlighter>
+                            <sourceHighlighter>prettify</sourceHighlighter>
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>
                                 <imagesdir>images</imagesdir>
+                                <prettifydir>prettify</prettifydir>
                                 <iconsdir>images/icons</iconsdir>
                                 <stylesdir>css</stylesdir>
                                 <scriptsdir>js</scriptsdir>
@@ -137,11 +138,12 @@
                             <doctype>book</doctype>
                             <eruby>erb</eruby>
                             <backend>html5</backend>
-                            <sourceHighlighter>highlightjs</sourceHighlighter>
+                            <sourceHighlighter>prettify</sourceHighlighter>
                             <attributes>
                                 <linkcss>true</linkcss>
                                 <stylesheet>blazebit.css</stylesheet>
                                 <imagesdir>images</imagesdir>
+                                <prettifydir>prettify</prettifydir>
                                 <iconsdir>images/icons</iconsdir>
                                 <stylesdir>css</stylesdir>
                                 <scriptsdir>js</scriptsdir>

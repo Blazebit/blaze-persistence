@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mvn --projects website -am clean compile jbake:serve -Djbake.port=8820
+mvn -P "local-serve" --projects website -am clean compile -Djbake.port=8820

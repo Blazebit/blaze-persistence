@@ -12,7 +12,7 @@
     - unless (attr :stylesheet, '').empty?
       %link(rel='stylesheet'){:href=>normalize_web_path((attr :stylesheet), (attr :stylesdir, ''))}
     - if attr? :icons, 'font'
-      %link(rel='stylesheet'){:href=>(attr 'iconfont-cdn', 'http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css')}
+      %link(rel='stylesheet'){:href=>(attr 'iconfont-cdn', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.2.1/css/font-awesome.min.css')}
       %style
         :plain
           .conum { display: inline-block; color: white !important; background-color: #222222; -webkit-border-radius: 100px; border-radius: 100px; text-align: center; width: 1.2em; height: 1.2em; font-size: 0.9em; font-weight: bold; line-height: 1.2; font-family: Arial, sans-serif; font-style: normal; position: relative; top: -0.1em; }
@@ -35,12 +35,13 @@
         - else
           =Asciidoctor::Stylesheets.instance.embed_pygments_stylesheet(attr 'pygments-style')
     - when 'highlightjs'
-      %link(rel='stylesheet' href="#{attr :highlightjsdir, 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3'}/styles/#{attr 'highlightjs-theme', 'default'}.min.css")
-      %script(src="#{attr :highlightjsdir, 'http://cdnjs.cloudflare.com/ajax/libs/highlight.js/7.3'}/highlight.min.js")
+      %link(rel='stylesheet' href="#{attr :highlightjsdir, 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0'}/styles/#{attr 'highlightjs-theme', 'default'}.min.css")
+      %script(src="#{attr :highlightjsdir, 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0'}/highlight.min.js")
       %script hljs.initHighlightingOnLoad()
     - when 'prettify'
-      %link(rel='stylesheet' href="#{attr :prettifydir, 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298'}/#{attr 'prettify-theme', 'prettify'}.min.css")
-      %script(src="#{attr :prettifydir, 'http://cdnjs.cloudflare.com/ajax/libs/prettify/r298'}/prettify.min.js")
+      %link(rel='stylesheet' href="#{attr :prettifydir, 'https://cdnjs.cloudflare.com/ajax/libs/prettify/r298'}/#{attr 'prettify-theme', 'prettify'}.min.css")
+      %script(src="#{attr :prettifydir, 'https://cdnjs.cloudflare.com/ajax/libs/prettify/r298'}/prettify.min.js")
+      %script(src="#{attr :prettifydir}/lang-ext.js")
       %script document.addEventListener('DOMContentLoaded', prettyPrint)
     %link(rel='stylesheet' href='deck.js/core/deck.core.css')
     - if deckjs_version <= '1.0.0'
@@ -114,8 +115,8 @@
     - if deckjs_version <= '1.0.0'
       %script(src='deck.js/extensions/hash/deck.hash.js')
     //%script(src='deck.js/extensions/scale/deck.scale.js')
-    - if attr? :blank
-      %script(src='deck.js/extensions/blank/deck.blank.js')
+    //- if attr? :blank
+    //  %script(src='deck.js/extensions/blank/deck.blank.js')
     - if attr? :goto
       %script(src='deck.js/extensions/goto/deck.goto.js')
     - if attr? :menu

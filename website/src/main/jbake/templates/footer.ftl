@@ -11,7 +11,8 @@
 <script src="js/modernizr-2.0.6.min.js"></script>
 <script src="js/jquery-1.11.1.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
-<script src="js/prettify.js"></script>
+<script src="js/prettify.min.js"></script>
+<script src="js/lang-ext.js"></script>
 
 <!--
 <script>

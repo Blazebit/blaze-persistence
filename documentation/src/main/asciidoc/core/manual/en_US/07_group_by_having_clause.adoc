@@ -1,8 +1,8 @@
 == Group by and having clause
 
-TODO: Describe the features here with examples +
-TODO: Mainly refer to the predicate building section which should explain the basics +
-TODO: Info that group by and having is not possible on paginated criteria builders +
-TODO: Note that group by subquery is not possible
-TODO: Note that there is a non compliant mode which is enabled by default that allows expressions in the group by
-TODO: Note that OpenJPA does not support anything but paths and simple function expressions, all other providers support arbitrary expressions
+//TODO: Describe the features here with examples +
+//TODO: Mainly refer to the predicate building section which should explain the basics +
+//TODO: Info that group by and having is not possible on paginated criteria builders +
+//TODO: Note that group by subquery is not possible
+//TODO: Note that there is a non compliant mode which is enabled by default that allows expressions in the group by
+//TODO: Note that OpenJPA does not support anything but paths and simple function expressions, all other providers support arbitrary expressions

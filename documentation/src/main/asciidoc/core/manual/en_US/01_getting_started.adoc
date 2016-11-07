@@ -4,7 +4,7 @@ This is a step-by-step introduction about how to get started with {projectname} 
 
 === Setup
 
-TODO: Describe what the dependencies are, maybe give a subsection about Maven.
+//TODO: Describe what the dependencies are, maybe give a subsection about Maven.
 
 === Environments [[Environments]]
 
@@ -35,8 +35,8 @@ The most convenient way to use {projectname} within a CDI environment is by crea
 
 [source,java]
 ----
-@javax.ejb.Singleton
-@javax.ejb.Startup
+@Singleton // From javax.ejb
+@Startup   // From javax.ejb
 public class CriteriaBuilderFactoryProducer {
 
     // inject your entity manager factory
@@ -113,8 +113,8 @@ So if we would like to only select the cats' age we would have to write:
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
- .from(Cat.class)
- .select("cat.age");
+    .from(Cat.class)
+    .select("cat.age");
 ----
 
 Here we can see that the criteria builder assigns a default alias (the simple lower-case name of the entity class)
@@ -124,8 +124,8 @@ for the root entity:
 [source,java]
 ----
 CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
- .from(Cat.class, "c")
- .select("c.age");
+    .from(Cat.class, "c")
+    .select("c.age");
 ----
 
 Next we want to build a more complicated query. Let's select all cats with an
@@ -134,10 +134,10 @@ like to order the results by name ascending and by id in case of equal names.
 [source,java]
 ----
 CriteriaBuilder<Cat> cb = cbf.create(em, Cat.class, "c")
- .where("c.age").betweenExpression("5").andExpression("10")
- .where("SIZE(c.kittens)").geExpression("2")
- .orderByAsc("c.name")
- .orderByAsc("c.id");
+    .where("c.age").betweenExpression("5").andExpression("10")
+    .where("SIZE(c.kittens)").geExpression("2")
+    .orderByAsc("c.name")
+    .orderByAsc("c.id");
 ----
 
 We have built a couple of queries so far but how can we retrieve the results?

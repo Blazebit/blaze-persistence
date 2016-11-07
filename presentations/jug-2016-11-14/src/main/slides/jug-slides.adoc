@@ -75,7 +75,7 @@ Think JPA 2.1 Entity-Graphs are too verbose?
 )
 public class Cat {
     @Id @GeneratedValue
-    private int id;
+    private Integer id;
     private String name;
     @OneToMany
     private Set<Cat> kittens;
@@ -94,13 +94,13 @@ Fetch-problems with loading the _"whole"_ database or `LazyInitializationExcepti
 ----
 public class Cat {
     @Id @GeneratedValue
-    private int id;
+    private Integer id;
     private String name;
-    @OneToMany(fetch = Fetch.{markstart}EAGER{markend})
+    @OneToMany(fetch = Fetch.EAGER)
     private Set<Cat> kittens;
-    @ManyToOne(fetch = Fetch.{markstart}EAGER{markend})
+    @ManyToOne(fetch = Fetch.EAGER)
     private Cat mother;
-    @ManyToOne(fetch = Fetch.{markstart}EAGER{markend})
+    @ManyToOne(fetch = Fetch.EAGER)
     private Cat father;
 }
 ----
@@ -120,7 +120,7 @@ Fetch-problems with loading the _"whole"_ database or `LazyInitializationExcepti
 ----
 public class Cat {
     @Id @GeneratedValue
-    private int id;
+    private Integer id;
     private String name;
     @OneToMany(fetch = Fetch.{markstart}LAZY{markend})
     private Set<Cat> kittens;
@@ -498,15 +498,13 @@ public class BlazePersistenceProducer {
     @Inject
     private EntityViewConfiguration entityViewConfiguration;
 
-    @Produces
-    @ApplicationScoped
+    @Produces @ApplicationScoped
     public CriteriaBuilderFactory createCriteriaBuilderFactory() {
         CriteriaBuilderConfiguration config = Criteria.getDefault();
         return config.createCriteriaBuilderFactory(emf);
     }
 
-    @Produces
-    @ApplicationScoped
+    @Produces @ApplicationScoped
     public EntityViewManager createEntityViewManager(CriteriaBuilderFactory criteriaBuilderFactory) {
         return entityViewConfiguration.createEntityViewManager(criteriaBuilderFactory, emf);
     }
@@ -515,7 +513,7 @@ public class BlazePersistenceProducer {
 
 == Getting started with Spring
 
-[source,java]
+[source, java]
 ----
 @Configuration
 public class BlazePersistenceConfiguration {

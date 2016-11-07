@@ -9,13 +9,13 @@ First the structure of the view has to be defined in a similar manner as an enti
 
 [source,java]
 ----
-@com.blazebit.persistence.CTE
-@javax.persistence.Entity
+@CTE    // from com.blazebit.persistence
+@Entity // from javax.persistence
 public class MyCte {
 
     private Long id;
 
-    @javax.persistence.Id
+    @Id // from javax.persistence
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 }
@@ -41,7 +41,7 @@ The query returned by `cb.getQueryString()` is a _logical_ representation of the
 [source,sql]
 ----
 WITH MyCte(id) AS(
-SELECT cat.id FROM Cat cat
+    SELECT cat.id FROM Cat cat
 )
 SELECT myCte FROM MyCte myCte
 ----
@@ -75,7 +75,7 @@ The implementations for *Oracle* and *Microsoft SQL Server* are neither tested n
 
 NOTE: DB2 does not support JOINs in the recursive part of a CTE: https://www.ibm.com/support/knowledgecenter/SSEPEK_10.0.0/com.ibm.db2z10.doc.codes/src/tpc/n345.dita
 
-TODO: Make a table that shows which DB supports what
+//TODO: Make a table that shows which DB supports what
 
 === Normal CTEs
 
@@ -96,14 +96,14 @@ The following illustrates how the ancestor hierarchy of an entity can be retriev
 [source,java]
 .CTE structure definition
 ----
-@com.blazebit.persistence.CTE
-@javax.persistence.Entity
+@CTE    // from com.blazebit.persistence
+@Entity // from javax.persistence
 public class CatCte {
 
     private Long id;
     private Cat ancestor;
 
-    @javax.persistence.Id
+    @Id // from javax.persistence
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -135,17 +135,17 @@ CriteriaBuilder<CatCte> cb = cbf.create(em, CatCte.class)
 .Logical representation
 ----
 WITH RECURSIVE CatCte(id, ancestor) AS(
-SELECT cat.id, cat.ancestor FROM Cat cat WHERE cat.id = :someCatId
-UNION ALL
-SELECT cat.id, cat.ancestor FROM Cat cat, CatCte parentCat WHERE cat.id = parentCat.ancestor.id
+    SELECT cat.id, cat.ancestor FROM Cat cat WHERE cat.id = :someCatId
+    UNION ALL
+    SELECT cat.id, cat.ancestor FROM Cat cat, CatCte parentCat WHERE cat.id = parentCat.ancestor.id
 )
 SELECT catCte FROM CatCte catCte
 ----
 
 This will return all the ancestors of the Cat with an id equal to *someCatId*.
 
-TODO: Give some examples of normal and recursive CTEs
+//TODO: Give some examples of normal and recursive CTEs
 
 === Updatable CTEs
 
-TODO: Give examples of updatable CTEs and describe the OLD and NEW views on entity data
+//TODO: Give examples of updatable CTEs and describe the OLD and NEW views on entity data

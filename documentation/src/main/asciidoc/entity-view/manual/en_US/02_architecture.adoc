@@ -1,4 +1,4 @@
 == Architecture
 
-TODO: describe how entity-views work under the hood and give a high level view of interesting interfaces
-TODO: describe how updatable entity-views work
+//TODO: describe how entity-views work under the hood and give a high level view of interesting interfaces
+//TODO: describe how updatable entity-views work

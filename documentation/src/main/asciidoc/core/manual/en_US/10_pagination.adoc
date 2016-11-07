@@ -1,19 +1,19 @@
 == Pagination
 
-TODO: Describe the features here with examples
+//TODO: Describe the features here with examples
 
 === General
 
-TODO: Write a section about how pagination support is implemented.
+//TODO: Write a section about how pagination support is implemented.
 
 === Limitations
 
-TODO: Describe the limitations already mentioned in the javadoc and if one needs better control then he should work on the TypedQuery directly
+//TODO: Describe the limitations already mentioned in the javadoc and if one needs better control then he should work on the TypedQuery directly
 
 === Offset pagination
 
-TODO: Describe performance penalty and suggest that keyset pagination is better
+//TODO: Describe performance penalty and suggest that keyset pagination is better
 
 === Keyset pagination
 
-TODO: Describe that a unique index column is needed
+//TODO: Describe that a unique index column is needed

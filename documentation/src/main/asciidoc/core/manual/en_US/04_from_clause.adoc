@@ -26,7 +26,10 @@ CriteriaBuilder<Integer> cb = cbf.create(em, Integer.class)
 This will result in the following JPQL query
 [source,sql]
 ----
-SELECT kittens_1.age FROM Cat cat LEFT JOIN cat.kittens kittens_1 WHERE kittens_1.age > 1
+SELECT kittens_1.age
+FROM Cat cat
+LEFT JOIN cat.kittens kittens_1
+WHERE kittens_1.age > 1
 ----
 
 ==== Model awareness
@@ -86,7 +89,11 @@ The resulting JPQL looks like the following
 
 [source,sql]
 ----
-SELECT kittens_1.age FROM Cat cat INNER JOIN cat.kittens kitty LEFT JOIN cat.kittens kittens_1 WHERE kitty.age > 1
+SELECT kittens_1.age
+FROM Cat cat
+INNER JOIN cat.kittens kitty
+LEFT JOIN cat.kittens kittens_1
+WHERE kitty.age > 1
 ----
 
 ==== Fetched joins
@@ -113,7 +120,14 @@ The `father` relation is left join fetched and given an alias which is then used
 
 [source,sql]
 ----
-SELECT cat FROM Cat cat LEFT JOIN FETCH cat.father dad LEFT JOIN FETCH cat.kittens kittens_1 LEFT JOIN FETCH kittens_1.kittens kittens_2 LEFT JOIN FETCH cat.mother mother_1 WHERE dad IS NULL OR dad.age > 1
+SELECT cat
+FROM Cat cat
+LEFT JOIN FETCH cat.father dad
+LEFT JOIN FETCH cat.kittens kittens_1
+LEFT JOIN FETCH kittens_1.kittens kittens_2
+LEFT JOIN FETCH cat.mother mother_1
+WHERE dad IS NULL
+   OR dad.age > 1
 ----
 
 WARN: Although the JPA spec does not specifically allow aliasing fetch joins, every major JPA provider supports this.
@@ -136,7 +150,11 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
 
 [source,sql]
 ----
-SELECT localizedName_language FROM Cat cat LEFT JOIN cat.localizedName localizedName_language ON KEY(localizedName_language) = :language WHERE localizedName_language IS NOT NULL
+SELECT localizedName_language
+FROM Cat cat
+LEFT JOIN cat.localizedName localizedName_language
+       ON KEY(localizedName_language) = :language
+WHERE localizedName_language IS NOT NULL
 ----
 
 The relation `localizedName` is assumed to be a map of type `Map<String, String>` which maps a language code to a localized name.
@@ -185,5 +203,9 @@ CriteriaBuilder<String> cb = cbf.create(em, String.class)
 
 [source,sql]
 ----
-SELECT localizedNameForLanguage FROM Cat cat LEFT JOIN cat.localizedName localizedNameForLanguage ON KEY(localizedNameForLanguage) = :language WHERE localizedNameForLanguage IS NOT NULL
+SELECT localizedNameForLanguage
+FROM Cat cat
+LEFT JOIN cat.localizedName localizedNameForLanguage
+       ON KEY(localizedNameForLanguage) = :language
+WHERE localizedNameForLanguage IS NOT NULL
 ----
