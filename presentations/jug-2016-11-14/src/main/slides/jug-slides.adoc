@@ -61,7 +61,7 @@ image::bernd_head.png[float="right"]
 
 // List the problems that people have with ORMs and show the bad decisions that have to be made because of that.
 
-* Think JPA 2.1 Entity-Graphs are too verbose?
+Think JPA 2.1 Entity-Graphs are too verbose?
 
 [source,java]
 ----
@@ -88,7 +88,7 @@ public class Cat {
 
 <<<
 
-* Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
+Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
 
 [source,java,subs="verbatim,attributes"]
 ----
@@ -114,7 +114,7 @@ Leading to loading all relations...
 
 <<<
 
-* Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
+Fetch-problems with loading the _"whole"_ database or `LazyInitializationExceptions`?
 
 [source,java,subs="verbatim,attributes"]
 ----
@@ -143,7 +143,7 @@ Leading to a `LazyInitializationExceptions` on invocation of `getName()`
 
 <<<
 
-* JPA constructor expressions for DTOs too inflexible?
+JPA constructor expressions for DTOs too inflexible?
 
 [source,sql]
 ----
@@ -171,7 +171,7 @@ entityManager.createQuery(query, MyCatDTO.class)
 
 <<<
 
-* Missing support for that one little SQL feature that you really need?
+Missing support for that one little SQL feature that you really need?
 
 [%step]
 --
@@ -206,7 +206,7 @@ SELECT c.id FROM MyCte c
 
 <<<
 
-* Having some longstanding problems with the JPA provider that don't seem to get fixed?
+Having some longstanding problems with the JPA provider that don't seem to get fixed?
 
 [%step]
 --
@@ -237,7 +237,7 @@ SELECT c.id FROM MyCte c
 
 <<<
 
-* Feel like you can't reuse parts of queries and have to duplicate code?
+Feel like you can't reuse parts of queries and have to duplicate code?
 
 [%step]
 --
@@ -330,9 +330,6 @@ public interface CatView {
 }
 ----
 
-[%step,role='demo-text']
-Entity View Basic Showcase
-
 == Example View - Subquery support
 
 [source,java,role='last-code']
@@ -358,9 +355,6 @@ public interface CatView {
 }
 ----
 
-[%step,role='demo-text']
-Entity View Subquery Showcase
-
 == Example View - Subview
 
 [source,java]
@@ -384,9 +378,6 @@ public interface PersonView {
 }
 ----
 
-[%step,role='demo-text']
-Entity View Subview Showcase
-
 == Pagination
 
 Blaze-persistence supports two types of pagination:
@@ -397,9 +388,6 @@ Blaze-persistence supports two types of pagination:
 Keyset pagination is preferable to offset pagination since it allows consistent pagination of data while elements are inserted.
 
 Pagination can also be combined with entity-views!
-
-[%step,role='demo-text']
-Pagination showcase
 
 == Offset pagination example
 
@@ -444,9 +432,6 @@ Use cases:
 
 CTEs can also be combined with pagination and entity-views!
 
-[%step,role='demo-text']
-CTE showcase
-
 == CTE example
 
 [source,java, role = 'smallcode']
@@ -487,6 +472,9 @@ Use like:
 EntityViewSetting<CatView, CriteriaBuilder<CatView>> catSetting = EntityViewSetting.create(CatView.class);
 List<CatView> catHierarchy = getCatHierarchy(1, catSetting);
 ----
+
+[canvas-image="images/show_me_a_demo.jpg"]
+== Demo
 
 == Integrations
 
@@ -564,6 +552,9 @@ public class BlazePersistenceConfiguration {
 * Lateral joins
 * Custom static metamodel
 * https://github.com/debezium[Debezium] integration to update secondary index servers via entity views
+
+[canvas-image="images/give_up_on_jpa.jpg"]
+== Don't give up on JPA
 
 == Community & Support
 
