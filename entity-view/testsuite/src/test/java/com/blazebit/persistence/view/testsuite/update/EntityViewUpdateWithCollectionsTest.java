@@ -49,6 +49,8 @@ import com.blazebit.persistence.view.testsuite.update.model.UpdatableDocumentWit
  * @since 1.1.0
  */
 @RunWith(Parameterized.class)
+// NOTE: No Datanucleus support yet
+@Category({ NoDatanucleus.class })
 public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWithCollectionsView> extends AbstractEntityViewUpdateTest {
 
     private Class<T> viewType;
@@ -106,7 +108,6 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testUpdateReplaceCollection() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
@@ -131,7 +132,6 @@ public class EntityViewUpdateWithCollectionsTest<T extends UpdatableDocumentWith
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testUpdateAddToCollection() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);

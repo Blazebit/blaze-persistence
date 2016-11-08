@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoFirebird;
@@ -34,7 +33,6 @@ import com.blazebit.persistence.testsuite.entity.Document;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntity;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityEmbeddable;
 import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityId;
-import com.blazebit.persistence.testsuite.entity.EmbeddableTestEntityIdEmbeddable;
 import com.blazebit.persistence.testsuite.entity.IntIdEntity;
 import com.blazebit.persistence.testsuite.tx.TxVoidWork;
 
@@ -64,7 +62,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-    // NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
+    // TODO: report that datanucleus doesn't support element collection in an embeddable
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningEmbeddable(){
         final String newEmbeddableTestEntityIdKey = "newKey";
@@ -91,7 +89,7 @@ public class UpdateEmbeddableComplexTest extends AbstractCoreTest {
     // NOTE: Currently only PostgreSQL and DB2 support returning from within a CTE
     @Test
     // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-    // NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
+    // TODO: report that datanucleus doesn't support element collection in an embeddable
     @Category({ NoH2.class, NoOracle.class, NoSQLite.class, NoFirebird.class, NoMySQL.class, NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
     public void testUpdateWithReturningExplicitId(){
         final String intIdEntity1Key = "1";

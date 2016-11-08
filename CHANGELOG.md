@@ -2,6 +2,28 @@
 
 Changes that happened in releases
 
+## 1.2.0-Alpha2
+
+Not yet released
+
+### New features
+
+* Spring integration for Entity Views
+* Showcase for CDI and Spring usage
+* Allow to reuse keyset page in more situations
+
+### Bug fixes
+
+* Support for primitive type in Entity Views
+* Keyset pagination backwards scrolling didn't invert the result list
+* JOIN FETCH problems with PaginatedCriteriaBuilder
+* Duplicate entity mappings in case of classpath scanning
+* MySQL 5.7 group by problems
+
+### Backwards-incompatible changes
+
+None
+
 ## 1.2.0-Alpha1
 
 29. September 2016 - [Release tag](https://github.com/Blazebit/blaze-persistence/releases/tag/1.2.0-Alpha1) [Resolved issues](https://github.com/Blazebit/blaze-persistence/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aclosed%20milestone%3A1.2.0%20closed%3A%3C2016-09-29)

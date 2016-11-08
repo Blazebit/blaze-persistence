@@ -50,6 +50,8 @@ import com.blazebit.persistence.view.testsuite.update.model.UpdatableDocumentVie
  * @since 1.1.0
  */
 @RunWith(Parameterized.class)
+// NOTE: No Datanucleus support yet
+@Category({ NoDatanucleus.class })
 public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends AbstractEntityViewUpdateTest {
 
     private Class<T> viewType;
@@ -104,7 +106,6 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testUpdateWithEntity() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
@@ -129,7 +130,6 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testSimpleUpdate() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
@@ -154,7 +154,6 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testUpdateRollbacked() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);
@@ -185,7 +184,6 @@ public class EntityViewUpdateTest<T extends UpdatableDocumentView> extends Abstr
     }
 
     @Test
-    @Category({ NoDatanucleus.class })
     public void testModifyAndUpdateRollbacked() {
         CriteriaBuilder<Document> criteria = cbf.create(em, Document.class, "d").orderByAsc("id");
         CriteriaBuilder<T> cb = evm.applySetting(EntityViewSetting.create(viewType), criteria);

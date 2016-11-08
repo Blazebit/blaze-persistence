@@ -20,14 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import javax.persistence.Tuple;
 
-import com.blazebit.persistence.testsuite.base.category.NoHibernate;
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.blazebit.persistence.CriteriaBuilder;
-import com.blazebit.persistence.testsuite.AbstractCoreTest;
-import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
 import com.blazebit.persistence.testsuite.base.category.NoEclipselink;
 import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
 
@@ -38,7 +37,7 @@ import com.blazebit.persistence.testsuite.base.category.NoOpenJPA;
  * @since 1.0.6
  */
 // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-// NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
+// TODO: report that datanucleus doesn't support element collection in an embeddable
 @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 public class EmbeddableComplexTest extends AbstractCoreTest {
     
@@ -112,7 +111,6 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     
     @Test
     // NOTE: Datanucleus, EclipseLink, OpenJPA does not support relations in embedded id
-    @Category({NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class})
     public void testWhereEmbeddableElementCollectionPropertyFilter() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .where("embeddable.elementCollection.primaryName").eqExpression("''");
@@ -124,8 +122,8 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     }
     
     @Test
-    // NOTE: hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate.class })
+    // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
+    @Category({ NoHibernate51.class })
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.elementCollection");

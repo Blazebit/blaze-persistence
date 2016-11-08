@@ -65,9 +65,8 @@ public class GroupByTest extends AbstractCoreTest {
         criteria.getResultList();
     }
     
-    // NOTE: Datanucleus does not support parameters in group by yet. see http://www.datanucleus.org/servlet/jira/browse/NUCRDBMS-1009
     @Test
-    @Category({NoDB2.class, NoDatanucleus.class})
+    @Category({ NoDB2.class })
     public void testSizeTransformWithImplicitParameterGroupBy2() {
         CriteriaBuilder<Long> criteria = cbf.create(em, Long.class).from(Document.class, "d")
                 .select("SIZE(d.versions)")

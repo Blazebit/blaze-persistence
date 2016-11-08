@@ -119,7 +119,7 @@ public class JoinTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/35
+    // TODO: Report that SingularAttributeImpl#getBindableType() returns ENTITY_TYPE instead of SINGULAR_ATTRIBUTE
     @Category(NoDatanucleus.class)
     public void listStringMapEmbeddableJoinWithFunctions() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);

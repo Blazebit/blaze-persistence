@@ -50,8 +50,6 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: https://github.com/datanucleus/datanucleus-core/issues/119
-    @Category(NoDatanucleus.class)
     public void setSubquery() {
         BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");
@@ -69,8 +67,6 @@ public class UpdateTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: https://github.com/datanucleus/datanucleus-core/issues/119
-    @Category(NoDatanucleus.class)
     public void setCorrelatedSubqueryExpression() {
         BlazeCriteriaBuilder cb = BlazeCriteria.get(em, cbf);
         BlazeCriteriaUpdate<Document> query = cb.createCriteriaUpdate(Document.class, "d");

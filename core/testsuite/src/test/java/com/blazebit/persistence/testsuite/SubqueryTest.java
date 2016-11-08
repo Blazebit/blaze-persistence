@@ -240,9 +240,7 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    // NOTE: Looks like Datanucleus doesn't support IN with collection tables: https://github.com/datanucleus/datanucleus-rdbms/issues/87
     @Test
-    @Category({ NoDatanucleus.class })
     public void testSubqueryCorrelatesSimple() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
                 .where("owner").in()
@@ -254,8 +252,8 @@ public class SubqueryTest extends AbstractCoreTest {
         crit.getResultList();
     }
 
-    // NOTE: Looks like Datanucleus doesn't support IN with collection tables: https://github.com/datanucleus/datanucleus-rdbms/issues/87
     @Test
+    // TODO: Report datanucleus issue
     @Category({ NoDatanucleus.class })
     public void testMultipleCorrelationsWithJoins() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")

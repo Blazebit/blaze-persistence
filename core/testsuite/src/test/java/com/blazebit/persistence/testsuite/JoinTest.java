@@ -364,9 +364,8 @@ public class JoinTest extends AbstractCoreTest {
     }
     
     // NOTE: DB2 9.7 which is what we've got on Travis CI does not support subqueries in the on clause. See http://www-01.ibm.com/support/knowledgecenter/SSEPGG_9.7.0/com.ibm.db2.luw.messages.sql.doc/doc/msql00338n.html?cp=SSEPGG_9.7.0
-    // TODO: Datanucleus does not seem to support subqueries in the on clause, the query parser complains about the FROM keyword
     @Test
-    @Category({ NoDB2.class, NoDatanucleus.class })
+    @Category({ NoDB2.class })
     public void testSizeInOnClause() {
         CriteriaBuilder<Document> crit = cbf.create(em, Document.class, "d")
             .leftJoinOn("d.partners", "p").on("SIZE(d.versions)").gtExpression("2").end();

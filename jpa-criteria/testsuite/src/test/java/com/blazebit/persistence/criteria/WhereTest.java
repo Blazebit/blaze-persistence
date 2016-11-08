@@ -87,8 +87,6 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/35
-    @Category(NoDatanucleus.class)
     public void embeddablePaths() {
         BlazeCriteriaQuery<Long> cq = BlazeCriteria.get(em, cbf, Long.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();
@@ -481,8 +479,6 @@ public class WhereTest extends AbstractCoreTest {
     }
 
     @Test
-    // TODO: https://github.com/datanucleus/datanucleus-api-jpa/issues/36
-    @Category(NoDatanucleus.class)
     public void parametersAndArrays() {
         BlazeCriteriaQuery<Document> cq = BlazeCriteria.get(em, cbf, Document.class);
         BlazeCriteriaBuilder cb = cq.getCriteriaBuilder();

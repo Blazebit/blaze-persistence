@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.persistence.EntityTransaction;
 
+import com.blazebit.persistence.testsuite.base.category.NoDatanucleus4;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -140,6 +141,7 @@ public class ExtendedEmbeddableCollectionsTest<T extends EmbeddableDocumentColle
     }
 
     @Test
+    // TODO: report that datanucleus doesn't support element collection in an embeddable
     @Category({NoHibernate.class, NoDatanucleus.class})
     public void testCollections() {
         EntityViewConfiguration cfg = EntityViews.createDefaultConfiguration();

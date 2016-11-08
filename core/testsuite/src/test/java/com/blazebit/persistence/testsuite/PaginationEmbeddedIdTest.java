@@ -25,7 +25,6 @@ import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import static com.googlecode.catchexception.CatchException.verifyException;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -34,7 +33,7 @@ import static org.junit.Assert.assertEquals;
  * @since 1.2.0
  */
 // NOTE: EclipseLink doesn't support Map in embeddables: https://bugs.eclipse.org/bugs/show_bug.cgi?id=391062
-// NOTE: Datanucleus doesn't support mapped by with embeddables: https://github.com/datanucleus/datanucleus-core/issues/137
+// TODO: report that datanucleus doesn't support element collection in an embeddable
 @Category({ NoDatanucleus.class, NoEclipselink.class, NoOpenJPA.class })
 public class PaginationEmbeddedIdTest extends AbstractCoreTest {
 

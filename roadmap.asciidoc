@@ -3,24 +3,34 @@ Blaze-Persistence - Roadmap
 
 As a side note, we are naming releases after http://marvel.com/comics/characters[Marvel comic characters] since we like the Avengers :)
 
+= 1.5 Kang
 
-= 1.3 Drax
-
+** Chunk-Processing support
 ** Spatial/Range datatype support
 ** RDBMS array datatype support
+** Full query parser and EntityManager implementation
 ** Deep EclipseLink integration
 ** Deep DataNuceleus integration
 
-= 1.2 Ink
+= 1.4 Black Panther
 
 ** JPA static metamodel
 ** Custom static metamodel
+** Dedicated Java 8 API
+** Entity view partial updates (full support)
+
+= 1.3 Drax
+
+** Debezium integration
+
+= 1.2 Ink
+
 ** TREAT support
 ** Table function support
 ** Interval arithmetics support
 ** Merge operation support
 ** Entity view fetch strategies
-** Entity view partial updates
+** Entity view partial updates (experimental support)
 ** Entity view collection attribute filters
 
 = 1.1 - Loki *[RELEASED]*
