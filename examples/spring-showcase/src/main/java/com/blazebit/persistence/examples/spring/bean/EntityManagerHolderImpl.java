@@ -20,7 +20,6 @@ import com.blazebit.persistence.examples.base.bean.EntityManagerHolder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
-import javax.enterprise.inject.Disposes;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
