@@ -21,6 +21,9 @@ import static org.junit.Assert.assertEquals;
 import javax.persistence.Tuple;
 
 import com.blazebit.persistence.testsuite.base.category.NoDatanucleus;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate42;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate43;
+import com.blazebit.persistence.testsuite.base.category.NoHibernate50;
 import com.blazebit.persistence.testsuite.base.category.NoHibernate51;
 import com.blazebit.persistence.testsuite.entity.*;
 import org.junit.Test;
@@ -123,7 +126,7 @@ public class EmbeddableComplexTest extends AbstractCoreTest {
     
     @Test
     // NOTE: http://hibernate.atlassian.net/browse/HHH-10229
-    @Category({ NoHibernate51.class })
+    @Category({ NoHibernate42.class, NoHibernate43.class, NoHibernate50.class, NoHibernate51.class })
     public void testSelectEmbeddableElementCollection() {
         CriteriaBuilder<Tuple> cb = cbf.create(em, Tuple.class).from(EmbeddableTestEntity.class, "e")
             .select("embeddable.elementCollection");
