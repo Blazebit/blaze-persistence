@@ -462,6 +462,7 @@
                     <suppressionsLocation>blaze-persistence/checkstyle-suppressions.xml</suppressionsLocation>
                     <suppressionsFileExpression>checkstyle.suppressions.file</suppressionsFileExpression>
                     <consoleOutput>true</consoleOutput>
+                    <skip>${skipCheckstyle}</skip>
                 </configuration>
                 <executions>
                     <execution>
